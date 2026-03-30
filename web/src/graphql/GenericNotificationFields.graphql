@@ -4,4 +4,6 @@ fragment GenericNotificationFields on GenericNotification {
   body
   link
   createdAt
+  actorName
+  actorPicture
 }

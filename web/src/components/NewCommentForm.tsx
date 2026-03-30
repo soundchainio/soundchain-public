@@ -7,7 +7,7 @@ import { GuestAvatar } from 'components/GuestAvatar'
 import { StickerPicker } from './StickerPicker'
 import { GifPicker } from './GifPicker'
 import Picker from '@emoji-mart/react'
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { getNormalizedLink, IdentifySource, hasLink } from 'utils/NormalizeEmbedLinks'
 import { MediaProvider } from 'types/MediaProvider'
 import { Smile, Sparkles, Link2, Send, X, Film, Video, Bookmark, ArrowDownToLine, Share2 } from 'lucide-react'
@@ -19,6 +19,7 @@ import { toast } from 'react-toastify'
 import { CreateStoryModal } from './dex/CreateStoryModal'
 import { SharePostModal } from './modals/SharePostModal'
 import { createPortal } from 'react-dom'
+import { MentionAutocomplete } from './MentionAutocomplete'
 
 interface Emoji {
   id: string
@@ -77,6 +78,26 @@ export const NewCommentForm = ({ postId, onSuccess, compact, inputRef, myReactio
   const [isSubmitting, setIsSubmitting] = useState(false)
   const pickerRef = useRef<HTMLDivElement>(null)
   const linkDetectionRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const internalInputRef = useRef<HTMLTextAreaElement>(null)
+  const textareaRef = inputRef || internalInputRef
+  const [cursorPosition, setCursorPosition] = useState(0)
+
+  const handleMentionSelect = useCallback((handle: string) => {
+    const textarea = textareaRef.current
+    if (!textarea) return
+    const before = body.slice(0, cursorPosition)
+    const after = body.slice(cursorPosition)
+    const mentionStart = before.lastIndexOf('@')
+    if (mentionStart === -1) return
+    const newBody = before.slice(0, mentionStart) + '@' + handle + ' ' + after
+    setBody(newBody)
+    const newCursor = mentionStart + handle.length + 2
+    setCursorPosition(newCursor)
+    requestAnimationFrame(() => {
+      textarea.focus()
+      textarea.setSelectionRange(newCursor, newCursor)
+    })
+  }, [body, cursorPosition, textareaRef])
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -283,10 +304,20 @@ export const NewCommentForm = ({ postId, onSuccess, compact, inputRef, myReactio
 
           {/* Text Input */}
           <div className="relative">
+            <MentionAutocomplete
+              text={body}
+              cursorPosition={cursorPosition}
+              onSelect={handleMentionSelect}
+              inputRef={textareaRef}
+            />
             <textarea
-              ref={inputRef}
+              ref={textareaRef}
               value={body}
-              onChange={(e) => setBody(e.target.value.slice(0, 500 - selectedStickers.length))}
+              onChange={(e) => {
+                setBody(e.target.value.slice(0, 500 - selectedStickers.length))
+                setCursorPosition(e.target.selectionStart || 0)
+              }}
+              onSelect={(e) => setCursorPosition((e.target as HTMLTextAreaElement).selectionStart || 0)}
               placeholder="Write a comment..."
               className="w-full bg-neutral-800 border border-neutral-700 rounded-xl p-3 pr-12 text-white placeholder:text-neutral-500 resize-none focus:outline-none focus:border-cyan-500 transition-colors text-sm"
               rows={compact ? 1 : 2}

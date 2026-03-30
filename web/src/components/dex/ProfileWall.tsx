@@ -21,6 +21,7 @@ import { GifPicker } from 'components/GifPicker'
 import { useUpload } from 'hooks/useUpload'
 import { SharePostModal } from 'components/modals/SharePostModal'
 import { CreateStoryModal } from 'components/dex/CreateStoryModal'
+import { MentionAutocomplete } from 'components/MentionAutocomplete'
 import Picker from '@emoji-mart/react'
 
 const ReactPlayer = dynamic(() => import('react-player'), { ssr: false })
@@ -538,8 +539,12 @@ export function ProfileWall({ profileId, isOwnProfile: isOwnProfileProp, viewerP
   // Belt-and-suspenders: if parent says it's own profile OR viewer ID matches wall owner, treat as own
   const isOwnProfile = isOwnProfileProp || (Boolean(viewerProfileId) && viewerProfileId === profileId)
   const [body, setBody] = useState('')
+  const [bodyCursor, setBodyCursor] = useState(0)
+  const bodyRef = useRef<HTMLTextAreaElement>(null)
   const [replyingTo, setReplyingTo] = useState<string | null>(null)
   const [replyBody, setReplyBody] = useState('')
+  const [replyCursor, setReplyCursor] = useState(0)
+  const replyRef = useRef<HTMLInputElement>(null)
   const [page, setPage] = useState(1)
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
   const { playlistState } = useAudioPlayerContext()
@@ -579,6 +584,35 @@ export function ProfileWall({ profileId, isOwnProfile: isOwnProfileProp, viewerP
   const [showReplySticker, setShowReplySticker] = useState(false)
   const [showReplyGif, setShowReplyGif] = useState(false)
   const [showReplyEmbed, setShowReplyEmbed] = useState(false)
+
+  // @mention autocomplete handlers
+  const handleBodyMentionSelect = useCallback((handle: string) => {
+    const el = bodyRef.current
+    if (!el) return
+    const before = body.slice(0, bodyCursor)
+    const after = body.slice(bodyCursor)
+    const mentionStart = before.lastIndexOf('@')
+    if (mentionStart === -1) return
+    const newBody = before.slice(0, mentionStart) + '@' + handle + ' ' + after
+    setBody(newBody)
+    const newCursor = mentionStart + handle.length + 2
+    setBodyCursor(newCursor)
+    requestAnimationFrame(() => { el.focus(); el.setSelectionRange(newCursor, newCursor) })
+  }, [body, bodyCursor])
+
+  const handleReplyMentionSelect = useCallback((handle: string) => {
+    const el = replyRef.current
+    if (!el) return
+    const before = replyBody.slice(0, replyCursor)
+    const after = replyBody.slice(replyCursor)
+    const mentionStart = before.lastIndexOf('@')
+    if (mentionStart === -1) return
+    const newBody = before.slice(0, mentionStart) + '@' + handle + ' ' + after
+    setReplyBody(newBody)
+    const newCursor = mentionStart + handle.length + 2
+    setReplyCursor(newCursor)
+    requestAnimationFrame(() => { el.focus(); el.setSelectionRange(newCursor, newCursor) })
+  }, [replyBody, replyCursor])
 
   const toggle = (key: string) => setCollapsed(prev => ({ ...prev, [key]: !prev[key] }))
 
@@ -1056,13 +1090,26 @@ export function ProfileWall({ profileId, isOwnProfile: isOwnProfileProp, viewerP
               </div>
             )}
 
-            <textarea
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
-              placeholder={`Write on ${profileName || 'their'} wall...`}
-              className="w-full bg-transparent text-white placeholder-gray-500 resize-none outline-none text-sm min-h-[60px] mt-2"
-              maxLength={1000}
-            />
+            <div className="relative mt-2">
+              <MentionAutocomplete
+                text={body}
+                cursorPosition={bodyCursor}
+                onSelect={handleBodyMentionSelect}
+                inputRef={bodyRef}
+              />
+              <textarea
+                ref={bodyRef}
+                value={body}
+                onChange={(e) => {
+                  setBody(e.target.value)
+                  setBodyCursor(e.target.selectionStart || 0)
+                }}
+                onSelect={(e) => setBodyCursor((e.target as HTMLTextAreaElement).selectionStart || 0)}
+                placeholder={`Write on ${profileName || 'their'} wall...`}
+                className="w-full bg-transparent text-white placeholder-gray-500 resize-none outline-none text-sm min-h-[60px]"
+                maxLength={1000}
+              />
+            </div>
             <div className="flex items-center justify-end mt-2">
               <Button
                 size="sm"
@@ -1424,9 +1471,20 @@ export function ProfileWall({ profileId, isOwnProfile: isOwnProfileProp, viewerP
                         <div className="flex items-start gap-2">
                           <div className="flex-1">
                             <div className="relative">
+                              <MentionAutocomplete
+                                text={replyBody}
+                                cursorPosition={replyCursor}
+                                onSelect={handleReplyMentionSelect}
+                                inputRef={replyRef}
+                              />
                               <input
+                                ref={replyRef}
                                 value={replyBody}
-                                onChange={(e) => setReplyBody(e.target.value)}
+                                onChange={(e) => {
+                                  setReplyBody(e.target.value)
+                                  setReplyCursor(e.target.selectionStart || 0)
+                                }}
+                                onSelect={(e) => setReplyCursor((e.target as HTMLInputElement).selectionStart || 0)}
                                 placeholder="Write a reply..."
                                 className="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-3 py-2 pr-10 text-white placeholder-gray-500 text-xs outline-none focus:border-cyan-500 transition-colors"
                                 maxLength={1000}

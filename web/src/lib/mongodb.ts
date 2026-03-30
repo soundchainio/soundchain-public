@@ -12,7 +12,12 @@ if (!process.env.MONGODB_URI) {
 }
 
 const uri = process.env.MONGODB_URI
-const options = {}
+const options = {
+  maxPoolSize: 10,
+  minPoolSize: 1,
+  maxIdleTimeMS: 30000,
+  serverSelectionTimeoutMS: 5000,
+}
 
 let client: MongoClient
 let clientPromise: Promise<MongoClient>

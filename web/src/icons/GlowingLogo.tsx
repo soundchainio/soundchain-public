@@ -75,17 +75,17 @@ export const GlowingLogo = ({
         }}
       />
 
-      {/* The actual logo with helix glow */}
+      {/* The actual spinning sphere logo */}
       <div className="relative z-10 animate-helix-glow">
-        <Logo width={width} height={height} />
+        <Logo width={width} height={height} spinSpeed="normal" />
       </div>
     </div>
   )
 }
 
 /**
- * Simpler version with just glow effect (no spinning)
- * Good for nav/header use where spinning might be distracting
+ * Simpler version with slower sphere spin
+ * Good for nav/header use - still spins but calmer
  */
 export const SubtleGlowLogo = ({
   width = 100,
@@ -106,9 +106,9 @@ export const SubtleGlowLogo = ({
         }}
       />
 
-      {/* The actual logo with helix pulse glow */}
+      {/* Slowly spinning sphere logo */}
       <div className="relative z-10 animate-helix-glow">
-        <Logo width={width} height={height} />
+        <Logo width={width} height={height} spinSpeed="slow" />
       </div>
     </div>
   )

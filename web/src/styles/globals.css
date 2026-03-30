@@ -1577,6 +1577,58 @@ input[type="number"]::-webkit-outer-spin-button {
   animation: helixPulse 3s ease-in-out infinite;
 }
 
+/* Spinning Sphere Logo — planetary rotation inspired by Radio 4D */
+@keyframes sphereSpin {
+  0% {
+    transform: rotateY(0deg);
+  }
+  100% {
+    transform: rotateY(360deg);
+  }
+}
+
+@keyframes sphereGlow {
+  0%, 100% {
+    box-shadow:
+      0 0 15px rgba(162,82,254,0.4),
+      0 0 30px rgba(63,221,138,0.2),
+      inset -8px -4px 12px rgba(0,0,0,0.5),
+      inset 4px 4px 8px rgba(255,255,255,0.1);
+  }
+  50% {
+    box-shadow:
+      0 0 20px rgba(1,192,214,0.5),
+      0 0 40px rgba(254,85,64,0.3),
+      inset -8px -4px 12px rgba(0,0,0,0.5),
+      inset 4px 4px 8px rgba(255,255,255,0.15);
+  }
+}
+
+.logo-sphere {
+  border-radius: 50%;
+  overflow: hidden;
+  animation: sphereSpin 6s linear infinite, sphereGlow 3s ease-in-out infinite;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  will-change: transform;
+}
+
+.logo-sphere-subtle {
+  border-radius: 50%;
+  overflow: hidden;
+  animation: sphereSpin 10s linear infinite, sphereGlow 4s ease-in-out infinite;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  will-change: transform;
+}
+
+.logo-sphere-container {
+  perspective: 400px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* High-res emoji rendering for 4K+ displays */
 .emoji-hd {
   image-rendering: -webkit-optimize-contrast;

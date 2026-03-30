@@ -1,16 +1,65 @@
 import * as React from 'react'
 
-export const Logo = ({ id = 'logo', width, height, ...props }: React.SVGProps<SVGSVGElement>) => {
+interface LogoProps extends React.SVGProps<SVGSVGElement> {
+  spin?: boolean
+  spinSpeed?: 'slow' | 'normal' | 'fast'
+}
+
+export const Logo = ({ id = 'logo', width, height, spin, spinSpeed = 'normal', className, ...props }: LogoProps) => {
+  const w = width || 100
+  const h = height || 100
+  // Auto-disable spin for tiny icons (under 24px) unless explicitly set
+  const numSize = typeof w === 'string' ? parseInt(w, 10) : Number(w)
+  const shouldSpin = spin !== undefined ? spin : numSize >= 24
+
+  const sphereClass = shouldSpin
+    ? spinSpeed === 'slow' ? 'logo-sphere-subtle' : 'logo-sphere'
+    : ''
+
+  // When spinning, className goes on wrapper and SVG fills it
+  // When not spinning, render SVG directly (original behavior)
+  if (!shouldSpin) {
+    return (
+      <svg
+        id={id || 'logo'}
+        width={w}
+        height={h}
+        viewBox="0 0 100 100"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className={className}
+        {...props}
+      >
+        {renderPaths(id)}
+        {renderDefs(id)}
+      </svg>
+    )
+  }
+
+  // Spinning sphere: wrapper gets className for sizing, SVG fills 100%
   return (
-    <svg
-      id={id || 'logo'}
-      width={width || 100}
-      height={height || 100}
-      viewBox="0 0 100 100"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      {...props}
-    >
+    <span className={`logo-sphere-container ${className || ''}`}>
+      <span className={sphereClass} style={{ width: '100%', height: '100%', display: 'inline-flex' }}>
+        <svg
+          id={id || 'logo'}
+          width="100%"
+          height="100%"
+          viewBox="0 0 100 100"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          {...props}
+        >
+          {renderPaths(id)}
+          {renderDefs(id)}
+        </svg>
+      </span>
+    </span>
+  )
+}
+
+function renderPaths(id: string) {
+  return (
+    <>
       <path
         d="M27.879 65.765a15.302 15.302 0 01-6.045-1.114 15.526 15.526 0 01-5.15-3.412 15.856 15.856 0 01-3.45-5.177 16.094 16.094 0 010-12.267 15.857 15.857 0 013.45-5.176 15.526 15.526 0 015.15-3.412 15.302 15.302 0 016.045-1.114h2.285V21.92h-2.285C12.473 21.92 0 34.457 0 49.926s12.485 28.006 27.879 28.006h6.266l-.206-6.21a6.225 6.225 0 00-1.848-4.226 6.003 6.003 0 00-4.212-1.73z"
         fill={`url(#${id}_prefix__paint0_linear)`}
@@ -27,54 +76,59 @@ export const Logo = ({ id = 'logo', width, height, ...props }: React.SVGProps<SV
         d="M49.806 0c-7.263-.002-14.233 2.914-19.399 8.115-5.165 5.2-8.107 12.266-8.189 19.663-.085 15.53 12.479 28.518 28.085 28.518v-12.16c-4.234-.023-8.287-1.75-11.276-4.803-2.99-3.054-4.672-7.187-4.681-11.5a15.979 15.979 0 014.582-11.06 15.404 15.404 0 0110.884-4.606h1.703c2.926-.013 5.78.927 8.146 2.68a13.986 13.986 0 015.006 7.073h7.454c1.693 0 3.382.154 5.049.457-.915-6.25-4.014-11.955-8.726-16.066C63.73 2.201 57.72-.04 51.515.001h-1.709z"
         fill={`url(#${id}_prefix__paint3_linear)`}
       />
-      <defs>
-        <linearGradient
-          id={`${id}_prefix__paint0_linear`}
-          x1={18.745}
-          y1={66.228}
-          x2={13.838}
-          y2={28.165}
-          gradientUnits="userSpaceOnUse"
-        >
-          <stop stopColor="#3FDD8A" />
-          <stop offset={1} stopColor="#A252FE" />
-        </linearGradient>
-        <linearGradient
-          id={`${id}_prefix__paint1_linear`}
-          x1={27.376}
-          y1={57.87}
-          x2={89.571}
-          y2={38.04}
-          gradientUnits="userSpaceOnUse"
-        >
-          <stop offset={0.37} stopColor="#AB4EFF" />
-          <stop offset={1} stopColor="#F1419E" />
-        </linearGradient>
-        <linearGradient
-          id={`${id}_prefix__paint2_linear`}
-          x1={24.776}
-          y1={102.308}
-          x2={62.723}
-          y2={62.126}
-          gradientUnits="userSpaceOnUse"
-        >
-          <stop stopColor="#01C0D6" />
-          <stop offset={0.77} stopColor="#77F744" />
-          <stop offset={0.86} stopColor="#FFD604" />
-        </linearGradient>
-        <linearGradient
-          id={`${id}_prefix__paint3_linear`}
-          x1={61.533}
-          y1={9.13}
-          x2={40.19}
-          y2={31.529}
-          gradientUnits="userSpaceOnUse"
-        >
-          <stop stopColor="#FE5540" />
-          <stop offset={0.69} stopColor="#FCAE1B" />
-          <stop offset={1} stopColor="#FED603" />
-        </linearGradient>
-      </defs>
-    </svg>
+    </>
+  )
+}
+
+function renderDefs(id: string) {
+  return (
+    <defs>
+      <linearGradient
+        id={`${id}_prefix__paint0_linear`}
+        x1={18.745}
+        y1={66.228}
+        x2={13.838}
+        y2={28.165}
+        gradientUnits="userSpaceOnUse"
+      >
+        <stop stopColor="#3FDD8A" />
+        <stop offset={1} stopColor="#A252FE" />
+      </linearGradient>
+      <linearGradient
+        id={`${id}_prefix__paint1_linear`}
+        x1={27.376}
+        y1={57.87}
+        x2={89.571}
+        y2={38.04}
+        gradientUnits="userSpaceOnUse"
+      >
+        <stop offset={0.37} stopColor="#AB4EFF" />
+        <stop offset={1} stopColor="#F1419E" />
+      </linearGradient>
+      <linearGradient
+        id={`${id}_prefix__paint2_linear`}
+        x1={24.776}
+        y1={102.308}
+        x2={62.723}
+        y2={62.126}
+        gradientUnits="userSpaceOnUse"
+      >
+        <stop stopColor="#01C0D6" />
+        <stop offset={0.77} stopColor="#77F744" />
+        <stop offset={0.86} stopColor="#FFD604" />
+      </linearGradient>
+      <linearGradient
+        id={`${id}_prefix__paint3_linear`}
+        x1={61.533}
+        y1={9.13}
+        x2={40.19}
+        y2={31.529}
+        gradientUnits="userSpaceOnUse"
+      >
+        <stop stopColor="#FE5540" />
+        <stop offset={0.69} stopColor="#FCAE1B" />
+        <stop offset={1} stopColor="#FED603" />
+      </linearGradient>
+    </defs>
   )
 }

@@ -2,6 +2,9 @@
  * Merged Users API — all users now live in Atlas (migrated from DocumentDB Mar 19, 2026)
  *
  * GET /api/explore/users-merged?search=&limit=200&skip=0
+ *
+ * Joins profiles + users collections to get handles for human users
+ * (human profiles don't have userHandle — it lives in the users collection as 'handle')
  */
 
 import type { NextApiRequest, NextApiResponse } from 'next'
@@ -20,34 +23,68 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const client = await clientPromise
     const db = client.db('soundchain')
 
-    const filter: any = {}
+    // Build aggregation to join profiles with users to get handles
+    const pipeline: any[] = [
+      // Join with users collection to get handle
+      {
+        $lookup: {
+          from: 'users',
+          localField: '_id',
+          foreignField: 'profileId',
+          as: 'userDoc',
+        },
+      },
+      // Unwind (optional match — some profiles may not have a user doc)
+      { $unwind: { path: '$userDoc', preserveNullAndEmptyArrays: true } },
+      // Add computed handle field
+      {
+        $addFields: {
+          resolvedHandle: {
+            $ifNull: ['$userHandle', { $ifNull: ['$userDoc.handle', ''] }],
+          },
+        },
+      },
+    ]
+
+    // Search filter (after join so we can search by handle too)
     if (search) {
-      filter.$or = [
-        { displayName: { $regex: search, $options: 'i' } },
-        { userHandle: { $regex: search, $options: 'i' } },
-      ]
+      pipeline.push({
+        $match: {
+          $or: [
+            { displayName: { $regex: search, $options: 'i' } },
+            { resolvedHandle: { $regex: search, $options: 'i' } },
+            { userHandle: { $regex: search, $options: 'i' } },
+          ],
+        },
+      })
     }
 
-    const totalCount = await db.collection('profiles').countDocuments(filter)
+    // Get total count
+    const countPipeline = [...pipeline, { $count: 'total' }]
+    const countResult = await db.collection('profiles').aggregate(countPipeline).toArray()
+    const totalCount = countResult[0]?.total || 0
 
-    const profiles = await db
-      .collection('profiles')
-      .find(filter)
-      .project({
-        _id: 1,
-        displayName: 1,
-        userHandle: 1,
-        profilePicture: 1,
-        followerCount: 1,
-        verified: 1,
-        favoriteGenres: 1,
-        createdAt: 1,
-        badges: 1,
-      })
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .toArray()
+    // Get paginated results
+    pipeline.push(
+      { $sort: { createdAt: -1 as const } },
+      { $skip: skip },
+      { $limit: limit },
+      {
+        $project: {
+          _id: 1,
+          displayName: 1,
+          userHandle: { $ifNull: ['$userHandle', '$userDoc.handle'] },
+          profilePicture: 1,
+          followerCount: 1,
+          verified: 1,
+          favoriteGenres: 1,
+          createdAt: 1,
+          badges: 1,
+        },
+      }
+    )
+
+    const profiles = await db.collection('profiles').aggregate(pipeline).toArray()
 
     const nodes = profiles.map((p) => ({
       id: p._id.toString(),

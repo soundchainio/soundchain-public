@@ -29,6 +29,7 @@ self.addEventListener('push', (event) => {
   // URL can be top-level or nested inside data.data (WebPushService format)
   const notificationUrl = url || nestedData?.url || '/dex/notifications';
   const isDM = nestedData?.type === 'dm';
+  const isMention = nestedData?.type === 'mention';
   const isCall = nestedData?.type === 'incoming_call';
 
   // INCOMING CALL — persistent notification with Answer/Decline actions
@@ -83,10 +84,10 @@ self.addEventListener('push', (event) => {
     icon: icon || '/icons/icon-192x192.png',
     badge: badge || '/icons/badge-72x72.png',
     data: { url: notificationUrl, type: nestedData?.type },
-    // DMs get unique tags so EVERY message vibrates independently
-    tag: tag || (isDM ? `dm-${Date.now()}` : 'soundchain-notification'),
-    vibrate: [200, 100, 200],
-    renotify: isDM, // iOS/Android: re-alert even if same tag
+    // DMs and mentions get unique tags so EVERY one vibrates independently
+    tag: tag || (isDM ? `dm-${Date.now()}` : isMention ? `mention-${Date.now()}` : 'soundchain-notification'),
+    vibrate: isMention ? [200, 100, 200, 100, 200] : [200, 100, 200],
+    renotify: isDM || isMention, // re-alert even if same tag
     requireInteraction: false,
     silent: false, // Explicitly NOT silent — we want sound + vibration
     actions: actions || [],

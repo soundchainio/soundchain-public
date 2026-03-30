@@ -15,4 +15,10 @@ export class GenericNotification {
 
   @Field(() => Date)
   createdAt: Date;
+
+  @Field(() => String, { nullable: true })
+  actorName?: string;
+
+  @Field(() => String, { nullable: true })
+  actorPicture?: string;
 }

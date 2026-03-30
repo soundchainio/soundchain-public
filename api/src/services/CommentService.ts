@@ -64,6 +64,36 @@ export class CommentService extends ModelService<typeof Comment> {
       }
     }
 
+    // Notify @mentioned users
+    try {
+      const mentionMatches = params.body.match(/@(\w{2,24})/g);
+      if (mentionMatches) {
+        const handles = [...new Set(mentionMatches.map(m => m.slice(1)))];
+        for (const handle of handles) {
+          try {
+            const mentionedProfile = await this.context.profileService.getProfileByHandle(handle);
+            if (
+              mentionedProfile &&
+              mentionedProfile._id &&
+              mentionedProfile._id.toString() !== params.profileId.toString() &&
+              mentionedProfile._id.toString() !== post.profileId?.toString()
+            ) {
+              await this.context.notificationService.notifyMention({
+                mentionedProfileId: mentionedProfile._id.toString(),
+                mentionerProfileId: params.profileId.toString(),
+                postId: params.postId.toString(),
+                type: 'post',
+              });
+            }
+          } catch (mentionErr) {
+            // Handle not found or other error — skip silently
+          }
+        }
+      }
+    } catch (mentionError) {
+      console.error('[CommentService] Failed to process mentions:', mentionError);
+    }
+
     // Log activity for activity feed
     try {
       await this.context.activityService.logCommented(

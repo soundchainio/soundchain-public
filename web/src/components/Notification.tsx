@@ -8,6 +8,7 @@ import {
   DeletedCommentNotification,
   DeletedPostNotification,
   FollowerNotification,
+  GenericNotification,
   NewBidNotification,
   NewPostNotification,
   NewVerificationRequestNotification,
@@ -35,6 +36,7 @@ import { OutbidNotificationItem } from './OutbidNotificationItem'
 import { ReactionNotificationItem } from './ReactionNotificationItem'
 import { VerificationRequestNotificationItem } from './VerificationRequestNotificationItem'
 import { WonAuctionNotificationItem } from './WonAuctionNotificationItem'
+import { GenericNotificationItem } from './GenericNotificationItem'
 
 interface NotificationProps {
   notificationId: string
@@ -162,6 +164,14 @@ export const Notification = ({ notificationId, index, closePopOver }: Notificati
       )
     }
     default: {
+      const genericNotif = notification as GenericNotification
+      if (genericNotif.body) {
+        return (
+          <span onClick={handleClick}>
+            <GenericNotificationItem notification={genericNotif} index={index} />
+          </span>
+        )
+      }
       return <></>
     }
   }

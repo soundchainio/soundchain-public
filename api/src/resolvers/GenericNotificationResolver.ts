@@ -36,6 +36,18 @@ export class GenericNotificationResolver {
     return actions[type] || 'sent you a notification';
   }
 
+  @FieldResolver(() => String, { nullable: true })
+  actorName(@Root() { metadata }: Notification): string | null {
+    const meta = metadata as unknown as Record<string, unknown> | undefined;
+    return (meta?.mentionerName || meta?.actorName || meta?.followerName || null) as string | null;
+  }
+
+  @FieldResolver(() => String, { nullable: true })
+  actorPicture(@Root() { metadata }: Notification): string | null {
+    const meta = metadata as unknown as Record<string, unknown> | undefined;
+    return (meta?.mentionerPicture || meta?.actorPicture || meta?.followerPicture || null) as string | null;
+  }
+
   @FieldResolver(() => String)
   link(@Root() { type, metadata }: Notification): string {
     // Best-effort link based on metadata
