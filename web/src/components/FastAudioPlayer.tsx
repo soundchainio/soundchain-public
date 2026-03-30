@@ -171,7 +171,9 @@ export const FastAudioPlayer = memo(({
   // Autoplay when ready
   useEffect(() => {
     if (autoplay && state.status === 'ready' && audioRef.current) {
-      audioRef.current.play().catch(console.error)
+      audioRef.current.play().catch((err) => {
+        if (err.name !== 'AbortError') console.error('[FastAudio] Autoplay failed:', err.message)
+      })
     }
   }, [autoplay, state.status])
 
@@ -182,7 +184,10 @@ export const FastAudioPlayer = memo(({
     if (state.status === 'playing') {
       audio.pause()
     } else {
-      audio.play().catch(console.error)
+      const p = audio.play()
+      if (p) p.catch((err) => {
+        if (err.name !== 'AbortError') console.error('[FastAudio] Play failed:', err.message)
+      })
     }
   }
 

@@ -313,13 +313,21 @@ export const AudioEngine = () => {
     if (isPlaying) {
       // Resume AudioContext if suspended (required for Web Audio after user interaction)
       resumeAudioContext()
-      audioRef.current.play().catch((err) => {
-        // Log errors for debugging (CORS, network, autoplay restrictions)
-        console.error('Audio playback failed:', err.message, '- Source:', currentSong.src)
-        setPlayingState(false)
-      })
+      const playPromise = audioRef.current.play()
+      if (playPromise !== undefined) {
+        playPromise.catch((err) => {
+          // Only log if not an abort error (play interrupted by pause is expected during transitions)
+          if (err.name !== 'AbortError') {
+            console.error('Audio playback failed:', err.message, '- Source:', currentSong.src)
+          }
+          setPlayingState(false)
+        })
+      }
     } else {
-      audioRef.current.pause()
+      // Only pause if not currently in a pending play() promise
+      if (audioRef.current.readyState > 0) {
+        audioRef.current.pause()
+      }
     }
   }, [isPlaying, currentSong, setPlayingState, resumeAudioContext])
 

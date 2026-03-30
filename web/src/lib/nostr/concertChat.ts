@@ -19,11 +19,11 @@ const pool = new SimplePool()
 
 // Public Nostr relays for concert chat
 // These are highly available and support ephemeral events
+// NOTE: relay.nostr.band removed — dead since Mar 2026, caused infinite reconnect spam
 export const NOSTR_RELAYS = [
   'wss://relay.damus.io',
   'wss://relay.snort.social',
   'wss://nos.lol',
-  'wss://relay.nostr.band',
   'wss://relay.primal.net',
 ]
 
