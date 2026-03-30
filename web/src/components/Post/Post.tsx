@@ -668,7 +668,6 @@ export const Post = memo(PostComponent, (prev, next) => {
          prev.post?.myReaction === next.post?.myReaction &&
          prev.post?.totalReactions === next.post?.totalReactions &&
          prev.post?.isBookmarked === next.post?.isBookmarked &&
-         prev.post?.commentCount === next.post?.commentCount &&
-         prev.handleOnPlayClicked === next.handleOnPlayClicked
+         prev.post?.commentCount === next.post?.commentCount
 })
 

@@ -130,7 +130,16 @@ export const Posts = ({ profileId, disableVirtualization, viewMode: externalView
     ssr: false,
     errorPolicy: 'all', // Return partial data even if some fields have errors
   })
-  // Debug logging removed — was spamming console on every state change
+  // Debug: Log query state
+  useEffect(() => {
+    console.log('📫 Posts Query State:', {
+      loading,
+      error: error?.message,
+      hasData: !!data,
+      nodeCount: data?.posts?.nodes?.length,
+      nodes: data?.posts?.nodes?.slice(0, 3), // First 3 for debugging
+    })
+  }, [loading, error, data])
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const listRef = useRef<any>(null)
@@ -193,11 +202,6 @@ export const Posts = ({ profileId, disableVirtualization, viewMode: externalView
 
   // Get nodes for hooks that need them (safe even if data not loaded yet)
   const nodes = data?.posts?.nodes
-
-  // Use ref for nodes to avoid useCallback dependency on Apollo's ever-changing array reference
-  // MUST be before any conditional returns (Rules of Hooks)
-  const nodesRef = useRef(nodes)
-  nodesRef.current = nodes
 
   // Find the currently playing post (for jump-to feature) - MUST be before conditional returns
   const playingPostId = useMemo(() => {
@@ -297,16 +301,15 @@ export const Posts = ({ profileId, disableVirtualization, viewMode: externalView
   const isItemLoaded = (index: number) => !pageInfo?.hasNextPage || index < nodes!.length
   const postsCount = pageInfo?.hasNextPage ? nodes!.length + 1 : nodes!.length
 
-  const handleOnPlayClicked = useCallback((trackId: string) => {
-    const currentNodes = nodesRef.current
-    if (currentNodes) {
+  const handleOnPlayClicked = (trackId: string) => {
+    if (nodes) {
       // Find the post that contains this track and set it as active
-      const playingPost = (currentNodes as PostType[]).find(post => post.track?.id === trackId)
+      const playingPost = (nodes as PostType[]).find(post => post.track?.id === trackId)
       if (playingPost) {
         setActivePostId(playingPost.id)
       }
 
-      const listOfTracks = (currentNodes as PostType[])
+      const listOfTracks = (nodes as PostType[])
         .filter(post => post.track && post.track.deleted === false)
         .map(post => {
           if (post.track) {
@@ -323,7 +326,7 @@ export const Posts = ({ profileId, disableVirtualization, viewMode: externalView
       const trackIndex = listOfTracks.findIndex(track => track.trackId === trackId)
       playlistState(listOfTracks, trackIndex)
     }
-  }, [playlistState])
+  }
 
   // Calculate responsive column count based on width
   // iPhone: 2 cols (~187px each), Desktop: 3-4 cols (~150px each) for tight stacking
