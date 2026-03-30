@@ -130,16 +130,7 @@ export const Posts = ({ profileId, disableVirtualization, viewMode: externalView
     ssr: false,
     errorPolicy: 'all', // Return partial data even if some fields have errors
   })
-  // Debug: Log query state
-  useEffect(() => {
-    console.log('📫 Posts Query State:', {
-      loading,
-      error: error?.message,
-      hasData: !!data,
-      nodeCount: data?.posts?.nodes?.length,
-      nodes: data?.posts?.nodes?.slice(0, 3), // First 3 for debugging
-    })
-  }, [loading, error, data])
+  // Debug logging removed — was spamming console on every state change
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const listRef = useRef<any>(null)
@@ -301,7 +292,7 @@ export const Posts = ({ profileId, disableVirtualization, viewMode: externalView
   const isItemLoaded = (index: number) => !pageInfo?.hasNextPage || index < nodes!.length
   const postsCount = pageInfo?.hasNextPage ? nodes!.length + 1 : nodes!.length
 
-  const handleOnPlayClicked = (trackId: string) => {
+  const handleOnPlayClicked = useCallback((trackId: string) => {
     if (nodes) {
       // Find the post that contains this track and set it as active
       const playingPost = (nodes as PostType[]).find(post => post.track?.id === trackId)
@@ -314,7 +305,7 @@ export const Posts = ({ profileId, disableVirtualization, viewMode: externalView
         .map(post => {
           if (post.track) {
             return {
-              src: post.track.playbackUrl,
+              src: post.track.playbackUrl || post.track.assetUrl || '',
               trackId: post.track.id,
               art: post.track.artworkUrl,
               title: post.track.title,
@@ -326,7 +317,7 @@ export const Posts = ({ profileId, disableVirtualization, viewMode: externalView
       const trackIndex = listOfTracks.findIndex(track => track.trackId === trackId)
       playlistState(listOfTracks, trackIndex)
     }
-  }
+  }, [nodes, playlistState])
 
   // Calculate responsive column count based on width
   // iPhone: 2 cols (~187px each), Desktop: 3-4 cols (~150px each) for tight stacking
