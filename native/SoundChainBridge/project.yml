@@ -3,6 +3,7 @@ options:
   bundleIdPrefix: io.soundchain
   deploymentTarget:
     iOS: "15.0"
+    watchOS: "10.0"
   xcodeVersion: "15.0"
 
 settings:
@@ -28,7 +29,27 @@ targets:
       TARGETED_DEVICE_FAMILY: "1,2"
       CODE_SIGN_STYLE: Automatic
       ENABLE_PREVIEWS: YES
+    dependencies:
+      - target: SoundChainWatchApp
     entitlements:
       path: SoundChainBridge/SoundChainBridge.entitlements
       properties:
         com.apple.developer.networking.multicast: true
+
+  SoundChainWatchApp:
+    type: application
+    platform: watchOS
+    sources:
+      - path: WatchExtension/Sources
+      - path: WatchApp
+    settings:
+      INFOPLIST_FILE: WatchApp/Info.plist
+      PRODUCT_BUNDLE_IDENTIFIER: io.soundchain.bridge.watchapp
+      SWIFT_VERSION: "5.0"
+      CODE_SIGN_STYLE: Automatic
+      ENABLE_PREVIEWS: YES
+      WATCHOS_DEPLOYMENT_TARGET: "10.0"
+    dependencies:
+      - sdk: WatchConnectivity.framework
+      - sdk: UserNotifications.framework
+      - sdk: WatchKit.framework
