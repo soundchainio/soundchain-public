@@ -548,6 +548,7 @@ export class UserResolver {
   async loginByEmail(
     @Ctx() { jwtService }: Context,
     @Arg('email') email: string,
+    @Arg('force', () => Boolean, { nullable: true }) force?: boolean,
   ): Promise<AuthPayload> {
     const normalizedEmail = email.toLowerCase().trim();
     if (!normalizedEmail) {
@@ -561,9 +562,12 @@ export class UserResolver {
 
     // Security: Block direct email login if user has EmailKey (Face ID) credentials.
     // They MUST use Face ID — prevents anyone with just your email from accessing your profile.
-    const hasEmailKey = await PasskeyCredentialModel.countDocuments({ userId: user._id });
-    if (hasEmailKey > 0) {
-      throw new AuthenticationError('EMAILKEY_REQUIRED');
+    // Allow bypass with force flag for users on devices without biometric support.
+    if (!force) {
+      const hasEmailKey = await PasskeyCredentialModel.countDocuments({ userId: user._id });
+      if (hasEmailKey > 0) {
+        throw new AuthenticationError('EMAILKEY_REQUIRED');
+      }
     }
 
     // Auto-generate Nostr keypair if missing

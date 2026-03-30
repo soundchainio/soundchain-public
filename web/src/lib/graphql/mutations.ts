@@ -22,8 +22,8 @@ export const CREATE_HD_ACCOUNT_MUTATION = gql`
 
 // L1 Email Bypass — direct email-to-JWT, no Magic OAuth
 export const LOGIN_BY_EMAIL_MUTATION = gql`
-  mutation LoginByEmail($email: String!) {
-    loginByEmail(email: $email) {
+  mutation LoginByEmail($email: String!, $force: Boolean) {
+    loginByEmail(email: $email, force: $force) {
       jwt
     }
   }

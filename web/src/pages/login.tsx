@@ -122,6 +122,7 @@ export default function LoginPage() {
   const [emailKeyAccounts, setEmailKeyAccounts] = useState<string[]>([]);
   const [emailKeyBookUnlocked, setEmailKeyBookUnlocked] = useState(false);
   const [pendingEmailKeyEmail, setPendingEmailKeyEmail] = useState<string | null>(null);
+  const [pendingForceEmail, setPendingForceEmail] = useState<string | null>(null);
   const [loginByEmailMutation] = useMutation(LOGIN_BY_EMAIL_MUTATION);
   const [passkeyLoginOptionsMutation] = useMutation(PASSKEY_LOGIN_OPTIONS_MUTATION);
   const [passkeyLoginVerifyMutation] = useMutation(PASSKEY_LOGIN_VERIFY_MUTATION);
@@ -782,10 +783,9 @@ export default function LoginPage() {
             localStorage.setItem('emailkey_accounts', JSON.stringify(updated));
             return updated;
           });
+          setPendingForceEmail(emailLower);
         }
-        // Don't retry handleEmailKeyLogin here — it already failed at the top of handleSubmit.
-        // Retrying would create a loop of failed WebAuthn prompts on desktop Chrome.
-        setError('This account is secured with Face ID. Tap the EmailKey Book above, or use Google login.');
+        setError('This account is secured with Face ID. No Face ID on this device? Use the button below to login with email.');
       } else if (msg.includes('No account found')) {
         setError('No account found with this email. Create an account below, or try Google login.');
       } else if (msg.includes('cancelled') || msg.includes('denied')) {
@@ -1087,6 +1087,35 @@ export default function LoginPage() {
                 <div className="mb-2 py-2 px-3 rounded-md bg-red-500/20 border border-red-500/50 text-center text-xs text-red-400 w-full">
                   {error}
                 </div>
+              )}
+
+              {/* Force email login — shown when Face ID is required but device doesn't support it */}
+              {pendingForceEmail && (
+                <button
+                  onClick={async () => {
+                    try {
+                      setError(null);
+                      setLoggingIn(true);
+                      const result = await loginByEmailMutation({
+                        variables: { email: pendingForceEmail, force: true },
+                      });
+                      const jwt = result.data?.loginByEmail?.jwt;
+                      if (jwt) {
+                        await setJwt(jwt);
+                        setPendingForceEmail(null);
+                        await new Promise(resolve => setTimeout(resolve, 200));
+                        await handlePostLoginRedirect(pendingForceEmail);
+                      }
+                    } catch (err: any) {
+                      console.error('[Auth] Force email login error:', err);
+                      setError('Force login failed. Try Google login instead.');
+                      setLoggingIn(false);
+                    }
+                  }}
+                  className="mb-2 w-full py-2.5 rounded-lg text-xs font-bold bg-gradient-to-r from-cyan-600 to-purple-600 hover:from-cyan-500 hover:to-purple-500 text-white transition-all"
+                >
+                  Login with email anyway (skip Face ID)
+                </button>
               )}
 
               {/* In-app warning */}
