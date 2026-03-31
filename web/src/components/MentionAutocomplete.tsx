@@ -47,7 +47,7 @@ export function MentionAutocomplete({ text, cursorPosition, onSelect, inputRef }
   return (
     <div
       ref={dropdownRef}
-      className="absolute bottom-full left-0 right-0 mb-1 bg-neutral-900 border border-neutral-700 rounded-lg shadow-xl z-50 max-h-48 overflow-y-auto"
+      className="absolute top-full left-0 mt-1 w-64 bg-neutral-900 border border-neutral-700 rounded-lg shadow-xl z-50 max-h-48 overflow-y-auto"
     >
       {loading && (
         <div className="px-3 py-2 text-xs text-gray-500">Searching...</div>
