@@ -310,6 +310,19 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
         </div>
       )}
 
+      {/* Auto-detect URL in body text and show rich preview card (when no mediaLink) */}
+      {post.body && !post.mediaLink && (() => {
+        const urlMatch = post.body.match(/https?:\/\/[^\s<>"{}|\\^`[\]]+/i)
+        if (urlMatch && !canPlayWithReactPlayer(urlMatch[0])) {
+          return (
+            <div className="mt-2 px-3">
+              <LinkPreviewCard url={urlMatch[0]} />
+            </div>
+          )
+        }
+        return null
+      })()}
+
       {/* Media Section */}
       {hasMedia && (
         <div className="mt-2 rounded-xl overflow-hidden relative">
