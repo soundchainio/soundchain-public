@@ -13,7 +13,7 @@ import { useMagicContext } from 'hooks/useMagicContext'
 import { useMe } from 'hooks/useMe'
 
 // Tunnel CLI bridge whitelist — only these handles can use `jack cli`
-const CLI_BRIDGE_WHITELIST = ['homie_yay_yay', 'furda1', 'furl_bldr', 'furl']
+const CLI_BRIDGE_WHITELIST = ['homie_yay_yay', 'furda1', 'furl_bldr', 'furl', 'jeremy_soundchain']
 
 // ─── Speech APIs ─────────────────────────────────────────────────────
 const SpeechRecognitionAPI = typeof window !== 'undefined'
