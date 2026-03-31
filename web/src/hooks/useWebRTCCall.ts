@@ -467,7 +467,7 @@ export function useWebRTCCall({ myId, myName, myAvatar, gateway, onIncomingCall 
         }
         case 'hangup':
         case 'decline': {
-          endCall()
+          endCallRef.current?.()
           break
         }
       }
@@ -475,7 +475,7 @@ export function useWebRTCCall({ myId, myName, myAvatar, gateway, onIncomingCall 
 
     signalCleanupRef.current = cleanup
     return cleanup
-  }, [gateway, myId, onIncomingCall, endCall])
+  }, [gateway, myId, onIncomingCall])
 
   // Format call duration as mm:ss
   const formatDuration = (seconds: number) => {
