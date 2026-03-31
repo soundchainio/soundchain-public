@@ -142,13 +142,16 @@ export const BottomNavBar = () => {
 
   useEffect(() => {
     if (process.browser) {
-      window.onbeforeunload = e => {
-        if (isMinting) {
+      if (isMinting) {
+        window.onbeforeunload = e => {
+          e.preventDefault()
           return 'You are publishing a track. You should not leave SoundChain!'
         }
-        e.preventDefault()
+      } else {
+        window.onbeforeunload = null
       }
     }
+    return () => { if (process.browser) window.onbeforeunload = null }
   }, [isMinting])
 
   const InboxBadgeWrapper = () => {
