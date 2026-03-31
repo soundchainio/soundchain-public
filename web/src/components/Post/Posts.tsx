@@ -128,7 +128,8 @@ export const Posts = ({ profileId, disableVirtualization, viewMode: externalView
       sort: { field: SortPostField.CreatedAt, order: SortOrder.Desc },
     },
     ssr: false,
-    errorPolicy: 'all', // Return partial data even if some fields have errors
+    errorPolicy: 'all',
+    fetchPolicy: 'cache-and-network', // Show cached feed instantly, update in background (no more skeleton flash)
   })
   // Debug: Log query state
   useEffect(() => {
@@ -253,7 +254,9 @@ export const Posts = ({ profileId, disableVirtualization, viewMode: externalView
     return () => observer.disconnect()
   }, [useSimpleMode, pageInfo?.hasNextPage, loading, loadMore])
 
-  if (loading) {
+  if (loading && !data) {
+    // Only show skeleton on first load (no cached data)
+    // With cache-and-network, subsequent visits show cached feed instantly
     return (
       <div className="space-y-2">
         <PostSkeleton />
