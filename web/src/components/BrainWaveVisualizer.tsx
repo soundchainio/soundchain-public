@@ -36,11 +36,22 @@ export function BrainWaveVisualizer({ audioRef, isPlaying, trackTitle }: BrainWa
     reward: 0,
   })
 
-  // Setup audio analyzer
+  // Setup audio analyzer — reuse existing AudioContext if RadioScene4D already created one
   useEffect(() => {
     if (!isOpen || !audioRef.current) return
 
     try {
+      // Check if there's already an AudioContext on the window (RadioScene4D creates one)
+      const existingCtx = (window as any).__soundchainAudioCtx as AudioContext | undefined
+      const existingAnalyzer = (window as any).__soundchainAnalyzer as AnalyserNode | undefined
+
+      if (existingAnalyzer) {
+        // Reuse the existing analyzer from RadioScene4D
+        analyzerRef.current = existingAnalyzer
+        return
+      }
+
+      // No existing context — create our own (radio scene not loaded yet)
       const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
       const source = audioCtx.createMediaElementSource(audioRef.current)
       const analyzer = audioCtx.createAnalyser()
@@ -49,12 +60,13 @@ export function BrainWaveVisualizer({ audioRef, isPlaying, trackTitle }: BrainWa
       analyzer.connect(audioCtx.destination)
       analyzerRef.current = analyzer
 
-      return () => {
-        source.disconnect()
-        analyzer.disconnect()
-      }
+      // Store globally so RadioScene4D can find it too
+      ;(window as any).__soundchainAudioCtx = audioCtx
+      ;(window as any).__soundchainAnalyzer = analyzer
     } catch {
-      // Audio context already connected — use existing
+      // Already connected — try to grab existing analyzer
+      const existing = (window as any).__soundchainAnalyzer as AnalyserNode | undefined
+      if (existing) analyzerRef.current = existing
     }
   }, [isOpen, audioRef])
 

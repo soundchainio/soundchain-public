@@ -183,6 +183,9 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
         analyser.connect(ctx.destination)
         analyserRef.current = analyser
         dataArrayRef.current = new Uint8Array(analyser.frequencyBinCount)
+        // Share globally so BrainWaveVisualizer can reuse (avoids double MediaElementSource)
+        ;(window as any).__soundchainAudioCtx = ctx
+        ;(window as any).__soundchainAnalyzer = analyser
       } catch (e) {
         console.warn('[4D Radio] Audio analyser setup failed:', e)
       }
