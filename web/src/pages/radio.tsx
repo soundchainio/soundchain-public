@@ -37,7 +37,9 @@ import {
   Share2,
   Link2,
   Check,
-  Twitter
+  Twitter,
+  Maximize,
+  Minimize,
 } from 'lucide-react'
 import { Logo } from 'icons/Logo'
 import { useLogStream } from 'hooks/useLogStream'
@@ -190,6 +192,30 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
   const [totalTracks, setTotalTracks] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [needsInteraction, setNeedsInteraction] = useState(true)
+  const [isFullscreen, setIsFullscreen] = useState(false)
+
+  // Fullscreen toggle — hides ALL browser UI
+  const toggleFullscreen = useCallback(() => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen?.().then(() => setIsFullscreen(true)).catch(() => {})
+      // iOS Safari fallback
+      const doc = document.documentElement as any
+      if (doc.webkitRequestFullscreen) doc.webkitRequestFullscreen()
+    } else {
+      document.exitFullscreen?.().then(() => setIsFullscreen(false)).catch(() => {})
+    }
+  }, [])
+
+  // Listen for fullscreen changes (esc key, etc)
+  useEffect(() => {
+    const handler = () => setIsFullscreen(!!document.fullscreenElement)
+    document.addEventListener('fullscreenchange', handler)
+    document.addEventListener('webkitfullscreenchange', handler)
+    return () => {
+      document.removeEventListener('fullscreenchange', handler)
+      document.removeEventListener('webkitfullscreenchange', handler)
+    }
+  }, [])
 
   // Header dropdown modal states (shown when logged in)
   const [showWinWinStatsModal, setShowWinWinStatsModal] = useState(false)
@@ -1077,11 +1103,24 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
 
             {/* Station Header */}
             <div className="text-center mb-3 md:mb-6">
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-black/40 rounded-full mb-2 border border-white/10">
-                <span className={`w-2 h-2 rounded-full ${isPlaying ? 'bg-green-500 animate-pulse shadow-[0_0_8px_rgba(74,222,128,0.8)]' : 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]'}`} />
-                <span className="text-xs font-mono font-bold tracking-[0.15em] text-gray-300">
-                  {isPlaying ? 'TRANSMITTING' : 'STANDBY'}
-                </span>
+              <div className="inline-flex items-center gap-2 mb-2">
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-black/40 rounded-full border border-white/10">
+                  <span className={`w-2 h-2 rounded-full ${isPlaying ? 'bg-green-500 animate-pulse shadow-[0_0_8px_rgba(74,222,128,0.8)]' : 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]'}`} />
+                  <span className="text-xs font-mono font-bold tracking-[0.15em] text-gray-300">
+                    {isPlaying ? 'TRANSMITTING' : 'STANDBY'}
+                  </span>
+                </div>
+                <button
+                  onClick={toggleFullscreen}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-black/40 rounded-full border border-white/10 hover:border-cyan-500/40 hover:bg-cyan-500/10 transition-all group"
+                  title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
+                >
+                  {isFullscreen ? (
+                    <Minimize className="w-3.5 h-3.5 text-cyan-400 group-hover:text-cyan-300" />
+                  ) : (
+                    <Maximize className="w-3.5 h-3.5 text-gray-400 group-hover:text-cyan-400" />
+                  )}
+                </button>
               </div>
               <h1 className="text-3xl md:text-5xl font-black text-white tracking-tight drop-shadow-[0_0_30px_rgba(255,255,255,0.15)]">
                 OGUN <span className="bg-gradient-to-r from-red-500 via-orange-400 to-yellow-400 bg-clip-text text-transparent">Radio</span>
