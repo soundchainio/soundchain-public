@@ -50,18 +50,18 @@ const DEFAULT_PALETTE = { primary: new THREE.Color(0xff4400), secondary: new THR
 
 // Ecosystem node labels
 const ECOSYSTEM_NODES = [
-  { label: 'NVIDIA', color: 0x76b900 },
-  { label: 'META', color: 0x0668e1 },
-  { label: 'POLYGON', color: 0x8247e5 },
-  { label: 'IPFS', color: 0x65c2cb },
-  { label: 'SCID', color: 0x00e5ff },
-  { label: 'FURL', color: 0xff4488 },
-  { label: 'SMITH', color: 0x44ff88 },
-  { label: 'AGENTS', color: 0x00ff88 },
-  { label: 'CLAWHUB', color: 0xff6600 },
-  { label: 'NPM', color: 0xcb3837 },
-  { label: 'OGUN', color: 0xffd700 },
-  { label: 'P2P', color: 0x22d3ee },
+  { label: 'NVIDIA', color: 0x76b900 },   // NVIDIA green
+  { label: 'META', color: 0x0668e1 },     // Meta blue
+  { label: 'POLYGON', color: 0x8247e5 },  // Polygon purple
+  { label: 'IPFS', color: 0x469ea2 },     // IPFS teal (darker, distinct from SCID)
+  { label: 'SCID', color: 0x00e5ff },     // SCID cyan
+  { label: 'FURL', color: 0xff2266 },     // FURL hot pink
+  { label: 'SMITH', color: 0xb8ff44 },    // SMITH lime yellow (distinct from AGENTS)
+  { label: 'AGENTS', color: 0xff8800 },   // AGENTS orange (was green, clashed with SMITH)
+  { label: 'CLAWHUB', color: 0xe64400 },  // CLAWHUB red-orange (distinct from AGENTS orange)
+  { label: 'NPM', color: 0xcb3837 },      // NPM red
+  { label: 'OGUN', color: 0xffd700 },     // OGUN gold
+  { label: 'P2P', color: 0x44ddff },      // P2P light blue (distinct from SCID cyan)
 ]
 
 // Create a text sprite for 3D labels
