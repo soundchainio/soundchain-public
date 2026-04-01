@@ -1110,7 +1110,7 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
             ) : currentTrack ? (
               <>
                 {/* Now Playing + NFT Card Layout */}
-                <div className="flex flex-col md:flex-row items-center md:items-start gap-4 md:gap-6 mb-4 md:mb-6">
+                <div className="flex flex-col md:flex-row items-center md:items-start gap-2 md:gap-6 mb-2 md:mb-6">
 
                   {/* NFT/SCID Card — desktop only, floats to the left */}
                   <div className="flex-shrink-0 order-first hidden md:block">
@@ -1145,21 +1145,21 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
                     )}
                   </div>
 
-                  {/* Track Info */}
+                  {/* Track Info — compact on mobile */}
                   <div className="flex-1 text-center md:text-left">
-                    <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-white mb-1 line-clamp-2 drop-shadow-[0_0_20px_rgba(255,255,255,0.1)]">
+                    <h2 className="text-base sm:text-2xl md:text-3xl font-black text-white mb-0.5 md:mb-1 line-clamp-1 md:line-clamp-2 drop-shadow-[0_0_20px_rgba(255,255,255,0.1)]">
                       {currentTrack.title}
                     </h2>
-                    <p className="text-base md:text-lg text-gray-300/80 mb-1">{currentTrack.artist}</p>
+                    <p className="text-sm md:text-lg text-gray-300/80 mb-0.5 md:mb-1">{currentTrack.artist}</p>
                     {currentTrack.genres && currentTrack.genres.length > 0 && (
-                      <div className="flex flex-wrap items-center justify-center md:justify-start gap-1.5 mb-3">
+                      <div className="flex flex-wrap items-center justify-center md:justify-start gap-1 mb-1 md:mb-3">
                         {currentTrack.genres.slice(0, 3).map((g) => {
                           const genreInfo = availableGenres.find(ag => ag.key === g)
                           return (
                             <button
                               key={g}
                               onClick={() => handleGenreChange(g)}
-                              className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-cyan-900/40 text-cyan-400 border border-cyan-800/30 hover:bg-cyan-800/50 transition-colors"
+                              className="px-1.5 py-0.5 rounded-full text-[9px] md:text-[10px] font-medium bg-cyan-900/40 text-cyan-400 border border-cyan-800/30 hover:bg-cyan-800/50 transition-colors"
                             >
                               {genreInfo?.label || g}
                             </button>
@@ -1167,12 +1167,10 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
                         })}
                       </div>
                     )}
-                    {currentTrack.album && (
-                      <p className="text-sm text-gray-500 mb-2">Album: {currentTrack.album}</p>
-                    )}
-                    <div className="flex items-center justify-center md:justify-start gap-4 text-sm text-gray-500">
+                    <p className="text-xs text-gray-500 mb-1 hidden md:block">{currentTrack.album ? `Album: ${currentTrack.album}` : ''}</p>
+                    <div className="flex items-center justify-center md:justify-start gap-3 text-xs md:text-sm text-gray-500">
                       <span className="flex items-center gap-1">
-                        <Play className="w-4 h-4" />
+                        <Play className="w-3 h-3 md:w-4 md:h-4" />
                         {currentTrack.play_count} plays
                       </span>
                       <span>{totalTracks || queueLength} Tracks</span>
