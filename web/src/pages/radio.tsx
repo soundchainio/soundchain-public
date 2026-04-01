@@ -597,10 +597,10 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
           onError={() => skipToNext()} // Auto-skip on error
         />
 
-        {/* Tap Anywhere Prompt - minimal, disappears on interaction */}
+        {/* Auto-play on first interaction — no overlay, just a subtle pulse on the play button */}
         {needsInteraction && !isLoading && currentTrack && (
           <div
-            className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 cursor-pointer"
+            className="fixed inset-0 z-[200] cursor-pointer"
             onClick={() => {
               if (audioRef.current && currentTrack?.stream_url) {
                 audioRef.current.play()
@@ -608,16 +608,7 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
                   .catch(() => {})
               }
             }}
-          >
-            <div className="text-center">
-              <div className="relative inline-block">
-                <div className="absolute -inset-8 rounded-full bg-gradient-to-r from-cyan-500/20 via-purple-500/20 to-orange-500/20 blur-2xl animate-pulse" />
-                <Radio className="relative w-20 h-20 text-red-500 mx-auto drop-shadow-[0_0_30px_rgba(239,68,68,0.6)]" />
-              </div>
-              <p className="text-3xl font-black text-white mt-6 tracking-tight drop-shadow-[0_0_20px_rgba(255,255,255,0.2)]">ENTER THE FREQUENCY</p>
-              <p className="text-sm font-mono text-gray-400 mt-2 tracking-widest">TAP ANYWHERE TO TRANSMIT</p>
-            </div>
-          </div>
+          />
         )}
 
         {/* Modern DEX-style Header */}
