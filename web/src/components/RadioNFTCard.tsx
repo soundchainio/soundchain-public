@@ -86,7 +86,7 @@ export function RadioNFTCard({ track, isPlaying }: RadioNFTCardProps) {
         onClick={() => setExpanded(!expanded)}
         className={`
           relative cursor-pointer select-none
-          w-[140px] md:w-[160px]
+          w-[100px] sm:w-[120px] md:w-[160px]
           rounded-xl overflow-hidden
           border border-white/20
           backdrop-blur-xl
@@ -208,7 +208,7 @@ export function RadioNFTCard({ track, isPlaying }: RadioNFTCardProps) {
       {expanded && (
         <div
           className={`
-            mt-2 w-[140px] md:w-[160px]
+            mt-2 w-[100px] sm:w-[120px] md:w-[160px]
             rounded-xl overflow-hidden
             border border-white/10
             backdrop-blur-xl
