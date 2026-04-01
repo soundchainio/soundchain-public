@@ -12,6 +12,7 @@ import { useRouter } from 'next/router'
 
 const RadioScene4D = dynamic(() => import('components/RadioScene4D'), { ssr: false })
 import { RadioNFTCard } from 'components/RadioNFTCard'
+import { BrainWaveVisualizer } from 'components/BrainWaveVisualizer'
 // CreateModal requires MagicContext + UnifiedWallet providers (not on radio page)
 // Upload button navigates to /dex/feed with create modal trigger instead
 import { GetServerSideProps } from 'next'
@@ -1121,6 +1122,7 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
                     <Maximize className="w-3.5 h-3.5 text-gray-400 group-hover:text-cyan-400" />
                   )}
                 </button>
+                <BrainWaveVisualizer audioRef={audioRef} isPlaying={isPlaying} trackTitle={currentTrack?.title} />
               </div>
               <h1 className="text-3xl md:text-5xl font-black text-white tracking-tight drop-shadow-[0_0_30px_rgba(255,255,255,0.15)]">
                 OGUN <span className="bg-gradient-to-r from-red-500 via-orange-400 to-yellow-400 bg-clip-text text-transparent">Radio</span>
