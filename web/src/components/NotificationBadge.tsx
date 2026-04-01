@@ -14,8 +14,8 @@ export const NotificationBadge = () => {
   useEffect(() => {
     fetchNotificationCount()
 
-    // Poll every 30 seconds instead of 5 to save battery on mobile
-    let intervalId = setInterval(refetchNotificationCount, 30000)
+    // Poll every 60 seconds to save battery
+    let intervalId = setInterval(refetchNotificationCount, 60000)
 
     // Pause polling when tab is hidden to save battery
     const handleVisibility = () => {
@@ -23,7 +23,7 @@ export const NotificationBadge = () => {
         clearInterval(intervalId)
       } else {
         refetchNotificationCount()
-        intervalId = setInterval(refetchNotificationCount, 30000)
+        intervalId = setInterval(refetchNotificationCount, 60000)
       }
     }
     document.addEventListener('visibilitychange', handleVisibility)

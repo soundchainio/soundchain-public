@@ -1925,7 +1925,7 @@ export function AgentStatusTicker() {
     const start = Date.now()
     let interval: NodeJS.Timeout | undefined
     const startTimer = () => {
-      interval = setInterval(() => setUptime(Math.floor((Date.now() - start) / 1000)), 1000)
+      interval = setInterval(() => setUptime(Math.floor((Date.now() - start) / 1000)), 5000)
     }
     const handleVisibility = () => {
       if (document.hidden) {

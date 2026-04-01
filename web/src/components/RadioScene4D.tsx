@@ -96,6 +96,9 @@ function createTextSprite(text: string, color: number): THREE.Sprite {
   return sprite
 }
 
+// Mobile detection — throttle GPU-intensive work on phones/tablets
+const isMobile = typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)
+
 export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }: RadioScene4DProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null)
@@ -231,9 +234,9 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
     const height = container.clientHeight
 
     // --- Renderer ---
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: 'high-performance' })
+    const renderer = new THREE.WebGLRenderer({ antialias: !isMobile, alpha: false, powerPreference: isMobile ? 'low-power' : 'high-performance' })
     renderer.setSize(width, height)
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 3)) // Higher DPI for crisp 4D rendering
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 3)) // Cap DPR on mobile to reduce GPU load
     renderer.setClearColor(0x020810, 1)
     renderer.toneMapping = THREE.ACESFilmicToneMapping
     renderer.toneMappingExposure = 1.2
@@ -256,10 +259,10 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
     composer.addPass(renderPass)
 
     const bloomPass = new UnrealBloomPass(
-      new THREE.Vector2(width, height),
-      0.8,   // strength — subtle glow (was 1.8)
-      0.4,   // radius — tighter bloom (was 0.6)
-      0.4    // threshold — only bright objects bloom (was 0.15)
+      new THREE.Vector2(isMobile ? width / 2 : width, isMobile ? height / 2 : height),
+      isMobile ? 0.4 : 0.8,   // strength — halved on mobile
+      isMobile ? 0.2 : 0.4,   // radius — tighter on mobile
+      isMobile ? 0.6 : 0.4    // threshold — only brightest objects bloom on mobile
     )
     composer.addPass(bloomPass)
     bloomPassRef.current = bloomPass
@@ -562,14 +565,26 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
     scene.add(new THREE.AmbientLight(0x080818, 0.3))
 
     // ==================== ANIMATION LOOP ====================
-    const animate = () => {
+    let frameCount = 0
+    let lastRenderTime = 0
+    const targetInterval = isMobile ? 33.33 : 0 // ~30fps on mobile, uncapped on desktop
+
+    const animate = (timestamp?: number) => {
       animFrameRef.current = requestAnimationFrame(animate)
+
+      // Throttle to ~30fps on mobile
+      if (isMobile && timestamp) {
+        if (timestamp - lastRenderTime < targetInterval) return
+        lastRenderTime = timestamp
+      }
+      frameCount++
+
       const elapsed = clockRef.current.getElapsedTime()
       const delta = clockRef.current.getDelta()
 
-      // Read FFT
+      // Read FFT — skip every other frame on mobile
       let bass = 0, mids = 0, highs = 0
-      if (analyserRef.current && dataArrayRef.current) {
+      if (analyserRef.current && dataArrayRef.current && (!isMobile || frameCount % 2 === 0)) {
         analyserRef.current.getByteFrequencyData(dataArrayRef.current)
         const data = dataArrayRef.current
         const len = data.length
@@ -623,11 +638,11 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
         starfieldRef.current.rotation.x = elapsed * 0.008
       }
 
-      // --- 3 Frequency rings ---
+      // --- 3 Frequency rings (skip geometry updates every other frame on mobile) ---
       freqRingsRef.current.forEach((ring, ringIdx) => {
         const { baseRadius, segments } = ring.userData as { baseRadius: number; segments: number }
         const positions = ring.geometry.attributes.position as THREE.BufferAttribute
-        if (dataArrayRef.current) {
+        if (dataArrayRef.current && (!isMobile || frameCount % 3 === 0)) {
           const data = dataArrayRef.current
           for (let i = 0; i < segments; i++) {
             const angle = (i / segments) * Math.PI * 2
@@ -644,8 +659,8 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
         rMat.opacity = [0.6, 0.35, 0.2][ringIdx] + sBass * 0.4
       })
 
-      // --- Grid pulse ---
-      if (gridRef.current) {
+      // --- Grid pulse (throttle material updates on mobile) ---
+      if (gridRef.current && (!isMobile || frameCount % 4 === 0)) {
         gridRef.current.children.forEach((line) => {
           const mat = line instanceof THREE.Line ? (line.material as THREE.LineBasicMaterial) : null
           if (mat) mat.opacity = 0.15 + sBass * 0.25
