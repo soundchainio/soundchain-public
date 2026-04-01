@@ -237,7 +237,7 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
     const renderer = new THREE.WebGLRenderer({ antialias: !isMobile, alpha: false, powerPreference: isMobile ? 'low-power' : 'high-performance' })
     renderer.setSize(width, height)
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 3)) // Cap DPR on mobile to reduce GPU load
-    renderer.setClearColor(0x020810, 1)
+    renderer.setClearColor(0x010408, 1)  // Deeper space black
     renderer.toneMapping = THREE.ACESFilmicToneMapping
     renderer.toneMappingExposure = 1.2
     container.appendChild(renderer.domElement)
@@ -245,7 +245,7 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
 
     // --- Scene ---
     const scene = new THREE.Scene()
-    scene.fog = new THREE.FogExp2(0x020810, 0.018)
+    scene.fog = new THREE.FogExp2(0x010408, 0.012)  // Deeper fog, farther visibility for planets
     sceneRef.current = scene
 
     // --- Camera (cinematic orbit) ---
@@ -471,6 +471,243 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
     // FREQUENCY RINGS removed — were too bright/white, blocking content
     freqRingsRef.current = []
 
+    // ============ DEEP SPACE OBJECTS ============
+    const cosmicGroup = new THREE.Group()
+
+    // --- PLANETS (orbiting at various distances) ---
+    const planetData = [
+      { radius: 0.8, color: 0xff6b35, emissive: 0x331100, distance: 18, speed: 0.12, y: 2, name: 'Mars' },
+      { radius: 1.4, color: 0xc9a85c, emissive: 0x2a2200, distance: 25, speed: 0.07, y: -1, name: 'Saturn', ring: true },
+      { radius: 0.5, color: 0x4488ff, emissive: 0x001133, distance: 14, speed: 0.18, y: 3.5, name: 'Neptune' },
+      { radius: 0.35, color: 0x88ffcc, emissive: 0x002211, distance: 32, speed: 0.05, y: -3, name: 'Titan' },
+      { radius: 1.1, color: 0xff4466, emissive: 0x220011, distance: 22, speed: 0.09, y: 1.5, name: 'Kepler' },
+    ]
+
+    const planets: { mesh: THREE.Mesh; distance: number; speed: number; y: number; ring?: THREE.Mesh }[] = []
+    for (const p of planetData) {
+      const geo = new THREE.SphereGeometry(p.radius, 32, 32)
+      const mat = new THREE.MeshStandardMaterial({
+        color: p.color,
+        emissive: p.emissive,
+        emissiveIntensity: 0.5,
+        roughness: 0.7,
+        metalness: 0.3,
+      })
+      const mesh = new THREE.Mesh(geo, mat)
+      mesh.position.set(p.distance, p.y, 0)
+      cosmicGroup.add(mesh)
+
+      let ringMesh: THREE.Mesh | undefined
+      if (p.ring) {
+        const ringGeo = new THREE.RingGeometry(p.radius * 1.4, p.radius * 2.2, 64)
+        const ringMat = new THREE.MeshBasicMaterial({
+          color: 0xc9a85c,
+          transparent: true,
+          opacity: 0.35,
+          side: THREE.DoubleSide,
+          blending: THREE.AdditiveBlending,
+        })
+        ringMesh = new THREE.Mesh(ringGeo, ringMat)
+        ringMesh.rotation.x = Math.PI / 2.5
+        mesh.add(ringMesh)
+      }
+      planets.push({ mesh, distance: p.distance, speed: p.speed, y: p.y, ring: ringMesh })
+    }
+
+    // --- NEBULA CLOUDS (colorful gas clusters) ---
+    const nebulaCount = 3
+    const nebulae: THREE.Points[] = []
+    const nebulaColors = [
+      { h: 0.8, s: 0.7, l: 0.4 },  // Purple nebula
+      { h: 0.55, s: 0.6, l: 0.3 },  // Teal nebula
+      { h: 0.05, s: 0.8, l: 0.4 },  // Orange/red nebula
+    ]
+    for (let n = 0; n < nebulaCount; n++) {
+      const count = 800
+      const positions = new Float32Array(count * 3)
+      const colors = new Float32Array(count * 3)
+      const sizes = new Float32Array(count)
+      const cx = (Math.random() - 0.5) * 60
+      const cy = (Math.random() - 0.5) * 20
+      const cz = -20 - Math.random() * 30
+      const spread = 6 + Math.random() * 8
+      const col = nebulaColors[n]
+
+      for (let i = 0; i < count; i++) {
+        // Gaussian-ish distribution for cloud shape
+        const r = spread * Math.pow(Math.random(), 0.5)
+        const theta = Math.random() * Math.PI * 2
+        const phi = Math.random() * Math.PI
+        positions[i * 3] = cx + r * Math.sin(phi) * Math.cos(theta)
+        positions[i * 3 + 1] = cy + r * Math.sin(phi) * Math.sin(theta) * 0.5
+        positions[i * 3 + 2] = cz + r * Math.cos(phi)
+
+        const c = new THREE.Color()
+        c.setHSL(col.h + (Math.random() - 0.5) * 0.1, col.s, col.l + Math.random() * 0.2)
+        colors[i * 3] = c.r
+        colors[i * 3 + 1] = c.g
+        colors[i * 3 + 2] = c.b
+        sizes[i] = 0.3 + Math.random() * 0.8
+      }
+
+      const nebGeo = new THREE.BufferGeometry()
+      nebGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+      nebGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3))
+      nebGeo.setAttribute('size', new THREE.BufferAttribute(sizes, 1))
+      const nebMat = new THREE.PointsMaterial({
+        size: 0.6,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.25,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      })
+      const nebula = new THREE.Points(nebGeo, nebMat)
+      cosmicGroup.add(nebula)
+      nebulae.push(nebula)
+    }
+
+    // --- HALLEY'S COMET (glowing head + particle tail) ---
+    const cometGroup = new THREE.Group()
+    const cometHead = new THREE.Mesh(
+      new THREE.SphereGeometry(0.3, 16, 16),
+      new THREE.MeshBasicMaterial({ color: 0xccffff })
+    )
+    // Comet glow
+    const cometGlow = new THREE.Mesh(
+      new THREE.SphereGeometry(0.6, 16, 16),
+      new THREE.MeshBasicMaterial({ color: 0x44aaff, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending })
+    )
+    cometGroup.add(cometHead)
+    cometGroup.add(cometGlow)
+
+    // Comet tail (stretched particles)
+    const tailCount = 200
+    const tailPositions = new Float32Array(tailCount * 3)
+    const tailColors = new Float32Array(tailCount * 3)
+    for (let i = 0; i < tailCount; i++) {
+      const t = i / tailCount
+      tailPositions[i * 3] = t * 8 + Math.random() * 0.3
+      tailPositions[i * 3 + 1] = (Math.random() - 0.5) * 0.4 * (1 - t)
+      tailPositions[i * 3 + 2] = (Math.random() - 0.5) * 0.4 * (1 - t)
+      const c = new THREE.Color().setHSL(0.55, 0.8, 0.7 - t * 0.5)
+      tailColors[i * 3] = c.r
+      tailColors[i * 3 + 1] = c.g
+      tailColors[i * 3 + 2] = c.b
+    }
+    const tailGeo = new THREE.BufferGeometry()
+    tailGeo.setAttribute('position', new THREE.BufferAttribute(tailPositions, 3))
+    tailGeo.setAttribute('color', new THREE.BufferAttribute(tailColors, 3))
+    const tailMat = new THREE.PointsMaterial({
+      size: 0.15,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.6,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    })
+    cometGroup.add(new THREE.Points(tailGeo, tailMat))
+    cometGroup.position.set(-40, 8, -15)
+    cosmicGroup.add(cometGroup)
+
+    // --- UAPs (glowing disc-shaped craft) ---
+    const uapCount = 3
+    const uaps: THREE.Group[] = []
+    for (let u = 0; u < uapCount; u++) {
+      const uapGroup = new THREE.Group()
+      // Disc body
+      const discGeo = new THREE.CylinderGeometry(0.5, 0.5, 0.08, 32)
+      const discMat = new THREE.MeshStandardMaterial({
+        color: 0x888899,
+        emissive: 0x222233,
+        emissiveIntensity: 0.8,
+        metalness: 0.9,
+        roughness: 0.1,
+      })
+      const disc = new THREE.Mesh(discGeo, discMat)
+      uapGroup.add(disc)
+
+      // Dome on top
+      const domeGeo = new THREE.SphereGeometry(0.3, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2)
+      const domeMat = new THREE.MeshBasicMaterial({
+        color: 0x44ffaa,
+        transparent: true,
+        opacity: 0.6,
+        blending: THREE.AdditiveBlending,
+      })
+      const dome = new THREE.Mesh(domeGeo, domeMat)
+      dome.position.y = 0.04
+      uapGroup.add(dome)
+
+      // Ring light around disc
+      const ringGeo = new THREE.TorusGeometry(0.55, 0.03, 8, 32)
+      const ringMat = new THREE.MeshBasicMaterial({
+        color: 0x00ffcc,
+        transparent: true,
+        opacity: 0.7,
+        blending: THREE.AdditiveBlending,
+      })
+      uapGroup.add(new THREE.Mesh(ringGeo, ringMat))
+
+      uapGroup.position.set(
+        (Math.random() - 0.5) * 50,
+        5 + Math.random() * 10,
+        -10 - Math.random() * 20
+      )
+      uapGroup.scale.setScalar(0.6 + Math.random() * 0.4)
+      cosmicGroup.add(uapGroup)
+      uaps.push(uapGroup)
+    }
+
+    // --- INTERSTELLAR SHUTTLE (geometric wedge shape) ---
+    const shuttleGroup = new THREE.Group()
+    // Fuselage
+    const fuselageGeo = new THREE.ConeGeometry(0.3, 2.5, 4)
+    const fuselageMat = new THREE.MeshStandardMaterial({
+      color: 0xaabbcc,
+      emissive: 0x111122,
+      emissiveIntensity: 0.5,
+      metalness: 0.8,
+      roughness: 0.2,
+    })
+    const fuselage = new THREE.Mesh(fuselageGeo, fuselageMat)
+    fuselage.rotation.z = Math.PI / 2
+    shuttleGroup.add(fuselage)
+
+    // Engine glow
+    const engineGeo = new THREE.SphereGeometry(0.2, 8, 8)
+    const engineMat = new THREE.MeshBasicMaterial({
+      color: 0x4488ff,
+      transparent: true,
+      opacity: 0.8,
+      blending: THREE.AdditiveBlending,
+    })
+    const engine = new THREE.Mesh(engineGeo, engineMat)
+    engine.position.x = -1.3
+    shuttleGroup.add(engine)
+
+    // Engine trail
+    const trailGeo = new THREE.ConeGeometry(0.15, 1.5, 8)
+    const trailMat = new THREE.MeshBasicMaterial({
+      color: 0x2266ff,
+      transparent: true,
+      opacity: 0.4,
+      blending: THREE.AdditiveBlending,
+    })
+    const trail = new THREE.Mesh(trailGeo, trailMat)
+    trail.rotation.z = -Math.PI / 2
+    trail.position.x = -2.2
+    shuttleGroup.add(trail)
+
+    shuttleGroup.position.set(35, 6, -12)
+    shuttleGroup.scale.setScalar(0.8)
+    cosmicGroup.add(shuttleGroup)
+
+    scene.add(cosmicGroup)
+
+    // Store refs for animation
+    const cosmicRefs = { planets, nebulae, cometGroup, uaps, shuttleGroup, cosmicGroup }
+
     // ============ TRON GRID FLOOR ============
     const gridGroup = new THREE.Group()
     const gridSize = 80
@@ -636,6 +873,57 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
         sm.uniforms.uTime.value = elapsed
         starfieldRef.current.rotation.y = elapsed * 0.015
         starfieldRef.current.rotation.x = elapsed * 0.008
+      }
+
+      // --- DEEP SPACE ANIMATION ---
+      if (cosmicRefs) {
+        // Planets orbit
+        for (const p of cosmicRefs.planets) {
+          const angle = elapsed * p.speed
+          p.mesh.position.x = Math.cos(angle) * p.distance
+          p.mesh.position.z = Math.sin(angle) * p.distance
+          p.mesh.position.y = p.y + Math.sin(elapsed * 0.3 + p.distance) * 0.5
+          p.mesh.rotation.y = elapsed * 0.5
+        }
+
+        // Nebulae gentle drift + pulse with bass
+        for (let i = 0; i < cosmicRefs.nebulae.length; i++) {
+          const neb = cosmicRefs.nebulae[i]
+          neb.rotation.y = elapsed * 0.02 * (i + 1)
+          neb.rotation.z = elapsed * 0.01
+          const nebMat = neb.material as THREE.PointsMaterial
+          nebMat.opacity = 0.2 + sBass * 0.15
+        }
+
+        // Halley's comet — sweeps across the scene
+        const cometT = (elapsed * 0.15) % 1
+        cosmicRefs.cometGroup.position.x = -40 + cometT * 80
+        cosmicRefs.cometGroup.position.y = 8 + Math.sin(cometT * Math.PI) * 5
+        cosmicRefs.cometGroup.position.z = -15 + Math.sin(cometT * Math.PI * 2) * 8
+        cosmicRefs.cometGroup.rotation.y = -Math.atan2(80 * 0.15, Math.cos(cometT * Math.PI) * 5 * Math.PI) + Math.PI
+
+        // UAPs — erratic movement patterns
+        for (let u = 0; u < cosmicRefs.uaps.length; u++) {
+          const uap = cosmicRefs.uaps[u]
+          const uSpeed = 0.3 + u * 0.2
+          uap.position.x += Math.sin(elapsed * uSpeed + u * 2) * 0.03
+          uap.position.y += Math.cos(elapsed * uSpeed * 0.7 + u) * 0.02
+          uap.position.z += Math.sin(elapsed * uSpeed * 0.5 + u * 3) * 0.02
+          uap.rotation.y = elapsed * 2  // Fast spin
+          // Occasional "dart" movement (UAP signature)
+          if (Math.sin(elapsed * 0.5 + u * 1.5) > 0.98) {
+            uap.position.x += (Math.random() - 0.5) * 2
+            uap.position.y += (Math.random() - 0.5) * 1
+          }
+          // Keep in bounds
+          if (Math.abs(uap.position.x) > 35) uap.position.x *= 0.95
+          if (uap.position.y > 18 || uap.position.y < 2) uap.position.y = 8
+        }
+
+        // Interstellar shuttle — slow cruise
+        cosmicRefs.shuttleGroup.position.x = 35 - (elapsed * 0.3) % 70
+        cosmicRefs.shuttleGroup.position.y = 6 + Math.sin(elapsed * 0.2) * 1.5
+        cosmicRefs.shuttleGroup.rotation.y = Math.sin(elapsed * 0.1) * 0.2
       }
 
       // --- 3 Frequency rings (skip geometry updates every other frame on mobile) ---
