@@ -11,6 +11,7 @@ import dynamic from 'next/dynamic'
 import { useRouter } from 'next/router'
 
 const RadioScene4D = dynamic(() => import('components/RadioScene4D'), { ssr: false })
+import { RadioNFTCard } from 'components/RadioNFTCard'
 // CreateModal requires MagicContext + UnifiedWallet providers (not on radio page)
 // Upload button navigates to /dex/feed with create modal trigger instead
 import { GetServerSideProps } from 'next'
@@ -1108,10 +1109,18 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
               </div>
             ) : currentTrack ? (
               <>
-                {/* Now Playing */}
-                <div className="flex flex-col md:flex-row items-start gap-4 md:gap-6 mb-4 md:mb-6">
+                {/* Now Playing + NFT Card Layout */}
+                <div className="flex flex-col md:flex-row items-center md:items-start gap-4 md:gap-6 mb-4 md:mb-6">
+
+                  {/* NFT/SCID Card — left on desktop, top on mobile */}
+                  <div className="flex-shrink-0 order-first">
+                    <RadioNFTCard track={currentTrack} isPlaying={isPlaying} />
+                  </div>
+
+                  {/* Track Info + Vinyl */}
+                  <div className="flex flex-col md:flex-row items-start gap-4 md:gap-6 flex-1">
                   {/* Mini vinyl — top left corner thumbnail */}
-                  <div className="relative w-16 h-16 flex-shrink-0">
+                  <div className="relative w-16 h-16 flex-shrink-0 hidden md:block">
                     <div className={`relative w-full h-full ${isPlaying ? 'animate-spin' : ''}`} style={{ animationDuration: '4s' }}>
                       {currentTrack.artwork_url ? (
                         <img
@@ -1169,6 +1178,7 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
                       <span>{totalTracks || queueLength} Tracks</span>
                     </div>
                   </div>
+                  </div>{/* Close Track Info + Vinyl wrapper */}
                 </div>
 
                 {/* Progress Bar — neon EQ style */}
