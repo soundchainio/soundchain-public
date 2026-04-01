@@ -36,39 +36,22 @@ export function BrainWaveVisualizer({ audioRef, isPlaying, trackTitle }: BrainWa
     reward: 0,
   })
 
-  // Setup audio analyzer — reuse existing AudioContext if RadioScene4D already created one
+  // Read-only — grab the shared analyzer from RadioScene4D (never create our own source)
   useEffect(() => {
-    if (!isOpen || !audioRef.current) return
+    if (!isOpen) return
 
-    try {
-      // Check if there's already an AudioContext on the window (RadioScene4D creates one)
-      const existingCtx = (window as any).__soundchainAudioCtx as AudioContext | undefined
-      const existingAnalyzer = (window as any).__soundchainAnalyzer as AnalyserNode | undefined
-
-      if (existingAnalyzer) {
-        // Reuse the existing analyzer from RadioScene4D
-        analyzerRef.current = existingAnalyzer
-        return
-      }
-
-      // No existing context — create our own (radio scene not loaded yet)
-      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
-      const source = audioCtx.createMediaElementSource(audioRef.current)
-      const analyzer = audioCtx.createAnalyser()
-      analyzer.fftSize = 256
-      source.connect(analyzer)
-      analyzer.connect(audioCtx.destination)
-      analyzerRef.current = analyzer
-
-      // Store globally so RadioScene4D can find it too
-      ;(window as any).__soundchainAudioCtx = audioCtx
-      ;(window as any).__soundchainAnalyzer = analyzer
-    } catch {
-      // Already connected — try to grab existing analyzer
+    const checkAnalyzer = () => {
       const existing = (window as any).__soundchainAnalyzer as AnalyserNode | undefined
-      if (existing) analyzerRef.current = existing
+      if (existing) {
+        analyzerRef.current = existing
+      }
     }
-  }, [isOpen, audioRef])
+
+    // Check immediately + poll every 500ms until RadioScene4D creates it
+    checkAnalyzer()
+    const interval = setInterval(checkAnalyzer, 500)
+    return () => clearInterval(interval)
+  }, [isOpen])
 
   // Render loop
   useEffect(() => {
