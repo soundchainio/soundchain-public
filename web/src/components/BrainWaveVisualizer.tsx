@@ -26,7 +26,7 @@ export function BrainWaveVisualizer({ audioRef, isPlaying, trackTitle }: BrainWa
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const analyzerRef = useRef<AnalyserNode | null>(null)
   const animFrameRef = useRef<number>(0)
-  const [isOpen, setIsOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(true)
   const [engagement, setEngagement] = useState(0)
   const [regions, setRegions] = useState({
     auditory: 0,
@@ -64,8 +64,8 @@ export function BrainWaveVisualizer({ audioRef, isPlaying, trackTitle }: BrainWa
 
     const canvas = canvasRef.current
     const ctx = canvas.getContext('2d')!
-    const W = canvas.width = 280
-    const H = canvas.height = 220
+    const W = canvas.width = 160
+    const H = canvas.height = 130
 
     let prevBass = 0
     let prevMids = 0
@@ -110,20 +110,20 @@ export function BrainWaveVisualizer({ audioRef, isPlaying, trackTitle }: BrainWa
       // Clear
       ctx.clearRect(0, 0, W, H)
 
-      // Draw brain silhouette (side view)
-      const cx = W * 0.45
-      const cy = H * 0.45
+      // Draw brain silhouette (side view) — scaled for mini card
+      const cx = W * 0.48
+      const cy = H * 0.42
+      const s = 0.55  // Scale factor
 
       // Brain outline
       ctx.save()
       ctx.beginPath()
-      // Simplified brain shape — side profile
-      ctx.moveTo(cx - 50, cy + 30)
-      ctx.bezierCurveTo(cx - 55, cy - 10, cx - 45, cy - 50, cx - 10, cy - 55)
-      ctx.bezierCurveTo(cx + 20, cy - 60, cx + 50, cy - 45, cx + 55, cy - 20)
-      ctx.bezierCurveTo(cx + 58, cy, cx + 55, cy + 20, cx + 45, cy + 35)
-      ctx.bezierCurveTo(cx + 35, cy + 45, cx + 15, cy + 50, cx, cy + 48)
-      ctx.bezierCurveTo(cx - 20, cy + 46, cx - 40, cy + 42, cx - 50, cy + 30)
+      ctx.moveTo(cx - 50*s, cy + 30*s)
+      ctx.bezierCurveTo(cx - 55*s, cy - 10*s, cx - 45*s, cy - 50*s, cx - 10*s, cy - 55*s)
+      ctx.bezierCurveTo(cx + 20*s, cy - 60*s, cx + 50*s, cy - 45*s, cx + 55*s, cy - 20*s)
+      ctx.bezierCurveTo(cx + 58*s, cy, cx + 55*s, cy + 20*s, cx + 45*s, cy + 35*s)
+      ctx.bezierCurveTo(cx + 35*s, cy + 45*s, cx + 15*s, cy + 50*s, cx, cy + 48*s)
+      ctx.bezierCurveTo(cx - 20*s, cy + 46*s, cx - 40*s, cy + 42*s, cx - 50*s, cy + 30*s)
       ctx.closePath()
       ctx.fillStyle = 'rgba(20, 15, 30, 0.8)'
       ctx.strokeStyle = 'rgba(100, 120, 160, 0.3)'
@@ -135,29 +135,29 @@ export function BrainWaveVisualizer({ audioRef, isPlaying, trackTitle }: BrainWa
       // Draw activation regions as glowing hotspots
 
       // Auditory cortex (temporal lobe — side, middle)
-      drawActivation(ctx, cx + 35, cy + 10, mids, [255, 100, 50], 35)
+      drawActivation(ctx, cx + 35*s, cy + 10*s, mids, [255, 100, 50], 20)
 
       // Motor cortex (top center — strip)
-      drawActivation(ctx, cx, cy - 35, bass, [50, 255, 150], 30)
+      drawActivation(ctx, cx, cy - 35*s, bass, [50, 255, 150], 18)
 
       // Prefrontal (front — top right of profile)
-      drawActivation(ctx, cx + 40, cy - 25, highs, [100, 150, 255], 28)
+      drawActivation(ctx, cx + 40*s, cy - 25*s, highs, [100, 150, 255], 16)
 
       // Emotional / Amygdala (deep center)
-      drawActivation(ctx, cx + 10, cy + 15, emotional, [255, 50, 100], 25)
+      drawActivation(ctx, cx + 10*s, cy + 15*s, emotional, [255, 50, 100], 15)
 
       // Reward circuit (nucleus accumbens — deep front)
-      drawActivation(ctx, cx + 25, cy + 5, reward, [255, 220, 50], 22)
+      drawActivation(ctx, cx + 25*s, cy + 5*s, reward, [255, 220, 50], 14)
 
       // Brain folds (sulci) — subtle lines
       ctx.strokeStyle = 'rgba(80, 100, 140, 0.15)'
       ctx.lineWidth = 0.5
-      for (let i = 0; i < 8; i++) {
+      for (let i = 0; i < 5; i++) {
         ctx.beginPath()
-        const sx = cx - 40 + i * 12
-        const sy = cy - 40 + Math.sin(i * 0.8) * 15
+        const sx = cx - 25*s + i * 10*s
+        const sy = cy - 30*s + Math.sin(i * 0.8) * 10*s
         ctx.moveTo(sx, sy)
-        ctx.quadraticCurveTo(sx + 6, sy + 20 + Math.cos(i) * 10, sx + 3, sy + 35)
+        ctx.quadraticCurveTo(sx + 4*s, sy + 15*s + Math.cos(i) * 6*s, sx + 2*s, sy + 25*s)
         ctx.stroke()
       }
 
@@ -165,21 +165,21 @@ export function BrainWaveVisualizer({ audioRef, isPlaying, trackTitle }: BrainWa
 
       // Brain stem
       ctx.beginPath()
-      ctx.moveTo(cx - 10, cy + 48)
-      ctx.quadraticCurveTo(cx - 15, cy + 65, cx - 20, cy + 80)
+      ctx.moveTo(cx - 8*s, cy + 48*s)
+      ctx.quadraticCurveTo(cx - 12*s, cy + 60*s, cx - 16*s, cy + 72*s)
       ctx.strokeStyle = 'rgba(100, 120, 160, 0.3)'
-      ctx.lineWidth = 8
+      ctx.lineWidth = 5
       ctx.stroke()
 
       // EEG wave at bottom
       ctx.beginPath()
       ctx.strokeStyle = `rgba(34, 211, 238, ${0.4 + energy * 0.4})`
-      ctx.lineWidth = 1.5
+      ctx.lineWidth = 1
       const t = Date.now() / 1000
       for (let x = 0; x < W; x++) {
-        const freq = 0.05 + mids * 0.1
-        const amp = 5 + bass * 15
-        const y = H - 15 + Math.sin(x * freq + t * 3) * amp * Math.sin(x * 0.02 + t)
+        const freq = 0.08 + mids * 0.1
+        const amp = 3 + bass * 8
+        const y = H - 8 + Math.sin(x * freq + t * 3) * amp * Math.sin(x * 0.03 + t)
         if (x === 0) ctx.moveTo(x, y)
         else ctx.lineTo(x, y)
       }
@@ -230,39 +230,33 @@ export function BrainWaveVisualizer({ audioRef, isPlaying, trackTitle }: BrainWa
   }
 
   return (
-    <div className="fixed top-16 right-2 md:right-4 z-[60] w-[260px] md:w-[280px] rounded-xl overflow-hidden border border-purple-500/30 backdrop-blur-xl shadow-[0_0_30px_rgba(168,85,247,0.2)]"
+    <div className="w-[140px] md:w-[160px] rounded-xl overflow-hidden border border-purple-500/30 backdrop-blur-xl shadow-[0_0_20px_rgba(168,85,247,0.2)]"
       style={{ background: 'linear-gradient(180deg, rgba(10,5,20,0.95) 0%, rgba(5,0,15,0.95) 100%)' }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-purple-500/20">
-        <div className="flex items-center gap-2">
-          <Brain className="w-4 h-4 text-purple-400" />
-          <span className="text-[10px] font-mono font-bold text-purple-300 tracking-wider">NEURAL RESPONSE</span>
+      <div className="flex items-center justify-between px-1.5 py-1 border-b border-purple-500/20">
+        <div className="flex items-center gap-1">
+          <Brain className="w-3 h-3 text-purple-400" />
+          <span className="text-[7px] font-mono font-bold text-purple-300 tracking-wider">NEURAL</span>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-[9px] font-mono text-cyan-400">{engagement}%</span>
-          <button onClick={() => setIsOpen(false)} className="text-gray-500 hover:text-white">
-            <X className="w-3.5 h-3.5" />
-          </button>
-        </div>
+        <span className="text-[8px] font-mono font-bold text-cyan-400">{engagement}%</span>
       </div>
 
       {/* Brain Canvas */}
       <canvas ref={canvasRef} className="w-full" style={{ imageRendering: 'auto' }} />
 
-      {/* Region Bars */}
-      <div className="px-3 pb-2 space-y-1">
-        <RegionBar label="Auditory" value={regions.auditory} color="rgb(255, 100, 50)" icon="🎵" />
+      {/* Region Bars — compact */}
+      <div className="px-1.5 pb-1.5 space-y-0.5">
+        <RegionBar label="Audio" value={regions.auditory} color="rgb(255, 100, 50)" icon="🎵" />
         <RegionBar label="Motor" value={regions.motor} color="rgb(50, 255, 150)" icon="🥁" />
-        <RegionBar label="Prefrontal" value={regions.prefrontal} color="rgb(100, 150, 255)" icon="🧠" />
-        <RegionBar label="Emotional" value={regions.emotional} color="rgb(255, 50, 100)" icon="💓" />
+        <RegionBar label="Cortex" value={regions.prefrontal} color="rgb(100, 150, 255)" icon="🧠" />
+        <RegionBar label="Emote" value={regions.emotional} color="rgb(255, 50, 100)" icon="💓" />
         <RegionBar label="Reward" value={regions.reward} color="rgb(255, 220, 50)" icon="⚡" />
       </div>
 
       {/* Footer */}
-      <div className="px-3 py-1.5 border-t border-purple-500/10 flex items-center justify-between">
-        <span className="text-[7px] text-gray-600 font-mono">Meta TRIBE v2 × SoundChain</span>
-        <span className="text-[7px] text-purple-500/50 font-mono">NVIDIA GPU Required for Full Model</span>
+      <div className="px-1.5 py-1 border-t border-purple-500/10 text-center">
+        <span className="text-[6px] text-gray-600 font-mono">TRIBE v2 × SoundChain × NVIDIA</span>
       </div>
     </div>
   )
@@ -270,20 +264,19 @@ export function BrainWaveVisualizer({ audioRef, isPlaying, trackTitle }: BrainWa
 
 function RegionBar({ label, value, color, icon }: { label: string; value: number; color: string; icon: string }) {
   return (
-    <div className="flex items-center gap-1.5">
-      <span className="text-[8px] w-3">{icon}</span>
-      <span className="text-[8px] text-gray-400 w-16 font-mono">{label}</span>
-      <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden">
+    <div className="flex items-center gap-1">
+      <span className="text-[6px] w-2.5">{icon}</span>
+      <span className="text-[6px] text-gray-500 w-9 font-mono">{label}</span>
+      <div className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden">
         <div
           className="h-full rounded-full transition-all duration-200"
           style={{
             width: `${Math.min(100, value * 100)}%`,
             backgroundColor: color,
-            boxShadow: `0 0 6px ${color}`,
+            boxShadow: `0 0 4px ${color}`,
           }}
         />
       </div>
-      <span className="text-[8px] text-gray-500 w-7 text-right font-mono">{Math.round(value * 100)}%</span>
     </div>
   )
 }
