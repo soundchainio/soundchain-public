@@ -1112,8 +1112,8 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
                 {/* Now Playing + NFT Card Layout */}
                 <div className="flex flex-col md:flex-row items-center md:items-start gap-4 md:gap-6 mb-4 md:mb-6">
 
-                  {/* NFT/SCID Card — left on desktop, top on mobile */}
-                  <div className="flex-shrink-0 order-first">
+                  {/* NFT/SCID Card — desktop only, floats to the left */}
+                  <div className="flex-shrink-0 order-first hidden md:block">
                     <RadioNFTCard track={currentTrack} isPlaying={isPlaying} />
                   </div>
 
