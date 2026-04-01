@@ -497,57 +497,147 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
       planets.push({ mesh, distance: p.distance, speed: p.speed, y: p.y })
     }
 
-    // --- NEBULA CLOUDS (colorful gas clusters) ---
-    const nebulaCount = 3
-    const nebulae: THREE.Points[] = []
-    const nebulaColors = [
-      { h: 0.8, s: 0.7, l: 0.4 },  // Purple nebula
-      { h: 0.55, s: 0.6, l: 0.3 },  // Teal nebula
-      { h: 0.05, s: 0.8, l: 0.4 },  // Orange/red nebula
+    // --- NEBULAE (realistic multi-layer volumetric gas clouds) ---
+    // Each nebula is built from multiple overlapping layers:
+    // - Dense core particles (bright, small, clustered)
+    // - Filament tendrils (elongated particle streams)
+    // - Outer gas halo (large, faint, diffuse)
+    // - Color gradient: hot core → cool edges (like real emission nebulae)
+
+    const nebulae: THREE.Group[] = []
+
+    const nebulaConfigs = [
+      {
+        cx: -25, cy: 8, cz: -35,
+        // Eagle Nebula style — pillars of creation
+        coreColor: { h: 0.08, s: 0.9, l: 0.5 },   // Hot orange core
+        midColor: { h: 0.85, s: 0.7, l: 0.35 },    // Purple/magenta mid
+        outerColor: { h: 0.65, s: 0.5, l: 0.2 },   // Deep blue outer
+        scale: 1.2,
+      },
+      {
+        cx: 30, cy: -5, cz: -40,
+        // Carina Nebula style — cyan/teal gas pillars
+        coreColor: { h: 0.5, s: 0.9, l: 0.6 },     // Bright cyan core
+        midColor: { h: 0.45, s: 0.7, l: 0.3 },     // Teal mid
+        outerColor: { h: 0.75, s: 0.6, l: 0.2 },   // Purple haze outer
+        scale: 1.0,
+      },
+      {
+        cx: 5, cy: 12, cz: -50,
+        // Orion Nebula style — warm reds and pinks
+        coreColor: { h: 0.95, s: 0.8, l: 0.55 },   // Hot pink/white core
+        midColor: { h: 0.0, s: 0.7, l: 0.4 },      // Red mid
+        outerColor: { h: 0.08, s: 0.5, l: 0.15 },  // Dark amber outer
+        scale: 1.5,
+      },
     ]
-    for (let n = 0; n < nebulaCount; n++) {
-      const count = 800
-      const positions = new Float32Array(count * 3)
-      const colors = new Float32Array(count * 3)
-      const sizes = new Float32Array(count)
-      const cx = (Math.random() - 0.5) * 60
-      const cy = (Math.random() - 0.5) * 20
-      const cz = -20 - Math.random() * 30
-      const spread = 6 + Math.random() * 8
-      const col = nebulaColors[n]
 
-      for (let i = 0; i < count; i++) {
-        // Gaussian-ish distribution for cloud shape
-        const r = spread * Math.pow(Math.random(), 0.5)
+    for (const cfg of nebulaConfigs) {
+      const nebGroup = new THREE.Group()
+      nebGroup.position.set(cfg.cx, cfg.cy, cfg.cz)
+      nebGroup.scale.setScalar(cfg.scale)
+
+      // LAYER 1: Dense core — bright concentrated particles
+      const coreCount = 400
+      const corePos = new Float32Array(coreCount * 3)
+      const coreCol = new Float32Array(coreCount * 3)
+      for (let i = 0; i < coreCount; i++) {
+        // Tight gaussian cluster
+        const r = 2 * Math.pow(Math.random(), 1.5)
         const theta = Math.random() * Math.PI * 2
-        const phi = Math.random() * Math.PI
-        positions[i * 3] = cx + r * Math.sin(phi) * Math.cos(theta)
-        positions[i * 3 + 1] = cy + r * Math.sin(phi) * Math.sin(theta) * 0.5
-        positions[i * 3 + 2] = cz + r * Math.cos(phi)
-
+        const phi = Math.acos(2 * Math.random() - 1)
+        corePos[i*3] = r * Math.sin(phi) * Math.cos(theta) * (1 + Math.sin(theta*3) * 0.3)
+        corePos[i*3+1] = r * Math.sin(phi) * Math.sin(theta) * 0.6
+        corePos[i*3+2] = r * Math.cos(phi) * (1 + Math.cos(theta*2) * 0.2)
         const c = new THREE.Color()
-        c.setHSL(col.h + (Math.random() - 0.5) * 0.1, col.s, col.l + Math.random() * 0.2)
-        colors[i * 3] = c.r
-        colors[i * 3 + 1] = c.g
-        colors[i * 3 + 2] = c.b
-        sizes[i] = 0.3 + Math.random() * 0.8
+        c.setHSL(cfg.coreColor.h + (Math.random()-0.5)*0.05, cfg.coreColor.s, cfg.coreColor.l + Math.random()*0.15)
+        coreCol[i*3] = c.r; coreCol[i*3+1] = c.g; coreCol[i*3+2] = c.b
+      }
+      const coreGeo = new THREE.BufferGeometry()
+      coreGeo.setAttribute('position', new THREE.BufferAttribute(corePos, 3))
+      coreGeo.setAttribute('color', new THREE.BufferAttribute(coreCol, 3))
+      nebGroup.add(new THREE.Points(coreGeo, new THREE.PointsMaterial({
+        size: 0.35, vertexColors: true, transparent: true, opacity: 0.6,
+        blending: THREE.AdditiveBlending, depthWrite: false,
+      })))
+
+      // LAYER 2: Filament tendrils — elongated streams radiating from core
+      const filamentCount = 600
+      const filPos = new Float32Array(filamentCount * 3)
+      const filCol = new Float32Array(filamentCount * 3)
+      const numTendrils = 5 + Math.floor(Math.random() * 4)
+      for (let i = 0; i < filamentCount; i++) {
+        const tendril = Math.floor(Math.random() * numTendrils)
+        const baseAngle = (tendril / numTendrils) * Math.PI * 2 + Math.sin(tendril) * 0.5
+        const t = Math.random()  // Position along tendril (0=core, 1=tip)
+        const length = 5 + Math.random() * 4
+        const width = (1 - t) * 1.5 + 0.2  // Wider at base, narrow at tip
+
+        filPos[i*3] = Math.cos(baseAngle) * t * length + (Math.random()-0.5) * width
+        filPos[i*3+1] = (Math.random()-0.5) * width * 0.7 + Math.sin(t * Math.PI) * 1.5
+        filPos[i*3+2] = Math.sin(baseAngle) * t * length + (Math.random()-0.5) * width
+
+        // Color transitions from core to outer along tendril
+        const c = new THREE.Color()
+        if (t < 0.3) c.setHSL(cfg.coreColor.h, cfg.coreColor.s * 0.8, cfg.coreColor.l * (1-t))
+        else if (t < 0.7) c.setHSL(cfg.midColor.h, cfg.midColor.s, cfg.midColor.l + (Math.random()-0.5)*0.1)
+        else c.setHSL(cfg.outerColor.h, cfg.outerColor.s, cfg.outerColor.l + Math.random()*0.1)
+        filCol[i*3] = c.r; filCol[i*3+1] = c.g; filCol[i*3+2] = c.b
+      }
+      const filGeo = new THREE.BufferGeometry()
+      filGeo.setAttribute('position', new THREE.BufferAttribute(filPos, 3))
+      filGeo.setAttribute('color', new THREE.BufferAttribute(filCol, 3))
+      nebGroup.add(new THREE.Points(filGeo, new THREE.PointsMaterial({
+        size: 0.25, vertexColors: true, transparent: true, opacity: 0.4,
+        blending: THREE.AdditiveBlending, depthWrite: false,
+      })))
+
+      // LAYER 3: Outer gas halo — large faint particles for volume
+      const haloCount = 300
+      const haloPos = new Float32Array(haloCount * 3)
+      const haloCol = new Float32Array(haloCount * 3)
+      for (let i = 0; i < haloCount; i++) {
+        const r = 3 + Math.random() * 8
+        const theta = Math.random() * Math.PI * 2
+        const phi = Math.acos(2 * Math.random() - 1)
+        haloPos[i*3] = r * Math.sin(phi) * Math.cos(theta)
+        haloPos[i*3+1] = r * Math.sin(phi) * Math.sin(theta) * 0.4
+        haloPos[i*3+2] = r * Math.cos(phi)
+        const c = new THREE.Color()
+        c.setHSL(cfg.outerColor.h + (Math.random()-0.5)*0.15, cfg.outerColor.s * 0.6, cfg.outerColor.l * 0.8)
+        haloCol[i*3] = c.r; haloCol[i*3+1] = c.g; haloCol[i*3+2] = c.b
+      }
+      const haloGeo = new THREE.BufferGeometry()
+      haloGeo.setAttribute('position', new THREE.BufferAttribute(haloPos, 3))
+      haloGeo.setAttribute('color', new THREE.BufferAttribute(haloCol, 3))
+      nebGroup.add(new THREE.Points(haloGeo, new THREE.PointsMaterial({
+        size: 1.2, vertexColors: true, transparent: true, opacity: 0.15,
+        blending: THREE.AdditiveBlending, depthWrite: false,
+      })))
+
+      // LAYER 4: Bright star seeds inside nebula (young stars forming)
+      const starSeedCount = 8 + Math.floor(Math.random() * 6)
+      for (let i = 0; i < starSeedCount; i++) {
+        const starGeo = new THREE.SphereGeometry(0.06 + Math.random() * 0.08, 8, 8)
+        const brightness = 0.7 + Math.random() * 0.3
+        const starMat = new THREE.MeshBasicMaterial({
+          color: new THREE.Color().setHSL(cfg.coreColor.h, 0.3, brightness),
+          transparent: true,
+          opacity: 0.8,
+          blending: THREE.AdditiveBlending,
+        })
+        const star = new THREE.Mesh(starGeo, starMat)
+        star.position.set(
+          (Math.random()-0.5) * 4,
+          (Math.random()-0.5) * 2,
+          (Math.random()-0.5) * 4
+        )
+        nebGroup.add(star)
       }
 
-      const nebGeo = new THREE.BufferGeometry()
-      nebGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3))
-      nebGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3))
-      nebGeo.setAttribute('size', new THREE.BufferAttribute(sizes, 1))
-      const nebMat = new THREE.PointsMaterial({
-        size: 0.6,
-        vertexColors: true,
-        transparent: true,
-        opacity: 0.25,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
-      })
-      const nebula = new THREE.Points(nebGeo, nebMat)
-      cosmicGroup.add(nebula)
-      nebulae.push(nebula)
+      cosmicGroup.add(nebGroup)
+      nebulae.push(nebGroup)
     }
 
     // --- HALLEY'S COMET (glowing head + particle tail) ---
@@ -872,10 +962,15 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
         // Nebulae gentle drift + pulse with bass
         for (let i = 0; i < cosmicRefs.nebulae.length; i++) {
           const neb = cosmicRefs.nebulae[i]
-          neb.rotation.y = elapsed * 0.02 * (i + 1)
-          neb.rotation.z = elapsed * 0.01
-          const nebMat = neb.material as THREE.PointsMaterial
-          nebMat.opacity = 0.2 + sBass * 0.15
+          neb.rotation.y = elapsed * 0.008 * (i + 1)
+          neb.rotation.x = Math.sin(elapsed * 0.01 + i) * 0.05
+          // Pulse all point layers with bass
+          neb.children.forEach(child => {
+            if (child instanceof THREE.Points) {
+              const mat = child.material as THREE.PointsMaterial
+              mat.opacity = (mat.userData?.baseOpacity || mat.opacity) + sBass * 0.12
+            }
+          })
         }
 
         // Halley's comet — sweeps across the scene
