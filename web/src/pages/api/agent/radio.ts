@@ -15,26 +15,47 @@ export const config = {
   maxDuration: 30,
 }
 
-// Fetch all tracks with audio from Atlas directly
+// Fetch all UNIQUE tracks with audio from Atlas directly
+// Editions are deduplicated — only one entry per unique audio file
 async function fetchAllTracks() {
   try {
     const client = await clientPromise
     const db = client.db('soundchain')
 
-    // Get random sample of tracks with audio (500 max to avoid timeout)
+    // Fetch ALL tracks with audio from the database (no limit)
+    const matchFilter = { assetUrl: { $exists: true, $ne: null, $ne: '' }, deleted: { $ne: true } }
     const tracks = await db.collection('tracks')
-      .aggregate([
-        { $match: { assetUrl: { $exists: true, $ne: null, $ne: '' }, deleted: { $ne: true } } },
-        { $sample: { size: 500 } },
-        { $project: {
-            _id: 1, title: 1, artist: 1, album: 1, description: 1,
-            artworkUrl: 1, assetUrl: 1, playbackCount: 1, genres: 1,
-        }},
-      ])
+      .find(matchFilter, {
+        projection: {
+          _id: 1, title: 1, artist: 1, album: 1, description: 1,
+          artworkUrl: 1, assetUrl: 1, playbackCount: 1, genres: 1,
+          trackEditionId: 1, editionQuantity: 1,
+        },
+      })
       .toArray()
 
-    // Look up SCIDs for sampled tracks only
-    const trackIds = tracks.map(t => t._id.toString())
+    // Total including all editions
+    const totalWithEditions = tracks.length
+
+    // Deduplicate editions — same assetUrl = same audio file
+    // Keep the first instance, track edition count for display
+    const seenAudio = new Map<string, any>()
+    const uniqueTracks = []
+    for (const track of tracks) {
+      const audioKey = track.assetUrl
+      if (seenAudio.has(audioKey)) {
+        // Already have this audio — increment edition count
+        const existing = seenAudio.get(audioKey)
+        existing._editionCount = (existing._editionCount || 1) + 1
+        continue
+      }
+      track._editionCount = 1
+      seenAudio.set(audioKey, track)
+      uniqueTracks.push(track)
+    }
+
+    // Look up SCIDs for unique tracks
+    const trackIds = uniqueTracks.map(t => t._id.toString())
     const scids = await db.collection('scids')
       .find(
         { trackId: { $in: trackIds } },
@@ -42,12 +63,16 @@ async function fetchAllTracks() {
       )
       .toArray()
 
+    // Also count total SCIDs in system
+    const totalScids = await db.collection('scids').countDocuments()
+
     const scidMap = new Map(scids.map(s => [s.trackId, s]))
 
-    const formatted = tracks.map(track => {
-      const scid = scidMap.get(track._id.toString())
+    const formatted = uniqueTracks.map(track => {
+      const trackIdStr = track._id.toString()
+      const scid = scidMap.get(trackIdStr)
       return {
-        id: track._id.toString(),
+        id: trackIdStr,
         title: track.title || 'Untitled',
         artist: track.artist || 'Unknown Artist',
         album: track.album,
@@ -57,13 +82,22 @@ async function fetchAllTracks() {
         playbackCount: track.playbackCount || 0,
         genres: track.genres || [],
         scid: scid ? { scid: scid.scid, streamCount: scid.streamCount, ogunRewardsEarned: scid.ogunRewardsEarned } : null,
+        isNft: !!track.trackEditionId,
+        editionCount: track._editionCount || 1,
       }
     })
 
-    return { tracks: formatted, totalCount: formatted.length }
+    console.log(`[OGUN Radio] ${totalWithEditions} total records → ${uniqueTracks.length} unique tracks (${totalScids} SCIDs)`)
+
+    return {
+      tracks: formatted,
+      totalCount: totalWithEditions,   // Total including editions
+      uniqueCount: uniqueTracks.length, // Unique audio files
+      totalScids,                       // Total SCIDs registered
+    }
   } catch (e) {
     console.error('[OGUN Radio] Atlas fetch error:', e)
-    return { tracks: [], totalCount: 0 }
+    return { tracks: [], totalCount: 0, uniqueCount: 0, totalScids: 0 }
   }
 }
 
@@ -99,6 +133,14 @@ let radioPlaylist: RadioTrack[] = []
 let totalTracksInDatabase: number = 0
 let lastFetchTime: Date | null = null
 const REFRESH_INTERVAL_MS = 5 * 60 * 1000
+
+function fisherYatesShuffle<T>(arr: T[]): T[] {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]]
+  }
+  return arr
+}
 
 function formatTrackForBroadcast(track: RadioTrack): string {
   const lines = [
@@ -155,6 +197,7 @@ function getFilteredPlaylist(genre?: string): RadioTrack[] {
 }
 
 function rawToRadioTrack(track: any): RadioTrack {
+  const isNft = track.isNft === true
   return {
     id: track.id,
     title: track.title || 'Untitled',
@@ -166,11 +209,11 @@ function rawToRadioTrack(track: any): RadioTrack {
     duration: null as any,
     play_count: track.playbackCount || 0,
     scid: track.scid?.scid || null,
-    is_nft: true,
+    is_nft: isNft,
     genres: track.genres || [],
     owner: null,
     licensing: {
-      type: 'nft' as const,
+      type: isNft ? 'nft' as const : 'open' as const,
       ogun_enabled: true,
       streaming_rewards: track.scid?.scid ? true : false,
     },
@@ -188,12 +231,12 @@ export default async function handler(
   if (req.method === 'GET') {
     if (action === 'playlist') {
       if (radioPlaylist.length === 0) {
-        const { tracks: rawTracks, totalCount } = await fetchAllTracks()
+        const { tracks: rawTracks, totalCount, uniqueCount, totalScids } = await fetchAllTracks()
         totalTracksInDatabase = totalCount
         radioPlaylist = rawTracks
           .filter((track: any) => track.assetUrl)
           .map(rawToRadioTrack)
-          .sort(() => Math.random() - 0.5)
+        fisherYatesShuffle(radioPlaylist)
         lastFetchTime = new Date()
       }
 
@@ -204,6 +247,8 @@ export default async function handler(
           current_track: currentTrack,
           current_track_started: trackStartTime?.toISOString(),
           total_tracks: totalTracksInDatabase || radioPlaylist.length,
+          unique_tracks: radioPlaylist.length,
+          total_scids: totalScids,
           playable_tracks: radioPlaylist.length,
           last_refresh: lastFetchTime?.toISOString()
         },
@@ -220,7 +265,7 @@ export default async function handler(
 
     if (radioPlaylist.length === 0 || needsRefresh) {
       try {
-        const { tracks: rawTracks, totalCount } = await fetchAllTracks()
+        const { tracks: rawTracks, totalCount, uniqueCount, totalScids } = await fetchAllTracks()
         totalTracksInDatabase = totalCount
 
         const tracks: RadioTrack[] = rawTracks
@@ -228,7 +273,7 @@ export default async function handler(
           .map(rawToRadioTrack)
 
         const currentTrackId = currentTrack?.id
-        radioPlaylist = tracks.sort(() => Math.random() - 0.5)
+        radioPlaylist = fisherYatesShuffle(tracks)
 
         if (currentTrackId) {
           const currentIdx = radioPlaylist.findIndex(t => t.id === currentTrackId)
@@ -273,6 +318,7 @@ export default async function handler(
         started_at: trackStartTime?.toISOString(),
         queue_length: radioPlaylist.length,
         total_tracks: totalTracksInDatabase || radioPlaylist.length,
+        unique_tracks: radioPlaylist.length,
         genre_filter: genreFilter || 'all',
         genre_track_count: genreFilter ? getFilteredPlaylist(genreFilter).length : radioPlaylist.length,
         available_genres: availableGenres,

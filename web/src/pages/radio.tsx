@@ -276,8 +276,8 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
 
       if (data.success && data.data?.now_playing) {
         setCurrentTrack(data.data.now_playing)
-        setQueueLength(data.data.queue_length || 0)
-        setTotalTracks(data.data.total_tracks || data.data.queue_length || 0)
+        setQueueLength(data.data.unique_tracks || data.data.queue_length || 0)
+        setTotalTracks(data.data.unique_tracks || data.data.queue_length || 0)
         if (data.data.available_genres) setAvailableGenres(data.data.available_genres)
         if (data.data.genre_track_count !== undefined) setGenreTrackCount(data.data.genre_track_count)
         setError(null)
