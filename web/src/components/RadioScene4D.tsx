@@ -497,143 +497,169 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
       planets.push({ mesh, distance: p.distance, speed: p.speed, y: p.y })
     }
 
-    // --- NEBULAE (realistic multi-layer volumetric gas clouds) ---
-    // Each nebula is built from multiple overlapping layers:
-    // - Dense core particles (bright, small, clustered)
-    // - Filament tendrils (elongated particle streams)
-    // - Outer gas halo (large, faint, diffuse)
-    // - Color gradient: hot core → cool edges (like real emission nebulae)
+    // --- NEBULAE (volumetric shader billboards — fluid sim look) ---
+    // Each nebula is a stack of billboard planes with FBM noise shaders
+    // creating realistic gas cloud appearance with turbulent flow
 
     const nebulae: THREE.Group[] = []
 
+    // FBM noise shader for volumetric nebula gas
+    const nebulaVertShader = `
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `
+    const nebulaFragShader = `
+      uniform float uTime;
+      uniform float uBass;
+      uniform vec3 uColor1;
+      uniform vec3 uColor2;
+      uniform vec3 uColor3;
+      uniform float uSeed;
+      varying vec2 vUv;
+
+      // Simplex-style noise
+      vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+      vec2 mod289(vec2 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+      vec3 permute(vec3 x) { return mod289(((x*34.0)+1.0)*x); }
+
+      float snoise(vec2 v) {
+        const vec4 C = vec4(0.211324865405187, 0.366025403784439, -0.577350269189626, 0.024390243902439);
+        vec2 i = floor(v + dot(v, C.yy));
+        vec2 x0 = v - i + dot(i, C.xx);
+        vec2 i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+        vec4 x12 = x0.xyxy + C.xxzz;
+        x12.xy -= i1;
+        i = mod289(i);
+        vec3 p = permute(permute(i.y + vec3(0.0, i1.y, 1.0)) + i.x + vec3(0.0, i1.x, 1.0));
+        vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy), dot(x12.zw,x12.zw)), 0.0);
+        m = m*m; m = m*m;
+        vec3 x = 2.0 * fract(p * C.www) - 1.0;
+        vec3 h = abs(x) - 0.5;
+        vec3 ox = floor(x + 0.5);
+        vec3 a0 = x - ox;
+        m *= 1.79284291400159 - 0.85373472095314 * (a0*a0 + h*h);
+        vec3 g;
+        g.x = a0.x * x0.x + h.x * x0.y;
+        g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+        return 130.0 * dot(m, g);
+      }
+
+      // Fractal Brownian Motion — layered noise for turbulent gas
+      float fbm(vec2 p) {
+        float value = 0.0;
+        float amplitude = 0.5;
+        float frequency = 1.0;
+        for (int i = 0; i < 6; i++) {
+          value += amplitude * snoise(p * frequency);
+          frequency *= 2.0;
+          amplitude *= 0.5;
+        }
+        return value;
+      }
+
+      void main() {
+        vec2 uv = vUv - 0.5;
+        float dist = length(uv);
+
+        // Radial falloff — gas density drops at edges
+        float falloff = 1.0 - smoothstep(0.0, 0.5, dist);
+        falloff *= falloff;
+
+        // Turbulent flow with time animation
+        float t = uTime * 0.08;
+        vec2 flow = vec2(
+          fbm(uv * 3.0 + vec2(t * 0.3, t * 0.2) + uSeed),
+          fbm(uv * 3.0 + vec2(t * -0.2, t * 0.4) + uSeed + 5.0)
+        );
+
+        // Domain warping — distort coordinates by noise (creates realistic gas swirls)
+        float n1 = fbm(uv * 2.5 + flow * 0.8 + uSeed);
+        float n2 = fbm(uv * 4.0 + flow * 1.2 + uSeed + 10.0);
+        float n3 = fbm(uv * 1.5 - flow * 0.5 + uSeed + 20.0);
+
+        // Filament structures — sharp ridges in the gas
+        float filaments = abs(n1 - n2) * 2.0;
+        filaments = pow(filaments, 0.8);
+
+        // Color mixing — core vs mid vs outer based on density + noise
+        float density = (n1 * 0.5 + n2 * 0.3 + filaments * 0.2) * falloff;
+        density = clamp(density, 0.0, 1.0);
+
+        // Three-color gradient based on density layers
+        vec3 color;
+        if (density > 0.5) {
+          color = mix(uColor2, uColor1, (density - 0.5) * 2.0);  // Hot core
+        } else {
+          color = mix(uColor3, uColor2, density * 2.0);  // Cool outer
+        }
+
+        // Add bright emission streaks
+        float emission = pow(max(filaments * falloff, 0.0), 1.5) * 0.6;
+        color += uColor1 * emission;
+
+        // Bass reactivity — brightness pulses
+        float bassBoost = 1.0 + uBass * 0.4;
+
+        // Star seeds — tiny bright spots in dense areas
+        float stars = pow(max(snoise(uv * 20.0 + uSeed), 0.0), 8.0) * density * 2.0;
+        color += vec3(1.0, 0.95, 0.8) * stars;
+
+        float alpha = density * falloff * 0.55 * bassBoost;
+        alpha = clamp(alpha, 0.0, 0.7);
+
+        gl_FragColor = vec4(color * bassBoost, alpha);
+      }
+    `
+
     const nebulaConfigs = [
       {
-        cx: -25, cy: 8, cz: -35,
-        // Eagle Nebula style — pillars of creation
-        coreColor: { h: 0.08, s: 0.9, l: 0.5 },   // Hot orange core
-        midColor: { h: 0.85, s: 0.7, l: 0.35 },    // Purple/magenta mid
-        outerColor: { h: 0.65, s: 0.5, l: 0.2 },   // Deep blue outer
-        scale: 1.2,
+        pos: new THREE.Vector3(-28, 6, -30),
+        color1: new THREE.Color(0xff8844), color2: new THREE.Color(0xaa44cc), color3: new THREE.Color(0x2244aa),
+        scale: 22, seed: 0.0, rotation: 0.3,
       },
       {
-        cx: 30, cy: -5, cz: -40,
-        // Carina Nebula style — cyan/teal gas pillars
-        coreColor: { h: 0.5, s: 0.9, l: 0.6 },     // Bright cyan core
-        midColor: { h: 0.45, s: 0.7, l: 0.3 },     // Teal mid
-        outerColor: { h: 0.75, s: 0.6, l: 0.2 },   // Purple haze outer
-        scale: 1.0,
+        pos: new THREE.Vector3(32, -3, -38),
+        color1: new THREE.Color(0x44ffee), color2: new THREE.Color(0x3388aa), color3: new THREE.Color(0x6644aa),
+        scale: 18, seed: 42.0, rotation: -0.5,
       },
       {
-        cx: 5, cy: 12, cz: -50,
-        // Orion Nebula style — warm reds and pinks
-        coreColor: { h: 0.95, s: 0.8, l: 0.55 },   // Hot pink/white core
-        midColor: { h: 0.0, s: 0.7, l: 0.4 },      // Red mid
-        outerColor: { h: 0.08, s: 0.5, l: 0.15 },  // Dark amber outer
-        scale: 1.5,
+        pos: new THREE.Vector3(3, 14, -45),
+        color1: new THREE.Color(0xff6688), color2: new THREE.Color(0xcc3344), color3: new THREE.Color(0x442200),
+        scale: 28, seed: 99.0, rotation: 0.8,
       },
     ]
 
     for (const cfg of nebulaConfigs) {
       const nebGroup = new THREE.Group()
-      nebGroup.position.set(cfg.cx, cfg.cy, cfg.cz)
-      nebGroup.scale.setScalar(cfg.scale)
+      nebGroup.position.copy(cfg.pos)
 
-      // LAYER 1: Dense core — bright concentrated particles
-      const coreCount = 400
-      const corePos = new Float32Array(coreCount * 3)
-      const coreCol = new Float32Array(coreCount * 3)
-      for (let i = 0; i < coreCount; i++) {
-        // Tight gaussian cluster
-        const r = 2 * Math.pow(Math.random(), 1.5)
-        const theta = Math.random() * Math.PI * 2
-        const phi = Math.acos(2 * Math.random() - 1)
-        corePos[i*3] = r * Math.sin(phi) * Math.cos(theta) * (1 + Math.sin(theta*3) * 0.3)
-        corePos[i*3+1] = r * Math.sin(phi) * Math.sin(theta) * 0.6
-        corePos[i*3+2] = r * Math.cos(phi) * (1 + Math.cos(theta*2) * 0.2)
-        const c = new THREE.Color()
-        c.setHSL(cfg.coreColor.h + (Math.random()-0.5)*0.05, cfg.coreColor.s, cfg.coreColor.l + Math.random()*0.15)
-        coreCol[i*3] = c.r; coreCol[i*3+1] = c.g; coreCol[i*3+2] = c.b
-      }
-      const coreGeo = new THREE.BufferGeometry()
-      coreGeo.setAttribute('position', new THREE.BufferAttribute(corePos, 3))
-      coreGeo.setAttribute('color', new THREE.BufferAttribute(coreCol, 3))
-      nebGroup.add(new THREE.Points(coreGeo, new THREE.PointsMaterial({
-        size: 0.35, vertexColors: true, transparent: true, opacity: 0.6,
-        blending: THREE.AdditiveBlending, depthWrite: false,
-      })))
-
-      // LAYER 2: Filament tendrils — elongated streams radiating from core
-      const filamentCount = 600
-      const filPos = new Float32Array(filamentCount * 3)
-      const filCol = new Float32Array(filamentCount * 3)
-      const numTendrils = 5 + Math.floor(Math.random() * 4)
-      for (let i = 0; i < filamentCount; i++) {
-        const tendril = Math.floor(Math.random() * numTendrils)
-        const baseAngle = (tendril / numTendrils) * Math.PI * 2 + Math.sin(tendril) * 0.5
-        const t = Math.random()  // Position along tendril (0=core, 1=tip)
-        const length = 5 + Math.random() * 4
-        const width = (1 - t) * 1.5 + 0.2  // Wider at base, narrow at tip
-
-        filPos[i*3] = Math.cos(baseAngle) * t * length + (Math.random()-0.5) * width
-        filPos[i*3+1] = (Math.random()-0.5) * width * 0.7 + Math.sin(t * Math.PI) * 1.5
-        filPos[i*3+2] = Math.sin(baseAngle) * t * length + (Math.random()-0.5) * width
-
-        // Color transitions from core to outer along tendril
-        const c = new THREE.Color()
-        if (t < 0.3) c.setHSL(cfg.coreColor.h, cfg.coreColor.s * 0.8, cfg.coreColor.l * (1-t))
-        else if (t < 0.7) c.setHSL(cfg.midColor.h, cfg.midColor.s, cfg.midColor.l + (Math.random()-0.5)*0.1)
-        else c.setHSL(cfg.outerColor.h, cfg.outerColor.s, cfg.outerColor.l + Math.random()*0.1)
-        filCol[i*3] = c.r; filCol[i*3+1] = c.g; filCol[i*3+2] = c.b
-      }
-      const filGeo = new THREE.BufferGeometry()
-      filGeo.setAttribute('position', new THREE.BufferAttribute(filPos, 3))
-      filGeo.setAttribute('color', new THREE.BufferAttribute(filCol, 3))
-      nebGroup.add(new THREE.Points(filGeo, new THREE.PointsMaterial({
-        size: 0.25, vertexColors: true, transparent: true, opacity: 0.4,
-        blending: THREE.AdditiveBlending, depthWrite: false,
-      })))
-
-      // LAYER 3: Outer gas halo — large faint particles for volume
-      const haloCount = 300
-      const haloPos = new Float32Array(haloCount * 3)
-      const haloCol = new Float32Array(haloCount * 3)
-      for (let i = 0; i < haloCount; i++) {
-        const r = 3 + Math.random() * 8
-        const theta = Math.random() * Math.PI * 2
-        const phi = Math.acos(2 * Math.random() - 1)
-        haloPos[i*3] = r * Math.sin(phi) * Math.cos(theta)
-        haloPos[i*3+1] = r * Math.sin(phi) * Math.sin(theta) * 0.4
-        haloPos[i*3+2] = r * Math.cos(phi)
-        const c = new THREE.Color()
-        c.setHSL(cfg.outerColor.h + (Math.random()-0.5)*0.15, cfg.outerColor.s * 0.6, cfg.outerColor.l * 0.8)
-        haloCol[i*3] = c.r; haloCol[i*3+1] = c.g; haloCol[i*3+2] = c.b
-      }
-      const haloGeo = new THREE.BufferGeometry()
-      haloGeo.setAttribute('position', new THREE.BufferAttribute(haloPos, 3))
-      haloGeo.setAttribute('color', new THREE.BufferAttribute(haloCol, 3))
-      nebGroup.add(new THREE.Points(haloGeo, new THREE.PointsMaterial({
-        size: 1.2, vertexColors: true, transparent: true, opacity: 0.15,
-        blending: THREE.AdditiveBlending, depthWrite: false,
-      })))
-
-      // LAYER 4: Bright star seeds inside nebula (young stars forming)
-      const starSeedCount = 8 + Math.floor(Math.random() * 6)
-      for (let i = 0; i < starSeedCount; i++) {
-        const starGeo = new THREE.SphereGeometry(0.06 + Math.random() * 0.08, 8, 8)
-        const brightness = 0.7 + Math.random() * 0.3
-        const starMat = new THREE.MeshBasicMaterial({
-          color: new THREE.Color().setHSL(cfg.coreColor.h, 0.3, brightness),
+      // Stack 3 billboard planes at slightly different depths for volume
+      for (let layer = 0; layer < 3; layer++) {
+        const planeGeo = new THREE.PlaneGeometry(cfg.scale, cfg.scale * 0.7)
+        const planeMat = new THREE.ShaderMaterial({
+          vertexShader: nebulaVertShader,
+          fragmentShader: nebulaFragShader,
+          uniforms: {
+            uTime: { value: 0 },
+            uBass: { value: 0 },
+            uColor1: { value: cfg.color1 },
+            uColor2: { value: cfg.color2 },
+            uColor3: { value: cfg.color3 },
+            uSeed: { value: cfg.seed + layer * 7.0 },
+          },
           transparent: true,
-          opacity: 0.8,
           blending: THREE.AdditiveBlending,
+          depthWrite: false,
+          side: THREE.DoubleSide,
         })
-        const star = new THREE.Mesh(starGeo, starMat)
-        star.position.set(
-          (Math.random()-0.5) * 4,
-          (Math.random()-0.5) * 2,
-          (Math.random()-0.5) * 4
-        )
-        nebGroup.add(star)
+        const plane = new THREE.Mesh(planeGeo, planeMat)
+        plane.position.z = layer * 1.5 - 1.5
+        plane.rotation.z = cfg.rotation + layer * 0.2
+        plane.rotation.y = layer * 0.15
+        nebGroup.add(plane)
       }
 
       cosmicGroup.add(nebGroup)
@@ -959,16 +985,16 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
           p.mesh.rotation.y = elapsed * 0.5
         }
 
-        // Nebulae gentle drift + pulse with bass
+        // Nebulae — update shader uniforms for fluid sim animation
         for (let i = 0; i < cosmicRefs.nebulae.length; i++) {
           const neb = cosmicRefs.nebulae[i]
-          neb.rotation.y = elapsed * 0.008 * (i + 1)
-          neb.rotation.x = Math.sin(elapsed * 0.01 + i) * 0.05
-          // Pulse all point layers with bass
+          neb.rotation.y = elapsed * 0.005 * (i + 1)
+          // Update all shader planes with time + bass
           neb.children.forEach(child => {
-            if (child instanceof THREE.Points) {
-              const mat = child.material as THREE.PointsMaterial
-              mat.opacity = (mat.userData?.baseOpacity || mat.opacity) + sBass * 0.12
+            if (child instanceof THREE.Mesh) {
+              const mat = child.material as THREE.ShaderMaterial
+              if (mat.uniforms?.uTime) mat.uniforms.uTime.value = elapsed
+              if (mat.uniforms?.uBass) mat.uniforms.uBass.value = sBass
             }
           })
         }
