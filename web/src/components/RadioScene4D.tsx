@@ -476,16 +476,14 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
 
     // --- PLANETS (orbiting at various distances) ---
     const planetData = [
-      { radius: 0.8, color: 0xff6b35, emissive: 0x331100, distance: 18, speed: 0.12, y: 2, name: 'Mars' },
-      { radius: 1.4, color: 0xc9a85c, emissive: 0x2a2200, distance: 25, speed: 0.07, y: -1, name: 'Saturn', ring: true },
-      { radius: 0.5, color: 0x4488ff, emissive: 0x001133, distance: 14, speed: 0.18, y: 3.5, name: 'Neptune' },
-      { radius: 0.35, color: 0x88ffcc, emissive: 0x002211, distance: 32, speed: 0.05, y: -3, name: 'Titan' },
-      { radius: 1.1, color: 0xff4466, emissive: 0x220011, distance: 22, speed: 0.09, y: 1.5, name: 'Kepler' },
+      { radius: 0.6, color: 0xff6b35, emissive: 0x331100, distance: 20, speed: 0.08, y: 4, name: 'Mars' },
+      { radius: 0.4, color: 0x4488ff, emissive: 0x001133, distance: 28, speed: 0.05, y: -2, name: 'Neptune' },
+      { radius: 0.3, color: 0xff4466, emissive: 0x220011, distance: 35, speed: 0.035, y: 6, name: 'Kepler' },
     ]
 
-    const planets: { mesh: THREE.Mesh; distance: number; speed: number; y: number; ring?: THREE.Mesh }[] = []
+    const planets: { mesh: THREE.Mesh; distance: number; speed: number; y: number }[] = []
     for (const p of planetData) {
-      const geo = new THREE.SphereGeometry(p.radius, 32, 32)
+      const geo = new THREE.SphereGeometry(p.radius, 24, 24)
       const mat = new THREE.MeshStandardMaterial({
         color: p.color,
         emissive: p.emissive,
@@ -496,22 +494,7 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
       const mesh = new THREE.Mesh(geo, mat)
       mesh.position.set(p.distance, p.y, 0)
       cosmicGroup.add(mesh)
-
-      let ringMesh: THREE.Mesh | undefined
-      if (p.ring) {
-        const ringGeo = new THREE.RingGeometry(p.radius * 1.4, p.radius * 2.2, 64)
-        const ringMat = new THREE.MeshBasicMaterial({
-          color: 0xc9a85c,
-          transparent: true,
-          opacity: 0.35,
-          side: THREE.DoubleSide,
-          blending: THREE.AdditiveBlending,
-        })
-        ringMesh = new THREE.Mesh(ringGeo, ringMat)
-        ringMesh.rotation.x = Math.PI / 2.5
-        mesh.add(ringMesh)
-      }
-      planets.push({ mesh, distance: p.distance, speed: p.speed, y: p.y, ring: ringMesh })
+      planets.push({ mesh, distance: p.distance, speed: p.speed, y: p.y })
     }
 
     // --- NEBULA CLOUDS (colorful gas clusters) ---
