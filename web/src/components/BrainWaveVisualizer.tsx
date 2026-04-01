@@ -13,7 +13,7 @@
  * real GPU-powered neural inference when NVIDIA Inception provides compute.
  */
 
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { X, Brain, Zap, Activity } from 'lucide-react'
 
 interface BrainWaveVisualizerProps {
