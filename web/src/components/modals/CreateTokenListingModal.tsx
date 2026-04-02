@@ -1,13 +1,32 @@
 import { useState, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { X, Coins, Plus, Zap, AlertCircle, ChevronDown, Check, Wallet } from 'lucide-react'
-import { SUPPORTED_TOKENS, TOKEN_INFO, Token, getDisplaySymbol } from 'constants/tokens'
+import { SUPPORTED_TOKENS, TOKEN_INFO, TOKEN_ADDRESSES, Token, getDisplaySymbol } from 'constants/tokens'
 import { useMagicContext } from 'hooks/useMagicContext'
 import { useUnifiedWallet } from 'contexts/UnifiedWalletContext'
 import { toast } from 'react-toastify'
 import { Card } from 'components/ui/card'
 import { Button } from 'components/ui/button'
 import { Badge } from 'components/ui/badge'
+import { ethers } from 'ethers'
+
+const TOKEN_EXCHANGE_ADDRESS = process.env.NEXT_PUBLIC_TOKEN_EXCHANGE || ''
+
+const OGUN_ADDRESS = '0x45f1af89486aeec2da0b06340cd9cd3bd741a15c'
+
+// Minimal ERC-20 ABI for approve + allowance
+const ERC20_ABI = [
+  'function approve(address spender, uint256 amount) external returns (bool)',
+  'function allowance(address owner, address spender) external view returns (uint256)',
+]
+
+// TokenExchange ABI - createListing
+const TOKEN_EXCHANGE_ABI = [
+  'function createListing(address sellToken, uint256 sellAmount, address askToken, uint256 askAmount, uint256 duration) external payable returns (uint256 listingId)',
+]
+
+// Default listing duration: 7 days
+const DEFAULT_DURATION = 7 * 24 * 60 * 60
 
 interface CreateTokenListingModalProps {
   isOpen: boolean
@@ -39,8 +58,9 @@ export const CreateTokenListingModal = ({
   const [showTokenDropdown, setShowTokenDropdown] = useState(false)
   const [acceptedTokens, setAcceptedTokens] = useState<Token[]>(['OGUN', 'MATIC'])
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [txStatus, setTxStatus] = useState<'idle' | 'approving' | 'creating' | 'confirming'>('idle')
 
-  const { account: magicAccount, ogunBalance } = useMagicContext()
+  const { magic, account: magicAccount, ogunBalance } = useMagicContext()
   const { activeAddress, polBalance } = useUnifiedWallet()
   const account = activeAddress || magicAccount
 
@@ -52,9 +72,36 @@ export const CreateTokenListingModal = ({
 
   const platformFee = useMemo(() => totalPrice * 0.0005, [totalPrice])
 
+  /** Resolve the on-chain address for the sell token. address(0) = native POL */
+  const getSellTokenAddress = (): string => {
+    if (selectedToken === 'MATIC') return ethers.constants.AddressZero // native POL
+    if (selectedToken === 'OGUN') return OGUN_ADDRESS
+    // Check TOKEN_ADDRESSES for any other known token
+    const addr = (TOKEN_ADDRESSES as Record<string, string | undefined>)[selectedToken]
+    if (addr) return addr
+    return ethers.constants.AddressZero
+  }
+
+  /** Resolve the on-chain address for the ask (payment) token */
+  const getAskTokenAddress = (): string => {
+    if (priceCurrency === 'POL') return ethers.constants.AddressZero // native POL
+    if (priceCurrency === 'OGUN') return OGUN_ADDRESS
+    return ethers.constants.AddressZero
+  }
+
   const handleSubmit = async () => {
     if (!account) {
       toast.error('Please connect your wallet first')
+      return
+    }
+
+    if (!TOKEN_EXCHANGE_ADDRESS) {
+      toast.error('Token Exchange contract not configured')
+      return
+    }
+
+    if (!magic) {
+      toast.error('Wallet provider not available')
       return
     }
 
@@ -72,32 +119,113 @@ export const CreateTokenListingModal = ({
     }
 
     setIsSubmitting(true)
+    setTxStatus('idle')
 
     try {
-      // For now, create a mock listing (will integrate with GraphQL/blockchain later)
+      const provider = new ethers.providers.Web3Provider((magic as any).rpcProvider, { chainId: 137, name: 'matic' })
+      const signer = provider.getSigner()
+
+      const sellTokenAddr = getSellTokenAddress()
+      const askTokenAddr = getAskTokenAddress()
+      const sellAmountWei = ethers.utils.parseUnits(String(amount), 18)
+      const askAmountWei = ethers.utils.parseUnits(totalPrice.toFixed(18), 18)
+      const isNativeSell = sellTokenAddr === ethers.constants.AddressZero
+
+      // Step 1: Approve ERC-20 spend (skip for native POL)
+      if (!isNativeSell) {
+        setTxStatus('approving')
+        const tokenContract = new ethers.Contract(sellTokenAddr, ERC20_ABI, signer)
+
+        // Check existing allowance
+        const currentAllowance = await tokenContract.allowance(account, TOKEN_EXCHANGE_ADDRESS)
+        if (currentAllowance.lt(sellAmountWei)) {
+          const approveTx = await tokenContract.approve(TOKEN_EXCHANGE_ADDRESS, sellAmountWei)
+          await approveTx.wait()
+        }
+      }
+
+      // Step 2: Create listing on TokenExchange
+      setTxStatus('creating')
+      const exchangeContract = new ethers.Contract(TOKEN_EXCHANGE_ADDRESS, TOKEN_EXCHANGE_ABI, signer)
+
+      // If selling native POL, send it as msg.value
+      const txOverrides: ethers.PayableOverrides = isNativeSell
+        ? { value: sellAmountWei, chainId: 137 }
+        : { chainId: 137 }
+
+      const tx = await exchangeContract.createListing(
+        sellTokenAddr,
+        sellAmountWei,
+        askTokenAddr,
+        askAmountWei,
+        DEFAULT_DURATION,
+        txOverrides,
+      )
+
+      setTxStatus('confirming')
+      const receipt = await tx.wait()
+
+      // Try to parse the listingId from events
+      let listingId = `token-${Date.now()}`
+      try {
+        const iface = new ethers.utils.Interface(TOKEN_EXCHANGE_ABI)
+        for (const log of receipt.logs) {
+          try {
+            const parsed = iface.parseLog(log)
+            if (parsed.name === 'ListingCreated' && parsed.args.listingId) {
+              listingId = parsed.args.listingId.toString()
+              break
+            }
+          } catch {
+            // Not our event, skip
+          }
+        }
+      } catch {
+        // Fallback ID is fine
+      }
+
       const newListing: TokenListingData = {
-        id: `token-${Date.now()}`,
+        id: listingId,
         tokenSymbol: selectedToken,
         tokenAmount: amount,
         chainId: 137,
         price: { value: price, currency: priceCurrency },
-        usdPrice: price * (priceCurrency === 'POL' ? 0.5 : 0.05), // Mock USD conversion
+        usdPrice: price * (priceCurrency === 'POL' ? 0.5 : 0.05),
         seller: account,
         createdAt: new Date(),
       }
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500))
+      const txHash = receipt.transactionHash
+      toast.success(
+        <div>
+          <p>Listed {amount} {getDisplaySymbol(selectedToken)} for sale!</p>
+          <a
+            href={`https://polygonscan.com/tx/${txHash}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-cyan-400 underline text-xs"
+          >
+            View on Polygonscan
+          </a>
+        </div>
+      )
 
-      toast.success(`Listed ${amount} ${getDisplaySymbol(selectedToken)} for sale!`)
       onSuccess?.(newListing)
       onClose()
       resetForm()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to create listing:', error)
-      toast.error('Failed to create listing. Please try again.')
+      const msg = error?.message || 'Unknown error'
+      if (msg.includes('user rejected') || msg.includes('User denied')) {
+        toast.error('Transaction cancelled')
+      } else if (msg.includes('insufficient funds') || msg.includes('insufficient balance')) {
+        toast.error('Insufficient balance for this transaction')
+      } else {
+        toast.error('Failed to create listing. Please try again.')
+      }
     } finally {
       setIsSubmitting(false)
+      setTxStatus('idle')
     }
   }
 
@@ -414,7 +542,10 @@ export const CreateTokenListingModal = ({
                 {isSubmitting ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
-                    Creating Listing...
+                    {txStatus === 'approving' && 'Approving Token...'}
+                    {txStatus === 'creating' && 'Creating Listing...'}
+                    {txStatus === 'confirming' && 'Confirming TX...'}
+                    {txStatus === 'idle' && 'Preparing...'}
                   </>
                 ) : (
                   <>
