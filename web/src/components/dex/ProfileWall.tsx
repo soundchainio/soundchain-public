@@ -18,6 +18,7 @@ import { MediaProvider } from 'types/MediaProvider'
 import { EmoteRenderer } from 'components/EmoteRenderer'
 import { StickerPicker } from 'components/StickerPicker'
 import { GifPicker } from 'components/GifPicker'
+import { AutoplayVideo } from 'components/AutoplayMedia'
 import { useUpload } from 'hooks/useUpload'
 import { SharePostModal } from 'components/modals/SharePostModal'
 import { CreateStoryModal } from 'components/dex/CreateStoryModal'
@@ -244,31 +245,13 @@ function WallPostMedia({ post, small }: { post: any; small?: boolean }) {
 
   if (type === 'video') {
     return (
-      <div className="mt-2 rounded-xl overflow-hidden relative" style={{ maxHeight: small ? '192px' : '320px' }}>
-        {/* Thumbnail poster as img for mobile — iOS Safari ignores video poster until play */}
-        {post.mediaThumbnailUrl && (
-          <img
-            src={post.mediaThumbnailUrl}
-            alt=""
-            className="absolute inset-0 w-full h-full object-cover rounded-xl pointer-events-none peer-[.playing]:hidden"
-            style={{ zIndex: 1 }}
-            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
-          />
-        )}
-        <video
-          controls
-          playsInline
-          preload="metadata"
-          className="w-full rounded-xl relative"
-          style={{ maxHeight: small ? '192px' : '320px', zIndex: 2 }}
-          poster={post.mediaThumbnailUrl || undefined}
-          onPlay={(e) => {
-            const img = (e.target as HTMLVideoElement).parentElement?.querySelector('img')
-            if (img) img.style.display = 'none'
-          }}
-        >
-          <source src={post.mediaUrl} />
-        </video>
+      <div className="mt-2 rounded-xl overflow-hidden" style={{ maxHeight: small ? '192px' : '320px' }}>
+        <AutoplayVideo
+          src={post.mediaUrl}
+          className="rounded-xl"
+          muted={true}
+          loop={true}
+        />
       </div>
     )
   }
