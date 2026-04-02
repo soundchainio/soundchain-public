@@ -75,7 +75,7 @@ export class MessageService extends ModelService<typeof Message> {
         _id: {
           $cond: {
             if: {
-              $in: ['$fromId', [profileObjectId, profileString]],
+              $eq: [{ $toString: '$fromId' }, profileString],
             },
             then: '$toId',
             else: '$fromId',
