@@ -298,9 +298,13 @@ function PulsePage() {
 
   // GraphQL data layer — poll every 5s for near-realtime DM awareness
   // Polling pauses while user is actively typing in chat (prevents text field bugs on iOS)
-  const { data: chatsData, loading: chatsLoading, refetch: refetchChats, startPolling, stopPolling } = useChatsQuery({
+  const { data: chatsData, loading: chatsLoading, error: chatsError, refetch: refetchChats, startPolling, stopPolling } = useChatsQuery({
     pollInterval: 5000,
+    onError: (err) => console.error('[Pulse] Chats query error:', err.message),
   })
+  // Debug: log chats data
+  if (chatsError) console.error('[Pulse] Chats error:', chatsError.message)
+  if (chatsData) console.log('[Pulse] Chats nodes:', chatsData?.chats?.nodes?.length, 'raw:', JSON.stringify(chatsData).slice(0, 200))
   // Stabilize startPolling/stopPolling via refs — Apollo does NOT guarantee referential stability
   // and using them as useCallback deps causes cascade re-renders (#310 on mobile Safari)
   const startPollingRef = useRef(startPolling)
