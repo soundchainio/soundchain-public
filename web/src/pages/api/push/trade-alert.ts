@@ -29,9 +29,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(500).json({ error: 'Web Push not configured' })
   }
 
-  webpush.setVapidDetails('mailto:soundchain@soundchain.io', VAPID_PUBLIC, VAPID_PRIVATE)
-
   try {
+    webpush.setVapidDetails('mailto:soundchain@soundchain.io', VAPID_PUBLIC, VAPID_PRIVATE)
     const client = await clientPromise
     const db = client.db('soundchain')
 
