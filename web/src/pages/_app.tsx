@@ -33,6 +33,7 @@ const MagicProvider = dynamic(() => import('hooks/useMagicContext'), { ssr: fals
 const Web3ModalProvider = dynamic(() => import('contexts/Web3ModalContext').then(mod => mod.Web3ModalProvider), { ssr: false })
 const UnifiedWalletProvider = dynamic(() => import('contexts/UnifiedWalletContext').then(mod => mod.UnifiedWalletProvider), { ssr: false })
 const RadioProvider = dynamic(() => import('contexts/RadioContext').then(mod => mod.RadioProvider), { ssr: false })
+const PushEnableFloat = dynamic(() => import('components/PushEnableFloat').then(mod => mod.PushEnableFloat), { ssr: false })
 
 // Capacitor native app detection and safe area handling
 const CapacitorInit = dynamic(() => import('hooks/useCapacitor').then(mod => {
@@ -160,6 +161,7 @@ function SoundchainMainLayout({ Component, pageProps }: CustomAppProps) {
                           <CheckBodyScroll />
                           <CapacitorInit />
                           <HeartbeatProvider />
+                          <PushEnableFloat />
                           <Layout>
                             <Component {...pageProps} />
                           </Layout>
