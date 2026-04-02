@@ -133,7 +133,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         message: chat.message,
         unread: isUnread,
         createdAt: chat.createdAt,
-        fromId: chat.from,
+        fromId: chat.fromId?.toString(),
         profile: {
           id: chat._id?.toString(),
           displayName: (profile as any).displayName || 'Unknown',

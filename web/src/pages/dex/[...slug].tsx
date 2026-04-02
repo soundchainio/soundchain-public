@@ -9013,19 +9013,52 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                       {profileTab === 'music' && (
                         <TracksGrid profileId={viewingProfile.id} />
                       )}
-                      {/* Shop - Listed NFTs, bundles, tickets, merch for this profile */}
+                      {/* Shop - Full storefront: NFTs, tokens, bundles, merch */}
                       {profileTab === 'shop' && (
                         <div className="space-y-4">
-                          {/* Shop Header with actions for own profile */}
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <ShoppingBag className="w-5 h-5 text-amber-400" />
-                              <h3 className="text-white font-semibold">
-                                {isViewingOwnProfile ? 'My Storefront' : `${viewingProfile.displayName || viewingProfile.userHandle}'s Shop`}
-                              </h3>
+                          {/* Storefront Hero */}
+                          <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-amber-900/20 via-purple-900/20 to-cyan-900/20 p-4 border border-amber-500/20">
+                            <div className="flex items-center justify-between flex-wrap gap-3">
+                              <div>
+                                <h3 className="text-white font-bold text-lg flex items-center gap-2">
+                                  <ShoppingBag className="w-5 h-5 text-amber-400" />
+                                  {isViewingOwnProfile ? 'My Storefront' : `${viewingProfile.displayName || viewingProfile.userHandle}'s Shop`}
+                                </h3>
+                                <p className="text-gray-400 text-xs mt-1">
+                                  {isViewingOwnProfile ? 'Your listings are live for all visitors' : 'Music NFTs • Tokens • Bundles • Merch'}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-3 text-xs">
+                                <div className="text-center px-3 py-1 rounded-lg bg-black/40">
+                                  <span className="text-amber-400 font-bold block">{(() => {
+                                    const nfts = marketTracks.filter((t: any) => t.artistProfileId === viewingProfile.id || t.profileId === viewingProfile.id)
+                                    return nfts.length + tokenListings.length + bundleListings.length
+                                  })()}</span>
+                                  <span className="text-gray-500">Items</span>
+                                </div>
+                                <div className="text-center px-3 py-1 rounded-lg bg-black/40">
+                                  <span className="text-cyan-400 font-bold block">0.05%</span>
+                                  <span className="text-gray-500">Fees</span>
+                                </div>
+                                <div className="text-center px-3 py-1 rounded-lg bg-black/40">
+                                  <span className="text-purple-400 font-bold block">L2</span>
+                                  <span className="text-gray-500">Powered</span>
+                                </div>
+                              </div>
                             </div>
+
+                            {/* Own profile: Create listing buttons */}
                             {isViewingOwnProfile && (
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-2 mt-3 flex-wrap">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setShowCreateTokenModal(true)}
+                                  className="border-cyan-500/50 hover:bg-cyan-500/10 text-cyan-400"
+                                >
+                                  <Coins className="w-4 h-4 mr-2" />
+                                  Sell Tokens
+                                </Button>
                                 <Button
                                   variant="outline"
                                   size="sm"
@@ -9033,7 +9066,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                                   className="border-amber-500/50 hover:bg-amber-500/10 text-amber-400"
                                 >
                                   <Package className="w-4 h-4 mr-2" />
-                                  Bundle
+                                  Create Bundle
                                 </Button>
                                 <Button
                                   variant="outline"
@@ -9048,15 +9081,27 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                             )}
                           </div>
 
-                          {/* Listed tracks filtered by this profile */}
+                          {/* Filter Pills + Sort */}
                           {(() => {
-                            const profileListings = marketTracks.filter(
+                            const profileNFTs = marketTracks.filter(
                               (track: any) => track.artistProfileId === viewingProfile.id || track.profileId === viewingProfile.id
                             )
+                            const profileTokens = tokenListings
+                            const profileBundles = bundleListings
+                            const totalItems = profileNFTs.length + profileTokens.length + profileBundles.length
+                            const shopFilterOptions = [
+                              { key: 'all', label: 'All', count: totalItems, color: 'amber' },
+                              { key: 'nfts', label: 'Music NFTs', count: profileNFTs.length, color: 'cyan' },
+                              { key: 'tokens', label: 'Tokens', count: profileTokens.length, color: 'green' },
+                              { key: 'bundles', label: 'Bundles', count: profileBundles.length, color: 'purple' },
+                            ]
+                            const [activeFilter, setActiveFilter] = React.useState('all')
+                            const [sortBy, setSortBy] = React.useState<'newest' | 'price-low' | 'price-high'>('newest')
+
                             if (listingLoading) {
                               return (
                                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                                  {[...Array(4)].map((_, i) => (
+                                  {[...Array(6)].map((_, i) => (
                                     <Card key={i} className="retro-card animate-pulse">
                                       <div className="aspect-square bg-gray-700 rounded-t-lg" />
                                       <div className="p-2 space-y-2">
@@ -9068,64 +9113,175 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                                 </div>
                               )
                             }
-                            if (profileListings.length === 0) {
-                              return (
-                                <Card className="retro-card p-8 text-center">
-                                  <ShoppingBag className="w-12 h-12 mx-auto mb-4 text-gray-500" />
-                                  <h3 className="text-white font-bold mb-2">No Items Listed</h3>
-                                  <p className="text-gray-400 text-sm">
-                                    {isViewingOwnProfile
-                                      ? 'List your published tracks, event tickets, or merch NFTs to start selling'
-                                      : 'This artist has no items listed for sale right now'}
-                                  </p>
-                                  {isViewingOwnProfile && (
-                                    <p className="text-amber-400/60 text-xs mt-3">
-                                      Go to Music tab → tap a published track → List for Sale
-                                    </p>
-                                  )}
-                                </Card>
-                              )
-                            }
+
                             return (
                               <>
-                                <span className="text-sm text-amber-400">{profileListings.length} listed</span>
-                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                                  {profileListings.map((track: any, index: number) => (
-                                    <TrackNFTCard
-                                      key={track.id}
-                                      track={{
-                                        id: track.id,
-                                        title: track.title || 'Untitled',
-                                        artist: track.artist || 'Unknown Artist',
-                                        artistProfileId: track.artistProfileId,
-                                        artworkUrl: track.artworkUrl || undefined,
-                                        playbackCount: track.playbackCount || 0,
-                                        playbackCountFormatted: track.playbackCountFormatted || '0',
-                                        favoriteCount: track.favoriteCount || 0,
-                                        genres: track.genres || [],
-                                        isFavorite: track.isFavorite || false,
-                                        nftData: track.nftData ? {
-                                          tokenId: track.nftData.tokenId,
-                                          transactionHash: track.nftData.transactionHash || undefined,
-                                          contractAddress: track.nftData.contract || undefined,
-                                        } : undefined,
-                                        listingItem: track.listingItem ? {
-                                          price: track.listingItem.pricePerItem || undefined,
-                                          pricePerItem: track.listingItem.pricePerItem || undefined,
-                                          pricePerItemToShow: track.listingItem.pricePerItemToShow || undefined,
-                                          acceptsOGUN: track.listingItem.isPaymentOGUN || false,
-                                        } : undefined,
-                                        editionSize: track.editionSize || undefined,
-                                      }}
-                                      onPlay={() => handlePlayTrack(track, index, profileListings)}
-                                      isPlaying={isPlaying}
-                                      isCurrentTrack={currentSong?.trackId === track.id}
-                                      onFavorite={async () => {
-                                        await toggleFavorite({ variables: { trackId: track.id }, refetchQueries: ['FavoriteTracks', 'ListingItems'] })
-                                      }}
-                                    />
-                                  ))}
+                                {/* Filter pills */}
+                                <div className="flex items-center justify-between flex-wrap gap-2">
+                                  <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
+                                    {shopFilterOptions.map((opt) => (
+                                      <button
+                                        key={opt.key}
+                                        onClick={() => setActiveFilter(opt.key)}
+                                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all ${
+                                          activeFilter === opt.key
+                                            ? `bg-${opt.color}-500/20 text-${opt.color}-400 border border-${opt.color}-500/50`
+                                            : 'bg-black/40 text-gray-400 border border-white/10 hover:border-white/20'
+                                        }`}
+                                      >
+                                        {opt.label}
+                                        <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${
+                                          activeFilter === opt.key ? `bg-${opt.color}-500/30` : 'bg-white/10'
+                                        }`}>{opt.count}</span>
+                                      </button>
+                                    ))}
+                                  </div>
+                                  <select
+                                    value={sortBy}
+                                    onChange={(e) => setSortBy(e.target.value as any)}
+                                    className="bg-black/40 border border-white/10 rounded-lg text-xs text-gray-300 px-2 py-1.5 focus:outline-none focus:border-amber-500/50"
+                                  >
+                                    <option value="newest">Newest</option>
+                                    <option value="price-low">Price: Low → High</option>
+                                    <option value="price-high">Price: High → Low</option>
+                                  </select>
                                 </div>
+
+                                {/* Empty state */}
+                                {totalItems === 0 && (
+                                  <Card className="retro-card p-8 text-center">
+                                    <ShoppingBag className="w-12 h-12 mx-auto mb-4 text-gray-500" />
+                                    <h3 className="text-white font-bold mb-2">No Items Listed</h3>
+                                    <p className="text-gray-400 text-sm mb-4">
+                                      {isViewingOwnProfile
+                                        ? 'Start selling — list NFTs, tokens, or bundles with merch & tickets'
+                                        : 'This artist has no items listed for sale right now'}
+                                    </p>
+                                    {isViewingOwnProfile && (
+                                      <div className="flex items-center justify-center gap-2 flex-wrap">
+                                        <Button size="sm" onClick={() => setShowCreateTokenModal(true)} className="bg-cyan-600 hover:bg-cyan-700 text-white">
+                                          <Coins className="w-4 h-4 mr-1" /> Sell Tokens
+                                        </Button>
+                                        <Button size="sm" onClick={() => setShowCreateBundleModal(true)} className="bg-amber-600 hover:bg-amber-700 text-white">
+                                          <Package className="w-4 h-4 mr-1" /> Create Bundle
+                                        </Button>
+                                      </div>
+                                    )}
+                                  </Card>
+                                )}
+
+                                {/* NFT Listings */}
+                                {(activeFilter === 'all' || activeFilter === 'nfts') && profileNFTs.length > 0 && (
+                                  <div className="space-y-2">
+                                    {activeFilter === 'all' && profileNFTs.length > 0 && (
+                                      <div className="flex items-center gap-2">
+                                        <Music className="w-4 h-4 text-cyan-400" />
+                                        <span className="text-sm font-bold text-cyan-400">Music NFTs</span>
+                                        <span className="text-xs text-gray-500">{profileNFTs.length}</span>
+                                      </div>
+                                    )}
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                                      {profileNFTs.map((track: any, index: number) => (
+                                        <TrackNFTCard
+                                          key={track.id}
+                                          track={{
+                                            id: track.id,
+                                            title: track.title || 'Untitled',
+                                            artist: track.artist || 'Unknown Artist',
+                                            artistProfileId: track.artistProfileId,
+                                            artworkUrl: track.artworkUrl || undefined,
+                                            playbackCount: track.playbackCount || 0,
+                                            playbackCountFormatted: track.playbackCountFormatted || '0',
+                                            favoriteCount: track.favoriteCount || 0,
+                                            genres: track.genres || [],
+                                            isFavorite: track.isFavorite || false,
+                                            nftData: track.nftData ? {
+                                              tokenId: track.nftData.tokenId,
+                                              transactionHash: track.nftData.transactionHash || undefined,
+                                              contractAddress: track.nftData.contract || undefined,
+                                            } : undefined,
+                                            listingItem: track.listingItem ? {
+                                              price: track.listingItem.pricePerItem || undefined,
+                                              pricePerItem: track.listingItem.pricePerItem || undefined,
+                                              pricePerItemToShow: track.listingItem.pricePerItemToShow || undefined,
+                                              acceptsOGUN: track.listingItem.isPaymentOGUN || false,
+                                            } : undefined,
+                                            editionSize: track.editionSize || undefined,
+                                          }}
+                                          onPlay={() => handlePlayTrack(track, index, profileNFTs)}
+                                          isPlaying={isPlaying}
+                                          isCurrentTrack={currentSong?.trackId === track.id}
+                                          onFavorite={async () => {
+                                            await toggleFavorite({ variables: { trackId: track.id }, refetchQueries: ['FavoriteTracks', 'ListingItems'] })
+                                          }}
+                                        />
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Token Listings */}
+                                {(activeFilter === 'all' || activeFilter === 'tokens') && profileTokens.length > 0 && (
+                                  <div className="space-y-2">
+                                    {activeFilter === 'all' && (
+                                      <div className="flex items-center gap-2">
+                                        <Coins className="w-4 h-4 text-green-400" />
+                                        <span className="text-sm font-bold text-green-400">Token Listings</span>
+                                        <span className="text-xs text-gray-500">{profileTokens.length}</span>
+                                      </div>
+                                    )}
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                                      {profileTokens.map((token) => (
+                                        <TokenCard
+                                          key={token.id}
+                                          token={{
+                                            id: token.id,
+                                            tokenSymbol: token.tokenSymbol,
+                                            tokenAmount: token.tokenAmount,
+                                            chainId: token.chainId,
+                                            price: token.price,
+                                            usdPrice: token.usdPrice,
+                                            saleType: 'fixed',
+                                          }}
+                                          onPurchase={(id) => toast.info('Token purchase coming soon')}
+                                          isWalletConnected={!!walletAccount}
+                                        />
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Bundle Listings */}
+                                {(activeFilter === 'all' || activeFilter === 'bundles') && profileBundles.length > 0 && (
+                                  <div className="space-y-2">
+                                    {activeFilter === 'all' && (
+                                      <div className="flex items-center gap-2">
+                                        <Package className="w-4 h-4 text-purple-400" />
+                                        <span className="text-sm font-bold text-purple-400">Bundles</span>
+                                        <span className="text-xs text-gray-500">{profileBundles.length}</span>
+                                      </div>
+                                    )}
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                                      {profileBundles.map((bundle) => (
+                                        <BundleCard
+                                          key={bundle.id}
+                                          bundle={{
+                                            id: bundle.id,
+                                            nftIds: bundle.nftIds,
+                                            tokenSymbol: bundle.tokenSymbol,
+                                            tokenAmount: bundle.tokenAmount,
+                                            chainId: bundle.chainId,
+                                            privateAsset: bundle.privateAsset,
+                                            price: bundle.price,
+                                            usdPrice: bundle.usdPrice,
+                                            ISRC: '',
+                                          }}
+                                          onPurchase={(id) => toast.info('Bundle purchase coming soon')}
+                                        />
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
                               </>
                             )
                           })()}
