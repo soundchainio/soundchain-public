@@ -58,25 +58,27 @@ export class MessageService extends ModelService<typeof Message> {
   }
 
   getChats(profileId: string, page?: PageInput): Promise<PaginateResult<Message>> {
-    // Convert profileId string to ObjectId for proper comparison in MongoDB aggregation
+    // Match both ObjectId and string formats — Atlas migration may have mixed types
     const profileObjectId = new mongoose.Types.ObjectId(profileId);
+    const profileString = profileId.toString();
 
     return this.paginateAggregated({
       filter: {
         $or: [
-          {
-            fromId: profileObjectId,
-          },
-          {
-            toId: profileObjectId,
-          },
+          { fromId: profileObjectId },
+          { toId: profileObjectId },
+          { fromId: profileString },
+          { toId: profileString },
         ],
       },
       group: {
         _id: {
           $cond: {
             if: {
-              $eq: ['$fromId', profileObjectId],
+              $or: [
+                { $eq: ['$fromId', profileObjectId] },
+                { $eq: ['$fromId', profileString] },
+              ],
             },
             then: '$toId',
             else: '$fromId',
