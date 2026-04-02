@@ -9014,279 +9014,254 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         <TracksGrid profileId={viewingProfile.id} />
                       )}
                       {/* Shop - Full storefront: NFTs, tokens, bundles, merch */}
-                      {profileTab === 'shop' && (
+                      {profileTab === 'shop' && (() => {
+                        const profileNFTs = marketTracks.filter(
+                          (track: any) => track.artistProfileId === viewingProfile.id || track.profileId === viewingProfile.id
+                        )
+                        const profileTokens = tokenListings
+                        const profileBundles = bundleListings
+                        const totalItems = profileNFTs.length + profileTokens.length + profileBundles.length
+
+                        return (
                         <div className="space-y-4">
-                          {/* Storefront Hero */}
-                          <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-amber-900/20 via-purple-900/20 to-cyan-900/20 p-4 border border-amber-500/20">
-                            <div className="flex items-center justify-between flex-wrap gap-3">
-                              <div>
-                                <h3 className="text-white font-bold text-lg flex items-center gap-2">
-                                  <ShoppingBag className="w-5 h-5 text-amber-400" />
-                                  {isViewingOwnProfile ? 'My Storefront' : `${viewingProfile.displayName || viewingProfile.userHandle}'s Shop`}
-                                </h3>
-                                <p className="text-gray-400 text-xs mt-1">
-                                  {isViewingOwnProfile ? 'Your listings are live for all visitors' : 'Music NFTs • Tokens • Bundles • Merch'}
-                                </p>
-                              </div>
-                              <div className="flex items-center gap-3 text-xs">
-                                <div className="text-center px-3 py-1 rounded-lg bg-black/40">
-                                  <span className="text-amber-400 font-bold block">{(() => {
-                                    const nfts = marketTracks.filter((t: any) => t.artistProfileId === viewingProfile.id || t.profileId === viewingProfile.id)
-                                    return nfts.length + tokenListings.length + bundleListings.length
-                                  })()}</span>
-                                  <span className="text-gray-500">Items</span>
+                          {/* Storefront Banner */}
+                          <div className="relative overflow-hidden rounded-xl border border-amber-500/30">
+                            <div className="absolute inset-0 bg-gradient-to-r from-amber-600/10 via-purple-600/10 to-cyan-600/10" />
+                            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(245,158,11,0.15),transparent_60%)]" />
+                            <div className="relative p-5">
+                              <div className="flex items-start justify-between gap-4">
+                                <div className="flex-1">
+                                  <h2 className="text-xl font-black text-white tracking-tight">
+                                    {isViewingOwnProfile ? 'MY STOREFRONT' : `${(viewingProfile.displayName || viewingProfile.userHandle || '').toUpperCase()}'S SHOP`}
+                                  </h2>
+                                  <p className="text-gray-400 text-sm mt-1">
+                                    {isViewingOwnProfile
+                                      ? 'List tokens, NFTs, and bundles. Your shop is live for everyone.'
+                                      : 'Music NFTs, tokens, bundles, merch & tickets'}
+                                  </p>
                                 </div>
-                                <div className="text-center px-3 py-1 rounded-lg bg-black/40">
-                                  <span className="text-cyan-400 font-bold block">0.05%</span>
-                                  <span className="text-gray-500">Fees</span>
-                                </div>
-                                <div className="text-center px-3 py-1 rounded-lg bg-black/40">
-                                  <span className="text-purple-400 font-bold block">L2</span>
-                                  <span className="text-gray-500">Powered</span>
+                                {/* Stats row */}
+                                <div className="flex items-center gap-2">
+                                  <div className="text-center px-3 py-2 rounded-lg bg-black/50 border border-white/5">
+                                    <span className="text-amber-400 font-black text-lg block leading-none">{totalItems}</span>
+                                    <span className="text-gray-500 text-[10px] uppercase tracking-wider">Listed</span>
+                                  </div>
+                                  <div className="text-center px-3 py-2 rounded-lg bg-black/50 border border-white/5">
+                                    <span className="text-cyan-400 font-black text-lg block leading-none">0.05%</span>
+                                    <span className="text-gray-500 text-[10px] uppercase tracking-wider">Fee</span>
+                                  </div>
+                                  <div className="text-center px-3 py-2 rounded-lg bg-black/50 border border-white/5">
+                                    <span className="text-purple-400 font-black text-lg block leading-none">24</span>
+                                    <span className="text-gray-500 text-[10px] uppercase tracking-wider">Tokens</span>
+                                  </div>
                                 </div>
                               </div>
                             </div>
-
-                            {/* Own profile: Create listing buttons */}
-                            {isViewingOwnProfile && (
-                              <div className="flex items-center gap-2 mt-3 flex-wrap">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => setShowCreateTokenModal(true)}
-                                  className="border-cyan-500/50 hover:bg-cyan-500/10 text-cyan-400"
-                                >
-                                  <Coins className="w-4 h-4 mr-2" />
-                                  Sell Tokens
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => setShowCreateBundleModal(true)}
-                                  className="border-amber-500/50 hover:bg-amber-500/10 text-amber-400"
-                                >
-                                  <Package className="w-4 h-4 mr-2" />
-                                  Create Bundle
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => setShowSweepPanel(!showSweepPanel)}
-                                  className="border-purple-500/50 hover:bg-purple-500/10 text-purple-400"
-                                >
-                                  <Zap className="w-4 h-4 mr-2" />
-                                  Sweep
-                                </Button>
-                              </div>
-                            )}
                           </div>
 
-                          {/* Filter Pills + Sort */}
-                          {(() => {
-                            const profileNFTs = marketTracks.filter(
-                              (track: any) => track.artistProfileId === viewingProfile.id || track.profileId === viewingProfile.id
-                            )
-                            const profileTokens = tokenListings
-                            const profileBundles = bundleListings
-                            const totalItems = profileNFTs.length + profileTokens.length + profileBundles.length
-                            const shopFilterOptions = [
-                              { key: 'all', label: 'All', count: totalItems, color: 'amber' },
-                              { key: 'nfts', label: 'Music NFTs', count: profileNFTs.length, color: 'cyan' },
-                              { key: 'tokens', label: 'Tokens', count: profileTokens.length, color: 'green' },
-                              { key: 'bundles', label: 'Bundles', count: profileBundles.length, color: 'purple' },
-                            ]
-                            const [activeFilter, setActiveFilter] = React.useState('all')
-                            const [sortBy, setSortBy] = React.useState<'newest' | 'price-low' | 'price-high'>('newest')
-
-                            if (listingLoading) {
-                              return (
-                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                                  {[...Array(6)].map((_, i) => (
-                                    <Card key={i} className="retro-card animate-pulse">
-                                      <div className="aspect-square bg-gray-700 rounded-t-lg" />
-                                      <div className="p-2 space-y-2">
-                                        <div className="h-3 bg-gray-700 rounded w-3/4" />
-                                        <div className="h-2 bg-gray-700 rounded w-1/2" />
-                                      </div>
-                                    </Card>
-                                  ))}
+                          {/* ACTION CARDS — What you can sell */}
+                          {isViewingOwnProfile && (
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                              {/* Sell Tokens Card */}
+                              <button
+                                onClick={() => setShowCreateTokenModal(true)}
+                                className="group relative overflow-hidden rounded-xl border border-green-500/30 bg-gradient-to-br from-green-900/20 to-green-800/5 p-4 text-left hover:border-green-400/60 hover:shadow-[0_0_30px_rgba(34,197,94,0.15)] transition-all duration-300"
+                              >
+                                <div className="absolute top-0 right-0 w-20 h-20 bg-green-500/5 rounded-full -mr-6 -mt-6 group-hover:bg-green-500/10 transition-colors" />
+                                <Coins className="w-8 h-8 text-green-400 mb-3" />
+                                <h3 className="text-white font-bold text-base">Sell Tokens</h3>
+                                <p className="text-gray-400 text-xs mt-1">List OGUN, POL, ETH, or any of 24 supported tokens</p>
+                                <div className="mt-3 flex items-center gap-2 text-xs">
+                                  <span className="px-2 py-0.5 rounded bg-green-500/20 text-green-400 font-bold">OGUN</span>
+                                  <span className="px-2 py-0.5 rounded bg-purple-500/20 text-purple-400 font-bold">POL</span>
+                                  <span className="px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 font-bold">ETH</span>
+                                  <span className="text-gray-500">+21</span>
                                 </div>
-                              )
-                            }
+                              </button>
 
-                            return (
-                              <>
-                                {/* Filter pills */}
-                                <div className="flex items-center justify-between flex-wrap gap-2">
-                                  <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
-                                    {shopFilterOptions.map((opt) => (
-                                      <button
-                                        key={opt.key}
-                                        onClick={() => setActiveFilter(opt.key)}
-                                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all ${
-                                          activeFilter === opt.key
-                                            ? `bg-${opt.color}-500/20 text-${opt.color}-400 border border-${opt.color}-500/50`
-                                            : 'bg-black/40 text-gray-400 border border-white/10 hover:border-white/20'
-                                        }`}
-                                      >
-                                        {opt.label}
-                                        <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${
-                                          activeFilter === opt.key ? `bg-${opt.color}-500/30` : 'bg-white/10'
-                                        }`}>{opt.count}</span>
-                                      </button>
+                              {/* Create Bundle Card */}
+                              <button
+                                onClick={() => setShowCreateBundleModal(true)}
+                                className="group relative overflow-hidden rounded-xl border border-amber-500/30 bg-gradient-to-br from-amber-900/20 to-amber-800/5 p-4 text-left hover:border-amber-400/60 hover:shadow-[0_0_30px_rgba(245,158,11,0.15)] transition-all duration-300"
+                              >
+                                <div className="absolute top-0 right-0 w-20 h-20 bg-amber-500/5 rounded-full -mr-6 -mt-6 group-hover:bg-amber-500/10 transition-colors" />
+                                <Package className="w-8 h-8 text-amber-400 mb-3" />
+                                <h3 className="text-white font-bold text-base">Create Bundle</h3>
+                                <p className="text-gray-400 text-xs mt-1">NFT + tokens + merch, tickets, vinyl in one package</p>
+                                <div className="mt-3 flex items-center gap-2 text-xs">
+                                  <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 font-bold">VIP</span>
+                                  <span className="px-2 py-0.5 rounded bg-pink-500/20 text-pink-400 font-bold">Vinyl</span>
+                                  <span className="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-400 font-bold">Merch</span>
+                                </div>
+                              </button>
+
+                              {/* List NFT Card */}
+                              <button
+                                onClick={() => { setProfileTab('music'); toast.info('Select a track and tap "List for Sale"') }}
+                                className="group relative overflow-hidden rounded-xl border border-cyan-500/30 bg-gradient-to-br from-cyan-900/20 to-cyan-800/5 p-4 text-left hover:border-cyan-400/60 hover:shadow-[0_0_30px_rgba(6,182,212,0.15)] transition-all duration-300"
+                              >
+                                <div className="absolute top-0 right-0 w-20 h-20 bg-cyan-500/5 rounded-full -mr-6 -mt-6 group-hover:bg-cyan-500/10 transition-colors" />
+                                <Music className="w-8 h-8 text-cyan-400 mb-3" />
+                                <h3 className="text-white font-bold text-base">List Music NFT</h3>
+                                <p className="text-gray-400 text-xs mt-1">Sell your minted tracks on the marketplace</p>
+                                <div className="mt-3 flex items-center gap-2 text-xs">
+                                  <span className="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-400 font-bold">NFT</span>
+                                  <span className="px-2 py-0.5 rounded bg-white/10 text-gray-400 font-bold">Editions</span>
+                                  <span className="px-2 py-0.5 rounded bg-white/10 text-gray-400 font-bold">1-of-1</span>
+                                </div>
+                              </button>
+                            </div>
+                          )}
+
+                          {/* Filter tabs for existing listings */}
+                          {totalItems > 0 && (
+                            <>
+                              <div className="flex items-center gap-3 border-b border-white/10 pb-2">
+                                <span className="text-sm font-bold text-white">{totalItems} Listed</span>
+                                <div className="flex-1" />
+                                {profileNFTs.length > 0 && (
+                                  <span className="text-xs text-cyan-400">{profileNFTs.length} NFTs</span>
+                                )}
+                                {profileTokens.length > 0 && (
+                                  <span className="text-xs text-green-400">{profileTokens.length} Tokens</span>
+                                )}
+                                {profileBundles.length > 0 && (
+                                  <span className="text-xs text-purple-400">{profileBundles.length} Bundles</span>
+                                )}
+                              </div>
+
+                              {/* NFT grid */}
+                              {profileNFTs.length > 0 && (
+                                <div className="space-y-2">
+                                  <div className="flex items-center gap-2">
+                                    <Music className="w-4 h-4 text-cyan-400" />
+                                    <span className="text-sm font-bold text-cyan-400">Music NFTs</span>
+                                  </div>
+                                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                                    {profileNFTs.map((track: any, index: number) => (
+                                      <TrackNFTCard
+                                        key={track.id}
+                                        track={{
+                                          id: track.id,
+                                          title: track.title || 'Untitled',
+                                          artist: track.artist || 'Unknown Artist',
+                                          artistProfileId: track.artistProfileId,
+                                          artworkUrl: track.artworkUrl || undefined,
+                                          playbackCount: track.playbackCount || 0,
+                                          playbackCountFormatted: track.playbackCountFormatted || '0',
+                                          favoriteCount: track.favoriteCount || 0,
+                                          genres: track.genres || [],
+                                          isFavorite: track.isFavorite || false,
+                                          nftData: track.nftData ? {
+                                            tokenId: track.nftData.tokenId,
+                                            transactionHash: track.nftData.transactionHash || undefined,
+                                            contractAddress: track.nftData.contract || undefined,
+                                          } : undefined,
+                                          listingItem: track.listingItem ? {
+                                            price: track.listingItem.pricePerItem || undefined,
+                                            pricePerItem: track.listingItem.pricePerItem || undefined,
+                                            pricePerItemToShow: track.listingItem.pricePerItemToShow || undefined,
+                                            acceptsOGUN: track.listingItem.isPaymentOGUN || false,
+                                          } : undefined,
+                                          editionSize: track.editionSize || undefined,
+                                        }}
+                                        onPlay={() => handlePlayTrack(track, index, profileNFTs)}
+                                        isPlaying={isPlaying}
+                                        isCurrentTrack={currentSong?.trackId === track.id}
+                                        onFavorite={async () => {
+                                          await toggleFavorite({ variables: { trackId: track.id }, refetchQueries: ['FavoriteTracks', 'ListingItems'] })
+                                        }}
+                                      />
                                     ))}
                                   </div>
-                                  <select
-                                    value={sortBy}
-                                    onChange={(e) => setSortBy(e.target.value as any)}
-                                    className="bg-black/40 border border-white/10 rounded-lg text-xs text-gray-300 px-2 py-1.5 focus:outline-none focus:border-amber-500/50"
-                                  >
-                                    <option value="newest">Newest</option>
-                                    <option value="price-low">Price: Low → High</option>
-                                    <option value="price-high">Price: High → Low</option>
-                                  </select>
                                 </div>
+                              )}
 
-                                {/* Empty state */}
-                                {totalItems === 0 && (
-                                  <Card className="retro-card p-8 text-center">
-                                    <ShoppingBag className="w-12 h-12 mx-auto mb-4 text-gray-500" />
-                                    <h3 className="text-white font-bold mb-2">No Items Listed</h3>
-                                    <p className="text-gray-400 text-sm mb-4">
-                                      {isViewingOwnProfile
-                                        ? 'Start selling — list NFTs, tokens, or bundles with merch & tickets'
-                                        : 'This artist has no items listed for sale right now'}
-                                    </p>
-                                    {isViewingOwnProfile && (
-                                      <div className="flex items-center justify-center gap-2 flex-wrap">
-                                        <Button size="sm" onClick={() => setShowCreateTokenModal(true)} className="bg-cyan-600 hover:bg-cyan-700 text-white">
-                                          <Coins className="w-4 h-4 mr-1" /> Sell Tokens
-                                        </Button>
-                                        <Button size="sm" onClick={() => setShowCreateBundleModal(true)} className="bg-amber-600 hover:bg-amber-700 text-white">
-                                          <Package className="w-4 h-4 mr-1" /> Create Bundle
-                                        </Button>
-                                      </div>
-                                    )}
-                                  </Card>
-                                )}
-
-                                {/* NFT Listings */}
-                                {(activeFilter === 'all' || activeFilter === 'nfts') && profileNFTs.length > 0 && (
-                                  <div className="space-y-2">
-                                    {activeFilter === 'all' && profileNFTs.length > 0 && (
-                                      <div className="flex items-center gap-2">
-                                        <Music className="w-4 h-4 text-cyan-400" />
-                                        <span className="text-sm font-bold text-cyan-400">Music NFTs</span>
-                                        <span className="text-xs text-gray-500">{profileNFTs.length}</span>
-                                      </div>
-                                    )}
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                                      {profileNFTs.map((track: any, index: number) => (
-                                        <TrackNFTCard
-                                          key={track.id}
-                                          track={{
-                                            id: track.id,
-                                            title: track.title || 'Untitled',
-                                            artist: track.artist || 'Unknown Artist',
-                                            artistProfileId: track.artistProfileId,
-                                            artworkUrl: track.artworkUrl || undefined,
-                                            playbackCount: track.playbackCount || 0,
-                                            playbackCountFormatted: track.playbackCountFormatted || '0',
-                                            favoriteCount: track.favoriteCount || 0,
-                                            genres: track.genres || [],
-                                            isFavorite: track.isFavorite || false,
-                                            nftData: track.nftData ? {
-                                              tokenId: track.nftData.tokenId,
-                                              transactionHash: track.nftData.transactionHash || undefined,
-                                              contractAddress: track.nftData.contract || undefined,
-                                            } : undefined,
-                                            listingItem: track.listingItem ? {
-                                              price: track.listingItem.pricePerItem || undefined,
-                                              pricePerItem: track.listingItem.pricePerItem || undefined,
-                                              pricePerItemToShow: track.listingItem.pricePerItemToShow || undefined,
-                                              acceptsOGUN: track.listingItem.isPaymentOGUN || false,
-                                            } : undefined,
-                                            editionSize: track.editionSize || undefined,
-                                          }}
-                                          onPlay={() => handlePlayTrack(track, index, profileNFTs)}
-                                          isPlaying={isPlaying}
-                                          isCurrentTrack={currentSong?.trackId === track.id}
-                                          onFavorite={async () => {
-                                            await toggleFavorite({ variables: { trackId: track.id }, refetchQueries: ['FavoriteTracks', 'ListingItems'] })
-                                          }}
-                                        />
-                                      ))}
-                                    </div>
+                              {/* Token grid */}
+                              {profileTokens.length > 0 && (
+                                <div className="space-y-2">
+                                  <div className="flex items-center gap-2">
+                                    <Coins className="w-4 h-4 text-green-400" />
+                                    <span className="text-sm font-bold text-green-400">Token Listings</span>
                                   </div>
-                                )}
-
-                                {/* Token Listings */}
-                                {(activeFilter === 'all' || activeFilter === 'tokens') && profileTokens.length > 0 && (
-                                  <div className="space-y-2">
-                                    {activeFilter === 'all' && (
-                                      <div className="flex items-center gap-2">
-                                        <Coins className="w-4 h-4 text-green-400" />
-                                        <span className="text-sm font-bold text-green-400">Token Listings</span>
-                                        <span className="text-xs text-gray-500">{profileTokens.length}</span>
-                                      </div>
-                                    )}
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                                      {profileTokens.map((token) => (
-                                        <TokenCard
-                                          key={token.id}
-                                          token={{
-                                            id: token.id,
-                                            tokenSymbol: token.tokenSymbol,
-                                            tokenAmount: token.tokenAmount,
-                                            chainId: token.chainId,
-                                            price: token.price,
-                                            usdPrice: token.usdPrice,
-                                            saleType: 'fixed',
-                                          }}
-                                          onPurchase={(id) => toast.info('Token purchase coming soon')}
-                                          isWalletConnected={!!walletAccount}
-                                        />
-                                      ))}
-                                    </div>
+                                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                                    {profileTokens.map((token) => (
+                                      <TokenCard
+                                        key={token.id}
+                                        token={{
+                                          id: token.id,
+                                          tokenSymbol: token.tokenSymbol,
+                                          tokenAmount: token.tokenAmount,
+                                          chainId: token.chainId,
+                                          price: token.price,
+                                          usdPrice: token.usdPrice,
+                                          saleType: 'fixed',
+                                        }}
+                                        onPurchase={(id) => toast.info('Token purchase coming soon')}
+                                        isWalletConnected={!!walletAccount}
+                                      />
+                                    ))}
                                   </div>
-                                )}
+                                </div>
+                              )}
 
-                                {/* Bundle Listings */}
-                                {(activeFilter === 'all' || activeFilter === 'bundles') && profileBundles.length > 0 && (
-                                  <div className="space-y-2">
-                                    {activeFilter === 'all' && (
-                                      <div className="flex items-center gap-2">
-                                        <Package className="w-4 h-4 text-purple-400" />
-                                        <span className="text-sm font-bold text-purple-400">Bundles</span>
-                                        <span className="text-xs text-gray-500">{profileBundles.length}</span>
-                                      </div>
-                                    )}
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                                      {profileBundles.map((bundle) => (
-                                        <BundleCard
-                                          key={bundle.id}
-                                          bundle={{
-                                            id: bundle.id,
-                                            nftIds: bundle.nftIds,
-                                            tokenSymbol: bundle.tokenSymbol,
-                                            tokenAmount: bundle.tokenAmount,
-                                            chainId: bundle.chainId,
-                                            privateAsset: bundle.privateAsset,
-                                            price: bundle.price,
-                                            usdPrice: bundle.usdPrice,
-                                            ISRC: '',
-                                          }}
-                                          onPurchase={(id) => toast.info('Bundle purchase coming soon')}
-                                        />
-                                      ))}
-                                    </div>
+                              {/* Bundle grid */}
+                              {profileBundles.length > 0 && (
+                                <div className="space-y-2">
+                                  <div className="flex items-center gap-2">
+                                    <Package className="w-4 h-4 text-purple-400" />
+                                    <span className="text-sm font-bold text-purple-400">Bundles</span>
                                   </div>
-                                )}
-                              </>
-                            )
-                          })()}
+                                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                                    {profileBundles.map((bundle) => (
+                                      <BundleCard
+                                        key={bundle.id}
+                                        bundle={{
+                                          id: bundle.id,
+                                          nftIds: bundle.nftIds,
+                                          tokenSymbol: bundle.tokenSymbol,
+                                          tokenAmount: bundle.tokenAmount,
+                                          chainId: bundle.chainId,
+                                          privateAsset: bundle.privateAsset,
+                                          price: bundle.price,
+                                          usdPrice: bundle.usdPrice,
+                                          ISRC: '',
+                                        }}
+                                        onPurchase={(id) => toast.info('Bundle purchase coming soon')}
+                                      />
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </>
+                          )}
+
+                          {/* Empty state for visitors */}
+                          {!isViewingOwnProfile && totalItems === 0 && (
+                            <Card className="retro-card p-8 text-center">
+                              <ShoppingBag className="w-12 h-12 mx-auto mb-4 text-gray-500" />
+                              <h3 className="text-white font-bold mb-2">Shop Coming Soon</h3>
+                              <p className="text-gray-400 text-sm">This artist hasn't listed anything yet</p>
+                            </Card>
+                          )}
+
+                          {/* Loading state */}
+                          {listingLoading && (
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                              {[...Array(6)].map((_, i) => (
+                                <Card key={i} className="retro-card animate-pulse">
+                                  <div className="aspect-square bg-gray-700 rounded-t-lg" />
+                                  <div className="p-2 space-y-2">
+                                    <div className="h-3 bg-gray-700 rounded w-3/4" />
+                                    <div className="h-2 bg-gray-700 rounded w-1/2" />
+                                  </div>
+                                </Card>
+                              ))}
+                            </div>
+                          )}
                         </div>
-                      )}
+                        )
+                      })()}
                       {profileTab === 'playlists' && (
                         <div className="space-y-4">
                           {/* Playlists Section */}
