@@ -38,8 +38,8 @@ export const Logo = ({ id = 'logo', width, height, spin, spinSpeed = 'normal', c
 
   // Spinning sphere: wrapper gets className for sizing, SVG fills 100%
   return (
-    <span className={`logo-sphere-container ${className || ''}`} style={{ width: w, height: w }}>
-      <span className={sphereClass} style={{ width: '100%', height: '100%', display: 'inline-flex', borderRadius: '50%', overflow: 'hidden' }}>
+    <span className={`logo-sphere-container ${className || ''}`}>
+      <span className={sphereClass} style={{ width: '100%', height: '100%', display: 'inline-flex' }}>
         <svg
           id={id || 'logo'}
           width="100%"

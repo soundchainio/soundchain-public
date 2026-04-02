@@ -1632,20 +1632,11 @@ input[type="number"]::-webkit-outer-spin-button {
 }
 
 .logo-sphere-container {
-  perspective: 150px;
+  perspective: 300px;
   perspective-origin: 50% 50%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transform-style: preserve-3d;
-}
-
-/* Force sphere shape on the logo — clip to circle + 3D lighting */
-.logo-sphere,
-.logo-sphere-subtle {
-  border-radius: 50% !important;
-  clip-path: circle(50%);
-  aspect-ratio: 1 / 1;
 }
 
 .logo-sphere::after,
