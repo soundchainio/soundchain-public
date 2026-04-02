@@ -260,15 +260,19 @@ function WallPostMedia({ post, small }: { post: any; small?: boolean }) {
           playsInline
           muted
           preload="metadata"
-          className="w-full rounded-xl relative"
-          style={{ maxHeight: small ? '192px' : '320px', zIndex: 2 }}
+          className="w-full rounded-xl relative object-contain bg-black"
+          style={{ maxHeight: small ? '300px' : '480px', minHeight: '200px', zIndex: 2 }}
           poster={post.mediaThumbnailUrl || undefined}
           onPlay={(e) => {
             const img = (e.target as HTMLVideoElement).parentElement?.querySelector('img')
             if (img) img.style.display = 'none'
           }}
+          onClick={(e) => {
+            // Tap to unmute/mute — iOS requires user interaction for audio
+            const vid = e.target as HTMLVideoElement
+            vid.muted = !vid.muted
+          }}
           ref={(el) => {
-            // Autoplay on scroll — play when visible, pause when not
             if (!el) return
             const observer = new IntersectionObserver(
               ([entry]) => {
@@ -278,7 +282,7 @@ function WallPostMedia({ post, small }: { post: any; small?: boolean }) {
                   el.pause()
                 }
               },
-              { threshold: 0.5 }
+              { threshold: 0.3 }
             )
             observer.observe(el)
           }}
