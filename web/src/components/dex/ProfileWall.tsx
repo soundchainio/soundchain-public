@@ -258,14 +258,29 @@ function WallPostMedia({ post, small }: { post: any; small?: boolean }) {
         <video
           controls
           playsInline
+          muted
           preload="metadata"
           className="w-full rounded-xl relative"
           style={{ maxHeight: small ? '192px' : '320px', zIndex: 2 }}
           poster={post.mediaThumbnailUrl || undefined}
           onPlay={(e) => {
-            // Hide the img overlay once video starts playing
             const img = (e.target as HTMLVideoElement).parentElement?.querySelector('img')
             if (img) img.style.display = 'none'
+          }}
+          ref={(el) => {
+            // Autoplay on scroll — play when visible, pause when not
+            if (!el) return
+            const observer = new IntersectionObserver(
+              ([entry]) => {
+                if (entry.isIntersecting) {
+                  el.play().catch(() => {})
+                } else {
+                  el.pause()
+                }
+              },
+              { threshold: 0.5 }
+            )
+            observer.observe(el)
           }}
         >
           <source src={post.mediaUrl} />
