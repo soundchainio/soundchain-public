@@ -1632,11 +1632,12 @@ input[type="number"]::-webkit-outer-spin-button {
 }
 
 .logo-sphere-container {
-  perspective: 300px;
+  perspective: 200px;
   perspective-origin: 50% 50%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  transform-style: preserve-3d;
 }
 
 .logo-sphere::after,
