@@ -260,8 +260,19 @@ function WallPostMedia({ post, small }: { post: any; small?: boolean }) {
           playsInline
           muted
           preload="metadata"
-          className="w-full rounded-xl relative object-cover"
-          style={{ maxHeight: '500px', zIndex: 2 }}
+          className="w-full rounded-xl relative"
+          style={{ zIndex: 2 }}
+          onLoadedMetadata={(e) => {
+            // Auto-adjust container to video's natural aspect ratio
+            const vid = e.target as HTMLVideoElement
+            const ratio = vid.videoHeight / vid.videoWidth
+            if (ratio > 1.5) {
+              // Vertical video — cap height so it doesn't take entire screen
+              vid.style.maxHeight = '70vh'
+              vid.style.objectFit = 'contain'
+            }
+            // Horizontal/square — let it fill naturally
+          }}
           poster={post.mediaThumbnailUrl || undefined}
           onPlay={(e) => {
             const img = (e.target as HTMLVideoElement).parentElement?.querySelector('img')
