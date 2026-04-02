@@ -85,42 +85,42 @@ const normalizeYoutube = (str: string) => {
     const srcUrl = embedMatch[1]
     const match = srcUrl.match(youtubeVideoIdRegex)
     if (match && match[1]) {
-      return `https://www.youtube-nocookie.com/embed/${match[1]}`
+      return `https://www.youtube.com/embed/${match[1]}`
     }
     return srcUrl
   }
 
   // If it's already an embed URL, return it (convert to nocookie if needed)
   if (str.includes('youtube.com/embed/')) {
-    return str.replace('youtube.com/embed/', 'youtube-nocookie.com/embed/')
+    return str.replace('youtube.com/embed/', 'youtube.com/embed/')
   }
-  if (str.includes('youtube-nocookie.com/embed/')) {
+  if (str.includes('youtube.com/embed/')) {
     return str
   }
 
   // Check for YouTube Music album URL (watch with list param) - prioritize album embed
   const musicAlbumMatch = str.match(youtubeMusicAlbumRegex)
   if (musicAlbumMatch && musicAlbumMatch[1]) {
-    return `https://www.youtube-nocookie.com/embed/videoseries?list=${musicAlbumMatch[1]}&autoplay=1&index=0`
+    return `https://www.youtube.com/embed/videoseries?list=${musicAlbumMatch[1]}&autoplay=1&index=0`
   }
 
   // Check for playlist URL — use /embed/videoseries (NOT /embed?listType=playlist which is malformed)
   const playlistMatch = str.match(youtubePlaylistRegex)
   if (playlistMatch && playlistMatch[1]) {
-    return `https://www.youtube-nocookie.com/embed/videoseries?list=${playlistMatch[1]}&autoplay=1&index=0`
+    return `https://www.youtube.com/embed/videoseries?list=${playlistMatch[1]}&autoplay=1&index=0`
   }
 
   // Check for clip URL - clips use a different embed format
   const clipMatch = str.match(youtubeClipRegex)
   if (clipMatch && clipMatch[1]) {
-    return `https://www.youtube-nocookie.com/embed/${clipMatch[1]}`
+    return `https://www.youtube.com/embed/${clipMatch[1]}`
   }
 
   // Check for @channel/live URL - extract channel for live embed
   const liveChannelMatch = str.match(youtubeLiveChannelRegex)
   if (liveChannelMatch && liveChannelMatch[1]) {
     // Live channel embeds use the channel's live stream
-    return `https://www.youtube-nocookie.com/embed/live_stream?channel=${liveChannelMatch[1]}`
+    return `https://www.youtube.com/embed/live_stream?channel=${liveChannelMatch[1]}`
   }
 
   // Extract video ID from standard YouTube URL formats (watch, shorts, live, v/, youtu.be, music)
@@ -129,9 +129,9 @@ const normalizeYoutube = (str: string) => {
     // Preserve playlist context if present (e.g. watch?v=VIDEO_ID&list=PLAYLIST_ID)
     const listParam = str.match(/[?&]list=([a-zA-Z0-9_-]+)/)
     if (listParam && listParam[1]) {
-      return `https://www.youtube-nocookie.com/embed/${match[1]}?list=${listParam[1]}&autoplay=1&index=0`
+      return `https://www.youtube.com/embed/${match[1]}?list=${listParam[1]}&autoplay=1&index=0`
     }
-    return `https://www.youtube-nocookie.com/embed/${match[1]}`
+    return `https://www.youtube.com/embed/${match[1]}`
   }
 
   // Fallback: try to extract video ID from URL parameters
@@ -162,7 +162,7 @@ const normalizeYoutube = (str: string) => {
     }
   }
 
-  return videoId ? `https://www.youtube-nocookie.com/embed/${videoId}` : str
+  return videoId ? `https://www.youtube.com/embed/${videoId}` : str
 }
 
 const normalizeSoundcloud = async (str: string) => {
