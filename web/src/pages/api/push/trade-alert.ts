@@ -1,7 +1,7 @@
 /**
  * POST /api/push/trade-alert — Send Web Push for OGUN Trader bot events
  *
- * Sends push notification to the founder's devices when the bot
+ * Sends push notification to founder devices when the bot
  * executes a trade. Phone lights up, vibrates, flashes.
  *
  * Body: { action, pair, price, qty, pnl, pnlPct }
