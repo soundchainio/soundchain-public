@@ -50,8 +50,6 @@ import {
 import Link from 'next/link'
 import { Avatar } from 'components/Avatar'
 import { SubtleGlowLogo } from 'icons/GlowingLogo'
-import dynamic from 'next/dynamic'
-const MiniSphere = dynamic(() => import('components/MiniSphere').then(m => m.MiniSphere), { ssr: false })
 import { useOpenClawGateway } from 'hooks/useOpenClawGateway'
 import { usePushNotifications } from 'hooks/usePushNotifications'
 import {
@@ -73,6 +71,7 @@ const StickerPicker = dynamic(() => import('components/StickerPicker').then((m) 
 const GifPicker = dynamic(() => import('components/GifPicker').then((m) => m.GifPicker), { ssr: false })
 const CallUI = dynamic(() => import('components/dex/CallUI').then((m) => m.CallUI), { ssr: false })
 const CallButton = dynamic(() => import('components/dex/CallUI').then((m) => m.CallButton), { ssr: false })
+const MiniSphere = dynamic(() => import('components/MiniSphere').then(m => m.MiniSphere), { ssr: false })
 
 const TEST_PUSH = gql`mutation TestPush { testPushNotification }`
 const SEND_TYPING = gql`mutation SendTypingIndicator($toId: String!) { sendTypingIndicator(toId: $toId) }`
