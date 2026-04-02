@@ -628,6 +628,28 @@ function PulsePage() {
 
   const unreadCount = unreadData?.myProfile?.unreadMessageCount || 0
 
+  // Stable refs for webrtc methods — MUST be before any early returns (React #310)
+  const answerCallRef = useRef(webrtc.answerCall)
+  const declineCallRef = useRef(webrtc.declineCall)
+  answerCallRef.current = webrtc.answerCall
+  declineCallRef.current = webrtc.declineCall
+
+  const handleAnswerCall = useCallback(() => {
+    const offer = (window as any).__pendingCallOffer
+    if (offer) {
+      answerCallRef.current(offer.callId, offer.senderId, offer.senderName, offer.senderAvatar, offer.mode, offer.offerSdp)
+      delete (window as any).__pendingCallOffer
+    }
+  }, [])
+
+  const handleDeclineCall = useCallback(() => {
+    const offer = (window as any).__pendingCallOffer
+    if (offer) {
+      declineCallRef.current(offer.callId, offer.senderId)
+      delete (window as any).__pendingCallOffer
+    }
+  }, [])
+
   if (meLoading || !me) {
     return (
       <div className="h-full flex items-center justify-center" style={{ backgroundColor: WA.bg }}>
@@ -1608,29 +1630,6 @@ function PulsePage() {
       </div>
     )
   }
-
-  // Stable refs for webrtc methods — avoids re-creating callbacks on every render
-  const answerCallRef = useRef(webrtc.answerCall)
-  const declineCallRef = useRef(webrtc.declineCall)
-  answerCallRef.current = webrtc.answerCall
-  declineCallRef.current = webrtc.declineCall
-
-  // Answer incoming call using stored offer data
-  const handleAnswerCall = useCallback(() => {
-    const offer = (window as any).__pendingCallOffer
-    if (offer) {
-      answerCallRef.current(offer.callId, offer.senderId, offer.senderName, offer.senderAvatar, offer.mode, offer.offerSdp)
-      delete (window as any).__pendingCallOffer
-    }
-  }, [])
-
-  const handleDeclineCall = useCallback(() => {
-    const offer = (window as any).__pendingCallOffer
-    if (offer) {
-      declineCallRef.current(offer.callId, offer.senderId)
-      delete (window as any).__pendingCallOffer
-    }
-  }, [])
 
   return (
     <>
