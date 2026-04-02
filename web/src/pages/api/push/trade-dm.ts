@@ -19,8 +19,8 @@ const webpush = (() => {
 const VAPID_PUBLIC = process.env.VAPID_PUBLIC_KEY || ''
 const VAPID_PRIVATE = process.env.VAPID_PRIVATE_KEY || ''
 
-// OGUN Trader bot identity
-const BOT_NAME = 'OGUN Trader'
+// OGUN Trader bot identity — shows as furl_ai in Pulse DMs
+const BOT_NAME = 'furl_ai'
 const FOUNDER_HANDLES = ['furda1', 'furda_nfts', 'furdA1']
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -34,14 +34,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const db = client.db('soundchain')
 
     // Find or create the bot's profile
-    let botProfile = await db.collection('profiles').findOne({ displayName: BOT_NAME, badges: 'bot' })
+    let botProfile = await db.collection('profiles').findOne({
+      $or: [
+        { displayName: BOT_NAME, badges: 'bot' },
+        { displayName: BOT_NAME, badges: { $in: ['bot', 'agent'] } },
+        { handle: 'furl_ai' },
+      ]
+    })
     if (!botProfile) {
       const botProfileId = new ObjectId()
       await db.collection('profiles').insertOne({
         _id: botProfileId,
+        handle: 'furl_ai',
         displayName: BOT_NAME,
-        profilePicture: 'https://api.dicebear.com/7.x/bottts/svg?seed=ogun-trader&backgroundColor=0a0a0a',
-        bio: 'SOL micro-ripple rider. Never sleeps. Never sells at a loss.',
+        profilePicture: 'https://api.dicebear.com/7.x/bottts/svg?seed=furl-ai&backgroundColor=0a0a0a',
+        bio: 'OGUN Trader — SOL micro-ripple rider. Never sleeps.',
         badges: ['bot', 'agent'],
         followerCount: 0,
         followingCount: 0,
@@ -77,8 +84,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (webpush && VAPID_PUBLIC && VAPID_PRIVATE) {
       webpush.setVapidDetails('mailto:agents@soundchain.io', VAPID_PUBLIC, VAPID_PRIVATE)
 
+      const founderUserId = founderUser._id?.toString()
+      const fpId = founderProfileId?.toString?.() || founderProfileId
       const subs = await db.collection('pushsubscriptions').find({
-        profileId: { $in: [founderProfileId, founderProfileId.toString()] }
+        $or: [
+          { profileId: { $in: [founderProfileId, fpId] } },
+          { userId: { $in: [founderUser._id, founderUserId, founderProfileId, fpId] } },
+        ]
       }).toArray()
 
       const emoji = type === 'buy' ? '🟢' : type === 'sell' ? '💰' : '📊'

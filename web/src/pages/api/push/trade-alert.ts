@@ -40,10 +40,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       handle: { $in: FOUNDER_HANDLES }
     }).toArray()
 
-    const founderProfileIds = founderUsers.map(u => u.profileId)
+    // Collect all possible IDs (profileId, _id, userId) for subscription lookup
+    const founderProfileIds = founderUsers.flatMap(u => [
+      u.profileId,
+      u.profileId?.toString(),
+      u._id,
+      u._id?.toString(),
+    ]).filter(Boolean)
 
     const subscriptions = await db.collection('pushsubscriptions').find({
-      profileId: { $in: founderProfileIds }
+      $or: [
+        { profileId: { $in: founderProfileIds } },
+        { userId: { $in: founderProfileIds } },
+      ]
     }).toArray()
 
     if (subscriptions.length === 0) {
