@@ -4,6 +4,8 @@ import { Avatar } from 'components/Avatar'
 import { Bell } from 'icons/Bell'
 import { Logo } from 'icons/Logo'
 import { SubtleGlowLogo } from 'icons/GlowingLogo'
+import dynamic from 'next/dynamic'
+const MiniSphere = dynamic(() => import('components/MiniSphere').then(m => m.MiniSphere), { ssr: false })
 import { getJwt } from 'lib/apollo'
 import { useMeQuery } from 'lib/graphql'
 import Link from 'next/link'
@@ -234,7 +236,7 @@ export const TopNavBar = ({
       <div className="relative z-10 flex h-14 items-center justify-between bg-black/95 backdrop-blur-md border-b border-white/5 px-4">
         {/* Mobile Logo - with energy glow */}
         <Link href="/dex" className="flex items-center gap-2 md:hidden" passHref>
-          <SubtleGlowLogo width={32} height={32} />
+          <MiniSphere size={32} />
         </Link>
 
         {/* Desktop Navigation */}
@@ -247,7 +249,7 @@ export const TopNavBar = ({
           !isCreateAccount && (
             <div className="hidden md:flex items-center gap-3">
               <Link href="/" passHref className="flex items-center gap-2">
-                <SubtleGlowLogo width={32} height={32} />
+                <MiniSphere size={32} />
                 <span className="text-white font-semibold text-lg">SoundCh<span className="matrix-ai">ai</span>n</span>
               </Link>
             </div>

@@ -50,6 +50,8 @@ import {
 import Link from 'next/link'
 import { Avatar } from 'components/Avatar'
 import { SubtleGlowLogo } from 'icons/GlowingLogo'
+import dynamic from 'next/dynamic'
+const MiniSphere = dynamic(() => import('components/MiniSphere').then(m => m.MiniSphere), { ssr: false })
 import { useOpenClawGateway } from 'hooks/useOpenClawGateway'
 import { usePushNotifications } from 'hooks/usePushNotifications'
 import {
@@ -682,7 +684,7 @@ function PulsePage() {
               <div className="absolute inset-0 -m-3 rounded-full animate-ping" style={{ backgroundColor: `${WA.accent}15`, animationDuration: '2s' }} />
               <div className="absolute inset-0 -m-1.5 rounded-full animate-pulse" style={{ backgroundColor: `${WA.accent}20` }} />
               <div className="relative w-16 h-16 rounded-2xl flex items-center justify-center" style={{ backgroundColor: WA.bg, border: `2px solid ${WA.accent}40` }}>
-                <SubtleGlowLogo width={40} height={40} />
+                <MiniSphere size={40} />
               </div>
             </div>
             <h3 className="text-lg font-bold" style={{ color: WA.text }}>SoundChain Pulse</h3>
@@ -1171,7 +1173,7 @@ function PulsePage() {
         <div className="flex items-center gap-2">
           {/* SoundChain logo — back to DEX */}
           <Link href="/dex/feed" className="flex items-center p-1 rounded-lg hover:bg-white/10 transition-colors">
-            <SubtleGlowLogo width={28} height={28} />
+            <MiniSphere size={28} />
           </Link>
           <h1 className="text-lg font-bold" style={{ color: WA.text }}>
             Pulse
@@ -1684,7 +1686,7 @@ function PulsePage() {
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center" style={{ backgroundColor: WA.bgDarker }}>
                 <div className="mb-4">
-                  <SubtleGlowLogo width={64} height={64} />
+                  <MiniSphere size={64} />
                 </div>
                 <h2 className="text-xl font-light mb-2" style={{ color: WA.text }}>
                   SoundChain Pulse
