@@ -2,10 +2,10 @@ import { NotAvailableMessage } from 'components/NotAvailableMessage'
 import { useModalDispatch } from 'contexts/ModalContext'
 import { useMe } from 'hooks/useMe'
 import { Ellipsis } from 'icons/Ellipsis'
-import { Role, useCommentQuery } from 'lib/graphql'
+import { Role, useCommentQuery, useCommentsLazyQuery, PageInput } from 'lib/graphql'
 import NextLink from 'next/link'
 import { useRouter } from 'next/router'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { toast } from 'react-toastify'
 import { createPortal } from 'react-dom'
 import { AuthorActionsType } from 'types/AuthorActionsType'
@@ -17,12 +17,12 @@ import { Timestamp } from '../Timestamp'
 import { EmoteRenderer } from '../EmoteRenderer'
 import { SharePostModal } from '../modals/SharePostModal'
 import { CreateStoryModal } from '../dex/CreateStoryModal'
-import { Share2, Film, MessageCircle, Trash2 } from 'lucide-react'
+import { Share2, Film, MessageCircle, Trash2, ChevronDown } from 'lucide-react'
 import { useDeleteCommentMutation } from 'lib/graphql'
 
 interface CommentProps {
   commentId: string
-  onReplyClick?: () => void
+  onReplyClick?: (authorName?: string) => void
 }
 
 export const Comment = ({ commentId, onReplyClick }: CommentProps) => {
@@ -116,6 +116,11 @@ export const Comment = ({ commentId, onReplyClick }: CommentProps) => {
           <Timestamp className="text-gray-600 text-[10px]" datetime={comment.createdAt} small />
           {canEdit && <Ellipsis className="h-3 w-3 cursor-pointer text-gray-600 hover:text-gray-400 ml-auto" onClick={onEllipsisClick} />}
         </div>
+        {comment.replyToId && comment.replyTo && (
+          <div className="text-[10px] text-cyan-500/70 mt-0.5">
+            replying to @{comment.replyTo.profile?.displayName || comment.replyTo.profile?.userHandle || (comment.replyTo.isGuest && comment.replyTo.walletAddress ? formatWalletAddress(comment.replyTo.walletAddress) : 'someone')}
+          </div>
+        )}
         <div className="text-gray-300 text-xs mt-0.5 whitespace-pre-wrap break-words">
           <EmoteRenderer text={comment.body} linkify />
         </div>
@@ -123,7 +128,7 @@ export const Comment = ({ commentId, onReplyClick }: CommentProps) => {
         <div className="flex items-center gap-2.5 mt-1.5">
           {me && onReplyClick && (
             <button
-              onClick={onReplyClick}
+              onClick={() => onReplyClick(comment.profile?.displayName || comment.profile?.userHandle || (isGuest ? formatWalletAddress(comment.walletAddress!) : undefined))}
               className="flex items-center gap-1 text-gray-600 hover:text-cyan-400 transition-colors text-[10px]"
               title="Reply"
             >
@@ -167,6 +172,33 @@ export const Comment = ({ commentId, onReplyClick }: CommentProps) => {
           )}
         </div>
       </div>
+
+      {/* Inline replies */}
+      {comment.replies?.nodes && comment.replies.nodes.length > 0 && (
+        <div className="mt-2 ml-8 pl-3 border-l border-white/10 space-y-2">
+          {comment.replies.nodes.map((reply: any) => (
+            <Comment
+              key={reply.id}
+              commentId={reply.id}
+              onReplyClick={onReplyClick}
+            />
+          ))}
+          {(comment.replyCount ?? 0) > comment.replies.nodes.length && (
+            <button
+              onClick={() => {
+                // Navigate to full post view to see all replies
+                if (comment.postId) {
+                  window.location.href = `/posts/${comment.postId}`
+                }
+              }}
+              className="flex items-center gap-1 text-[10px] text-neutral-500 hover:text-cyan-400 transition-colors py-0.5"
+            >
+              <ChevronDown className="w-2.5 h-2.5" />
+              View {(comment.replyCount ?? 0) - comment.replies.nodes.length} more {(comment.replyCount ?? 0) - comment.replies.nodes.length === 1 ? 'reply' : 'replies'}
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Share Post Modal (DM share) */}
       {portalContainer && showShareModal && createPortal(

@@ -6,6 +6,49 @@ fragment CommentComponentFields on Comment {
   deleted
   isGuest
   walletAddress
+  replyToId
+  replyCount
+  replies(page: { first: 3 }) {
+    nodes {
+      id
+      body
+      postId
+      createdAt
+      deleted
+      isGuest
+      walletAddress
+      replyToId
+      replyTo {
+        id
+        profile {
+          id
+          displayName
+          userHandle
+        }
+        isGuest
+        walletAddress
+      }
+      profile {
+        id
+        displayName
+        profilePicture
+        verified
+        teamMember
+        userHandle
+        badges
+      }
+    }
+  }
+  replyTo {
+    id
+    profile {
+      id
+      displayName
+      userHandle
+    }
+    isGuest
+    walletAddress
+  }
   profile {
     id
     displayName

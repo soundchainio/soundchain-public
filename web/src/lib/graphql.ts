@@ -3759,9 +3759,9 @@ export type CommentQueryVariables = Exact<{
 }>;
 
 
-export type CommentQuery = { __typename?: 'Query', comment: { __typename?: 'Comment', id: string, body: string, postId: string, createdAt: string, deleted: boolean | null, isGuest: boolean | null, walletAddress: string | null, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null } | null } };
+export type CommentQuery = { __typename?: 'Query', comment: CommentComponentFieldsFragment };
 
-export type CommentComponentFieldsFragment = { __typename?: 'Comment', id: string, body: string, postId: string, createdAt: string, deleted: boolean | null, isGuest: boolean | null, walletAddress: string | null, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null } | null };
+export type CommentComponentFieldsFragment = { __typename?: 'Comment', id: string, body: string, postId: string, createdAt: string, deleted: boolean | null, isGuest: boolean | null, walletAddress: string | null, replyToId: string | null, replyCount: number | null, replyTo: { __typename?: 'Comment', id: string, profile: { __typename?: 'Profile', id: string, displayName: string, userHandle: string } | null, isGuest: boolean | null, walletAddress: string | null } | null, replies: { __typename?: 'CommentConnection', nodes: Array<{ __typename?: 'Comment', id: string, body: string, postId: string, createdAt: string, deleted: boolean | null, isGuest: boolean | null, walletAddress: string | null, replyToId: string | null, replyTo: { __typename?: 'Comment', id: string, profile: { __typename?: 'Profile', id: string, displayName: string, userHandle: string } | null, isGuest: boolean | null, walletAddress: string | null } | null, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null } | null }> } | null, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null } | null };
 
 export type CommentNotificationFieldsFragment = { __typename?: 'CommentNotification', id: string, type: NotificationType, body: string, previewBody: string, link: string, createdAt: string, authorName: string, authorPicture: string | null };
 
@@ -3771,7 +3771,7 @@ export type CommentsQueryVariables = Exact<{
 }>;
 
 
-export type CommentsQuery = { __typename?: 'Query', comments: { __typename?: 'CommentConnection', nodes: Array<{ __typename?: 'Comment', id: string, body: string, postId: string, createdAt: string, deleted: boolean | null, isGuest: boolean | null, walletAddress: string | null, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null } | null }>, pageInfo: { __typename?: 'PageInfo', hasPreviousPage: boolean, hasNextPage: boolean, startCursor: string | null, endCursor: string | null } } };
+export type CommentsQuery = { __typename?: 'Query', comments: { __typename?: 'CommentConnection', nodes: Array<CommentComponentFieldsFragment>, pageInfo: { __typename?: 'PageInfo', hasPreviousPage: boolean, hasNextPage: boolean, startCursor: string | null, endCursor: string | null } } };
 
 export type CountBidsQueryVariables = Exact<{
   tokenId: Scalars['Float']['input'];
@@ -4895,6 +4895,49 @@ export const CommentComponentFieldsFragmentDoc = gql`
   deleted
   isGuest
   walletAddress
+  replyToId
+  replyCount
+  replies(page: { first: 3 }) {
+    nodes {
+      id
+      body
+      postId
+      createdAt
+      deleted
+      isGuest
+      walletAddress
+      replyToId
+      replyTo {
+        id
+        profile {
+          id
+          displayName
+          userHandle
+        }
+        isGuest
+        walletAddress
+      }
+      profile {
+        id
+        displayName
+        profilePicture
+        verified
+        teamMember
+        userHandle
+        badges
+      }
+    }
+  }
+  replyTo {
+    id
+    profile {
+      id
+      displayName
+      userHandle
+    }
+    isGuest
+    walletAddress
+  }
   profile {
     id
     displayName

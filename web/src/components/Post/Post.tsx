@@ -80,6 +80,8 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
   const [showPermanentModal, setShowPermanentModal] = useState(false)
   const commentInputRef = useRef<HTMLTextAreaElement>(null)
   const [showComments, setShowComments] = useState(false)
+  const [replyToCommentId, setReplyToCommentId] = useState<string | null>(null)
+  const [replyToName, setReplyToName] = useState<string | null>(null)
   const [pipedStreamUrl, setPipedStreamUrl] = useState<string | null>(null)
   const [ytBlocked, setYtBlocked] = useState(false)
   const ytPlayerReady = useRef(false)
@@ -592,36 +594,44 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
         </div>
       )}
 
-      {/* Comment count — tap to load/toggle threaded replies */}
-      {(post.commentCount ?? 0) > 0 && !showComments && (
-        <button
-          onClick={handleShowComments}
-          className="mt-2 ml-2 pl-3 text-xs text-neutral-400 hover:text-cyan-400 transition-colors"
-        >
-          View {post.commentCount} {post.commentCount === 1 ? 'comment' : 'comments'}
-        </button>
+      {/* Auto-load comments inline — show up to 3, then "View more" */}
+      {(post.commentCount ?? 0) > 0 && !showComments && !commentsData && (
+        <AutoLoadComments postId={post.id} loadComments={loadComments} setShowComments={setShowComments} firstPage={firstPage} />
       )}
 
-      {/* Threaded replies — loaded on demand */}
-      {showComments && commentsLoading ? (
+      {/* Threaded replies — auto-loaded, show up to 3 inline */}
+      {commentsLoading && !commentsData ? (
         <div className="mt-3 ml-2 pl-3 border-l-2 border-white/10 space-y-2">
           <CommentSkeleton />
           <CommentSkeleton />
         </div>
-      ) : showComments && commentsData?.comments?.nodes?.length ? (
+      ) : commentsData?.comments?.nodes?.length ? (
         <div className="mt-3 ml-2 pl-3 border-l-2 border-white/10 space-y-2">
-          {commentsData.comments.nodes.map((comment: any) => (
+          {(showComments ? commentsData.comments.nodes : commentsData.comments.nodes.slice(0, 3)).map((comment: any) => (
             <Comment
               key={comment.id}
               commentId={comment.id}
-              onReplyClick={() => {
+              onReplyClick={(authorName?: string) => {
+                setReplyToCommentId(comment.id)
+                setReplyToName(authorName || null)
                 commentInputRef.current?.focus()
                 commentInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
               }}
             />
           ))}
-          {(post.commentCount ?? 0) > (commentsData.comments.nodes.length ?? 0) && (
-            <button className="text-xs text-neutral-500 hover:text-cyan-400 transition-colors py-1">
+          {!showComments && commentsData.comments.nodes.length > 3 && (
+            <button
+              onClick={() => setShowComments(true)}
+              className="text-xs text-neutral-500 hover:text-cyan-400 transition-colors py-1"
+            >
+              View all {post.commentCount} comments
+            </button>
+          )}
+          {showComments && (post.commentCount ?? 0) > (commentsData.comments.nodes.length ?? 0) && (
+            <button
+              onClick={() => loadComments({ variables: { postId: post.id, page: firstPage } })}
+              className="text-xs text-neutral-500 hover:text-cyan-400 transition-colors py-1"
+            >
               View more comments
             </button>
           )}
@@ -633,10 +643,16 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
         <NewCommentForm
           postId={post.id}
           compact
+          replyToCommentId={replyToCommentId}
+          replyToName={replyToName}
+          onCancelReply={() => { setReplyToCommentId(null); setReplyToName(null) }}
           onSuccess={() => {
             // Show comments thread after posting a new comment
             if (!showComments) setShowComments(true)
-            loadComments({ variables: { postId: post.id, page: firstPage } })
+            setReplyToCommentId(null)
+            setReplyToName(null)
+            // Refetch root comments + replies by clearing cache and reloading
+            loadComments({ variables: { postId: post.id, page: firstPage }, fetchPolicy: 'network-only' })
           }}
           inputRef={commentInputRef}
           myReaction={post.myReaction}
@@ -674,6 +690,19 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
       )}
     </article>
   )
+}
+
+// Auto-load comments on mount so they show inline
+const AutoLoadComments = ({ postId, loadComments, setShowComments, firstPage }: {
+  postId: string
+  loadComments: (opts: any) => void
+  setShowComments: (v: boolean) => void
+  firstPage: PageInput
+}) => {
+  useEffect(() => {
+    loadComments({ variables: { postId, page: firstPage } })
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  return null
 }
 
 export const Post = memo(PostComponent, (prev, next) => {

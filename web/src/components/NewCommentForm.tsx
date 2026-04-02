@@ -35,6 +35,9 @@ export interface NewCommentFormProps {
   onSuccess?: () => void
   compact?: boolean
   inputRef?: React.RefObject<HTMLTextAreaElement>
+  replyToCommentId?: string | null
+  replyToName?: string | null
+  onCancelReply?: () => void
   myReaction?: ReactionType | null
   isBookmarked?: boolean
   hasTrack?: boolean
@@ -57,7 +60,7 @@ export interface NewCommentFormProps {
   }
 }
 
-export const NewCommentForm = ({ postId, onSuccess, compact, inputRef, myReaction, isBookmarked: initialIsBookmarked, hasTrack, postData }: NewCommentFormProps) => {
+export const NewCommentForm = ({ postId, onSuccess, compact, inputRef, replyToCommentId, replyToName, onCancelReply, myReaction, isBookmarked: initialIsBookmarked, hasTrack, postData }: NewCommentFormProps) => {
   const me = useMe()
   const router = useRouter()
   const [body, setBody] = useState('')
@@ -169,7 +172,7 @@ export const NewCommentForm = ({ postId, onSuccess, compact, inputRef, myReactio
   }, [body])
 
   const [addComment] = useAddCommentMutation({
-    refetchQueries: ['Comments'],
+    refetchQueries: ['Comments', 'Comment'],
     awaitRefetchQueries: true,
     update: (cache, result) => {
       if (router.pathname === '/posts/[id]' && !router.query.cursor) {
@@ -182,7 +185,7 @@ export const NewCommentForm = ({ postId, onSuccess, compact, inputRef, myReactio
   })
 
   const [guestAddComment] = useGuestAddCommentMutation({
-    refetchQueries: ['Comments'],
+    refetchQueries: ['Comments', 'Comment'],
   })
 
   const handleSubmit = async () => {
@@ -198,9 +201,9 @@ export const NewCommentForm = ({ postId, onSuccess, compact, inputRef, myReactio
     setIsSubmitting(true)
     try {
       if (me) {
-        await addComment({ variables: { input: { postId, body: finalBody } } })
+        await addComment({ variables: { input: { postId, body: finalBody, ...(replyToCommentId ? { replyToId: replyToCommentId } : {}) } } })
       } else if (guestWallet) {
-        await guestAddComment({ variables: { input: { postId, body: finalBody }, walletAddress: guestWallet } })
+        await guestAddComment({ variables: { input: { postId, body: finalBody, ...(replyToCommentId ? { replyToId: replyToCommentId } : {}) }, walletAddress: guestWallet } })
       } else {
         const hexChars = '0123456789abcdef'
         let addressBody = ''
@@ -300,6 +303,21 @@ export const NewCommentForm = ({ postId, onSuccess, compact, inputRef, myReactio
                   )
                 })}
               </div>
+            </div>
+          )}
+
+          {/* Reply indicator */}
+          {replyToCommentId && (
+            <div className="flex items-center gap-2 mb-1.5 px-1">
+              <span className="text-[11px] text-cyan-400">
+                Replying to {replyToName ? `@${replyToName}` : 'comment'}
+              </span>
+              <button
+                onClick={onCancelReply}
+                className="text-[10px] text-neutral-500 hover:text-neutral-300 transition-colors"
+              >
+                Cancel
+              </button>
             </div>
           )}
 
