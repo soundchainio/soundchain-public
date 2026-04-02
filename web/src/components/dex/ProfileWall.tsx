@@ -258,44 +258,13 @@ function WallPostMedia({ post, small }: { post: any; small?: boolean }) {
         <video
           controls
           playsInline
-          muted
           preload="metadata"
           className="w-full rounded-xl relative"
-          style={{ zIndex: 2 }}
-          onLoadedMetadata={(e) => {
-            // Auto-adjust container to video's natural aspect ratio
-            const vid = e.target as HTMLVideoElement
-            const ratio = vid.videoHeight / vid.videoWidth
-            if (ratio > 1.5) {
-              // Vertical video — cap height so it doesn't take entire screen
-              vid.style.maxHeight = '70vh'
-              vid.style.objectFit = 'contain'
-            }
-            // Horizontal/square — let it fill naturally
-          }}
+          style={{ maxHeight: small ? '192px' : '320px', zIndex: 2 }}
           poster={post.mediaThumbnailUrl || undefined}
           onPlay={(e) => {
             const img = (e.target as HTMLVideoElement).parentElement?.querySelector('img')
             if (img) img.style.display = 'none'
-          }}
-          onClick={(e) => {
-            // Tap to unmute/mute — iOS requires user interaction for audio
-            const vid = e.target as HTMLVideoElement
-            vid.muted = !vid.muted
-          }}
-          ref={(el) => {
-            if (!el) return
-            const observer = new IntersectionObserver(
-              ([entry]) => {
-                if (entry.isIntersecting) {
-                  el.play().catch(() => {})
-                } else {
-                  el.pause()
-                }
-              },
-              { threshold: 0.3 }
-            )
-            observer.observe(el)
           }}
         >
           <source src={post.mediaUrl} />
