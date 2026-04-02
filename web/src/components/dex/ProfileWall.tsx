@@ -261,7 +261,7 @@ function WallPostMedia({ post, small }: { post: any; small?: boolean }) {
           muted
           preload="metadata"
           className="w-full rounded-xl relative"
-          style={{ maxHeight: '80vh', zIndex: 2 }}
+          style={{ zIndex: 2 }}
           poster={post.mediaThumbnailUrl || undefined}
           onPlay={(e) => {
             const img = (e.target as HTMLVideoElement).parentElement?.querySelector('img')
