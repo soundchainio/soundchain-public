@@ -102,6 +102,11 @@ interface RadioTrack {
   play_count: number
   is_nft: boolean
   genres?: string[]
+  scid?: string
+  nft_token_id?: string
+  nft_contract?: string
+  artist_handle?: string
+  royalty_percentage?: number
 }
 
 interface RadioGenre {
@@ -241,6 +246,8 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
     expandedSection?: string // for accordion sections within details
   } | null>(null)
   const [overlayExpandedSection, setOverlayExpandedSection] = useState<string | null>(null)
+  // Bug #5/#7 fix: Lock track context when overlay opens — prevents silent switch mid-browse
+  const [overlayLockedTrack, setOverlayLockedTrack] = useState<RadioTrack | null>(null)
 
   // Genre channels (XM Radio style)
   const [selectedGenre, setSelectedGenre] = useState<string>('all')
@@ -1297,6 +1304,7 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
                 <div className="mt-4 md:mt-8 flex items-center justify-center gap-2 md:gap-3 flex-wrap">
                   <button
                     onClick={() => {
+                      setOverlayLockedTrack(currentTrack) // Lock to current track
                       setRadioOverlay({ type: 'details', title: 'Track Details' })
                       setOverlayExpandedSection(null)
                     }}
@@ -1652,23 +1660,45 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
 
           {/* Content area */}
           <div className="flex-1 overflow-y-auto">
-            {radioOverlay.type === 'details' && currentTrack ? (
+            {radioOverlay.type === 'details' && (overlayLockedTrack || currentTrack) ? (() => {
+              // Bug #5/#7 fix: Use locked track (frozen when overlay opened), not live currentTrack
+              const track = overlayLockedTrack || currentTrack!
+              const nftContract = track.nft_contract || '0xf01D323bdAc88ee39543CbBc568C6Fc76258FfE0'
+              const tokenId = track.nft_token_id
+              const royalty = track.royalty_percentage ?? 0
+              return (
               <div className="max-w-lg mx-auto p-4 space-y-2">
+                {/* Now Playing banner — shows if radio advanced to a different track */}
+                {currentTrack && currentTrack.id !== track.id && (
+                  <button
+                    onClick={() => setOverlayLockedTrack(currentTrack)}
+                    className="w-full flex items-center gap-2 p-2 bg-red-500/10 border border-red-500/30 rounded-lg hover:bg-red-500/20 transition-colors"
+                  >
+                    <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                    <span className="text-xs text-red-400">Now playing: <strong>{currentTrack.title}</strong> — tap to switch</span>
+                  </button>
+                )}
+
                 {/* Track header */}
                 <div className="flex items-center gap-3 p-3 bg-black/40 rounded-xl border border-white/10">
-                  {currentTrack.artwork_url ? (
-                    <img src={currentTrack.artwork_url} alt={currentTrack.title} className="w-14 h-14 rounded-lg object-cover border border-white/10" />
+                  {track.artwork_url ? (
+                    <img src={track.artwork_url} alt={track.title} className="w-14 h-14 rounded-lg object-cover border border-white/10" />
                   ) : (
                     <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-red-900 to-purple-900 flex items-center justify-center">
                       <Music className="w-6 h-6 text-white/50" />
                     </div>
                   )}
                   <div className="min-w-0 flex-1">
-                    <h3 className="text-white font-bold text-base truncate">{currentTrack.title}</h3>
-                    <p className="text-gray-400 text-sm truncate">{currentTrack.artist}</p>
-                    {currentTrack.is_nft && (
-                      <span className="inline-flex items-center px-1.5 py-0.5 bg-yellow-500/20 text-yellow-400 text-[9px] font-bold rounded-full mt-1">NFT</span>
-                    )}
+                    <h3 className="text-white font-bold text-base truncate">{track.title}</h3>
+                    <p className="text-gray-400 text-sm truncate">{track.artist}</p>
+                    <div className="flex items-center gap-1.5 mt-1">
+                      {track.is_nft && (
+                        <span className="inline-flex items-center px-1.5 py-0.5 bg-yellow-500/20 text-yellow-400 text-[9px] font-bold rounded-full">NFT</span>
+                      )}
+                      {track.scid && (
+                        <span className="inline-flex items-center px-1.5 py-0.5 bg-cyan-500/20 text-cyan-400 text-[9px] font-mono rounded-full">{track.scid}</span>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -1682,16 +1712,18 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
                 </button>
                 {overlayExpandedSection === 'info' && (
                   <div className="p-3 bg-black/30 rounded-xl border border-white/5 space-y-2 text-sm">
-                    <div className="flex justify-between"><span className="text-gray-500">Title</span><span className="text-white">{currentTrack.title}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-500">Artist</span><span className="text-white">{currentTrack.artist}</span></div>
-                    {currentTrack.album && <div className="flex justify-between"><span className="text-gray-500">Album</span><span className="text-white">{currentTrack.album}</span></div>}
-                    <div className="flex justify-between"><span className="text-gray-500">Plays</span><span className="text-cyan-400">{currentTrack.play_count}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-500">Type</span><span className={currentTrack.is_nft ? 'text-yellow-400' : 'text-gray-300'}>{currentTrack.is_nft ? 'NFT' : 'SCid'}</span></div>
-                    {currentTrack.genres && currentTrack.genres.length > 0 && (
+                    <div className="flex justify-between"><span className="text-gray-500">Title</span><span className="text-white">{track.title}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-500">Artist</span><span className="text-white">{track.artist}</span></div>
+                    {track.album && <div className="flex justify-between"><span className="text-gray-500">Album</span><span className="text-white">{track.album}</span></div>}
+                    <div className="flex justify-between"><span className="text-gray-500">Plays</span><span className="text-cyan-400">{track.play_count}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-500">Type</span><span className={track.is_nft ? 'text-yellow-400' : 'text-gray-300'}>{track.is_nft ? 'NFT' : 'SCid'}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-500">Royalty</span><span className="text-amber-400">{royalty}%</span></div>
+                    {track.scid && <div className="flex justify-between"><span className="text-gray-500">SCID</span><span className="text-cyan-400 font-mono text-xs">{track.scid}</span></div>}
+                    {track.genres && track.genres.length > 0 && (
                       <div className="flex justify-between items-start">
                         <span className="text-gray-500">Genres</span>
                         <div className="flex flex-wrap gap-1 justify-end">
-                          {currentTrack.genres.map(g => (
+                          {track.genres.map(g => (
                             <span key={g} className="px-1.5 py-0.5 rounded-full text-[10px] bg-cyan-900/40 text-cyan-400 border border-cyan-800/30">{g}</span>
                           ))}
                         </div>
@@ -1710,13 +1742,13 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
                 </button>
                 {overlayExpandedSection === 'ipfs' && (
                   <div className="p-3 bg-black/30 rounded-xl border border-white/5 space-y-3 text-sm">
-                    {currentTrack.stream_url && (
+                    {track.stream_url && (
                       <div>
                         <p className="text-gray-500 text-xs mb-1">Stream URL (IPFS)</p>
-                        <p className="font-mono text-cyan-400 text-xs break-all">{currentTrack.stream_url}</p>
-                        {currentTrack.stream_url.includes('mypinata.cloud') && (
+                        <p className="font-mono text-cyan-400 text-xs break-all">{track.stream_url}</p>
+                        {track.stream_url.includes('mypinata.cloud') && (
                           <button
-                            onClick={() => setRadioOverlay({ type: 'iframe', title: 'IPFS Gateway', url: currentTrack.stream_url! })}
+                            onClick={() => setRadioOverlay({ type: 'iframe', title: 'IPFS Gateway', url: track.stream_url! })}
                             className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 bg-cyan-600/20 border border-cyan-500/30 rounded-lg text-xs text-cyan-400 hover:bg-cyan-600/30 transition-colors"
                           >
                             <Globe className="w-3 h-3" />
@@ -1725,16 +1757,16 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
                         )}
                       </div>
                     )}
-                    {currentTrack.artwork_url && (
+                    {track.artwork_url && (
                       <div>
                         <p className="text-gray-500 text-xs mb-1">Artwork URL</p>
-                        <p className="font-mono text-cyan-400 text-xs break-all">{currentTrack.artwork_url}</p>
+                        <p className="font-mono text-cyan-400 text-xs break-all">{track.artwork_url}</p>
                       </div>
                     )}
                   </div>
                 )}
 
-                {/* Accordion: On-Chain */}
+                {/* Accordion: On-Chain — Bug #6 fix: show inline data */}
                 <button
                   onClick={() => setOverlayExpandedSection(overlayExpandedSection === 'chain' ? null : 'chain')}
                   className="w-full flex items-center justify-between p-3 bg-black/40 rounded-xl border border-white/10 hover:border-cyan-500/30 transition-all"
@@ -1744,31 +1776,52 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
                 </button>
                 {overlayExpandedSection === 'chain' && (
                   <div className="p-3 bg-black/30 rounded-xl border border-white/5 space-y-3 text-sm">
-                    <button
-                      onClick={() => setRadioOverlay({ type: 'iframe', title: 'OGUN Token — Polygonscan', url: 'https://polygonscan.com/token/0x45f1af89486aeec2da0b06340cd9cd3bd741a15c' })}
-                      className="w-full flex items-center justify-between p-2.5 bg-cyan-900/20 border border-cyan-500/20 rounded-lg hover:border-cyan-400/40 transition-all"
-                    >
-                      <span className="text-cyan-400 text-xs">OGUN Token Contract</span>
-                      <Globe className="w-3.5 h-3.5 text-cyan-400" />
-                    </button>
-                    <button
-                      onClick={() => setRadioOverlay({ type: 'iframe', title: 'Rewards Distributor — Polygonscan', url: 'https://polygonscan.com/address/0x84561ddF3A6Db139ab5f695a28c0DE46Af2a7083' })}
-                      className="w-full flex items-center justify-between p-2.5 bg-green-900/20 border border-green-500/20 rounded-lg hover:border-green-400/40 transition-all"
-                    >
-                      <span className="text-green-400 text-xs">Streaming Rewards Distributor</span>
-                      <Globe className="w-3.5 h-3.5 text-green-400" />
-                    </button>
-                    <button
-                      onClick={() => setRadioOverlay({ type: 'iframe', title: `Track — SoundChain`, url: `https://soundchain.io/dex/track/${currentTrack.id}` })}
-                      className="w-full flex items-center justify-between p-2.5 bg-purple-900/20 border border-purple-500/20 rounded-lg hover:border-purple-400/40 transition-all"
-                    >
-                      <span className="text-purple-400 text-xs">Full Track Page</span>
-                      <Globe className="w-3.5 h-3.5 text-purple-400" />
-                    </button>
+                    {/* Inline on-chain data */}
+                    <div className="space-y-2">
+                      <div className="flex justify-between"><span className="text-gray-500">Chain</span><span className="text-purple-400">Polygon (137)</span></div>
+                      <div className="flex justify-between"><span className="text-gray-500">NFT Contract</span><span className="text-cyan-400 font-mono text-[10px]">{nftContract.slice(0, 6)}...{nftContract.slice(-4)}</span></div>
+                      {tokenId && <div className="flex justify-between"><span className="text-gray-500">Token ID</span><span className="text-white">#{tokenId}</span></div>}
+                      <div className="flex justify-between"><span className="text-gray-500">Royalty</span><span className="text-amber-400">{royalty}%</span></div>
+                      <div className="flex justify-between"><span className="text-gray-500">Platform Fee</span><span className="text-gray-400">0.05%</span></div>
+                      <div className="flex justify-between"><span className="text-gray-500">Treasury</span><span className="text-green-400 font-mono text-[10px]">0x519B...703B</span></div>
+                    </div>
+
+                    <div className="border-t border-white/5 pt-2 space-y-2">
+                      {tokenId && (
+                        <button
+                          onClick={() => setRadioOverlay({ type: 'iframe', title: 'NFT — Polygonscan', url: `https://polygonscan.com/token/${nftContract}?a=${tokenId}` })}
+                          className="w-full flex items-center justify-between p-2.5 bg-yellow-900/20 border border-yellow-500/20 rounded-lg hover:border-yellow-400/40 transition-all"
+                        >
+                          <span className="text-yellow-400 text-xs">View NFT on Polygonscan</span>
+                          <Globe className="w-3.5 h-3.5 text-yellow-400" />
+                        </button>
+                      )}
+                      <button
+                        onClick={() => setRadioOverlay({ type: 'iframe', title: 'OGUN Token — Polygonscan', url: 'https://polygonscan.com/token/0x45f1af89486aeec2da0b06340cd9cd3bd741a15c' })}
+                        className="w-full flex items-center justify-between p-2.5 bg-cyan-900/20 border border-cyan-500/20 rounded-lg hover:border-cyan-400/40 transition-all"
+                      >
+                        <span className="text-cyan-400 text-xs">OGUN Token Contract</span>
+                        <Globe className="w-3.5 h-3.5 text-cyan-400" />
+                      </button>
+                      <button
+                        onClick={() => setRadioOverlay({ type: 'iframe', title: 'Rewards Distributor — Polygonscan', url: 'https://polygonscan.com/address/0x84561ddF3A6Db139ab5f695a28c0DE46Af2a7083' })}
+                        className="w-full flex items-center justify-between p-2.5 bg-green-900/20 border border-green-500/20 rounded-lg hover:border-green-400/40 transition-all"
+                      >
+                        <span className="text-green-400 text-xs">Streaming Rewards Distributor</span>
+                        <Globe className="w-3.5 h-3.5 text-green-400" />
+                      </button>
+                      <button
+                        onClick={() => setRadioOverlay({ type: 'iframe', title: `Track — SoundChain`, url: `https://soundchain.io/dex/track/${track.id}` })}
+                        className="w-full flex items-center justify-between p-2.5 bg-purple-900/20 border border-purple-500/20 rounded-lg hover:border-purple-400/40 transition-all"
+                      >
+                        <span className="text-purple-400 text-xs">Full Track Page</span>
+                        <Globe className="w-3.5 h-3.5 text-purple-400" />
+                      </button>
+                    </div>
                   </div>
                 )}
 
-                {/* Accordion: Share */}
+                {/* Accordion: Share — fixed always-highlighted button */}
                 <button
                   onClick={() => setOverlayExpandedSection(overlayExpandedSection === 'share' ? null : 'share')}
                   className="w-full flex items-center justify-between p-3 bg-black/40 rounded-xl border border-white/10 hover:border-cyan-500/30 transition-all"
@@ -1794,7 +1847,7 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
                     </button>
                     <button
                       onClick={() => { setRadioOverlay(null); setShowShareStoryModal(true) }}
-                      className="w-full flex items-center gap-3 p-2.5 bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/20 rounded-lg hover:border-purple-400/40 transition-colors text-sm text-white"
+                      className="w-full flex items-center gap-3 p-2.5 bg-black/40 rounded-lg hover:bg-white/5 transition-colors text-sm text-white"
                     >
                       <Share2 className="w-4 h-4 text-purple-400" />
                       Share to Story
@@ -1802,7 +1855,8 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
                   </div>
                 )}
               </div>
-            ) : radioOverlay.type === 'iframe' && radioOverlay.url ? (
+              )
+            })() : radioOverlay.type === 'iframe' && radioOverlay.url ? (
               <div className="flex-1 h-full">
                 <iframe
                   src={radioOverlay.url}

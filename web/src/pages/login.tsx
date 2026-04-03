@@ -447,6 +447,10 @@ export default function LoginPage() {
       } else if (err.message?.includes('could not be verified') || err.message?.includes('verification required')) {
         // Touch ID / biometric failed on this device (e.g. Chrome Mac with Touch ID not configured)
         setError('Biometric login failed on this device. Try using Safari, or log in with Google.');
+      } else if (err.message?.includes('502') || err.message?.includes('504') || err.message?.includes('status code 5')) {
+        setError('Server temporarily unavailable. Please try again in a moment.');
+      } else {
+        setError('Login failed. Please try again.');
       }
       return false;
     } finally {

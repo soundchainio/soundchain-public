@@ -86,6 +86,10 @@ module.exports = withPWA({
 
       // User profiles → DEX profile
       { source: '/users/:handle', destination: '/dex/users/:handle', permanent: false },
+      // Artist vanity URLs → DEX profile (Bug #8)
+      { source: '/artist/:handle', destination: '/dex/users/:handle', permanent: false },
+      // Track by mongo ID shortcut (Bug #9)
+      { source: '/track/:id', destination: '/dex/track/:id', permanent: false },
 
       // Claim badge → DEX
       { source: '/claim-badge-profile', destination: '/dex/feed', permanent: false },
