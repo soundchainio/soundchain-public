@@ -41,6 +41,11 @@ import {
   Twitter,
   Maximize,
   Minimize,
+  ChevronDown,
+  ChevronUp,
+  Info,
+  Globe,
+  FileText,
 } from 'lucide-react'
 import { Logo } from 'icons/Logo'
 import { useLogStream } from 'hooks/useLogStream'
@@ -227,6 +232,15 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
   const [showShareStoryModal, setShowShareStoryModal] = useState(false)
   const [showShareMenu, setShowShareMenu] = useState(false)
   const [linkCopied, setLinkCopied] = useState(false)
+
+  // Radio Overlay Modal — keeps music playing, no navigation
+  const [radioOverlay, setRadioOverlay] = useState<{
+    type: 'details' | 'iframe'
+    title: string
+    url?: string // for iframe type
+    expandedSection?: string // for accordion sections within details
+  } | null>(null)
+  const [overlayExpandedSection, setOverlayExpandedSection] = useState<string | null>(null)
 
   // Genre channels (XM Radio style)
   const [selectedGenre, setSelectedGenre] = useState<string>('all')
@@ -1281,13 +1295,16 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
 
                 {/* Track Link + Share Options */}
                 <div className="mt-4 md:mt-8 flex items-center justify-center gap-2 md:gap-3 flex-wrap">
-                  <Link
-                    href={`/dex/track/${currentTrack.id}`}
+                  <button
+                    onClick={() => {
+                      setRadioOverlay({ type: 'details', title: 'Track Details' })
+                      setOverlayExpandedSection(null)
+                    }}
                     className="inline-flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm text-gray-300 transition-colors"
                   >
                     View Track Details
-                    <ExternalLink className="w-4 h-4" />
-                  </Link>
+                    <Info className="w-4 h-4" />
+                  </button>
                   <button
                     onClick={() => setShowShareStoryModal(true)}
                     className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 rounded-lg text-sm text-white font-medium transition-all shadow-lg shadow-purple-500/20"
@@ -1389,10 +1406,8 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
           {/* Info Cards — glass panels over 4D universe */}
           <div className="grid grid-cols-3 gap-2 md:gap-3 mt-4 md:mt-6">
             {/* Tracks — real count + Polygonscan link */}
-            <a
-              href="https://polygonscan.com/token/0x45f1af89486aeec2da0b06340cd9cd3bd741a15c"
-              target="_blank"
-              rel="noreferrer"
+            <button
+              onClick={() => setRadioOverlay({ type: 'iframe', title: 'OGUN Token — Polygonscan', url: 'https://polygonscan.com/token/0x45f1af89486aeec2da0b06340cd9cd3bd741a15c' })}
               className="bg-black/20 backdrop-blur-sm border border-cyan-500/20 rounded-xl p-3 text-center hover:border-cyan-400/40 transition-all group cursor-pointer"
             >
               <div className="text-xl md:text-3xl font-bold text-cyan-400 drop-shadow-[0_0_12px_rgba(34,211,238,0.5)]">
@@ -1400,7 +1415,7 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
               </div>
               <div className="text-xs text-gray-400">Tracks</div>
               <div className="text-[8px] text-cyan-500/50 group-hover:text-cyan-400 mt-1">IPFS + Polygonscan</div>
-            </a>
+            </button>
             {/* 24/7 */}
             <div className="bg-black/20 backdrop-blur-sm border border-yellow-500/20 rounded-xl p-3 text-center hover:border-yellow-400/40 transition-all">
               <div className="text-xl md:text-3xl font-bold text-yellow-400 drop-shadow-[0_0_12px_rgba(250,204,21,0.5)]">24/7</div>
@@ -1408,16 +1423,14 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
               <div className="text-[8px] text-yellow-500/50 mt-1">Decentralized Radio</div>
             </div>
             {/* OGUN — live distribution data + Polygonscan link */}
-            <a
-              href="https://polygonscan.com/address/0x84561ddF3A6Db139ab5f695a28c0DE46Af2a7083"
-              target="_blank"
-              rel="noreferrer"
+            <button
+              onClick={() => setRadioOverlay({ type: 'iframe', title: 'Streaming Rewards — Polygonscan', url: 'https://polygonscan.com/address/0x84561ddF3A6Db139ab5f695a28c0DE46Af2a7083' })}
               className="bg-black/20 backdrop-blur-sm border border-green-500/20 rounded-xl p-3 text-center hover:border-green-400/40 transition-all group cursor-pointer"
             >
               <div className="text-xl md:text-3xl font-bold text-green-400 drop-shadow-[0_0_12px_rgba(74,222,128,0.5)]">OGUN</div>
               <div className="text-xs text-gray-400">Streaming Rewards</div>
               <div className="text-[8px] text-green-500/50 group-hover:text-green-400 mt-1">70% Creator · 30% Listener</div>
-            </a>
+            </button>
           </div>
 
           {/* OGUN Distribution Ticker — scrolling left to right */}
@@ -1443,11 +1456,11 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
 
           {/* Ecosystem Badges — neon-lit status indicators */}
           <div className="mt-4 md:mt-6 flex flex-wrap items-center justify-center gap-2">
-            <a href="https://www.npmjs.com/package/@soundchain/openclaw-plugin" target="_blank" rel="noreferrer"
+            <button onClick={() => setRadioOverlay({ type: 'iframe', title: 'npm — @soundchain/openclaw-plugin', url: 'https://www.npmjs.com/package/@soundchain/openclaw-plugin' })}
               className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-black/30 border border-red-500/30 rounded-full text-[10px] font-bold text-red-400 hover:shadow-[0_0_15px_rgba(239,68,68,0.4)] hover:border-red-400/60 transition-all group">
               <span className="w-1.5 h-1.5 rounded-full bg-red-500 group-hover:animate-pulse shadow-[0_0_6px_rgba(239,68,68,0.8)]" />
               npm
-            </a>
+            </button>
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-black/30 border border-orange-500/30 rounded-full text-[10px] font-bold text-orange-400 shadow-[0_0_8px_rgba(249,115,22,0.15)]">
               <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse shadow-[0_0_6px_rgba(249,115,22,0.8)]" />
               ClawHub
@@ -1600,6 +1613,230 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
                 />
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Radio Overlay Modal — accordion-style, music keeps playing */}
+      {radioOverlay && (
+        <div
+          className="fixed inset-0 z-[300] bg-black/85 backdrop-blur-md flex flex-col"
+          onClick={(e) => { if (e.target === e.currentTarget) setRadioOverlay(null) }}
+        >
+          {/* Header bar */}
+          <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-black/80 backdrop-blur-xl flex-shrink-0">
+            <div className="flex items-center gap-2 min-w-0">
+              {radioOverlay.type === 'details' ? (
+                <FileText className="w-4 h-4 text-cyan-400 flex-shrink-0" />
+              ) : (
+                <Globe className="w-4 h-4 text-cyan-400 flex-shrink-0" />
+              )}
+              <span className="text-sm font-bold text-white truncate">{radioOverlay.title}</span>
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {/* Now Playing mini indicator */}
+              {isPlaying && currentTrack && (
+                <span className="hidden sm:flex items-center gap-1.5 px-2 py-1 rounded-full bg-red-500/20 border border-red-500/30">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                  <span className="text-[9px] text-red-400 font-mono">LIVE</span>
+                </span>
+              )}
+              <button
+                onClick={() => setRadioOverlay(null)}
+                className="p-2 rounded-full hover:bg-white/10 transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-400" />
+              </button>
+            </div>
+          </div>
+
+          {/* Content area */}
+          <div className="flex-1 overflow-y-auto">
+            {radioOverlay.type === 'details' && currentTrack ? (
+              <div className="max-w-lg mx-auto p-4 space-y-2">
+                {/* Track header */}
+                <div className="flex items-center gap-3 p-3 bg-black/40 rounded-xl border border-white/10">
+                  {currentTrack.artwork_url ? (
+                    <img src={currentTrack.artwork_url} alt={currentTrack.title} className="w-14 h-14 rounded-lg object-cover border border-white/10" />
+                  ) : (
+                    <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-red-900 to-purple-900 flex items-center justify-center">
+                      <Music className="w-6 h-6 text-white/50" />
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-white font-bold text-base truncate">{currentTrack.title}</h3>
+                    <p className="text-gray-400 text-sm truncate">{currentTrack.artist}</p>
+                    {currentTrack.is_nft && (
+                      <span className="inline-flex items-center px-1.5 py-0.5 bg-yellow-500/20 text-yellow-400 text-[9px] font-bold rounded-full mt-1">NFT</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Accordion: Track Info */}
+                <button
+                  onClick={() => setOverlayExpandedSection(overlayExpandedSection === 'info' ? null : 'info')}
+                  className="w-full flex items-center justify-between p-3 bg-black/40 rounded-xl border border-white/10 hover:border-cyan-500/30 transition-all"
+                >
+                  <span className="text-sm font-medium text-gray-300">Track Info</span>
+                  {overlayExpandedSection === 'info' ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                </button>
+                {overlayExpandedSection === 'info' && (
+                  <div className="p-3 bg-black/30 rounded-xl border border-white/5 space-y-2 text-sm">
+                    <div className="flex justify-between"><span className="text-gray-500">Title</span><span className="text-white">{currentTrack.title}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-500">Artist</span><span className="text-white">{currentTrack.artist}</span></div>
+                    {currentTrack.album && <div className="flex justify-between"><span className="text-gray-500">Album</span><span className="text-white">{currentTrack.album}</span></div>}
+                    <div className="flex justify-between"><span className="text-gray-500">Plays</span><span className="text-cyan-400">{currentTrack.play_count}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-500">Type</span><span className={currentTrack.is_nft ? 'text-yellow-400' : 'text-gray-300'}>{currentTrack.is_nft ? 'NFT' : 'SCid'}</span></div>
+                    {currentTrack.genres && currentTrack.genres.length > 0 && (
+                      <div className="flex justify-between items-start">
+                        <span className="text-gray-500">Genres</span>
+                        <div className="flex flex-wrap gap-1 justify-end">
+                          {currentTrack.genres.map(g => (
+                            <span key={g} className="px-1.5 py-0.5 rounded-full text-[10px] bg-cyan-900/40 text-cyan-400 border border-cyan-800/30">{g}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Accordion: IPFS / Pinata */}
+                <button
+                  onClick={() => setOverlayExpandedSection(overlayExpandedSection === 'ipfs' ? null : 'ipfs')}
+                  className="w-full flex items-center justify-between p-3 bg-black/40 rounded-xl border border-white/10 hover:border-cyan-500/30 transition-all"
+                >
+                  <span className="text-sm font-medium text-gray-300">IPFS / Pinata</span>
+                  {overlayExpandedSection === 'ipfs' ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                </button>
+                {overlayExpandedSection === 'ipfs' && (
+                  <div className="p-3 bg-black/30 rounded-xl border border-white/5 space-y-3 text-sm">
+                    {currentTrack.stream_url && (
+                      <div>
+                        <p className="text-gray-500 text-xs mb-1">Stream URL (IPFS)</p>
+                        <p className="font-mono text-cyan-400 text-xs break-all">{currentTrack.stream_url}</p>
+                        {currentTrack.stream_url.includes('mypinata.cloud') && (
+                          <button
+                            onClick={() => setRadioOverlay({ type: 'iframe', title: 'IPFS Gateway', url: currentTrack.stream_url! })}
+                            className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 bg-cyan-600/20 border border-cyan-500/30 rounded-lg text-xs text-cyan-400 hover:bg-cyan-600/30 transition-colors"
+                          >
+                            <Globe className="w-3 h-3" />
+                            Open in Overlay
+                          </button>
+                        )}
+                      </div>
+                    )}
+                    {currentTrack.artwork_url && (
+                      <div>
+                        <p className="text-gray-500 text-xs mb-1">Artwork URL</p>
+                        <p className="font-mono text-cyan-400 text-xs break-all">{currentTrack.artwork_url}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Accordion: On-Chain */}
+                <button
+                  onClick={() => setOverlayExpandedSection(overlayExpandedSection === 'chain' ? null : 'chain')}
+                  className="w-full flex items-center justify-between p-3 bg-black/40 rounded-xl border border-white/10 hover:border-cyan-500/30 transition-all"
+                >
+                  <span className="text-sm font-medium text-gray-300">On-Chain / Polygonscan</span>
+                  {overlayExpandedSection === 'chain' ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                </button>
+                {overlayExpandedSection === 'chain' && (
+                  <div className="p-3 bg-black/30 rounded-xl border border-white/5 space-y-3 text-sm">
+                    <button
+                      onClick={() => setRadioOverlay({ type: 'iframe', title: 'OGUN Token — Polygonscan', url: 'https://polygonscan.com/token/0x45f1af89486aeec2da0b06340cd9cd3bd741a15c' })}
+                      className="w-full flex items-center justify-between p-2.5 bg-cyan-900/20 border border-cyan-500/20 rounded-lg hover:border-cyan-400/40 transition-all"
+                    >
+                      <span className="text-cyan-400 text-xs">OGUN Token Contract</span>
+                      <Globe className="w-3.5 h-3.5 text-cyan-400" />
+                    </button>
+                    <button
+                      onClick={() => setRadioOverlay({ type: 'iframe', title: 'Rewards Distributor — Polygonscan', url: 'https://polygonscan.com/address/0x84561ddF3A6Db139ab5f695a28c0DE46Af2a7083' })}
+                      className="w-full flex items-center justify-between p-2.5 bg-green-900/20 border border-green-500/20 rounded-lg hover:border-green-400/40 transition-all"
+                    >
+                      <span className="text-green-400 text-xs">Streaming Rewards Distributor</span>
+                      <Globe className="w-3.5 h-3.5 text-green-400" />
+                    </button>
+                    <button
+                      onClick={() => setRadioOverlay({ type: 'iframe', title: `Track — SoundChain`, url: `https://soundchain.io/dex/track/${currentTrack.id}` })}
+                      className="w-full flex items-center justify-between p-2.5 bg-purple-900/20 border border-purple-500/20 rounded-lg hover:border-purple-400/40 transition-all"
+                    >
+                      <span className="text-purple-400 text-xs">Full Track Page</span>
+                      <Globe className="w-3.5 h-3.5 text-purple-400" />
+                    </button>
+                  </div>
+                )}
+
+                {/* Accordion: Share */}
+                <button
+                  onClick={() => setOverlayExpandedSection(overlayExpandedSection === 'share' ? null : 'share')}
+                  className="w-full flex items-center justify-between p-3 bg-black/40 rounded-xl border border-white/10 hover:border-cyan-500/30 transition-all"
+                >
+                  <span className="text-sm font-medium text-gray-300">Share</span>
+                  {overlayExpandedSection === 'share' ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                </button>
+                {overlayExpandedSection === 'share' && (
+                  <div className="p-3 bg-black/30 rounded-xl border border-white/5 space-y-2">
+                    <button
+                      onClick={handleCopyLink}
+                      className="w-full flex items-center gap-3 p-2.5 bg-black/40 rounded-lg hover:bg-white/5 transition-colors text-sm text-white"
+                    >
+                      {linkCopied ? <Check className="w-4 h-4 text-green-400" /> : <Link2 className="w-4 h-4 text-cyan-400" />}
+                      {linkCopied ? 'Copied!' : 'Copy Radio Link'}
+                    </button>
+                    <button
+                      onClick={handleShareTwitter}
+                      className="w-full flex items-center gap-3 p-2.5 bg-black/40 rounded-lg hover:bg-white/5 transition-colors text-sm text-white"
+                    >
+                      <Twitter className="w-4 h-4 text-blue-400" />
+                      Share to X
+                    </button>
+                    <button
+                      onClick={() => { setRadioOverlay(null); setShowShareStoryModal(true) }}
+                      className="w-full flex items-center gap-3 p-2.5 bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/20 rounded-lg hover:border-purple-400/40 transition-colors text-sm text-white"
+                    >
+                      <Share2 className="w-4 h-4 text-purple-400" />
+                      Share to Story
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : radioOverlay.type === 'iframe' && radioOverlay.url ? (
+              <div className="flex-1 h-full">
+                <iframe
+                  src={radioOverlay.url}
+                  className="w-full h-full min-h-[80vh] border-0"
+                  sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+                  title={radioOverlay.title}
+                />
+              </div>
+            ) : null}
+          </div>
+
+          {/* Footer — back to details or close */}
+          <div className="flex-shrink-0 border-t border-white/10 bg-black/80 backdrop-blur-xl px-4 py-2 flex items-center justify-between">
+            {radioOverlay.type === 'iframe' ? (
+              <button
+                onClick={() => {
+                  setRadioOverlay({ type: 'details', title: 'Track Details' })
+                  setOverlayExpandedSection(null)
+                }}
+                className="flex items-center gap-2 text-sm text-cyan-400 hover:text-cyan-300 transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back to Details
+              </button>
+            ) : (
+              <div />
+            )}
+            <button
+              onClick={() => setRadioOverlay(null)}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-sm text-gray-400 hover:text-white hover:border-white/20 transition-all"
+            >
+              <X className="w-3.5 h-3.5" />
+              Close
+            </button>
           </div>
         </div>
       )}
