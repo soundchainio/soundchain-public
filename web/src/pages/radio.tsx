@@ -594,7 +594,11 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
           onEnded={handleTrackEnd}
           onPlay={() => setIsPlaying(true)}
           onPause={() => setIsPlaying(false)}
-          onError={() => skipToNext()} // Auto-skip on error
+          onError={() => {
+            const err = audioRef.current?.error
+            console.warn('[OGUN Radio] Audio error:', err?.code, err?.message, 'src:', audioRef.current?.src?.substring(0, 80))
+            skipToNext()
+          }}
         />
 
         {/* Auto-play on first interaction — no overlay, just a subtle pulse on the play button */}

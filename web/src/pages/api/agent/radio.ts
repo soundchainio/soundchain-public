@@ -28,7 +28,7 @@ async function fetchAllTracks() {
       .find(matchFilter, {
         projection: {
           _id: 1, title: 1, artist: 1, album: 1, description: 1,
-          artworkUrl: 1, assetUrl: 1, playbackCount: 1, genres: 1,
+          artworkUrl: 1, assetUrl: 1, playbackUrl: 1, playbackCount: 1, genres: 1,
           trackEditionId: 1, editionQuantity: 1,
         },
       })
@@ -79,6 +79,7 @@ async function fetchAllTracks() {
         description: track.description,
         artworkUrl: track.artworkUrl,
         assetUrl: track.assetUrl,
+        playbackUrl: track.playbackUrl,
         playbackCount: track.playbackCount || 0,
         genres: track.genres || [],
         scid: scid ? { scid: scid.scid, streamCount: scid.streamCount, ogunRewardsEarned: scid.ogunRewardsEarned } : null,
@@ -205,7 +206,7 @@ function rawToRadioTrack(track: any): RadioTrack {
     album: track.album,
     description: track.description,
     artwork_url: track.artworkUrl,
-    stream_url: track.assetUrl,
+    stream_url: track.playbackUrl || track.assetUrl,
     duration: null as any,
     play_count: track.playbackCount || 0,
     scid: track.scid?.scid || null,
