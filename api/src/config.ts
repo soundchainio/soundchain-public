@@ -88,14 +88,24 @@ export const config = {
       ? {
           useNewUrlParser: true,
           useUnifiedTopology: true,
-          tls: true,
-          tlsCAFile: path.join(__dirname, '..', 'global-bundle.pem'),
-          authMechanism: 'SCRAM-SHA-1' as any,
-          tlsAllowInvalidHostnames: true,
-          tlsAllowInvalidCertificates: true,
-          serverSelectionTimeoutMS: 60000,
-          directConnection: true,
-          retryWrites: false,
+          // Atlas uses replica sets — directConnection MUST be false for failover
+          // DocumentDB needed directConnection:true + TLS certs, Atlas does not
+          ...(process.env.MONGODB_URI ? {
+            // Atlas connection — no TLS cert file needed, no directConnection
+            retryWrites: true,
+            readPreference: 'primaryPreferred' as any,
+            serverSelectionTimeoutMS: 30000,
+          } : {
+            // Legacy DocumentDB connection
+            tls: true,
+            tlsCAFile: path.join(__dirname, '..', 'global-bundle.pem'),
+            authMechanism: 'SCRAM-SHA-1' as any,
+            tlsAllowInvalidHostnames: true,
+            tlsAllowInvalidCertificates: true,
+            serverSelectionTimeoutMS: 60000,
+            directConnection: true,
+            retryWrites: false,
+          }),
         }
       : {
           useNewUrlParser: true,
