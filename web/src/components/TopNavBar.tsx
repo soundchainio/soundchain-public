@@ -6,6 +6,7 @@ import { Logo } from 'icons/Logo'
 import { SubtleGlowLogo } from 'icons/GlowingLogo'
 import dynamic from 'next/dynamic'
 const MiniSphere = dynamic(() => import('components/MiniSphere').then(m => m.MiniSphere), { ssr: false })
+import { OgunPriceTicker } from 'components/OgunPriceTicker'
 import { getJwt } from 'lib/apollo'
 import { useMeQuery } from 'lib/graphql'
 import Link from 'next/link'
@@ -336,6 +337,8 @@ export const TopNavBar = ({
           </span>
         </div>
       )}
+      {/* OGUN Price Ticker — ESPN-style scrolling bar */}
+      <OgunPriceTicker />
     </header>
   )
 }

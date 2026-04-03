@@ -40,6 +40,14 @@
   animation-play-state: paused;
 }
 
+.animate-marquee-slow {
+  animation: marquee 45s linear infinite;
+}
+
+.animate-marquee-slow:hover {
+  animation-play-state: paused;
+}
+
 /* Hide scrollbar for horizontal scroll sections (Spotify-style) */
 .scrollbar-hide {
   -ms-overflow-style: none;  /* IE and Edge */
