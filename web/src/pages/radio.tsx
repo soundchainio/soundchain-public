@@ -1415,7 +1415,7 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
           <div className="grid grid-cols-3 gap-2 md:gap-3 mt-4 md:mt-6">
             {/* Tracks — real count + Polygonscan link */}
             <button
-              onClick={() => setRadioOverlay({ type: 'iframe', title: 'OGUN Token — Polygonscan', url: 'https://polygonscan.com/token/0x45f1af89486aeec2da0b06340cd9cd3bd741a15c' })}
+              onClick={() => window.open('https://polygonscan.com/token/0x45f1af89486aeec2da0b06340cd9cd3bd741a15c', '_blank')}
               className="bg-black/20 backdrop-blur-sm border border-cyan-500/20 rounded-xl p-3 text-center hover:border-cyan-400/40 transition-all group cursor-pointer"
             >
               <div className="text-xl md:text-3xl font-bold text-cyan-400 drop-shadow-[0_0_12px_rgba(34,211,238,0.5)]">
@@ -1432,7 +1432,7 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
             </div>
             {/* OGUN — live distribution data + Polygonscan link */}
             <button
-              onClick={() => setRadioOverlay({ type: 'iframe', title: 'Streaming Rewards — Polygonscan', url: 'https://polygonscan.com/address/0x84561ddF3A6Db139ab5f695a28c0DE46Af2a7083' })}
+              onClick={() => window.open('https://polygonscan.com/address/0x84561ddF3A6Db139ab5f695a28c0DE46Af2a7083', '_blank')}
               className="bg-black/20 backdrop-blur-sm border border-green-500/20 rounded-xl p-3 text-center hover:border-green-400/40 transition-all group cursor-pointer"
             >
               <div className="text-xl md:text-3xl font-bold text-green-400 drop-shadow-[0_0_12px_rgba(74,222,128,0.5)]">OGUN</div>
@@ -1789,7 +1789,7 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
                     <div className="border-t border-white/5 pt-2 space-y-2">
                       {tokenId && (
                         <button
-                          onClick={() => setRadioOverlay({ type: 'iframe', title: 'NFT — Polygonscan', url: `https://polygonscan.com/token/${nftContract}?a=${tokenId}` })}
+                          onClick={() => window.open(`https://polygonscan.com/token/${nftContract}?a=${tokenId}`, '_blank')}
                           className="w-full flex items-center justify-between p-2.5 bg-yellow-900/20 border border-yellow-500/20 rounded-lg hover:border-yellow-400/40 transition-all"
                         >
                           <span className="text-yellow-400 text-xs">View NFT on Polygonscan</span>
@@ -1797,14 +1797,14 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
                         </button>
                       )}
                       <button
-                        onClick={() => setRadioOverlay({ type: 'iframe', title: 'OGUN Token — Polygonscan', url: 'https://polygonscan.com/token/0x45f1af89486aeec2da0b06340cd9cd3bd741a15c' })}
+                        onClick={() => window.open('https://polygonscan.com/token/0x45f1af89486aeec2da0b06340cd9cd3bd741a15c', '_blank')}
                         className="w-full flex items-center justify-between p-2.5 bg-cyan-900/20 border border-cyan-500/20 rounded-lg hover:border-cyan-400/40 transition-all"
                       >
                         <span className="text-cyan-400 text-xs">OGUN Token Contract</span>
                         <Globe className="w-3.5 h-3.5 text-cyan-400" />
                       </button>
                       <button
-                        onClick={() => setRadioOverlay({ type: 'iframe', title: 'Rewards Distributor — Polygonscan', url: 'https://polygonscan.com/address/0x84561ddF3A6Db139ab5f695a28c0DE46Af2a7083' })}
+                        onClick={() => window.open('https://polygonscan.com/address/0x84561ddF3A6Db139ab5f695a28c0DE46Af2a7083', '_blank')}
                         className="w-full flex items-center justify-between p-2.5 bg-green-900/20 border border-green-500/20 rounded-lg hover:border-green-400/40 transition-all"
                       >
                         <span className="text-green-400 text-xs">Streaming Rewards Distributor</span>
