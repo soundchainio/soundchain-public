@@ -34,6 +34,7 @@ export const InputField = ({ label, icon: Icon, alignTextCenter, ...props }: Inp
           className={`placeholder-semibold w-full border-none bg-gray-1A p-0 text-xs font-bold leading-3 text-gray-200 placeholder-gray-50 focus:outline-none focus:ring-transparent ${
             alignTextCenter && 'text-center'
           }`}
+          style={{ backgroundColor: '#1A1A1A', color: '#e5e7eb' }}
           id={props.name}
           {...field}
           {...props}
