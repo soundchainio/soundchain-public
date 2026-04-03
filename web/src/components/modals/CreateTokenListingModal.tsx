@@ -122,13 +122,15 @@ export const CreateTokenListingModal = ({
     setTxStatus('idle')
 
     try {
-      const provider = new ethers.providers.Web3Provider((magic as any).rpcProvider, { chainId: 137, name: 'matic' })
+      const provider = new ethers.providers.Web3Provider((magic as any).rpcProvider)
       const signer = provider.getSigner()
 
       const sellTokenAddr = getSellTokenAddress()
       const askTokenAddr = getAskTokenAddress()
-      const sellAmountWei = ethers.utils.parseUnits(String(amount), 18)
-      const askAmountWei = ethers.utils.parseUnits(totalPrice.toFixed(18), 18)
+      const sellAmountWei = ethers.utils.parseUnits(amount.toFixed(6), 18)
+      // Avoid JS floating point: compute askAmount from integers
+      const priceWei = ethers.utils.parseUnits(price.toFixed(6), 18)
+      const askAmountWei = priceWei.mul(ethers.utils.parseUnits(amount.toFixed(6), 0)).div(ethers.utils.parseUnits('1', 6))
       const isNativeSell = sellTokenAddr === ethers.constants.AddressZero
 
       // Step 1: Approve ERC-20 spend (skip for native POL)
@@ -139,19 +141,22 @@ export const CreateTokenListingModal = ({
         // Check existing allowance
         const currentAllowance = await tokenContract.allowance(account, TOKEN_EXCHANGE_ADDRESS)
         if (currentAllowance.lt(sellAmountWei)) {
-          const approveTx = await tokenContract.approve(TOKEN_EXCHANGE_ADDRESS, sellAmountWei)
+          toast.info('Approve OGUN spend in your wallet...')
+          const approveTx = await tokenContract.approve(TOKEN_EXCHANGE_ADDRESS, sellAmountWei, { gasLimit: 100000 })
           await approveTx.wait()
+          toast.success('Token approved!')
         }
       }
 
       // Step 2: Create listing on TokenExchange
       setTxStatus('creating')
+      toast.info('Confirm the listing transaction in your wallet...')
       const exchangeContract = new ethers.Contract(TOKEN_EXCHANGE_ADDRESS, TOKEN_EXCHANGE_ABI, signer)
 
-      // If selling native POL, send it as msg.value
+      // Gas limit explicit — Magic RPC can't estimate on new contracts
       const txOverrides: ethers.PayableOverrides = isNativeSell
-        ? { value: sellAmountWei, chainId: 137 }
-        : { chainId: 137 }
+        ? { value: sellAmountWei, gasLimit: 250000 }
+        : { gasLimit: 250000 }
 
       const tx = await exchangeContract.createListing(
         sellTokenAddr,
@@ -478,9 +483,22 @@ export const CreateTokenListingModal = ({
                     </div>
                   </div>
 
+                  <div className="flex justify-between text-xs border-t border-white/10 pt-2">
+                    <span className="text-gray-500">Platform Fee (0.05%)</span>
+                    <span className="text-gray-400">{platformFee.toFixed(6)} {priceCurrency}</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-gray-500">You Receive</span>
+                    <span className="text-green-400 font-medium">{(totalPrice - platformFee).toFixed(4)} {priceCurrency}</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-gray-500">Royalty Aggregation</span>
+                    <span className="text-amber-400">Via RoyaltySplitter</span>
+                  </div>
+
                   <div className="flex items-center gap-2 mt-3 p-2 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
                     <Zap className="w-4 h-4 text-cyan-400" />
-                    <span className="text-xs text-cyan-400">L2 powered • 0.05% fee • Instant settlement</span>
+                    <span className="text-xs text-cyan-400">L2 powered • 0.05% fee • Instant settlement • Gas ~0.01 POL</span>
                   </div>
                 </div>
 
