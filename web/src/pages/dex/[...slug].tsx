@@ -947,7 +947,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
       case 'post': return 'post' // /dex/post/:id -> single post view
       case 'playlist': return 'playlist'
       case 'staking': return 'staking'
-      case 'marketplace': return 'marketplace'
+      case 'marketplace': return 'feed' // GHOSTED — redirect marketplace to feed
       case 'feed': return 'feed'
       case 'dashboard': return 'dashboard' // /dex/dashboard -> dashboard view with genres/leaderboards
       case 'announcements': return 'announcements'
@@ -4638,7 +4638,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
           </>
           )}
 
-          {/* Marketplace View - New L2 Powered Design */}
+          {/* Marketplace View — GHOSTED: storefronts live on user profiles now (Shop tab)
           {selectedView === 'marketplace' && (
             <MarketplaceView
               tracks={marketTracks}
@@ -4654,6 +4654,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
               onSweepClick={() => setShowSweepPanel(true)}
             />
           )}
+          */}
 
           {/* Users View - Browse and Leaderboard for all profiles */}
           {selectedView === 'users' && (() => {
@@ -5415,9 +5416,9 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
               {/* Quick Nav Row */}
               <div className="grid grid-cols-4 gap-2">
-                <button onClick={() => router.push('/dex/marketplace')} className="flex flex-col items-center gap-1 p-3 rounded-lg bg-white/10 hover:bg-white/20 ring-1 ring-white/15 transition-all">
+                <button onClick={() => { if (me?.profile?.userHandle) router.push(`/dex/users/${me.profile.userHandle}?tab=shop`); else setSelectedView('profile'); }} className="flex flex-col items-center gap-1 p-3 rounded-lg bg-white/10 hover:bg-white/20 ring-1 ring-white/15 transition-all">
                   <Flame className="w-5 h-5 text-orange-400" />
-                  <span className="text-[10px] text-gray-200">Shop</span>
+                  <span className="text-[10px] text-gray-200">My Shop</span>
                 </button>
                 <button onClick={() => router.push('/radio')} className="flex flex-col items-center gap-1 p-3 rounded-lg bg-white/10 hover:bg-white/20 ring-1 ring-white/15 transition-all">
                   <Zap className="w-5 h-5 text-cyan-400" />
@@ -5800,9 +5801,9 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   <div className="text-center py-8">
                     <ImageIcon className="w-12 h-12 text-gray-600 mx-auto mb-3" />
                     <p className="text-gray-400">No tracks collected yet</p>
-                    <Button onClick={() => setSelectedView('marketplace')} className="mt-4 retro-button">
-                      <ShoppingBag className="w-4 h-4 mr-2" />
-                      Browse Marketplace
+                    <Button onClick={() => setSelectedView('explore')} className="mt-4 retro-button">
+                      <Compass className="w-4 h-4 mr-2" />
+                      Explore Tracks
                     </Button>
                   </div>
                 )}
@@ -9515,8 +9516,8 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   <div className="py-8 text-center text-gray-400">
                     <Music className="w-10 h-10 mx-auto mb-2 opacity-50" />
                     <p className="text-sm">No tracks yet</p>
-                    <Button className="mt-3 retro-button text-xs" onClick={() => { setShowTracksCollectionModal(false); setSelectedView('marketplace') }}>
-                      Browse Marketplace
+                    <Button className="mt-3 retro-button text-xs" onClick={() => { setShowTracksCollectionModal(false); setSelectedView('explore') }}>
+                      Explore Tracks
                     </Button>
                   </div>
                 ) : (

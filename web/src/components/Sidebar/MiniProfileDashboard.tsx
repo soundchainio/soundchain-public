@@ -144,13 +144,7 @@ export const MiniProfileDashboard = () => {
               <Users className="w-4 h-4" />
               <span className="text-sm font-medium">Users</span>
             </Link>
-            <Link
-              href="/dex/marketplace"
-              className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-400 hover:text-amber-400 hover:bg-amber-500/10 transition-all"
-            >
-              <ShoppingBag className="w-4 h-4" />
-              <span className="text-sm font-medium">Marketplace</span>
-            </Link>
+            {/* Marketplace ghosted — storefronts on profiles (Shop tab) */}
             <Link
               href="/dex/wallet"
               className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-400 hover:text-purple-400 hover:bg-purple-500/10 transition-all"

@@ -1015,7 +1015,7 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
             {[
               { label: 'Feed', icon: '📱', link: '/dex/feed' },
               { label: 'Explore', icon: '🔍', link: '/dex/explore' },
-              { label: 'Marketplace', icon: '🛒', link: '/dex/marketplace' },
+              // { label: 'Marketplace', icon: '🛒', link: '/dex/marketplace' }, // GHOSTED — storefronts on profiles now
               { label: 'Artists', icon: '🎤', link: '/dex/users' },
               { label: 'Playlists', icon: '🎧', link: '/dex/playlists' },
               { label: 'Wallet', icon: '💰', link: '/dex/wallet' },

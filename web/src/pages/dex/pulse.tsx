@@ -1259,8 +1259,8 @@ function PulsePage() {
           <Link href="/dex/feed" className="text-[11px] font-medium whitespace-nowrap hover:opacity-80 transition-opacity" style={{ color: WA.accent }}>
             Feed
           </Link>
-          <Link href="/dex/marketplace" className="text-[11px] font-medium whitespace-nowrap hover:opacity-80 transition-opacity" style={{ color: WA.text_secondary }}>
-            Market
+          <Link href="/dex/explore" className="text-[11px] font-medium whitespace-nowrap hover:opacity-80 transition-opacity" style={{ color: WA.text_secondary }}>
+            Explore
           </Link>
           <Link href="/dex/wallet" className="text-[11px] font-medium whitespace-nowrap hover:opacity-80 transition-opacity" style={{ color: WA.text_secondary }}>
             Wallet
