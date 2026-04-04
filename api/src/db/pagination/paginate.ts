@@ -67,6 +67,9 @@ export async function paginate<T extends typeof Model>(
 
   // Use .lean() to return plain objects for GraphQL serialization
   // Without .lean(), mongoose Documents contain internal symbols that break serialization
+  // Optimization: use estimatedDocumentCount when no filter (instant on Atlas)
+  // countDocuments with filter does a full collection scan — slow on Atlas
+  const isUnfiltered = !filter || Object.keys(filter).length === 0
   const [rawResults, totalCount] = await Promise.all([
     collection
       .find({ $and: [cursorFilter, filter] })
@@ -74,7 +77,9 @@ export async function paginate<T extends typeof Model>(
       .limit(limit + 1)
       .lean()
       .exec(),
-    collection.find(filter).countDocuments().exec(),
+    isUnfiltered
+      ? collection.estimatedDocumentCount().exec()
+      : collection.countDocuments(filter).exec(),
   ]);
 
   // Cast lean results to expected type for prepareResult

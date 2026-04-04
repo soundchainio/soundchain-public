@@ -1,10 +1,12 @@
-import { getModelForClass, prop } from '@typegoose/typegoose';
+import { getModelForClass, index, prop } from '@typegoose/typegoose';
 import mongoose from 'mongoose';
 import { Field, ID, ObjectType } from 'type-graphql';
 import { ReactionStats } from '../types/ReactionStats';
 import { Model } from './Model';
 
 @ObjectType()
+@index({ profileId: 1, createdAt: -1 })  // User posts sorted by newest
+@index({ createdAt: -1 })                 // Global feed sorted by newest
 export class Post extends Model {
   @Field(() => ID, { name: 'id' })
   public override _id!: mongoose.Types.ObjectId;

@@ -168,6 +168,23 @@ export class PostService extends ModelService<typeof Post> {
     return this.findOrFail(id);
   }
 
+  /**
+   * Batch fetch posts by IDs — single query instead of N+1
+   * Critical for feed performance on Atlas (network latency per query)
+   */
+  async getPostsByIds(ids: string[]): Promise<Map<string, Post>> {
+    if (!ids.length) return new Map()
+    const objectIds = ids.map(id => {
+      try { return new (require('mongoose').Types.ObjectId)(id) } catch { return id }
+    })
+    const posts = await this.model.find({ _id: { $in: objectIds } }).lean().exec()
+    const map = new Map<string, Post>()
+    for (const post of posts) {
+      map.set(post._id.toString(), post as unknown as Post)
+    }
+    return map
+  }
+
   async addReactionToPost({ profileId, postId, type }: NewReactionParams): Promise<Post> {
     const [post, alreadyReacted] = await Promise.all([
       this.findOrFail(postId.toString()),

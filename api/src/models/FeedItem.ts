@@ -5,6 +5,7 @@ import { Model } from './Model';
 
 @ObjectType()
 @index({ profileId: 1, postId: 1 }, { unique: true })
+@index({ profileId: 1, postedAt: -1 })  // Feed query: filter by profile, sort by newest — CRITICAL for performance
 export class FeedItem extends Model {
   @Field(() => ID, { name: 'id' })
   public override _id!: mongoose.Types.ObjectId;
