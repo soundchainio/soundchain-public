@@ -9,6 +9,9 @@ import Head from 'next/head'
 import { TrendingUp, TrendingDown, Target, Trophy, Clock, Zap, BarChart3, RefreshCw } from 'lucide-react'
 import type { CustomLayout } from './_app'
 
+interface ChartPoint { p: number; t: number }
+interface TradeEntry { action: string; price: number; ts: number; pnl?: number }
+
 interface TraderStatus {
   portfolio: number
   cash: number
@@ -39,6 +42,8 @@ interface TraderStatus {
   holding: boolean
   lastAction: string
   uptime: string
+  chart: ChartPoint[]
+  recentTrades: TradeEntry[]
 }
 
 function TraderPage() {
@@ -184,6 +189,99 @@ function TraderPage() {
                 <span>High</span>
               </div>
             </div>
+
+            {/* Price Chart — SVG mini chart */}
+            {status.chart && status.chart.length > 5 && (() => {
+              const prices = status.chart
+              const minP = Math.min(...prices.map(p => p.p))
+              const maxP = Math.max(...prices.map(p => p.p))
+              const range = maxP - minP || 1
+              const w = 340
+              const h = 120
+              const points = prices.map((p, i) => {
+                const x = (i / (prices.length - 1)) * w
+                const y = h - ((p.p - minP) / range) * (h - 10) - 5
+                return `${x},${y}`
+              }).join(' ')
+              const lastPrice = prices[prices.length - 1]?.p || 0
+              const firstPrice = prices[0]?.p || 0
+              const isGreen = lastPrice >= firstPrice
+
+              return (
+                <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs text-gray-400">Price Chart</span>
+                    <span className="text-[10px] text-gray-500">{prices.length} ticks</span>
+                  </div>
+                  <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-28">
+                    {/* Grid lines */}
+                    <line x1="0" y1={h/4} x2={w} y2={h/4} stroke="rgba(255,255,255,0.05)" />
+                    <line x1="0" y1={h/2} x2={w} y2={h/2} stroke="rgba(255,255,255,0.05)" />
+                    <line x1="0" y1={h*3/4} x2={w} y2={h*3/4} stroke="rgba(255,255,255,0.05)" />
+                    {/* Price line */}
+                    <polyline
+                      fill="none"
+                      stroke={isGreen ? '#22c55e' : '#ef4444'}
+                      strokeWidth="2"
+                      points={points}
+                    />
+                    {/* Fill under the line */}
+                    <polygon
+                      fill={isGreen ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)'}
+                      points={`0,${h} ${points} ${w},${h}`}
+                    />
+                    {/* Buy/sell markers */}
+                    {status.recentTrades?.map((trade, i) => {
+                      const tradeIdx = prices.findIndex(p => Math.abs(p.t - trade.ts) < 30000)
+                      if (tradeIdx < 0) return null
+                      const x = (tradeIdx / (prices.length - 1)) * w
+                      const y = h - ((trade.price - minP) / range) * (h - 10) - 5
+                      return (
+                        <circle
+                          key={i}
+                          cx={x} cy={y} r="4"
+                          fill={trade.action === 'BUY' ? '#22c55e' : '#ef4444'}
+                          stroke="white" strokeWidth="1"
+                        />
+                      )
+                    })}
+                    {/* Price labels */}
+                    <text x="2" y="12" fill="rgba(255,255,255,0.3)" fontSize="9">${maxP.toFixed(2)}</text>
+                    <text x="2" y={h - 2} fill="rgba(255,255,255,0.3)" fontSize="9">${minP.toFixed(2)}</text>
+                  </svg>
+                  {/* Entry price line label */}
+                  {status.holding && status.entryPrice > 0 && (
+                    <div className="text-[9px] text-gray-500 text-center mt-1">
+                      Entry: ${status.entryPrice.toFixed(2)} | Current: ${status.solPrice.toFixed(2)}
+                    </div>
+                  )}
+                </div>
+              )
+            })()}
+
+            {/* Recent Trades / Order History */}
+            {status.recentTrades && status.recentTrades.length > 0 && (
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+                <span className="text-xs text-gray-400 mb-2 block">Recent Trades</span>
+                <div className="space-y-1.5">
+                  {status.recentTrades.slice(-8).reverse().map((trade, i) => (
+                    <div key={i} className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2">
+                        <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${trade.action === 'BUY' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                          {trade.action}
+                        </span>
+                        <span className="text-white font-mono">${trade.price?.toFixed(2)}</span>
+                      </div>
+                      {trade.pnl !== undefined && trade.pnl !== null && (
+                        <span className={trade.pnl >= 0 ? 'text-green-400' : 'text-red-400'}>
+                          {trade.pnl >= 0 ? '+' : ''}${trade.pnl.toFixed(2)}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* RSI Gauges */}
             <div className="grid grid-cols-2 gap-3">

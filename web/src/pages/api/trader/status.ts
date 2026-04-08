@@ -10,6 +10,7 @@ import path from 'path'
 
 const STATE_PATH = path.join(process.env.HOME || '/Users/soundchain', 'ogun-trader/state.json')
 const LOG_PATH = path.join(process.env.HOME || '/Users/soundchain', 'ogun-trader/trader.log')
+const CHART_PATH = path.join(process.env.HOME || '/Users/soundchain', 'ogun-trader/chart.json')
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' })
@@ -20,6 +21,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     try {
       state = JSON.parse(readFileSync(STATE_PATH, 'utf-8'))
     } catch { /* no state file */ }
+
+    // Read chart data
+    let chartData: any = { prices: [], trades: [] }
+    try {
+      chartData = JSON.parse(readFileSync(CHART_PATH, 'utf-8'))
+    } catch { /* no chart file yet */ }
 
     // Read last 50 lines of log for current data
     let lastLines: string[] = []
@@ -140,6 +147,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       holding: solQty > 0.5,
       lastAction,
       uptime,
+      chart: chartData.prices || [],
+      recentTrades: chartData.trades || [],
     })
   } catch (err: any) {
     return res.status(500).json({ error: err.message })
