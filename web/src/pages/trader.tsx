@@ -4,9 +4,10 @@
  * Reads from /api/trader/status which reads the bot's state.json
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, ReactElement } from 'react'
 import Head from 'next/head'
 import { TrendingUp, TrendingDown, Target, Trophy, Clock, Zap, BarChart3, RefreshCw } from 'lucide-react'
+import type { CustomLayout } from './_app'
 
 interface TraderStatus {
   portfolio: number
@@ -40,7 +41,7 @@ interface TraderStatus {
   uptime: string
 }
 
-export default function TraderPage() {
+function TraderPage() {
   const [status, setStatus] = useState<TraderStatus | null>(null)
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
   const [error, setError] = useState('')
@@ -261,3 +262,8 @@ export default function TraderPage() {
     </>
   )
 }
+
+// Standalone layout — no sidebars, no nav, no FURL pill menu
+TraderPage.getLayout = ((page: ReactElement) => <>{page}</>) as CustomLayout
+
+export default TraderPage
