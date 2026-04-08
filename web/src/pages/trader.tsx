@@ -54,7 +54,7 @@ function TraderPage() {
   useEffect(() => {
     const fetchStatus = async () => {
       try {
-        const res = await fetch('/api/trader/status')
+        const res = await fetch('/api/trader/update?token=ogun-razor-v12')
         if (res.ok) {
           const data = await res.json()
           setStatus(data)
