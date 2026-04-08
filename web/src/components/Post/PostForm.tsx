@@ -288,7 +288,7 @@ export const PostForm = ({ ...props }: PostFormProps) => {
       validationSchema={validationSchema}
       onSubmit={onSubmit}
     >
-      {({ values, setFieldValue }) => (
+      {({ values, setFieldValue, isSubmitting, errors, submitCount }) => (
         <Form className="pb-safe flex flex-col">
           {/* Header - dark styling with inline style for guaranteed visibility */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-800" style={{ backgroundColor: '#171717' }}>
@@ -304,11 +304,21 @@ export const PostForm = ({ ...props }: PostFormProps) => {
               {props.type === PostFormType.EDIT && 'Edit Post'}
               {props.type === PostFormType.NEW && 'New Post'}
             </span>
-            <Button className="text-sm px-4 py-1.5" type="submit" variant="rainbow-rounded">
-              {props.type === PostFormType.EDIT && 'Save'}
-              {props.type !== PostFormType.EDIT && 'Post'}
+            <Button className="text-sm px-4 py-1.5" type="submit" variant="rainbow-rounded" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <span className="flex items-center gap-1.5">
+                  <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  {props.type === PostFormType.EDIT ? 'Saving...' : 'Posting...'}
+                </span>
+              ) : props.type === PostFormType.EDIT ? 'Save' : 'Post'}
             </Button>
           </div>
+          {/* Show validation error if user tried to submit */}
+          {submitCount > 0 && errors.body && (
+            <div className="px-4 py-2 text-xs text-red-400 bg-red-900/20">
+              {errors.body}
+            </div>
+          )}
           <PostBodyField
             name="body"
             placeholder="What's happening?"

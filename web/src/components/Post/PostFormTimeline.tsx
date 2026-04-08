@@ -17,7 +17,7 @@ interface Emoji {
 }
 import { Edit } from 'icons/Edit'
 import { CreatePostInput, useCreatePostMutation, useGuestCreatePostMutation } from 'lib/graphql'
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { toast } from 'react-toastify'
 import tw from 'tailwind-styled-components'
 import { MediaProvider } from 'types/MediaProvider'
@@ -32,17 +32,17 @@ import { EmoteTextInput, getDisplayLength } from './EmoteTextInput'
 export const PostFormTimeline = () => {
   const me = useMe()
 
-  // Use refetchQueries to reload posts after creation
-  // This ensures the feed updates with the new post
+  // Refetch posts after creation — don't await refetch to avoid 504 gateway timeout
   const [createPost] = useCreatePostMutation({
-    refetchQueries: ['Posts'],
-    awaitRefetchQueries: true, // Wait for refetch to complete before success toast
+    refetchQueries: ['Posts', 'Feed'],
   })
 
   const [guestCreatePost] = useGuestCreatePostMutation({
-    refetchQueries: ['Posts'],
-    awaitRefetchQueries: true,
+    refetchQueries: ['Posts', 'Feed'],
   })
+
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const submitLockRef = useRef(false)
 
   const [postBody, setPostBody] = useState('')
   const [isMusicLinkVisible, setMusicLinkVisible] = useState(false)
@@ -69,31 +69,36 @@ export const PostFormTimeline = () => {
   const customProvider = MediaProvider.CUSTOM_HTML
 
   const onPostSubmit = async () => {
-    if (getDisplayLength(postBody) > postMaxLength) {
-      toast.warn(`Post can have a maximum of ${postMaxLength} characters count.`)
-      return
-    }
-
-    // Require either text, a media link, or uploaded media
-    if (!postBody.trim() && (!link || !link.value) && !uploadedMediaUrl) {
-      toast.warn('Please enter some text, add a media link, or upload media.')
-      return
-    }
-
-    const newPostParams: CreatePostInput = { body: postBody }
-
-    if (link && link.value) newPostParams.mediaLink = link.value
-
-    // Add ephemeral media if uploaded
-    if (uploadedMediaUrl && uploadedMediaType) {
-      (newPostParams as any).uploadedMediaUrl = uploadedMediaUrl;
-      (newPostParams as any).uploadedMediaType = uploadedMediaType;
-      if (uploadedMediaThumbnail) {
-        (newPostParams as any).uploadedMediaThumbnail = uploadedMediaThumbnail;
-      }
-    }
+    // Prevent double/triple posts from rapid tapping
+    if (submitLockRef.current || isSubmitting) return
+    submitLockRef.current = true
+    setIsSubmitting(true)
 
     try {
+      if (getDisplayLength(postBody) > postMaxLength) {
+        toast.warn(`Post can have a maximum of ${postMaxLength} characters count.`)
+        return
+      }
+
+      // Require either text, a media link, or uploaded media
+      if (!postBody.trim() && (!link || !link.value) && !uploadedMediaUrl) {
+        toast.warn('Please enter some text, add a media link, or upload media.')
+        return
+      }
+
+      const newPostParams: CreatePostInput = { body: postBody }
+
+      if (link && link.value) newPostParams.mediaLink = link.value
+
+      // Add ephemeral media if uploaded
+      if (uploadedMediaUrl && uploadedMediaType) {
+        (newPostParams as any).uploadedMediaUrl = uploadedMediaUrl;
+        (newPostParams as any).uploadedMediaType = uploadedMediaType;
+        if (uploadedMediaThumbnail) {
+          (newPostParams as any).uploadedMediaThumbnail = uploadedMediaThumbnail;
+        }
+      }
+
       // Create post - authenticated users use regular mutation, others use guest mutation
       // Check me?.profile to ensure user is actually logged in (not just partial data)
       if (me?.profile) {
@@ -101,7 +106,6 @@ export const PostFormTimeline = () => {
         toast.success(`Post successfully created.`)
       } else {
         // Public post - generate valid Ethereum wallet address format
-        // Create 40 hex characters (20 bytes) for the address after 0x
         const hexChars = '0123456789abcdef'
         let addressBody = ''
         for (let i = 0; i < 40; i++) {
@@ -124,12 +128,15 @@ export const PostFormTimeline = () => {
       setUploadedMediaType(undefined)
       setUploadedMediaThumbnail(undefined)
     } catch (error: any) {
-      // Log detailed error for debugging
       console.error('Post creation error:', error)
       console.error('Error message:', error?.message)
       console.error('GraphQL errors:', error?.graphQLErrors)
       console.error('Network error:', error?.networkError)
       toast.error(error?.message || 'We were unable to create your Post, try again in a few.')
+    } finally {
+      setIsSubmitting(false)
+      // Small delay before unlocking to prevent rapid re-submission
+      setTimeout(() => { submitLockRef.current = false }, 1000)
     }
   }
 
@@ -429,7 +436,16 @@ export const PostFormTimeline = () => {
 
       {!isMusicLinkVisible && !isVideoLinkVisible && (
         <div className="w-full">
-          <Button onClick={onPostSubmit}>Post</Button>
+          <Button onClick={onPostSubmit} disabled={isSubmitting}>
+            {isSubmitting ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Posting...
+              </span>
+            ) : (
+              'Post'
+            )}
+          </Button>
         </div>
       )}
     </div>
