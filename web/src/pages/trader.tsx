@@ -73,8 +73,13 @@ function TraderPage() {
     return () => clearInterval(interval)
   }, [])
 
-  const isUp = status && status.pnlPerSol >= 0
-  const dailyPct = status?.dailyPct || 0
+  // Safe number helper — prevents .toFixed crashes on undefined/null
+  const n = (val: any, fallback = 0): number => {
+    const num = parseFloat(val)
+    return isNaN(num) ? fallback : num
+  }
+  const isUp = status && n(status.pnlPerSol) >= 0
+  const dailyPct = n(status?.dailyPct)
 
   return (
     <>
@@ -110,7 +115,7 @@ function TraderPage() {
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-bold text-amber-400">Daily Target</span>
                 <span className={`text-lg font-black ${status.bonusRound ? 'text-green-400' : 'text-white'}`}>
-                  ${status.todayProfit.toFixed(2)} / ${status.dailyTarget}
+                  ${n(status.todayProfit).toFixed(2)} / ${status.dailyTarget}
                 </span>
               </div>
               <div className="w-full h-3 bg-black/50 rounded-full overflow-hidden">
@@ -127,15 +132,29 @@ function TraderPage() {
               </div>
             </div>
 
+            {/* Bonus Rounds Tracker */}
+            {status.bonusRound && (
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-green-900/30 to-emerald-800/20 border border-green-500/40 animate-pulse">
+                <div className="text-center">
+                  <span className="text-2xl">🎰</span>
+                  <h3 className="text-lg font-black text-green-400 mt-1">BONUS ROUND</h3>
+                  <p className="text-xs text-green-300 mt-1">Daily minimum hit! Every dollar from here is pure bonus</p>
+                  <p className="text-2xl font-black text-white mt-2">
+                    +${(n(status.todayProfit) - n(status.dailyTarget)).toFixed(2)} bonus
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* Portfolio */}
             <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-400">Portfolio</span>
-                <span className="text-xl font-black">${status.portfolio.toFixed(2)}</span>
+                <span className="text-xl font-black">${n(status.portfolio).toFixed(2)}</span>
               </div>
               <div className="flex items-center justify-between mt-1">
-                <span className="text-xs text-gray-500">Cash: ${status.cash.toFixed(2)}</span>
-                <span className="text-xs text-gray-500">SOL: {status.solQty.toFixed(2)}</span>
+                <span className="text-xs text-gray-500">Cash: ${n(status.cash).toFixed(2)}</span>
+                <span className="text-xs text-gray-500">SOL: {n(status.solQty).toFixed(2)}</span>
               </div>
             </div>
 
@@ -145,14 +164,14 @@ function TraderPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <span className="text-sm text-gray-400">Position</span>
-                    <p className="text-lg font-black">{status.solQty.toFixed(2)} SOL @ ${status.entryPrice.toFixed(2)}</p>
+                    <p className="text-lg font-black">{n(status.solQty).toFixed(2)} SOL @ ${n(status.entryPrice).toFixed(2)}</p>
                   </div>
                   <div className="text-right">
                     <span className={`text-lg font-black ${isUp ? 'text-green-400' : 'text-red-400'}`}>
-                      {isUp ? '+' : ''}{status.pnlTotal.toFixed(2)}
+                      {isUp ? '+' : ''}{n(status.pnlTotal).toFixed(2)}
                     </span>
                     <p className={`text-xs ${isUp ? 'text-green-400' : 'text-red-400'}`}>
-                      {isUp ? '+' : ''}{status.pnlPct.toFixed(2)}%
+                      {isUp ? '+' : ''}{n(status.pnlPct).toFixed(2)}%
                     </p>
                   </div>
                 </div>
@@ -170,10 +189,10 @@ function TraderPage() {
             {/* SOL Price + Range */}
             <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
               <div className="flex items-center justify-between">
-                <span className="text-2xl font-black">${status.solPrice.toFixed(2)}</span>
+                <span className="text-2xl font-black">${n(status.solPrice).toFixed(2)}</span>
                 <div className="text-right">
                   <span className="text-xs text-gray-500">24H Range</span>
-                  <p className="text-sm text-gray-300">${status.low24h.toFixed(2)} — ${status.high24h.toFixed(2)}</p>
+                  <p className="text-sm text-gray-300">${n(status.low24h).toFixed(2)} — ${n(status.high24h).toFixed(2)}</p>
                 </div>
               </div>
               <div className="w-full h-2 bg-black/50 rounded-full mt-2 overflow-hidden relative">
@@ -185,7 +204,7 @@ function TraderPage() {
               </div>
               <div className="flex justify-between mt-1 text-[10px] text-gray-500">
                 <span>Low</span>
-                <span>Pos: {status.posInRange.toFixed(0)}%</span>
+                <span>Pos: {n(status.posInRange).toFixed(0)}%</span>
                 <span>High</span>
               </div>
             </div>
@@ -252,7 +271,7 @@ function TraderPage() {
                   {/* Entry price line label */}
                   {status.holding && status.entryPrice > 0 && (
                     <div className="text-[9px] text-gray-500 text-center mt-1">
-                      Entry: ${status.entryPrice.toFixed(2)} | Current: ${status.solPrice.toFixed(2)}
+                      Entry: ${n(status.entryPrice).toFixed(2)} | Current: ${n(status.solPrice).toFixed(2)}
                     </div>
                   )}
                 </div>
@@ -288,7 +307,7 @@ function TraderPage() {
               <div className="p-3 rounded-2xl bg-white/5 border border-white/10 text-center">
                 <span className="text-[10px] text-gray-500 uppercase tracking-wider">1m RSI</span>
                 <p className={`text-2xl font-black mt-1 ${status.rsi1m <= 45 ? 'text-green-400' : status.rsi1m >= 64 ? 'text-red-400' : 'text-white'}`}>
-                  {status.rsi1m.toFixed(0)}
+                  {n(status.rsi1m).toFixed(0)}
                 </p>
                 <p className="text-[9px] text-gray-500 mt-0.5">
                   {status.rsi1m <= 45 ? 'BUY ZONE' : status.rsi1m >= 64 ? 'SELL ZONE' : 'NEUTRAL'}
@@ -297,7 +316,7 @@ function TraderPage() {
               <div className="p-3 rounded-2xl bg-white/5 border border-white/10 text-center">
                 <span className="text-[10px] text-gray-500 uppercase tracking-wider">1h RSI</span>
                 <p className={`text-2xl font-black mt-1 ${status.rsi1h <= 30 ? 'text-green-400' : status.rsi1h >= 70 ? 'text-red-400' : 'text-white'}`}>
-                  {status.rsi1h.toFixed(0)}
+                  {n(status.rsi1h).toFixed(0)}
                 </p>
                 <p className="text-[9px] text-gray-500 mt-0.5">
                   {status.rsi1h <= 30 ? 'OVERSOLD' : status.rsi1h >= 70 ? 'OVERBOUGHT' : 'NEUTRAL'}
@@ -314,7 +333,7 @@ function TraderPage() {
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-500">BTC</span>
-                  <span className="text-white">${(status.btcPrice / 1000).toFixed(1)}K <span className={status.btcChange24h >= 0 ? 'text-green-400' : 'text-red-400'}>{status.btcChange24h >= 0 ? '+' : ''}{status.btcChange24h.toFixed(1)}%</span></span>
+                  <span className="text-white">${(n(status.btcPrice) / 1000).toFixed(1)}K <span className={status.btcChange24h >= 0 ? 'text-green-400' : 'text-red-400'}>{status.btcChange24h >= 0 ? '+' : ''}{n(status.btcChange24h).toFixed(1)}%</span></span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-500">F&G</span>
@@ -330,7 +349,7 @@ function TraderPage() {
               <div className="grid grid-cols-3 gap-3 text-center">
                 <div>
                   <span className="text-[10px] text-gray-500 uppercase">Win Rate</span>
-                  <p className="text-lg font-black text-green-400">{status.winRate.toFixed(0)}%</p>
+                  <p className="text-lg font-black text-green-400">{n(status.winRate).toFixed(0)}%</p>
                 </div>
                 <div>
                   <span className="text-[10px] text-gray-500 uppercase">Cycles</span>
@@ -339,7 +358,7 @@ function TraderPage() {
                 <div>
                   <span className="text-[10px] text-gray-500 uppercase">Total P&L</span>
                   <p className={`text-lg font-black ${status.totalPnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                    ${status.totalPnl.toFixed(2)}
+                    ${n(status.totalPnl).toFixed(2)}
                   </p>
                 </div>
               </div>
