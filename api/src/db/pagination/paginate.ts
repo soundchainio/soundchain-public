@@ -67,20 +67,26 @@ export async function paginate<T extends typeof Model>(
 
   // Use .lean() to return plain objects for GraphQL serialization
   // Without .lean(), mongoose Documents contain internal symbols that break serialization
-  // Optimization: use estimatedDocumentCount when no filter (instant on Atlas)
-  // countDocuments with filter does a full collection scan — slow on Atlas
+  // Optimization: skip countDocuments for filtered queries (e.g. feed) — Atlas perf killer
+  // countDocuments with filter scans the index which adds 20-50ms per query on Atlas
+  // For paginated feeds we only need hasNextPage (limit+1 trick), not totalCount
   const isUnfiltered = !filter || Object.keys(filter).length === 0
-  const [rawResults, totalCount] = await Promise.all([
-    collection
-      .find({ $and: [cursorFilter, filter] })
-      .sort(querySort as Record<string, 1 | -1>)
-      .limit(limit + 1)
-      .lean()
-      .exec(),
-    isUnfiltered
-      ? collection.estimatedDocumentCount().exec()
-      : collection.countDocuments(filter).exec(),
-  ]);
+  const rawResults = await collection
+    .find({ $and: [cursorFilter, filter] })
+    .sort(querySort as Record<string, 1 | -1>)
+    .limit(limit + 1)
+    .lean()
+    .exec();
+
+  // Only count when unfiltered (instant via estimatedDocumentCount) or when
+  // we have few results (likely last page, count is cheap). Skip expensive
+  // filtered counts for mid-feed pages — use -1 to signal "unknown total"
+  const needsCount = isUnfiltered || rawResults.length <= limit
+  const totalCount = needsCount
+    ? (isUnfiltered
+        ? await collection.estimatedDocumentCount().exec()
+        : await collection.countDocuments(filter).exec())
+    : -1;
 
   // Cast lean results to expected type for prepareResult
   const results = rawResults as unknown as DocumentType<InstanceType<T>>[];

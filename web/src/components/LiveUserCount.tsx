@@ -18,7 +18,7 @@ export function LiveUserCount() {
     }
 
     fetchCount()
-    const interval = setInterval(fetchCount, 60_000) // refresh every minute
+    const interval = setInterval(fetchCount, 300_000) // refresh every 5 minutes (was 60s — Vercel invocation savings)
 
     return () => {
       mounted = false

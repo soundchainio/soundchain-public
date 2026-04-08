@@ -166,6 +166,7 @@ export const PostBar = ({
               if (getBodyCharacterCount(values.body) < maxLength) {
                 setFieldValue('body', `${values.body}${emoteMarkdown}`)
               }
+              setGifPickerVisible(false)
             }}
           />
         </div>

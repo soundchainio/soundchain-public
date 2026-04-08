@@ -93,7 +93,7 @@ export const PostModal = () => {
     }, 1000)
 
     return () => clearTimeout(delayDebounce)
-  }, [bodyValue])
+  }, [bodyValue, originalLink, postType])
 
   useEffect(() => {
     if (originalLink) {

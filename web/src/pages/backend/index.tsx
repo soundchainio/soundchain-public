@@ -232,8 +232,8 @@ export default function MoltbookPlayground() {
       }
     }
     fetchRadio()
-    // Refresh every 60 seconds
-    const interval = setInterval(fetchRadio, 60000)
+    // Refresh every 5 minutes (was 60s — Vercel invocation savings)
+    const interval = setInterval(fetchRadio, 300000)
     return () => clearInterval(interval)
   }, [])
 
@@ -253,8 +253,8 @@ export default function MoltbookPlayground() {
       }
     }
     fetchPlayground()
-    // Refresh every 30 seconds
-    const interval = setInterval(fetchPlayground, 30000)
+    // Refresh every 5 minutes (was 30s — Vercel invocation savings)
+    const interval = setInterval(fetchPlayground, 300000)
     return () => clearInterval(interval)
   }, [])
 
@@ -272,8 +272,8 @@ export default function MoltbookPlayground() {
       }
     }
     fetchAirdrop()
-    // Refresh every 30 seconds
-    const interval = setInterval(fetchAirdrop, 30000)
+    // Refresh every 5 minutes (was 30s — Vercel invocation savings)
+    const interval = setInterval(fetchAirdrop, 300000)
     return () => clearInterval(interval)
   }, [])
 

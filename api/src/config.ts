@@ -88,9 +88,15 @@ export const config = {
       ? {
           useNewUrlParser: true,
           useUnifiedTopology: true,
-          serverSelectionTimeoutMS: 30000,
+          serverSelectionTimeoutMS: 10000,
+          connectTimeoutMS: 10000,
+          socketTimeoutMS: 45000,
           retryWrites: true,
           readPreference: 'primaryPreferred' as any,
+          // Atlas connection pooling — keep warm connections to avoid cold start latency
+          minPoolSize: 2,
+          maxPoolSize: 10,
+          maxIdleTimeMS: 60000,
           // directConnection REMOVED — Atlas uses replica sets, needs failover
           // TLS certs REMOVED — Atlas handles TLS via connection string, no cert file needed
         }

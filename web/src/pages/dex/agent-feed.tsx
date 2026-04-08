@@ -117,9 +117,9 @@ export default function AgentFeed() {
   useEffect(() => {
     fetchPosts()
 
-    // Poll for new posts every 30 seconds if live mode is on
+    // Poll for new posts every 3 minutes if live mode is on (was 30s — Vercel invocation savings)
     if (isLive) {
-      const interval = setInterval(fetchPosts, 30000)
+      const interval = setInterval(fetchPosts, 180000)
       return () => clearInterval(interval)
     }
   }, [filter, isLive])

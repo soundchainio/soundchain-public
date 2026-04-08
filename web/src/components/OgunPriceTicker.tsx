@@ -56,7 +56,7 @@ export const OgunPriceTicker = () => {
     }
 
     fetchPrice()
-    const interval = setInterval(fetchPrice, 60000) // Refresh every minute
+    const interval = setInterval(fetchPrice, 300000) // Refresh every 5 minutes (was 60s — Vercel invocation savings)
     return () => clearInterval(interval)
   }, [])
 
