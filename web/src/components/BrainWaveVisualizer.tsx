@@ -14,7 +14,7 @@
  */
 
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { X, Brain, Zap, Activity } from 'lucide-react'
+import { X, Brain, Zap, Activity, ChevronUp, ChevronDown, Cpu, Music, Drum, Heart, Sparkles } from 'lucide-react'
 
 interface BrainWaveVisualizerProps {
   audioRef: React.RefObject<HTMLAudioElement | null>
@@ -27,6 +27,7 @@ export function BrainWaveVisualizer({ audioRef, isPlaying, trackTitle }: BrainWa
   const analyzerRef = useRef<AnalyserNode | null>(null)
   const animFrameRef = useRef<number>(0)
   const [isOpen, setIsOpen] = useState(true)
+  const [expanded, setExpanded] = useState(false)
   const [engagement, setEngagement] = useState(0)
   const [regions, setRegions] = useState({
     auditory: 0,
@@ -224,36 +225,145 @@ export function BrainWaveVisualizer({ audioRef, isPlaying, trackTitle }: BrainWa
     )
   }
 
+  const regionDetails = [
+    { label: 'Audio', key: 'auditory' as const, color: 'rgb(255, 100, 50)', icon: '🎵', iconComponent: Music, desc: 'Raw audio frequency energy — how sonically dense the track is', colorClass: 'from-orange-500/20 to-red-500/20 border-orange-500/20' },
+    { label: 'Motor', key: 'motor' as const, color: 'rgb(50, 255, 150)', icon: '🥁', iconComponent: Drum, desc: 'Rhythmic intensity — BPM and drum pattern drive', colorClass: 'from-green-500/20 to-emerald-500/20 border-green-500/20' },
+    { label: 'Cortex', key: 'prefrontal' as const, color: 'rgb(100, 150, 255)', icon: '🧠', iconComponent: Brain, desc: 'Cognitive complexity — harmonic depth, chord changes, structure', colorClass: 'from-blue-500/20 to-indigo-500/20 border-blue-500/20' },
+    { label: 'Emote', key: 'emotional' as const, color: 'rgb(255, 50, 100)', icon: '💓', iconComponent: Heart, desc: 'Emotional resonance — mood, tone, and feeling conveyed', colorClass: 'from-pink-500/20 to-rose-500/20 border-pink-500/20' },
+    { label: 'Reward', key: 'reward' as const, color: 'rgb(255, 220, 50)', icon: '⚡', iconComponent: Zap, desc: 'Dopamine prediction — how satisfying the track is to the brain', colorClass: 'from-yellow-500/20 to-amber-500/20 border-yellow-500/20' },
+  ]
+
   return (
-    <div className="w-[140px] md:w-[160px] rounded-xl overflow-hidden border border-purple-500/30 backdrop-blur-xl shadow-[0_0_20px_rgba(168,85,247,0.2)]"
-      style={{ background: 'linear-gradient(180deg, rgba(10,5,20,0.95) 0%, rgba(5,0,15,0.95) 100%)' }}
-    >
-      {/* Header */}
-      <div className="flex items-center justify-between px-1.5 py-1 border-b border-purple-500/20">
-        <div className="flex items-center gap-1">
-          <Brain className="w-3 h-3 text-purple-400" />
-          <span className="text-[7px] font-mono font-bold text-purple-300 tracking-wider">NEURAL</span>
+    <>
+      <div
+        className="w-[140px] md:w-[160px] rounded-xl overflow-hidden border border-purple-500/30 backdrop-blur-xl shadow-[0_0_20px_rgba(168,85,247,0.2)] cursor-pointer hover:border-purple-400/50 transition-all"
+        style={{ background: 'linear-gradient(180deg, rgba(10,5,20,0.95) 0%, rgba(5,0,15,0.95) 100%)' }}
+        onClick={() => setExpanded(!expanded)}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-1.5 py-1 border-b border-purple-500/20">
+          <div className="flex items-center gap-1">
+            <Brain className="w-3 h-3 text-purple-400" />
+            <span className="text-[7px] font-mono font-bold text-purple-300 tracking-wider">NEURAL</span>
+          </div>
+          <span className="text-[8px] font-mono font-bold text-cyan-400">{engagement}%</span>
         </div>
-        <span className="text-[8px] font-mono font-bold text-cyan-400">{engagement}%</span>
+
+        {/* Brain Canvas */}
+        <canvas ref={canvasRef} className="w-full" style={{ imageRendering: 'auto' }} />
+
+        {/* Region Bars — compact */}
+        <div className="px-1.5 pb-1 space-y-0.5">
+          {regionDetails.map(r => (
+            <RegionBar key={r.key} label={r.label} value={regions[r.key]} color={r.color} icon={r.icon} />
+          ))}
+        </div>
+
+        {/* Expand indicator */}
+        <div className="flex items-center justify-center pb-1 text-[7px] text-gray-600">
+          {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+        </div>
+
+        {/* Footer */}
+        <div className="px-1.5 py-1 border-t border-purple-500/10 text-center">
+          <span className="text-[6px] text-gray-600 font-mono">TRIBE v2 × SoundChain × NVIDIA</span>
+        </div>
       </div>
 
-      {/* Brain Canvas */}
-      <canvas ref={canvasRef} className="w-full" style={{ imageRendering: 'auto' }} />
+      {/* Expanded Neural Accordion */}
+      {expanded && (
+        <div
+          className="mt-2 w-[140px] md:w-[160px] rounded-xl overflow-hidden border border-purple-500/20 backdrop-blur-xl transition-all duration-300"
+          style={{ background: 'linear-gradient(180deg, rgba(10,5,20,0.95) 0%, rgba(5,0,15,0.95) 100%)' }}
+        >
+          <div className="divide-y divide-purple-500/10">
+            {/* Overall Score */}
+            <div className="p-2">
+              <div className="text-[7px] text-gray-500 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                <Cpu className="w-2.5 h-2.5" /> Neural Score
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="relative w-10 h-10">
+                  <svg viewBox="0 0 36 36" className="w-10 h-10 -rotate-90">
+                    <circle cx="18" cy="18" r="15.5" fill="none" stroke="rgba(168,85,247,0.1)" strokeWidth="3" />
+                    <circle cx="18" cy="18" r="15.5" fill="none" stroke="rgba(168,85,247,0.8)" strokeWidth="3"
+                      strokeDasharray={`${engagement * 0.975} 97.5`}
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-purple-300 font-mono">{engagement}%</span>
+                </div>
+                <p className="text-[7px] text-gray-400 leading-relaxed flex-1">
+                  {engagement >= 70 ? 'High activation — emotionally engaging track'
+                    : engagement >= 40 ? 'Moderate activation — balanced sonic profile'
+                    : 'Low activation — ambient or minimal structure'}
+                </p>
+              </div>
+            </div>
 
-      {/* Region Bars — compact */}
-      <div className="px-1.5 pb-1.5 space-y-0.5">
-        <RegionBar label="Audio" value={regions.auditory} color="rgb(255, 100, 50)" icon="🎵" />
-        <RegionBar label="Motor" value={regions.motor} color="rgb(50, 255, 150)" icon="🥁" />
-        <RegionBar label="Cortex" value={regions.prefrontal} color="rgb(100, 150, 255)" icon="🧠" />
-        <RegionBar label="Emote" value={regions.emotional} color="rgb(255, 50, 100)" icon="💓" />
-        <RegionBar label="Reward" value={regions.reward} color="rgb(255, 220, 50)" icon="⚡" />
-      </div>
+            {/* Detailed Region Breakdown */}
+            {regionDetails.map(r => {
+              const val = Math.round(regions[r.key] * 100)
+              const Icon = r.iconComponent
+              return (
+                <div key={r.key} className="p-2">
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center gap-1">
+                      <span className="text-[8px]">{r.icon}</span>
+                      <span className="text-[8px] font-mono font-bold text-white">{r.label}</span>
+                    </div>
+                    <span className="text-[9px] font-mono font-bold" style={{ color: r.color }}>{val}%</span>
+                  </div>
+                  <div className="h-1.5 bg-white/5 rounded-full overflow-hidden mb-1">
+                    <div
+                      className="h-full rounded-full transition-all duration-500"
+                      style={{ width: `${Math.min(100, val)}%`, backgroundColor: r.color, boxShadow: `0 0 6px ${r.color}` }}
+                    />
+                  </div>
+                  <p className="text-[6px] text-gray-500 leading-relaxed">{r.desc}</p>
+                </div>
+              )
+            })}
 
-      {/* Footer */}
-      <div className="px-1.5 py-1 border-t border-purple-500/10 text-center">
-        <span className="text-[6px] text-gray-600 font-mono">TRIBE v2 × SoundChain × NVIDIA</span>
-      </div>
-    </div>
+            {/* TRIBE v2 Analysis */}
+            <div className="p-2">
+              <div className="text-[7px] text-gray-500 uppercase tracking-wider mb-1 flex items-center gap-1">
+                <Sparkles className="w-2.5 h-2.5" /> Analysis
+              </div>
+              <div className="bg-purple-500/5 border border-purple-500/20 rounded-md p-1.5">
+                <p className="text-[7px] text-purple-300 leading-relaxed">
+                  {(() => {
+                    const sorted = regionDetails
+                      .map(r => ({ label: r.label, val: regions[r.key] }))
+                      .sort((a, b) => b.val - a.val)
+                    const top = sorted[0]
+                    const low = sorted[sorted.length - 1]
+                    return `Highest: ${top.label} (${Math.round(top.val * 100)}%). Lowest: ${low.label} (${Math.round(low.val * 100)}%). ${
+                      top.label === 'Emote' ? 'Strong emotional resonance — mood-driven track.'
+                      : top.label === 'Motor' ? 'Rhythm-forward — high groove and beat drive.'
+                      : top.label === 'Audio' ? 'Sonically dense — rich frequency spectrum.'
+                      : top.label === 'Reward' ? 'High dopamine — satisfying sonic payoff.'
+                      : 'Complex structure — high cognitive engagement.'
+                    }`
+                  })()}
+                </p>
+                <div className="text-[6px] text-gray-600 mt-1 font-mono">Powered by TRIBE v2 × NVIDIA</div>
+              </div>
+            </div>
+
+            {/* Track info if available */}
+            {trackTitle && (
+              <div className="p-2">
+                <div className="text-[7px] text-gray-500 uppercase tracking-wider mb-1 flex items-center gap-1">
+                  <Activity className="w-2.5 h-2.5" /> Scanning
+                </div>
+                <div className="text-[8px] text-cyan-400 font-mono truncate">{trackTitle}</div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </>
   )
 }
 

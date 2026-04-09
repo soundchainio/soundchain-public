@@ -88,7 +88,7 @@ export const config = {
       ? {
           useNewUrlParser: true,
           useUnifiedTopology: true,
-          serverSelectionTimeoutMS: 10000,
+          serverSelectionTimeoutMS: 30000,
           connectTimeoutMS: 10000,
           socketTimeoutMS: 45000,
           retryWrites: true,
