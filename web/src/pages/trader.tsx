@@ -390,6 +390,44 @@ function TraderPage() {
 
         {status && (
           <div className="p-4 space-y-2">
+            {/* $100K MISSION — Cumulative goal tracker */}
+            {(() => {
+              const target = 100000
+              const current = n(status.portfolio)
+              const pct = Math.min(100, (current / target) * 100)
+              const totalDays = status.dailyHistory?.length || 1
+              const totalProfit = status.dailyHistory?.reduce((s: number, d: any) => s + n(d.profit), 0) || 0
+              const avgPerDay = totalDays > 0 ? totalProfit / totalDays : 0
+              const remaining = target - current
+              const daysToTarget = avgPerDay > 0 ? Math.ceil(remaining / avgPerDay) : Infinity
+              return (
+                <div className="p-2.5 rounded-xl bg-gradient-to-br from-purple-900/20 via-black to-cyan-900/10 border border-purple-500/20 shadow-[0_0_20px_rgba(168,85,247,0.08)]">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[8px] text-purple-400/70 uppercase tracking-[0.2em] font-mono">$100K MISSION</span>
+                    <span className="text-[9px] text-gray-500 font-mono">{pct.toFixed(1)}%</span>
+                  </div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-base font-black text-white" style={{ textShadow: '0 0 10px rgba(168,85,247,0.3)' }}>
+                      ${current >= 1000 ? `${(current/1000).toFixed(1)}K` : current.toFixed(0)}
+                    </span>
+                    <span className="text-xs text-gray-500">→ $100K</span>
+                  </div>
+                  <div className="w-full h-2 bg-black/60 rounded-full overflow-hidden border border-white/5">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-purple-600 via-cyan-500 to-green-400 transition-all duration-1000"
+                      style={{ width: `${Math.max(1, pct)}%` }}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between mt-1.5 text-[8px] font-mono">
+                    <span className="text-gray-600">${remaining >= 1000 ? `${(remaining/1000).toFixed(1)}K` : remaining.toFixed(0)} to go</span>
+                    <span className="text-purple-400/60">
+                      {avgPerDay > 0 && daysToTarget < 9999 ? `~${daysToTarget}d at $${avgPerDay.toFixed(0)}/day` : 'Earning data...'}
+                    </span>
+                  </div>
+                </div>
+              )
+            })()}
+
             {/* Daily Target Progress */}
             <div className="p-2.5 rounded-xl bg-gradient-to-br from-amber-900/20 via-black to-amber-800/10 border border-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.08)]">
               <div className="flex items-center justify-between mb-2">
@@ -489,71 +527,106 @@ function TraderPage() {
               </div>
             </div>
 
-            {/* Price Chart — SVG mini chart */}
-            {status.chart && status.chart.length > 5 && (() => {
+            {/* Candlestick Chart — Groups ticks into OHLC candles */}
+            {status.chart && status.chart.length > 10 && (() => {
               const prices = status.chart
-              const minP = Math.min(...prices.map(p => p.p))
-              const maxP = Math.max(...prices.map(p => p.p))
-              const range = maxP - minP || 1
+              // Group ticks into 5-tick candles (OHLC)
+              const candleSize = 5
+              const candles: Array<{o:number;h:number;l:number;c:number;t:number}> = []
+              for (let i = 0; i < prices.length; i += candleSize) {
+                const chunk = prices.slice(i, i + candleSize)
+                if (chunk.length < 2) continue
+                candles.push({
+                  o: chunk[0].p,
+                  h: Math.max(...chunk.map(c => c.p)),
+                  l: Math.min(...chunk.map(c => c.p)),
+                  c: chunk[chunk.length - 1].p,
+                  t: chunk[0].t,
+                })
+              }
+              if (candles.length < 3) return null
+
+              const allPrices = candles.flatMap(c => [c.h, c.l])
+              const minP = Math.min(...allPrices)
+              const maxP = Math.max(...allPrices)
+              const range = maxP - minP || 0.01
               const w = 340
-              const h = 120
-              const points = prices.map((p, i) => {
-                const x = (i / (prices.length - 1)) * w
-                const y = h - ((p.p - minP) / range) * (h - 10) - 5
-                return `${x},${y}`
-              }).join(' ')
-              const lastPrice = prices[prices.length - 1]?.p || 0
-              const firstPrice = prices[0]?.p || 0
-              const isGreen = lastPrice >= firstPrice
+              const h = 130
+              const candleW = Math.max(2, (w / candles.length) - 1.5)
+              const toY = (p: number) => h - 8 - ((p - minP) / range) * (h - 16)
+
+              // Volume bars from candle range
+              const maxRange = Math.max(...candles.map(c => c.h - c.l), 0.01)
 
               return (
                 <div className="p-2.5 rounded-xl bg-white/[0.02] border border-cyan-500/10 backdrop-blur-sm">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-gray-400">Price Chart</span>
-                    <span className="text-[10px] text-gray-500">{prices.length} ticks</span>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[8px] text-cyan-500/50 uppercase tracking-[0.2em] font-mono">Candlestick</span>
+                    <span className="text-[8px] text-gray-600 font-mono">{candles.length} candles</span>
                   </div>
-                  <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-28">
+                  <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-32">
                     {/* Grid lines */}
-                    <line x1="0" y1={h/4} x2={w} y2={h/4} stroke="rgba(255,255,255,0.05)" />
-                    <line x1="0" y1={h/2} x2={w} y2={h/2} stroke="rgba(255,255,255,0.05)" />
-                    <line x1="0" y1={h*3/4} x2={w} y2={h*3/4} stroke="rgba(255,255,255,0.05)" />
-                    {/* Price line */}
-                    <polyline
-                      fill="none"
-                      stroke={isGreen ? '#22c55e' : '#ef4444'}
-                      strokeWidth="2"
-                      points={points}
-                    />
-                    {/* Fill under the line */}
-                    <polygon
-                      fill={isGreen ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)'}
-                      points={`0,${h} ${points} ${w},${h}`}
-                    />
+                    {[0.25, 0.5, 0.75].map(pct => (
+                      <line key={pct} x1="0" y1={h * pct} x2={w} y2={h * pct} stroke="rgba(6,182,212,0.05)" />
+                    ))}
+                    {/* Entry price line */}
+                    {status.holding && n(status.entryPrice) > 0 && (
+                      <line
+                        x1="0" y1={toY(n(status.entryPrice))} x2={w} y2={toY(n(status.entryPrice))}
+                        stroke="rgba(168,85,247,0.4)" strokeWidth="1" strokeDasharray="4,3"
+                      />
+                    )}
+                    {/* Candles */}
+                    {candles.map((c, i) => {
+                      const x = (i / candles.length) * w + 1
+                      const isGreen = c.c >= c.o
+                      const bodyTop = toY(Math.max(c.o, c.c))
+                      const bodyBot = toY(Math.min(c.o, c.c))
+                      const bodyH = Math.max(1, bodyBot - bodyTop)
+                      const wickTop = toY(c.h)
+                      const wickBot = toY(c.l)
+                      const color = isGreen ? '#22c55e' : '#ef4444'
+                      const wickX = x + candleW / 2
+                      // Volume bar
+                      const volH = ((c.h - c.l) / maxRange) * 12
+                      return (
+                        <g key={i}>
+                          {/* Wick */}
+                          <line x1={wickX} y1={wickTop} x2={wickX} y2={wickBot} stroke={color} strokeWidth="0.8" />
+                          {/* Body */}
+                          <rect x={x} y={bodyTop} width={candleW} height={bodyH} fill={color} rx="0.5"
+                            opacity={isGreen ? 0.9 : 0.7} />
+                          {/* Volume bar at bottom */}
+                          <rect x={x} y={h - volH} width={candleW} height={volH}
+                            fill={isGreen ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)'} />
+                        </g>
+                      )
+                    })}
                     {/* Buy/sell markers */}
                     {status.recentTrades?.map((trade, i) => {
-                      const tradeIdx = prices.findIndex(p => Math.abs(p.t - trade.ts) < 30000)
-                      if (tradeIdx < 0) return null
-                      const x = (tradeIdx / (prices.length - 1)) * w
-                      const y = h - ((trade.price - minP) / range) * (h - 10) - 5
+                      const candleIdx = candles.findIndex(c => Math.abs(c.t - trade.ts) < 60000)
+                      if (candleIdx < 0) return null
+                      const x = (candleIdx / candles.length) * w + candleW / 2
+                      const y = toY(trade.price)
                       return (
-                        <circle
-                          key={i}
-                          cx={x} cy={y} r="4"
-                          fill={trade.action === 'BUY' ? '#22c55e' : '#ef4444'}
-                          stroke="white" strokeWidth="1"
-                        />
+                        <g key={`trade-${i}`}>
+                          <circle cx={x} cy={y} r="3.5" fill={trade.action === 'BUY' ? '#22c55e' : '#ef4444'} stroke="white" strokeWidth="0.8" />
+                          <text x={x} y={y - 6} fill="white" fontSize="6" textAnchor="middle" fontWeight="bold">
+                            {trade.action === 'BUY' ? 'B' : 'S'}
+                          </text>
+                        </g>
                       )
                     })}
                     {/* Price labels */}
-                    <text x="2" y="12" fill="rgba(255,255,255,0.3)" fontSize="9">${maxP.toFixed(2)}</text>
-                    <text x="2" y={h - 2} fill="rgba(255,255,255,0.3)" fontSize="9">${minP.toFixed(2)}</text>
+                    <text x="2" y="10" fill="rgba(6,182,212,0.3)" fontSize="8" fontFamily="monospace">${maxP.toFixed(2)}</text>
+                    <text x="2" y={h - 2} fill="rgba(6,182,212,0.3)" fontSize="8" fontFamily="monospace">${minP.toFixed(2)}</text>
+                    {/* Entry label */}
+                    {status.holding && n(status.entryPrice) > 0 && (
+                      <text x={w - 2} y={toY(n(status.entryPrice)) - 3} fill="rgba(168,85,247,0.6)" fontSize="7" textAnchor="end" fontFamily="monospace">
+                        entry ${n(status.entryPrice).toFixed(2)}
+                      </text>
+                    )}
                   </svg>
-                  {/* Entry price line label */}
-                  {status.holding && status.entryPrice > 0 && (
-                    <div className="text-[9px] text-gray-500 text-center mt-1">
-                      Entry: ${n(status.entryPrice).toFixed(2)} | Current: ${n(status.solPrice).toFixed(2)}
-                    </div>
-                  )}
                 </div>
               )
             })()}
@@ -620,22 +693,61 @@ function TraderPage() {
               </div>
             </div>
 
-            {/* Market Intel */}
+            {/* Market Intel — with Fear & Greed gauge */}
             <div className="p-2.5 rounded-xl bg-white/[0.02] border border-cyan-500/10 backdrop-blur-sm">
-              <div className="flex items-center gap-2 mb-2">
-                <BarChart3 className="w-4 h-4 text-blue-400" />
-                <span className="text-sm font-bold text-gray-300">Market Intel</span>
-              </div>
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-500">BTC</span>
-                  <span className="text-white">${(n(status.btcPrice) / 1000).toFixed(1)}K <span className={status.btcChange24h >= 0 ? 'text-green-400' : 'text-red-400'}>{status.btcChange24h >= 0 ? '+' : ''}{n(status.btcChange24h).toFixed(1)}%</span></span>
+              <span className="text-[8px] text-cyan-500/50 uppercase tracking-[0.2em] font-mono block mb-2">Market Intel</span>
+              <div className="flex items-center gap-3">
+                {/* Fear & Greed Circular Gauge */}
+                <div className="flex-shrink-0">
+                  <svg viewBox="0 0 60 36" className="w-16 h-10">
+                    {/* Background arc */}
+                    <path d="M 5 32 A 25 25 0 0 1 55 32" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="5" strokeLinecap="round" />
+                    {/* Colored arc segments */}
+                    <path d="M 5 32 A 25 25 0 0 1 17.5 10" fill="none" stroke="#ef4444" strokeWidth="5" strokeLinecap="round" opacity="0.6" />
+                    <path d="M 17.5 10 A 25 25 0 0 1 30 7" fill="none" stroke="#f97316" strokeWidth="5" strokeLinecap="round" opacity="0.6" />
+                    <path d="M 30 7 A 25 25 0 0 1 42.5 10" fill="none" stroke="#eab308" strokeWidth="5" strokeLinecap="round" opacity="0.6" />
+                    <path d="M 42.5 10 A 25 25 0 0 1 55 32" fill="none" stroke="#22c55e" strokeWidth="5" strokeLinecap="round" opacity="0.6" />
+                    {/* Needle */}
+                    {(() => {
+                      const fg = n(status.fearGreed, 50)
+                      const angle = -180 + (fg / 100) * 180
+                      const rad = (angle * Math.PI) / 180
+                      const nx = 30 + 20 * Math.cos(rad)
+                      const ny = 32 + 20 * Math.sin(rad)
+                      return <line x1="30" y1="32" x2={nx} y2={ny} stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+                    })()}
+                    <circle cx="30" cy="32" r="2" fill="white" />
+                    {/* Value */}
+                    <text x="30" y="28" fill="white" fontSize="10" textAnchor="middle" fontWeight="bold">{n(status.fearGreed)}</text>
+                  </svg>
+                  <p className={`text-[7px] text-center font-mono mt-0.5 ${
+                    n(status.fearGreed) <= 25 ? 'text-red-400' : n(status.fearGreed) >= 75 ? 'text-green-400' : 'text-yellow-400'
+                  }`}>{status.fearGreedLabel || 'Neutral'}</p>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">F&G</span>
-                  <span className={`${status.fearGreed <= 25 ? 'text-red-400' : status.fearGreed >= 75 ? 'text-green-400' : 'text-yellow-400'}`}>
-                    {status.fearGreed} ({status.fearGreedLabel})
-                  </span>
+                {/* BTC + market data */}
+                <div className="flex-1 space-y-1.5 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500 font-mono text-[10px]">BTC</span>
+                    <span className="text-white font-mono text-[10px]">${(n(status.btcPrice) / 1000).toFixed(1)}K
+                      <span className={`ml-1 ${n(status.btcChange24h) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        {n(status.btcChange24h) >= 0 ? '↑' : '↓'}{Math.abs(n(status.btcChange24h)).toFixed(1)}%
+                      </span>
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500 font-mono text-[10px]">SOL 24h</span>
+                    <span className="text-white font-mono text-[10px]">${n(status.low24h).toFixed(0)} — ${n(status.high24h).toFixed(0)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500 font-mono text-[10px]">Sentiment</span>
+                    <span className={`font-mono text-[10px] ${
+                      n(status.fearGreed) <= 20 ? 'text-red-400' : n(status.fearGreed) <= 40 ? 'text-orange-400'
+                      : n(status.fearGreed) <= 60 ? 'text-yellow-400' : 'text-green-400'
+                    }`}>
+                      {n(status.fearGreed) <= 20 ? '🔴 BLOOD' : n(status.fearGreed) <= 40 ? '🟠 FEAR'
+                      : n(status.fearGreed) <= 60 ? '🟡 NEUTRAL' : '🟢 GREED'}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
