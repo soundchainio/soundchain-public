@@ -6,7 +6,7 @@
 
 import { useState, useEffect, useRef, useCallback, ReactElement } from 'react'
 import Head from 'next/head'
-import { TrendingUp, TrendingDown, Target, Trophy, Clock, Zap, BarChart3, RefreshCw, Terminal, X, Maximize2, Minimize2 } from 'lucide-react'
+import { TrendingUp, TrendingDown, Target, Trophy, Clock, Zap, BarChart3, RefreshCw, Terminal, X, Maximize2, Minimize2, ShoppingCart, DollarSign } from 'lucide-react'
 import type { CustomLayout } from './_app'
 
 // CLI bridge whitelist — same as AgentStatusTicker
@@ -77,6 +77,30 @@ function TraderPage() {
   const [termConnected, setTermConnected] = useState(false)
   const termContainerRef = useRef<HTMLDivElement>(null)
   const termIframeRef = useRef<HTMLIFrameElement | null>(null)
+
+  // ─── Manual Trade State ─────────────────────────────────────────
+  const [tradeLoading, setTradeLoading] = useState<'BUY' | 'SELL' | null>(null)
+  const [tradeResult, setTradeResult] = useState<{ action: string; ok: boolean; ts: number } | null>(null)
+
+  const executeTrade = async (action: 'BUY' | 'SELL') => {
+    setTradeLoading(action)
+    setTradeResult(null)
+    try {
+      const res = await fetch('/api/trader/trade?token=ogun-razor-v12', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action }),
+      })
+      const data = await res.json()
+      setTradeResult({ action, ok: data.ok, ts: Date.now() })
+    } catch {
+      setTradeResult({ action, ok: false, ts: Date.now() })
+    } finally {
+      setTradeLoading(null)
+      // Clear result after 3s
+      setTimeout(() => setTradeResult(null), 3000)
+    }
+  }
 
   const connectTerminal = useCallback((tunnelUrl: string) => {
     const container = termContainerRef.current
@@ -198,6 +222,81 @@ function TraderPage() {
       </Head>
 
       <div className="min-h-screen bg-black text-white" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+        {/* ─── FURL Terminal Header (Compact) ─────────────────────── */}
+        {!termOpen ? (
+          <div className="px-3 py-2 border-b border-cyan-500/20 bg-[#0a0a0a]">
+            <button
+              onClick={() => setTermOpen(true)}
+              className="w-full flex items-center justify-center gap-2 py-1.5 rounded-lg bg-cyan-900/20 border border-cyan-500/20 hover:bg-cyan-900/40 transition-colors"
+            >
+              <Terminal className="w-3.5 h-3.5 text-cyan-400" />
+              <span className="text-xs font-bold text-cyan-400">FURL TERMINAL</span>
+              <span className="text-[9px] text-gray-500">• tap to open</span>
+            </button>
+          </div>
+        ) : (
+          <div className={`${termFullscreen ? 'fixed inset-0 z-[200] bg-black flex flex-col' : 'border-b border-cyan-500/30 bg-[#0a0a0a]'}`}>
+            {/* Terminal Header */}
+            <div className="flex items-center justify-between px-3 py-1.5 border-b border-cyan-500/20">
+              <div className="flex items-center gap-2">
+                <Terminal className="w-3 h-3 text-cyan-400" />
+                <span className="text-[10px] font-mono font-bold text-cyan-400">FURL</span>
+                {termConnected && <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />}
+              </div>
+              <div className="flex items-center gap-1">
+                <button onClick={() => setTermFullscreen(!termFullscreen)} className="p-1 text-gray-500 hover:text-cyan-400">
+                  {termFullscreen ? <Minimize2 className="w-3 h-3" /> : <Maximize2 className="w-3 h-3" />}
+                </button>
+                <button onClick={handleTermClose} className="p-1 text-gray-500 hover:text-red-400">
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            </div>
+
+            {/* Auth gate */}
+            {!termAuthed ? (
+              <div className="p-4 text-center space-y-2">
+                <p className="text-xs text-gray-400">Enter your SoundChain handle</p>
+                <input
+                  value={termHandle}
+                  onChange={e => setTermHandle(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleTermAuth()}
+                  placeholder="your_handle"
+                  className="w-full max-w-[200px] mx-auto block px-3 py-1.5 rounded-lg bg-gray-800 border border-gray-700 text-white text-xs font-mono text-center focus:border-cyan-500 focus:outline-none"
+                  autoFocus
+                />
+                <button onClick={handleTermAuth} className="px-4 py-1 rounded-lg bg-cyan-600 text-white text-xs font-bold hover:bg-cyan-500 transition-colors">
+                  Connect
+                </button>
+                {termHandle && !CLI_BRIDGE_WHITELIST.includes(termHandle.trim().toLowerCase()) && termHandle.length > 2 && (
+                  <p className="text-[9px] text-red-400">handle not whitelisted</p>
+                )}
+              </div>
+            ) : !termConnected ? (
+              <div className="p-4 text-center space-y-2">
+                <p className="text-[10px] text-gray-500">Tunnel URL</p>
+                <input
+                  value={termTunnel}
+                  onChange={e => setTermTunnel(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleTermConnect()}
+                  placeholder={DEFAULT_TUNNEL}
+                  className="w-full max-w-[260px] mx-auto block px-3 py-1.5 rounded-lg bg-gray-800 border border-gray-700 text-white text-xs font-mono text-center focus:border-cyan-500 focus:outline-none"
+                />
+                <button onClick={handleTermConnect} className="px-4 py-1.5 rounded-lg bg-cyan-600 text-white text-xs font-bold hover:bg-cyan-500 transition-colors">
+                  <Terminal className="w-3 h-3 inline mr-1" />Connect
+                </button>
+              </div>
+            ) : (
+              /* Terminal iframe container — compact unless fullscreen */
+              <div
+                ref={termContainerRef}
+                className={`bg-[#0a0a0a] ${termFullscreen ? 'flex-1 min-h-0' : 'h-[180px]'}`}
+                style={{ overflow: 'hidden' }}
+              />
+            )}
+          </div>
+        )}
+
         {/* Header */}
         <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
           <div>
@@ -208,6 +307,45 @@ function TraderPage() {
             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
             <span className="text-[10px] text-gray-400">{lastUpdate ? `${Math.floor((Date.now() - lastUpdate.getTime()) / 1000)}s ago` : '...'}</span>
           </div>
+        </div>
+
+        {/* ─── Manual Trade Tabs (BUY / SELL) ─────────────────────── */}
+        <div className="px-4 pt-3">
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => executeTrade('BUY')}
+              disabled={tradeLoading !== null}
+              className={`flex items-center justify-center gap-2 py-3 rounded-xl font-black text-sm transition-all ${
+                tradeLoading === 'BUY'
+                  ? 'bg-green-500/40 border border-green-500/50 text-green-300 animate-pulse'
+                  : 'bg-green-600/20 border border-green-500/40 text-green-400 hover:bg-green-600/40 active:scale-95'
+              }`}
+            >
+              <ShoppingCart className="w-4 h-4" />
+              {tradeLoading === 'BUY' ? 'BUYING...' : 'BUY ALL IN'}
+            </button>
+            <button
+              onClick={() => executeTrade('SELL')}
+              disabled={tradeLoading !== null}
+              className={`flex items-center justify-center gap-2 py-3 rounded-xl font-black text-sm transition-all ${
+                tradeLoading === 'SELL'
+                  ? 'bg-red-500/40 border border-red-500/50 text-red-300 animate-pulse'
+                  : 'bg-red-600/20 border border-red-500/40 text-red-400 hover:bg-red-600/40 active:scale-95'
+              }`}
+            >
+              <DollarSign className="w-4 h-4" />
+              {tradeLoading === 'SELL' ? 'SELLING...' : 'SELL ALL IN'}
+            </button>
+          </div>
+          {tradeResult && (
+            <div className={`mt-2 p-2 rounded-lg text-center text-xs font-bold ${
+              tradeResult.ok
+                ? 'bg-green-500/20 border border-green-500/30 text-green-400'
+                : 'bg-red-500/20 border border-red-500/30 text-red-400'
+            }`}>
+              {tradeResult.ok ? `${tradeResult.action} command sent` : `${tradeResult.action} failed — check connection`}
+            </div>
+          )}
         </div>
 
         {error && (
@@ -476,83 +614,6 @@ function TraderPage() {
             <div className="p-3 rounded-2xl bg-purple-900/20 border border-purple-500/30 text-center">
               <p className="text-xs text-purple-400 font-mono">{status.lastAction}</p>
             </div>
-          </div>
-        )}
-
-        {/* ─── FURL Terminal Panel ─────────────────────────────────── */}
-        {!termOpen && (
-          <div className="px-4 mt-3">
-            <button
-              onClick={() => setTermOpen(true)}
-              className="w-full p-3 rounded-2xl bg-cyan-900/20 border border-cyan-500/30 flex items-center justify-center gap-2 hover:bg-cyan-900/40 transition-colors"
-            >
-              <Terminal className="w-4 h-4 text-cyan-400" />
-              <span className="text-sm font-bold text-cyan-400">FURL TERMINAL</span>
-              <span className="text-[10px] text-gray-500">• Claude Code CLI</span>
-            </button>
-          </div>
-        )}
-
-        {termOpen && (
-          <div className={`${termFullscreen ? 'fixed inset-0 z-[200] bg-black flex flex-col' : 'mx-4 mt-3 rounded-2xl overflow-hidden border border-cyan-500/30'}`}>
-            {/* Terminal Header */}
-            <div className="flex items-center justify-between px-3 py-2 bg-[#0a0a0a] border-b border-cyan-500/20">
-              <div className="flex items-center gap-2">
-                <Terminal className="w-3.5 h-3.5 text-cyan-400" />
-                <span className="text-[11px] font-mono font-bold text-cyan-400">FURL TERMINAL</span>
-                {termConnected && <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />}
-              </div>
-              <div className="flex items-center gap-1">
-                <button onClick={() => setTermFullscreen(!termFullscreen)} className="p-1 text-gray-500 hover:text-cyan-400">
-                  {termFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
-                </button>
-                <button onClick={handleTermClose} className="p-1 text-gray-500 hover:text-red-400">
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </div>
-
-            {/* Auth gate */}
-            {!termAuthed ? (
-              <div className="p-6 bg-[#0a0a0a] text-center space-y-3">
-                <p className="text-sm text-gray-400">Enter your SoundChain handle to access CLI</p>
-                <input
-                  value={termHandle}
-                  onChange={e => setTermHandle(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleTermAuth()}
-                  placeholder="your_handle"
-                  className="w-full max-w-[240px] mx-auto block px-3 py-2 rounded-lg bg-gray-800 border border-gray-700 text-white text-sm font-mono text-center focus:border-cyan-500 focus:outline-none"
-                  autoFocus
-                />
-                <button onClick={handleTermAuth} className="px-4 py-1.5 rounded-lg bg-cyan-600 text-white text-sm font-bold hover:bg-cyan-500 transition-colors">
-                  Connect
-                </button>
-                {termHandle && !CLI_BRIDGE_WHITELIST.includes(termHandle.trim().toLowerCase()) && termHandle.length > 2 && (
-                  <p className="text-[10px] text-red-400">handle not whitelisted</p>
-                )}
-              </div>
-            ) : !termConnected ? (
-              <div className="p-6 bg-[#0a0a0a] text-center space-y-3">
-                <p className="text-xs text-gray-500">Tunnel URL</p>
-                <input
-                  value={termTunnel}
-                  onChange={e => setTermTunnel(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleTermConnect()}
-                  placeholder={DEFAULT_TUNNEL}
-                  className="w-full max-w-[300px] mx-auto block px-3 py-2 rounded-lg bg-gray-800 border border-gray-700 text-white text-sm font-mono text-center focus:border-cyan-500 focus:outline-none"
-                />
-                <button onClick={handleTermConnect} className="px-6 py-2 rounded-lg bg-cyan-600 text-white text-sm font-bold hover:bg-cyan-500 transition-colors">
-                  <Terminal className="w-4 h-4 inline mr-1.5" />Connect Terminal
-                </button>
-              </div>
-            ) : (
-              /* Terminal iframe container */
-              <div
-                ref={termContainerRef}
-                className={`bg-[#0a0a0a] ${termFullscreen ? 'flex-1 min-h-0' : 'min-h-[350px] max-h-[500px]'}`}
-                style={{ overflow: 'hidden' }}
-              />
-            )}
           </div>
         )}
 
