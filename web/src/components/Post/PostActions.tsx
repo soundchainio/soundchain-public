@@ -5,13 +5,13 @@ import { useModalDispatch } from 'contexts/ModalContext'
 import { useMe } from 'hooks/useMe'
 import { ReactionEmoji } from 'icons/ReactionEmoji'
 import { delayFocus } from 'lib/delayFocus'
-import { ReactionType, useBookmarkPostMutation, useUnbookmarkPostMutation } from 'lib/graphql'
+import { ReactionType, useBookmarkPostMutation, useUnbookmarkPostMutation, useDeletePostMutation } from 'lib/graphql'
 import { createPostArchive, downloadArchive, generateArchiveFilename, isMobileDevice } from 'lib/postArchive'
 import NextLink from 'next/link'
 import { useRouter } from 'next/router'
 import { toast } from 'react-toastify'
 
-import { ChatBubbleLeftIcon, ArrowPathIcon, ShareIcon, HandThumbUpIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline'
+import { ChatBubbleLeftIcon, ArrowPathIcon, ShareIcon, HandThumbUpIcon, ArrowDownTrayIcon, TrashIcon } from '@heroicons/react/24/outline'
 import { Bookmark, Archive, Info, Film } from 'lucide-react'
 import { createPortal } from 'react-dom'
 import { CreateStoryModal } from 'components/dex/CreateStoryModal'
@@ -94,6 +94,13 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
   // Bookmark mutations
   const [bookmarkPost, { loading: bookmarking }] = useBookmarkPostMutation()
   const [unbookmarkPost, { loading: unbookmarking }] = useUnbookmarkPostMutation()
+
+  // Delete mutation
+  const [deletePost, { loading: deleting }] = useDeletePostMutation({
+    onCompleted: () => toast.success('Post deleted'),
+    onError: (err) => toast.error(`Failed to delete: ${err.message}`),
+    refetchQueries: ['Feed', 'Posts', 'WallPosts'],
+  })
 
   // Sync local state with prop
   useEffect(() => {
@@ -398,6 +405,23 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
             ) : (
               <Bookmark className="h-4 w-4" />
             )}
+          </button>
+        </div>
+      )}
+      {/* Delete button - only for post owner */}
+      {isOwner && (
+        <div className={commonClasses}>
+          <button
+            className={`flex items-center px-1.5 sm:px-3 py-1.5 sm:py-2 rounded-xl hover:bg-red-500/10 hover:text-red-400 transition-all ${deleting ? 'opacity-50' : ''}`}
+            onClick={() => {
+              if (window.confirm('Delete this post?')) {
+                deletePost({ variables: { input: { postId } } })
+              }
+            }}
+            disabled={deleting}
+            title="Delete"
+          >
+            <TrashIcon className={`h-4 w-4 ${deleting ? 'animate-pulse' : ''}`} />
           </button>
         </div>
       )}

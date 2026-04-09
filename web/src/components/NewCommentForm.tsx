@@ -1,7 +1,7 @@
 import { ApolloCache, FetchResult } from '@apollo/client'
 import { useMe } from 'hooks/useMe'
 import { useRouter } from 'next/router'
-import { AddCommentMutation, CommentDocument, useAddCommentMutation, useGuestAddCommentMutation, ReactionType, useBookmarkPostMutation, useUnbookmarkPostMutation } from '../lib/graphql'
+import { AddCommentMutation, CommentDocument, useAddCommentMutation, useGuestAddCommentMutation, ReactionType, useBookmarkPostMutation, useUnbookmarkPostMutation, useDeletePostMutation } from '../lib/graphql'
 import { Avatar } from 'components/Avatar'
 import { GuestAvatar } from 'components/GuestAvatar'
 import { StickerPicker } from './StickerPicker'
@@ -10,7 +10,7 @@ import Picker from '@emoji-mart/react'
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { getNormalizedLink, IdentifySource, hasLink } from 'utils/NormalizeEmbedLinks'
 import { MediaProvider } from 'types/MediaProvider'
-import { Smile, Sparkles, Link2, Send, X, Film, Video, Bookmark, ArrowDownToLine, Share2 } from 'lucide-react'
+import { Smile, Sparkles, Link2, Send, X, Film, Video, Bookmark, ArrowDownToLine, Share2, Trash2 } from 'lucide-react'
 import { HandThumbUpIcon } from '@heroicons/react/24/outline'
 import { ReactionSelector } from 'components/ReactionSelector'
 import { ReactionEmoji } from 'icons/ReactionEmoji'
@@ -67,6 +67,12 @@ export const NewCommentForm = ({ postId, onSuccess, compact, inputRef, replyToCo
   const [reactionSelectorOpened, setReactionSelectorOpened] = useState(false)
   const [localIsBookmarked, setLocalIsBookmarked] = useState(initialIsBookmarked ?? false)
   const [isDownloading, setIsDownloading] = useState(false)
+  const isPostOwner = me?.profile?.id && postData?.profile?.id && me.profile.id === postData.profile.id
+  const [deletePost, { loading: deleting }] = useDeletePostMutation({
+    onCompleted: () => toast.success('Post deleted'),
+    onError: (err) => toast.error(`Failed to delete: ${err.message}`),
+    refetchQueries: ['Feed', 'Posts', 'WallPosts'],
+  })
   const [selectedStickers, setSelectedStickers] = useState<Array<{url: string, name: string}>>([])
   const [embedUrl, setEmbedUrl] = useState('')
   const [linkPreview, setLinkPreview] = useState<string | undefined>(undefined)
@@ -546,6 +552,24 @@ export const NewCommentForm = ({ postId, onSuccess, compact, inputRef, replyToCo
                 >
                   <Bookmark className={`w-4 h-4 ${localIsBookmarked ? 'fill-cyan-400' : ''}`} />
                   <span className="text-[10px] font-medium hidden sm:inline">Mark</span>
+                </button>
+              )}
+
+              {/* Delete pill — only for post owner */}
+              {isPostOwner && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (window.confirm('Delete this post?')) {
+                      deletePost({ variables: { input: { postId } } })
+                    }
+                  }}
+                  disabled={deleting}
+                  className={`p-1.5 rounded-lg transition-all flex items-center gap-1 bg-neutral-800 text-neutral-400 hover:bg-red-500/20 hover:text-red-400 ${deleting ? 'opacity-50' : ''}`}
+                  title="Delete"
+                >
+                  <Trash2 className={`w-4 h-4 ${deleting ? 'animate-pulse' : ''}`} />
+                  <span className="text-[10px] font-medium hidden sm:inline">Delete</span>
                 </button>
               )}
             </div>
