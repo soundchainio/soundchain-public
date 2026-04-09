@@ -50,6 +50,7 @@ interface TraderStatus {
   uptime: string
   chart: ChartPoint[]
   recentTrades: TradeEntry[]
+  dailyHistory: Array<{ date: string; cycles: number; profit: number; wins: number; losses: number }>
 }
 
 function TraderPage() {
@@ -658,6 +659,46 @@ function TraderPage() {
                 </div>
               </div>
             </div>
+
+            {/* Daily Calendar — Micro chart showing profit per day */}
+            {status.dailyHistory && status.dailyHistory.length > 0 && (
+              <div className="p-2.5 rounded-xl bg-white/[0.02] border border-cyan-500/10 backdrop-blur-sm">
+                <span className="text-[8px] text-cyan-500/50 uppercase tracking-[0.2em] font-mono block mb-2">Daily P&L Calendar</span>
+                <div className="flex items-end gap-1 h-16">
+                  {status.dailyHistory.slice(-14).map((day, i) => {
+                    const maxProfit = Math.max(...status.dailyHistory.map(d => Math.abs(d.profit)), 1)
+                    const barHeight = Math.max(4, (Math.abs(day.profit) / maxProfit) * 56)
+                    const isGreen = day.profit >= 0
+                    const isToday = day.date === new Date().toISOString().slice(0, 10)
+                    const hitTarget = day.profit >= 150
+                    return (
+                      <div key={day.date} className="flex-1 flex flex-col items-center gap-0.5">
+                        <div
+                          className={`w-full rounded-sm transition-all ${
+                            hitTarget ? 'bg-gradient-to-t from-green-500 to-emerald-400 shadow-[0_0_8px_rgba(34,197,94,0.3)]'
+                            : isGreen ? 'bg-green-500/60' : 'bg-red-500/60'
+                          } ${isToday ? 'ring-1 ring-cyan-400/50' : ''}`}
+                          style={{ height: `${barHeight}px` }}
+                          title={`${day.date}: $${day.profit.toFixed(2)} | ${day.cycles} cycles | W:${day.wins} L:${day.losses}`}
+                        />
+                        <span className={`text-[7px] font-mono ${isToday ? 'text-cyan-400' : 'text-gray-600'}`}>
+                          {day.date.slice(5)}
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+                {/* Legend */}
+                <div className="flex items-center justify-between mt-1.5 text-[7px] text-gray-600 font-mono">
+                  <span>Last {Math.min(14, status.dailyHistory.length)} days</span>
+                  <div className="flex items-center gap-2">
+                    <span className="flex items-center gap-0.5"><span className="w-1.5 h-1.5 rounded-sm bg-green-500/60" /> profit</span>
+                    <span className="flex items-center gap-0.5"><span className="w-1.5 h-1.5 rounded-sm bg-red-500/60" /> loss</span>
+                    <span className="flex items-center gap-0.5"><span className="w-1.5 h-1.5 rounded-sm bg-gradient-to-t from-green-500 to-emerald-400" /> $150+</span>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Razor Status */}
             <div className="p-2 rounded-xl bg-purple-900/20 border border-purple-500/30 text-center">
