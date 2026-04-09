@@ -6,12 +6,11 @@
 
 import { useState, useEffect, useRef, useCallback, ReactElement } from 'react'
 import Head from 'next/head'
-import { TrendingUp, TrendingDown, Target, Trophy, Clock, Zap, BarChart3, RefreshCw, Terminal, X, Maximize2, Minimize2, ShoppingCart, DollarSign } from 'lucide-react'
+import { TrendingUp, TrendingDown, Target, Trophy, Clock, Zap, BarChart3, RefreshCw, ShoppingCart, DollarSign } from 'lucide-react'
+import dynamic from 'next/dynamic'
 import type { CustomLayout } from './_app'
 
-// CLI bridge whitelist — same as AgentStatusTicker
-const CLI_BRIDGE_WHITELIST = ['homie_yay_yay', 'furda1', 'furdA1', 'furl_bldr', 'furl', 'jeremy_soundchain', 'jsan619']
-const DEFAULT_TUNNEL = 'tunnel.soundchain.io'
+const AgentStatusTicker = dynamic(() => import('components/AgentStatusTicker').then(m => m.AgentStatusTicker), { ssr: false })
 
 interface ChartPoint { p: number; t: number }
 interface TradeEntry { action: string; price: number; ts: number; pnl?: number }
@@ -74,28 +73,7 @@ function TraderPage() {
     return () => clearInterval(t)
   }, [])
 
-  // ─── FURL Terminal State ─────────────────────────────────────────
-  const [termOpen, setTermOpen] = useState(() => {
-    if (typeof window === 'undefined') return false
-    return sessionStorage.getItem('trader_term_open') === '1'
-  })
-  const [termFullscreen, setTermFullscreen] = useState(false)
-  const [termHandle, setTermHandle] = useState(() => {
-    if (typeof window === 'undefined') return ''
-    return sessionStorage.getItem('trader_term_handle') || ''
-  })
-  const [termAuthed, setTermAuthed] = useState(() => {
-    if (typeof window === 'undefined') return false
-    const h = sessionStorage.getItem('trader_term_handle') || ''
-    return CLI_BRIDGE_WHITELIST.includes(h.toLowerCase())
-  })
-  const [termTunnel, setTermTunnel] = useState(() => {
-    if (typeof window === 'undefined') return DEFAULT_TUNNEL
-    return sessionStorage.getItem('trader_term_tunnel') || DEFAULT_TUNNEL
-  })
-  const [termConnected, setTermConnected] = useState(false)
-  const termContainerRef = useRef<HTMLDivElement>(null)
-  const termIframeRef = useRef<HTMLIFrameElement | null>(null)
+  // FURL Terminal — uses AgentStatusTicker (same as /dex pages)
 
   // ─── Manual Trade State ─────────────────────────────────────────
   const [tradeLoading, setTradeLoading] = useState<'BUY' | 'SELL' | null>(null)
@@ -121,86 +99,6 @@ function TraderPage() {
     }
   }
 
-  const connectTerminal = useCallback((tunnelUrl: string) => {
-    const container = termContainerRef.current
-    if (!container) return
-
-    // Clean up previous iframe
-    if (termIframeRef.current) {
-      try { termIframeRef.current.contentWindow?.postMessage({ type: 'furl-disconnect' }, '*') } catch {}
-      try { termIframeRef.current.remove() } catch {}
-      termIframeRef.current = null
-    }
-
-    const cleanUrl = tunnelUrl.replace(/^https?:\/\//, '').replace(/\/+$/, '')
-    const iframeSrc = `/furl-terminal.html?tunnel=${encodeURIComponent(cleanUrl)}`
-
-    const iframe = document.createElement('iframe')
-    iframe.src = iframeSrc
-    iframe.style.cssText = 'width:100%;height:100%;border:none;background:#0a0a0a;display:block'
-    iframe.setAttribute('allow', 'clipboard-read; clipboard-write')
-    iframe.title = 'FURL Terminal — Trader'
-
-    container.innerHTML = ''
-    container.appendChild(iframe)
-    termIframeRef.current = iframe
-    setTermConnected(true)
-
-    // Focus on click
-    container.addEventListener('click', () => {
-      try { iframe.contentWindow?.postMessage({ type: 'furl-focus' }, '*') } catch {}
-    })
-
-    // Re-fit on resize
-    const handleResize = () => {
-      try { iframe.contentWindow?.postMessage({ type: 'furl-fit' }, '*') } catch {}
-    }
-    window.addEventListener('resize', handleResize)
-    ;(iframe as any)._cleanup = () => window.removeEventListener('resize', handleResize)
-  }, [])
-
-  const disconnectTerminal = useCallback(() => {
-    if (termIframeRef.current) {
-      try { termIframeRef.current.contentWindow?.postMessage({ type: 'furl-disconnect' }, '*') } catch {}
-      try { (termIframeRef.current as any)._cleanup?.(); termIframeRef.current.remove() } catch {}
-      termIframeRef.current = null
-    }
-    setTermConnected(false)
-  }, [])
-
-  const handleTermAuth = () => {
-    const h = termHandle.trim().toLowerCase()
-    if (CLI_BRIDGE_WHITELIST.includes(h)) {
-      setTermAuthed(true)
-      try { sessionStorage.setItem('trader_term_handle', h) } catch {}
-    }
-  }
-
-  const handleTermConnect = () => {
-    const url = termTunnel.trim() || DEFAULT_TUNNEL
-    try {
-      sessionStorage.setItem('trader_term_tunnel', url)
-      sessionStorage.setItem('trader_term_open', '1')
-    } catch {}
-    connectTerminal(url)
-  }
-
-  const handleTermClose = () => {
-    disconnectTerminal()
-    setTermOpen(false)
-    setTermFullscreen(false)
-    try { sessionStorage.removeItem('trader_term_open') } catch {}
-  }
-
-  // Auto-reconnect on mount if terminal was open
-  useEffect(() => {
-    if (termOpen && termAuthed && termContainerRef.current && !termIframeRef.current) {
-      const url = sessionStorage.getItem('trader_term_tunnel') || DEFAULT_TUNNEL
-      // Small delay to let DOM mount
-      const t = setTimeout(() => connectTerminal(url), 200)
-      return () => clearTimeout(t)
-    }
-  }, [termOpen, termAuthed, connectTerminal])
 
   useEffect(() => {
     const fetchStatus = async () => {
@@ -283,80 +181,8 @@ function TraderPage() {
         <div className="fixed inset-0 pointer-events-none opacity-[0.015]" style={{
           backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.1) 2px, rgba(255,255,255,0.1) 4px)',
         }} />
-        {/* ─── FURL Terminal Header (Compact) ─────────────────────── */}
-        {!termOpen ? (
-          <div className="px-3 py-2 border-b border-cyan-500/20 bg-[#0a0a0a]">
-            <button
-              onClick={() => setTermOpen(true)}
-              className="w-full flex items-center justify-center gap-2 py-1.5 rounded-lg bg-cyan-900/20 border border-cyan-500/20 hover:bg-cyan-900/40 transition-colors"
-            >
-              <Terminal className="w-3.5 h-3.5 text-cyan-400" />
-              <span className="text-xs font-bold text-cyan-400">FURL TERMINAL</span>
-              <span className="text-[9px] text-gray-500">• tap to open</span>
-            </button>
-          </div>
-        ) : (
-          <div className={`${termFullscreen ? 'fixed inset-0 z-[200] bg-black flex flex-col' : 'border-b border-cyan-500/30 bg-[#0a0a0a]'}`}>
-            {/* Terminal Header */}
-            <div className="flex items-center justify-between px-3 py-1.5 border-b border-cyan-500/20">
-              <div className="flex items-center gap-2">
-                <Terminal className="w-3 h-3 text-cyan-400" />
-                <span className="text-[10px] font-mono font-bold text-cyan-400">FURL</span>
-                {termConnected && <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />}
-              </div>
-              <div className="flex items-center gap-1">
-                <button onClick={() => setTermFullscreen(!termFullscreen)} className="p-1 text-gray-500 hover:text-cyan-400">
-                  {termFullscreen ? <Minimize2 className="w-3 h-3" /> : <Maximize2 className="w-3 h-3" />}
-                </button>
-                <button onClick={handleTermClose} className="p-1 text-gray-500 hover:text-red-400">
-                  <X className="w-3 h-3" />
-                </button>
-              </div>
-            </div>
-
-            {/* Auth gate */}
-            {!termAuthed ? (
-              <div className="p-4 text-center space-y-2">
-                <p className="text-xs text-gray-400">Enter your SoundChain handle</p>
-                <input
-                  value={termHandle}
-                  onChange={e => setTermHandle(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleTermAuth()}
-                  placeholder="your_handle"
-                  className="w-full max-w-[200px] mx-auto block px-3 py-1.5 rounded-lg bg-gray-800 border border-gray-700 text-white text-xs font-mono text-center focus:border-cyan-500 focus:outline-none"
-                  autoFocus
-                />
-                <button onClick={handleTermAuth} className="px-4 py-1 rounded-lg bg-cyan-600 text-white text-xs font-bold hover:bg-cyan-500 transition-colors">
-                  Connect
-                </button>
-                {termHandle && !CLI_BRIDGE_WHITELIST.includes(termHandle.trim().toLowerCase()) && termHandle.length > 2 && (
-                  <p className="text-[9px] text-red-400">handle not whitelisted</p>
-                )}
-              </div>
-            ) : !termConnected ? (
-              <div className="p-4 text-center space-y-2">
-                <p className="text-[10px] text-gray-500">Tunnel URL</p>
-                <input
-                  value={termTunnel}
-                  onChange={e => setTermTunnel(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleTermConnect()}
-                  placeholder={DEFAULT_TUNNEL}
-                  className="w-full max-w-[260px] mx-auto block px-3 py-1.5 rounded-lg bg-gray-800 border border-gray-700 text-white text-xs font-mono text-center focus:border-cyan-500 focus:outline-none"
-                />
-                <button onClick={handleTermConnect} className="px-4 py-1.5 rounded-lg bg-cyan-600 text-white text-xs font-bold hover:bg-cyan-500 transition-colors">
-                  <Terminal className="w-3 h-3 inline mr-1" />Connect
-                </button>
-              </div>
-            ) : (
-              /* Terminal iframe container — compact unless fullscreen */
-              <div
-                ref={termContainerRef}
-                className={`bg-[#0a0a0a] ${termFullscreen ? 'flex-1 min-h-0' : 'h-[180px]'}`}
-                style={{ overflow: 'hidden' }}
-              />
-            )}
-          </div>
-        )}
+        {/* ─── FURL Terminal — Same as /dex (AgentStatusTicker) ──── */}
+        <AgentStatusTicker />
 
         {/* Header — Holographic neon */}
         <div className="relative px-4 py-2.5 border-b border-cyan-500/20 flex items-center justify-between bg-black/80 backdrop-blur-xl">
