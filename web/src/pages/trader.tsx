@@ -17,6 +17,7 @@ interface ChartPoint { p: number; t: number }
 interface TradeEntry { action: string; price: number; ts: number; pnl?: number }
 
 interface TraderStatus {
+  ts: number
   portfolio: number
   cash: number
   solQty: number
@@ -54,6 +55,13 @@ function TraderPage() {
   const [status, setStatus] = useState<TraderStatus | null>(null)
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
   const [error, setError] = useState('')
+  const [tick, setTick] = useState(0)
+
+  // Tick every second so age display stays live
+  useEffect(() => {
+    const t = setInterval(() => setTick(k => k + 1), 1000)
+    return () => clearInterval(t)
+  }, [])
 
   // ─── FURL Terminal State ─────────────────────────────────────────
   const [termOpen, setTermOpen] = useState(() => {
@@ -190,7 +198,8 @@ function TraderPage() {
         if (res.ok) {
           const data = await res.json()
           setStatus(data)
-          setLastUpdate(new Date())
+          // Use bot's own timestamp for precision — shows real data age
+          setLastUpdate(data.ts ? new Date(data.ts) : new Date())
           setError('')
         } else {
           setError('Bot offline')
@@ -201,7 +210,7 @@ function TraderPage() {
     }
 
     fetchStatus()
-    const interval = setInterval(fetchStatus, 5000) // Refresh every 5 seconds
+    const interval = setInterval(fetchStatus, 2000) // 2s polling — tight sync with bot
     return () => clearInterval(interval)
   }, [])
 
@@ -305,7 +314,7 @@ function TraderPage() {
           </div>
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            <span className="text-[10px] text-gray-400">{lastUpdate ? `${Math.floor((Date.now() - lastUpdate.getTime()) / 1000)}s ago` : '...'}</span>
+            <span className="text-[10px] text-gray-400">{lastUpdate ? `${Math.floor((Date.now() - lastUpdate.getTime()) / 1000)}s` : '...'}</span>
           </div>
         </div>
 
