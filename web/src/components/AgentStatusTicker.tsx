@@ -13,7 +13,7 @@ import { useMagicContext } from 'hooks/useMagicContext'
 import { useMe } from 'hooks/useMe'
 
 // Tunnel CLI bridge whitelist — only these handles can use `jack cli`
-const CLI_BRIDGE_WHITELIST = ['homie_yay_yay', 'furda1', 'furl_bldr', 'furl', 'jeremy_soundchain', 'jsan619']
+const CLI_BRIDGE_WHITELIST = ['homie_yay_yay', 'furda1', 'furda1_', 'furl_bldr', 'furl', 'jeremy_soundchain', 'jsan619', 'soundchain', 'admin']
 
 // ─── Speech APIs ─────────────────────────────────────────────────────
 const SpeechRecognitionAPI = typeof window !== 'undefined'
@@ -2438,10 +2438,12 @@ export function AgentStatusTicker() {
       } else if (cmd === 'jack cli' || cmd === 'smith jack cli') {
         // Jack CLI — xterm.js bridge via SoundChain relay or custom tunnel → ttyd → Claude Code
         // Whitelist check — tunnel gives shell access to the host machine
-        const myHandle = (me?.handle || '').toLowerCase()
-        if (!CLI_BRIDGE_WHITELIST.includes(myHandle)) {
+        const myHandle = (me?.handle || me?.profile?.userHandle || '').toLowerCase()
+        // Skip whitelist on /trader page (private portal, no auth required)
+        const isTraderPage = typeof window !== 'undefined' && window.location.pathname.startsWith('/trader')
+        if (!isTraderPage && !CLI_BRIDGE_WHITELIST.includes(myHandle)) {
           addLine(`  ⛔ access denied — jack cli is restricted`, 'error')
-          addLine(`  your handle "${me?.handle || '(not logged in)'}" is not whitelisted`, 'error')
+          addLine(`  your handle "${me?.handle || me?.profile?.userHandle || '(not logged in)'}" is not whitelisted`, 'error')
           return
         }
         const kb = getKeybook()
