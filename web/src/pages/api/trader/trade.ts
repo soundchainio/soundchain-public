@@ -8,13 +8,14 @@ import type { NextApiRequest, NextApiResponse } from 'next'
  */
 
 interface TradeCommand {
-  action: 'BUY' | 'SELL'
+  action: 'BUY' | 'SELL' | 'PAUSE' | 'RESUME'
   mode: 'ALL_IN'
   ts: number
   source: 'manual'
 }
 
 let pendingCommand: TradeCommand | null = null
+let botPaused = false
 const BOT_TOKEN = process.env.TRADER_BOT_TOKEN || 'ogun-razor-v12'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -25,8 +26,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   if (req.method === 'POST') {
     const { action } = req.body
-    if (action !== 'BUY' && action !== 'SELL') {
-      return res.status(400).json({ error: 'action must be BUY or SELL' })
+    if (!['BUY', 'SELL', 'PAUSE', 'RESUME'].includes(action)) {
+      return res.status(400).json({ error: 'action must be BUY, SELL, PAUSE, or RESUME' })
+    }
+
+    if (action === 'PAUSE') {
+      botPaused = true
+      return res.status(200).json({ ok: true, paused: true })
+    }
+    if (action === 'RESUME') {
+      botPaused = false
+      return res.status(200).json({ ok: true, paused: false })
     }
 
     pendingCommand = {
@@ -40,10 +50,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   if (req.method === 'GET') {
-    // Bot polls — return and clear
+    // Bot polls — return command and pause state
     const cmd = pendingCommand
     pendingCommand = null
-    return res.status(200).json({ command: cmd })
+    return res.status(200).json({ command: cmd, paused: botPaused })
   }
 
   return res.status(405).json({ error: 'Method not allowed' })

@@ -10,8 +10,8 @@ import { TrendingUp, TrendingDown, Target, Trophy, Clock, Zap, BarChart3, Refres
 import type { CustomLayout } from './_app'
 
 // CLI bridge whitelist — same as AgentStatusTicker
-const CLI_BRIDGE_WHITELIST = ['homie_yay_yay', 'furda1', 'furl_bldr', 'furl', 'jeremy_soundchain', 'jsan619']
-const DEFAULT_TUNNEL = 'relay.soundchain.io'
+const CLI_BRIDGE_WHITELIST = ['homie_yay_yay', 'furda1', 'furdA1', 'furl_bldr', 'furl', 'jeremy_soundchain', 'jsan619']
+const DEFAULT_TUNNEL = 'tunnel.soundchain.io'
 
 interface ChartPoint { p: number; t: number }
 interface TradeEntry { action: string; price: number; ts: number; pnl?: number }
@@ -45,6 +45,7 @@ interface TraderStatus {
   dailyPct: number
   bonusRound: boolean
   holding: boolean
+  paused: boolean
   lastAction: string
   uptime: string
   chart: ChartPoint[]
@@ -309,7 +310,7 @@ function TraderPage() {
         {/* Header */}
         <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
           <div>
-            <h1 className="text-lg font-black tracking-tight">OGUN TRADER</h1>
+            <h1 className="text-base font-black tracking-tight">OGUN TRADER</h1>
             <p className="text-[10px] text-gray-500">THE RAZOR v12 • LIVE</p>
           </div>
           <div className="flex items-center gap-2">
@@ -346,6 +347,17 @@ function TraderPage() {
               {tradeLoading === 'SELL' ? 'SELLING...' : 'SELL ALL IN'}
             </button>
           </div>
+          {/* Pause/Resume Bot */}
+          <button
+            onClick={() => executeTrade(status?.paused ? 'RESUME' : 'PAUSE' as any)}
+            className={`mt-2 w-full flex items-center justify-center gap-2 py-2 rounded-xl font-bold text-xs transition-all ${
+              status?.paused
+                ? 'bg-yellow-500/30 border border-yellow-500/50 text-yellow-300 animate-pulse'
+                : 'bg-white/5 border border-white/10 text-gray-400 hover:bg-white/10'
+            }`}
+          >
+            {status?.paused ? '▶ RESUME BOT' : '⏸ PAUSE BOT'}
+          </button>
           {tradeResult && (
             <div className={`mt-2 p-2 rounded-lg text-center text-xs font-bold ${
               tradeResult.ok
@@ -364,12 +376,12 @@ function TraderPage() {
         )}
 
         {status && (
-          <div className="p-4 space-y-3">
+          <div className="p-4 space-y-2">
             {/* Daily Target Progress */}
-            <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-900/30 to-amber-800/10 border border-amber-500/30">
+            <div className="p-2.5 rounded-xl bg-gradient-to-r from-amber-900/30 to-amber-800/10 border border-amber-500/30">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-bold text-amber-400">Daily Target</span>
-                <span className={`text-lg font-black ${status.bonusRound ? 'text-green-400' : 'text-white'}`}>
+                <span className={`text-base font-black ${status.bonusRound ? 'text-green-400' : 'text-white'}`}>
                   ${n(status.todayProfit).toFixed(2)} / ${status.dailyTarget}
                 </span>
               </div>
@@ -389,12 +401,12 @@ function TraderPage() {
 
             {/* Bonus Rounds Tracker */}
             {status.bonusRound && (
-              <div className="p-4 rounded-2xl bg-gradient-to-r from-green-900/30 to-emerald-800/20 border border-green-500/40 animate-pulse">
+              <div className="p-2.5 rounded-xl bg-gradient-to-r from-green-900/30 to-emerald-800/20 border border-green-500/40 animate-pulse">
                 <div className="text-center">
                   <span className="text-2xl">🎰</span>
-                  <h3 className="text-lg font-black text-green-400 mt-1">BONUS ROUND</h3>
+                  <h3 className="text-base font-black text-green-400 mt-1">BONUS ROUND</h3>
                   <p className="text-xs text-green-300 mt-1">Daily minimum hit! Every dollar from here is pure bonus</p>
-                  <p className="text-2xl font-black text-white mt-2">
+                  <p className="text-base font-black text-white mt-2">
                     +${(n(status.todayProfit) - n(status.dailyTarget)).toFixed(2)} bonus
                   </p>
                 </div>
@@ -402,10 +414,10 @@ function TraderPage() {
             )}
 
             {/* Portfolio */}
-            <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+            <div className="p-2.5 rounded-xl bg-white/5 border border-white/10">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-400">Portfolio</span>
-                <span className="text-xl font-black">${n(status.portfolio).toFixed(2)}</span>
+                <span className="text-base font-black">${n(status.portfolio).toFixed(2)}</span>
               </div>
               <div className="flex items-center justify-between mt-1">
                 <span className="text-xs text-gray-500">Cash: ${n(status.cash).toFixed(2)}</span>
@@ -415,14 +427,14 @@ function TraderPage() {
 
             {/* Position */}
             {status.holding && (
-              <div className={`p-4 rounded-2xl border ${isUp ? 'bg-green-900/20 border-green-500/30' : 'bg-red-900/20 border-red-500/30'}`}>
+              <div className={`p-2.5 rounded-xl border ${isUp ? 'bg-green-900/20 border-green-500/30' : 'bg-red-900/20 border-red-500/30'}`}>
                 <div className="flex items-center justify-between">
                   <div>
                     <span className="text-sm text-gray-400">Position</span>
-                    <p className="text-lg font-black">{n(status.solQty).toFixed(2)} SOL @ ${n(status.entryPrice).toFixed(2)}</p>
+                    <p className="text-base font-black">{n(status.solQty).toFixed(2)} SOL @ ${n(status.entryPrice).toFixed(2)}</p>
                   </div>
                   <div className="text-right">
-                    <span className={`text-lg font-black ${isUp ? 'text-green-400' : 'text-red-400'}`}>
+                    <span className={`text-base font-black ${isUp ? 'text-green-400' : 'text-red-400'}`}>
                       {isUp ? '+' : ''}{n(status.pnlTotal).toFixed(2)}
                     </span>
                     <p className={`text-xs ${isUp ? 'text-green-400' : 'text-red-400'}`}>
@@ -434,7 +446,7 @@ function TraderPage() {
             )}
 
             {!status.holding && (
-              <div className="p-4 rounded-2xl bg-cyan-900/20 border border-cyan-500/30 text-center">
+              <div className="p-2.5 rounded-xl bg-cyan-900/20 border border-cyan-500/30 text-center">
                 <Zap className="w-6 h-6 text-cyan-400 mx-auto mb-1" />
                 <p className="text-sm text-cyan-400 font-bold">Waiting for entry</p>
                 <p className="text-xs text-gray-400">1m RSI ≤ 45 triggers buy</p>
@@ -442,9 +454,9 @@ function TraderPage() {
             )}
 
             {/* SOL Price + Range */}
-            <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+            <div className="p-2.5 rounded-xl bg-white/5 border border-white/10">
               <div className="flex items-center justify-between">
-                <span className="text-2xl font-black">${n(status.solPrice).toFixed(2)}</span>
+                <span className="text-base font-black">${n(status.solPrice).toFixed(2)}</span>
                 <div className="text-right">
                   <span className="text-xs text-gray-500">24H Range</span>
                   <p className="text-sm text-gray-300">${n(status.low24h).toFixed(2)} — ${n(status.high24h).toFixed(2)}</p>
@@ -482,7 +494,7 @@ function TraderPage() {
               const isGreen = lastPrice >= firstPrice
 
               return (
-                <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+                <div className="p-2.5 rounded-xl bg-white/5 border border-white/10">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs text-gray-400">Price Chart</span>
                     <span className="text-[10px] text-gray-500">{prices.length} ticks</span>
@@ -535,7 +547,7 @@ function TraderPage() {
 
             {/* Recent Trades / Order History */}
             {status.recentTrades && status.recentTrades.length > 0 && (
-              <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+              <div className="p-2.5 rounded-xl bg-white/5 border border-white/10">
                 <span className="text-xs text-gray-400 mb-2 block">Recent Trades</span>
                 <div className="space-y-1.5">
                   {status.recentTrades.slice(-8).reverse().map((trade, i) => (
@@ -559,18 +571,18 @@ function TraderPage() {
 
             {/* RSI Gauges */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="p-3 rounded-2xl bg-white/5 border border-white/10 text-center">
+              <div className="p-2 rounded-xl bg-white/5 border border-white/10 text-center">
                 <span className="text-[10px] text-gray-500 uppercase tracking-wider">1m RSI</span>
-                <p className={`text-2xl font-black mt-1 ${status.rsi1m <= 45 ? 'text-green-400' : status.rsi1m >= 64 ? 'text-red-400' : 'text-white'}`}>
+                <p className={`text-base font-black mt-1 ${status.rsi1m <= 45 ? 'text-green-400' : status.rsi1m >= 64 ? 'text-red-400' : 'text-white'}`}>
                   {n(status.rsi1m).toFixed(0)}
                 </p>
                 <p className="text-[9px] text-gray-500 mt-0.5">
                   {status.rsi1m <= 45 ? 'BUY ZONE' : status.rsi1m >= 64 ? 'SELL ZONE' : 'NEUTRAL'}
                 </p>
               </div>
-              <div className="p-3 rounded-2xl bg-white/5 border border-white/10 text-center">
+              <div className="p-2 rounded-xl bg-white/5 border border-white/10 text-center">
                 <span className="text-[10px] text-gray-500 uppercase tracking-wider">1h RSI</span>
-                <p className={`text-2xl font-black mt-1 ${status.rsi1h <= 30 ? 'text-green-400' : status.rsi1h >= 70 ? 'text-red-400' : 'text-white'}`}>
+                <p className={`text-base font-black mt-1 ${status.rsi1h <= 30 ? 'text-green-400' : status.rsi1h >= 70 ? 'text-red-400' : 'text-white'}`}>
                   {n(status.rsi1h).toFixed(0)}
                 </p>
                 <p className="text-[9px] text-gray-500 mt-0.5">
@@ -580,7 +592,7 @@ function TraderPage() {
             </div>
 
             {/* Market Intel */}
-            <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+            <div className="p-2.5 rounded-xl bg-white/5 border border-white/10">
               <div className="flex items-center gap-2 mb-2">
                 <BarChart3 className="w-4 h-4 text-blue-400" />
                 <span className="text-sm font-bold text-gray-300">Market Intel</span>
@@ -600,19 +612,19 @@ function TraderPage() {
             </div>
 
             {/* Stats */}
-            <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+            <div className="p-2.5 rounded-xl bg-white/5 border border-white/10">
               <div className="grid grid-cols-3 gap-3 text-center">
                 <div>
                   <span className="text-[10px] text-gray-500 uppercase">Win Rate</span>
-                  <p className="text-lg font-black text-green-400">{n(status.winRate).toFixed(0)}%</p>
+                  <p className="text-base font-black text-green-400">{n(status.winRate).toFixed(0)}%</p>
                 </div>
                 <div>
                   <span className="text-[10px] text-gray-500 uppercase">Cycles</span>
-                  <p className="text-lg font-black">{status.todayCycles}</p>
+                  <p className="text-base font-black">{status.todayCycles}</p>
                 </div>
                 <div>
                   <span className="text-[10px] text-gray-500 uppercase">Total P&L</span>
-                  <p className={`text-lg font-black ${status.totalPnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  <p className={`text-base font-black ${status.totalPnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                     ${n(status.totalPnl).toFixed(2)}
                   </p>
                 </div>
@@ -620,7 +632,7 @@ function TraderPage() {
             </div>
 
             {/* Razor Status */}
-            <div className="p-3 rounded-2xl bg-purple-900/20 border border-purple-500/30 text-center">
+            <div className="p-2 rounded-xl bg-purple-900/20 border border-purple-500/30 text-center">
               <p className="text-xs text-purple-400 font-mono">{status.lastAction}</p>
             </div>
           </div>
