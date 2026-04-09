@@ -11,9 +11,14 @@ import { PageInput } from '../types/PageInput';
 
 @Resolver(Chat)
 export class ChatResolver {
-  @FieldResolver(() => Profile)
-  profile(@Ctx() { profileService }: Context, @Root() chat: Chat): Promise<Profile> {
-    return profileService.getProfile(chat._id.toString());
+  @FieldResolver(() => Profile, { nullable: true })
+  async profile(@Ctx() { profileService }: Context, @Root() chat: Chat): Promise<Profile | null> {
+    try {
+      return await profileService.getProfile(chat._id.toString());
+    } catch {
+      // Partner profile may have been deleted — return null instead of crashing entire chat list
+      return null;
+    }
   }
 
   @FieldResolver()
@@ -32,13 +37,15 @@ export class ChatResolver {
     // Transform PaginateResult<Message> to ChatConnection
     return {
       pageInfo: messages.pageInfo,
-      nodes: messages.nodes.map(message => ({
-        _id: message._id.toString(),
-        fromId: message.fromId.toString(),
-        readAt: message.readAt,
-        message: message.message || '',
-        createdAt: message.createdAt,
-      })),
+      nodes: messages.nodes
+        .filter(message => message._id) // Skip null grouped results
+        .map(message => ({
+          _id: message._id.toString(),
+          fromId: message.fromId?.toString() || '',
+          readAt: message.readAt,
+          message: message.message || '',
+          createdAt: message.createdAt,
+        })),
     };
   }
 
