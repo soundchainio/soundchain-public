@@ -476,25 +476,76 @@ function TraderPage() {
               </div>
             </div>
 
-            {/* Position */}
-            {status.holding && (
-              <div className={`p-2.5 rounded-xl border ${isUp ? 'bg-green-900/20 border-green-500/30' : 'bg-red-900/20 border-red-500/30'}`}>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <span className="text-sm text-gray-400">Position</span>
-                    <p className="text-base font-black">{n(status.solQty).toFixed(2)} SOL @ ${n(status.entryPrice).toFixed(2)}</p>
+            {/* Position + Fee Threshold Meter */}
+            {status.holding && (() => {
+              const pnl = n(status.pnlTotal)
+              const solQty = n(status.solQty)
+              const feeRoundTrip = 4.96 // ~$2.48 × 2
+              const netProfit = pnl - feeRoundTrip
+              // Meter range: -$15 to +$30
+              const meterMin = -15
+              const meterMax = 30
+              const meterRange = meterMax - meterMin
+              const meterPos = Math.max(0, Math.min(100, ((pnl - meterMin) / meterRange) * 100))
+              const feeLinePos = ((feeRoundTrip - meterMin) / meterRange) * 100
+              const zeroLinePos = ((0 - meterMin) / meterRange) * 100
+              const inLoss = pnl < 0
+              const inFeeZone = pnl >= 0 && pnl < feeRoundTrip
+              const inProfit = pnl >= feeRoundTrip
+              const zone = inLoss ? 'LOSS' : inFeeZone ? 'FEE ZONE' : 'NET PROFIT'
+              const zoneColor = inLoss ? 'text-red-400' : inFeeZone ? 'text-yellow-400' : 'text-green-400'
+              const zoneBg = inLoss ? 'bg-red-900/20 border-red-500/30' : inFeeZone ? 'bg-yellow-900/20 border-yellow-500/30' : 'bg-green-900/20 border-green-500/30'
+
+              return (
+                <div className={`p-2.5 rounded-xl border ${zoneBg}`}>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-sm text-gray-400">Position</span>
+                      <p className="text-base font-black">{n(status.solQty).toFixed(2)} SOL @ ${n(status.entryPrice).toFixed(2)}</p>
+                    </div>
+                    <div className="text-right">
+                      <span className={`text-base font-black ${zoneColor}`}>
+                        {pnl >= 0 ? '+' : ''}{pnl.toFixed(2)}
+                      </span>
+                      <p className={`text-xs ${zoneColor}`}>
+                        {isUp ? '+' : ''}{n(status.pnlPct).toFixed(2)}%
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <span className={`text-base font-black ${isUp ? 'text-green-400' : 'text-red-400'}`}>
-                      {isUp ? '+' : ''}{n(status.pnlTotal).toFixed(2)}
-                    </span>
-                    <p className={`text-xs ${isUp ? 'text-green-400' : 'text-red-400'}`}>
-                      {isUp ? '+' : ''}{n(status.pnlPct).toFixed(2)}%
-                    </p>
+
+                  {/* Fee Threshold Meter */}
+                  <div className="mt-2">
+                    <div className="relative w-full h-3 bg-black/60 rounded-full overflow-visible border border-white/5">
+                      {/* Loss zone (red) */}
+                      <div className="absolute h-full rounded-l-full bg-gradient-to-r from-red-600/40 to-red-500/20" style={{ width: `${zeroLinePos}%` }} />
+                      {/* Fee zone (yellow) */}
+                      <div className="absolute h-full bg-gradient-to-r from-yellow-600/30 to-yellow-500/20" style={{ left: `${zeroLinePos}%`, width: `${feeLinePos - zeroLinePos}%` }} />
+                      {/* Profit zone (green) */}
+                      <div className="absolute h-full rounded-r-full bg-gradient-to-r from-green-600/30 to-green-500/40" style={{ left: `${feeLinePos}%`, width: `${100 - feeLinePos}%` }} />
+                      {/* Zero line */}
+                      <div className="absolute h-full w-[1px] bg-white/20" style={{ left: `${zeroLinePos}%` }} />
+                      {/* Fee clearance line */}
+                      <div className="absolute h-full w-[1px] bg-yellow-400/50" style={{ left: `${feeLinePos}%` }} />
+                      {/* Current position dot */}
+                      <div
+                        className={`absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full border-2 border-white shadow-lg ${inLoss ? 'bg-red-500' : inFeeZone ? 'bg-yellow-500' : 'bg-green-500'}`}
+                        style={{ left: `${meterPos}%`, marginLeft: '-6px', boxShadow: inProfit ? '0 0 8px rgba(34,197,94,0.6)' : inFeeZone ? '0 0 8px rgba(234,179,8,0.6)' : '0 0 8px rgba(239,68,68,0.6)' }}
+                      />
+                    </div>
+                    <div className="flex justify-between mt-1 text-[7px] font-mono">
+                      <span className="text-red-400/60">LOSS</span>
+                      <span className="text-yellow-400/60">FEES ${feeRoundTrip.toFixed(2)}</span>
+                      <span className="text-green-400/60">NET PROFIT</span>
+                    </div>
+                    <div className="text-center mt-0.5">
+                      <span className={`text-[9px] font-mono font-bold ${zoneColor}`}>
+                        {inProfit ? `✅ NET +$${netProfit.toFixed(2)}` : inFeeZone ? `🟡 +$${pnl.toFixed(2)} gross (fees eat $${feeRoundTrip.toFixed(2)})` : `❌ $${pnl.toFixed(2)}`}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )
+            })()}
 
             {!status.holding && (
               <div className="p-2.5 rounded-xl bg-cyan-900/20 border border-cyan-500/30 text-center">
