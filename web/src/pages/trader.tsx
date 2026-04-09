@@ -53,10 +53,19 @@ interface TraderStatus {
   dailyHistory: Array<{ date: string; cycles: number; profit: number; wins: number; losses: number }>
 }
 
+interface NewsItem {
+  title: string
+  source: string
+  url: string
+  kind: string // bearish, bullish, neutral
+  ts: number
+}
+
 function TraderPage() {
   const [status, setStatus] = useState<TraderStatus | null>(null)
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
   const [error, setError] = useState('')
+  const [news, setNews] = useState<NewsItem[]>([])
   const [tick, setTick] = useState(0)
 
   // Tick every second so age display stays live
@@ -215,6 +224,38 @@ function TraderPage() {
     const interval = setInterval(fetchStatus, 2000) // 2s polling — tight sync with bot
     return () => clearInterval(interval)
   }, [])
+
+  // Fetch crypto news headlines
+  useEffect(() => {
+    const fetchNews = async () => {
+      try {
+        // CoinGecko status + CryptoPanic-style free headlines via proxy
+        const res = await fetch('https://api.coingecko.com/api/v3/search/trending')
+        if (res.ok) {
+          const data = await res.json()
+          const items: NewsItem[] = (data.coins || []).slice(0, 6).map((c: any) => ({
+            title: `${c.item?.name} (${c.item?.symbol}) trending — #${c.item?.market_cap_rank || '?'} market cap`,
+            source: 'CoinGecko',
+            url: `https://coingecko.com/en/coins/${c.item?.id}`,
+            kind: 'neutral',
+            ts: Date.now(),
+          }))
+          // Add SOL-specific context
+          items.unshift({
+            title: `SOL $${n(status?.solPrice).toFixed(2)} | BTC $${(n(status?.btcPrice)/1000).toFixed(1)}K | F&G: ${status?.fearGreed || 50} ${status?.fearGreedLabel || ''}`,
+            source: 'OGUN Trader',
+            url: '',
+            kind: n(status?.fearGreed) <= 25 ? 'bearish' : n(status?.fearGreed) >= 60 ? 'bullish' : 'neutral',
+            ts: Date.now(),
+          })
+          setNews(items)
+        }
+      } catch {}
+    }
+    fetchNews()
+    const interval = setInterval(fetchNews, 300000) // Every 5 min
+    return () => clearInterval(interval)
+  }, [status?.solPrice, status?.fearGreed, status?.btcPrice, status?.fearGreedLabel])
 
   // Safe number helper — prevents .toFixed crashes on undefined/null
   const n = (val: any, fallback = 0): number => {
@@ -910,6 +951,29 @@ function TraderPage() {
                     <span className="flex items-center gap-0.5"><span className="w-1.5 h-1.5 rounded-sm bg-green-500/60" /> profit</span>
                     <span className="flex items-center gap-0.5"><span className="w-1.5 h-1.5 rounded-sm bg-red-500/60" /> loss</span>
                     <span className="flex items-center gap-0.5"><span className="w-1.5 h-1.5 rounded-sm bg-gradient-to-t from-green-500 to-emerald-400" /> $150+</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* News Ticker — Bloomberg terminal style */}
+            {news.length > 0 && (
+              <div className="rounded-xl bg-black/80 border border-cyan-500/10 overflow-hidden">
+                <div className="px-2.5 py-1 border-b border-cyan-500/10 flex items-center justify-between">
+                  <span className="text-[7px] text-cyan-500/50 uppercase tracking-[0.2em] font-mono">LIVE INTEL</span>
+                  <span className="text-[7px] text-gray-600 font-mono">{news.length} headlines</span>
+                </div>
+                <div className="overflow-hidden relative h-6">
+                  <div className="flex items-center gap-8 animate-marquee-slow whitespace-nowrap px-2 h-full">
+                    {news.concat(news).map((item, i) => (
+                      <span key={i} className="inline-flex items-center gap-1.5 text-[9px] font-mono">
+                        <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                          item.kind === 'bullish' ? 'bg-green-500' : item.kind === 'bearish' ? 'bg-red-500' : 'bg-yellow-500'
+                        }`} />
+                        <span className="text-gray-400">{item.source}</span>
+                        <span className="text-gray-200">{item.title}</span>
+                      </span>
+                    ))}
                   </div>
                 </div>
               </div>
