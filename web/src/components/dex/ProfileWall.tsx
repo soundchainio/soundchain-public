@@ -752,14 +752,22 @@ export function ProfileWall({ profileId, isOwnProfile: isOwnProfileProp, viewerP
       setShowReplyEmbed(false)
       refetch()
     },
+    onError: (err) => {
+      console.error('[WallPost] Error:', err)
+      toast.error(err?.message?.includes('504') || err?.message?.includes('timeout')
+        ? 'Server busy — try again in a moment'
+        : `Post failed: ${err?.message || 'Unknown error'}`)
+    },
   })
 
   const [deleteWallPost] = useMutation(DELETE_WALL_POST, {
     onCompleted: () => refetch(),
+    onError: (err) => toast.error(`Delete failed: ${err?.message || 'Unknown error'}`),
   })
 
   const [pinWallPost] = useMutation(PIN_WALL_POST, {
     onCompleted: () => refetch(),
+    onError: (err) => toast.error(`Pin failed: ${err?.message || 'Unknown error'}`),
   })
 
   const [updateWallPost, { loading: updating }] = useMutation(UPDATE_WALL_POST, {
@@ -768,6 +776,7 @@ export function ProfileWall({ profileId, isOwnProfile: isOwnProfileProp, viewerP
       setEditBody('')
       refetch()
     },
+    onError: (err) => toast.error(`Update failed: ${err?.message || 'Unknown error'}`),
   })
 
   const handleSubmit = () => {
