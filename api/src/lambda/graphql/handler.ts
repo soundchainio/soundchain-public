@@ -11,7 +11,16 @@ import { AnnouncementModel, AnnouncementStatus, AnnouncementType } from '../../m
 let dbConnected = false;
 
 const connectDb = async () => {
-  if (dbConnected) return;
+  // Check if existing connection is actually alive (not just flagged)
+  // Atlas can drop idle connections — readyState 1 = connected
+  if (dbConnected && mongoose.connection.readyState === 1) return;
+
+  // Reset flag if connection dropped
+  if (dbConnected && mongoose.connection.readyState !== 1) {
+    console.log(`[DB] Connection stale (readyState: ${mongoose.connection.readyState}), reconnecting...`);
+    dbConnected = false;
+  }
+
   const url = process.env.DATABASE_URL || config.db.url;
   await mongoose.connect(url, config.db.options);
   dbConnected = true;

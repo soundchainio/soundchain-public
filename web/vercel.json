@@ -12,6 +12,10 @@
   ],
   "crons": [
     {
+      "path": "/api/warmup",
+      "schedule": "*/5 * * * *"
+    },
+    {
       "path": "/api/agent/radio/broadcast",
       "schedule": "0 * * * *"
     },
