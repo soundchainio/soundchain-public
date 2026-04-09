@@ -8294,20 +8294,30 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                           <button
                             onClick={async () => {
                               if (!me) { router.push('/login'); return; }
-                              if (viewingProfile.isFollowed) {
-                                await unfollowProfile({ variables: { input: { followedId: viewingProfile.id } } })
-                              } else {
-                                await followProfile({ variables: { input: { followedId: viewingProfile.id } } })
+                              if (followLoading || unfollowLoading) return;
+                              try {
+                                if (viewingProfile.isFollowed) {
+                                  await unfollowProfile({ variables: { input: { followedId: viewingProfile.id } } })
+                                } else {
+                                  await followProfile({ variables: { input: { followedId: viewingProfile.id } } })
+                                }
+                              } catch (err: any) {
+                                console.error('[Follow] Error:', err)
+                                toast.error(err?.message?.includes('504') || err?.message?.includes('timeout')
+                                  ? 'Server busy — try again in a moment'
+                                  : `Follow failed: ${err?.message || 'Unknown error'}`)
                               }
                             }}
+                            disabled={followLoading || unfollowLoading}
                             className={`px-4 py-2 text-sm rounded-lg flex items-center gap-2 transition-colors ${
+                              followLoading || unfollowLoading ? 'opacity-50 cursor-wait' :
                               viewingProfile.isFollowed
                                 ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50'
                                 : 'bg-cyan-500 text-white hover:bg-cyan-600'
                             }`}
                           >
-                            <Users className="w-4 h-4" />
-                            {viewingProfile.isFollowed ? 'Following' : 'Follow'}
+                            <Users className={`w-4 h-4 ${followLoading || unfollowLoading ? 'animate-pulse' : ''}`} />
+                            {followLoading || unfollowLoading ? 'Working...' : viewingProfile.isFollowed ? 'Following' : 'Follow'}
                           </button>
                         )}
                         {!isViewingOwnProfile && (
