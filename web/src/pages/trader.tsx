@@ -547,13 +547,65 @@ function TraderPage() {
               )
             })()}
 
-            {!status.holding && (
-              <div className="p-2.5 rounded-xl bg-cyan-900/20 border border-cyan-500/30 text-center">
-                <Zap className="w-6 h-6 text-cyan-400 mx-auto mb-1" />
-                <p className="text-sm text-cyan-400 font-bold">Waiting for entry</p>
-                <p className="text-xs text-gray-400">1m RSI ≤ 45 triggers buy</p>
-              </div>
-            )}
+            {!status.holding && (() => {
+              const rsi = n(status.rsi1m, 50)
+              const buyZone = 45
+              // Meter: RSI 80 (overbought/don't buy) → 45 (buy zone)
+              // Flip the scale — lower RSI = closer to green
+              const meterPos = Math.max(0, Math.min(100, ((80 - rsi) / (80 - 20)) * 100))
+              const buyLinePos = ((80 - buyZone) / (80 - 20)) * 100
+              const inBuyZone = rsi <= buyZone
+              const inNeutral = rsi > buyZone && rsi <= 60
+              const inOverbought = rsi > 60
+              const zone = inBuyZone ? 'BUY ZONE' : inNeutral ? 'NEUTRAL' : 'OVERBOUGHT'
+              const zoneColor = inBuyZone ? 'text-green-400' : inNeutral ? 'text-yellow-400' : 'text-red-400'
+
+              return (
+                <div className={`p-2.5 rounded-xl border ${inBuyZone ? 'bg-green-900/20 border-green-500/30' : inNeutral ? 'bg-yellow-900/10 border-yellow-500/20' : 'bg-red-900/10 border-red-500/20'}`}>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-sm text-gray-400">Hunting Mode</span>
+                      <p className="text-base font-black">${n(status.cash).toFixed(0)} ready</p>
+                    </div>
+                    <div className="text-right">
+                      <span className={`text-base font-black ${zoneColor}`}>
+                        RSI {rsi.toFixed(0)}
+                      </span>
+                      <p className={`text-xs ${zoneColor}`}>{zone}</p>
+                    </div>
+                  </div>
+
+                  {/* Buy Zone VU Meter — flipped: green = oversold = BUY */}
+                  <div className="mt-2">
+                    <div className="relative w-full h-3 bg-black/60 rounded-full overflow-visible border border-white/5">
+                      {/* Overbought zone (red — don't buy) */}
+                      <div className="absolute h-full rounded-l-full bg-gradient-to-r from-red-600/40 to-red-500/20" style={{ width: `${100 - buyLinePos - 10}%` }} />
+                      {/* Neutral zone (yellow) */}
+                      <div className="absolute h-full bg-gradient-to-r from-yellow-600/20 to-yellow-500/20" style={{ left: `${100 - buyLinePos - 10}%`, width: `${10}%` }} />
+                      {/* Buy zone (green — FIRE) */}
+                      <div className="absolute h-full rounded-r-full bg-gradient-to-r from-green-500/30 to-green-400/50" style={{ left: `${buyLinePos}%`, width: `${100 - buyLinePos}%` }} />
+                      {/* Buy trigger line */}
+                      <div className="absolute h-full w-[1px] bg-green-400/60" style={{ left: `${buyLinePos}%` }} />
+                      {/* Current RSI dot */}
+                      <div
+                        className={`absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full border-2 border-white shadow-lg ${inBuyZone ? 'bg-green-500' : inNeutral ? 'bg-yellow-500' : 'bg-red-500'}`}
+                        style={{ left: `${meterPos}%`, marginLeft: '-6px', boxShadow: inBuyZone ? '0 0 10px rgba(34,197,94,0.7)' : inNeutral ? '0 0 8px rgba(234,179,8,0.5)' : '0 0 8px rgba(239,68,68,0.5)' }}
+                      />
+                    </div>
+                    <div className="flex justify-between mt-1 text-[7px] font-mono">
+                      <span className="text-red-400/60">OVERBOUGHT</span>
+                      <span className="text-yellow-400/60">NEUTRAL</span>
+                      <span className="text-green-400/60">BUY ≤{buyZone}</span>
+                    </div>
+                    <div className="text-center mt-0.5">
+                      <span className={`text-[9px] font-mono font-bold ${zoneColor}`}>
+                        {inBuyZone ? '🟢 FIRING — ALL IN' : inNeutral ? `🟡 ${(rsi - buyZone).toFixed(0)} RSI points to buy zone` : `🔴 ${(rsi - buyZone).toFixed(0)} RSI points away — waiting`}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )
+            })()}
 
             {/* SOL Price + Range */}
             <div className="p-2.5 rounded-xl bg-white/[0.02] border border-cyan-500/10 backdrop-blur-sm">
