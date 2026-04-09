@@ -63,8 +63,11 @@ export class BookmarkService extends ModelService<typeof Bookmark, BookmarkKeyCo
   }
 
   async isBookmarked(profileId: mongoose.Types.ObjectId, postId: mongoose.Types.ObjectId): Promise<boolean> {
-    const count = await this.model.countDocuments({ profileId, postId });
-    return count > 0;
+    // Use DataLoader batch query instead of individual countDocuments per post
+    // This batches all isBookmarked checks in a single request into one $or query
+    const key = this.getKeyFromComponents({ profileId, postId });
+    const bookmark = await this.dataLoader.load(key);
+    return Boolean(bookmark);
   }
 
   async getBookmarks(profileId: string, page?: PageInput): Promise<PaginateResult<Bookmark>> {

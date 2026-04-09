@@ -53,6 +53,24 @@ export class FeedResolver {
       for (const [id, post] of postsMap) {
         cache.set(id, post);
       }
+
+      // Pre-warm reaction + bookmark DataLoaders for all posts in batch
+      // This triggers a single $or query for each service instead of N individual queries
+      if (profileId) {
+        const mongoose = require('mongoose');
+        const postObjectIds = postIds.map(id => new mongoose.Types.ObjectId(id));
+        const profileObjId = new mongoose.Types.ObjectId(profileId);
+        await Promise.all([
+          // Batch-load all reactions for this user + these posts
+          Promise.all(postObjectIds.map(pid =>
+            ctx.reactionService.findReaction({ postId: pid, profileId: profileObjId }).catch(() => null)
+          )),
+          // Batch-load all bookmarks for this user + these posts
+          Promise.all(postObjectIds.map(pid =>
+            ctx.bookmarkService.isBookmarked(profileObjId, pid).catch(() => false)
+          )),
+        ]);
+      }
     }
 
     return result;
