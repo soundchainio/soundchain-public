@@ -41,6 +41,7 @@ const AudioEngine = dynamic(import('components/common/BottomAudioPlayer/AudioEng
 const AudioPlayerModal = dynamic(import('components/modals/AudioPlayerModal'))
 const CreateModal = dynamic(import('components/modals/CreateModal'))
 const MiniRadioBar = dynamic(() => import('components/MiniRadioBar').then(mod => mod.MiniRadioBar), { ssr: false })
+const NeuralModal = dynamic(() => import('components/NeuralModal').then(mod => ({ default: mod.NeuralModal })), { ssr: false })
 
 interface LayoutProps {
   children: ReactNode
@@ -60,6 +61,14 @@ export const Layout = ({ children, className }: LayoutProps) => {
 
   const isMobileOrTablet = useIsMobile(breakpointsNumber.tablet)
   const hasActivePlayer = !!currentSong?.src
+  const [neuralOpen, setNeuralOpen] = useState(false)
+
+  // Listen for global neural toggle events (from TopNavBar brain button)
+  useEffect(() => {
+    const handler = () => setNeuralOpen(prev => !prev)
+    window.addEventListener('toggle-neural', handler)
+    return () => window.removeEventListener('toggle-neural', handler)
+  }, [])
 
   useEffect(() => {
     setCanInsertScript(true)
@@ -164,6 +173,8 @@ export const Layout = ({ children, className }: LayoutProps) => {
           cursor: 'pointer',
         }}
       />
+      {/* Neural brain scanner — global floating modal */}
+      {hasActivePlayer && <NeuralModal isOpen={neuralOpen} onClose={() => setNeuralOpen(false)} />}
       {/* Decentralized notification stack - no SMS/Twilio! */}
       <PWAInstallPrompt />
       <NostrNotificationListener />

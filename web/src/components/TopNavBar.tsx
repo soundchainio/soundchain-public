@@ -12,7 +12,7 @@ import { useMeQuery } from 'lib/graphql'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useMagicContext } from 'hooks/useMagicContext'
-import { Users, ChevronDown, Copy, Check, Wallet, ExternalLink, MessageCircle, X } from 'lucide-react'
+import { Users, ChevronDown, Copy, Check, Wallet, ExternalLink, MessageCircle, X, Brain } from 'lucide-react'
 
 import { Button } from './common/Buttons/Button'
 import { SoundChainPopOver } from './common/PopOverButton/PopOverButton'
@@ -290,6 +290,16 @@ export const TopNavBar = ({
 
           {/* Live User Count */}
           <LiveUserCount />
+
+          {/* Neural Brain Scanner Toggle */}
+          <button
+            onClick={() => window.dispatchEvent(new Event('toggle-neural'))}
+            className="flex items-center gap-1 px-2 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 hover:border-purple-400/40 hover:bg-purple-500/20 transition-all"
+            title="Neural Brain Scanner"
+          >
+            <Brain className="w-3.5 h-3.5 text-purple-400" />
+            <span className="text-[10px] font-mono font-semibold text-purple-300 hidden sm:inline">NEURAL</span>
+          </button>
 
           {/* Social Links - Always visible */}
           <SoundChainPopOver icon={SocialIcon}>

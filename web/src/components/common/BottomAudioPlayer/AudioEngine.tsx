@@ -190,6 +190,13 @@ export const AudioEngine = () => {
       sourceNodeRef.current.connect(gainNodeRef.current)
       gainNodeRef.current.connect(ctx.destination)
 
+      // Create analyser for Neural visualizer — branch from gain node (read-only, no audio impact)
+      const analyser = ctx.createAnalyser()
+      analyser.fftSize = 256
+      analyser.smoothingTimeConstant = 0.8
+      gainNodeRef.current.connect(analyser)
+      ;(window as any).__soundchainAnalyzer = analyser
+
       isAudioGraphConnected.current = true
       console.log('Audio normalization initialized (-24 LUFS target, dynamics preserved)')
     } catch (error) {
