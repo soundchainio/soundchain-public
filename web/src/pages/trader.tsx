@@ -231,7 +231,16 @@ function TraderPage() {
         <meta name="theme-color" content="#000000" />
       </Head>
 
-      <div className="min-h-screen bg-black text-white" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+      <div className="min-h-screen bg-[#030308] text-white relative overflow-hidden" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+        {/* Cyberpunk background grid */}
+        <div className="fixed inset-0 pointer-events-none" style={{
+          backgroundImage: 'linear-gradient(rgba(6,182,212,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(6,182,212,0.03) 1px, transparent 1px)',
+          backgroundSize: '40px 40px',
+        }} />
+        {/* Scan line effect */}
+        <div className="fixed inset-0 pointer-events-none opacity-[0.015]" style={{
+          backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.1) 2px, rgba(255,255,255,0.1) 4px)',
+        }} />
         {/* ─── FURL Terminal Header (Compact) ─────────────────────── */}
         {!termOpen ? (
           <div className="px-3 py-2 border-b border-cyan-500/20 bg-[#0a0a0a]">
@@ -307,15 +316,18 @@ function TraderPage() {
           </div>
         )}
 
-        {/* Header */}
-        <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
+        {/* Header — Holographic neon */}
+        <div className="relative px-4 py-2.5 border-b border-cyan-500/20 flex items-center justify-between bg-black/80 backdrop-blur-xl">
+          <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent" />
           <div>
-            <h1 className="text-base font-black tracking-tight">OGUN TRADER</h1>
-            <p className="text-[10px] text-gray-500">THE RAZOR v12 • LIVE</p>
+            <h1 className="text-sm font-black tracking-[0.2em] uppercase" style={{ textShadow: '0 0 10px rgba(6,182,212,0.5)' }}>OGUN TRADER</h1>
+            <p className="text-[9px] text-cyan-500/60 font-mono tracking-widest">THE RAZOR v14 • {status?.paused ? '⏸ PAUSED' : 'LIVE'}</p>
           </div>
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            <span className="text-[10px] text-gray-400">{lastUpdate ? `${Math.floor((Date.now() - lastUpdate.getTime()) / 1000)}s` : '...'}</span>
+            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full border border-cyan-500/20 bg-cyan-500/5">
+              <span className={`w-1.5 h-1.5 rounded-full ${status?.paused ? 'bg-yellow-500' : 'bg-cyan-400'} animate-pulse`} />
+              <span className="text-[9px] text-cyan-400 font-mono">{lastUpdate ? `${Math.floor((Date.now() - lastUpdate.getTime()) / 1000)}s` : '...'}</span>
+            </div>
           </div>
         </div>
 
@@ -353,7 +365,7 @@ function TraderPage() {
             className={`mt-2 w-full flex items-center justify-center gap-2 py-2 rounded-xl font-bold text-xs transition-all ${
               status?.paused
                 ? 'bg-yellow-500/30 border border-yellow-500/50 text-yellow-300 animate-pulse'
-                : 'bg-white/5 border border-white/10 text-gray-400 hover:bg-white/10'
+                : 'bg-white/[0.02] border border-cyan-500/10 backdrop-blur-sm text-gray-400 hover:bg-white/10'
             }`}
           >
             {status?.paused ? '▶ RESUME BOT' : '⏸ PAUSE BOT'}
@@ -378,7 +390,7 @@ function TraderPage() {
         {status && (
           <div className="p-4 space-y-2">
             {/* Daily Target Progress */}
-            <div className="p-2.5 rounded-xl bg-gradient-to-r from-amber-900/30 to-amber-800/10 border border-amber-500/30">
+            <div className="p-2.5 rounded-xl bg-gradient-to-br from-amber-900/20 via-black to-amber-800/10 border border-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.08)]">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-bold text-amber-400">Daily Target</span>
                 <span className={`text-base font-black ${status.bonusRound ? 'text-green-400' : 'text-white'}`}>
@@ -414,7 +426,7 @@ function TraderPage() {
             )}
 
             {/* Portfolio */}
-            <div className="p-2.5 rounded-xl bg-white/5 border border-white/10">
+            <div className="p-2.5 rounded-xl bg-white/[0.02] border border-cyan-500/10 backdrop-blur-sm">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-400">Portfolio</span>
                 <span className="text-base font-black">${n(status.portfolio).toFixed(2)}</span>
@@ -454,7 +466,7 @@ function TraderPage() {
             )}
 
             {/* SOL Price + Range */}
-            <div className="p-2.5 rounded-xl bg-white/5 border border-white/10">
+            <div className="p-2.5 rounded-xl bg-white/[0.02] border border-cyan-500/10 backdrop-blur-sm">
               <div className="flex items-center justify-between">
                 <span className="text-base font-black">${n(status.solPrice).toFixed(2)}</span>
                 <div className="text-right">
@@ -494,7 +506,7 @@ function TraderPage() {
               const isGreen = lastPrice >= firstPrice
 
               return (
-                <div className="p-2.5 rounded-xl bg-white/5 border border-white/10">
+                <div className="p-2.5 rounded-xl bg-white/[0.02] border border-cyan-500/10 backdrop-blur-sm">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs text-gray-400">Price Chart</span>
                     <span className="text-[10px] text-gray-500">{prices.length} ticks</span>
@@ -547,7 +559,7 @@ function TraderPage() {
 
             {/* Recent Trades / Order History */}
             {status.recentTrades && status.recentTrades.length > 0 && (
-              <div className="p-2.5 rounded-xl bg-white/5 border border-white/10">
+              <div className="p-2.5 rounded-xl bg-white/[0.02] border border-cyan-500/10 backdrop-blur-sm">
                 <span className="text-xs text-gray-400 mb-2 block">Recent Trades</span>
                 <div className="space-y-1.5">
                   {status.recentTrades.slice(-8).reverse().map((trade, i) => (
@@ -569,30 +581,46 @@ function TraderPage() {
               </div>
             )}
 
-            {/* RSI Gauges */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="p-2 rounded-xl bg-white/5 border border-white/10 text-center">
-                <span className="text-[10px] text-gray-500 uppercase tracking-wider">1m RSI</span>
-                <p className={`text-base font-black mt-1 ${status.rsi1m <= 45 ? 'text-green-400' : status.rsi1m >= 64 ? 'text-red-400' : 'text-white'}`}>
+            {/* RSI Gauges — Holographic */}
+            <div className="grid grid-cols-2 gap-2">
+              <div className={`p-2 rounded-xl text-center relative overflow-hidden ${
+                n(status.rsi1m) <= 45 ? 'border border-green-500/30 bg-green-500/[0.05] shadow-[0_0_12px_rgba(34,197,94,0.1)]'
+                : n(status.rsi1m) >= 64 ? 'border border-red-500/30 bg-red-500/[0.05] shadow-[0_0_12px_rgba(239,68,68,0.1)]'
+                : 'border border-cyan-500/10 bg-white/[0.02]'
+              }`}>
+                <span className="text-[8px] text-cyan-500/50 uppercase tracking-[0.2em] font-mono">1m RSI</span>
+                <p className={`text-2xl font-black mt-0.5 ${
+                  n(status.rsi1m) <= 45 ? 'text-green-400' : n(status.rsi1m) >= 64 ? 'text-red-400' : 'text-white'
+                }`} style={{ textShadow: n(status.rsi1m) <= 45 ? '0 0 15px rgba(34,197,94,0.5)' : n(status.rsi1m) >= 64 ? '0 0 15px rgba(239,68,68,0.5)' : 'none' }}>
                   {n(status.rsi1m).toFixed(0)}
                 </p>
-                <p className="text-[9px] text-gray-500 mt-0.5">
-                  {status.rsi1m <= 45 ? 'BUY ZONE' : status.rsi1m >= 64 ? 'SELL ZONE' : 'NEUTRAL'}
+                <p className={`text-[8px] font-mono tracking-wider ${
+                  n(status.rsi1m) <= 45 ? 'text-green-400/70' : n(status.rsi1m) >= 64 ? 'text-red-400/70' : 'text-gray-600'
+                }`}>
+                  {n(status.rsi1m) <= 45 ? '◉ BUY ZONE' : n(status.rsi1m) >= 64 ? '◉ SELL ZONE' : '○ NEUTRAL'}
                 </p>
               </div>
-              <div className="p-2 rounded-xl bg-white/5 border border-white/10 text-center">
-                <span className="text-[10px] text-gray-500 uppercase tracking-wider">1h RSI</span>
-                <p className={`text-base font-black mt-1 ${status.rsi1h <= 30 ? 'text-green-400' : status.rsi1h >= 70 ? 'text-red-400' : 'text-white'}`}>
+              <div className={`p-2 rounded-xl text-center relative overflow-hidden ${
+                n(status.rsi1h) <= 30 ? 'border border-green-500/30 bg-green-500/[0.05] shadow-[0_0_12px_rgba(34,197,94,0.1)]'
+                : n(status.rsi1h) >= 70 ? 'border border-red-500/30 bg-red-500/[0.05] shadow-[0_0_12px_rgba(239,68,68,0.1)]'
+                : 'border border-cyan-500/10 bg-white/[0.02]'
+              }`}>
+                <span className="text-[8px] text-cyan-500/50 uppercase tracking-[0.2em] font-mono">1h RSI</span>
+                <p className={`text-2xl font-black mt-0.5 ${
+                  n(status.rsi1h) <= 30 ? 'text-green-400' : n(status.rsi1h) >= 70 ? 'text-red-400' : 'text-white'
+                }`} style={{ textShadow: n(status.rsi1h) <= 30 ? '0 0 15px rgba(34,197,94,0.5)' : n(status.rsi1h) >= 70 ? '0 0 15px rgba(239,68,68,0.5)' : 'none' }}>
                   {n(status.rsi1h).toFixed(0)}
                 </p>
-                <p className="text-[9px] text-gray-500 mt-0.5">
-                  {status.rsi1h <= 30 ? 'OVERSOLD' : status.rsi1h >= 70 ? 'OVERBOUGHT' : 'NEUTRAL'}
+                <p className={`text-[8px] font-mono tracking-wider ${
+                  n(status.rsi1h) <= 30 ? 'text-green-400/70' : n(status.rsi1h) >= 70 ? 'text-red-400/70' : 'text-gray-600'
+                }`}>
+                  {n(status.rsi1h) <= 30 ? '◉ OVERSOLD' : n(status.rsi1h) >= 70 ? '◉ OVERBOUGHT' : '○ NEUTRAL'}
                 </p>
               </div>
             </div>
 
             {/* Market Intel */}
-            <div className="p-2.5 rounded-xl bg-white/5 border border-white/10">
+            <div className="p-2.5 rounded-xl bg-white/[0.02] border border-cyan-500/10 backdrop-blur-sm">
               <div className="flex items-center gap-2 mb-2">
                 <BarChart3 className="w-4 h-4 text-blue-400" />
                 <span className="text-sm font-bold text-gray-300">Market Intel</span>
@@ -612,7 +640,7 @@ function TraderPage() {
             </div>
 
             {/* Stats */}
-            <div className="p-2.5 rounded-xl bg-white/5 border border-white/10">
+            <div className="p-2.5 rounded-xl bg-white/[0.02] border border-cyan-500/10 backdrop-blur-sm">
               <div className="grid grid-cols-3 gap-3 text-center">
                 <div>
                   <span className="text-[10px] text-gray-500 uppercase">Win Rate</span>
@@ -638,9 +666,11 @@ function TraderPage() {
           </div>
         )}
 
-        {/* Footer */}
-        <div className="px-4 py-6 text-center">
-          <p className="text-[10px] text-gray-600">THE RAZOR v12 • 1m RSI Buy ≤45 Sell ≥64 • Never sell at a loss</p>
+        {/* Footer — Cyberpunk */}
+        <div className="px-4 py-4 text-center relative">
+          <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent" />
+          <p className="text-[8px] text-cyan-500/30 font-mono tracking-[0.3em] uppercase">THE RAZOR v14 • 1m RSI ≤45 → ≥64 • PEAK RIDER • NEVER SELL AT A LOSS</p>
+          <p className="text-[8px] text-cyan-500/20 font-mono mt-1">JOHN CONNOR • THE FURLINATOR • POWERED BY OGUN</p>
         </div>
       </div>
     </>
