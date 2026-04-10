@@ -2039,9 +2039,25 @@ export function AgentStatusTicker() {
       .then(response => {
         if (!response.ok) {
           return response.json().then(err => {
-            addLine(`SMITH error: ${err.reason || 'unknown'}`, 'error')
-            if (err.verdict === 'KEY_MISSING') {
-              addLine(`  run: smith key sk-ant-... to set your API key`, 'info')
+            // Friendly BYOK message — SoundChain agents are wired but require
+            // user's own Anthropic API key. We don't fund usage centrally.
+            const isKeyMissing = err.verdict === 'KEY_MISSING' || /no api key/i.test(err.reason || '')
+            if (isKeyMissing) {
+              addLine(`┌─ BYOK REQUIRED ──────────────────────┐`, 'system')
+              addLine(`│ This agent runs on Anthropic's cloud`, 'info')
+              addLine(`│ You need YOUR OWN Anthropic API key.`, 'info')
+              addLine(`│`, 'info')
+              addLine(`│ Get one (~$5 min): console.anthropic.com`, 'info')
+              addLine(`│ Then run: smith key sk-ant-...`, 'info')
+              addLine(`│`, 'info')
+              addLine(`│ Note: Claude Max sub does NOT include API.`, 'info')
+              addLine(`│ API and Max are separate billing.`, 'info')
+              addLine(`│`, 'info')
+              addLine(`│ Read the architecture: soundchain.io/skill.md`, 'info')
+              addLine(`│ Agent Academy: 12 agents alive on the net`, 'info')
+              addLine(`└────────────────────────────────────────┘`, 'system')
+            } else {
+              addLine(`SMITH error: ${err.reason || 'unknown'}`, 'error')
             }
           })
         }
