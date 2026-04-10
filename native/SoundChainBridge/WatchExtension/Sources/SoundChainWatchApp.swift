@@ -27,10 +27,15 @@ struct SoundChainWatchApp: App {
             }
             .tabViewStyle(.verticalPage)
             .task {
+                // WatchConnectivity only works with paired iPhone — skip on simulator
                 if self.receiver == nil {
-                    let receiver = WatchConnectivityReceiver(store: self.inboxStore)
-                    receiver.activate()
-                    self.receiver = receiver
+                    do {
+                        let receiver = WatchConnectivityReceiver(store: self.inboxStore)
+                        receiver.activate()
+                        self.receiver = receiver
+                    } catch {
+                        print("[WatchApp] WatchConnectivity not available: \(error)")
+                    }
                 }
             }
         }

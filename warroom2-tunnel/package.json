@@ -1,0 +1,19 @@
+{
+  "name": "soundchain-tunnel-relay",
+  "version": "1.0.0",
+  "description": "WebSocket tunnel relay — bridges FURL browser xterm to MacBook ttyd via EC2",
+  "scripts": {
+    "relay": "tsx server.ts",
+    "agent": "tsx agent.ts",
+    "deploy": "bash deploy.sh"
+  },
+  "dependencies": {
+    "node-pty": "^1.1.0",
+    "ws": "^8.16.0"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.5.10",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3"
+  }
+}

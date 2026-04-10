@@ -24,6 +24,7 @@ package-lock.json
 !README.md
 !api/README.md
 !api/DEPLOY_TRIGGER.md
+!warroom2-tunnel/README.md
 moltbook-*.json
 chart.html
 chart.json

@@ -24,7 +24,5 @@
 	<true/>
 	<key>WKCompanionAppBundleIdentifier</key>
 	<string>io.soundchain.bridge</string>
-	<key>WKWatchKitApp</key>
-	<true/>
 </dict>
 </plist>
