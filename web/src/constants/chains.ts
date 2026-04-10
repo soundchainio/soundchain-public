@@ -66,7 +66,7 @@ export const CHAINS: Record<string, ChainConfig> = {
     icon: '⬡',
     color: '#8247E5',
     chainId: 137,
-    rpcUrl: 'https://polygon-rpc.com',
+    rpcUrl: (typeof window !== 'undefined' ? window.location.origin + '/api/rpc/polygon' : 'https://soundchain.io/api/rpc/polygon'),
     explorer: 'https://polygonscan.com',
     nativeCurrency: { name: 'POL', symbol: 'POL', decimals: 18 },
     enabled: true,

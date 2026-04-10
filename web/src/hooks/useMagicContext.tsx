@@ -54,7 +54,7 @@ const createMagic = (magicPublicKey: string): MagicInstance => {
     const magicInstance = new Magic(magicPublicKey, {
       extensions: [new OAuthExtension()],
       network: {
-        rpcUrl: 'https://polygon-rpc.com',
+        rpcUrl: (typeof window !== 'undefined' ? window.location.origin + '/api/rpc/polygon' : 'https://soundchain.io/api/rpc/polygon'),
         chainId: 137,
       },
     });
@@ -365,7 +365,7 @@ export function MagicProvider({ children }: MagicProviderProps) {
       }
 
       // Use direct RPC (bypasses Magic's proxy which can corrupt responses)
-      const directWeb3 = new Web3('https://polygon-rpc.com')
+      const directWeb3 = new Web3((typeof window !== 'undefined' ? window.location.origin + '/api/rpc/polygon' : 'https://soundchain.io/api/rpc/polygon'))
       const maticBalance = await directWeb3.eth.getBalance(account)
       setMaticBalance(parseBalance(maticBalance, directWeb3))
     } catch (error) {
@@ -379,7 +379,7 @@ export function MagicProvider({ children }: MagicProviderProps) {
       if (!ogunAddress || !account) return
 
       // Use direct RPC (bypasses Magic's proxy)
-      const directWeb3 = new Web3('https://polygon-rpc.com')
+      const directWeb3 = new Web3((typeof window !== 'undefined' ? window.location.origin + '/api/rpc/polygon' : 'https://soundchain.io/api/rpc/polygon'))
       const ogunContract = new directWeb3.eth.Contract(SoundchainOGUN20.abi as AbiItem[], ogunAddress)
       const tokenAmount = await ogunContract.methods.balanceOf(account).call()
       const balStr = typeof tokenAmount === 'bigint' ? tokenAmount.toString() : String(tokenAmount || '0')

@@ -289,7 +289,7 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
     }
 
     // Direct Polygon RPC — never route through Magic
-    const web3Instance = new Web3('https://polygon-rpc.com')
+    const web3Instance = new Web3((typeof window !== 'undefined' ? window.location.origin + '/api/rpc/polygon' : 'https://soundchain.io/api/rpc/polygon'))
 
     try {
       // POL (native) Balance

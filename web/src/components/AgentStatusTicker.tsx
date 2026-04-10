@@ -1719,8 +1719,8 @@ const CLI_CHEAT_CATEGORIES = [
     icon: 'Coins',
     color: 'text-amber-400',
     prompts: [
-      'cast call 0x45f1af89486aeec2da0b06340cd9cd3bd741a15c "totalSupply()" --rpc-url https://polygon-rpc.com',
-      'cast balance 0x519bed3fe32272fa8f1aecaf86dbfbd674ee703b --rpc-url https://polygon-rpc.com',
+      'cast call 0x45f1af89486aeec2da0b06340cd9cd3bd741a15c "totalSupply()" --rpc-url /api/rpc/polygon',
+      'cast balance 0x519bed3fe32272fa8f1aecaf86dbfbd674ee703b --rpc-url /api/rpc/polygon',
       'curl -s "https://api.polygonscan.com/api?module=account&action=txlist&address=0x519bed3fe32272fa8f1aecaf86dbfbd674ee703b&page=1&offset=5&sort=desc"',
     ],
   },
