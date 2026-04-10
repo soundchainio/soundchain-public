@@ -1,6 +1,5 @@
 import classNames from 'classnames'
 import { BottomNavBarWrapper } from 'components/BottomNavBar/BottomNavBarWrapper'
-import { RightSideNav } from 'components/RightSideNav'
 import { PanelTaskbar } from 'components/PanelTaskbar'
 import { useModalState } from 'contexts/ModalContext'
 import { useHideBottomNavBar } from 'hooks/useHideBottomNavBar'
@@ -139,7 +138,7 @@ export const Layout = ({ children, className }: LayoutProps) => {
       <AudioEngine />
       {isMobileOrTablet ? <MobileBottomAudioPlayer /> : <DesktopBottomAudioPlayer />}
       <BottomNavBarWrapper />
-      <RightSideNav />
+      {/* RightSideNav removed — was cluttering mobile with vertical Discord-style pills */}
       <PanelTaskbar />
       <ToastContainer
         position="top-center"
