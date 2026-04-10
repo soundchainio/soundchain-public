@@ -1778,6 +1778,7 @@ export function AgentStatusTicker() {
     return sessionStorage.getItem('furl_jack_mode') === 'CLI_BRIDGE' ? 'CLI_BRIDGE' : 'DISCONNECTED'
   })
   const [forgeMode, setForgeMode] = useState(false) // true = coding agent, false = chat
+  const [managedMode, setManagedMode] = useState<string | null>(null) // managed agent handle or null
   const [jackHistory, setJackHistory] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([])
   const jackAbortRef = useRef<AbortController | null>(null)
   const jackStreamRef = useRef<string>('') // accumulates current streaming response
@@ -2030,7 +2031,8 @@ export function AgentStatusTicker() {
         openclawUrl: ocUrl || undefined,
         openclawToken: ocToken || undefined,
         provider,
-        mode: forgeMode ? 'FORGE' : 'CHAT',
+        mode: managedMode ? 'MANAGED' : forgeMode ? 'FORGE' : 'CHAT',
+        agent: managedMode || undefined,
       }),
       signal: abortCtrl.signal,
     })
@@ -2084,6 +2086,15 @@ export function AgentStatusTicker() {
                   }
                   currentLineText = parts[parts.length - 1]
                 }
+              } else if (event.type === 'tool_start') {
+                // Managed agent is using a tool
+                const label = event.custom === 'YES' ? `⚡ ${event.tool}` : `🔧 ${event.tool}`
+                addLine(`  ${label}`, 'info')
+              } else if (event.type === 'tool_result') {
+                const icon = event.success === 'YES' ? '✓' : '✗'
+                addLine(`  ${icon} ${event.tool} → ${(event.preview as string || '').slice(0, 80)}`, event.success === 'YES' ? 'success' : 'error')
+              } else if (event.type === 'status') {
+                if (event.message) addLine(`  ${event.message}`, 'info')
               } else if (event.type === 'done') {
                 // Flush remaining text
                 if (currentLineText.trim()) addLine(currentLineText, 'furl')
@@ -2108,7 +2119,7 @@ export function AgentStatusTicker() {
           addLine('SMITH unreachable — check your connection.', 'error')
         }
       })
-  }, [jackHistory, addLine, forgeMode])
+  }, [jackHistory, addLine, forgeMode, managedMode])
 
   // ─── Mic Toggle (Speech-to-Text) ──────────────────────────────────
   const toggleMic = useCallback(() => {
@@ -2196,6 +2207,8 @@ export function AgentStatusTicker() {
         addLine('  keys         — keybook — manage saved API keys', 'info')
         addLine('  jack         — jack in to SMITH (streaming AI chat)', 'info')
         addLine('  jack forge   — jack in to SMITH FORGE (coding agent)', 'info')
+        addLine('  jack managed — Anthropic Managed Agent (autonomous, tools)', 'info')
+        addLine('  jack managed <agent> — use specific agent (smith, furl, etc)', 'info')
         addLine('  jack cli     — CLI bridge via SoundChain relay (Claude Code)', 'info')
         addLine('  tunnel <url> — override tunnel URL (default: relay.soundchain.io)', 'info')
         addLine('  exit         — disconnect from any jack mode', 'info')
@@ -2465,6 +2478,39 @@ export function AgentStatusTicker() {
         addLine(`  │ type "exit" in FURL to disconnect`, 'info')
         addLine(`  └──────────────────────────────────────────┘`, 'system')
         furlSpeak(`CLI bridge opening. Connecting to tunnel.`)
+      } else if (cmd.startsWith('jack managed') || cmd.startsWith('smith jack managed')) {
+        // Jack in to a Managed Agent — Anthropic runs the loop, tools call back to SoundChain
+        const parts = cmd.split(/\s+/)
+        const agentHandle = parts[parts.length - 1] === 'managed' ? 'smith' : parts[parts.length - 1]
+        const knownAgents = ['smith', 'furl', 'soundchainradio', 'agent_explore', 'agent_wallet', 'agent_upload', 'agent_feed', 'agent_pulse', 'agent_moltbook', 'agent_playlists', 'sc_artists', 'sc_staking']
+
+        if (!knownAgents.includes(agentHandle)) {
+          addLine(`  unknown agent: "${agentHandle}"`, 'error')
+          addLine(`  available: ${knownAgents.join(', ')}`, 'info')
+        } else {
+          const active = keybookGetActive()
+          const kb = getKeybook()
+          if (!active && kb.entries.length === 0 && !process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY) {
+            addLine(`  no API key in keybook. add one first:`, 'error')
+            addLine(`  keys add <label> sk-ant-...`, 'info')
+          } else {
+            setJackMode('JACKED_IN')
+            setForgeMode(false)
+            setManagedMode(agentHandle)
+            setJackHistory([])
+            jackStreamRef.current = ''
+            const provider = active ? `${active.label} · ${active.type}` : 'platform key'
+            addLine(`  ┌─ MANAGED AGENT ──────────────────────┐`, 'system')
+            addLine(`  │ @${agentHandle} (Anthropic Managed)`, 'success')
+            addLine(`  │ provider: ${provider}`, 'info')
+            addLine(`  │ tools: MongoDB, OGUN, IPFS, Radio`, 'info')
+            addLine(`  │ built-in: bash, files, web search`, 'info')
+            addLine(`  │ agent runs autonomously in cloud`, 'info')
+            addLine(`  │ type "exit" to disconnect`, 'info')
+            addLine(`  └────────────────────────────────────────┘`, 'system')
+            furlSpeak(`Managed agent ${agentHandle} active. Anthropic is running the loop. Talk to me.`)
+          }
+        }
       } else if (cmd === 'jack forge' || cmd === 'smith jack forge') {
         // Jack in to SMITH FORGE — full coding agent with tools
         const active = keybookGetActive()
@@ -2528,12 +2574,14 @@ export function AgentStatusTicker() {
         } else if (jackMode === 'JACKED_IN') {
           if (jackAbortRef.current) jackAbortRef.current.abort()
           const wasForge = forgeMode
+          const wasManaged = managedMode
           setJackMode('DISCONNECTED')
           setForgeMode(false)
+          setManagedMode(null)
           setJackHistory([])
           jackStreamRef.current = ''
           addLine(`  ┌─ DISCONNECTED ─────────────────────────┐`, 'system')
-          addLine(`  │ ${wasForge ? 'SMITH FORGE' : 'SMITH'} session ended`, 'info')
+          addLine(`  │ ${wasManaged ? `@${wasManaged} (Managed)` : wasForge ? 'SMITH FORGE' : 'SMITH'} session ended`, 'info')
           addLine(`  │ conversation history cleared`, 'info')
           addLine(`  │ back to local FURL mode`, 'info')
           addLine(`  └────────────────────────────────────────┘`, 'system')

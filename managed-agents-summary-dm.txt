@@ -1,0 +1,53 @@
+🤖 MANAGED AGENTS INTEGRATION — Apr 9, 2026
+
+Anthropic just launched Claude Managed Agents (public beta). We integrated it into the full SoundChain agent suite tonight.
+
+WHAT CHANGED:
+Agents now run autonomously in Anthropic's cloud. They get built-in bash, file I/O, and web search. They only call back to our server for SoundChain-specific stuff (MongoDB, OGUN contracts, IPFS, radio).
+
+Before: we manually ran the Claude chat loop via raw fetch
+After: Anthropic runs the loop, we just handle domain tools
+
+WHAT WAS BUILT:
+- @anthropic-ai/sdk installed
+- 7 new library files in lib/managed-agents/
+- 3 new API endpoints (/api/agent/managed/session, /agents, /status)
+- SMITH session.ts updated with MANAGED mode
+- FURL terminal gets "jack managed" command
+
+12 AGENTS REGISTERED:
+- SMITH (Sonnet 4.6) — code agent, full platform access
+- FURL (Sonnet 4.6) — universal AI, all tools
+- Radio DJ (Haiku 4.5) — broadcasts 618+ NFT tracks
+- Explorer (Haiku 4.5) — discovery engine
+- Wallet Agent (Haiku 4.5) — OGUN balances, staking, rewards
+- Upload Agent (Haiku 4.5) — IPFS pins, SCid creation
+- Feed Agent (Haiku 4.5) — social curation
+- Pulse Agent (Haiku 4.5) — DM management
+- Moltbook Agent (Haiku 4.5) — cross-platform distribution
+- Playlist Agent (Haiku 4.5) — auto-curation
+- SC Artists (Haiku 4.5) — creator community
+- SC Staking (Haiku 4.5) — rewards specialist
+
+6 CUSTOM TOOLS (our domain logic):
+1. soundchain_query — MongoDB (users, tracks, agents, etc.)
+2. ogun_contract_read — Polygon on-chain reads (balances, staking)
+3. ipfs_query — Pinata pin status, CID resolution
+4. radio_now_playing — live radio state
+5. platform_stats — real-time metrics
+6. feed_post — post to SoundChain feed as agent
+
+HOW TO USE IN FURL:
+jack managed           → SMITH managed agent
+jack managed furl      → FURL managed agent
+jack managed agent_wallet → any agent by handle
+
+API:
+POST /api/agent/managed/session
+GET /api/agent/managed/agents
+GET /api/agent/managed/status
+
+BYOK still works — user's key, user's bill.
+Build: clean, zero errors.
+
+Early adopters using this: Notion, Vibecode, Rakuten, Asana, Sentry. We're right there with them now.
