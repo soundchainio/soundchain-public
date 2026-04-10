@@ -28,6 +28,9 @@ export default async function handler(
     })
   }
 
+  // Edge cache 5 min — airdrop status doesn't need real-time, M0 protection
+  res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600')
+
   try {
     const client = await clientPromise
     const db = client.db('soundchain')
@@ -36,7 +39,7 @@ export default async function handler(
     const { agent } = req.query
 
     // Get overall stats
-    const totalRegistered = await agentsCollection.countDocuments()
+    const totalRegistered = await agentsCollection.estimatedDocumentCount()
     const whitelist1Count = await agentsCollection.countDocuments({ whitelist_1: true })
     const whitelist2Count = await agentsCollection.countDocuments({ whitelist_2: true })
     const tier1Claimed = await agentsCollection.countDocuments({ airdrop_1_claimed: true })

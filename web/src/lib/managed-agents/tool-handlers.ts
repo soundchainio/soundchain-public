@@ -17,6 +17,37 @@ import clientPromise from 'lib/mongodb'
 import { ethers } from 'ethers'
 import type { CustomToolResult } from './types'
 
+// ─── In-memory cache (per Lambda container) ──────────────────────
+// Critical for M0 free tier protection — agents hammer the same queries.
+// Cache survives the lifetime of the warm Lambda container (5-15 min).
+interface CacheEntry { data: CustomToolResult; expiresAt: number }
+const CACHE = new Map<string, CacheEntry>()
+const CACHE_TTL_MS = 60_000 // 60 second TTL — agent state doesn't change that fast
+const MAX_CACHE_ENTRIES = 200 // Hard cap to prevent memory bloat
+
+function cacheKey(tool: string, input: Record<string, unknown>): string {
+  return `${tool}:${JSON.stringify(input)}`
+}
+
+function getCached(key: string): CustomToolResult | null {
+  const entry = CACHE.get(key)
+  if (!entry) return null
+  if (Date.now() > entry.expiresAt) {
+    CACHE.delete(key)
+    return null
+  }
+  return entry.data
+}
+
+function setCached(key: string, data: CustomToolResult): void {
+  if (CACHE.size >= MAX_CACHE_ENTRIES) {
+    // Evict oldest entry (first in Map iteration order)
+    const firstKey = CACHE.keys().next().value
+    if (firstKey) CACHE.delete(firstKey)
+  }
+  CACHE.set(key, { data, expiresAt: Date.now() + CACHE_TTL_MS })
+}
+
 // ─── Polygon RPC (direct, no Magic) ─────────────────────────────
 
 const POLYGON_RPC = process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://polygon.llamarpc.com'
@@ -53,27 +84,59 @@ const REWARDS_ABI = [
 
 // ─── Tool Router ─────────────────────────────────────────────────
 
+// Tools that are safe to cache (read-only, deterministic-ish)
+const CACHEABLE_TOOLS = new Set([
+  'soundchain_query',
+  'ogun_contract_read',
+  'ipfs_query',
+  'radio_now_playing',
+  'platform_stats',
+])
+
 export async function handleCustomTool(
   toolName: string,
   input: Record<string, unknown>,
 ): Promise<CustomToolResult> {
+  // Check cache for read-only tools — protects M0 connection limit
+  if (CACHEABLE_TOOLS.has(toolName)) {
+    const key = cacheKey(toolName, input)
+    const cached = getCached(key)
+    if (cached) {
+      console.log(`[managed-agents] cache HIT ${toolName}`)
+      return cached
+    }
+  }
+
   try {
+    let result: CustomToolResult
     switch (toolName) {
       case 'soundchain_query':
-        return await handleSoundchainQuery(input)
+        result = await handleSoundchainQuery(input)
+        break
       case 'ogun_contract_read':
-        return await handleOgunContract(input)
+        result = await handleOgunContract(input)
+        break
       case 'ipfs_query':
-        return await handleIpfsQuery(input)
+        result = await handleIpfsQuery(input)
+        break
       case 'radio_now_playing':
-        return await handleRadio(input)
+        result = await handleRadio(input)
+        break
       case 'platform_stats':
-        return await handlePlatformStats(input)
+        result = await handlePlatformStats(input)
+        break
       case 'feed_post':
-        return await handleFeedPost(input)
+        return await handleFeedPost(input)  // Writes — never cache
       default:
         return { success: 'NO', data: null, error: `Unknown tool: ${toolName}` }
     }
+
+    // Cache successful read results
+    if (CACHEABLE_TOOLS.has(toolName) && result.success === 'YES') {
+      setCached(cacheKey(toolName, input), result)
+    }
+
+    return result
   } catch (err: any) {
     return { success: 'NO', data: null, error: err.message || 'Tool execution failed' }
   }
@@ -103,6 +166,7 @@ async function handleSoundchainQuery(input: Record<string, unknown>): Promise<Cu
   const client = await clientPromise
   const db = client.db('soundchain')
 
+  // Single query — no countDocuments (doubles M0 connection usage for no real value)
   const docs = await db
     .collection(collection)
     .find(filter)
@@ -111,14 +175,12 @@ async function handleSoundchainQuery(input: Record<string, unknown>): Promise<Cu
     .limit(limit)
     .toArray()
 
-  const count = await db.collection(collection).countDocuments(filter)
-
   return {
     success: 'YES',
     data: {
       collection,
-      count,
       returned: docs.length,
+      hasMore: docs.length === limit ? 'MAYBE' : 'NO',
       documents: docs,
     },
   }
@@ -263,8 +325,9 @@ async function handleRadio(input: Record<string, unknown>): Promise<CustomToolRe
   switch (action) {
     case 'now_playing':
     case 'stats': {
-      const trackCount = await db.collection('tracks').countDocuments()
-      const agentCount = await db.collection('agents').countDocuments()
+      // estimatedDocumentCount is instant (no scan) — perfect for M0
+      const trackCount = await db.collection('tracks').estimatedDocumentCount()
+      const agentCount = await db.collection('agents').estimatedDocumentCount()
 
       // Get a sample of recent tracks for "now playing" simulation
       const recentTracks = await db
@@ -315,14 +378,15 @@ async function handlePlatformStats(input: Record<string, unknown>): Promise<Cust
 
   const all = !metrics || metrics.length === 0
 
+  // Use estimatedDocumentCount — instant, no scan, doesn't hold connections
   if (all || metrics?.includes('users')) {
-    stats.totalUsers = await db.collection('users').countDocuments()
+    stats.totalUsers = await db.collection('users').estimatedDocumentCount()
   }
   if (all || metrics?.includes('tracks')) {
-    stats.totalTracks = await db.collection('tracks').countDocuments()
+    stats.totalTracks = await db.collection('tracks').estimatedDocumentCount()
   }
   if (all || metrics?.includes('agents')) {
-    stats.totalAgents = await db.collection('agents').countDocuments()
+    stats.totalAgents = await db.collection('agents').estimatedDocumentCount()
   }
   if (all || metrics?.includes('streams')) {
     // Aggregate total streams from SCids

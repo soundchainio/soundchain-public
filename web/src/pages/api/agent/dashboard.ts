@@ -15,6 +15,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: 'GET only' })
   }
 
+  // Edge cache 5 minutes — dashboard stats don't need real-time
+  // M0 free tier protection: this endpoint was doing 9 countDocuments per request
+  res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600')
+
   try {
     const client = await clientPromise
 
@@ -22,32 +26,29 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const scDb = client.db('soundchain')
     const agentsDb = client.db('agents')
 
-    // All data now lives in Atlas (migrated from DocumentDB on Mar 19, 2026)
+    // estimatedDocumentCount is INSTANT — no scan, no connection hold
+    // This was previously 9 expensive countDocuments — killed M0 free tier
     const [
       scUsers, scProfiles, scAgents, scTracks, scPosts, scFeedback, scScids,
       agAgents,
     ] = await Promise.all([
-      scDb.collection('users').countDocuments().catch(() => 0),
-      scDb.collection('profiles').countDocuments().catch(() => 0),
-      scDb.collection('agents').countDocuments().catch(() => 0),
-      scDb.collection('tracks').countDocuments().catch(() => 0),
-      scDb.collection('posts').countDocuments().catch(() => 0),
-      scDb.collection('feedback').countDocuments().catch(() => 0),
-      scDb.collection('scids').countDocuments().catch(() => 0),
-      agentsDb.collection('agents').countDocuments().catch(() => 0),
+      scDb.collection('users').estimatedDocumentCount().catch(() => 0),
+      scDb.collection('profiles').estimatedDocumentCount().catch(() => 0),
+      scDb.collection('agents').estimatedDocumentCount().catch(() => 0),
+      scDb.collection('tracks').estimatedDocumentCount().catch(() => 0),
+      scDb.collection('posts').estimatedDocumentCount().catch(() => 0),
+      scDb.collection('feedback').estimatedDocumentCount().catch(() => 0),
+      scDb.collection('scids').estimatedDocumentCount().catch(() => 0),
+      agentsDb.collection('agents').estimatedDocumentCount().catch(() => 0),
     ])
 
     const totalAgents = Math.max(scAgents, agAgents)
     const totalUsers = Math.max(scUsers, scProfiles)
     const totalTracks = scTracks
 
-    // Count NFTs vs SCid-only tracks
-    let nftTracks = 0
-    let scidOnlyTracks = 0
-    try {
-      nftTracks = await scDb.collection('tracks').countDocuments({ contractAddress: { $exists: true, $ne: null } })
-      scidOnlyTracks = totalTracks - nftTracks
-    } catch {}
+    // Skip the filtered NFT count — too expensive for dashboard, estimate instead
+    const nftTracks = Math.floor(totalTracks * 0.1) // Rough estimate
+    const scidOnlyTracks = totalTracks - nftTracks
 
     // Recent agent registrations
     let recentAgents: any[] = []

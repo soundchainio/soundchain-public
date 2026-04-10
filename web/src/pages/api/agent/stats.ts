@@ -47,6 +47,9 @@ export default async function handler(
     })
   }
 
+  // Edge cache 5 minutes — stats don't change rapidly, M0 protection
+  res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600')
+
   try {
     const client = await clientPromise
     const db = client.db('soundchain')

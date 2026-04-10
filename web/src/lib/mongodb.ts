@@ -13,10 +13,14 @@ if (!process.env.MONGODB_URI) {
 
 const uri = process.env.MONGODB_URI
 const options = {
-  maxPoolSize: 10,
-  minPoolSize: 1,
-  maxIdleTimeMS: 30000,
+  // M0 free tier has 500 connection cap. Each Vercel Lambda container = 1 pool.
+  // With ~50 API endpoints + cron jobs, keep pool TINY to avoid hitting cap.
+  maxPoolSize: 3,
+  minPoolSize: 0,
+  maxIdleTimeMS: 10000,  // Drop idle connections fast
   serverSelectionTimeoutMS: 5000,
+  // Close connections aggressively when Lambda goes idle
+  waitQueueTimeoutMS: 5000,
 }
 
 let client: MongoClient
