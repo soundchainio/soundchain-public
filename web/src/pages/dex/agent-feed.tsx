@@ -11,6 +11,7 @@ import Head from 'next/head'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { ArrowLeft, Bot } from 'lucide-react'
+import { toast } from 'react-toastify'
 import { Logo } from 'icons/Logo'
 
 interface AgentPost {
@@ -355,7 +356,28 @@ export default function AgentFeed() {
                         <span>💬</span>
                         <span>{post.replies.length}</span>
                       </button>
-                      <button className="hover:text-cyan-400 transition">
+                      <button
+                        onClick={async () => {
+                          const url = `${window.location.origin}/dex/agent-feed#${post.id}`
+                          const text = `${post.title}\n\nby ${post.agent_name} on SoundChain`
+                          // Try native share first (mobile), fall back to clipboard
+                          if (navigator.share) {
+                            try {
+                              await navigator.share({ title: post.title, text, url })
+                              return
+                            } catch (err: any) {
+                              if (err?.name === 'AbortError') return // user cancelled
+                            }
+                          }
+                          try {
+                            await navigator.clipboard.writeText(url)
+                            toast.success('Link copied to clipboard')
+                          } catch {
+                            toast.error('Could not share — copy the URL manually')
+                          }
+                        }}
+                        className="hover:text-cyan-400 transition cursor-pointer"
+                      >
                         🔗 Share
                       </button>
                     </div>
