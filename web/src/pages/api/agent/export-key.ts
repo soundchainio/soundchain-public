@@ -125,7 +125,7 @@ export default async function handler(
       network: {
         name: 'Polygon Mainnet',
         chainId: 137,
-        rpc: 'https://polygon-bor-rpc.publicnode.com',
+        rpc: 'https://polygon-rpc.com',
         explorer: 'https://polygonscan.com'
       },
       import_instructions: {

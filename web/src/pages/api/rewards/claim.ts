@@ -24,7 +24,7 @@ export const config = {
 const JWT_SECRET = process.env.JWT_SECRET || 'not-so-secret'
 const JWT_NAMESPACE = 'https://soundchain.io'
 const WALLET_PRIVATE_KEY = process.env.WALLET_PRIVATE_KEY
-const POLYGON_RPC = process.env.POLYGON_RPC_URL || 'https://polygon-bor-rpc.publicnode.com'
+const POLYGON_RPC = process.env.POLYGON_RPC_URL || 'https://polygon-rpc.com'
 
 // V2 — no per-claim cap, deployed Mar 20 2026
 const STREAMING_REWARDS_ADDRESS = '0x84561ddF3A6Db139ab5f695a28c0DE46Af2a7083'

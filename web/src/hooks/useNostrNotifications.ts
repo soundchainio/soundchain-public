@@ -38,6 +38,9 @@ interface UseNostrNotificationsOptions {
   enabled?: boolean
 }
 
+// Removed dead snort.social relay (was failing every reconnect attempt)
+const ACTIVE_RELAYS = NOSTR_RELAYS.filter(r => !r.includes('snort.social'))
+
 export function useNostrNotifications({
   userPubkey,
   onNotification,
@@ -49,14 +52,22 @@ export function useNostrNotifications({
   const reconnectTimeoutsRef = useRef<NodeJS.Timeout[]>([])
   const subscriptionIdRef = useRef<string>(`soundchain-${Date.now()}`)
 
-  // Clean up function
+  // Stabilize onNotification via ref — prevents callback identity from
+  // triggering reconnect loops. This was the root cause of the Nostr
+  // connection storm: parent passed fresh arrow fn each render → useCallback
+  // deps changed → useEffect re-fired → reconnect loop.
+  const onNotificationRef = useRef(onNotification)
+  onNotificationRef.current = onNotification
+
+  // Clean up function (no deps — fully stable)
   const cleanup = useCallback(() => {
     socketsRef.current.forEach((ws) => {
-      if (ws.readyState === WebSocket.OPEN) {
-        // Close subscription
-        ws.send(JSON.stringify(['CLOSE', subscriptionIdRef.current]))
-        ws.close()
-      }
+      try {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify(['CLOSE', subscriptionIdRef.current]))
+          ws.close()
+        }
+      } catch {}
     })
     socketsRef.current = []
 
@@ -67,133 +78,103 @@ export function useNostrNotifications({
     setConnectionCount(0)
   }, [])
 
-  // Connect to a single relay
-  const connectToRelay = useCallback((relayUrl: string, attempt = 0) => {
-    if (!enabled || !userPubkey) return
-
-    try {
-      const ws = new WebSocket(relayUrl)
-
-      ws.onopen = () => {
-        console.log(`[Nostr] Connected to ${relayUrl}`)
-        setConnectionCount((c) => c + 1)
-        setIsConnected(true)
-
-        // Subscribe to notifications for this user
-        // Kind 4 = encrypted DM (legacy)
-        // Kind 14 = NIP-17 encrypted DM
-        // Kind 1059 = Gift wrapped (NIP-59)
-        const subscription = [
-          'REQ',
-          subscriptionIdRef.current,
-          {
-            kinds: [4, 14, 1059],
-            '#p': [userPubkey],
-            since: Math.floor(Date.now() / 1000) - 60, // Last minute
-          },
-        ]
-
-        ws.send(JSON.stringify(subscription))
-      }
-
-      ws.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data)
-
-          if (data[0] === 'EVENT' && data[2]) {
-            const nostrEvent: NostrEvent = data[2]
-            console.log('[Nostr] Received event:', nostrEvent.kind)
-
-            // Call the notification handler
-            if (onNotification) {
-              onNotification(nostrEvent)
-            }
-
-            // Show toast for new notifications
-            if (nostrEvent.kind === 4 || nostrEvent.kind === 14) {
-              // Try to parse content (might be encrypted)
-              let message = 'New message received'
-              try {
-                const parsed = JSON.parse(nostrEvent.content)
-                message = parsed.body || parsed.message || message
-              } catch {
-                // Content might be encrypted or plain text
-                if (nostrEvent.content.length < 100) {
-                  message = nostrEvent.content
-                }
-              }
-
-              toast.info(message, {
-                icon: '🔔',
-                position: 'top-right',
-                autoClose: 5000,
-              })
-            }
-          }
-        } catch (err) {
-          // Ignore parse errors
-        }
-      }
-
-      ws.onerror = (error) => {
-        console.warn(`[Nostr] Error on ${relayUrl}:`, error)
-      }
-
-      ws.onclose = () => {
-        console.log(`[Nostr] Disconnected from ${relayUrl}`)
-        setConnectionCount((c) => Math.max(0, c - 1))
-
-        // Remove from active sockets
-        socketsRef.current = socketsRef.current.filter((s) => s !== ws)
-
-        if (socketsRef.current.length === 0) {
-          setIsConnected(false)
-        }
-
-        // Reconnect with exponential backoff (max 30s)
-        if (enabled && attempt < 10) {
-          const delay = Math.min(1000 * Math.pow(2, attempt), 30000)
-          const timeout = setTimeout(() => {
-            connectToRelay(relayUrl, attempt + 1)
-          }, delay)
-          reconnectTimeoutsRef.current.push(timeout)
-        }
-      }
-
-      socketsRef.current.push(ws)
-    } catch (err) {
-      console.error(`[Nostr] Failed to connect to ${relayUrl}:`, err)
-    }
-  }, [enabled, userPubkey, onNotification])
-
-  // Connect to all relays
-  const connectToAllRelays = useCallback(() => {
+  // Effect to manage connections — only re-runs when enabled or userPubkey changes
+  // (NOT when callbacks change, which was causing the loop)
+  useEffect(() => {
     if (!enabled || !userPubkey) return
 
     console.log('[Nostr] Connecting to relays for user:', userPubkey.slice(0, 8))
-    NOSTR_RELAYS.forEach((relay) => connectToRelay(relay))
-  }, [enabled, userPubkey, connectToRelay])
 
-  // Effect to manage connections
-  useEffect(() => {
-    if (enabled && userPubkey) {
-      connectToAllRelays()
+    // Connect to a single relay (defined inside useEffect to avoid dep loops)
+    const connectToRelay = (relayUrl: string, attempt = 0): void => {
+      try {
+        const ws = new WebSocket(relayUrl)
+
+        ws.onopen = () => {
+          console.log(`[Nostr] Connected to ${relayUrl}`)
+          setConnectionCount((c) => c + 1)
+          setIsConnected(true)
+
+          const subscription = [
+            'REQ',
+            subscriptionIdRef.current,
+            {
+              kinds: [4, 14, 1059],
+              '#p': [userPubkey],
+              since: Math.floor(Date.now() / 1000) - 60,
+            },
+          ]
+          try { ws.send(JSON.stringify(subscription)) } catch {}
+        }
+
+        ws.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data)
+            if (data[0] === 'EVENT' && data[2]) {
+              const nostrEvent: NostrEvent = data[2]
+              // Use ref so we always get latest callback without re-subscribing
+              onNotificationRef.current?.(nostrEvent)
+
+              if (nostrEvent.kind === 4 || nostrEvent.kind === 14) {
+                let message = 'New message received'
+                try {
+                  const parsed = JSON.parse(nostrEvent.content)
+                  message = parsed.body || parsed.message || message
+                } catch {
+                  if (nostrEvent.content.length < 100) {
+                    message = nostrEvent.content
+                  }
+                }
+                toast.info(message, {
+                  icon: '🔔',
+                  position: 'top-right',
+                  autoClose: 5000,
+                })
+              }
+            }
+          } catch {}
+        }
+
+        ws.onerror = () => {
+          // Silent — onclose handles reconnect
+        }
+
+        ws.onclose = () => {
+          setConnectionCount((c) => Math.max(0, c - 1))
+          socketsRef.current = socketsRef.current.filter((s) => s !== ws)
+          if (socketsRef.current.length === 0) {
+            setIsConnected(false)
+          }
+          // Reconnect with exponential backoff (max 30s, cap 5 attempts to prevent storms)
+          if (attempt < 5) {
+            const delay = Math.min(2000 * Math.pow(2, attempt), 30000)
+            const timeout = setTimeout(() => connectToRelay(relayUrl, attempt + 1), delay)
+            reconnectTimeoutsRef.current.push(timeout)
+          }
+        }
+
+        socketsRef.current.push(ws)
+      } catch (err) {
+        console.warn(`[Nostr] Failed to init ${relayUrl}`)
+      }
     }
 
-    return cleanup
-  }, [enabled, userPubkey, connectToAllRelays, cleanup])
+    ACTIVE_RELAYS.forEach((relay) => connectToRelay(relay))
 
-  // Reconnect function for manual use
+    return cleanup
+  }, [enabled, userPubkey, cleanup])
+
+  // Reconnect function for manual use — full unmount/remount cycle
   const reconnect = useCallback(() => {
     cleanup()
-    setTimeout(connectToAllRelays, 100)
-  }, [cleanup, connectToAllRelays])
+    // The useEffect will pick this up if userPubkey is still set
+  }, [cleanup])
 
   return {
     isConnected,
     connectionCount,
     reconnect,
-    relayCount: NOSTR_RELAYS.length,
+    relayCount: ACTIVE_RELAYS.length,
   }
 }
 

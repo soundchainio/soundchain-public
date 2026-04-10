@@ -16,6 +16,7 @@ import {
 } from '@apollo/client'
 import { setContext } from '@apollo/client/link/context'
 import { onError } from '@apollo/client/link/error'
+import { RetryLink } from '@apollo/client/link/retry'
 import { getDataFromTree } from '@apollo/client/react/ssr'
 import { mergeDeep } from '@apollo/client/utilities'
 
@@ -95,8 +96,36 @@ export function createApolloClient(context?: GetServerSidePropsContext) {
     }
   })
 
+  // Retry on 504 (Lambda cold start) — critical for login flow
+  // Lambda hits Atlas for first request and times out at 30s
+  // Auto-retry transparently warms the Lambda and the second request succeeds
+  const retryLink = new RetryLink({
+    delay: {
+      initial: 500,
+      max: 2000,
+      jitter: true,
+    },
+    attempts: {
+      max: 3,
+      retryIf: (error, _operation) => {
+        if (!error) return false
+        // Retry on 504 Gateway Timeout (Lambda cold start)
+        if (error.statusCode === 504) {
+          console.log('[Apollo] Retrying after 504 (Lambda cold start)')
+          return true
+        }
+        // Retry on network errors
+        if (error.message?.includes('Failed to fetch')) {
+          console.log('[Apollo] Retrying after network error')
+          return true
+        }
+        return false
+      },
+    },
+  })
+
   return new ApolloClient({
-    link: errorLink.concat(authLink.concat(httpLink)),
+    link: errorLink.concat(retryLink.concat(authLink.concat(httpLink))),
     cache: new InMemoryCache(cacheConfig),
     ssrMode: !isBrowser,
     defaultOptions: {},

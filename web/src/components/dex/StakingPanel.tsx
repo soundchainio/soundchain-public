@@ -289,7 +289,7 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
     }
 
     // Direct Polygon RPC — never route through Magic
-    const web3Instance = new Web3('https://polygon-bor-rpc.publicnode.com')
+    const web3Instance = new Web3('https://polygon-rpc.com')
 
     try {
       // POL (native) Balance

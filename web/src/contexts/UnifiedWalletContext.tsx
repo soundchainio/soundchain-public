@@ -115,14 +115,14 @@ const chainSymbols: Record<number, string> = {
 // Using official/reliable public RPCs - avoiding llamarpc due to CSP issues
 const chainRpcs: Record<number, string> = {
   1: 'https://ethereum.publicnode.com',
-  137: 'https://polygon-bor-rpc.publicnode.com',
+  137: 'https://polygon-rpc.com',
   8453: 'https://mainnet.base.org',
   42161: 'https://arb1.arbitrum.io/rpc',
   10: 'https://mainnet.optimism.io',
   7000: 'https://zetachain-evm.blockpi.network/v1/rpc/public',
 }
 
-const getRpcForChain = (chainId: number): string => chainRpcs[chainId] || 'https://polygon-bor-rpc.publicnode.com'
+const getRpcForChain = (chainId: number): string => chainRpcs[chainId] || 'https://polygon-rpc.com'
 
 // Inner provider that uses Web3Modal hooks (only rendered when ready)
 function UnifiedWalletInner({
