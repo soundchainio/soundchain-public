@@ -181,8 +181,11 @@ function TraderPage() {
         <div className="fixed inset-0 pointer-events-none opacity-[0.015]" style={{
           backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.1) 2px, rgba(255,255,255,0.1) 4px)',
         }} />
-        {/* ─── FURL Terminal — Same as /dex (AgentStatusTicker) ──── */}
-        <AgentStatusTicker />
+        {/* ─── FURL Terminal — Rectangular box frame ──── */}
+        {/* Tap bar = expand in box. Fullscreen button = breaks out to full view. */}
+        <div className="mx-3 mt-2 rounded-xl border border-cyan-500/20 overflow-hidden bg-black/60 shadow-[0_0_15px_rgba(6,182,212,0.08)]" style={{ maxHeight: '180px' }}>
+          <AgentStatusTicker />
+        </div>
 
         {/* Header — Holographic neon */}
         <div className="relative px-4 py-2.5 border-b border-cyan-500/20 flex items-center justify-between bg-black/80 backdrop-blur-xl">
