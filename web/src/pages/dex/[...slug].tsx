@@ -2087,6 +2087,33 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     }
   }, [profileStatsModal, showTopFriendsPicker, viewingProfile?.id])
 
+  // Auto-play profile song when profile loads (MySpace-style)
+  useEffect(() => {
+    if (viewingProfileLoading) return
+    if (!viewingProfile) return
+    const featuredTrackId = (viewingProfile as any)?.featuredTrackId
+    const featuredAudioUrl = (viewingProfile as any)?.featuredAudioUrl
+    if (!featuredTrackId && !featuredAudioUrl) return
+    const nftTrack = featuredTrackId ? viewingProfileNFTs.find((t: any) => t.id === featuredTrackId) : null
+    const songUrl = nftTrack?.playbackUrl || featuredAudioUrl
+    if (!songUrl) return
+    const timer = setTimeout(() => {
+      if (nftTrack) {
+        handlePlayTrack(nftTrack, 0, [nftTrack])
+      } else {
+        playlistState([{
+          trackId: `profile-song-${viewingProfile.id}`,
+          src: songUrl,
+          title: (viewingProfile as any)?.featuredAudioTitle || 'Profile Song',
+          artist: (viewingProfile as any)?.featuredAudioArtist || viewingProfile.displayName || '',
+          art: (viewingProfile as any)?.featuredAudioCoverUrl || '',
+          isFavorite: false,
+        }], 0)
+      }
+    }, 1500)
+    return () => clearTimeout(timer)
+  }, [viewingProfile?.id, viewingProfileLoading, viewingProfileNFTs, handlePlayTrack, playlistState])
+
   // Transform followers data (filter out null profiles)
   const followersList = viewingProfileFollowersData?.followers?.nodes
     ?.filter(f => f?.followerProfile)
