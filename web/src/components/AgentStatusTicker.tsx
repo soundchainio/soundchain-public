@@ -2911,6 +2911,23 @@ export function AgentStatusTicker() {
         return
       }
 
+      // CLI_BRIDGE mode — forward keystrokes to the iframe terminal
+      // (otherwise commands like "whoami" get answered by FURL chat instead of the real shell)
+      if (jackMode === 'CLI_BRIDGE') {
+        const iframe = xtermIframeRef.current
+        if (iframe?.contentWindow) {
+          try {
+            iframe.contentWindow.postMessage({ type: 'furl-input', text: trimmed + '\n' }, '*')
+            iframe.contentWindow.postMessage({ type: 'furl-focus' }, '*')
+          } catch (err) {
+            addLine(`  CLI bridge send failed — try clicking the terminal then typing directly`, 'error')
+          }
+        } else {
+          addLine(`  CLI bridge not ready — wait for "connecting..." to finish`, 'info')
+        }
+        return
+      }
+
       // Chat mode — behavior depends on jack-in state
       addLine(trimmed, 'user')
 
