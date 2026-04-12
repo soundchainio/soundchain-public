@@ -12,7 +12,7 @@ import { useMeQuery } from 'lib/graphql'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useMagicContext } from 'hooks/useMagicContext'
-import { Users, ChevronDown, Copy, Check, Wallet, ExternalLink, MessageCircle, X, Brain } from 'lucide-react'
+import { Users, ChevronDown, Copy, Check, Wallet, ExternalLink, MessageCircle, X, Brain, HardDrive } from 'lucide-react'
 
 import { Button } from './common/Buttons/Button'
 import { SoundChainPopOver } from './common/PopOverButton/PopOverButton'
@@ -299,6 +299,16 @@ export const TopNavBar = ({
           >
             <Brain className="w-3.5 h-3.5 text-purple-400" />
             <span className="text-[10px] font-mono font-semibold text-purple-300 hidden sm:inline">NEURAL</span>
+          </button>
+
+          {/* Operator File Transfer Toggle */}
+          <button
+            onClick={() => window.dispatchEvent(new Event('toggle-operator'))}
+            className="flex items-center gap-1 px-2 py-1 rounded-full bg-green-500/10 border border-green-500/20 hover:border-green-400/40 hover:bg-green-500/20 transition-all"
+            title="Operator — File Transfer"
+          >
+            <HardDrive className="w-3.5 h-3.5 text-green-400" />
+            <span className="text-[10px] font-mono font-semibold text-green-300 hidden sm:inline">OPERATOR</span>
           </button>
 
           {/* Social Links - Always visible */}

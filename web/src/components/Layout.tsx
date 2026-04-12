@@ -41,6 +41,7 @@ const AudioPlayerModal = dynamic(import('components/modals/AudioPlayerModal'))
 const CreateModal = dynamic(import('components/modals/CreateModal'))
 const MiniRadioBar = dynamic(() => import('components/MiniRadioBar').then(mod => mod.MiniRadioBar), { ssr: false })
 const NeuralModal = dynamic(() => import('components/NeuralModal').then(mod => ({ default: mod.NeuralModal })), { ssr: false })
+const OperatorModal = dynamic(() => import('components/OperatorModal').then(mod => ({ default: mod.OperatorModal })), { ssr: false })
 
 interface LayoutProps {
   children: ReactNode
@@ -61,12 +62,18 @@ export const Layout = ({ children, className }: LayoutProps) => {
   const isMobileOrTablet = useIsMobile(breakpointsNumber.tablet)
   const hasActivePlayer = !!currentSong?.src
   const [neuralOpen, setNeuralOpen] = useState(false)
+  const [operatorOpen, setOperatorOpen] = useState(false)
 
-  // Listen for global neural toggle events (from TopNavBar brain button)
+  // Listen for global toggle events (from TopNavBar buttons)
   useEffect(() => {
-    const handler = () => setNeuralOpen(prev => !prev)
-    window.addEventListener('toggle-neural', handler)
-    return () => window.removeEventListener('toggle-neural', handler)
+    const neuralHandler = () => setNeuralOpen(prev => !prev)
+    const operatorHandler = () => setOperatorOpen(prev => !prev)
+    window.addEventListener('toggle-neural', neuralHandler)
+    window.addEventListener('toggle-operator', operatorHandler)
+    return () => {
+      window.removeEventListener('toggle-neural', neuralHandler)
+      window.removeEventListener('toggle-operator', operatorHandler)
+    }
   }, [])
 
   useEffect(() => {
@@ -174,6 +181,8 @@ export const Layout = ({ children, className }: LayoutProps) => {
       />
       {/* Neural brain scanner — global floating modal */}
       {hasActivePlayer && <NeuralModal isOpen={neuralOpen} onClose={() => setNeuralOpen(false)} />}
+      {/* Operator file transfer — global floating modal */}
+      <OperatorModal isOpen={operatorOpen} onClose={() => setOperatorOpen(false)} />
       {/* Decentralized notification stack - no SMS/Twilio! */}
       <PWAInstallPrompt />
       <NostrNotificationListener />
