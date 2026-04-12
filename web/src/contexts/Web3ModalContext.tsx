@@ -11,7 +11,7 @@ const polygon = {
   name: 'Polygon',
   currency: 'POL',
   explorerUrl: 'https://polygonscan.com',
-  rpcUrl: process.env.NEXT_PUBLIC_POLYGON_RPC || (typeof window !== 'undefined' ? window.location.origin + '/api/rpc/polygon' : 'https://soundchain.io/api/rpc/polygon')
+  rpcUrl: process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://polygon-rpc.com'
 }
 
 const ethereum = {

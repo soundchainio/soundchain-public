@@ -1,3 +1,4 @@
+import { getPolygonRpc } from 'lib/polygonRpc'
 /**
  * Multi-Wallet Aggregator - Connect and view multiple wallets inline
  * Unique feature: View NFTs from all connected wallets in one place
@@ -221,7 +222,7 @@ export function MultiWalletAggregator({
 
       setIsLoadingHdBalance(true)
       try {
-        const web3 = new Web3((typeof window !== 'undefined' ? window.location.origin + '/api/rpc/polygon' : 'https://soundchain.io/api/rpc/polygon'))
+        const web3 = new Web3(getPolygonRpc())
         const balance = await web3.eth.getBalance(hdWalletAddress)
         setHdWalletBalance(Number(web3.utils.fromWei(balance, 'ether')).toFixed(4))
 
@@ -245,7 +246,7 @@ export function MultiWalletAggregator({
 
       setIsLoadingLegacyBalance(true)
       try {
-        const web3 = new Web3((typeof window !== 'undefined' ? window.location.origin + '/api/rpc/polygon' : 'https://soundchain.io/api/rpc/polygon'))
+        const web3 = new Web3(getPolygonRpc())
         const balance = await web3.eth.getBalance(legacyOAuthAddress)
         setLegacyWalletBalance(Number(web3.utils.fromWei(balance, 'ether')).toFixed(4))
 

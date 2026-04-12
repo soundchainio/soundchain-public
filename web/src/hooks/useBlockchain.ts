@@ -27,7 +27,7 @@ export const gas = 1200000
 export const applySoundchainFee = (price: number) => (price * (1 + config.soundchainFee)).toFixed()
 
 // Direct RPC for read calls - bypasses Magic's broken proxy
-const DIRECT_POLYGON_RPC = (typeof window !== 'undefined' ? window.location.origin + '/api/rpc/polygon' : 'https://soundchain.io/api/rpc/polygon');
+const DIRECT_POLYGON_RPC = typeof window !== "undefined" ? window.location.origin + "/api/rpc/polygon" : "https://polygon-rpc.com";
 let _directWeb3Read: Web3 | null = null;
 const getDirectWeb3 = (): Web3 => {
   if (!_directWeb3Read) _directWeb3Read = new Web3(DIRECT_POLYGON_RPC);

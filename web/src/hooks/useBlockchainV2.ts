@@ -1,3 +1,4 @@
+import { getPolygonRpc } from 'lib/polygonRpc'
 import { SDKBase, InstanceWithExtensions } from '@magic-sdk/provider';
 import { OAuthExtension } from '@magic-ext/oauth';
 import { config } from 'config';
@@ -34,7 +35,7 @@ export const gas = 1200000;
 // Magic's proxy corrupts RPC responses (returns HTML on writes).
 // This instance is used for ALL read operations: estimateGas, getGasPrice, etc.
 // Magic's web3 is ONLY used for send() which requires signing.
-const DIRECT_POLYGON_RPC = (typeof window !== 'undefined' ? window.location.origin + '/api/rpc/polygon' : 'https://soundchain.io/api/rpc/polygon');
+const DIRECT_POLYGON_RPC = typeof window !== "undefined" ? window.location.origin + "/api/rpc/polygon" : "https://polygon-rpc.com";
 let _directWeb3: Web3 | null = null;
 const getDirectWeb3 = (): Web3 => {
   if (!_directWeb3) _directWeb3 = new Web3(DIRECT_POLYGON_RPC);
@@ -227,7 +228,7 @@ class BlockchainFunction<Type> {
     this.onTransactionHashFunction && this.onTransactionHashFunction(txHash);
 
     // Wait for on-chain confirmation using direct Polygon RPC
-    const polygonProvider = new ethers.providers.JsonRpcProvider((typeof window !== 'undefined' ? window.location.origin + '/api/rpc/polygon' : 'https://soundchain.io/api/rpc/polygon'));
+    const polygonProvider = new ethers.providers.JsonRpcProvider(getPolygonRpc());
     console.log('[SignBroadcast] Waiting for tx confirmation:', txHash);
     const ethersReceipt = await polygonProvider.waitForTransaction(txHash, 1, 120000);
 
@@ -331,7 +332,7 @@ class BlockchainFunction<Type> {
     this.onTransactionHashFunction && this.onTransactionHashFunction(txHash);
 
     // Wait for on-chain confirmation using direct Polygon RPC
-    const polygonProvider = new ethers.providers.JsonRpcProvider((typeof window !== 'undefined' ? window.location.origin + '/api/rpc/polygon' : 'https://soundchain.io/api/rpc/polygon'));
+    const polygonProvider = new ethers.providers.JsonRpcProvider(getPolygonRpc());
     const ethersReceipt = await polygonProvider.waitForTransaction(txHash, 1, 120000);
 
     const receipt = ethersReceipt as unknown as TransactionReceipt;

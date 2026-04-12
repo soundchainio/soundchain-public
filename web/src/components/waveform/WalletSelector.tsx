@@ -1,3 +1,4 @@
+import { getPolygonRpc } from 'lib/polygonRpc'
 /**
  * WalletSelector - Universal Wallet Connection Interface
  *
@@ -261,7 +262,7 @@ export const WalletSelector = ({ className, ownerAddressAccount, showOgun = fals
   // Fetch OGUN balance for external wallets on Polygon
   const fetchOgunBalance = useCallback(async (address: string): Promise<string> => {
     try {
-      const web3 = new Web3((typeof window !== 'undefined' ? window.location.origin + '/api/rpc/polygon' : 'https://soundchain.io/api/rpc/polygon'))
+      const web3 = new Web3(getPolygonRpc())
       const contract = new web3.eth.Contract(SoundchainOGUN20.abi as AbiItem[], config.ogunTokenAddress as string)
       const rawBalance = await contract.methods.balanceOf(address).call() as string | undefined
       const valid = rawBalance !== undefined && (typeof rawBalance === 'string' || typeof rawBalance === 'number')

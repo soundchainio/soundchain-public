@@ -1,3 +1,4 @@
+import { getPolygonRpc } from 'lib/polygonRpc'
 import React, { useState, useMemo, useCallback, ReactElement, useEffect, useRef, Component, ErrorInfo } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
@@ -1338,7 +1339,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
       if (!walletAccount || !tokenStakeContractAddress) return
       try {
         // Use Magic web3 or fallback to Alchemy Polygon RPC
-        const web3Instance = magicWeb3 || new Web3(process.env.NEXT_PUBLIC_POLYGON_RPC || (typeof window !== 'undefined' ? window.location.origin + '/api/rpc/polygon' : 'https://soundchain.io/api/rpc/polygon'))
+        const web3Instance = magicWeb3 || new Web3(process.env.NEXT_PUBLIC_POLYGON_RPC || getPolygonRpc())
         const stakingContract = getStakingContract(web3Instance)
         const balanceData = await stakingContract.methods.getBalanceOf(walletAccount).call() as [string, string, string] | undefined
         if (balanceData) {
@@ -2366,7 +2367,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     // Get web3 instance based on selected wallet type
     let web3Instance: Web3
     if (transferSourceWallet === 'oauth' || transferSourceWallet === 'hd' || transferSourceWallet === 'legacy') {
-      web3Instance = magicWeb3 || new Web3(process.env.NEXT_PUBLIC_POLYGON_RPC || (typeof window !== 'undefined' ? window.location.origin + '/api/rpc/polygon' : 'https://soundchain.io/api/rpc/polygon'))
+      web3Instance = magicWeb3 || new Web3(process.env.NEXT_PUBLIC_POLYGON_RPC || getPolygonRpc())
     } else {
       // Use window.ethereum for external wallets
       if (typeof window !== 'undefined' && (window as any).ethereum) {
@@ -2763,7 +2764,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     // Get web3 instance based on selected wallet type
     let web3Instance: Web3
     if (transferSourceWallet === 'oauth' || transferSourceWallet === 'hd' || transferSourceWallet === 'legacy') {
-      web3Instance = magicWeb3 || new Web3((typeof window !== 'undefined' ? window.location.origin + '/api/rpc/polygon' : 'https://soundchain.io/api/rpc/polygon'))
+      web3Instance = magicWeb3 || new Web3(getPolygonRpc())
     } else {
       // Use window.ethereum for external wallets
       if (typeof window !== 'undefined' && (window as any).ethereum) {
@@ -2911,7 +2912,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
       // Use appropriate web3 instance based on wallet type
       const web3Instance = tipSelectedWallet === 'external' && window.ethereum
         ? new Web3(window.ethereum as any)
-        : magicWeb3 || new Web3((typeof window !== 'undefined' ? window.location.origin + '/api/rpc/polygon' : 'https://soundchain.io/api/rpc/polygon'))
+        : magicWeb3 || new Web3(getPolygonRpc())
 
       const treasuryAddress = config.treasuryAddress
       const amountWei = web3Instance.utils.toWei(profileTipAmount, 'ether')
