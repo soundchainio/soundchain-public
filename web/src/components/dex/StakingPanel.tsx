@@ -1,4 +1,3 @@
-import { getPolygonRpc } from 'lib/polygonRpc'
 /**
  * OGUN Staking Panel - DEX Style
  * Stake OGUN tokens to earn rewards across multiple chains
@@ -290,7 +289,7 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
     }
 
     // Direct Polygon RPC — never route through Magic
-    const web3Instance = new Web3(getPolygonRpc())
+    const web3Instance = new Web3('https://soundchain.io/api/rpc/polygon')
 
     try {
       // POL (native) Balance
