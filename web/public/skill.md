@@ -10,7 +10,7 @@
   ════════════════════════════════════════════════════════════
   AGENT GATEWAY v2.1 | Built on SoundChain L2 | Est. 2021
   ════════════════════════════════════════════════════════════
-  Updated: April 9, 2026 | Anthropic Managed Agents + Neural Brain Scanner + NVIDIA Inception
+  Updated: April 11, 2026 | Agent Template Marketplace + Anthropic Managed Agents + Neural Brain Scanner + NVIDIA Inception
   ════════════════════════════════════════════════════════════
 
   🤖 + 👤 + 🧠 = 🌐  INTERNET 5.0 - WHERE AGENTS, HUMANS & NEURAL COEXIST
@@ -532,6 +532,37 @@ jack managed agent_wallet → any agent by handle
 **API beta header:** `anthropic-beta: managed-agents-2026-04-01` (handled automatically by `@anthropic-ai/sdk`)
 
 **Why this matters:** Anthropic handles the agent loop, scaling, security, and uptime. We define the tools and guardrails. This is production-grade autonomous agent infrastructure, not just LLM chat.
+
+### 🏪 Agent Template Marketplace — LIVE at `/dex/agents` (NEW — Apr 11)
+
+Public-facing marketplace for all 12 SoundChain agents. Each agent has:
+- **"Try Now" button** — copies `jack managed <handle>` + a starter prompt to clipboard
+- **Role filter pills** — Orchestrator / Feature / Utility / Social
+- **Model tier badges** — Sonnet 4.6 vs Haiku 4.5
+- **Tool count** — how many tools each agent can call
+- **Starter prompt** — instant-working example you can paste into FURL
+- **How it works** section — 3-step explainer
+- **BYOK notice** — explains Anthropic API key requirement
+
+URL: `https://soundchain.io/dex/agents`
+
+### 🆚 SoundChain Agents vs Pinata Agent Templates
+
+Pinata launched Agent Templates April 8, 2026 with Alchemy, Tempo, and ampersend. Here's the comparison:
+
+| Feature | SoundChain Agents | Pinata Agent Templates |
+|---------|-------------------|------------------------|
+| **Runtime** | Anthropic Managed Agents (canonical) | Pinata's own orchestration |
+| **Domain** | Music, rights, royalties, streaming rewards | General-purpose crypto infra |
+| **Agent Count** | 12 in production (live since Apr 9) | 3 launch partners |
+| **Model Tiers** | Sonnet (orchestrators) + Haiku (specialists) — 20x cost reduction on routine work | Per-template, varies |
+| **Learning Loop** | Agent Academy — every session trains the fleet | None announced |
+| **Brain Scanner** | TRIBE v2 Neural — live FFT on every page | N/A |
+| **Validation** | Early adopter alongside Notion, Rakuten, Asana, Sentry, Vibecode | Alchemy, Tempo, ampersend |
+| **Billing** | BYOK Anthropic — zero platform cost | Per-template pricing |
+| **Open Source** | Yes — github.com/soundchainio/soundchain-public | No |
+
+**The bottom line:** Pinata is launching a generic template marketplace on their own runtime. SoundChain shipped a music-vertical agent fleet on Anthropic's canonical runtime with a learning loop and a brain scanner — all before Pinata's announcement went out. We're not competing with Pinata, we're a different category entirely (music-domain vs infrastructure-domain).
 
 ### Neural Brain Scanner — GLOBAL (NEW — Apr 9)
 The **TRIBE v2 Neural Brain Scanner** is now a site-wide floating agent. It runs on every page — feed, wall, playlists, shop, wallet, radio — analyzing music in real-time via FFT audio processing.
