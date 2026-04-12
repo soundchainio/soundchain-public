@@ -140,6 +140,17 @@ export default function LoginPage() {
     // triggers Magic iframe communication that ITP blocks.
     localStorage.removeItem('didToken');
 
+    // PRE-WARM Lambda — fire a lightweight query silently on login page mount.
+    // By the time the user types their email, Lambda + Atlas connection is warm.
+    // This is THE fix for the cold start 504 that made Face ID appear broken.
+    // Without this, the first passkeyLoginOptions mutation hits a cold Lambda
+    // and 504s after 30s, making the EmailKey Book look hung.
+    fetch(config.apiUrl || 'https://19ne212py4.execute-api.us-east-1.amazonaws.com/production', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{"query":"{ __typename }"}',
+    }).catch(() => {}) // Silent — warmup only, don't care about response
+
     // Check if WebAuthn / EmailKeys are available on this device
     if (typeof window !== 'undefined' && window.PublicKeyCredential) {
       PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()
