@@ -50,6 +50,73 @@ export default function WarRoomPage() {
   const [showAgenda, setShowAgenda] = useState(false)
   const [linkCopied, setLinkCopied] = useState(false)
   const [calledToOrder, setCalledToOrder] = useState(false)
+  const [chatInput, setChatInput] = useState('')
+
+  // Agent auto-responses — keyword-triggered, no API needed
+  const agentRespond = useCallback((message: string) => {
+    const msg = message.toLowerCase()
+    const responses: Array<{ delay: number; actor: string; color: string; text: string }> = []
+
+    // FURL always acknowledges
+    responses.push({ delay: 800, actor: 'FURL', color: '#1D9E75', text: 'Acknowledged, Fleet Commander.' })
+
+    if (msg.includes('radio') || msg.includes('music') || msg.includes('play')) {
+      responses.push({ delay: 1500, actor: 'OGUN Radio', color: '#EF9F27', text: currentTrack ? `Now playing: ${currentTrack.title}` : 'Broadcasting 8,800+ tracks 24/7.' })
+    }
+    if (msg.includes('bug') || msg.includes('crash') || msg.includes('error') || msg.includes('fix')) {
+      responses.push({ delay: 1200, actor: 'Agent Eye', color: '#E24B4A', text: 'Scanning for issues... monitoring active.' })
+    }
+    if (msg.includes('ogun') || msg.includes('token') || msg.includes('balance') || msg.includes('wallet') || msg.includes('stake')) {
+      responses.push({ delay: 1300, actor: 'Wallet', color: '#10b981', text: 'OGUN on Polygon. 125% APR staking live.' })
+      responses.push({ delay: 1800, actor: 'Staking', color: '#f59e0b', text: '5M OGUN in rewards contract.' })
+    }
+    if (msg.includes('neural') || msg.includes('brain') || msg.includes('scan')) {
+      responses.push({ delay: 1100, actor: 'Neural', color: '#a855f7', text: 'TRIBE v2 brain scanner on standby. 5 cortical regions ready.' })
+    }
+    if (msg.includes('login') || msg.includes('auth') || msg.includes('face id')) {
+      responses.push({ delay: 1000, actor: 'Login', color: '#06b6d4', text: 'Login gateway monitoring. Face ID + EmailKey active.' })
+    }
+    if (msg.includes('feed') || msg.includes('post') || msg.includes('social')) {
+      responses.push({ delay: 1400, actor: 'Feed', color: '#ec4899', text: 'Feed curation active. Tracking engagement.' })
+    }
+    if (msg.includes('upload') || msg.includes('ipfs') || msg.includes('pin')) {
+      responses.push({ delay: 1500, actor: 'Upload', color: '#14b8a6', text: 'IPFS gateway healthy. Pinata operational.' })
+    }
+    if (msg.includes('pulse') || msg.includes('dm') || msg.includes('message')) {
+      responses.push({ delay: 1200, actor: 'Pulse', color: '#3b82f6', text: 'DM system online. WebRTC calls ready.' })
+    }
+    if (msg.includes('nvidia') || msg.includes('gpu') || msg.includes('inception')) {
+      responses.push({ delay: 1600, actor: 'SMITH', color: '#22d3ee', text: 'NVIDIA Inception application pending. 3 products listed. All shipping.' })
+      responses.push({ delay: 2200, actor: 'Neural', color: '#a855f7', text: 'GPU upgrade path: TensorRT inference, Omniverse Kit, Jetson edge.' })
+    }
+    if (msg.includes('jeremy') || msg.includes('tunnel') || msg.includes('war room 2')) {
+      responses.push({ delay: 1100, actor: 'SMITH', color: '#22d3ee', text: 'tunnel2.soundchain.io relay is live. Awaiting Jeremy connection.' })
+    }
+    if (msg.includes('analytics') || msg.includes('metrics') || msg.includes('data')) {
+      responses.push({ delay: 1300, actor: 'Analytics', color: '#8b5cf6', text: 'Tracking: activation time, retention, creator conversion, agent adoption.' })
+    }
+    if (msg.includes('status') || msg.includes('report') || msg.includes('standup')) {
+      // Everyone reports in
+      responses.push({ delay: 1000, actor: 'OGUN Radio', color: '#EF9F27', text: '8,800+ tracks. Broadcasting 24/7.' })
+      responses.push({ delay: 1500, actor: 'Login', color: '#06b6d4', text: 'Gateway online. Vercel direct auth active.' })
+      responses.push({ delay: 2000, actor: 'Analytics', color: '#8b5cf6', text: '728 users. 17 agents registered.' })
+      responses.push({ delay: 2500, actor: 'Agent Eye', color: '#E24B4A', text: '0 critical bugs. Site stable.' })
+      responses.push({ delay: 3000, actor: 'Neural', color: '#a855f7', text: 'Brain scanner global. NVIDIA product updated to Shipping.' })
+      responses.push({ delay: 3500, actor: 'SMITH', color: '#22d3ee', text: '12 managed agents on Anthropic cloud. 14 tools. BYOK active.' })
+      responses.push({ delay: 4000, actor: 'Operator', color: '#22c55e', text: 'File transfer ready. WebRTC DataChannel operational.' })
+    }
+
+    responses.forEach(r => {
+      setTimeout(() => addActivity(r.actor, r.color, r.text), r.delay)
+    })
+  }, [addActivity, currentTrack])
+
+  const handleChatSubmit = useCallback(() => {
+    if (!chatInput.trim()) return
+    addActivity('Frank', '#D85A30', chatInput.trim())
+    agentRespond(chatInput.trim())
+    setChatInput('')
+  }, [chatInput, addActivity, agentRespond])
 
   const addActivity = useCallback((actor: string, color: string, message: string) => {
     setActivities(prev => [{ id: `${Date.now()}-${Math.random().toString(36).slice(2,6)}`, timestamp: new Date(), actor, color, message }, ...prev].slice(0, 50))
@@ -165,7 +232,30 @@ export default function WarRoomPage() {
             </div>
             {!showAgenda && <div className="flex-1 overflow-y-auto p-3 space-y-1.5 scrollbar-hide">{activities.map(a => <div key={a.id} className="text-[10px] leading-relaxed"><span className="text-gray-600 font-mono">[{formatTime(a.timestamp)}]</span>{' '}<span className="font-bold" style={{ color: a.color }}>{a.actor}</span>{' '}<span className="text-gray-400">{a.message}</span></div>)}</div>}
             {showAgenda && <div className="flex-1 p-3 flex flex-col"><textarea value={agenda} onChange={e => setAgenda(e.target.value)} placeholder={"Type agenda items here...\n\n- Item 1\n- Item 2"} className="flex-1 bg-black/30 border border-gray-800 rounded-lg p-3 text-xs text-gray-300 resize-none focus:outline-none focus:border-cyan-500/50 placeholder:text-gray-700 font-mono" /><p className="mt-2 text-[8px] text-gray-600 text-center">Visible to all in the War Room</p></div>}
-            <div className="px-3 py-2 border-t border-gray-800 flex items-center justify-between"><div className="flex items-center gap-1.5"><Users className="w-3 h-3 text-gray-500" /><span className="text-[9px] text-gray-500 font-mono">{onlineSeats.size} present</span></div><span className="text-[8px] text-gray-700 font-mono">Phase 1</span></div>
+            {/* Chat input */}
+            <div className="px-3 py-2 border-t border-gray-800">
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={chatInput}
+                  onChange={e => setChatInput(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleChatSubmit()}
+                  placeholder="Speak to the room..."
+                  className="flex-1 bg-black/50 border border-gray-700 rounded-lg px-3 py-1.5 text-xs text-white placeholder:text-gray-600 focus:outline-none focus:border-cyan-500 font-mono"
+                />
+                <button
+                  onClick={handleChatSubmit}
+                  disabled={!chatInput.trim()}
+                  className="px-3 py-1.5 bg-cyan-500 text-black text-xs font-bold rounded-lg hover:bg-cyan-400 transition disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  Send
+                </button>
+              </div>
+              <div className="flex items-center justify-between mt-1.5">
+                <div className="flex items-center gap-1.5"><Users className="w-3 h-3 text-gray-500" /><span className="text-[9px] text-gray-500 font-mono">{onlineSeats.size} present</span></div>
+                <span className="text-[7px] text-gray-700 font-mono">try: &quot;status report&quot;</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
