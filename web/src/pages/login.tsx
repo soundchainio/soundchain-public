@@ -140,6 +140,14 @@ export default function LoginPage() {
     // triggers Magic iframe communication that ITP blocks.
     localStorage.removeItem('didToken');
 
+    // Pre-warm Lambda — fire lightweight query silently on login page mount.
+    // By the time user types email, Lambda + Atlas connection is warm.
+    fetch('https://19ne212py4.execute-api.us-east-1.amazonaws.com/production', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{"query":"{ __typename }"}',
+    }).catch(() => {}) // Silent warmup only
+
     // Check if WebAuthn / EmailKeys are available on this device
     if (typeof window !== 'undefined' && window.PublicKeyCredential) {
       PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()
