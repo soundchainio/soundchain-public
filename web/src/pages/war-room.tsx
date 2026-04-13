@@ -5,6 +5,7 @@ import { Users, Radio, Bug, Brain, Clock, MessageCircle, Zap, Copy, CheckCircle2
 import type { CustomLayout } from './_app'
 
 const MiniSphere = dynamic(() => import('components/MiniSphere').then(m => m.MiniSphere), { ssr: false })
+const WarRoom3D = dynamic(() => import('components/WarRoom3D').then(m => ({ default: m.WarRoom3D })), { ssr: false })
 
 interface Seat {
   id: string; name: string; role: string; type: 'human' | 'agent'; color: string; initials: string; handle?: string; bubble?: string
@@ -130,50 +131,30 @@ export default function WarRoomPage() {
         <div className="relative z-10 flex flex-col lg:flex-row h-[calc(100vh-52px)]">
           <div className="flex-1 flex flex-col items-center justify-center p-4 lg:p-8">
             <button onClick={handleCallToOrder} disabled={calledToOrder} className={`mb-6 px-6 py-2 rounded-lg text-xs font-bold transition-all ${calledToOrder ? 'bg-green-500/20 text-green-400 border border-green-500/30 cursor-default' : 'bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-400 hover:to-purple-400 text-black'}`}>{calledToOrder ? 'War Room Convened' : 'Call to Order'}</button>
-            <div className="relative w-[500px] h-[500px] sm:w-[600px] sm:h-[600px] lg:w-[700px] lg:h-[700px]">
-              {/* Table surface */}
-              <div className="absolute inset-[120px] sm:inset-[140px] lg:inset-[160px] rounded-full bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 border-2 border-gray-700 shadow-[0_0_40px_rgba(0,0,0,0.5),inset_0_0_30px_rgba(6,182,212,0.05)]">
-                <div className="absolute inset-0 flex items-center justify-center"><div className="text-center"><MiniSphere size={40} /><div className="text-[10px] font-mono text-gray-600 tracking-[0.2em] mt-1">SOUNDCHAIN</div><div className="text-[8px] font-mono text-gray-700">WAR ROOM</div></div></div>
+            <div className="w-full max-w-[700px]">
+              {/* 3D War Room Scene */}
+              <WarRoom3D
+                seats={SEATS.map(s => ({
+                  ...s,
+                  online: onlineSeats.has(s.id),
+                }))}
+                width={700}
+                height={450}
+              />
+
+              {/* Name tags overlay below the 3D scene */}
+              <div className="mt-3 flex flex-wrap justify-center gap-2">
+                {SEATS.map(seat => {
+                  const isOnline = onlineSeats.has(seat.id)
+                  return (
+                    <div key={seat.id} className={`flex items-center gap-1.5 px-2 py-1 rounded-full border text-[9px] font-mono ${isOnline ? 'border-opacity-50' : 'border-gray-800 opacity-30'}`} style={{ borderColor: isOnline ? seat.color : undefined, color: isOnline ? seat.color : '#666' }}>
+                      <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-500' : 'bg-gray-700'}`} />
+                      <span className="font-bold">{seat.name}</span>
+                      {seat.bubble && isOnline && <span className="text-gray-500 text-[7px] max-w-[80px] truncate">{seat.bubble}</span>}
+                    </div>
+                  )
+                })}
               </div>
-
-              {/* Humans — inner ring */}
-              {SEATS.filter(s => s.type === 'human').map((seat, i, arr) => {
-                const isOnline = onlineSeats.has(seat.id)
-                const angle = (i / arr.length) * 2 * Math.PI - Math.PI / 2
-                const left = 50 + 28 * Math.cos(angle)
-                const top = 50 + 28 * Math.sin(angle)
-                return (
-                  <div key={seat.id} className="absolute flex flex-col items-center z-10" style={{ left: `${left}%`, top: `${top}%`, transform: 'translate(-50%, -50%)' }}>
-                    <div className="relative">
-                      <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center text-sm font-bold transition-all ${isOnline ? '' : 'opacity-20'}`} style={{ backgroundColor: isOnline ? seat.color : 'transparent', border: `2px ${isOnline ? 'solid' : 'dashed'} ${seat.color}`, boxShadow: isOnline ? `0 0 20px ${seat.color}40` : 'none', color: isOnline ? '#fff' : seat.color }}>{seat.initials}</div>
-                      {isOnline && <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-green-500 border-2 border-[#0a0a0a]" />}
-                    </div>
-                    <div className="mt-1 text-center"><div className="text-[9px] font-bold text-white whitespace-nowrap">{seat.name}</div><div className="text-[7px] text-gray-500 whitespace-nowrap">{seat.role}</div>{!isOnline && <div className="text-[6px] text-gray-600 italic">away</div>}</div>
-                  </div>
-                )
-              })}
-
-              {/* Agents — outer ring with speech bubbles */}
-              {SEATS.filter(s => s.type === 'agent').map((seat, i, arr) => {
-                const isOnline = onlineSeats.has(seat.id)
-                const angle = (i / arr.length) * 2 * Math.PI - Math.PI / 2
-                const left = 50 + 47 * Math.cos(angle)
-                const top = 50 + 47 * Math.sin(angle)
-                return (
-                  <div key={seat.id} className="absolute flex flex-col items-center" style={{ left: `${left}%`, top: `${top}%`, transform: 'translate(-50%, -50%)' }}>
-                    {/* Speech bubble */}
-                    {isOnline && seat.bubble && (
-                      <div className="mb-1 px-2 py-0.5 bg-black/80 border rounded text-[6px] font-mono whitespace-nowrap max-w-[100px] truncate" style={{ borderColor: `${seat.color}40`, color: seat.color }}>{seat.bubble}</div>
-                    )}
-                    <div className="relative">
-                      <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-bold transition-all ${isOnline ? '' : 'opacity-15'}`} style={{ backgroundColor: isOnline ? seat.color : 'transparent', border: `2px ${isOnline ? 'solid' : 'dashed'} ${seat.color}`, boxShadow: isOnline ? `0 0 15px ${seat.color}30` : 'none', color: isOnline ? '#fff' : seat.color }}>{seat.initials}</div>
-                      {isOnline && <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-green-500 border-2 border-[#0a0a0a]" />}
-                      {isOnline && <div className="absolute inset-0 rounded-full animate-ping" style={{ border: `1px solid ${seat.color}`, opacity: 0.2, animationDuration: '4s' }} />}
-                    </div>
-                    <div className="mt-0.5 text-center"><div className="text-[7px] font-bold text-white whitespace-nowrap">{seat.name}</div><div className="text-[6px] text-gray-600 whitespace-nowrap">{seat.role}</div></div>
-                  </div>
-                )
-              })}
             </div>
             {currentTrack && <div className="mt-6 flex items-center gap-2 px-4 py-2 bg-amber-500/5 border border-amber-500/20 rounded-lg"><Radio className="w-4 h-4 text-amber-400 animate-pulse" /><span className="text-xs text-amber-300 font-mono">{currentTrack.title}</span><span className="text-[10px] text-gray-500">by {currentTrack.artist}</span></div>}
           </div>
