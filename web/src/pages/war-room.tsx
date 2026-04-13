@@ -54,9 +54,16 @@ export default function WarRoomPage() {
   const [calledToOrder, setCalledToOrder] = useState(false)
   const [chatInput, setChatInput] = useState('')
   const logRef = useRef<HTMLDivElement>(null)
+  const sessionIdRef = useRef(`warroom-${Date.now()}-${Math.random().toString(36).slice(2,6)}`)
 
   const addActivity = useCallback((actor: string, color: string, message: string) => {
     setActivities(prev => [...prev, { id: `${Date.now()}-${Math.random().toString(36).slice(2,6)}`, timestamp: new Date(), actor, color, message }].slice(-50))
+    // Archive to MongoDB — fire and forget, never blocks UI
+    fetch('/api/war-room/log', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ actor, color, message, sessionId: sessionIdRef.current }),
+    }).catch(() => {})
   }, [])
 
   const agentRespond = useCallback((message: string) => {
