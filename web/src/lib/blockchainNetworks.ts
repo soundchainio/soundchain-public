@@ -12,7 +12,7 @@ export interface BlockchainNetwork {
 export const mainNetwork: BlockchainNetwork = {
   name: 'Polygon Mainnet',
   // Use Ankr public RPC - CORS-friendly with better rate limits
-  rpc: process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://soundchain.io/api/rpc/polygon',
+  rpc: process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://polygon-bor-rpc.publicnode.com',
   id: 137,
   idHex: '0x89',
   symbol: 'POL',
