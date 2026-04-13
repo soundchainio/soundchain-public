@@ -1,10 +1,14 @@
 import { useState, useEffect, useCallback, useRef, ReactElement } from 'react'
 import Head from 'next/head'
 import dynamic from 'next/dynamic'
-import { Users, Radio, Clock, Copy, CheckCircle2, Send } from 'lucide-react'
+import { Users, Radio, Clock, Copy, CheckCircle2, Send, Lock } from 'lucide-react'
+import { useMe } from 'hooks/useMe'
 import type { CustomLayout } from './_app'
 
 const MiniSphere = dynamic(() => import('components/MiniSphere').then(m => m.MiniSphere), { ssr: false })
+
+// Only these handles can enter the War Room
+const WAR_ROOM_ACCESS = ['furda1', 'furda1', 'homie_yay_yay', 'jeremy_soundchain', 'jsan619', 'tito']
 
 interface Seat {
   id: string; name: string; role: string; type: 'human' | 'agent'; color: string; initials: string; bubble?: string
@@ -36,6 +40,10 @@ const SEATS: Seat[] = [
 interface ActivityItem { id: string; timestamp: Date; actor: string; color: string; message: string }
 
 export default function WarRoomPage() {
+  const me = useMe()
+  const myHandle = (me?.handle || me?.profile?.userHandle || '').toLowerCase()
+  const hasAccess = WAR_ROOM_ACCESS.includes(myHandle)
+
   const allAgentIds = SEATS.filter(s => s.type === 'agent').map(s => s.id)
   const [onlineSeats, setOnlineSeats] = useState<Set<string>>(new Set(['frank', ...allAgentIds]))
   const [activities, setActivities] = useState<ActivityItem[]>([])
@@ -59,10 +67,30 @@ export default function WarRoomPage() {
     if (msg.includes('bug') || msg.includes('crash') || msg.includes('error')) responses.push({ delay: 1200, actor: 'Agent Eye', color: '#E24B4A', text: 'Scanning... monitoring active.' })
     if (msg.includes('ogun') || msg.includes('token') || msg.includes('wallet') || msg.includes('stake')) { responses.push({ delay: 1300, actor: 'Wallet', color: '#10b981', text: 'OGUN on Polygon. 125% APR live.' }); responses.push({ delay: 1800, actor: 'Staking', color: '#f59e0b', text: '5M OGUN in rewards contract.' }) }
     if (msg.includes('neural') || msg.includes('brain')) responses.push({ delay: 1100, actor: 'Neural', color: '#a855f7', text: 'TRIBE v2 brain scanner on standby. 5 regions ready.' })
-    if (msg.includes('login') || msg.includes('auth')) responses.push({ delay: 1000, actor: 'Login', color: '#06b6d4', text: 'Login gateway online. Face ID active.' })
+    if (msg.includes('login') || msg.includes('auth')) {
+      responses.push({ delay: 1000, actor: 'Login', color: '#06b6d4', text: 'Fetching login metrics...' })
+      fetch('/api/agent/login-metrics').then(r => r.json()).then(d => {
+        const s = d.summary || {}
+        setTimeout(() => addActivity('Login', '#06b6d4', `Logins: ${s.totalLogins || 0} | Avg: ${s.avgLoginTimeSec || '?'}s | Fail: ${s.failRate || '0%'} | Cold: ${s.coldStartRate || '0%'}`), 1800)
+      }).catch(() => {})
+    }
     if (msg.includes('feed') || msg.includes('post')) responses.push({ delay: 1400, actor: 'Feed', color: '#ec4899', text: 'Curation active. Tracking engagement.' })
-    if (msg.includes('nvidia') || msg.includes('gpu')) { responses.push({ delay: 1600, actor: 'SMITH', color: '#22d3ee', text: 'NVIDIA Inception pending. 3 products shipping.' }); responses.push({ delay: 2200, actor: 'Neural', color: '#a855f7', text: 'GPU path: TensorRT, Omniverse, Jetson edge.' }) }
-    if (msg.includes('analytics') || msg.includes('metrics')) responses.push({ delay: 1300, actor: 'Analytics', color: '#8b5cf6', text: 'Tracking: activation, retention, conversion.' })
+    if (msg.includes('pulse') || msg.includes('dm') || msg.includes('message')) {
+      responses.push({ delay: 1200, actor: 'Pulse', color: '#3b82f6', text: 'DM system online. WebRTC calls ready. Checking unread...' })
+    }
+    if (msg.includes('nvidia') || msg.includes('gpu') || msg.includes('jensen') || msg.includes('inception')) { responses.push({ delay: 1600, actor: 'SMITH', color: '#22d3ee', text: 'NVIDIA Inception pending. 3 products shipping. 12 agents live.' }); responses.push({ delay: 2200, actor: 'Neural', color: '#a855f7', text: 'GPU path: TensorRT, Omniverse, Jetson edge. Brain scanner ready for inference upgrade.' }) }
+    if (msg.includes('analytics') || msg.includes('metrics') || msg.includes('score')) {
+      responses.push({ delay: 1300, actor: 'Analytics', color: '#8b5cf6', text: 'Fetching live metrics...' })
+      // Fetch real analytics data
+      fetch('/api/agent/analytics-events').then(r => r.json()).then(d => {
+        const s = d.summary || {}
+        const sc = d.score || {}
+        setTimeout(() => addActivity('Analytics', '#8b5cf6', `Events: ${s.totalEvents || 0} | Last 24h: ${s.last24h || 0} | Score: ${sc.engagement || 0}/100 (${sc.grade || '?'})`), 2000)
+        if (s.conversionFunnel) {
+          setTimeout(() => addActivity('Analytics', '#8b5cf6', `Funnel: ${s.conversionFunnel.firstStreams || 0} streams → ${s.conversionFunnel.firstPosts || 0} posts → ${s.conversionFunnel.ogunClaims || 0} claims → ${s.conversionFunnel.scidUploads || 0} uploads → ${s.conversionFunnel.nftMints || 0} mints`), 2800)
+        }
+      }).catch(() => {})
+    }
     if (msg.includes('status') || msg.includes('report') || msg.includes('standup')) {
       responses.push({ delay: 1000, actor: 'OGUN Radio', color: '#EF9F27', text: '8,800+ tracks. Broadcasting 24/7.' })
       responses.push({ delay: 1500, actor: 'Login', color: '#06b6d4', text: 'Gateway online. Vercel direct auth active.' })
@@ -75,12 +103,16 @@ export default function WarRoomPage() {
     responses.forEach(r => { setTimeout(() => addActivity(r.actor, r.color, r.text), r.delay) })
   }, [addActivity, currentTrack])
 
+  // Detect which human is speaking
+  const speakerName = myHandle.includes('jeremy') || myHandle.includes('jsan') ? 'Jeremy' : myHandle.includes('tito') ? 'Tito' : 'Frank'
+  const speakerColor = myHandle.includes('jeremy') || myHandle.includes('jsan') ? '#185FA5' : myHandle.includes('tito') ? '#534AB7' : '#D85A30'
+
   const handleChatSubmit = useCallback(() => {
     if (!chatInput.trim()) return
-    addActivity('Frank', '#D85A30', chatInput.trim())
+    addActivity(speakerName, speakerColor, chatInput.trim())
     agentRespond(chatInput.trim())
     setChatInput('')
-  }, [chatInput, addActivity, agentRespond])
+  }, [chatInput, addActivity, agentRespond, speakerName, speakerColor])
 
   useEffect(() => {
     fetch('/api/agent/radio').then(r => r.json()).then(d => {
@@ -103,6 +135,34 @@ export default function WarRoomPage() {
   }, [activities])
 
   const formatTime = (d: Date) => d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+
+  // Access gate — only Frank, Jeremy, Tito
+  if (!me) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
+        <div className="text-center p-8">
+          <Lock className="w-12 h-12 text-cyan-500/30 mx-auto mb-4" />
+          <h1 className="text-xl font-mono font-bold text-cyan-400 mb-2">SOUNDCHAIN WAR ROOM</h1>
+          <p className="text-sm text-gray-500 mb-4">Restricted access. Log in to continue.</p>
+          <a href="/login" className="px-6 py-2 bg-cyan-500 text-black rounded-lg text-sm font-bold hover:bg-cyan-400 transition">Log In</a>
+        </div>
+      </div>
+    )
+  }
+
+  if (!hasAccess) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
+        <div className="text-center p-8">
+          <Lock className="w-12 h-12 text-red-500/30 mx-auto mb-4" />
+          <h1 className="text-xl font-mono font-bold text-cyan-400 mb-2">SOUNDCHAIN WAR ROOM</h1>
+          <p className="text-sm text-gray-500 mb-2">Access restricted to War Room members.</p>
+          <p className="text-xs text-gray-600">Your handle: @{myHandle || 'unknown'}</p>
+          <a href="/dex/feed" className="mt-4 inline-block px-6 py-2 bg-gray-800 text-white rounded-lg text-sm hover:bg-gray-700 transition">Back to Feed</a>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <>
