@@ -13,7 +13,7 @@ import { useMagicContext } from 'hooks/useMagicContext'
 import { useMe } from 'hooks/useMe'
 
 // Tunnel CLI bridge whitelist — only these handles can use `jack cli`
-const CLI_BRIDGE_WHITELIST = ['homie_yay_yay', 'furda1', 'furda1_', 'furl_bldr', 'furl', 'jeremy_soundchain', 'jsan619', 'soundchain', 'admin']
+const CLI_BRIDGE_WHITELIST = ['homie_yay_yay', 'furda1', 'furl_bldr', 'furl', 'jeremy_soundchain', 'jsan619']
 
 // ─── Speech APIs ─────────────────────────────────────────────────────
 const SpeechRecognitionAPI = typeof window !== 'undefined'
@@ -1719,8 +1719,8 @@ const CLI_CHEAT_CATEGORIES = [
     icon: 'Coins',
     color: 'text-amber-400',
     prompts: [
-      'cast call 0x45f1af89486aeec2da0b06340cd9cd3bd741a15c "totalSupply()" --rpc-url /api/rpc/polygon',
-      'cast balance 0x519bed3fe32272fa8f1aecaf86dbfbd674ee703b --rpc-url /api/rpc/polygon',
+      'cast call 0x45f1af89486aeec2da0b06340cd9cd3bd741a15c "totalSupply()" --rpc-url https://polygon-rpc.com',
+      'cast balance 0x519bed3fe32272fa8f1aecaf86dbfbd674ee703b --rpc-url https://polygon-rpc.com',
       'curl -s "https://api.polygonscan.com/api?module=account&action=txlist&address=0x519bed3fe32272fa8f1aecaf86dbfbd674ee703b&page=1&offset=5&sort=desc"',
     ],
   },
@@ -1778,7 +1778,6 @@ export function AgentStatusTicker() {
     return sessionStorage.getItem('furl_jack_mode') === 'CLI_BRIDGE' ? 'CLI_BRIDGE' : 'DISCONNECTED'
   })
   const [forgeMode, setForgeMode] = useState(false) // true = coding agent, false = chat
-  const [managedMode, setManagedMode] = useState<string | null>(null) // managed agent handle or null
   const [jackHistory, setJackHistory] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([])
   const jackAbortRef = useRef<AbortController | null>(null)
   const jackStreamRef = useRef<string>('') // accumulates current streaming response
@@ -2031,33 +2030,16 @@ export function AgentStatusTicker() {
         openclawUrl: ocUrl || undefined,
         openclawToken: ocToken || undefined,
         provider,
-        mode: managedMode ? 'MANAGED' : forgeMode ? 'FORGE' : 'CHAT',
-        agent: managedMode || undefined,
+        mode: forgeMode ? 'FORGE' : 'CHAT',
       }),
       signal: abortCtrl.signal,
     })
       .then(response => {
         if (!response.ok) {
           return response.json().then(err => {
-            // Friendly BYOK message — SoundChain agents are wired but require
-            // user's own Anthropic API key. We don't fund usage centrally.
-            const isKeyMissing = err.verdict === 'KEY_MISSING' || /no api key/i.test(err.reason || '')
-            if (isKeyMissing) {
-              addLine(`┌─ BYOK REQUIRED ──────────────────────┐`, 'system')
-              addLine(`│ This agent runs on Anthropic's cloud`, 'info')
-              addLine(`│ You need YOUR OWN Anthropic API key.`, 'info')
-              addLine(`│`, 'info')
-              addLine(`│ Get one (~$5 min): console.anthropic.com`, 'info')
-              addLine(`│ Then run: smith key sk-ant-...`, 'info')
-              addLine(`│`, 'info')
-              addLine(`│ Note: Claude Max sub does NOT include API.`, 'info')
-              addLine(`│ API and Max are separate billing.`, 'info')
-              addLine(`│`, 'info')
-              addLine(`│ Read the architecture: soundchain.io/skill.md`, 'info')
-              addLine(`│ Agent Academy: 12 agents alive on the net`, 'info')
-              addLine(`└────────────────────────────────────────┘`, 'system')
-            } else {
-              addLine(`SMITH error: ${err.reason || 'unknown'}`, 'error')
+            addLine(`SMITH error: ${err.reason || 'unknown'}`, 'error')
+            if (err.verdict === 'KEY_MISSING') {
+              addLine(`  run: smith key sk-ant-... to set your API key`, 'info')
             }
           })
         }
@@ -2102,15 +2084,6 @@ export function AgentStatusTicker() {
                   }
                   currentLineText = parts[parts.length - 1]
                 }
-              } else if (event.type === 'tool_start') {
-                // Managed agent is using a tool
-                const label = event.custom === 'YES' ? `⚡ ${event.tool}` : `🔧 ${event.tool}`
-                addLine(`  ${label}`, 'info')
-              } else if (event.type === 'tool_result') {
-                const icon = event.success === 'YES' ? '✓' : '✗'
-                addLine(`  ${icon} ${event.tool} → ${(event.preview as string || '').slice(0, 80)}`, event.success === 'YES' ? 'success' : 'error')
-              } else if (event.type === 'status') {
-                if (event.message) addLine(`  ${event.message}`, 'info')
               } else if (event.type === 'done') {
                 // Flush remaining text
                 if (currentLineText.trim()) addLine(currentLineText, 'furl')
@@ -2135,7 +2108,7 @@ export function AgentStatusTicker() {
           addLine('SMITH unreachable — check your connection.', 'error')
         }
       })
-  }, [jackHistory, addLine, forgeMode, managedMode])
+  }, [jackHistory, addLine, forgeMode])
 
   // ─── Mic Toggle (Speech-to-Text) ──────────────────────────────────
   const toggleMic = useCallback(() => {
@@ -2223,8 +2196,6 @@ export function AgentStatusTicker() {
         addLine('  keys         — keybook — manage saved API keys', 'info')
         addLine('  jack         — jack in to SMITH (streaming AI chat)', 'info')
         addLine('  jack forge   — jack in to SMITH FORGE (coding agent)', 'info')
-        addLine('  jack managed — Anthropic Managed Agent (autonomous, tools)', 'info')
-        addLine('  jack managed <agent> — use specific agent (smith, furl, etc)', 'info')
         addLine('  jack cli     — CLI bridge via SoundChain relay (Claude Code)', 'info')
         addLine('  tunnel <url> — override tunnel URL (default: relay.soundchain.io)', 'info')
         addLine('  exit         — disconnect from any jack mode', 'info')
@@ -2467,12 +2438,10 @@ export function AgentStatusTicker() {
       } else if (cmd === 'jack cli' || cmd === 'smith jack cli') {
         // Jack CLI — xterm.js bridge via SoundChain relay or custom tunnel → ttyd → Claude Code
         // Whitelist check — tunnel gives shell access to the host machine
-        const myHandle = (me?.handle || me?.profile?.userHandle || '').toLowerCase()
-        // Skip whitelist on /trader page (private portal, no auth required)
-        const isTraderPage = typeof window !== 'undefined' && window.location.pathname.startsWith('/trader')
-        if (!isTraderPage && !CLI_BRIDGE_WHITELIST.includes(myHandle)) {
+        const myHandle = (me?.handle || '').toLowerCase()
+        if (!CLI_BRIDGE_WHITELIST.includes(myHandle)) {
           addLine(`  ⛔ access denied — jack cli is restricted`, 'error')
-          addLine(`  your handle "${me?.handle || me?.profile?.userHandle || '(not logged in)'}" is not whitelisted`, 'error')
+          addLine(`  your handle "${me?.handle || '(not logged in)'}" is not whitelisted`, 'error')
           return
         }
         const kb = getKeybook()
@@ -2494,39 +2463,6 @@ export function AgentStatusTicker() {
         addLine(`  │ type "exit" in FURL to disconnect`, 'info')
         addLine(`  └──────────────────────────────────────────┘`, 'system')
         furlSpeak(`CLI bridge opening. Connecting to tunnel.`)
-      } else if (cmd.startsWith('jack managed') || cmd.startsWith('smith jack managed')) {
-        // Jack in to a Managed Agent — Anthropic runs the loop, tools call back to SoundChain
-        const parts = cmd.split(/\s+/)
-        const agentHandle = parts[parts.length - 1] === 'managed' ? 'smith' : parts[parts.length - 1]
-        const knownAgents = ['smith', 'furl', 'soundchainradio', 'agent_explore', 'agent_wallet', 'agent_upload', 'agent_feed', 'agent_pulse', 'agent_moltbook', 'agent_playlists', 'sc_artists', 'sc_staking']
-
-        if (!knownAgents.includes(agentHandle)) {
-          addLine(`  unknown agent: "${agentHandle}"`, 'error')
-          addLine(`  available: ${knownAgents.join(', ')}`, 'info')
-        } else {
-          const active = keybookGetActive()
-          const kb = getKeybook()
-          if (!active && kb.entries.length === 0 && !process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY) {
-            addLine(`  no API key in keybook. add one first:`, 'error')
-            addLine(`  keys add <label> sk-ant-...`, 'info')
-          } else {
-            setJackMode('JACKED_IN')
-            setForgeMode(false)
-            setManagedMode(agentHandle)
-            setJackHistory([])
-            jackStreamRef.current = ''
-            const provider = active ? `${active.label} · ${active.type}` : 'platform key'
-            addLine(`  ┌─ MANAGED AGENT ──────────────────────┐`, 'system')
-            addLine(`  │ @${agentHandle} (Anthropic Managed)`, 'success')
-            addLine(`  │ provider: ${provider}`, 'info')
-            addLine(`  │ tools: MongoDB, OGUN, IPFS, Radio`, 'info')
-            addLine(`  │ built-in: bash, files, web search`, 'info')
-            addLine(`  │ agent runs autonomously in cloud`, 'info')
-            addLine(`  │ type "exit" to disconnect`, 'info')
-            addLine(`  └────────────────────────────────────────┘`, 'system')
-            furlSpeak(`Managed agent ${agentHandle} active. Anthropic is running the loop. Talk to me.`)
-          }
-        }
       } else if (cmd === 'jack forge' || cmd === 'smith jack forge') {
         // Jack in to SMITH FORGE — full coding agent with tools
         const active = keybookGetActive()
@@ -2590,14 +2526,12 @@ export function AgentStatusTicker() {
         } else if (jackMode === 'JACKED_IN') {
           if (jackAbortRef.current) jackAbortRef.current.abort()
           const wasForge = forgeMode
-          const wasManaged = managedMode
           setJackMode('DISCONNECTED')
           setForgeMode(false)
-          setManagedMode(null)
           setJackHistory([])
           jackStreamRef.current = ''
           addLine(`  ┌─ DISCONNECTED ─────────────────────────┐`, 'system')
-          addLine(`  │ ${wasManaged ? `@${wasManaged} (Managed)` : wasForge ? 'SMITH FORGE' : 'SMITH'} session ended`, 'info')
+          addLine(`  │ ${wasForge ? 'SMITH FORGE' : 'SMITH'} session ended`, 'info')
           addLine(`  │ conversation history cleared`, 'info')
           addLine(`  │ back to local FURL mode`, 'info')
           addLine(`  └────────────────────────────────────────┘`, 'system')
@@ -2908,23 +2842,6 @@ export function AgentStatusTicker() {
         addLine(trimmed.slice(0, 12) + '...', 'user')
         addLine('  looks like an API key — not sending as chat.', 'error')
         addLine('  to save it: keys add <label> sk-ant-...', 'info')
-        return
-      }
-
-      // CLI_BRIDGE mode — forward keystrokes to the iframe terminal
-      // (otherwise commands like "whoami" get answered by FURL chat instead of the real shell)
-      if (jackMode === 'CLI_BRIDGE') {
-        const iframe = xtermIframeRef.current
-        if (iframe?.contentWindow) {
-          try {
-            iframe.contentWindow.postMessage({ type: 'furl-input', text: trimmed + '\n' }, '*')
-            iframe.contentWindow.postMessage({ type: 'furl-focus' }, '*')
-          } catch (err) {
-            addLine(`  CLI bridge send failed — try clicking the terminal then typing directly`, 'error')
-          }
-        } else {
-          addLine(`  CLI bridge not ready — wait for "connecting..." to finish`, 'info')
-        }
         return
       }
 

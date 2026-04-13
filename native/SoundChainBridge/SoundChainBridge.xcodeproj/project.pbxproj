@@ -1,0 +1,508 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		06A5778ABF67A1C5C50CB5D5 /* WatchKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1C6644CC8FADBDD94954D819 /* WatchKit.framework */; };
+		16D063B103AD03E88B3B7AD9 /* WatchInboxView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF9CDA8E9F5F1D8869B62E72 /* WatchInboxView.swift */; };
+		31A6FD8F5DA1171CA4345BE6 /* WatchConnectivity.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A3FB063890618F4A2F610827 /* WatchConnectivity.framework */; };
+		4A160C0C052441B5A9E78283 /* UserNotifications.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 741C7C293270F429C9FE340E /* UserNotifications.framework */; };
+		513C1841791540E44CDBC369 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D9F992C5F0BB42555D8E96B1 /* Assets.xcassets */; };
+		59B9A84FFD0971497B9EE1D3 /* SoundChainWatchApp.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 3955F20DE3AE74124773A30C /* SoundChainWatchApp.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		71291D6A6C5289A808D52CC2 /* TraderWatchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E24FE43079C36909D061D067 /* TraderWatchView.swift */; };
+		9B8337B3F31C6D0228F5F8BE /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A141FF3CFB3074943AF0D61 /* ContentView.swift */; };
+		AF03D5EB1F7E9AE4CB96D630 /* WatchInboxStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DEBB303D49394181244BC3E /* WatchInboxStore.swift */; };
+		C2EFDD1AE9B5B34661A0093C /* WatchMessagingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FE570FC4BA4D75F7659ACFC /* WatchMessagingService.swift */; };
+		D780145BA14CAB7907EB605A /* BridgeServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F0CE087BC8159FF19E3C22 /* BridgeServer.swift */; };
+		DDA4514E339B8ACE03F81748 /* SoundChainWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F969FF41E8264DE4E4E76A9 /* SoundChainWatchApp.swift */; };
+		E50B5694BFA38D3ECF4E3793 /* WatchConnectivityReceiver.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2BCABC97A0BA67F1738D5F4 /* WatchConnectivityReceiver.swift */; };
+		F2784DFA15EFB16DE2CD0074 /* SoundChainBridgeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F6FD5F675BF250FA28BEA87 /* SoundChainBridgeApp.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		3E762AE49A7DB479453DB780 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7286A63FA4BB6E8CF537798C /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F8285240EEC0EC3DA65A0BA8;
+			remoteInfo = SoundChainWatchApp;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		25DB00D8C54445251B250D7D /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				59B9A84FFD0971497B9EE1D3 /* SoundChainWatchApp.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		1A141FF3CFB3074943AF0D61 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		1C6644CC8FADBDD94954D819 /* WatchKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WatchKit.framework; path = System/Library/Frameworks/WatchKit.framework; sourceTree = SDKROOT; };
+		1C6909E5A09108F929F1AE3A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		2C6C47321D9993323227D6DC /* SoundChainBridge.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = SoundChainBridge.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		2F969FF41E8264DE4E4E76A9 /* SoundChainWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundChainWatchApp.swift; sourceTree = "<group>"; };
+		3955F20DE3AE74124773A30C /* SoundChainWatchApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SoundChainWatchApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3DEBB303D49394181244BC3E /* WatchInboxStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchInboxStore.swift; sourceTree = "<group>"; };
+		4F6FD5F675BF250FA28BEA87 /* SoundChainBridgeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundChainBridgeApp.swift; sourceTree = "<group>"; };
+		5FE570FC4BA4D75F7659ACFC /* WatchMessagingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchMessagingService.swift; sourceTree = "<group>"; };
+		726391B9B041115F2DEE5471 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		741C7C293270F429C9FE340E /* UserNotifications.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UserNotifications.framework; path = System/Library/Frameworks/UserNotifications.framework; sourceTree = SDKROOT; };
+		A3FB063890618F4A2F610827 /* WatchConnectivity.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WatchConnectivity.framework; path = System/Library/Frameworks/WatchConnectivity.framework; sourceTree = SDKROOT; };
+		A9F0CE087BC8159FF19E3C22 /* BridgeServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BridgeServer.swift; sourceTree = "<group>"; };
+		B905134AC49215F2D4D31F8B /* SoundChainBridge.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SoundChainBridge.entitlements; sourceTree = "<group>"; };
+		D2BCABC97A0BA67F1738D5F4 /* WatchConnectivityReceiver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchConnectivityReceiver.swift; sourceTree = "<group>"; };
+		D9F992C5F0BB42555D8E96B1 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		E24FE43079C36909D061D067 /* TraderWatchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TraderWatchView.swift; sourceTree = "<group>"; };
+		EF9CDA8E9F5F1D8869B62E72 /* WatchInboxView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchInboxView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		867F5A5D2D6A9E2C95F825D8 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				31A6FD8F5DA1171CA4345BE6 /* WatchConnectivity.framework in Frameworks */,
+				4A160C0C052441B5A9E78283 /* UserNotifications.framework in Frameworks */,
+				06A5778ABF67A1C5C50CB5D5 /* WatchKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		3B6DD4D062BF21DA245CEC3D /* WatchApp */ = {
+			isa = PBXGroup;
+			children = (
+				1C6909E5A09108F929F1AE3A /* Info.plist */,
+			);
+			path = WatchApp;
+			sourceTree = "<group>";
+		};
+		5C0ACD44CB2294265EF6B25E /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				741C7C293270F429C9FE340E /* UserNotifications.framework */,
+				A3FB063890618F4A2F610827 /* WatchConnectivity.framework */,
+				1C6644CC8FADBDD94954D819 /* WatchKit.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		67DB0051699AAB58EEBB7586 /* SoundChainBridge */ = {
+			isa = PBXGroup;
+			children = (
+				D9F992C5F0BB42555D8E96B1 /* Assets.xcassets */,
+				A9F0CE087BC8159FF19E3C22 /* BridgeServer.swift */,
+				1A141FF3CFB3074943AF0D61 /* ContentView.swift */,
+				726391B9B041115F2DEE5471 /* Info.plist */,
+				B905134AC49215F2D4D31F8B /* SoundChainBridge.entitlements */,
+				4F6FD5F675BF250FA28BEA87 /* SoundChainBridgeApp.swift */,
+				5FE570FC4BA4D75F7659ACFC /* WatchMessagingService.swift */,
+			);
+			path = SoundChainBridge;
+			sourceTree = "<group>";
+		};
+		6C68598DDE8026F90EA181D3 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				2C6C47321D9993323227D6DC /* SoundChainBridge.app */,
+				3955F20DE3AE74124773A30C /* SoundChainWatchApp.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		B7DAEADA5D4438386DECECCA /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				2F969FF41E8264DE4E4E76A9 /* SoundChainWatchApp.swift */,
+				E24FE43079C36909D061D067 /* TraderWatchView.swift */,
+				D2BCABC97A0BA67F1738D5F4 /* WatchConnectivityReceiver.swift */,
+				3DEBB303D49394181244BC3E /* WatchInboxStore.swift */,
+				EF9CDA8E9F5F1D8869B62E72 /* WatchInboxView.swift */,
+			);
+			name = Sources;
+			path = WatchExtension/Sources;
+			sourceTree = "<group>";
+		};
+		E5791E1A4812D259170BEA85 = {
+			isa = PBXGroup;
+			children = (
+				67DB0051699AAB58EEBB7586 /* SoundChainBridge */,
+				B7DAEADA5D4438386DECECCA /* Sources */,
+				3B6DD4D062BF21DA245CEC3D /* WatchApp */,
+				5C0ACD44CB2294265EF6B25E /* Frameworks */,
+				6C68598DDE8026F90EA181D3 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		9057CF75CF7EC8584CE53FD2 /* SoundChainBridge */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7AC60518A09B844FD6B4A518 /* Build configuration list for PBXNativeTarget "SoundChainBridge" */;
+			buildPhases = (
+				A893F78EA1380441A5E10F36 /* Sources */,
+				AEBF033C7E5F27503E866850 /* Resources */,
+				25DB00D8C54445251B250D7D /* Embed Watch Content */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				54DC672E7C4C0D49EC151FC4 /* PBXTargetDependency */,
+			);
+			name = SoundChainBridge;
+			packageProductDependencies = (
+			);
+			productName = SoundChainBridge;
+			productReference = 2C6C47321D9993323227D6DC /* SoundChainBridge.app */;
+			productType = "com.apple.product-type.application";
+		};
+		F8285240EEC0EC3DA65A0BA8 /* SoundChainWatchApp */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 059CF6E00672F8D171337A9D /* Build configuration list for PBXNativeTarget "SoundChainWatchApp" */;
+			buildPhases = (
+				BA7288A26204A102ADC272BE /* Sources */,
+				867F5A5D2D6A9E2C95F825D8 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = SoundChainWatchApp;
+			packageProductDependencies = (
+			);
+			productName = SoundChainWatchApp;
+			productReference = 3955F20DE3AE74124773A30C /* SoundChainWatchApp.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		7286A63FA4BB6E8CF537798C /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					9057CF75CF7EC8584CE53FD2 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+					F8285240EEC0EC3DA65A0BA8 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 14C0492DF93F04B2375B77A6 /* Build configuration list for PBXProject "SoundChainBridge" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = E5791E1A4812D259170BEA85;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				9057CF75CF7EC8584CE53FD2 /* SoundChainBridge */,
+				F8285240EEC0EC3DA65A0BA8 /* SoundChainWatchApp */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		AEBF033C7E5F27503E866850 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				513C1841791540E44CDBC369 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A893F78EA1380441A5E10F36 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D780145BA14CAB7907EB605A /* BridgeServer.swift in Sources */,
+				9B8337B3F31C6D0228F5F8BE /* ContentView.swift in Sources */,
+				F2784DFA15EFB16DE2CD0074 /* SoundChainBridgeApp.swift in Sources */,
+				C2EFDD1AE9B5B34661A0093C /* WatchMessagingService.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BA7288A26204A102ADC272BE /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DDA4514E339B8ACE03F81748 /* SoundChainWatchApp.swift in Sources */,
+				71291D6A6C5289A808D52CC2 /* TraderWatchView.swift in Sources */,
+				E50B5694BFA38D3ECF4E3793 /* WatchConnectivityReceiver.swift in Sources */,
+				AF03D5EB1F7E9AE4CB96D630 /* WatchInboxStore.swift in Sources */,
+				16D063B103AD03E88B3B7AD9 /* WatchInboxView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		54DC672E7C4C0D49EC151FC4 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F8285240EEC0EC3DA65A0BA8 /* SoundChainWatchApp */;
+			targetProxy = 3E762AE49A7DB479453DB780 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		1707601E644678E808CE0013 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = WatchApp/Info.plist;
+				PRODUCT_BUNDLE_IDENTIFIER = io.soundchain.bridge.watchapp;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Debug;
+		};
+		355C75918A73E28E6E288DA0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = SoundChainBridge/SoundChainBridge.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = SoundChainBridge/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = io.soundchain.bridge;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		401245AC3F8A403D27F20703 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				MARKETING_VERSION = 1.0.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Debug;
+		};
+		7B5D60AA262E417B68A73761 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = SoundChainBridge/SoundChainBridge.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = SoundChainBridge/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = io.soundchain.bridge;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		9373761701A7CCE3CEDF077A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				MARKETING_VERSION = 1.0.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Release;
+		};
+		D1DEA07CF07595A9F957C9E1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = WatchApp/Info.plist;
+				PRODUCT_BUNDLE_IDENTIFIER = io.soundchain.bridge.watchapp;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		059CF6E00672F8D171337A9D /* Build configuration list for PBXNativeTarget "SoundChainWatchApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1707601E644678E808CE0013 /* Debug */,
+				D1DEA07CF07595A9F957C9E1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		14C0492DF93F04B2375B77A6 /* Build configuration list for PBXProject "SoundChainBridge" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				401245AC3F8A403D27F20703 /* Debug */,
+				9373761701A7CCE3CEDF077A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		7AC60518A09B844FD6B4A518 /* Build configuration list for PBXNativeTarget "SoundChainBridge" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7B5D60AA262E417B68A73761 /* Debug */,
+				355C75918A73E28E6E288DA0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 7286A63FA4BB6E8CF537798C /* Project object */;
+}

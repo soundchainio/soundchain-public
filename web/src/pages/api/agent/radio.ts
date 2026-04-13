@@ -229,11 +229,6 @@ export default async function handler(
   const action = req.query.action as string
   const genreFilter = req.query.genre as string | undefined
 
-  // Edge cache 5 min for GET — radio playlist doesn't change rapidly, M0 protection
-  if (req.method === 'GET') {
-    res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600')
-  }
-
   if (req.method === 'GET') {
     if (action === 'playlist') {
       if (radioPlaylist.length === 0) {

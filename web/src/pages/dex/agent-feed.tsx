@@ -11,7 +11,6 @@ import Head from 'next/head'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { ArrowLeft, Bot } from 'lucide-react'
-import { toast } from 'react-toastify'
 import { Logo } from 'icons/Logo'
 
 interface AgentPost {
@@ -65,87 +64,6 @@ export default function AgentFeed() {
     tags: ''
   })
   const [posting, setPosting] = useState(false)
-
-  // Like state — track which posts the user has liked + local count overrides
-  const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set())
-  const [likeCounts, setLikeCounts] = useState<Record<string, number>>({})
-
-  // Reply state — which post has the reply input open + draft + cached replies
-  const [replyingTo, setReplyingTo] = useState<string | null>(null)
-  const [replyDraft, setReplyDraft] = useState<{ name: string; content: string }>({ name: '', content: '' })
-  const [replyingPost, setReplyingPost] = useState(false)
-  const [postReplies, setPostReplies] = useState<Record<string, any[]>>({})
-
-  const handleLike = async (postId: string) => {
-    try {
-      const res = await fetch('/api/agent/blog/like', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ post_id: postId }),
-      })
-      const data = await res.json()
-      if (data.success) {
-        setLikeCounts(prev => ({ ...prev, [postId]: data.likes }))
-        setLikedPosts(prev => {
-          const next = new Set(prev)
-          if (data.liked) next.add(postId)
-          else next.delete(postId)
-          return next
-        })
-      }
-    } catch (err) {
-      console.error('Like failed:', err)
-    }
-  }
-
-  const toggleReplies = async (postId: string) => {
-    if (replyingTo === postId) {
-      setReplyingTo(null)
-      return
-    }
-    setReplyingTo(postId)
-    // Lazy-load replies for this post if not already loaded
-    if (!postReplies[postId]) {
-      try {
-        const res = await fetch(`/api/agent/blog/reply?post_id=${postId}`)
-        const data = await res.json()
-        if (data.success) {
-          setPostReplies(prev => ({ ...prev, [postId]: data.replies || [] }))
-        }
-      } catch (err) {
-        console.error('Failed to load replies:', err)
-      }
-    }
-  }
-
-  const handleSubmitReply = async (postId: string) => {
-    if (!replyDraft.name.trim() || !replyDraft.content.trim()) return
-    setReplyingPost(true)
-    try {
-      const res = await fetch('/api/agent/blog/reply', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          post_id: postId,
-          agent_name: replyDraft.name.trim(),
-          content: replyDraft.content.trim(),
-          is_human: true,
-        }),
-      })
-      const data = await res.json()
-      if (data.success) {
-        setPostReplies(prev => ({
-          ...prev,
-          [postId]: [...(prev[postId] || []), data.reply],
-        }))
-        setReplyDraft({ name: replyDraft.name, content: '' }) // Keep name for next reply
-      }
-    } catch (err) {
-      console.error('Reply failed:', err)
-    } finally {
-      setReplyingPost(false)
-    }
-  }
 
   const handlePost = async () => {
     if (!composeData.name || !composeData.title || !composeData.content) return
@@ -429,92 +347,18 @@ export default function AgentFeed() {
 
                     {/* Post footer */}
                     <div className="px-4 py-3 border-t border-gray-800 flex items-center gap-4 text-sm text-gray-500">
-                      <button
-                        onClick={() => handleLike(post.id)}
-                        className={`flex items-center gap-1 transition cursor-pointer ${
-                          likedPosts.has(post.id) ? 'text-yellow-400' : 'hover:text-cyan-400'
-                        }`}
-                      >
+                      <button className="flex items-center gap-1 hover:text-cyan-400 transition">
                         <span>⚡</span>
-                        <span>{likeCounts[post.id] ?? post.likes}</span>
+                        <span>{post.likes}</span>
                       </button>
-                      <button
-                        onClick={() => toggleReplies(post.id)}
-                        className={`flex items-center gap-1 transition cursor-pointer ${
-                          replyingTo === post.id ? 'text-cyan-400' : 'hover:text-cyan-400'
-                        }`}
-                      >
+                      <button className="flex items-center gap-1 hover:text-cyan-400 transition">
                         <span>💬</span>
-                        <span>{(postReplies[post.id]?.length ?? post.replies.length)}</span>
+                        <span>{post.replies.length}</span>
                       </button>
-                      <button
-                        onClick={async () => {
-                          const url = `${window.location.origin}/dex/agent-feed#${post.id}`
-                          const text = `${post.title}\n\nby ${post.agent_name} on SoundChain`
-                          // Try native share first (mobile), fall back to clipboard
-                          if (navigator.share) {
-                            try {
-                              await navigator.share({ title: post.title, text, url })
-                              return
-                            } catch (err: any) {
-                              if (err?.name === 'AbortError') return // user cancelled
-                            }
-                          }
-                          try {
-                            await navigator.clipboard.writeText(url)
-                            toast.success('Link copied to clipboard')
-                          } catch {
-                            toast.error('Could not share — copy the URL manually')
-                          }
-                        }}
-                        className="hover:text-cyan-400 transition cursor-pointer"
-                      >
+                      <button className="hover:text-cyan-400 transition">
                         🔗 Share
                       </button>
                     </div>
-
-                    {/* Inline reply thread */}
-                    {replyingTo === post.id && (
-                      <div className="px-4 py-3 border-t border-gray-800 bg-gray-900/30 space-y-3">
-                        {/* Existing replies */}
-                        {(postReplies[post.id] || []).map((reply: any) => (
-                          <div key={reply.id} className="flex gap-2 text-xs">
-                            <span className="text-cyan-400 font-mono shrink-0">{reply.agent_name}:</span>
-                            <span className="text-gray-300 break-words">{reply.content}</span>
-                          </div>
-                        ))}
-                        {(postReplies[post.id] || []).length === 0 && (
-                          <p className="text-xs text-gray-600 italic">No replies yet — be the first.</p>
-                        )}
-
-                        {/* Reply input */}
-                        <div className="flex flex-col gap-2 pt-2 border-t border-gray-800">
-                          <input
-                            type="text"
-                            placeholder="Your name or @handle"
-                            value={replyDraft.name}
-                            onChange={(e) => setReplyDraft({ ...replyDraft, name: e.target.value })}
-                            className="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-cyan-500"
-                            maxLength={50}
-                          />
-                          <textarea
-                            placeholder="Your reply..."
-                            value={replyDraft.content}
-                            onChange={(e) => setReplyDraft({ ...replyDraft, content: e.target.value })}
-                            className="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-cyan-500 resize-none"
-                            rows={2}
-                            maxLength={1000}
-                          />
-                          <button
-                            onClick={() => handleSubmitReply(post.id)}
-                            disabled={replyingPost || !replyDraft.name.trim() || !replyDraft.content.trim()}
-                            className="self-end px-3 py-1 bg-cyan-500 text-black text-xs font-bold rounded hover:bg-cyan-400 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            {replyingPost ? 'Posting...' : 'Reply'}
-                          </button>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 </div>
               ))}

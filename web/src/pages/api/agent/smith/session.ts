@@ -13,7 +13,6 @@
  */
 
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { streamManagedSession, getAgentDefinition } from 'lib/managed-agents'
 
 // ─── Enums ───────────────────────────────────────────────────────────
 
@@ -32,7 +31,6 @@ const SESSION_PROVIDER = {
 const SESSION_MODE = {
   CHAT: 'CHAT',
   FORGE: 'FORGE',
-  MANAGED: 'MANAGED',
 } as const
 
 // ─── Rate Limit ─────────────────────────────────────────────────────
@@ -82,20 +80,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   // Cap conversation history to prevent abuse
   const cappedMessages = messages.slice(-20)
-
-  // MANAGED mode — route through Anthropic Managed Agents API
-  // Agent runs autonomously in Anthropic's cloud. Custom tools call back to us.
-  if (mode === SESSION_MODE.MANAGED) {
-    const agentHandle = (req.body.agent as string) || 'smith'
-    const def = getAgentDefinition(agentHandle)
-    if (!def) {
-      return res.status(400).json({
-        verdict: SESSION_VERDICT.REJECTED,
-        reason: `Unknown managed agent: "${agentHandle}". Use "smith", "furl", etc.`,
-      })
-    }
-    return streamManagedSession(res, agentHandle, cappedMessages, anthropicKey)
-  }
 
   // FORGE mode — route to EC2 BYOK forge server (port 3334)
   // Key flows: FURL localStorage → here → EC2 /forge/agent → Anthropic. Never stored.

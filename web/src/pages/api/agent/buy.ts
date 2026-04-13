@@ -17,7 +17,7 @@ const OGUN_ADDRESS = process.env.NEXT_PUBLIC_OGUN_ADRESS || '0x45f1af89486aeec2d
 const NFT_ADDRESS = process.env.NEXT_PUBLIC_NFT_MULTIPLE_EDITION_ADDRESS || '0xF0287926D495719b239340Fc31d268b76bAD8B42'
 
 // Polygon RPC
-const POLYGON_RPC = process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://polygon-rpc.com'
+const POLYGON_RPC = process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://polygon-bor-rpc.publicnode.com'
 
 // Agent wallet derivation (MUST be set in env)
 const AGENT_MASTER_SEED = process.env.AGENT_WALLET_SEED

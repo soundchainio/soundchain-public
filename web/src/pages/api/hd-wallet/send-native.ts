@@ -11,7 +11,7 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import { ethers } from 'ethers'
 import crypto from 'crypto'
 
-const POLYGON_RPC = process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://polygon-rpc.com'
+const POLYGON_RPC = process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://polygon-bor-rpc.publicnode.com'
 const GRAPHQL_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.soundchain.io/graphql'
 const HUMAN_WALLET_SEED = process.env.HUMAN_WALLET_SEED
 

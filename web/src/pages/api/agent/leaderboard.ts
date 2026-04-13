@@ -25,9 +25,6 @@ export default async function handler(
     })
   }
 
-  // Edge cache 60s — leaderboard changes slowly, doesn't need real-time
-  res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=120')
-
   try {
     const client = await clientPromise
     const db = client.db('soundchain')
@@ -36,9 +33,8 @@ export default async function handler(
     const { agent, limit = '25' } = req.query
     const limitNum = Math.min(parseInt(limit as string) || 25, 100)
 
-    // Use estimatedDocumentCount for total (instant, no scan)
-    // Whitelist counts must be filtered, but we cache the response anyway
-    const totalRegistered = await agentsCollection.estimatedDocumentCount()
+    // Get total counts
+    const totalRegistered = await agentsCollection.countDocuments()
     const whitelist1Count = await agentsCollection.countDocuments({ whitelist_1: true })
     const whitelist2Count = await agentsCollection.countDocuments({ whitelist_2: true })
 

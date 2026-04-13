@@ -19,7 +19,7 @@ const STREAMING_REWARDS_ADDRESS = process.env.STREAMING_REWARDS_ADDRESS || '0xcf
 const OGUN_ADDRESS = process.env.NEXT_PUBLIC_OGUN_ADRESS || '0x45f1af89486aeec2da0b06340cd9cd3bd741a15c'
 
 // Polygon RPC
-const POLYGON_RPC = process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://polygon-rpc.com'
+const POLYGON_RPC = process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://polygon-bor-rpc.publicnode.com'
 
 // Agent wallet derivation (MUST be set in env)
 const AGENT_MASTER_SEED = process.env.AGENT_WALLET_SEED

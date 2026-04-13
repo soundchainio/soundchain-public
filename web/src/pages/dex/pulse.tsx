@@ -300,10 +300,9 @@ function PulsePage() {
   // GraphQL data layer — poll every 5s for near-realtime DM awareness
   // Polling pauses while user is actively typing in chat (prevents text field bugs on iOS)
   const { data: chatsData, loading: chatsLoading, error: chatsError, refetch: refetchChats, startPolling, stopPolling } = useChatsQuery({
-    pollInterval: 10000,  // 10s — was 5s, reduce Vercel invocations
+    pollInterval: 5000,
     skip: meLoading || !me,  // Don't query until auth is ready
     fetchPolicy: 'cache-and-network',  // Always fetch fresh, don't rely on stale cache
-    errorPolicy: 'all',  // Return partial data even if profile field resolver fails on some chats
     onError: (err) => console.error('[Pulse] Chats query error:', err.message),
   })
   // Stabilize startPolling/stopPolling via refs — Apollo does NOT guarantee referential stability
@@ -345,20 +344,18 @@ function PulsePage() {
   // Map chats to normalized items
   const chats: ChatItem[] = useMemo(() => {
     const nodes = chatsData?.chats?.nodes || []
-    return nodes
-      .filter((c) => c.profile) // Skip chats where partner profile was deleted
-      .map((c) => ({
-        id: c.id,
-        profileId: c.profile?.id || c.id,
-        displayName: c.profile?.displayName || 'Unknown',
-        userHandle: c.profile?.userHandle || null,
-        profilePicture: c.profile?.profilePicture || null,
-        lastMessage: c.message || '',
-        unread: c.unread,
-        createdAt: c.createdAt,
-        verified: c.profile?.verified,
-        isOnline: (c.profile as any)?.isOnline || false,
-      }))
+    return nodes.map((c) => ({
+      id: c.id,
+      profileId: c.profile?.id || c.id,
+      displayName: c.profile?.displayName || 'Unknown',
+      userHandle: c.profile?.userHandle || null,
+      profilePicture: c.profile?.profilePicture || null,
+      lastMessage: c.message || '',
+      unread: c.unread,
+      createdAt: c.createdAt,
+      verified: c.profile?.verified,
+      isOnline: (c.profile as any)?.isOnline || false,
+    }))
   }, [chatsData])
 
   // Filter by search — match name and handle only (not message content, which gives confusing results)

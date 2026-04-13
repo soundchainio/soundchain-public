@@ -140,17 +140,6 @@ export default function LoginPage() {
     // triggers Magic iframe communication that ITP blocks.
     localStorage.removeItem('didToken');
 
-    // PRE-WARM Lambda — fire a lightweight query silently on login page mount.
-    // By the time the user types their email, Lambda + Atlas connection is warm.
-    // This is THE fix for the cold start 504 that made Face ID appear broken.
-    // Without this, the first passkeyLoginOptions mutation hits a cold Lambda
-    // and 504s after 30s, making the EmailKey Book look hung.
-    fetch(config.apiUrl || 'https://19ne212py4.execute-api.us-east-1.amazonaws.com/production', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: '{"query":"{ __typename }"}',
-    }).catch(() => {}) // Silent — warmup only, don't care about response
-
     // Check if WebAuthn / EmailKeys are available on this device
     if (typeof window !== 'undefined' && window.PublicKeyCredential) {
       PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()
@@ -407,44 +396,40 @@ export default function LoginPage() {
   const handleGoogleLogin = () => handleSocialLogin('google');
 
   // Handle EmailKey login — email-gated Face ID / Touch ID
-  // NOW USES DIRECT VERCEL API ROUTES — no Lambda, no cold start, no 504
   const handleEmailKeyLogin = async (email: string): Promise<boolean> => {
     try {
       setPasskeyLoading(true);
       setError(null);
 
-      // Step 1: Check if this email has an EmailKey — DIRECT Vercel → Atlas
-      const optRes = await fetch('/api/auth/passkey-login-options', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+      // Step 1: Check if this email has an EmailKey
+      const { data: optData } = await passkeyLoginOptionsMutation({
+        variables: { email },
       });
-      const optJson = await optRes.json();
-      const optData = optJson.data?.passkeyLoginOptions;
 
-      if (!optData?.hasEmailKey) {
-        return false; // No EmailKey — fall through to email login
+      if (!optData?.passkeyLoginOptions?.hasEmailKey) {
+        return false; // No EmailKey — fall through to Magic
       }
 
-      const { sessionId, options } = optData;
+      const { sessionId, options } = optData.passkeyLoginOptions;
       const parsedOptions = JSON.parse(options);
 
       // Step 2: Trigger Face ID / Touch ID (no QR code — specific credentials only)
       const { startAuthentication } = await import('@simplewebauthn/browser');
       const credential = await startAuthentication({ optionsJSON: parsedOptions });
 
-      // Step 3: Verify with server and get JWT — DIRECT Vercel → Atlas
+      // Step 3: Verify with server and get JWT
       setLoggingIn(true);
-      const verifyRes = await fetch('/api/auth/passkey-login-verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId, credential: JSON.stringify(credential) }),
+      const { data: verifyData } = await passkeyLoginVerifyMutation({
+        variables: {
+          input: {
+            sessionId,
+            credential: JSON.stringify(credential),
+          },
+        },
       });
-      const verifyJson = await verifyRes.json();
-      const jwtToken = verifyJson.data?.passkeyLoginVerify?.jwt;
 
-      if (jwtToken) {
-        await setJwt(jwtToken);
+      if (verifyData?.passkeyLoginVerify?.jwt) {
+        await setJwt(verifyData.passkeyLoginVerify.jwt);
         const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
         router.push(redirectUrl);
         return true; // EmailKey login succeeded — skip Magic
@@ -774,28 +759,20 @@ export default function LoginPage() {
         return;
       }
 
-      console.log('[Auth] L1 Email Bypass — direct Vercel login for:', email);
+      console.log('[Auth] L1 Email Bypass — direct login for:', email);
 
-      // DIRECT Vercel → Atlas — no Lambda, no cold start, no 504
-      const loginRes = await fetch('/api/auth/login-by-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+      const result = await loginByEmailMutation({
+        variables: { email },
       });
-      const loginJson = await loginRes.json();
 
-      if (loginRes.ok && loginJson.data?.loginByEmail?.jwt) {
-        const jwtToken = loginJson.data.loginByEmail.jwt;
-        await setJwt(jwtToken);
+      const jwt = result.data?.loginByEmail?.jwt;
+      if (jwt) {
+        await setJwt(jwt);
         await new Promise(resolve => setTimeout(resolve, 200));
-        console.log('[Auth] L1 Email Bypass — success via Vercel API, checking Face ID gate...');
+        console.log('[Auth] L1 Email Bypass — success, checking Face ID gate...');
         await handlePostLoginRedirect(email);
-      } else if (loginJson.error === 'EMAILKEY_REQUIRED') {
-        throw new Error('EMAILKEY_REQUIRED');
-      } else if (loginRes.status === 404) {
-        throw new Error('No account found with this email');
       } else {
-        throw new Error(loginJson.error || 'Login failed: No JWT returned');
+        throw new Error('Login failed: No JWT returned');
       }
     } catch (error: any) {
       console.error('[Auth] L1 Email Bypass error:', error);
@@ -1117,22 +1094,18 @@ export default function LoginPage() {
               )}
 
               {/* Force email login — shown when Face ID is required but device doesn't support it */}
-              {/* NOW USES DIRECT VERCEL API — no Lambda, instant */}
               {pendingForceEmail && (
                 <button
                   onClick={async () => {
                     try {
                       setError(null);
                       setLoggingIn(true);
-                      const forceRes = await fetch('/api/auth/login-by-email', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email: pendingForceEmail, force: true }),
+                      const result = await loginByEmailMutation({
+                        variables: { email: pendingForceEmail, force: true },
                       });
-                      const forceJson = await forceRes.json();
-                      const jwtToken = forceJson.data?.loginByEmail?.jwt;
-                      if (jwtToken) {
-                        await setJwt(jwtToken);
+                      const jwt = result.data?.loginByEmail?.jwt;
+                      if (jwt) {
+                        await setJwt(jwt);
                         setPendingForceEmail(null);
                         await new Promise(resolve => setTimeout(resolve, 200));
                         await handlePostLoginRedirect(pendingForceEmail);
