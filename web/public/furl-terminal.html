@@ -31,14 +31,12 @@
   #landscape-lock .rotate-icon{font-size:48px;margin-bottom:16px;animation:wobble 2s infinite}
   #landscape-lock p{color:#999;font-size:12px;margin-top:8px}
   @keyframes wobble{0%,100%{transform:rotate(0deg)}25%{transform:rotate(-20deg)}75%{transform:rotate(20deg)}}
-  @media(orientation:landscape) and (max-height:500px) and (max-width:932px){
-    #landscape-lock{display:flex}
-    #term-wrap,#status{display:none}
-  }
+  /* Landscape lock disabled — was cropping xterm on trader page and blocking
+     Claude Code access during site outages. Terminal works fine in landscape. */
 </style>
 </head>
 <body>
-<div id="landscape-lock"><span class="rotate-icon">📱</span>Rotate to Portrait<p>Landscape disconnects the tunnel</p></div>
+<!-- landscape lock removed — was blocking xterm access on trader page -->
 <div id="status"><span class="dot connecting" id="dot"></span><span id="msg">connecting...</span><button id="btnPaste">Paste</button></div>
 <div id="term-wrap"><div id="terminal"></div></div>
 
