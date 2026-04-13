@@ -1,6 +1,10 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, ReactElement } from 'react'
 import Head from 'next/head'
+import dynamic from 'next/dynamic'
 import { Users, Radio, Bug, Brain, Clock, MessageCircle, Zap, Copy, CheckCircle2 } from 'lucide-react'
+import type { CustomLayout } from './_app'
+
+const MiniSphere = dynamic(() => import('components/MiniSphere').then(m => m.MiniSphere), { ssr: false })
 
 interface Seat {
   id: string; name: string; role: string; type: 'human' | 'agent'; color: string; initials: string; handle?: string
@@ -98,7 +102,7 @@ export default function WarRoomPage() {
       <div className="min-h-screen bg-[#0a0a0a] text-white overflow-hidden">
         <div className="fixed inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 50% 50%, rgba(6,182,212,0.03) 0%, transparent 70%), linear-gradient(rgba(6,182,212,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(6,182,212,0.02) 1px, transparent 1px)', backgroundSize: '100% 100%, 60px 60px, 60px 60px' }} />
         <div className="relative z-10 flex items-center justify-between px-4 py-3 border-b border-cyan-500/10 bg-black/80 backdrop-blur-sm">
-          <div className="flex items-center gap-3"><div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" /><h1 className="text-sm font-mono font-bold text-cyan-400 tracking-wider">SOUNDCHAIN WAR ROOM</h1></div>
+          <div className="flex items-center gap-3"><MiniSphere size={28} /><div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" /><h1 className="text-sm font-mono font-bold text-cyan-400 tracking-wider">SOUNDCHAIN WAR ROOM</h1></div>
           <div className="flex items-center gap-3">
             <span className="text-[10px] font-mono text-gray-600"><Clock className="w-3 h-3 inline mr-1" />{new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</span>
             <button onClick={handleCopyLink} className="text-[10px] px-2 py-1 rounded bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-cyan-400 transition flex items-center gap-1">{linkCopied ? <CheckCircle2 className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3" />}{linkCopied ? 'Copied' : 'Share Link'}</button>
@@ -144,3 +148,6 @@ export default function WarRoomPage() {
     </>
   )
 }
+
+// Bare layout — no Layout wrapper = no RightSideNav vertical pills
+WarRoomPage.getLayout = ((page: ReactElement) => <>{page}</>) as CustomLayout

@@ -11,10 +11,14 @@
  * with Agent Academy learning loop.
  */
 
-import { useState } from 'react'
+import { useState, ReactElement } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
 import { ArrowLeft, Zap, Brain, Music, Wallet, Upload, Rss, MessageCircle, Book, ListMusic, Users, Coins, Cpu, CheckCircle2, Rocket } from 'lucide-react'
+import type { CustomLayout } from '../_app'
+
+const MiniSphere = dynamic(() => import('components/MiniSphere').then(m => m.MiniSphere), { ssr: false })
 
 // Agent catalog — keep in sync with web/src/lib/managed-agents/agents.ts
 // We duplicate here (vs importing) so this page works even if managed-agents module fails
@@ -251,8 +255,8 @@ export default function AgentsPage() {
             </Link>
 
             <div className="flex items-start gap-4 mb-6">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center flex-shrink-0">
-                <Cpu className="w-8 h-8 text-black" />
+              <div className="flex-shrink-0">
+                <MiniSphere size={56} />
               </div>
               <div className="flex-1">
                 <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent mb-2">
@@ -521,3 +525,6 @@ export default function AgentsPage() {
     </>
   )
 }
+
+// Bare layout — no Layout wrapper = no RightSideNav vertical pills
+AgentsPage.getLayout = ((page: ReactElement) => <>{page}</>) as CustomLayout
