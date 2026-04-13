@@ -37,6 +37,7 @@ soundchain-agent/
 
 # Tunnel relay - private infrastructure
 tunnel-relay/
+warroom2-tunnel/
 
 # Audio files - private content
 audio/

@@ -1,6 +1,6 @@
 # 🎵 Welcome to SoundChain
 
-<figure><img src=".gitbook/assets/soundchain-banner.png" alt="SoundChain - The SpaceX of Web3 Music"><figcaption></figcaption></figure>
+<figure><img src=".gitbook/assets/soundchain-banner.png" alt="SoundChain - P2P Decentralized Music Platform"><figcaption></figcaption></figure>
 
 ## The Future of Music is Here
 
