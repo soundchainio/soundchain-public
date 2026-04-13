@@ -17,7 +17,12 @@ const withPWA = require('next-pwa')({
       handler: 'NetworkOnly',
     },
     {
-      urlPattern: /^https:\/\/.*\/(radio|dex|login|backend|get-verified).*$/,
+      // Login: NEVER cache. SW was breaking login when Lambda 504'd.
+      urlPattern: /\/login/,
+      handler: 'NetworkOnly',
+    },
+    {
+      urlPattern: /^https:\/\/.*\/(radio|dex|backend|get-verified).*$/,
       handler: 'NetworkFirst',
       options: {
         cacheName: 'pages',
