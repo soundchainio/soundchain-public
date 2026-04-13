@@ -928,6 +928,15 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   // Legacy UI Modal Hooks
   const { dispatchShowCreateModal } = useModalDispatch()
   const me = useMe()
+  // Pre-warm Vercel + Lambda connections on dex page mount
+  useEffect(() => {
+    // Silent Vercel direct warm — gets Atlas connection pool ready
+    if (me?.profile?.id) fetch(`/api/feed/posts?profileId=${me.profile.id}&limit=1`).catch(() => {})
+    // Silent Lambda warm
+    fetch('https://19ne212py4.execute-api.us-east-1.amazonaws.com/production', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{"query":"{ __typename }"}',
+    }).catch(() => {})
+  }, [me?.profile?.id])
   const { isMinting } = useHideBottomNavBar()
 
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list')
