@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, ReactElement } from 'react'
+import { useState, useEffect, useCallback, useRef, ReactElement } from 'react'
 import Head from 'next/head'
 import dynamic from 'next/dynamic'
 import { Users, Radio, Clock, Copy, CheckCircle2, Send } from 'lucide-react'
@@ -45,9 +45,10 @@ export default function WarRoomPage() {
   const [linkCopied, setLinkCopied] = useState(false)
   const [calledToOrder, setCalledToOrder] = useState(false)
   const [chatInput, setChatInput] = useState('')
+  const logRef = useRef<HTMLDivElement>(null)
 
   const addActivity = useCallback((actor: string, color: string, message: string) => {
-    setActivities(prev => [{ id: `${Date.now()}-${Math.random().toString(36).slice(2,6)}`, timestamp: new Date(), actor, color, message }, ...prev].slice(0, 50))
+    setActivities(prev => [...prev, { id: `${Date.now()}-${Math.random().toString(36).slice(2,6)}`, timestamp: new Date(), actor, color, message }].slice(-50))
   }, [])
 
   const agentRespond = useCallback((message: string) => {
@@ -95,6 +96,11 @@ export default function WarRoomPage() {
     addActivity('OGUN Radio', '#EF9F27', 'Broadcasting 24/7 — 8,800+ tracks')
     addActivity('Neural', '#a855f7', 'Brain scanner on standby.')
   }, [addActivity])
+
+  // Auto-scroll activity log to bottom on new messages
+  useEffect(() => {
+    if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight
+  }, [activities])
 
   const formatTime = (d: Date) => d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
 
@@ -164,7 +170,7 @@ export default function WarRoomPage() {
               <button onClick={() => setShowAgenda(false)} className={`flex-1 px-3 py-2 text-[10px] font-mono font-bold transition ${!showAgenda ? 'text-cyan-400 border-b-2 border-cyan-400' : 'text-gray-600'}`}>Activity Log</button>
               <button onClick={() => setShowAgenda(true)} className={`flex-1 px-3 py-2 text-[10px] font-mono font-bold transition ${showAgenda ? 'text-cyan-400 border-b-2 border-cyan-400' : 'text-gray-600'}`}>Agenda</button>
             </div>
-            {!showAgenda && <div className="flex-1 overflow-y-auto p-3 space-y-1.5 scrollbar-hide">{activities.map(a => <div key={a.id} className="text-[10px] leading-relaxed"><span className="text-gray-600 font-mono">[{formatTime(a.timestamp)}]</span> <span className="font-bold" style={{ color: a.color }}>{a.actor}</span> <span className="text-gray-400">{a.message}</span></div>)}</div>}
+            {!showAgenda && <div ref={logRef} className="flex-1 overflow-y-auto p-3 space-y-1.5 scrollbar-hide">{activities.map(a => <div key={a.id} className="text-[10px] leading-relaxed"><span className="text-gray-600 font-mono">[{formatTime(a.timestamp)}]</span> <span className="font-bold" style={{ color: a.color }}>{a.actor}</span> <span className="text-gray-400">{a.message}</span></div>)}</div>}
             {showAgenda && <div className="flex-1 p-3 flex flex-col"><textarea value={agenda} onChange={e => setAgenda(e.target.value)} placeholder={"Agenda items...\n- Item 1\n- Item 2"} className="flex-1 bg-black/30 border border-gray-800 rounded-lg p-3 text-xs text-gray-300 resize-none focus:outline-none focus:border-cyan-500/50 placeholder:text-gray-700 font-mono" /></div>}
 
             {/* Chat Input */}
