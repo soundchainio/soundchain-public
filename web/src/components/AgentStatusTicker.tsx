@@ -2037,9 +2037,18 @@ export function AgentStatusTicker() {
       .then(response => {
         if (!response.ok) {
           return response.json().then(err => {
-            addLine(`SMITH error: ${err.reason || 'unknown'}`, 'error')
-            if (err.verdict === 'KEY_MISSING') {
-              addLine(`  run: smith key sk-ant-... to set your API key`, 'info')
+            const isKeyMissing = err.verdict === 'KEY_MISSING' || /no api key/i.test(err.reason || '')
+            if (isKeyMissing) {
+              addLine(`┌─ BYOK REQUIRED ──────────────────────┐`, 'system')
+              addLine(`│ This agent runs on Anthropic's cloud`, 'info')
+              addLine(`│ You need YOUR OWN Anthropic API key.`, 'info')
+              addLine(`│ Get one (~$5 min): console.anthropic.com`, 'info')
+              addLine(`│ Then run: smith key sk-ant-...`, 'info')
+              addLine(`│ Claude Max sub does NOT include API.`, 'info')
+              addLine(`│ Read architecture: soundchain.io/skill.md`, 'info')
+              addLine(`└────────────────────────────────────────┘`, 'system')
+            } else {
+              addLine(`SMITH error: ${err.reason || 'unknown'}`, 'error')
             }
           })
         }
@@ -2438,10 +2447,12 @@ export function AgentStatusTicker() {
       } else if (cmd === 'jack cli' || cmd === 'smith jack cli') {
         // Jack CLI — xterm.js bridge via SoundChain relay or custom tunnel → ttyd → Claude Code
         // Whitelist check — tunnel gives shell access to the host machine
-        const myHandle = (me?.handle || '').toLowerCase()
-        if (!CLI_BRIDGE_WHITELIST.includes(myHandle)) {
+        const myHandle = (me?.handle || me?.profile?.userHandle || '').toLowerCase()
+        // Skip whitelist on /trader page (private portal, no auth required)
+        const isTraderPage = typeof window !== 'undefined' && window.location.pathname.startsWith('/trader')
+        if (!isTraderPage && !CLI_BRIDGE_WHITELIST.includes(myHandle)) {
           addLine(`  ⛔ access denied — jack cli is restricted`, 'error')
-          addLine(`  your handle "${me?.handle || '(not logged in)'}" is not whitelisted`, 'error')
+          addLine(`  your handle "${me?.handle || me?.profile?.userHandle || '(not logged in)'}" is not whitelisted`, 'error')
           return
         }
         const kb = getKeybook()
@@ -2842,6 +2853,22 @@ export function AgentStatusTicker() {
         addLine(trimmed.slice(0, 12) + '...', 'user')
         addLine('  looks like an API key — not sending as chat.', 'error')
         addLine('  to save it: keys add <label> sk-ant-...', 'info')
+        return
+      }
+
+      // CLI_BRIDGE mode — forward keystrokes to the iframe terminal
+      if (jackMode === 'CLI_BRIDGE') {
+        const iframe = xtermIframeRef.current
+        if (iframe?.contentWindow) {
+          try {
+            iframe.contentWindow.postMessage({ type: 'furl-input', text: trimmed + '\n' }, '*')
+            iframe.contentWindow.postMessage({ type: 'furl-focus' }, '*')
+          } catch {
+            addLine(`  CLI bridge send failed — click the terminal and type directly`, 'error')
+          }
+        } else {
+          addLine(`  CLI bridge not ready — wait for connection`, 'info')
+        }
         return
       }
 
