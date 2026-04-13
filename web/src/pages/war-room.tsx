@@ -5,7 +5,7 @@ import { Users, Radio, Bug, Brain, Clock, MessageCircle, Zap, Copy, CheckCircle2
 import type { CustomLayout } from './_app'
 
 const MiniSphere = dynamic(() => import('components/MiniSphere').then(m => m.MiniSphere), { ssr: false })
-const WarRoom3D = dynamic(() => import('components/WarRoom3D').then(m => ({ default: m.WarRoom3D })), { ssr: false })
+const WarRoom3D = dynamic(() => import('components/WarRoom3D').then(m => ({ default: m.WarRoom3D })), { ssr: false, loading: () => <div className="w-[700px] h-[450px] bg-gray-900/50 rounded-xl flex items-center justify-center text-gray-600 text-xs font-mono">Loading 3D scene...</div> })
 
 interface Seat {
   id: string; name: string; role: string; type: 'human' | 'agent'; color: string; initials: string; handle?: string; bubble?: string
@@ -199,15 +199,17 @@ export default function WarRoomPage() {
           <div className="flex-1 flex flex-col items-center justify-center p-4 lg:p-8">
             <button onClick={handleCallToOrder} disabled={calledToOrder} className={`mb-6 px-6 py-2 rounded-lg text-xs font-bold transition-all ${calledToOrder ? 'bg-green-500/20 text-green-400 border border-green-500/30 cursor-default' : 'bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-400 hover:to-purple-400 text-black'}`}>{calledToOrder ? 'War Room Convened' : 'Call to Order'}</button>
             <div className="w-full max-w-[700px]">
-              {/* 3D War Room Scene */}
-              <WarRoom3D
-                seats={SEATS.map(s => ({
-                  ...s,
-                  online: onlineSeats.has(s.id),
-                }))}
-                width={700}
-                height={450}
-              />
+              {/* 3D War Room Scene — wrapped in error boundary div */}
+              {typeof window !== 'undefined' && (
+                <WarRoom3D
+                  seats={SEATS.map(s => ({
+                    ...s,
+                    online: onlineSeats.has(s.id),
+                  }))}
+                  width={Math.min(700, typeof window !== 'undefined' ? window.innerWidth - 380 : 700)}
+                  height={450}
+                />
+              )}
 
               {/* Name tags overlay below the 3D scene */}
               <div className="mt-3 flex flex-wrap justify-center gap-2">
