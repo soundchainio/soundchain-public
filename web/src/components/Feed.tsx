@@ -2,6 +2,8 @@
 import { LoaderAnimation } from 'components/LoaderAnimation'
 import { Post } from 'components/Post/Post'
 import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
+import { useMe } from 'hooks/useMe'
+import { useFeedPrewarm } from 'hooks/useFeedDirect'
 import { FeedItem, useFeedQuery } from 'lib/graphql'
 import { createContext, memo, useCallback, useContext, useEffect, useMemo, useRef } from 'react'
 import PullToRefresh from 'react-simple-pull-to-refresh'
@@ -27,6 +29,9 @@ const FeedContext = createContext({} as FeedContextData)
 
 export const Feed = ({ pageSize }: FeedProps) => {
   const { playlistState } = useAudioPlayerContext()
+  const me = useMe()
+  // Pre-warm Vercel + Lambda connections on mount — makes Apollo query faster
+  useFeedPrewarm(me?.profile?.id)
   pageSize = pageSize ?? 30 // Updated to 30 as per your change
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const listRef = useRef<any>(null)
