@@ -1,3 +1,4 @@
+import { trackEvent, logActivity } from 'lib/api/trackEvent'
 import type { NextApiRequest, NextApiResponse } from 'next'
 import clientPromise from 'lib/mongodb'
 import { ObjectId } from 'mongodb'
@@ -32,6 +33,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
     const { insertedId } = await db.collection('comments').insertOne(doc)
     await db.collection('posts').updateOne({ _id: postOid }, { $inc: { commentCount: 1 } })
+    trackEvent('post_comment', { postId, commentId: insertedId.toString() }, auth.userId)
+    logActivity(auth.profileId, 'COMMENTED', postOid)
 
     const author = await db.collection('profiles').findOne(
       { _id: auth.profileId },

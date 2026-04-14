@@ -1,3 +1,4 @@
+import { trackEvent, logActivity } from 'lib/api/trackEvent'
 /**
  * POST /api/feed/follow
  *
@@ -68,6 +69,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         await db.collection('feeditems').insertMany(feedItems, { ordered: false }).catch(() => {})
       }
 
+      trackEvent('follow_user', { followedId }, followerId)
+      logActivity(followerOid, 'FOLLOWED', followedOid)
       return res.status(200).json({ ok: true, action: 'followed' })
     }
 

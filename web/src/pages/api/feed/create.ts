@@ -91,6 +91,29 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       await db.collection('feeditems').insertMany(feedItems, { ordered: false }).catch(() => {})
     }
 
+    // Fire-and-forget: activity log + analytics event
+    // These don't block the response — post is already created
+    Promise.all([
+      // Log activity for feed
+      db.collection('activities').insertOne({
+        profileId,
+        type: 'POSTED',
+        postId: insertedId,
+        createdAt: now,
+      }).catch(() => {}),
+      // Track analytics event
+      fetch(`https://${req.headers.host}/api/agent/analytics-events`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ event: 'post_create', userId, meta: { postId: insertedId.toString() } }),
+      }).catch(() => {}),
+      // Increment profile post count (for activity feed)
+      db.collection('profiles').updateOne(
+        { _id: profileId },
+        { $inc: { postsCount: 1 } }
+      ).catch(() => {}),
+    ]).catch(() => {})
+
     return res.status(200).json({
       post: {
         id: insertedId.toString(),

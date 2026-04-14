@@ -1,3 +1,4 @@
+import { trackEvent, logActivity } from 'lib/api/trackEvent'
 import type { NextApiRequest, NextApiResponse } from 'next'
 import clientPromise from 'lib/mongodb'
 import { ObjectId } from 'mongodb'

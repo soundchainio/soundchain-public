@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import clientPromise from 'lib/mongodb'
 import { ObjectId } from 'mongodb'
 import { authFromRequest } from 'lib/api/authJwt'
+import { trackEvent, logActivity } from 'lib/api/trackEvent'
 
 // POST { postId, type, action: 'add' | 'change' | 'remove' }
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -40,6 +41,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const now = new Date()
       await reactions.insertOne({ postId: postOid, profileId: auth.profileId, type, createdAt: now, updatedAt: now })
       await posts.updateOne({ _id: postOid }, { $inc: { [`reactionStats.${type}`]: 1 } })
+      trackEvent('post_like', { postId, type }, auth.userId)
+      logActivity(auth.profileId, 'LIKED', postOid, { reactionType: type })
       return res.status(200).json({ ok: true, action: 'added', type })
     }
 
