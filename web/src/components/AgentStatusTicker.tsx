@@ -7,7 +7,7 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { ChevronDown, ChevronUp, ChevronLeft, ChevronRight, X, Terminal, Slash, Shield, MessageCircle, Mic, MicOff, Volume2, VolumeX, Settings, Sparkles, Zap, Code, Palette, Coins, Compass, Gamepad2, Swords, Radio, Trophy, Maximize2, Minimize2 } from 'lucide-react'
+import { ChevronDown, ChevronUp, ChevronLeft, ChevronRight, X, Terminal, Slash, Shield, MessageCircle, Mic, MicOff, Volume2, VolumeX, Settings, Sparkles, Zap, Code, Palette, Coins, Compass, Gamepad2, Swords, Radio, Trophy, Maximize2, Minimize2, Brain, HardDrive, Upload, Download, Wifi, WifiOff, FileIcon } from 'lucide-react'
 import { useAgentManager, AGENT_STATUS, PRIORITY_LEVEL, type AgentInfo, type AgentStatus, type PriorityLevel } from 'hooks/useAgentManager'
 import { useMagicContext } from 'hooks/useMagicContext'
 import { useMe } from 'hooks/useMe'
@@ -1550,7 +1550,7 @@ function TermLine({ text, type = 'info' }: { text: string; type?: LineType }) {
 }
 
 // ─── Panel Tabs ───────────────────────────────────────────────────────
-type PanelTab = 'agents' | 'terminal' | 'gaming'
+type PanelTab = 'agents' | 'terminal' | 'gaming' | 'neural' | 'operator'
 
 // ─── FURL Arcade — P2P Games (runs on user's device, zero server cost) ──
 const FURL_GAMES = [
@@ -2974,8 +2974,8 @@ export function AgentStatusTicker() {
                 <span className="text-xs font-mono text-cyan-400 font-bold tracking-wide">FURL</span>
                 <span className="text-[10px] font-mono text-gray-500">v{suiteVersion}</span>
               </div>
-              {/* Mobile Tabs (sm:hidden) — toggle between 3 columns */}
-              <div className="flex items-center gap-1 ml-2 sm:hidden">
+              {/* Tabs — visible on all screens */}
+              <div className="flex items-center gap-1 ml-2">
                 <button
                   onClick={(e) => { e.stopPropagation(); setActiveTab('agents') }}
                   className={`text-[9px] font-mono px-2 py-0.5 rounded transition-colors ${
@@ -3001,6 +3001,24 @@ export function AgentStatusTicker() {
                 >
                   <Gamepad2 className="w-2.5 h-2.5" />
                   Gaming
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setActiveTab('neural') }}
+                  className={`text-[9px] font-mono px-2 py-0.5 rounded transition-colors flex items-center gap-1 ${
+                    activeTab === 'neural' ? 'bg-purple-500/20 text-purple-300' : 'text-gray-500 hover:text-gray-300'
+                  }`}
+                >
+                  <Brain className="w-2.5 h-2.5" />
+                  Neural
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setActiveTab('operator') }}
+                  className={`text-[9px] font-mono px-2 py-0.5 rounded transition-colors flex items-center gap-1 ${
+                    activeTab === 'operator' ? 'bg-green-500/20 text-green-400' : 'text-gray-500 hover:text-gray-300'
+                  }`}
+                >
+                  <HardDrive className="w-2.5 h-2.5" />
+                  Operator
                 </button>
               </div>
               {/* Desktop label (hidden on mobile) */}
@@ -3105,6 +3123,70 @@ export function AgentStatusTicker() {
                         <span className="text-[8px] text-gray-500">{game.era}</span>
                       </button>
                     ))}
+                  </div>
+                </div>
+              </div>
+            )}
+            {/* Neural tab — Brain scanner inline */}
+            {activeTab === 'neural' && (
+              <div className="border-t border-purple-500/20 flex-1 overflow-hidden min-h-[300px] max-h-[450px] bg-[#0a0512] flex flex-col">
+                <div className="flex items-center justify-between px-3 py-2 border-b border-purple-500/10">
+                  <div className="flex items-center gap-2">
+                    <Brain className="w-4 h-4 text-purple-400" />
+                    <span className="text-xs font-mono font-bold text-purple-300">NEURAL — TRIBE v2 Brain Scanner</span>
+                  </div>
+                  <button onClick={() => window.dispatchEvent(new Event('toggle-neural'))} className="text-[9px] px-2 py-0.5 rounded bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 transition">
+                    Full Screen
+                  </button>
+                </div>
+                <div className="flex-1 flex items-center justify-center p-4">
+                  <div className="text-center space-y-3">
+                    <Brain className="w-16 h-16 text-purple-500/30 mx-auto animate-pulse" style={{ animationDuration: '3s' }} />
+                    <div className="text-purple-300 font-mono text-sm">TRIBE v2 × SoundChain × NVIDIA</div>
+                    <div className="text-[10px] text-gray-500 max-w-[280px] mx-auto">5 cortical regions: Audio · Motor · Cortex · Emote · Reward. Real-time FFT analysis. Play any track to activate the brain scanner.</div>
+                    <div className="flex items-center justify-center gap-3 pt-2">
+                      <div className="text-center"><div className="text-[8px] text-gray-600">Audio</div><div className="w-12 h-1 bg-orange-500/20 rounded-full"><div className="h-full w-0 bg-orange-500 rounded-full" /></div></div>
+                      <div className="text-center"><div className="text-[8px] text-gray-600">Motor</div><div className="w-12 h-1 bg-green-500/20 rounded-full"><div className="h-full w-0 bg-green-500 rounded-full" /></div></div>
+                      <div className="text-center"><div className="text-[8px] text-gray-600">Cortex</div><div className="w-12 h-1 bg-blue-500/20 rounded-full"><div className="h-full w-0 bg-blue-500 rounded-full" /></div></div>
+                      <div className="text-center"><div className="text-[8px] text-gray-600">Emote</div><div className="w-12 h-1 bg-pink-500/20 rounded-full"><div className="h-full w-0 bg-pink-500 rounded-full" /></div></div>
+                      <div className="text-center"><div className="text-[8px] text-gray-600">Reward</div><div className="w-12 h-1 bg-yellow-500/20 rounded-full"><div className="h-full w-0 bg-yellow-500 rounded-full" /></div></div>
+                    </div>
+                    <p className="text-[8px] text-purple-500/50 font-mono">GPU upgrade: TensorRT → real fMRI inference</p>
+                    <p className="text-[8px] text-purple-500/50 font-mono">Hardware: Meta Ray-Bans · Apple Vision Pro · NVIDIA Jetson</p>
+                  </div>
+                </div>
+              </div>
+            )}
+            {/* Operator tab — File transfer inline */}
+            {activeTab === 'operator' && (
+              <div className="border-t border-green-500/20 flex-1 overflow-hidden min-h-[300px] max-h-[450px] bg-[#050a05] flex flex-col">
+                <div className="flex items-center justify-between px-3 py-2 border-b border-green-500/10">
+                  <div className="flex items-center gap-2">
+                    <HardDrive className="w-4 h-4 text-green-400" />
+                    <span className="text-xs font-mono font-bold text-green-300">OPERATOR — Decentralized File Transfer</span>
+                  </div>
+                  <button onClick={() => window.dispatchEvent(new Event('toggle-operator'))} className="text-[9px] px-2 py-0.5 rounded bg-green-500/20 text-green-400 hover:bg-green-500/30 transition">
+                    Full Screen
+                  </button>
+                </div>
+                <div className="flex-1 flex items-center justify-center p-4">
+                  <div className="text-center space-y-3">
+                    <HardDrive className="w-16 h-16 text-green-500/30 mx-auto" />
+                    <div className="text-green-300 font-mono text-sm">Device-to-Device · No Cloud · DTLS Encrypted</div>
+                    <div className="text-[10px] text-gray-500 max-w-[280px] mx-auto">WebRTC DataChannel file transfer. Direct device-to-device — no server in the data path. No FileZilla subscription needed.</div>
+                    <div className="flex items-center justify-center gap-4 pt-2">
+                      <div className="flex flex-col items-center gap-1 px-4 py-3 bg-green-500/5 border border-green-500/20 rounded-lg">
+                        <Upload className="w-5 h-5 text-green-400" />
+                        <span className="text-[9px] text-green-400 font-mono font-bold">Send</span>
+                      </div>
+                      <div className="text-green-500/30 font-mono">⟷</div>
+                      <div className="flex flex-col items-center gap-1 px-4 py-3 bg-green-500/5 border border-green-500/20 rounded-lg">
+                        <Download className="w-5 h-5 text-green-400" />
+                        <span className="text-[9px] text-green-400 font-mono font-bold">Receive</span>
+                      </div>
+                    </div>
+                    <p className="text-[8px] text-green-500/50 font-mono">Signaling: tunnel.soundchain.io · NAT: STUN + TURN (EC2)</p>
+                    <p className="text-[8px] text-green-500/50 font-mono">Phase 2: Bluetooth via Bitchat · WiFi Direct</p>
                   </div>
                 </div>
               </div>
