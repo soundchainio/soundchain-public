@@ -17,6 +17,7 @@ interface Emoji {
 }
 import { Edit } from 'icons/Edit'
 import { CreatePostInput, useCreatePostMutation, useGuestCreatePostMutation } from 'lib/graphql'
+import { useApolloClient } from '@apollo/client'
 import { useState, useRef } from 'react'
 import { toast } from 'react-toastify'
 import tw from 'tailwind-styled-components'
@@ -31,6 +32,7 @@ import { EmoteTextInput, getDisplayLength } from './EmoteTextInput'
 
 export const PostFormTimeline = () => {
   const me = useMe()
+  const apolloClient = useApolloClient()
 
   // Refetch posts after creation — don't await refetch to avoid 504 gateway timeout
   const [createPost] = useCreatePostMutation({
@@ -99,10 +101,20 @@ export const PostFormTimeline = () => {
         }
       }
 
-      // Create post - authenticated users use regular mutation, others use guest mutation
+      // Create post - authenticated users hit Vercel direct route (bypasses Lambda 504)
       // Check me?.profile to ensure user is actually logged in (not just partial data)
       if (me?.profile) {
-        await createPost({ variables: { input: newPostParams } })
+        const resp = await fetch('/api/feed/create', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newPostParams),
+        })
+        if (!resp.ok) {
+          const err = await resp.json().catch(() => ({ error: `HTTP ${resp.status}` }))
+          throw new Error(err.error || 'Failed to create post')
+        }
+        apolloClient.refetchQueries({ include: ['Posts', 'Feed'] }).catch(() => {})
         toast.success(`Post successfully created.`)
       } else {
         // Public post - generate valid Ethereum wallet address format
