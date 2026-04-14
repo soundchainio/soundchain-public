@@ -164,37 +164,25 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
     return GENRE_PALETTES[key] || DEFAULT_PALETTE
   }, [genre])
 
-  // Connect Web Audio API analyser
+  // Read-only — grab shared analyser from AudioEngine (NEVER create our own MediaElementSource)
+  // Creating a second createMediaElementSource on the same <audio> element violates Web Audio API
+  // and causes speaker clipping/distortion on desktop. AudioEngine is the single owner.
   useEffect(() => {
-    if (!audioRef.current) return
-    const audio = audioRef.current
-    const connectAnalyser = () => {
-      if (analyserRef.current) return
-      try {
-        const ctx = audioCtxRef.current || new AudioContext()
-        audioCtxRef.current = ctx
-        if (!sourceRef.current) {
-          sourceRef.current = ctx.createMediaElementSource(audio)
-        }
-        const analyser = ctx.createAnalyser()
-        analyser.fftSize = 512
-        analyser.smoothingTimeConstant = 0.82
-        sourceRef.current.connect(analyser)
-        analyser.connect(ctx.destination)
-        analyserRef.current = analyser
-        dataArrayRef.current = new Uint8Array(analyser.frequencyBinCount)
-        // Share globally so BrainWaveVisualizer can reuse (avoids double MediaElementSource)
-        ;(window as any).__soundchainAudioCtx = ctx
-        ;(window as any).__soundchainAnalyzer = analyser
-      } catch (e) {
-        console.warn('[4D Radio] Audio analyser setup failed:', e)
+    const checkAnalyzer = () => {
+      const existing = (window as any).__soundchainAnalyzer as AnalyserNode | undefined
+      if (existing && !analyserRef.current) {
+        analyserRef.current = existing
+        dataArrayRef.current = new Uint8Array(existing.frequencyBinCount)
+        audioCtxRef.current = (window as any).__soundchainAudioCtx || null
       }
     }
-    audio.addEventListener('play', connectAnalyser, { once: true })
-    return () => { audio.removeEventListener('play', connectAnalyser) }
-  }, [audioRef])
+    // Check immediately + poll until AudioEngine creates it
+    checkAnalyzer()
+    const interval = setInterval(checkAnalyzer, 500)
+    return () => clearInterval(interval)
+  }, [])
 
-  // Resume AudioContext
+  // Resume AudioContext (may still be needed if user interacts before audio starts)
   useEffect(() => {
     if (isPlaying && audioCtxRef.current?.state === 'suspended') {
       audioCtxRef.current.resume().catch(() => {})

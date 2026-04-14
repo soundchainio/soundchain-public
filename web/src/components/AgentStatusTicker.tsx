@@ -1869,8 +1869,9 @@ export function AgentStatusTicker() {
   const [fullscreen, setFullscreen] = useState(false)
   const [activeTab, setActiveTab] = useState<PanelTab>('terminal')
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null)
-  // Operator — selected local files
+  // Operator — selected local files + destination
   const [operatorFiles, setOperatorFiles] = useState<File[]>([])
+  const [operatorDest, setOperatorDest] = useState<string | null>(null)
   const operatorFileRef = useRef<HTMLInputElement>(null)
   const handleOperatorFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) setOperatorFiles(prev => [...prev, ...Array.from(e.target.files!)])
@@ -3364,46 +3365,51 @@ export function AgentStatusTicker() {
                     <span className="text-[8px] font-mono text-gray-500">🌐</span>
                     <span className="text-[8px] font-mono text-cyan-400/60">ipfs://soundchain/</span>
                   </div>
-                  {/* Destinations */}
+                  {/* Destinations — selectable */}
                   <div className="flex-1 overflow-y-auto p-2 space-y-1">
-                    <div className="flex items-center gap-2 px-2 py-1.5 rounded bg-white/[0.02] hover:bg-white/5 cursor-pointer transition group">
-                      <span className="text-[9px]">📁</span>
-                      <span className="text-[9px] font-mono text-cyan-300/70 group-hover:text-cyan-300">IPFS Pinata Gateway</span>
-                      <span className="text-[7px] font-mono text-gray-700 ml-auto">permanent</span>
-                    </div>
-                    <div className="flex items-center gap-2 px-2 py-1.5 rounded bg-white/[0.02] hover:bg-white/5 cursor-pointer transition group">
-                      <span className="text-[9px]">📁</span>
-                      <span className="text-[9px] font-mono text-cyan-300/70 group-hover:text-cyan-300">SoundChain Profile</span>
-                      <span className="text-[7px] font-mono text-gray-700 ml-auto">tracks/art</span>
-                    </div>
-                    <div className="flex items-center gap-2 px-2 py-1.5 rounded bg-white/[0.02] hover:bg-white/5 cursor-pointer transition group">
-                      <span className="text-[9px]">📁</span>
-                      <span className="text-[9px] font-mono text-cyan-300/70 group-hover:text-cyan-300">War Room Shared</span>
-                      <span className="text-[7px] font-mono text-gray-700 ml-auto">team files</span>
-                    </div>
-                    <div className="flex items-center gap-2 px-2 py-1.5 rounded bg-white/[0.02] hover:bg-white/5 cursor-pointer transition group">
-                      <span className="text-[9px]">👤</span>
-                      <span className="text-[9px] font-mono text-cyan-300/70 group-hover:text-cyan-300">Direct to Peer...</span>
-                      <span className="text-[7px] font-mono text-gray-700 ml-auto">WebRTC P2P</span>
-                    </div>
-                    <div className="flex items-center gap-2 px-2 py-1.5 rounded bg-white/[0.02] hover:bg-white/5 cursor-pointer transition group">
-                      <span className="text-[9px]">📡</span>
-                      <span className="text-[9px] font-mono text-cyan-300/70 group-hover:text-cyan-300">Bluetooth Nearby</span>
-                      <span className="text-[7px] font-mono text-gray-700 ml-auto">Bitchat BLE</span>
-                    </div>
+                    {[
+                      { id: 'ipfs', icon: '📁', label: 'IPFS Pinata Gateway', tag: 'permanent' },
+                      { id: 'profile', icon: '📁', label: 'SoundChain Profile', tag: 'tracks/art' },
+                      { id: 'warroom', icon: '📁', label: 'War Room Shared', tag: 'team files' },
+                      { id: 'peer', icon: '👤', label: 'Direct to Peer...', tag: 'WebRTC P2P' },
+                      { id: 'bluetooth', icon: '📡', label: 'Bluetooth Nearby', tag: 'Bitchat BLE' },
+                    ].map(d => (
+                      <button
+                        key={d.id}
+                        onClick={() => setOperatorDest(prev => prev === d.id ? null : d.id)}
+                        className={`w-full flex items-center gap-2 px-2 py-1.5 rounded transition text-left ${
+                          operatorDest === d.id
+                            ? 'bg-cyan-500/10 border border-cyan-500/30'
+                            : 'bg-white/[0.02] hover:bg-white/5 border border-transparent'
+                        }`}
+                      >
+                        <span className="text-[9px]">{d.icon}</span>
+                        <span className={`text-[9px] font-mono truncate flex-1 ${operatorDest === d.id ? 'text-cyan-300' : 'text-cyan-300/70'}`}>{d.label}</span>
+                        <span className="text-[7px] font-mono text-gray-700 flex-shrink-0">{d.tag}</span>
+                        {operatorDest === d.id && <span className="text-[8px] text-cyan-400">✓</span>}
+                      </button>
+                    ))}
                   </div>
                 </div>
               </div>
 
-              {/* Transfer queue */}
-              <div className="px-2 py-1.5 border-t border-green-500/10 bg-black/30">
+              {/* Transfer queue + action bar */}
+              <div className="px-2 py-1.5 border-t border-green-500/10 bg-black/30 space-y-1">
+                {operatorFiles.length > 0 && operatorDest && (
+                  <button
+                    onClick={() => { /* TODO: actual transfer via WebRTC/IPFS */ alert(`Transfer ${operatorFiles.length} file(s) → ${operatorDest.toUpperCase()}\n\nWebRTC DataChannel + IPFS upload coming soon.`) }}
+                    className="w-full py-1.5 rounded bg-green-500/20 border border-green-500/30 text-[9px] font-mono font-bold text-green-400 hover:bg-green-500/30 transition flex items-center justify-center gap-2"
+                  >
+                    <Zap className="w-3 h-3" />
+                    TRANSFER {operatorFiles.length} FILE{operatorFiles.length !== 1 ? 'S' : ''} → {operatorDest.toUpperCase()}
+                  </button>
+                )}
                 <div className="flex items-center justify-between">
-                  <span className="text-[8px] font-mono text-gray-600">Transfer Queue: {operatorFiles.length} item{operatorFiles.length !== 1 ? 's' : ''}</span>
-                  <div className="flex items-center gap-3">
-                    <span className="text-[7px] font-mono text-gray-700">↑ 0 B/s</span>
-                    <span className="text-[7px] font-mono text-gray-700">↓ 0 B/s</span>
-                    <span className="text-[7px] font-mono text-green-500/50">NO SUBSCRIPTION · FREE FOREVER</span>
-                  </div>
+                  <span className="text-[8px] font-mono text-gray-600">
+                    {operatorFiles.length} file{operatorFiles.length !== 1 ? 's' : ''} selected
+                    {operatorDest ? ` → ${operatorDest}` : ' · select destination →'}
+                  </span>
+                  <span className="text-[7px] font-mono text-green-500/50">FREE FOREVER</span>
                 </div>
               </div>
             </div>
