@@ -207,7 +207,16 @@ export const NewCommentForm = ({ postId, onSuccess, compact, inputRef, replyToCo
     setIsSubmitting(true)
     try {
       if (me) {
-        await addComment({ variables: { input: { postId, body: finalBody, ...(replyToCommentId ? { replyToId: replyToCommentId } : {}) } } })
+        const resp = await fetch('/api/posts/comment', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ postId, body: finalBody, ...(replyToCommentId ? { replyToId: replyToCommentId } : {}) }),
+        })
+        if (!resp.ok) {
+          const err = await resp.json().catch(() => ({ error: `HTTP ${resp.status}` }))
+          throw new Error(err.error || 'Failed to add comment')
+        }
       } else if (guestWallet) {
         await guestAddComment({ variables: { input: { postId, body: finalBody, ...(replyToCommentId ? { replyToId: replyToCommentId } : {}) }, walletAddress: guestWallet } })
       } else {

@@ -41,15 +41,26 @@ export const DMModal = ({ show, onClose, recipientProfile }: DMModalProps) => {
     fetchPolicy: 'network-only',
   })
 
-  const [sendMessage, { loading: sending }] = useSendMessageMutation({
-    onCompleted: () => {
+  const [sending, setSending] = useState(false)
+  const sendMessage = async ({ variables }: { variables: { input: { message: string; toId: string } } }) => {
+    setSending(true)
+    try {
+      const resp = await fetch('/api/dm/send', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ toId: variables.input.toId, message: variables.input.message }),
+      })
+      if (!resp.ok) throw new Error((await resp.json().catch(() => ({}))).error || 'DM failed')
       setMessageText('')
       setShowEmojiPicker(false)
       setShowStickerPicker(false)
       setShowGifPicker(false)
       refetch?.()
-    },
-  })
+    } finally {
+      setSending(false)
+    }
+  }
 
   // Load chat history when modal opens
   useEffect(() => {

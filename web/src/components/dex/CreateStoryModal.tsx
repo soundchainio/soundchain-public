@@ -8,7 +8,7 @@ import { smartCompress, needsCompression, CompressionProgress } from 'lib/mediaC
 import { useUpload } from 'hooks/useUpload'
 import { usePinToIpfsMutation, Track } from 'lib/graphql'
 import { toast } from 'react-toastify'
-import { gql, useMutation } from '@apollo/client'
+import { gql, useMutation, useApolloClient } from '@apollo/client'
 import { NFTMusicPicker } from './NFTMusicPicker'
 import { MediaCropEditor } from './MediaCropEditor'
 import StoryTextOverlay, { TextLayer } from './StoryTextOverlay'
@@ -200,9 +200,21 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish, prefillTrack, pre
   const [pinToIPFS] = usePinToIpfsMutation()
   const [guestPinToIPFS] = useMutation(GUEST_PIN_TO_IPFS)
   const [directPinToIPFS] = useMutation(DIRECT_PIN_TO_IPFS)
-  const [createStoryWithOverlays] = useMutation(CREATE_STORY_WITH_OVERLAYS, {
-    refetchQueries: ['publicStories', 'myFollowingStories', 'publicStoriesForProfile'],
-  })
+  const apolloClientForStory = useApolloClient()
+  const createStoryWithOverlays = async ({ variables }: { variables: any }) => {
+    const resp = await fetch('/api/stories/create', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(variables),
+    })
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({ error: `HTTP ${resp.status}` }))
+      throw new Error(err.error || 'Story create failed')
+    }
+    apolloClientForStory.refetchQueries({ include: ['publicStories', 'myFollowingStories', 'publicStoriesForProfile'] }).catch(() => {})
+    return resp.json()
+  }
   const [guestCreateStoryWithOverlays] = useMutation(GUEST_CREATE_STORY_WITH_OVERLAYS, {
     refetchQueries: ['publicStories', 'publicStoriesForProfile'],
   })

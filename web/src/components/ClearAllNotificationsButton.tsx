@@ -1,5 +1,6 @@
 import classNames from 'classnames'
-import { useClearNotificationsMutation } from 'lib/graphql'
+import { useState } from 'react'
+import { useApolloClient } from '@apollo/client'
 
 import { Button } from './common/Buttons/Button'
 
@@ -8,11 +9,20 @@ interface ClearAllNotificationsButtonProps {
 }
 export const ClearAllNotificationsButton = (props: ClearAllNotificationsButtonProps) => {
   const { className } = props
+  const [loading, setLoading] = useState(false)
+  const apollo = useApolloClient()
 
-  const [clearNotification, { loading }] = useClearNotificationsMutation({ refetchQueries: ['Notifications'] })
-
-  const onClick = () => {
-    clearNotification()
+  const onClick = async () => {
+    setLoading(true)
+    try {
+      await fetch('/api/notifications/clear', {
+        method: 'POST',
+        credentials: 'include',
+      })
+      apollo.refetchQueries({ include: ['Notifications'] }).catch(() => {})
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (

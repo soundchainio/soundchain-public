@@ -123,9 +123,13 @@ export const SharePostModal = ({ isOpen, onClose, postId, postBody, onShareToSto
 
     try {
       for (const profileId of selectedIds) {
-        await sendMessage({
-          variables: { input: { message, toId: profileId } },
+        const resp = await fetch('/api/dm/send', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ toId: profileId, message }),
         })
+        if (!resp.ok) throw new Error((await resp.json().catch(() => ({}))).error || 'Share failed')
       }
       setSentIds(prev => new Set([...prev, ...selectedIds]))
       setSelectedIds(new Set())

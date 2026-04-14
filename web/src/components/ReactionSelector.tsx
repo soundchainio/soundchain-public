@@ -73,20 +73,14 @@ export const ReactionSelector = ({ postId, myReaction, opened, setOpened, isGues
       return
     }
 
-    // Logged-in user reactions
-    if (type === myReaction) {
-      await retractReaction({ variables: { input: { postId } } })
-    } else if (myReaction) {
-      await changeReaction({
-        variables: { input: { postId, type } },
-        refetchQueries: ['Post'],
-      })
-    } else {
-      await reactToPost({
-        variables: { input: { postId, type } },
-        refetchQueries: ['Post'],
-      })
-    }
+    // Logged-in user reactions — Vercel direct (kills Lambda 504)
+    const action = type === myReaction ? 'remove' : myReaction ? 'change' : 'add'
+    await fetch('/api/posts/react', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ postId, type, action }),
+    }).catch(() => {})
 
     setOpened(false)
   }

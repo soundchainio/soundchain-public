@@ -734,8 +734,20 @@ export function ProfileWall({ profileId, isOwnProfile: isOwnProfileProp, viewerP
     playlistState(playlist, index)
   }
 
-  const [createWallPost, { loading: posting }] = useMutation(CREATE_WALL_POST, {
-    onCompleted: () => {
+  const [posting, setPosting] = useState(false)
+  const createWallPost = async ({ variables }: { variables: any }) => {
+    setPosting(true)
+    try {
+      const resp = await fetch('/api/wall/create', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(variables),
+      })
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({ error: `HTTP ${resp.status}` }))
+        throw new Error(err.error || 'Post failed')
+      }
       setBody('')
       setPostStickers([])
       setPostEmbedUrl('')
@@ -751,14 +763,13 @@ export function ProfileWall({ profileId, isOwnProfile: isOwnProfileProp, viewerP
       setShowReplySticker(false)
       setShowReplyEmbed(false)
       refetch()
-    },
-    onError: (err) => {
+    } catch (err: any) {
       console.error('[WallPost] Error:', err)
-      toast.error(err?.message?.includes('504') || err?.message?.includes('timeout')
-        ? 'Server busy — try again in a moment'
-        : `Post failed: ${err?.message || 'Unknown error'}`)
-    },
-  })
+      toast.error(`Post failed: ${err?.message || 'Unknown error'}`)
+    } finally {
+      setPosting(false)
+    }
+  }
 
   const [deleteWallPost] = useMutation(DELETE_WALL_POST, {
     onCompleted: () => refetch(),

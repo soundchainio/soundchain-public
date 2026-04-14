@@ -27,13 +27,12 @@ export const SubscribeButton = ({ profileId, isSubscriber, small = false }: Subs
       return
     }
 
-    const opts = { variables: { input: { profileId } } }
-
-    if (!isSubscriber) {
-      await subscribeProfile(opts)
-    } else {
-      await unsubscribeProfile(opts)
-    }
+    await fetch('/api/profile/subscribe', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ targetProfileId: profileId, action: isSubscriber ? 'unsubscribe' : 'subscribe' }),
+    }).catch(() => {})
   }
 
   if (me?.profile.id === profileId) {
