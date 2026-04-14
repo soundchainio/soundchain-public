@@ -3157,36 +3157,118 @@ export function AgentStatusTicker() {
                 </div>
               </div>
             )}
-            {/* Operator tab — File transfer inline */}
+            {/* Operator tab — Cyberpunk FileZilla split-pane */}
             {activeTab === 'operator' && (
-              <div className="border-t border-green-500/20 flex-1 overflow-hidden min-h-[300px] max-h-[450px] bg-[#050a05] flex flex-col">
-                <div className="flex items-center justify-between px-3 py-2 border-b border-green-500/10">
+              <div className="border-t border-green-500/20 flex-1 overflow-hidden min-h-[300px] max-h-[500px] bg-[#050a05] flex flex-col">
+                {/* Connection bar */}
+                <div className="flex items-center justify-between px-3 py-1.5 border-b border-green-500/10 bg-black/40">
                   <div className="flex items-center gap-2">
-                    <HardDrive className="w-4 h-4 text-green-400" />
-                    <span className="text-xs font-mono font-bold text-green-300">OPERATOR — Decentralized File Transfer</span>
+                    <HardDrive className="w-3.5 h-3.5 text-green-400" />
+                    <span className="text-[10px] font-mono font-bold text-green-300">OPERATOR</span>
+                    <span className="text-[8px] font-mono text-gray-600">v1.0 · WebRTC · DTLS</span>
                   </div>
-                  <button onClick={() => window.dispatchEvent(new Event('toggle-operator'))} className="text-[9px] px-2 py-0.5 rounded bg-green-500/20 text-green-400 hover:bg-green-500/30 transition">
-                    Full Screen
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1">
+                      <Wifi className="w-3 h-3 text-green-500" />
+                      <span className="text-[8px] font-mono text-green-500">READY</span>
+                    </div>
+                    <button onClick={() => window.dispatchEvent(new Event('toggle-operator'))} className="text-[8px] px-2 py-0.5 rounded bg-green-500/20 text-green-400 hover:bg-green-500/30 transition font-mono">
+                      ⤢ EXPAND
+                    </button>
+                  </div>
                 </div>
-                <div className="flex-1 flex items-center justify-center p-4">
-                  <div className="text-center space-y-3">
-                    <HardDrive className="w-16 h-16 text-green-500/30 mx-auto" />
-                    <div className="text-green-300 font-mono text-sm">Device-to-Device · No Cloud · DTLS Encrypted</div>
-                    <div className="text-[10px] text-gray-500 max-w-[280px] mx-auto">WebRTC DataChannel file transfer. Direct device-to-device — no server in the data path. No FileZilla subscription needed.</div>
-                    <div className="flex items-center justify-center gap-4 pt-2">
-                      <div className="flex flex-col items-center gap-1 px-4 py-3 bg-green-500/5 border border-green-500/20 rounded-lg">
-                        <Upload className="w-5 h-5 text-green-400" />
-                        <span className="text-[9px] text-green-400 font-mono font-bold">Send</span>
-                      </div>
-                      <div className="text-green-500/30 font-mono">⟷</div>
-                      <div className="flex flex-col items-center gap-1 px-4 py-3 bg-green-500/5 border border-green-500/20 rounded-lg">
-                        <Download className="w-5 h-5 text-green-400" />
-                        <span className="text-[9px] text-green-400 font-mono font-bold">Receive</span>
+
+                {/* Split pane — Local | Remote */}
+                <div className="flex-1 flex overflow-hidden">
+                  {/* LEFT: Local Device */}
+                  <div className="flex-1 flex flex-col border-r border-green-500/10">
+                    <div className="flex items-center gap-1.5 px-2 py-1 bg-green-500/5 border-b border-green-500/10">
+                      <Upload className="w-3 h-3 text-green-400" />
+                      <span className="text-[9px] font-mono font-bold text-green-400">LOCAL DEVICE</span>
+                      <span className="text-[7px] font-mono text-gray-600 ml-auto">YOUR FILES</span>
+                    </div>
+                    <div className="flex items-center gap-1 px-2 py-1 bg-black/30 border-b border-white/5">
+                      <span className="text-[8px] font-mono text-gray-500">📁</span>
+                      <span className="text-[8px] font-mono text-green-400/60">/device/storage/</span>
+                    </div>
+                    {/* Drop zone */}
+                    <div className="flex-1 flex flex-col items-center justify-center p-3 border-2 border-dashed border-green-500/10 m-2 rounded-lg hover:border-green-500/30 transition cursor-pointer group"
+                      onClick={() => { const input = document.createElement('input'); input.type = 'file'; input.click() }}
+                    >
+                      <Upload className="w-8 h-8 text-green-500/20 group-hover:text-green-500/40 transition mb-2" />
+                      <span className="text-[9px] font-mono text-green-500/40 group-hover:text-green-500/60">DROP FILES HERE</span>
+                      <span className="text-[7px] font-mono text-gray-700 mt-1">or tap to browse</span>
+                      <div className="flex items-center gap-2 mt-3">
+                        <span className="text-[7px] font-mono text-gray-700 px-2 py-0.5 rounded bg-white/5">Photos</span>
+                        <span className="text-[7px] font-mono text-gray-700 px-2 py-0.5 rounded bg-white/5">Music</span>
+                        <span className="text-[7px] font-mono text-gray-700 px-2 py-0.5 rounded bg-white/5">Videos</span>
+                        <span className="text-[7px] font-mono text-gray-700 px-2 py-0.5 rounded bg-white/5">Docs</span>
                       </div>
                     </div>
-                    <p className="text-[8px] text-green-500/50 font-mono">Signaling: tunnel.soundchain.io · NAT: STUN + TURN (EC2)</p>
-                    <p className="text-[8px] text-green-500/50 font-mono">Phase 2: Bluetooth via Bitchat · WiFi Direct</p>
+                  </div>
+
+                  {/* Transfer arrows */}
+                  <div className="w-8 flex flex-col items-center justify-center gap-2 bg-black/20">
+                    <button className="p-1 rounded bg-green-500/10 hover:bg-green-500/20 transition" title="Send →">
+                      <ChevronRight className="w-3 h-3 text-green-400" />
+                    </button>
+                    <div className="w-px h-6 bg-green-500/10" />
+                    <button className="p-1 rounded bg-cyan-500/10 hover:bg-cyan-500/20 transition" title="← Receive">
+                      <ChevronLeft className="w-3 h-3 text-cyan-400" />
+                    </button>
+                  </div>
+
+                  {/* RIGHT: Remote / Peer Device */}
+                  <div className="flex-1 flex flex-col">
+                    <div className="flex items-center gap-1.5 px-2 py-1 bg-cyan-500/5 border-b border-cyan-500/10">
+                      <Download className="w-3 h-3 text-cyan-400" />
+                      <span className="text-[9px] font-mono font-bold text-cyan-400">REMOTE PEER</span>
+                      <span className="text-[7px] font-mono text-gray-600 ml-auto">SOUNDCHAIN</span>
+                    </div>
+                    <div className="flex items-center gap-1 px-2 py-1 bg-black/30 border-b border-white/5">
+                      <span className="text-[8px] font-mono text-gray-500">🌐</span>
+                      <span className="text-[8px] font-mono text-cyan-400/60">ipfs://soundchain/</span>
+                    </div>
+                    {/* Destinations */}
+                    <div className="flex-1 overflow-y-auto p-2 space-y-1">
+                      <div className="flex items-center gap-2 px-2 py-1.5 rounded bg-white/[0.02] hover:bg-white/5 cursor-pointer transition group">
+                        <span className="text-[9px]">📁</span>
+                        <span className="text-[9px] font-mono text-cyan-300/70 group-hover:text-cyan-300">IPFS Pinata Gateway</span>
+                        <span className="text-[7px] font-mono text-gray-700 ml-auto">permanent</span>
+                      </div>
+                      <div className="flex items-center gap-2 px-2 py-1.5 rounded bg-white/[0.02] hover:bg-white/5 cursor-pointer transition group">
+                        <span className="text-[9px]">📁</span>
+                        <span className="text-[9px] font-mono text-cyan-300/70 group-hover:text-cyan-300">SoundChain Profile</span>
+                        <span className="text-[7px] font-mono text-gray-700 ml-auto">tracks/art</span>
+                      </div>
+                      <div className="flex items-center gap-2 px-2 py-1.5 rounded bg-white/[0.02] hover:bg-white/5 cursor-pointer transition group">
+                        <span className="text-[9px]">📁</span>
+                        <span className="text-[9px] font-mono text-cyan-300/70 group-hover:text-cyan-300">War Room Shared</span>
+                        <span className="text-[7px] font-mono text-gray-700 ml-auto">team files</span>
+                      </div>
+                      <div className="flex items-center gap-2 px-2 py-1.5 rounded bg-white/[0.02] hover:bg-white/5 cursor-pointer transition group">
+                        <span className="text-[9px]">👤</span>
+                        <span className="text-[9px] font-mono text-cyan-300/70 group-hover:text-cyan-300">Direct to Peer...</span>
+                        <span className="text-[7px] font-mono text-gray-700 ml-auto">WebRTC P2P</span>
+                      </div>
+                      <div className="flex items-center gap-2 px-2 py-1.5 rounded bg-white/[0.02] hover:bg-white/5 cursor-pointer transition group">
+                        <span className="text-[9px]">📡</span>
+                        <span className="text-[9px] font-mono text-cyan-300/70 group-hover:text-cyan-300">Bluetooth Nearby</span>
+                        <span className="text-[7px] font-mono text-gray-700 ml-auto">Bitchat BLE</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Transfer queue */}
+                <div className="px-2 py-1.5 border-t border-green-500/10 bg-black/30">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[8px] font-mono text-gray-600">Transfer Queue: 0 items</span>
+                    <div className="flex items-center gap-3">
+                      <span className="text-[7px] font-mono text-gray-700">↑ 0 B/s</span>
+                      <span className="text-[7px] font-mono text-gray-700">↓ 0 B/s</span>
+                      <span className="text-[7px] font-mono text-green-500/50">NO SUBSCRIPTION · FREE FOREVER</span>
+                    </div>
                   </div>
                 </div>
               </div>
