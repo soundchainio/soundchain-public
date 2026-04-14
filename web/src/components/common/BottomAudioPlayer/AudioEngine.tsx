@@ -175,11 +175,15 @@ export const AudioEngine = () => {
         return
       }
 
-      audioContextRef.current = new AudioContextClass()
-      const ctx = audioContextRef.current
+      // Reuse existing AudioContext if available (prevents stale context issues)
+      const ctx = audioContextRef.current || new AudioContextClass()
+      audioContextRef.current = ctx
 
-      // Create source from audio element
-      sourceNodeRef.current = ctx.createMediaElementSource(audioRef.current)
+      // Create source from audio element — can only be called ONCE per element
+      // If it throws (element already consumed), fall back to native playback
+      if (!sourceNodeRef.current) {
+        sourceNodeRef.current = ctx.createMediaElementSource(audioRef.current)
+      }
 
       // Create gain node for volume normalization (no compression - preserves dynamics)
       gainNodeRef.current = ctx.createGain()
@@ -196,11 +200,19 @@ export const AudioEngine = () => {
       analyser.smoothingTimeConstant = 0.8
       gainNodeRef.current.connect(analyser)
       ;(window as any).__soundchainAnalyzer = analyser
+      ;(window as any).__soundchainAudioCtx = ctx
 
       isAudioGraphConnected.current = true
-      console.log('Audio normalization initialized (-24 LUFS target, dynamics preserved)')
+      console.log('[AudioEngine] Audio graph initialized — source → gain → analyser → destination')
     } catch (error) {
-      console.warn('Failed to initialize audio normalization:', error)
+      console.warn('[AudioEngine] Web Audio graph failed, falling back to native playback:', error)
+      // CRITICAL: If createMediaElementSource fails, audio element may be consumed but
+      // not connected to destination → silence. Reset and use native playback.
+      if (audioRef.current) {
+        audioRef.current.volume = volume * NORMALIZATION_CONFIG.normalizationGain
+      }
+      // Mark as connected so we don't retry and make it worse
+      isAudioGraphConnected.current = true
     }
   }, [isExternalAudioOutput])
 
