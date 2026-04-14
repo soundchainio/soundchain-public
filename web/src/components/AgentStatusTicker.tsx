@@ -1730,6 +1730,136 @@ const CATEGORY_ICONS: Record<string, React.FC<{ className?: string }>> = {
   Zap, Code, Palette, Coins, Compass, Terminal, Shield,
 }
 
+// ─── Neural Inline Panel — Live FFT Brain Scanner ─────────────────────
+// Reads from window.__soundchainAnalyzer (shared with RadioScene4D / AudioEngine)
+function NeuralInlinePanel() {
+  const analyzerRef = useRef<AnalyserNode | null>(null)
+  const rafRef = useRef<number>(0)
+  const [regions, setRegions] = useState({ auditory: 0, motor: 0, prefrontal: 0, emotional: 0, reward: 0 })
+  const [engagement, setEngagement] = useState(0)
+  const [isLive, setIsLive] = useState(false)
+
+  useEffect(() => {
+    let mounted = true
+    const checkAnalyzer = () => {
+      const existing = (window as any).__soundchainAnalyzer as AnalyserNode | undefined
+      if (existing) { analyzerRef.current = existing; if (mounted) setIsLive(true) }
+      else { analyzerRef.current = null; if (mounted) setIsLive(false) }
+    }
+    checkAnalyzer()
+    const poll = setInterval(checkAnalyzer, 800)
+
+    // Animation loop — reads FFT and maps to 5 cortical regions
+    let prevBass = 0, prevMids = 0, prevHighs = 0
+    let frameCount = 0
+    const loop = () => {
+      if (!mounted) return
+      frameCount++
+      let bass = 0, mids = 0, highs = 0, energy = 0
+      if (analyzerRef.current) {
+        try {
+          const data = new Uint8Array(analyzerRef.current.frequencyBinCount)
+          analyzerRef.current.getByteFrequencyData(data)
+          const len = data.length
+          for (let i = 0; i < len; i++) {
+            const val = data[i] / 255
+            if (i < len * 0.15) bass += val
+            else if (i < len * 0.5) mids += val
+            else highs += val
+            energy += val
+          }
+          bass = bass / (len * 0.15)
+          mids = mids / (len * 0.35)
+          highs = highs / (len * 0.5)
+          energy = energy / len
+        } catch {}
+      }
+      bass = prevBass * 0.7 + bass * 0.3
+      mids = prevMids * 0.7 + mids * 0.3
+      highs = prevHighs * 0.7 + highs * 0.3
+      prevBass = bass; prevMids = mids; prevHighs = highs
+      const emotional = Math.min(1, (bass * 0.5 + mids * 0.3 + energy * 0.2) * 1.5)
+      const reward = Math.min(1, energy * 2)
+      // Update state every 3 frames to avoid thrashing
+      if (frameCount % 3 === 0) {
+        setRegions({ auditory: mids, motor: bass, prefrontal: highs, emotional, reward })
+        setEngagement(Math.round(((bass + mids + highs + emotional + reward) / 5) * 100))
+      }
+      rafRef.current = requestAnimationFrame(loop)
+    }
+    rafRef.current = requestAnimationFrame(loop)
+    return () => { mounted = false; clearInterval(poll); cancelAnimationFrame(rafRef.current) }
+  }, [])
+
+  const regionConfig = [
+    { key: 'auditory', label: 'Audio', color: 'bg-orange-500', glow: 'shadow-orange-500/50' },
+    { key: 'motor', label: 'Motor', color: 'bg-green-500', glow: 'shadow-green-500/50' },
+    { key: 'prefrontal', label: 'Cortex', color: 'bg-blue-500', glow: 'shadow-blue-500/50' },
+    { key: 'emotional', label: 'Emote', color: 'bg-pink-500', glow: 'shadow-pink-500/50' },
+    { key: 'reward', label: 'Reward', color: 'bg-yellow-500', glow: 'shadow-yellow-500/50' },
+  ] as const
+
+  return (
+    <div className="border-t border-purple-500/20 flex-1 overflow-hidden min-h-[300px] bg-[#0a0512] flex flex-col">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-purple-500/10">
+        <div className="flex items-center gap-2">
+          <Brain className="w-4 h-4 text-purple-400" />
+          <span className="text-xs font-mono font-bold text-purple-300">NEURAL — TRIBE v2 Brain Scanner</span>
+          {isLive && <span className="text-[7px] font-mono text-green-400 px-1.5 py-0.5 rounded bg-green-500/10 border border-green-500/20 animate-pulse">LIVE</span>}
+        </div>
+        <button onClick={() => window.dispatchEvent(new Event('toggle-neural'))} className="text-[9px] px-2 py-0.5 rounded bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 transition">
+          Full Screen
+        </button>
+      </div>
+      <div className="flex-1 flex flex-col items-center justify-center p-4 gap-4">
+        {/* Brain icon with engagement glow */}
+        <div className="relative">
+          <Brain
+            className="w-16 h-16 text-purple-500 mx-auto transition-all duration-300"
+            style={{
+              filter: isLive ? `drop-shadow(0 0 ${8 + engagement * 0.2}px rgba(168,85,247,${0.3 + engagement * 0.007}))` : 'none',
+              opacity: isLive ? 0.6 + engagement * 0.004 : 0.2,
+            }}
+          />
+          <div className="absolute -top-1 -right-1 text-[8px] font-mono font-bold text-purple-300 bg-purple-500/20 px-1.5 py-0.5 rounded-full">
+            {engagement}%
+          </div>
+        </div>
+
+        {/* 5 cortical region bars — LIVE */}
+        <div className="w-full max-w-[320px] space-y-2">
+          {regionConfig.map(r => {
+            const val = regions[r.key as keyof typeof regions]
+            const pct = Math.round(val * 100)
+            return (
+              <div key={r.key} className="flex items-center gap-2">
+                <span className="text-[8px] font-mono text-gray-500 w-10 text-right">{r.label}</span>
+                <div className="flex-1 h-2 bg-white/5 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full ${r.color} transition-all duration-150`}
+                    style={{ width: `${Math.max(isLive ? pct : 0, isLive ? 2 : 0)}%`, boxShadow: pct > 40 ? `0 0 6px currentColor` : 'none' }}
+                  />
+                </div>
+                <span className="text-[7px] font-mono text-gray-600 w-7 tabular-nums">{isLive ? `${pct}%` : '--'}</span>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Status line */}
+        <div className="text-center space-y-1">
+          {isLive ? (
+            <div className="text-[10px] text-purple-300 font-mono">Reading FFT from audio engine · {engagement > 50 ? 'HIGH ACTIVITY' : engagement > 20 ? 'MODERATE' : 'LOW SIGNAL'}</div>
+          ) : (
+            <div className="text-[10px] text-gray-500 font-mono">Play any track to activate the brain scanner</div>
+          )}
+          <div className="text-[8px] text-purple-500/40 font-mono">TRIBE v2 × SoundChain × NVIDIA · Meta Ray-Bans · Apple Vision Pro</div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Main Component ───────────────────────────────────────────────────
 export function AgentStatusTicker() {
   const { agents, activeAgentCount, totalOgunConsumed, suiteVersion, setAgentStatus } = useAgentManager()
@@ -1739,6 +1869,12 @@ export function AgentStatusTicker() {
   const [fullscreen, setFullscreen] = useState(false)
   const [activeTab, setActiveTab] = useState<PanelTab>('terminal')
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null)
+  // Operator — selected local files
+  const [operatorFiles, setOperatorFiles] = useState<File[]>([])
+  const operatorFileRef = useRef<HTMLInputElement>(null)
+  const handleOperatorFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) setOperatorFiles(prev => [...prev, ...Array.from(e.target.files!)])
+  }, [])
   // 3-column Tron cockpit — collapse state (desktop only, mobile uses tabs)
   const [colAgents, setColAgents] = useState(() => {
     if (typeof window === 'undefined') return false
@@ -2974,8 +3110,8 @@ export function AgentStatusTicker() {
                 <span className="text-xs font-mono text-cyan-400 font-bold tracking-wide">FURL</span>
                 <span className="text-[10px] font-mono text-gray-500">v{suiteVersion}</span>
               </div>
-              {/* Tabs — visible on all screens */}
-              <div className="flex items-center gap-1 ml-2">
+              {/* Tabs — visible on all screens, scrollable on mobile */}
+              <div className="flex items-center gap-1 ml-2 overflow-x-auto whitespace-nowrap scrollbar-hide max-w-[calc(100vw-200px)] sm:max-w-none">
                 <button
                   onClick={(e) => { e.stopPropagation(); setActiveTab('agents') }}
                   className={`text-[9px] font-mono px-2 py-0.5 rounded transition-colors ${
@@ -3127,36 +3263,8 @@ export function AgentStatusTicker() {
                 </div>
               </div>
             )}
-            {/* Neural tab — Brain scanner inline (all screens) */}
-            {activeTab === 'neural' && (
-              <div className="border-t border-purple-500/20 flex-1 overflow-hidden min-h-[300px] bg-[#0a0512] flex flex-col">
-                <div className="flex items-center justify-between px-3 py-2 border-b border-purple-500/10">
-                  <div className="flex items-center gap-2">
-                    <Brain className="w-4 h-4 text-purple-400" />
-                    <span className="text-xs font-mono font-bold text-purple-300">NEURAL — TRIBE v2 Brain Scanner</span>
-                  </div>
-                  <button onClick={() => window.dispatchEvent(new Event('toggle-neural'))} className="text-[9px] px-2 py-0.5 rounded bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 transition">
-                    Full Screen
-                  </button>
-                </div>
-                <div className="flex-1 flex items-center justify-center p-4">
-                  <div className="text-center space-y-3">
-                    <Brain className="w-16 h-16 text-purple-500/30 mx-auto animate-pulse" style={{ animationDuration: '3s' }} />
-                    <div className="text-purple-300 font-mono text-sm">TRIBE v2 × SoundChain × NVIDIA</div>
-                    <div className="text-[10px] text-gray-500 max-w-[280px] mx-auto">5 cortical regions: Audio · Motor · Cortex · Emote · Reward. Real-time FFT analysis. Play any track to activate the brain scanner.</div>
-                    <div className="flex items-center justify-center gap-3 pt-2">
-                      <div className="text-center"><div className="text-[8px] text-gray-600">Audio</div><div className="w-12 h-1 bg-orange-500/20 rounded-full"><div className="h-full w-0 bg-orange-500 rounded-full" /></div></div>
-                      <div className="text-center"><div className="text-[8px] text-gray-600">Motor</div><div className="w-12 h-1 bg-green-500/20 rounded-full"><div className="h-full w-0 bg-green-500 rounded-full" /></div></div>
-                      <div className="text-center"><div className="text-[8px] text-gray-600">Cortex</div><div className="w-12 h-1 bg-blue-500/20 rounded-full"><div className="h-full w-0 bg-blue-500 rounded-full" /></div></div>
-                      <div className="text-center"><div className="text-[8px] text-gray-600">Emote</div><div className="w-12 h-1 bg-pink-500/20 rounded-full"><div className="h-full w-0 bg-pink-500 rounded-full" /></div></div>
-                      <div className="text-center"><div className="text-[8px] text-gray-600">Reward</div><div className="w-12 h-1 bg-yellow-500/20 rounded-full"><div className="h-full w-0 bg-yellow-500 rounded-full" /></div></div>
-                    </div>
-                    <p className="text-[8px] text-purple-500/50 font-mono">GPU upgrade: TensorRT → real fMRI inference</p>
-                    <p className="text-[8px] text-purple-500/50 font-mono">Hardware: Meta Ray-Bans · Apple Vision Pro · NVIDIA Jetson</p>
-                  </div>
-                </div>
-              </div>
-            )}
+            {/* Neural tab — LIVE Brain scanner inline (all screens) */}
+            {activeTab === 'neural' && <NeuralInlinePanel />}
             {/* Operator tab — Cyberpunk FileZilla split-pane (all screens) */}
             {activeTab === 'operator' && (
               <div className="border-t border-green-500/20 flex-1 overflow-hidden min-h-[300px] bg-[#050a05] flex flex-col">
@@ -3191,19 +3299,45 @@ export function AgentStatusTicker() {
                       <span className="text-[8px] font-mono text-gray-500">📁</span>
                       <span className="text-[8px] font-mono text-green-400/60">/device/storage/</span>
                     </div>
-                    {/* Drop zone */}
-                    <div className="flex-1 flex flex-col items-center justify-center p-3 border-2 border-dashed border-green-500/10 m-2 rounded-lg hover:border-green-500/30 transition cursor-pointer group"
-                      onClick={() => { const input = document.createElement('input'); input.type = 'file'; input.click() }}
-                    >
-                      <Upload className="w-8 h-8 text-green-500/20 group-hover:text-green-500/40 transition mb-2" />
-                      <span className="text-[9px] font-mono text-green-500/40 group-hover:text-green-500/60">DROP FILES HERE</span>
-                      <span className="text-[7px] font-mono text-gray-700 mt-1">or tap to browse</span>
-                      <div className="flex items-center gap-2 mt-3">
-                        <span className="text-[7px] font-mono text-gray-700 px-2 py-0.5 rounded bg-white/5">Photos</span>
-                        <span className="text-[7px] font-mono text-gray-700 px-2 py-0.5 rounded bg-white/5">Music</span>
-                        <span className="text-[7px] font-mono text-gray-700 px-2 py-0.5 rounded bg-white/5">Videos</span>
-                        <span className="text-[7px] font-mono text-gray-700 px-2 py-0.5 rounded bg-white/5">Docs</span>
-                      </div>
+                    {/* Hidden file input */}
+                    <input ref={operatorFileRef} type="file" multiple className="hidden" onChange={handleOperatorFileSelect} />
+                    {/* Drop zone + file list */}
+                    <div className="flex-1 flex flex-col overflow-hidden">
+                      {operatorFiles.length > 0 ? (
+                        <div className="flex-1 overflow-y-auto p-1.5 space-y-0.5">
+                          {operatorFiles.map((f, i) => (
+                            <div key={`${f.name}-${i}`} className="flex items-center gap-2 px-2 py-1 rounded bg-green-500/5 border border-green-500/10 group">
+                              <FileIcon className="w-3 h-3 text-green-400 flex-shrink-0" />
+                              <span className="text-[9px] font-mono text-green-300 truncate flex-1">{f.name}</span>
+                              <span className="text-[7px] font-mono text-gray-600 flex-shrink-0">{f.size < 1024 ? `${f.size} B` : f.size < 1048576 ? `${(f.size / 1024).toFixed(1)} KB` : `${(f.size / 1048576).toFixed(1)} MB`}</span>
+                              <button onClick={() => setOperatorFiles(prev => prev.filter((_, idx) => idx !== i))} className="p-0.5 hover:bg-red-500/20 rounded opacity-0 group-hover:opacity-100 transition">
+                                <X className="w-2.5 h-2.5 text-red-400" />
+                              </button>
+                            </div>
+                          ))}
+                          <button
+                            onClick={() => operatorFileRef.current?.click()}
+                            className="w-full flex items-center justify-center gap-1 py-1.5 mt-1 border border-dashed border-green-500/20 rounded hover:border-green-500/40 transition"
+                          >
+                            <Upload className="w-3 h-3 text-green-500/40" />
+                            <span className="text-[8px] font-mono text-green-500/40">ADD MORE FILES</span>
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex-1 flex flex-col items-center justify-center p-3 border-2 border-dashed border-green-500/10 m-2 rounded-lg hover:border-green-500/30 transition cursor-pointer group"
+                          onClick={() => operatorFileRef.current?.click()}
+                        >
+                          <Upload className="w-8 h-8 text-green-500/20 group-hover:text-green-500/40 transition mb-2" />
+                          <span className="text-[9px] font-mono text-green-500/40 group-hover:text-green-500/60">DROP FILES HERE</span>
+                          <span className="text-[7px] font-mono text-gray-700 mt-1">or tap to browse</span>
+                          <div className="flex items-center gap-2 mt-3">
+                            <span className="text-[7px] font-mono text-gray-700 px-2 py-0.5 rounded bg-white/5">Photos</span>
+                            <span className="text-[7px] font-mono text-gray-700 px-2 py-0.5 rounded bg-white/5">Music</span>
+                            <span className="text-[7px] font-mono text-gray-700 px-2 py-0.5 rounded bg-white/5">Videos</span>
+                            <span className="text-[7px] font-mono text-gray-700 px-2 py-0.5 rounded bg-white/5">Docs</span>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -3263,7 +3397,7 @@ export function AgentStatusTicker() {
                 {/* Transfer queue */}
                 <div className="px-2 py-1.5 border-t border-green-500/10 bg-black/30">
                   <div className="flex items-center justify-between">
-                    <span className="text-[8px] font-mono text-gray-600">Transfer Queue: 0 items</span>
+                    <span className="text-[8px] font-mono text-gray-600">Transfer Queue: {operatorFiles.length} item{operatorFiles.length !== 1 ? 's' : ''}</span>
                     <div className="flex items-center gap-3">
                       <span className="text-[7px] font-mono text-gray-700">↑ 0 B/s</span>
                       <span className="text-[7px] font-mono text-gray-700">↓ 0 B/s</span>
