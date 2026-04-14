@@ -3127,9 +3127,9 @@ export function AgentStatusTicker() {
                 </div>
               </div>
             )}
-            {/* Neural tab — Brain scanner inline */}
+            {/* Neural tab — Brain scanner inline (all screens) */}
             {activeTab === 'neural' && (
-              <div className="border-t border-purple-500/20 flex-1 overflow-hidden min-h-[300px] max-h-[450px] bg-[#0a0512] flex flex-col">
+              <div className="border-t border-purple-500/20 flex-1 overflow-hidden min-h-[300px] bg-[#0a0512] flex flex-col">
                 <div className="flex items-center justify-between px-3 py-2 border-b border-purple-500/10">
                   <div className="flex items-center gap-2">
                     <Brain className="w-4 h-4 text-purple-400" />
@@ -3157,9 +3157,9 @@ export function AgentStatusTicker() {
                 </div>
               </div>
             )}
-            {/* Operator tab — Cyberpunk FileZilla split-pane */}
+            {/* Operator tab — Cyberpunk FileZilla split-pane (all screens) */}
             {activeTab === 'operator' && (
-              <div className="border-t border-green-500/20 flex-1 overflow-hidden min-h-[300px] max-h-[500px] bg-[#050a05] flex flex-col">
+              <div className="border-t border-green-500/20 flex-1 overflow-hidden min-h-[300px] bg-[#050a05] flex flex-col">
                 {/* Connection bar */}
                 <div className="flex items-center justify-between px-3 py-1.5 border-b border-green-500/10 bg-black/40">
                   <div className="flex items-center gap-2">
@@ -3276,7 +3276,8 @@ export function AgentStatusTicker() {
           </div>
 
           {/* ─── DESKTOP: 3-column Tron cockpit with chevron collapse ─── */}
-          <div className="hidden sm:flex flex-1 overflow-hidden border-t border-white/5 relative">
+          {/* Hide desktop columns when Neural or Operator tab is active — show their panels instead */}
+          <div className={`${activeTab === 'neural' || activeTab === 'operator' ? 'hidden' : 'hidden sm:flex'} flex-1 overflow-hidden border-t border-white/5 relative`}>
             {/* LEFT: Agents column */}
             <div className={`flex flex-col border-r border-white/5 transition-all duration-200 overflow-hidden ${
               colAgents ? 'w-[200px] flex-shrink-0' : 'w-[28px] flex-shrink-0'
