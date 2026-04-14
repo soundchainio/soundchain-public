@@ -1741,8 +1741,8 @@ export function AgentStatusTicker() {
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null)
   // 3-column Tron cockpit — collapse state (desktop only, mobile uses tabs)
   const [colAgents, setColAgents] = useState(() => {
-    if (typeof window === 'undefined') return true
-    const s = localStorage.getItem('furl_col_agents'); return s !== null ? s === '1' : true
+    if (typeof window === 'undefined') return false
+    const s = localStorage.getItem('furl_col_agents'); return s !== null ? s === '1' : false
   })
   const [colTerminal, setColTerminal] = useState(() => {
     if (typeof window === 'undefined') return true
