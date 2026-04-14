@@ -30,11 +30,10 @@ const NORMALIZATION_CONFIG = {
   targetLUFS: -24,
   // Assumed average loudness of uploaded music (most music is around -10 to -14 LUFS)
   assumedSourceLUFS: -12,
-  // Calculated gain: difference between target and assumed source
-  // -24 - (-12) = -12 dB = 10^(-12/20) = 0.25 linear gain
-  // However, this might be too quiet, so we use a moderate adjustment
-  // targeting a reduction that brings loud tracks down without killing quiet ones
-  normalizationGain: 1.0,  // Full volume (no reduction)
+  // Gain set to 0.85 (~-1.4dB headroom) to prevent clipping on laptop speakers.
+  // Hot-mastered tracks (hip-hop/trap) peak above 0dBFS — without headroom,
+  // MacBook speakers distort. A limiter node catches remaining peaks.
+  normalizationGain: 0.85,
 }
 
 /**
@@ -185,14 +184,22 @@ export const AudioEngine = () => {
         sourceNodeRef.current = ctx.createMediaElementSource(audioRef.current)
       }
 
-      // Create gain node for volume normalization (no compression - preserves dynamics)
+      // Create gain node for volume normalization
       gainNodeRef.current = ctx.createGain()
       gainNodeRef.current.gain.setValueAtTime(NORMALIZATION_CONFIG.normalizationGain, ctx.currentTime)
 
-      // Connect the audio graph: source -> gain -> destination
-      // No compressor in chain - full dynamics preserved
+      // Create limiter (DynamicsCompressor as brick-wall) to catch peaks that clip speakers
+      const limiter = ctx.createDynamicsCompressor()
+      limiter.threshold.setValueAtTime(-1.0, ctx.currentTime)   // Catch anything above -1dB
+      limiter.knee.setValueAtTime(0, ctx.currentTime)           // Hard knee = brick wall
+      limiter.ratio.setValueAtTime(20, ctx.currentTime)         // 20:1 = near-infinite limiting
+      limiter.attack.setValueAtTime(0.001, ctx.currentTime)     // 1ms attack — catch transients
+      limiter.release.setValueAtTime(0.1, ctx.currentTime)      // 100ms release — smooth
+
+      // Connect the audio graph: source -> gain -> limiter -> destination
       sourceNodeRef.current.connect(gainNodeRef.current)
-      gainNodeRef.current.connect(ctx.destination)
+      gainNodeRef.current.connect(limiter)
+      limiter.connect(ctx.destination)
 
       // Create analyser for Neural visualizer — branch from gain node (read-only, no audio impact)
       const analyser = ctx.createAnalyser()
