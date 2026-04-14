@@ -2096,6 +2096,37 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     }
   }, [profileStatsModal, showTopFriendsPicker, viewingProfile?.id])
 
+  // Auto-play profile song when profile loads (MySpace-style)
+  // Supports: featuredTrackId, featuredAudioUrl, or wallAudioPlaylist[0]
+  useEffect(() => {
+    if (viewingProfileLoading) return
+    if (!viewingProfile) return
+    const vp = viewingProfile as any
+    const featuredTrackId = vp?.featuredTrackId
+    const featuredAudioUrl = vp?.featuredAudioUrl
+    const wallTrack = vp?.wallAudioPlaylist?.[0]
+    if (!featuredTrackId && !featuredAudioUrl && !wallTrack) return
+    const nftTrack = featuredTrackId ? viewingProfileNFTs.find((t: any) => t.id === featuredTrackId) : null
+    const songUrl = nftTrack?.playbackUrl || featuredAudioUrl || wallTrack?.audioUrl
+    if (!songUrl) return
+    const timer = setTimeout(() => {
+      if (nftTrack) {
+        handlePlayTrack(nftTrack, 0, [nftTrack])
+      } else {
+        playlistState([{
+          trackId: `profile-song-${viewingProfile.id}`,
+          src: songUrl,
+          title: vp?.featuredAudioTitle || wallTrack?.title || 'Profile Song',
+          artist: vp?.featuredAudioArtist || wallTrack?.artist || viewingProfile.displayName || '',
+          art: vp?.featuredAudioCoverUrl || wallTrack?.coverUrl || '',
+          isFavorite: false,
+        }], 0)
+      }
+    }, 1500)
+    return () => clearTimeout(timer)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewingProfile?.id, viewingProfileLoading])
+
   // Transform followers data (filter out null profiles)
   const followersList = viewingProfileFollowersData?.followers?.nodes
     ?.filter(f => f?.followerProfile)

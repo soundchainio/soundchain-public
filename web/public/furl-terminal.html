@@ -205,8 +205,13 @@
       if (isFirstConnect) {
         isFirstConnect = false;
         setTimeout(function(){ try { fitAddon.fit(); } catch(e){} sendResize(); sendInput('\n'); }, 800);
-        // Auto-launch Claude Code only on first connect
-        setTimeout(function(){ try { fitAddon.fit(); } catch(e){} sendResize(); sendInput('claude\n'); }, 1500);
+        // Ensure PATH includes common Claude Code install locations (yarn global, npm global, homebrew)
+        // Non-interactive shells (PTY) only read ~/.zshenv, not ~/.zshrc — PATH may be incomplete
+        setTimeout(function(){
+          sendInput('export PATH="$PATH:$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:/usr/local/bin:/opt/homebrew/bin:$HOME/.npm-global/bin"\n');
+        }, 1200);
+        // Auto-launch Claude Code
+        setTimeout(function(){ try { fitAddon.fit(); } catch(e){} sendResize(); sendInput('claude\n'); }, 2000);
       } else {
         // Reconnection — just send enter to refresh prompt, don't relaunch claude
         setTimeout(function(){ try { fitAddon.fit(); } catch(e){} sendResize(); sendInput('\n'); }, 500);
