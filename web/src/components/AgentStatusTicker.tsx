@@ -1896,27 +1896,22 @@ export function AgentStatusTicker() {
     return () => { mounted = false; clearInterval(iv) }
   }, [activeTab])
   // Operator transfer handler
+  const [operatorError, setOperatorError] = useState<string | null>(null)
   const handleOperatorTransfer = useCallback(async () => {
     if (!operatorFiles.length || !operatorDest || operatorUploading) return
     setOperatorUploading(true)
     setOperatorProgress(0)
     setOperatorLastCid(null)
+    setOperatorError(null)
     try {
       for (let i = 0; i < operatorFiles.length; i++) {
         const file = operatorFiles[i]
-        // Read file as base64 for JSON upload (serverless-compatible)
-        const base64 = await new Promise<string>((resolve) => {
-          const reader = new FileReader()
-          reader.onload = () => {
-            const result = reader.result as string
-            resolve(result.split(',')[1]) // strip data:...;base64, prefix
-          }
-          reader.readAsDataURL(file)
-        })
+        // Use FormData for large files (WAV/FLAC can be 50MB+)
+        const formData = new FormData()
+        formData.append('file', file)
         const res = await fetch('/api/operator/upload', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ fileData: base64, fileName: file.name, mimeType: file.type }),
+          body: formData,
         })
         if (!res.ok) {
           const err = await res.json().catch(() => ({ error: `HTTP ${res.status}` }))
@@ -1929,6 +1924,7 @@ export function AgentStatusTicker() {
       setOperatorFiles([])
     } catch (err: any) {
       console.error('[Operator] Transfer failed:', err)
+      setOperatorError(err.message || 'Transfer failed')
     } finally {
       setOperatorUploading(false)
     }
@@ -3519,6 +3515,14 @@ export function AgentStatusTicker() {
                     <div className="h-1 bg-green-500/10 rounded-full overflow-hidden">
                       <div className="h-full bg-green-500 rounded-full transition-all duration-300" style={{ width: `${operatorProgress}%` }} />
                     </div>
+                  </div>
+                )}
+                {/* Error display */}
+                {operatorError && !operatorUploading && (
+                  <div className="flex items-center gap-2 px-2 py-1 rounded bg-red-500/10 border border-red-500/20">
+                    <span className="text-[7px] font-mono text-red-400">ERROR</span>
+                    <span className="text-[7px] font-mono text-red-300 truncate flex-1">{operatorError}</span>
+                    <button onClick={() => setOperatorError(null)} className="text-[7px] font-mono text-gray-500 hover:text-red-400 transition">DISMISS</button>
                   </div>
                 )}
                 {/* Last upload CID */}
