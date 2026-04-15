@@ -1986,6 +1986,27 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     fetchPolicy: 'cache-and-network',
   })
 
+  // Owner profile lookup — resolve NFT owner wallet address to SoundChain profile (avatar + handle)
+  const [nftOwnerProfile, setNftOwnerProfile] = useState<{ id: string; userHandle: string; displayName: string; profilePicture: string } | null>(null)
+  useEffect(() => {
+    const ownerAddr = trackDetailData?.track?.nftData?.owner
+    if (!ownerAddr || selectedView !== 'track') { setNftOwnerProfile(null); return }
+    let mounted = true
+    ;(async () => {
+      try {
+        // Search profiles collection for this wallet address
+        const r = await fetch(`/api/explore/users-merged?wallet=${encodeURIComponent(ownerAddr)}&limit=1`)
+        if (r.ok && mounted) {
+          const data = await r.json()
+          const profile = data.users?.[0]
+          if (profile) setNftOwnerProfile({ id: profile.id || profile._id, userHandle: profile.userHandle, displayName: profile.displayName, profilePicture: profile.profilePicture })
+          else setNftOwnerProfile(null)
+        }
+      } catch { if (mounted) setNftOwnerProfile(null) }
+    })()
+    return () => { mounted = false }
+  }, [trackDetailData?.track?.nftData?.owner, selectedView])
+
   // Edition Sequencer — fetch all individual tracks in the same edition for the detail page
   const [fetchEditionTracks, { data: editionTracksData, loading: editionTracksLoading }] = useTracksLazyQuery()
   useEffect(() => {
@@ -7804,13 +7825,27 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                               </a>
                             </div>
                           )}
-                          {/* Owner */}
+                          {/* Owner — with avatar pill if profile found */}
                           {trackDetailData.track.nftData.owner && (
                             <div className="flex flex-col md:flex-row md:justify-between py-2 border-b border-gray-800">
                               <span className="text-gray-400 mb-1 md:mb-0">Current Owner</span>
                               <div className="flex items-center gap-2">
                                 {allMyAddresses.has(trackDetailData.track.nftData.owner.toLowerCase()) && (
                                   <Badge className="bg-green-500/20 text-green-400 text-xs">You own this</Badge>
+                                )}
+                                {/* Owner profile avatar pill */}
+                                {nftOwnerProfile && (
+                                  <a
+                                    href={`/dex/users/${nftOwnerProfile.userHandle || nftOwnerProfile.id}`}
+                                    className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 transition-all"
+                                  >
+                                    <img
+                                      src={nftOwnerProfile.profilePicture || '/default-pictures/profile/red.png'}
+                                      alt=""
+                                      className="w-4 h-4 rounded-full object-cover"
+                                    />
+                                    <span className="text-[10px] font-mono text-white">{nftOwnerProfile.displayName || nftOwnerProfile.userHandle}</span>
+                                  </a>
                                 )}
                                 <a
                                   href={`${config.polygonscan}address/${trackDetailData.track.nftData.owner}`}

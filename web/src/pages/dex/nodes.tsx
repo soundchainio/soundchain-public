@@ -353,7 +353,7 @@ export default function NodesPage() {
               ))}
               {collection.map((track: any, i: number) => (
                 <div key={track.id || i} className="group relative rounded-lg overflow-hidden border border-white/5 hover:border-cyan-500/30 transition-all cursor-pointer bg-black/40 hover:bg-black/60"
-                  onClick={() => router.push(`/dex/track/${track.id}`)}
+                  onClick={() => window.open(`/dex/track/${track.id}`, '_blank', 'noopener')}
                 >
                   <div className="aspect-square bg-gradient-to-br from-cyan-900/30 to-purple-900/30">
                     {track.artworkUrl ? (
@@ -403,7 +403,7 @@ export default function NodesPage() {
                   const shortCid = cid ? `${cid.slice(0, 6)}...${cid.slice(-4)}` : '—'
                   return (
                     <div key={track.id || i}
-                      onClick={() => router.push(`/dex/track/${track.id}`)}
+                      onClick={() => window.open(`/dex/track/${track.id}`, '_blank', 'noopener')}
                       className="grid grid-cols-12 gap-0 px-3 py-1 items-center border-b border-white/[0.02] hover:bg-white/[0.03] cursor-pointer transition"
                     >
                       <span className="col-span-1 text-[8px] font-mono text-gray-600">{i + 1}</span>

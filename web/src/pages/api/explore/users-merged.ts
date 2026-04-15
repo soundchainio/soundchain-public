@@ -18,6 +18,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const limit = Math.min(parseInt(req.query.limit as string) || 200, 500)
   const skip = parseInt(req.query.skip as string) || 0
   const search = (req.query.search as string)?.trim() || ''
+  const wallet = (req.query.wallet as string)?.trim() || ''
 
   try {
     const client = await clientPromise
@@ -45,6 +46,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         },
       },
     ]
+
+    // Wallet address lookup — find profile by any wallet address field
+    if (wallet) {
+      const walletLower = wallet.toLowerCase()
+      pipeline.push({
+        $match: {
+          $or: [
+            { 'userDoc.magicWalletAddress': { $regex: `^${walletLower}$`, $options: 'i' } },
+            { 'userDoc.googleWalletAddress': { $regex: `^${walletLower}$`, $options: 'i' } },
+            { 'userDoc.discordWalletAddress': { $regex: `^${walletLower}$`, $options: 'i' } },
+            { 'userDoc.twitchWalletAddress': { $regex: `^${walletLower}$`, $options: 'i' } },
+            { 'userDoc.emailWalletAddress': { $regex: `^${walletLower}$`, $options: 'i' } },
+            { 'userDoc.hdWalletAddress': { $regex: `^${walletLower}$`, $options: 'i' } },
+          ],
+        },
+      })
+    }
 
     // Search filter (after join so we can search by handle too)
     if (search) {
