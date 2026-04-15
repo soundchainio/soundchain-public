@@ -1869,13 +1869,56 @@ export function AgentStatusTicker() {
   const [fullscreen, setFullscreen] = useState(false)
   const [activeTab, setActiveTab] = useState<PanelTab>('terminal')
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null)
-  // Operator — selected local files + destination
+  // Operator — selected local files + destination + upload state + node stats
   const [operatorFiles, setOperatorFiles] = useState<File[]>([])
   const [operatorDest, setOperatorDest] = useState<string | null>(null)
+  const [operatorExpandedDest, setOperatorExpandedDest] = useState<string | null>(null)
+  const [operatorUploading, setOperatorUploading] = useState(false)
+  const [operatorProgress, setOperatorProgress] = useState(0)
+  const [operatorLastCid, setOperatorLastCid] = useState<string | null>(null)
+  const [operatorNodeStats, setOperatorNodeStats] = useState<any>(null)
   const operatorFileRef = useRef<HTMLInputElement>(null)
   const handleOperatorFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) setOperatorFiles(prev => [...prev, ...Array.from(e.target.files!)])
   }, [])
+  // Fetch node status when Operator tab is active
+  useEffect(() => {
+    if (activeTab !== 'operator') return
+    let mounted = true
+    const fetchStatus = async () => {
+      try {
+        const r = await fetch('/api/operator/status')
+        if (r.ok && mounted) setOperatorNodeStats(await r.json())
+      } catch {}
+    }
+    fetchStatus()
+    const iv = setInterval(fetchStatus, 15000)
+    return () => { mounted = false; clearInterval(iv) }
+  }, [activeTab])
+  // Operator transfer handler
+  const handleOperatorTransfer = useCallback(async () => {
+    if (!operatorFiles.length || !operatorDest || operatorUploading) return
+    setOperatorUploading(true)
+    setOperatorProgress(0)
+    setOperatorLastCid(null)
+    try {
+      for (let i = 0; i < operatorFiles.length; i++) {
+        const file = operatorFiles[i]
+        const formData = new FormData()
+        formData.append('file', file)
+        const res = await fetch('/api/operator/upload', { method: 'POST', body: formData })
+        if (!res.ok) throw new Error(`Upload failed: ${res.status}`)
+        const data = await res.json()
+        setOperatorLastCid(data.cid)
+        setOperatorProgress(Math.round(((i + 1) / operatorFiles.length) * 100))
+      }
+      setOperatorFiles([])
+    } catch (err: any) {
+      console.error('[Operator] Transfer failed:', err)
+    } finally {
+      setOperatorUploading(false)
+    }
+  }, [operatorFiles, operatorDest, operatorUploading])
   // 3-column Tron cockpit — collapse state (desktop only, mobile uses tabs)
   const [colAgents, setColAgents] = useState(() => {
     if (typeof window === 'undefined') return false
@@ -3270,17 +3313,33 @@ export function AgentStatusTicker() {
           {activeTab === 'neural' && <NeuralInlinePanel />}
           {activeTab === 'operator' && (
             <div className="border-t border-green-500/20 flex-1 overflow-hidden min-h-[300px] bg-[#050a05] flex flex-col">
-              {/* Connection bar */}
+              {/* Connection bar with live node stats */}
               <div className="flex items-center justify-between px-3 py-1.5 border-b border-green-500/10 bg-black/40">
                 <div className="flex items-center gap-2">
                   <HardDrive className="w-3.5 h-3.5 text-green-400" />
                   <span className="text-[10px] font-mono font-bold text-green-300">OPERATOR</span>
-                  <span className="text-[8px] font-mono text-gray-600">v1.0 · WebRTC · DTLS</span>
+                  {operatorNodeStats?.ipfs && (
+                    <span className={`text-[7px] font-mono px-1.5 py-0.5 rounded ${
+                      operatorNodeStats.ipfs.status === 'online' ? 'bg-green-500/10 text-green-400 border border-green-500/20' :
+                      operatorNodeStats.ipfs.status === 'degraded' ? 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20' :
+                      'bg-red-500/10 text-red-400 border border-red-500/20'
+                    }`}>
+                      IPFS {operatorNodeStats.ipfs.status === 'online' ? `${operatorNodeStats.ipfs.latency}ms` : operatorNodeStats.ipfs.status}
+                    </span>
+                  )}
+                  {operatorNodeStats?.ipfs?.pins > 0 && (
+                    <span className="text-[7px] font-mono text-gray-600">{operatorNodeStats.ipfs.pins} pins</span>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
+                  {operatorNodeStats?.nostr && (
+                    <span className="text-[7px] font-mono text-purple-400">{operatorNodeStats.nostr.relays} relays</span>
+                  )}
                   <div className="flex items-center gap-1">
-                    <Wifi className="w-3 h-3 text-green-500" />
-                    <span className="text-[8px] font-mono text-green-500">READY</span>
+                    <Wifi className={`w-3 h-3 ${operatorNodeStats?.ipfs?.status === 'online' ? 'text-green-500' : 'text-yellow-500'}`} />
+                    <span className={`text-[8px] font-mono ${operatorNodeStats?.ipfs?.status === 'online' ? 'text-green-500' : 'text-yellow-500'}`}>
+                      {operatorNodeStats ? (operatorNodeStats.ipfs.status === 'online' ? 'ONLINE' : 'DEGRADED') : 'CHECKING...'}
+                    </span>
                   </div>
                   <button onClick={() => window.dispatchEvent(new Event('toggle-operator'))} className="text-[8px] px-2 py-0.5 rounded bg-green-500/20 text-green-400 hover:bg-green-500/30 transition font-mono">
                     ⤢ EXPAND
@@ -3365,51 +3424,115 @@ export function AgentStatusTicker() {
                     <span className="text-[8px] font-mono text-gray-500">🌐</span>
                     <span className="text-[8px] font-mono text-cyan-400/60">ipfs://soundchain/</span>
                   </div>
-                  {/* Destinations — selectable */}
-                  <div className="flex-1 overflow-y-auto p-2 space-y-1">
+                  {/* Destinations — expandable directory browser */}
+                  <div className="flex-1 overflow-y-auto p-1.5 space-y-0.5">
                     {[
-                      { id: 'ipfs', icon: '📁', label: 'IPFS Pinata Gateway', tag: 'permanent' },
-                      { id: 'profile', icon: '📁', label: 'SoundChain Profile', tag: 'tracks/art' },
-                      { id: 'warroom', icon: '📁', label: 'War Room Shared', tag: 'team files' },
-                      { id: 'peer', icon: '👤', label: 'Direct to Peer...', tag: 'WebRTC P2P' },
-                      { id: 'bluetooth', icon: '📡', label: 'Bluetooth Nearby', tag: 'Bitchat BLE' },
+                      { id: 'ipfs', icon: '📁', label: 'IPFS Pinata Gateway', tag: 'permanent', protocol: 'IPFS/HTTP',
+                        children: [
+                          { label: '/pinned/', info: operatorNodeStats?.ipfs?.pins ? `${operatorNodeStats.ipfs.pins} objects` : 'loading...' },
+                          { label: '/uploads/', info: 'CIDv1 · immutable' },
+                          { label: '/music/', info: 'audio/mpeg, audio/wav' },
+                          { label: '/metadata/', info: 'JSON · NFT traits' },
+                        ]},
+                      { id: 'profile', icon: '📁', label: 'SoundChain Profile', tag: 'tracks/art', protocol: 'HTTPS',
+                        children: [
+                          { label: '/tracks/', info: 'SCid uploads' },
+                          { label: '/artwork/', info: 'cover art · IPFS' },
+                          { label: '/avatar/', info: 'profile picture' },
+                          { label: '/wall/', info: 'wall media' },
+                        ]},
+                      { id: 'warroom', icon: '📁', label: 'War Room Shared', tag: 'team files', protocol: 'WebSocket',
+                        children: [
+                          { label: '/shared/', info: 'team dropzone' },
+                          { label: '/logs/', info: 'session recordings' },
+                        ]},
+                      { id: 'peer', icon: '👤', label: 'Direct to Peer', tag: 'WebRTC P2P', protocol: 'DTLS/SCTP',
+                        children: [
+                          { label: 'DataChannel', info: operatorNodeStats?.webrtc?.available ? 'ready · encrypted' : 'unavailable' },
+                          { label: 'STUN/TURN', info: 'turn.soundchain.io' },
+                        ]},
+                      { id: 'bluetooth', icon: '📡', label: 'Bluetooth Nearby', tag: 'Bitchat BLE', protocol: 'BLE 5.0',
+                        children: [
+                          { label: 'Mesh Network', info: operatorNodeStats?.bluetooth?.available ? 'scanning...' : 'requires native app' },
+                          { label: 'Bitchat UUID', info: 'F47B5E2D...' },
+                        ]},
                     ].map(d => (
-                      <button
-                        key={d.id}
-                        onClick={() => setOperatorDest(prev => prev === d.id ? null : d.id)}
-                        className={`w-full flex items-center gap-2 px-2 py-1.5 rounded transition text-left ${
-                          operatorDest === d.id
-                            ? 'bg-cyan-500/10 border border-cyan-500/30'
-                            : 'bg-white/[0.02] hover:bg-white/5 border border-transparent'
-                        }`}
-                      >
-                        <span className="text-[9px]">{d.icon}</span>
-                        <span className={`text-[9px] font-mono truncate flex-1 ${operatorDest === d.id ? 'text-cyan-300' : 'text-cyan-300/70'}`}>{d.label}</span>
-                        <span className="text-[7px] font-mono text-gray-700 flex-shrink-0">{d.tag}</span>
-                        {operatorDest === d.id && <span className="text-[8px] text-cyan-400">✓</span>}
-                      </button>
+                      <div key={d.id}>
+                        <button
+                          onClick={() => {
+                            setOperatorDest(prev => prev === d.id ? null : d.id)
+                            setOperatorExpandedDest(prev => prev === d.id ? null : d.id)
+                          }}
+                          className={`w-full flex items-center gap-2 px-2 py-1.5 rounded transition text-left ${
+                            operatorDest === d.id
+                              ? 'bg-cyan-500/10 border border-cyan-500/30'
+                              : 'bg-white/[0.02] hover:bg-white/5 border border-transparent'
+                          }`}
+                        >
+                          <ChevronRight className={`w-2.5 h-2.5 text-gray-600 transition-transform ${operatorExpandedDest === d.id ? 'rotate-90' : ''}`} />
+                          <span className="text-[9px]">{d.icon}</span>
+                          <span className={`text-[9px] font-mono truncate flex-1 ${operatorDest === d.id ? 'text-cyan-300' : 'text-cyan-300/70'}`}>{d.label}</span>
+                          <span className="text-[6px] font-mono text-gray-700 flex-shrink-0">{d.protocol}</span>
+                          {operatorDest === d.id && <span className="text-[8px] text-cyan-400">✓</span>}
+                        </button>
+                        {/* Expanded children — inline directory listing */}
+                        {operatorExpandedDest === d.id && (
+                          <div className="ml-5 pl-2 border-l border-green-500/10 mt-0.5 mb-1 space-y-0.5">
+                            {d.children.map((c, ci) => (
+                              <div key={ci} className="flex items-center gap-2 px-2 py-0.5 rounded hover:bg-white/[0.03] transition">
+                                <span className="text-[7px] text-green-500/40">├─</span>
+                                <span className="text-[8px] font-mono text-green-400/80">{c.label}</span>
+                                <span className="text-[7px] font-mono text-gray-700 ml-auto">{c.info}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     ))}
                   </div>
                 </div>
               </div>
 
-              {/* Transfer queue + action bar */}
+              {/* Transfer queue + action bar + progress */}
               <div className="px-2 py-1.5 border-t border-green-500/10 bg-black/30 space-y-1">
-                {operatorFiles.length > 0 && operatorDest && (
+                {/* Upload progress bar */}
+                {operatorUploading && (
+                  <div className="space-y-0.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[8px] font-mono text-green-400 animate-pulse">TRANSFERRING...</span>
+                      <span className="text-[8px] font-mono text-green-400">{operatorProgress}%</span>
+                    </div>
+                    <div className="h-1 bg-green-500/10 rounded-full overflow-hidden">
+                      <div className="h-full bg-green-500 rounded-full transition-all duration-300" style={{ width: `${operatorProgress}%` }} />
+                    </div>
+                  </div>
+                )}
+                {/* Last upload CID */}
+                {operatorLastCid && !operatorUploading && (
+                  <div className="flex items-center gap-2 px-2 py-1 rounded bg-green-500/5 border border-green-500/20">
+                    <span className="text-[7px] font-mono text-green-500">PINNED</span>
+                    <span className="text-[7px] font-mono text-cyan-400 truncate flex-1">{operatorLastCid}</span>
+                    <button onClick={() => { navigator.clipboard.writeText(`https://gateway.pinata.cloud/ipfs/${operatorLastCid}`); }} className="text-[7px] font-mono text-gray-500 hover:text-cyan-400 transition">COPY</button>
+                  </div>
+                )}
+                {/* Transfer button */}
+                {operatorFiles.length > 0 && operatorDest && !operatorUploading && (
                   <button
-                    onClick={() => { /* TODO: actual transfer via WebRTC/IPFS */ alert(`Transfer ${operatorFiles.length} file(s) → ${operatorDest.toUpperCase()}\n\nWebRTC DataChannel + IPFS upload coming soon.`) }}
+                    onClick={handleOperatorTransfer}
                     className="w-full py-1.5 rounded bg-green-500/20 border border-green-500/30 text-[9px] font-mono font-bold text-green-400 hover:bg-green-500/30 transition flex items-center justify-center gap-2"
                   >
                     <Zap className="w-3 h-3" />
                     TRANSFER {operatorFiles.length} FILE{operatorFiles.length !== 1 ? 'S' : ''} → {operatorDest.toUpperCase()}
                   </button>
                 )}
+                {/* Status line */}
                 <div className="flex items-center justify-between">
                   <span className="text-[8px] font-mono text-gray-600">
-                    {operatorFiles.length} file{operatorFiles.length !== 1 ? 's' : ''} selected
-                    {operatorDest ? ` → ${operatorDest}` : ' · select destination →'}
+                    {operatorUploading ? 'uploading to IPFS...' :
+                     operatorFiles.length > 0 ? `${operatorFiles.length} file${operatorFiles.length !== 1 ? 's' : ''}${operatorDest ? ` → ${operatorDest}` : ' · select destination →'}` :
+                     'drop files to begin'}
                   </span>
-                  <span className="text-[7px] font-mono text-green-500/50">FREE FOREVER</span>
+                  <span className="text-[7px] font-mono text-green-500/50">P2P · NO SUBSCRIPTION · FREE</span>
                 </div>
               </div>
             </div>
