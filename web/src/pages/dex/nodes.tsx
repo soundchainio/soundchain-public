@@ -569,36 +569,30 @@ export default function NodesPage() {
                       )}
                     </>
                   })()}
-                  {/* Media — uploaded image/video or embed link thumbnail */}
-                  {(post.uploadedMediaUrl || post.mediaThumbnail || post.mediaLink) && (
-                    <div className={`rounded overflow-hidden mb-2 ${isExpanded ? 'max-h-64' : 'max-h-32'} transition-all`}>
-                      {post.uploadedMediaUrl || post.mediaThumbnail ? (
-                        <img src={post.mediaThumbnail || post.uploadedMediaUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
-                      ) : post.mediaLink && isExpanded ? (
-                        <iframe src={post.mediaLink} className="w-full h-48 border-0 rounded" allow="autoplay; encrypted-media" loading="lazy" />
-                      ) : post.mediaLink ? (
-                        <div className="flex items-center gap-2 p-2 bg-white/[0.02] rounded border border-white/5">
-                          <Film className="w-4 h-4 text-cyan-400 flex-shrink-0" />
-                          <span className="text-[8px] font-mono text-cyan-400/60 truncate">{post.mediaLink}</span>
-                        </div>
-                      ) : null}
+                  {/* Media — always visible, full width, autoplay embeds */}
+                  {(post.uploadedMediaUrl || post.mediaThumbnail) && (
+                    <div className="rounded overflow-hidden mb-2">
+                      {post.uploadedMediaType === 'video' ? (
+                        <video src={post.uploadedMediaUrl} className="w-full rounded max-h-64" controls autoPlay muted playsInline loop />
+                      ) : (
+                        <img src={post.mediaThumbnail || post.uploadedMediaUrl} alt="" className="w-full rounded" loading="lazy" />
+                      )}
                     </div>
                   )}
-                  {/* Stats */}
-                  <div className="flex items-center gap-3 text-[8px] font-mono text-gray-600">
-                    <span>{post.totalReactions || 0} reactions</span>
-                    <span>{post.commentCount || 0} comments</span>
-                    <span>{post.repostCount || 0} reposts</span>
-                  </div>
-                  {/* Expanded: inline actions (no redirect) */}
-                  {isExpanded && (
-                    <div className="mt-2 flex items-center gap-2">
-                      <button onClick={(e) => { e.stopPropagation() }} className="text-[8px] font-mono text-cyan-400/40 px-2 py-0.5 rounded border border-cyan-500/10">Reply</button>
-                      <button onClick={(e) => { e.stopPropagation() }} className="text-[8px] font-mono text-pink-400/40 px-2 py-0.5 rounded border border-pink-500/10">React</button>
-                      <button onClick={(e) => { e.stopPropagation() }} className="text-[8px] font-mono text-green-400/40 px-2 py-0.5 rounded border border-green-500/10">Repost</button>
-                      <button onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(`${window.location.origin}/dex/post/${post.id}`) }} className="text-[8px] font-mono text-gray-500 px-2 py-0.5 rounded border border-white/5 hover:text-cyan-400 transition">Share</button>
+                  {/* Embed links — YouTube, Spotify, etc — always render as iframe */}
+                  {post.mediaLink && (
+                    <div className="rounded overflow-hidden mb-2">
+                      <iframe
+                        src={post.mediaLink}
+                        className="w-full border-0 rounded"
+                        style={{ height: post.mediaLink.includes('spotify') ? '80px' : post.mediaLink.includes('soundcloud') ? '166px' : '200px' }}
+                        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                        loading="lazy"
+                      />
                     </div>
                   )}
+                  {/* Actions — always visible like real feed */}
+                  <FeedPostActions postId={post.id} reactions={post.totalReactions} comments={post.commentCount} reposts={post.repostCount} isExpanded={isExpanded} />
                 </div>
                 )
               })}
@@ -643,6 +637,102 @@ function StatBox({ icon, label, value, color }: { icon: React.ReactNode; label: 
         <span className="text-[8px] font-mono text-gray-600 tracking-wider">{label}</span>
       </div>
       <span className={`text-sm font-mono font-bold text-${color}-400`}>{value}</span>
+    </div>
+  )
+}
+
+// Feed post actions — wired to Vercel direct endpoints (no Lambda)
+function FeedPostActions({ postId, reactions, comments, reposts, isExpanded }: { postId: string; reactions: number; comments: number; reposts: number; isExpanded: boolean }) {
+  const [reactionCount, setReactionCount] = useState(reactions)
+  const [hasReacted, setHasReacted] = useState(false)
+  const [showReactions, setShowReactions] = useState(false)
+  const [commentText, setCommentText] = useState('')
+  const [showCommentInput, setShowCommentInput] = useState(false)
+  const [commentCount, setCommentCount] = useState(comments)
+  const [shared, setShared] = useState(false)
+
+  const react = async (type: string) => {
+    const action = hasReacted ? 'remove' : 'add'
+    await fetch('/api/posts/react', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ postId, type, action }),
+    })
+    setReactionCount(prev => hasReacted ? Math.max(0, prev - 1) : prev + 1)
+    setHasReacted(!hasReacted)
+    setShowReactions(false)
+  }
+
+  const submitComment = async () => {
+    if (!commentText.trim()) return
+    await fetch('/api/posts/comment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ postId, body: commentText.trim() }),
+    })
+    setCommentText('')
+    setCommentCount(prev => prev + 1)
+    setShowCommentInput(false)
+  }
+
+  const repost = async () => {
+    await fetch('/api/posts/repost', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ postId }),
+    })
+  }
+
+  const share = () => {
+    navigator.clipboard.writeText(`${window.location.origin}/dex/post/${postId}`)
+    setShared(true)
+    setTimeout(() => setShared(false), 2000)
+  }
+
+  return (
+    <div className="mt-1.5 space-y-1.5" onClick={(e) => e.stopPropagation()}>
+      {/* Stats + action row */}
+      <div className="flex items-center gap-1">
+        <button onClick={() => setShowReactions(!showReactions)} className={`flex items-center gap-1 text-[8px] font-mono px-2 py-1 rounded transition ${hasReacted ? 'text-pink-400 bg-pink-500/10 border border-pink-500/20' : 'text-gray-500 hover:text-pink-400 border border-transparent hover:border-pink-500/20'}`}>
+          {hasReacted ? '❤️' : '🤍'} {reactionCount}
+        </button>
+        <button onClick={() => setShowCommentInput(!showCommentInput)} className="flex items-center gap-1 text-[8px] font-mono text-gray-500 hover:text-cyan-400 px-2 py-1 rounded transition hover:border-cyan-500/20 border border-transparent">
+          💬 {commentCount}
+        </button>
+        <button onClick={repost} className="flex items-center gap-1 text-[8px] font-mono text-gray-500 hover:text-green-400 px-2 py-1 rounded transition hover:border-green-500/20 border border-transparent">
+          🔄 {reposts}
+        </button>
+        <button onClick={share} className={`flex items-center gap-1 text-[8px] font-mono px-2 py-1 rounded transition border border-transparent ${shared ? 'text-cyan-400' : 'text-gray-500 hover:text-cyan-400'}`}>
+          {shared ? '✓ Copied' : '🔗 Share'}
+        </button>
+      </div>
+      {/* Reaction picker */}
+      {showReactions && (
+        <div className="flex items-center gap-1 px-1">
+          {['fire', 'heart', 'rocket', 'thumbsUp', 'mind_blown', 'clap'].map(type => (
+            <button key={type} onClick={() => react(type)} className="text-sm hover:scale-125 transition-transform">
+              {type === 'fire' ? '🔥' : type === 'heart' ? '❤️' : type === 'rocket' ? '🚀' : type === 'thumbsUp' ? '👍' : type === 'mind_blown' ? '🤯' : '👏'}
+            </button>
+          ))}
+        </div>
+      )}
+      {/* Comment input */}
+      {showCommentInput && (
+        <div className="flex items-center gap-1.5">
+          <input
+            type="text"
+            value={commentText}
+            onChange={(e) => setCommentText(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') submitComment() }}
+            placeholder="Write a comment..."
+            className="flex-1 text-[9px] font-mono bg-black/40 border border-white/10 rounded px-2 py-1 text-white placeholder-gray-600 outline-none focus:border-cyan-500/30"
+            autoFocus
+          />
+          <button onClick={submitComment} className="text-[8px] font-mono text-cyan-400 px-2 py-1 rounded bg-cyan-500/10 border border-cyan-500/20 hover:bg-cyan-500/20 transition">
+            Post
+          </button>
+        </div>
+      )}
     </div>
   )
 }

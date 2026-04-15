@@ -4301,7 +4301,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
               <div className="flex items-center gap-1.5 min-w-max">
                 {[
                   ...(me?.profile ? [{ id: 'profile', label: 'Profile', route: `/dex/users/${me?.profile?.userHandle}` }] : []),
-                  { id: 'feed', label: 'Feed', route: '/dex/nodes?tab=feed' },
+                  { id: 'nodes', label: 'Nodes', route: '/dex/nodes' },
                   { id: 'announcements', label: 'News', route: '/dex/announcements' },
                   { id: 'explore', label: 'Explore', route: '/dex/explore' },
                   { id: 'users', label: 'Users', route: '/dex/users' },
@@ -4309,7 +4309,6 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   { id: 'moltbook', label: 'Moltbook', route: '/backend' },
                   { id: 'library', label: 'Library', route: '/dex/library' },
                   { id: 'playlist', label: 'Playlists', route: '/dex/playlist' },
-                  { id: 'nodes', label: 'Nodes', route: '/dex/nodes?tab=network' },
                   { id: 'archive', label: 'Archive', route: '/dex/archive' },
                 ].map((item) => {
                   const isActive = selectedView === item.id || (item.id === 'profile' && isBioExpanded)
