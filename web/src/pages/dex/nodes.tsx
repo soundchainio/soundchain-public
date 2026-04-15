@@ -72,6 +72,11 @@ export default function NodesPage() {
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null)
   const [pinging, setPinging] = useState(false)
   const [collectionView, setCollectionView] = useState<'cards' | 'table'>('table')
+  const [mobileTab, setMobileTab] = useState<'network' | 'feed'>('network')
+  const [feedPosts, setFeedPosts] = useState<any[]>([])
+  const [feedLoading, setFeedLoading] = useState(false)
+  const [feedCursor, setFeedCursor] = useState<string | null>(null)
+  const [feedHasMore, setFeedHasMore] = useState(true)
 
   // Fetch operator status
   const fetchStatus = useCallback(async () => {
@@ -137,12 +142,33 @@ export default function NodesPage() {
   })
   const collection = useMemo(() => tracksData?.groupedTracks?.nodes || [], [tracksData])
 
+  // Feed — direct Vercel endpoint, no Lambda
+  const fetchFeed = useCallback(async (cursor?: string | null) => {
+    if (!me?.profile?.id || feedLoading) return
+    setFeedLoading(true)
+    try {
+      const params = new URLSearchParams({ profileId: me.profile.id, limit: '20' })
+      if (cursor) params.set('cursor', cursor)
+      const r = await fetch(`/api/feed/posts?${params}`)
+      if (r.ok) {
+        const data = await r.json()
+        if (cursor) setFeedPosts(prev => [...prev, ...data.posts])
+        else setFeedPosts(data.posts || [])
+        setFeedCursor(data.endCursor)
+        setFeedHasMore(data.hasNextPage)
+      }
+    } catch {}
+    setFeedLoading(false)
+  }, [me?.profile?.id, feedLoading])
+
   useEffect(() => {
     fetchStatus()
     fetchAnalytics()
+    if (me?.profile?.id) fetchFeed()
     const iv = setInterval(fetchStatus, 15000)
     return () => clearInterval(iv)
-  }, [fetchStatus, fetchAnalytics])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchStatus, fetchAnalytics, me?.profile?.id])
 
   // Auto-ping on mount
   useEffect(() => { pingAll() }, []) // eslint-disable-line react-hooks/exhaustive-deps
@@ -184,7 +210,17 @@ export default function NodesPage() {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 py-4 space-y-4">
+      <div className="max-w-[1400px] mx-auto px-4 py-4 space-y-4">
+        {/* Mobile tab toggle */}
+        <div className="flex items-center gap-1 lg:hidden">
+          <button onClick={() => setMobileTab('network')} className={`flex-1 py-2 text-[10px] font-mono font-bold rounded-lg transition ${mobileTab === 'network' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-white/[0.02] text-gray-600 border border-white/5'}`}>
+            NETWORK
+          </button>
+          <button onClick={() => setMobileTab('feed')} className={`flex-1 py-2 text-[10px] font-mono font-bold rounded-lg transition ${mobileTab === 'feed' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'bg-white/[0.02] text-gray-600 border border-white/5'}`}>
+            FEED
+          </button>
+        </div>
+
         {/* Top stats row */}
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2">
           <StatBox icon={<Signal className="w-4 h-4 text-green-400" />} label="NODES" value={`${onlineCount}/${nodes.length}`} color="green" />
@@ -194,6 +230,11 @@ export default function NodesPage() {
           <StatBox icon={<HardDrive className="w-4 h-4 text-blue-400" />} label="TRACKS" value={analytics?.totalTracks?.toLocaleString() || '...'} color="blue" />
           <StatBox icon={<Shield className="w-4 h-4 text-pink-400" />} label="PROTOCOL" value="DTLS 1.2" color="pink" />
         </div>
+
+        {/* ─── Split Layout: Network (left) + Feed (right) on desktop ─── */}
+        <div className="flex gap-4">
+        {/* LEFT: Network dashboard — full on mobile when "network" tab active, left column on desktop */}
+        <div className={`${mobileTab === 'feed' ? 'hidden lg:block' : ''} flex-1 min-w-0 space-y-4`}>
 
         {/* Node swarm grid */}
         <div>
@@ -443,6 +484,87 @@ export default function NodesPage() {
             </div>
           )}
         </div>
+
+        </div>{/* end network column */}
+
+        {/* RIGHT: Feed timeline — hidden on mobile unless "feed" tab active */}
+        <div className={`${mobileTab === 'network' ? 'hidden lg:block' : ''} lg:w-[380px] lg:flex-shrink-0`}>
+          <div className="sticky top-16 space-y-2">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Activity className="w-4 h-4 text-cyan-400" />
+                <h2 className="text-xs font-mono font-bold text-cyan-400 tracking-wider">LIVE FEED</h2>
+                <span className="text-[8px] font-mono text-gray-600">Vercel direct · no Lambda</span>
+              </div>
+              <button onClick={() => { setFeedPosts([]); setFeedCursor(null); setFeedHasMore(true); setTimeout(() => fetchFeed(), 50) }} className="text-[8px] font-mono text-gray-600 hover:text-cyan-400 transition">
+                <RefreshCw className="w-3 h-3" />
+              </button>
+            </div>
+
+            <div className="max-h-[calc(100vh-200px)] overflow-y-auto space-y-2 pr-1 scrollbar-hide">
+              {feedPosts.length === 0 && !feedLoading && (
+                <div className="text-center py-8 text-[10px] font-mono text-gray-700">
+                  {me?.profile?.id ? 'No posts yet — follow users to fill your feed' : 'Sign in to see your feed'}
+                </div>
+              )}
+              {feedPosts.map((post: any) => (
+                <div key={post.id}
+                  onClick={() => window.open(`/dex/post/${post.id}`, '_blank', 'noopener')}
+                  className="p-3 rounded-lg border border-white/5 bg-black/40 hover:bg-black/60 cursor-pointer transition-all hover:border-cyan-500/20 group"
+                >
+                  {/* Author */}
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-6 h-6 rounded-full overflow-hidden bg-gray-800 flex-shrink-0">
+                      {post.profile?.profilePicture ? (
+                        <img src={post.profile.profilePicture} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-cyan-900 to-purple-900" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-[10px] font-mono text-white font-bold">{post.profile?.displayName || post.profile?.userHandle || 'Anonymous'}</span>
+                      {post.profile?.userHandle && <span className="text-[8px] font-mono text-gray-600 ml-1">@{post.profile.userHandle}</span>}
+                    </div>
+                    <span className="text-[7px] font-mono text-gray-700 flex-shrink-0">
+                      {post.createdAt ? new Date(post.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}
+                    </span>
+                  </div>
+                  {/* Body */}
+                  {post.body && (
+                    <p className="text-[10px] font-mono text-gray-300 leading-relaxed mb-2 line-clamp-3">{post.body}</p>
+                  )}
+                  {/* Media thumbnail */}
+                  {(post.uploadedMediaUrl || post.mediaThumbnail) && (
+                    <div className="rounded overflow-hidden mb-2 max-h-32">
+                      <img src={post.mediaThumbnail || post.uploadedMediaUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
+                    </div>
+                  )}
+                  {/* Stats */}
+                  <div className="flex items-center gap-3 text-[8px] font-mono text-gray-600">
+                    <span>{post.totalReactions || 0} reactions</span>
+                    <span>{post.commentCount || 0} comments</span>
+                    <span>{post.repostCount || 0} reposts</span>
+                  </div>
+                </div>
+              ))}
+              {/* Load more */}
+              {feedHasMore && feedPosts.length > 0 && (
+                <button
+                  onClick={() => fetchFeed(feedCursor)}
+                  disabled={feedLoading}
+                  className="w-full py-2 text-[9px] font-mono text-cyan-400/60 hover:text-cyan-400 border border-white/5 rounded-lg hover:border-cyan-500/20 transition disabled:opacity-50"
+                >
+                  {feedLoading ? 'LOADING...' : 'LOAD MORE'}
+                </button>
+              )}
+              {feedLoading && feedPosts.length === 0 && Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="p-3 rounded-lg border border-white/5 bg-black/40 animate-pulse h-24" />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        </div>{/* end split layout */}
 
         {/* Supported protocols banner */}
         <div className="p-3 rounded-lg border border-white/5 bg-black/30 flex items-center justify-between flex-wrap gap-2">
