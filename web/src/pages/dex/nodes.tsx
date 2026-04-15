@@ -4,13 +4,14 @@
  * Shows all connected peers, IPFS pins, relay health, bandwidth, swarm status.
  * Shell + Brain + Agent = Hybrid Grid Resident
  */
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useMe } from 'hooks/useMe'
 import { useRouter } from 'next/router'
+import { useGroupedTracksQuery } from 'lib/graphql'
 import {
   HardDrive, Wifi, WifiOff, Activity, Globe, Radio, Shield, Zap,
   Server, Database, ArrowUpRight, ArrowDownLeft, RefreshCw, Terminal,
-  Eye, Clock, ChevronRight, Signal, Cpu, Lock
+  Eye, Clock, ChevronRight, Signal, Cpu, Lock, Music
 } from 'lucide-react'
 
 interface NodeStats {
@@ -70,9 +71,7 @@ export default function NodesPage() {
   const [nodes, setNodes] = useState(SWARM_NODES)
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null)
   const [pinging, setPinging] = useState(false)
-  const [collection, setCollection] = useState<any[]>([])
   const [collectionView, setCollectionView] = useState<'cards' | 'table'>('table')
-  const [collectionLoading, setCollectionLoading] = useState(false)
 
   // Fetch operator status
   const fetchStatus = useCallback(async () => {
@@ -131,27 +130,19 @@ export default function NodesPage() {
     setPinging(false)
   }, [nodes])
 
-  // Fetch user's NFT collection for the directory browser
-  const fetchCollection = useCallback(async () => {
-    if (!me?.profile?.id) return
-    setCollectionLoading(true)
-    try {
-      const r = await fetch('/api/feed/tracks?limit=50')
-      if (r.ok) {
-        const data = await r.json()
-        setCollection(data.tracks || [])
-      }
-    } catch {}
-    setCollectionLoading(false)
-  }, [me?.profile?.id])
+  // Grouped tracks — deduplicated editions (one card per unique track)
+  const { data: tracksData, loading: tracksLoading, refetch: refetchTracks } = useGroupedTracksQuery({
+    variables: { page: { first: 500 } },
+    fetchPolicy: 'cache-and-network',
+  })
+  const collection = useMemo(() => tracksData?.groupedTracks?.nodes || [], [tracksData])
 
   useEffect(() => {
     fetchStatus()
     fetchAnalytics()
-    fetchCollection()
     const iv = setInterval(fetchStatus, 15000)
     return () => clearInterval(iv)
-  }, [fetchStatus, fetchAnalytics, fetchCollection])
+  }, [fetchStatus, fetchAnalytics])
 
   // Auto-ping on mount
   useEffect(() => { pingAll() }, []) // eslint-disable-line react-hooks/exhaustive-deps
@@ -336,8 +327,8 @@ export default function NodesPage() {
             <div className="flex items-center gap-1">
               <button onClick={() => setCollectionView('cards')} className={`px-2 py-0.5 rounded text-[8px] font-mono transition ${collectionView === 'cards' ? 'bg-cyan-500/20 text-cyan-400' : 'text-gray-600 hover:text-gray-400'}`}>CARDS</button>
               <button onClick={() => setCollectionView('table')} className={`px-2 py-0.5 rounded text-[8px] font-mono transition ${collectionView === 'table' ? 'bg-cyan-500/20 text-cyan-400' : 'text-gray-600 hover:text-gray-400'}`}>TABLE</button>
-              <button onClick={fetchCollection} className="px-2 py-0.5 rounded text-[8px] font-mono text-gray-600 hover:text-cyan-400 transition">
-                <RefreshCw className={`w-3 h-3 inline ${collectionLoading ? 'animate-spin' : ''}`} />
+              <button onClick={() => refetchTracks()} className="px-2 py-0.5 rounded text-[8px] font-mono text-gray-600 hover:text-cyan-400 transition">
+                <RefreshCw className={`w-3 h-3 inline ${tracksLoading ? 'animate-spin' : ''}`} />
               </button>
             </div>
           </div>
@@ -345,22 +336,28 @@ export default function NodesPage() {
           {collectionView === 'cards' ? (
             /* Mini card grid — like wallet page NFT cards */
             <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-8 gap-2">
-              {collection.length === 0 && !collectionLoading && (
+              {collection.length === 0 && !tracksLoading && (
                 <div className="col-span-full text-center py-8 text-[10px] font-mono text-gray-700">No tracks found — upload via Operator or SCID</div>
               )}
-              {collectionLoading && collection.length === 0 && Array.from({ length: 8 }).map((_, i) => (
+              {tracksLoading && collection.length === 0 && Array.from({ length: 8 }).map((_, i) => (
                 <div key={i} className="aspect-square rounded-lg bg-white/[0.02] border border-white/5 animate-pulse" />
               ))}
               {collection.map((track: any, i: number) => (
                 <div key={track.id || i} className="group relative rounded-lg overflow-hidden border border-white/5 hover:border-cyan-500/30 transition-all cursor-pointer bg-black/40 hover:bg-black/60"
                   onClick={() => window.open(`/dex/track/${track.id}`, '_blank', 'noopener')}
                 >
-                  <div className="aspect-square bg-gradient-to-br from-cyan-900/30 to-purple-900/30">
+                  <div className="aspect-square bg-gradient-to-br from-cyan-900/30 to-purple-900/30 relative">
                     {track.artworkUrl ? (
                       <img src={track.artworkUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
-                        <HardDrive className="w-6 h-6 text-gray-700" />
+                        <Music className="w-6 h-6 text-gray-700" />
+                      </div>
+                    )}
+                    {/* Edition fraction badge — degens know what 1/10 means */}
+                    {track.editionSize > 1 && (
+                      <div className="absolute top-1 right-1 px-1.5 py-0.5 rounded bg-black/70 border border-purple-500/30 backdrop-blur-sm">
+                        <span className="text-[7px] font-mono font-bold text-purple-300">1/{track.editionSize}</span>
                       </div>
                     )}
                   </div>
@@ -368,9 +365,9 @@ export default function NodesPage() {
                     <p className="text-[8px] font-mono text-white truncate font-bold">{track.title || 'Untitled'}</p>
                     <p className="text-[7px] font-mono text-gray-600 truncate">{track.artist || 'Unknown'}</p>
                     <div className="flex items-center gap-1 mt-0.5">
-                      {track.isNFT && <span className="text-[6px] font-mono text-purple-400 px-1 py-0 rounded bg-purple-500/10">NFT</span>}
-                      {track.ipfsHash && <span className="text-[6px] font-mono text-cyan-400 px-1 py-0 rounded bg-cyan-500/10">IPFS</span>}
-                      {track.streamCount > 0 && <span className="text-[6px] font-mono text-gray-600">{track.streamCount}x</span>}
+                      {track.nftData?.tokenId ? <span className="text-[6px] font-mono text-purple-400 px-1 py-0 rounded bg-purple-500/10">NFT</span> : <span className="text-[6px] font-mono text-cyan-400 px-1 py-0 rounded bg-cyan-500/10">SCid</span>}
+                      {track.nftData?.ipfsCid && <span className="text-[6px] font-mono text-cyan-400 px-1 py-0 rounded bg-cyan-500/10">IPFS</span>}
+                      {track.playbackCount > 0 && <span className="text-[6px] font-mono text-gray-600">{track.playbackCount}x</span>}
                     </div>
                   </div>
                 </div>
@@ -385,22 +382,24 @@ export default function NodesPage() {
                 <span className="col-span-1 text-[7px] font-mono text-gray-600">ART</span>
                 <span className="col-span-3 text-[7px] font-mono text-gray-600">TITLE</span>
                 <span className="col-span-2 text-[7px] font-mono text-gray-600">ARTIST</span>
+                <span className="col-span-1 text-[7px] font-mono text-gray-600 text-right">SUPPLY</span>
                 <span className="col-span-1 text-[7px] font-mono text-gray-600 text-right">PLAYS</span>
                 <span className="col-span-1 text-[7px] font-mono text-gray-600 text-right">TYPE</span>
-                <span className="col-span-2 text-[7px] font-mono text-gray-600 text-right">CID</span>
-                <span className="col-span-1 text-[7px] font-mono text-gray-600 text-right">PIN</span>
+                <span className="col-span-2 text-[7px] font-mono text-gray-600 text-right">CID / PIN</span>
               </div>
               {/* Rows */}
-              <div className="max-h-[300px] overflow-y-auto">
-                {collection.length === 0 && !collectionLoading && (
+              <div className="max-h-[400px] overflow-y-auto">
+                {collection.length === 0 && !tracksLoading && (
                   <div className="text-center py-6 text-[10px] font-mono text-gray-700">No data — upload tracks to populate</div>
                 )}
-                {collectionLoading && collection.length === 0 && Array.from({ length: 5 }).map((_, i) => (
+                {tracksLoading && collection.length === 0 && Array.from({ length: 5 }).map((_, i) => (
                   <div key={i} className="h-8 bg-white/[0.01] animate-pulse border-b border-white/[0.02]" />
                 ))}
                 {collection.map((track: any, i: number) => {
-                  const cid = track.ipfsHash || track.playbackUrl?.split('/ipfs/')?.[1]?.split('?')?.[0] || ''
+                  const cid = track.nftData?.ipfsCid || track.playbackUrl?.split('/ipfs/')?.[1]?.split('?')?.[0] || ''
                   const shortCid = cid ? `${cid.slice(0, 6)}...${cid.slice(-4)}` : '—'
+                  const isNFT = !!track.nftData?.tokenId
+                  const edSize = track.editionSize || 1
                   return (
                     <div key={track.id || i}
                       onClick={() => window.open(`/dex/track/${track.id}`, '_blank', 'noopener')}
@@ -418,17 +417,24 @@ export default function NodesPage() {
                       </div>
                       <span className="col-span-3 text-[9px] font-mono text-white truncate pr-2">{track.title || 'Untitled'}</span>
                       <span className="col-span-2 text-[8px] font-mono text-gray-500 truncate">{track.artist || '—'}</span>
-                      <span className="col-span-1 text-[8px] font-mono text-gray-400 text-right">{track.streamCount || 0}</span>
+                      <span className="col-span-1 text-[8px] font-mono text-right">
+                        {edSize > 1 ? (
+                          <span className="text-purple-400">1/{edSize}</span>
+                        ) : (
+                          <span className="text-gray-600">1/1</span>
+                        )}
+                      </span>
+                      <span className="col-span-1 text-[8px] font-mono text-gray-400 text-right">{track.playbackCount || 0}</span>
                       <span className="col-span-1 text-right">
-                        {track.isNFT ? (
+                        {isNFT ? (
                           <span className="text-[7px] font-mono text-purple-400 px-1 rounded bg-purple-500/10">NFT</span>
                         ) : (
                           <span className="text-[7px] font-mono text-cyan-400 px-1 rounded bg-cyan-500/10">SCid</span>
                         )}
                       </span>
-                      <span className="col-span-2 text-[7px] font-mono text-cyan-500/60 text-right truncate" title={cid}>{shortCid}</span>
-                      <span className="col-span-1 text-right">
-                        {cid ? <span className="text-[7px] font-mono text-green-500">PINNED</span> : <span className="text-[7px] font-mono text-gray-700">—</span>}
+                      <span className="col-span-2 text-right flex items-center justify-end gap-1">
+                        <span className="text-[7px] font-mono text-cyan-500/60 truncate" title={cid}>{shortCid}</span>
+                        {cid ? <span className="w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0" title="PINNED" /> : <span className="w-1.5 h-1.5 rounded-full bg-gray-700 flex-shrink-0" />}
                       </span>
                     </div>
                   )
