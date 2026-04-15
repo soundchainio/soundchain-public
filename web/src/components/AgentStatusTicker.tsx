@@ -1897,6 +1897,22 @@ export function AgentStatusTicker() {
   }, [activeTab])
   // Operator transfer handler
   const [operatorError, setOperatorError] = useState<string | null>(null)
+  const [operatorArchiveFiles, setOperatorArchiveFiles] = useState<any[]>([])
+  // Fetch user's tracks for archive thumbnails when profile destination expanded
+  useEffect(() => {
+    if (operatorExpandedDest !== 'profile') return
+    let mounted = true
+    ;(async () => {
+      try {
+        const r = await fetch('/api/feed/tracks?limit=20')
+        if (r.ok && mounted) {
+          const data = await r.json()
+          setOperatorArchiveFiles(data.tracks || [])
+        }
+      } catch {}
+    })()
+    return () => { mounted = false }
+  }, [operatorExpandedDest])
   const [operatorCompleted, setOperatorCompleted] = useState(0)
   const handleOperatorTransfer = useCallback(async () => {
     if (!operatorFiles.length || !operatorDest || operatorUploading) return
@@ -3457,12 +3473,13 @@ export function AgentStatusTicker() {
                           { label: '/music/', info: 'audio/mpeg, audio/wav' },
                           { label: '/metadata/', info: 'JSON · NFT traits' },
                         ]},
-                      { id: 'profile', icon: '📁', label: 'SoundChain Profile', tag: 'tracks/art', protocol: 'HTTPS',
+                      { id: 'profile', icon: '📁', label: 'SoundChain Profile', tag: 'tracks/art/archive', protocol: 'HTTPS',
                         children: [
-                          { label: '/tracks/', info: 'SCid uploads' },
+                          { label: '/tracks/', info: `${operatorArchiveFiles.length} SCid uploads` },
                           { label: '/artwork/', info: 'cover art · IPFS' },
                           { label: '/avatar/', info: 'profile picture' },
                           { label: '/wall/', info: 'wall media' },
+                          { label: '/archive/', info: 'saved · bookmarks' },
                         ]},
                       { id: 'warroom', icon: '📁', label: 'War Room Shared', tag: 'team files', protocol: 'WebSocket',
                         children: [
@@ -3498,7 +3515,7 @@ export function AgentStatusTicker() {
                           <span className="text-[6px] font-mono text-gray-700 flex-shrink-0">{d.protocol}</span>
                           {operatorDest === d.id && <span className="text-[8px] text-cyan-400">✓</span>}
                         </button>
-                        {/* Expanded children — inline directory listing */}
+                        {/* Expanded children — inline directory listing + thumbnails */}
                         {operatorExpandedDest === d.id && (
                           <div className="ml-5 pl-2 border-l border-green-500/10 mt-0.5 mb-1 space-y-0.5">
                             {d.children.map((c, ci) => (
@@ -3508,6 +3525,33 @@ export function AgentStatusTicker() {
                                 <span className="text-[7px] font-mono text-gray-700 ml-auto">{c.info}</span>
                               </div>
                             ))}
+                            {/* Micro thumbnails — real IPFS content from user's profile */}
+                            {d.id === 'profile' && operatorArchiveFiles.length > 0 && (
+                              <div className="mt-1 pt-1 border-t border-green-500/5">
+                                <div className="flex items-center gap-1 px-2 mb-1">
+                                  <span className="text-[7px] font-mono text-gray-700">IPFS OBJECTS</span>
+                                  <span className="text-[6px] font-mono text-green-500/40">{operatorArchiveFiles.length} files</span>
+                                </div>
+                                <div className="flex flex-wrap gap-1 px-1">
+                                  {operatorArchiveFiles.slice(0, 12).map((t: any, ti: number) => (
+                                    <div key={t.id || ti} className="w-7 h-7 rounded overflow-hidden border border-green-500/10 hover:border-cyan-500/30 transition cursor-pointer" title={`${t.title || 'Untitled'} — ${t.artist || ''}`}>
+                                      {t.artworkUrl ? (
+                                        <img src={t.artworkUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
+                                      ) : (
+                                        <div className="w-full h-full bg-gradient-to-br from-green-900/30 to-cyan-900/30 flex items-center justify-center">
+                                          <FileIcon className="w-2.5 h-2.5 text-green-500/30" />
+                                        </div>
+                                      )}
+                                    </div>
+                                  ))}
+                                  {operatorArchiveFiles.length > 12 && (
+                                    <div className="w-7 h-7 rounded border border-white/5 flex items-center justify-center">
+                                      <span className="text-[6px] font-mono text-gray-600">+{operatorArchiveFiles.length - 12}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
