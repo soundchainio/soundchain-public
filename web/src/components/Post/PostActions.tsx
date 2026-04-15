@@ -5,7 +5,7 @@ import { useModalDispatch } from 'contexts/ModalContext'
 import { useMe } from 'hooks/useMe'
 import { ReactionEmoji } from 'icons/ReactionEmoji'
 import { delayFocus } from 'lib/delayFocus'
-import { ReactionType, useBookmarkPostMutation, useUnbookmarkPostMutation } from 'lib/graphql'
+import { ReactionType } from 'lib/graphql'
 import { createPostArchive, downloadArchive, generateArchiveFilename, isMobileDevice } from 'lib/postArchive'
 import NextLink from 'next/link'
 import { useRouter } from 'next/router'
@@ -91,9 +91,17 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
     setShowShareToStory(true)
   }
 
-  // Bookmark mutations
-  const [bookmarkPost, { loading: bookmarking }] = useBookmarkPostMutation()
-  const [unbookmarkPost, { loading: unbookmarking }] = useUnbookmarkPostMutation()
+  // Bookmark — Vercel direct
+  const [bookmarking, setBookmarking] = useState(false)
+  const unbookmarking = false
+  const bookmarkPost = async ({ variables }: any) => {
+    setBookmarking(true)
+    try { await fetch('/api/posts/bookmark', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ postId: variables.postId, action: 'add' }) }) } finally { setBookmarking(false) }
+  }
+  const unbookmarkPost = async ({ variables }: any) => {
+    setBookmarking(true)
+    try { await fetch('/api/posts/bookmark', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ postId: variables.postId, action: 'remove' }) }) } finally { setBookmarking(false) }
+  }
 
   // Delete — Vercel direct (no Lambda)
   const [deleting, setDeleting] = useState(false)

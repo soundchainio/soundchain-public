@@ -2,25 +2,8 @@
 
 import { useState, useCallback, useRef } from 'react'
 import { X, ImagePlus, Loader2, Plus, Search, Link2, Music2, Trash2 } from 'lucide-react'
-import { useCreatePlaylistMutation, useCreatePlaylistTracksMutation, useExploreTracksQuery, SortExploreTracksField, SortOrder, PlaylistTrackSourceType } from 'lib/graphql'
-import { gql, useMutation } from '@apollo/client'
-
-// Mutation for adding external links to playlist (not yet in codegen)
-const ADD_PLAYLIST_ITEM = gql`
-  mutation AddPlaylistItem($input: AddPlaylistItemInput!) {
-    addPlaylistItem(input: $input) {
-      playlistTrack {
-        id
-        playlistId
-        sourceType
-        externalUrl
-        title
-        position
-      }
-      success
-    }
-  }
-`
+import { useExploreTracksQuery, SortExploreTracksField, SortOrder, PlaylistTrackSourceType } from 'lib/graphql'
+// Apollo mutations replaced by Vercel direct (Phase 5e)
 import { useUpload } from 'hooks/useUpload'
 import Asset from 'components/Asset/Asset'
 
@@ -115,9 +98,14 @@ export const CreatePlaylistModal = ({ isOpen, onClose, onSuccess }: CreatePlayli
     (url) => setArtworkUrl(url)
   )
 
-  const [createPlaylist] = useCreatePlaylistMutation()
-  const [createPlaylistTracks] = useCreatePlaylistTracksMutation()
-  const [addPlaylistItem] = useMutation(ADD_PLAYLIST_ITEM)
+  // Playlist mutations — Vercel direct (Phase 5e)
+  const playlistFetch = async (action: string, params: any) => {
+    const res = await fetch('/api/playlists/manage', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action, ...params }) })
+    return { data: await res.json() }
+  }
+  const createPlaylist = ({ variables }: any) => playlistFetch('create', { name: variables.input?.name, description: variables.input?.description })
+  const createPlaylistTracks = ({ variables }: any) => playlistFetch('addTracks', { playlistId: variables.input?.playlistId, tracks: variables.input?.tracks?.map((t: any) => ({ trackId: t.trackId, source: t.source })) || [] })
+  const addPlaylistItem = ({ variables }: any) => playlistFetch('addTrack', { playlistId: variables.input?.playlistId || variables.playlistId, trackId: variables.input?.trackId || variables.trackId, source: variables.input?.source })
 
   // Handle artwork file selection
   const handleArtworkClick = () => {

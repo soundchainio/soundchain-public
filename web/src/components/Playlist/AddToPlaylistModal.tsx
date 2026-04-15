@@ -7,7 +7,7 @@ import {
   GripVertical, Trash2
 } from 'lucide-react'
 import {
-  useAddPlaylistItemMutation,
+  // useAddPlaylistItemMutation removed — Phase 5e Vercel direct
   PlaylistTrackSourceType,
   AddPlaylistItemInput
 } from 'lib/graphql'
@@ -108,7 +108,9 @@ export const AddToPlaylistModal = ({ isOpen, onClose, playlistId, onSuccess }: A
   const [isSubmitting, setIsSubmitting] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const [addPlaylistItem] = useAddPlaylistItemMutation()
+  const addPlaylistItem = async ({ variables }: any) => {
+    await fetch('/api/playlists/manage', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'addTrack', playlistId: variables.input?.playlistId, trackId: variables.input?.trackId, source: variables.input?.source }) })
+  }
   const { upload: uploadToS3 } = useUpload()
 
   // Handle URL paste/add

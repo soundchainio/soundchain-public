@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Play, Pause, Heart, Share2, Clock, X, Trash2, ExternalLink, Music, Loader2, Plus, Search, SkipBack, SkipForward, Link2, Import, Check, CheckSquare, Square, Camera, MessageSquare, Film, Copy } from 'lucide-react'
 import { useAudioPlayerContext, Song } from 'hooks/useAudioPlayer'
-import { GetUserPlaylistsQuery, useDeletePlaylistItemMutation, useDeletePlaylistMutation, useTogglePlaylistFavoriteMutation, useCreatePlaylistTracksMutation, useExploreTracksQuery, PlaylistTrackSourceType, TrackDocument, SortExploreTracksField, SortOrder, useAddPlaylistItemMutation, useUpdatePlaylistMutation } from 'lib/graphql'
+import { GetUserPlaylistsQuery, useExploreTracksQuery, PlaylistTrackSourceType, TrackDocument, SortExploreTracksField, SortOrder } from 'lib/graphql'
 import { useApolloClient } from '@apollo/client'
 import Asset from 'components/Asset/Asset'
 import { useUpload } from 'hooks/useUpload'
@@ -215,12 +215,17 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
   const router = useRouter()
   const { dispatchShowPostModal } = useModalDispatch()
   const { playlistState, currentSong, isPlaying, togglePlay, isCurrentSong } = useAudioPlayerContext()
-  const [deletePlaylistItem] = useDeletePlaylistItemMutation()
-  const [deletePlaylist] = useDeletePlaylistMutation()
-  const [toggleFavorite] = useTogglePlaylistFavoriteMutation()
-  const [createPlaylistTracks] = useCreatePlaylistTracksMutation()
-  const [addPlaylistItem] = useAddPlaylistItemMutation()
-  const [updatePlaylist] = useUpdatePlaylistMutation()
+  // Playlist mutations — Vercel direct (Phase 5e)
+  const playlistFetch = async (action: string, params: any) => {
+    const res = await fetch('/api/playlists/manage', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action, ...params }) })
+    return res.json()
+  }
+  const deletePlaylistItem = ({ variables }: any) => playlistFetch('removeTrack', { playlistId: variables.input?.playlistId || variables.playlistId, trackId: variables.input?.trackId || variables.trackId })
+  const deletePlaylist = ({ variables }: any) => playlistFetch('delete', { playlistId: variables.input?.playlistId || variables.id })
+  const toggleFavorite = ({ variables }: any) => playlistFetch('favorite', { playlistId: variables.input?.playlistId || variables.playlistId })
+  const createPlaylistTracks = ({ variables }: any) => playlistFetch('addTracks', { playlistId: variables.input?.playlistId, tracks: variables.input?.tracks?.map((t: any) => ({ trackId: t.trackId, source: t.source })) || [] })
+  const addPlaylistItem = ({ variables }: any) => playlistFetch('addTrack', { playlistId: variables.input?.playlistId, trackId: variables.input?.trackId, source: variables.input?.source })
+  const updatePlaylist = ({ variables }: any) => playlistFetch('update', { playlistId: variables.input?.playlistId || variables.id, name: variables.input?.name, description: variables.input?.description, coverUrl: variables.input?.coverUrl })
   const coverInputRef = useRef<HTMLInputElement>(null)
   const [coverArtUrl, setCoverArtUrl] = useState<string | null>(playlist.artworkUrl || null)
   const { preview: coverPreview, uploading: coverUploading, upload: uploadCover } = useUpload(

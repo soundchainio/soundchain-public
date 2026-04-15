@@ -1,10 +1,6 @@
 import { useModalDispatch, useModalState } from 'contexts/ModalContext'
 import { useMe } from 'hooks/useMe'
 import {
-  CommentsDocument,
-  PostsDocument,
-  useDeleteCommentMutation,
-  useDeletePostMutation,
   useTrackLazyQuery,
 } from 'lib/graphql'
 import { useRouter } from 'next/router'
@@ -28,19 +24,13 @@ export const AuthorActionsModal = () => {
 
   const [getTrack] = useTrackLazyQuery()
 
-  const [deleteComment] = useDeleteCommentMutation({
-    refetchQueries: [CommentsDocument],
-    update: (cache, data) => {
-      cache.evict({ id: cache.identify(data.data!.deleteComment.comment!) })
-    },
-  })
-
-  const [deletePost] = useDeletePostMutation({
-    refetchQueries: [PostsDocument],
-    update: (cache, data) => {
-      cache.evict({ id: cache.identify(data.data!.deletePost.post!) })
-    },
-  })
+  // Delete mutations — Vercel direct (Phase 5)
+  const deleteComment = async ({ variables }: any) => {
+    await fetch('/api/posts/comment-delete', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ commentId: variables.id }) })
+  }
+  const deletePost = async ({ variables }: any) => {
+    await fetch('/api/posts/delete', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ postId: variables.input?.postId || variables.id }) })
+  }
 
   const onOutsideClick = () => {
     dispatchShowAuthorActionsModal({
