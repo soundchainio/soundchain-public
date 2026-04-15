@@ -2,9 +2,10 @@
  * Archive — Saved/Bookmarked posts (IG-style)
  * Shows all bookmarked posts in a grid + list view
  */
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, ReactElement } from 'react'
 import { useMe } from 'hooks/useMe'
 import { useRouter } from 'next/router'
+import { TopNavBar } from 'components/TopNavBar'
 import { Bookmark, Grid, List, RefreshCw, Music, Image as ImageIcon, Film, MessageCircle, Heart, ExternalLink } from 'lucide-react'
 
 export default function ArchivePage() {
@@ -34,6 +35,7 @@ export default function ArchivePage() {
 
   return (
     <div className="min-h-screen bg-[#030303] text-white">
+      <TopNavBar />
       {/* Header */}
       <div className="border-b border-white/5 bg-black/60 backdrop-blur-md">
         <div className="max-w-4xl mx-auto px-4 py-4">
@@ -182,3 +184,6 @@ export default function ArchivePage() {
     </div>
   )
 }
+
+// Skip default Layout — use our own TopNavBar
+;(ArchivePage as any).getLayout = (page: ReactElement) => page

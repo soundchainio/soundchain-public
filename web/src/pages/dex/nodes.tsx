@@ -4,10 +4,11 @@
  * Shows all connected peers, IPFS pins, relay health, bandwidth, swarm status.
  * Shell + Brain + Agent = Hybrid Grid Resident
  */
-import { useEffect, useState, useCallback, useMemo } from 'react'
+import { useEffect, useState, useCallback, useMemo, ReactElement } from 'react'
 import { useMe } from 'hooks/useMe'
 import { useRouter } from 'next/router'
 import { useGroupedTracksQuery } from 'lib/graphql'
+import { TopNavBar } from 'components/TopNavBar'
 import {
   HardDrive, Wifi, WifiOff, Activity, Globe, Radio, Shield, Zap,
   Server, Database, ArrowUpRight, ArrowDownLeft, RefreshCw, Terminal,
@@ -77,6 +78,7 @@ export default function NodesPage() {
   const [feedLoading, setFeedLoading] = useState(false)
   const [feedCursor, setFeedCursor] = useState<string | null>(null)
   const [feedHasMore, setFeedHasMore] = useState(true)
+  const [expandedPostId, setExpandedPostId] = useState<string | null>(null)
 
   // Fetch operator status
   const fetchStatus = useCallback(async () => {
@@ -177,6 +179,7 @@ export default function NodesPage() {
 
   return (
     <div className="min-h-screen bg-[#030303] text-white">
+      <TopNavBar />
       {/* Header */}
       <div className="border-b border-green-500/10 bg-black/60 backdrop-blur-md">
         <div className="max-w-6xl mx-auto px-4 py-4">
@@ -507,14 +510,20 @@ export default function NodesPage() {
                   {me?.profile?.id ? 'No posts yet — follow users to fill your feed' : 'Sign in to see your feed'}
                 </div>
               )}
-              {feedPosts.map((post: any) => (
+              {feedPosts.map((post: any) => {
+                const isExpanded = expandedPostId === post.id
+                return (
                 <div key={post.id}
-                  onClick={() => window.open(`/dex/post/${post.id}`, '_blank', 'noopener')}
-                  className="p-3 rounded-lg border border-white/5 bg-black/40 hover:bg-black/60 cursor-pointer transition-all hover:border-cyan-500/20 group"
+                  onClick={() => setExpandedPostId(isExpanded ? null : post.id)}
+                  className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                    isExpanded ? 'bg-black/60 border-cyan-500/30' : 'border-white/5 bg-black/40 hover:bg-black/60 hover:border-cyan-500/20'
+                  } group`}
                 >
                   {/* Author */}
                   <div className="flex items-center gap-2 mb-2">
-                    <div className="w-6 h-6 rounded-full overflow-hidden bg-gray-800 flex-shrink-0">
+                    <div className="w-6 h-6 rounded-full overflow-hidden bg-gray-800 flex-shrink-0 cursor-pointer"
+                      onClick={(e) => { e.stopPropagation(); window.open(`/dex/users/${post.profile?.userHandle || post.profile?.id}`, '_blank', 'noopener') }}
+                    >
                       {post.profile?.profilePicture ? (
                         <img src={post.profile.profilePicture} alt="" className="w-full h-full object-cover" />
                       ) : (
@@ -531,11 +540,11 @@ export default function NodesPage() {
                   </div>
                   {/* Body */}
                   {post.body && (
-                    <p className="text-[10px] font-mono text-gray-300 leading-relaxed mb-2 line-clamp-3">{post.body}</p>
+                    <p className={`text-[10px] font-mono text-gray-300 leading-relaxed mb-2 ${isExpanded ? '' : 'line-clamp-3'}`}>{post.body}</p>
                   )}
                   {/* Media thumbnail */}
                   {(post.uploadedMediaUrl || post.mediaThumbnail) && (
-                    <div className="rounded overflow-hidden mb-2 max-h-32">
+                    <div className={`rounded overflow-hidden mb-2 ${isExpanded ? 'max-h-64' : 'max-h-32'} transition-all`}>
                       <img src={post.mediaThumbnail || post.uploadedMediaUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
                     </div>
                   )}
@@ -545,8 +554,18 @@ export default function NodesPage() {
                     <span>{post.commentCount || 0} comments</span>
                     <span>{post.repostCount || 0} reposts</span>
                   </div>
+                  {/* Expanded: open full post link */}
+                  {isExpanded && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); router.push(`/dex/post/${post.id}`) }}
+                      className="mt-2 text-[8px] font-mono text-cyan-400 hover:text-cyan-300 transition"
+                    >
+                      Open full post →
+                    </button>
+                  )}
                 </div>
-              ))}
+                )
+              })}
               {/* Load more */}
               {feedHasMore && feedPosts.length > 0 && (
                 <button
@@ -600,3 +619,6 @@ function InfoRow({ label, value }: { label: string; value: string }) {
     </div>
   )
 }
+
+// Skip default Layout — use our own TopNavBar (matches dex page pattern)
+;(NodesPage as any).getLayout = (page: ReactElement) => page
