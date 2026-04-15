@@ -38,15 +38,30 @@ const FURL_IDENTITY = {
 // Stores multiple API keys with labels. Users pick the active one.
 // Persists across sessions in localStorage. Zero booleans.
 
-type KeybookEntryType = 'CLAUDE' | 'OPENCLAW' | 'TUNNEL'
+type KeybookEntryType = 'CLAUDE' | 'OPENCLAW' | 'TUNNEL' | 'IPFS'
+
+// IPFS provider configs for BYOK
+type IpfsProvider = 'pinata' | 'infura' | 'web3storage' | 'filebase' | 'nftstorage' | 'custom'
+
+const IPFS_PROVIDERS: Record<IpfsProvider, { name: string; uploadUrl: string; authType: 'apikey' | 'bearer' | 'basic'; gateway: string }> = {
+  pinata: { name: 'Pinata', uploadUrl: 'https://api.pinata.cloud/pinning/pinFileToIPFS', authType: 'apikey', gateway: 'https://gateway.pinata.cloud/ipfs/' },
+  infura: { name: 'Infura', uploadUrl: 'https://ipfs.infura.io:5001/api/v0/add', authType: 'basic', gateway: 'https://ipfs.infura.io/ipfs/' },
+  web3storage: { name: 'Web3.Storage', uploadUrl: 'https://api.web3.storage/upload', authType: 'bearer', gateway: 'https://w3s.link/ipfs/' },
+  filebase: { name: 'Filebase', uploadUrl: 'https://api.filebase.io/v1/ipfs/pins', authType: 'bearer', gateway: 'https://ipfs.filebase.io/ipfs/' },
+  nftstorage: { name: 'NFT.Storage', uploadUrl: 'https://api.nft.storage/upload', authType: 'bearer', gateway: 'https://nftstorage.link/ipfs/' },
+  custom: { name: 'Custom', uploadUrl: '', authType: 'bearer', gateway: '' },
+}
 
 interface KeybookEntry {
   id: string
   label: string
   type: KeybookEntryType
-  key?: string       // Claude sk-ant-...
-  url?: string       // OpenClaw gateway URL
+  key?: string       // Claude sk-ant-... OR Pinata API key OR Bearer token
+  secret?: string    // Pinata API secret OR Infura project secret
+  url?: string       // OpenClaw gateway URL OR Custom IPFS upload URL
   token?: string     // OpenClaw gateway token
+  ipfsProvider?: IpfsProvider // Which IPFS provider this key is for
+  ipfsGateway?: string       // Custom gateway URL override
   addedAt: number
 }
 
@@ -153,6 +168,83 @@ function keybookGetActive(): KeybookEntry | null {
 function keybookMaskKey(key: string): string {
   if (key.length <= 12) return '****'
   return key.slice(0, 8) + '...' + key.slice(-4)
+}
+
+// Get active IPFS BYOK entry (or null for default SoundChain Pinata)
+function getActiveIpfsKey(): KeybookEntry | null {
+  const kb = getKeybook()
+  return kb.entries.find(e => e.type === 'IPFS') || null
+}
+
+// Upload file to any IPFS provider using BYOK credentials
+async function uploadToIpfsProvider(file: File, entry: KeybookEntry, folder: string): Promise<{ cid: string; url: string }> {
+  const provider = entry.ipfsProvider || 'pinata'
+  const config = IPFS_PROVIDERS[provider]
+  const formData = new FormData()
+
+  if (provider === 'pinata') {
+    formData.append('file', file)
+    formData.append('pinataMetadata', JSON.stringify({ name: `operator/${folder}/${file.name}` }))
+    formData.append('pinataOptions', JSON.stringify({ cidVersion: 1 }))
+    const res = await fetch(config.uploadUrl, {
+      method: 'POST',
+      headers: { pinata_api_key: entry.key!, pinata_secret_api_key: entry.secret! },
+      body: formData,
+    })
+    if (!res.ok) throw new Error(`Pinata: ${res.status}`)
+    const data = await res.json()
+    return { cid: data.IpfsHash, url: `${entry.ipfsGateway || config.gateway}${data.IpfsHash}` }
+  }
+
+  if (provider === 'infura') {
+    formData.append('file', file)
+    const auth = btoa(`${entry.key}:${entry.secret}`)
+    const res = await fetch(`${config.uploadUrl}?pin=true`, {
+      method: 'POST',
+      headers: { Authorization: `Basic ${auth}` },
+      body: formData,
+    })
+    if (!res.ok) throw new Error(`Infura: ${res.status}`)
+    const data = await res.json()
+    return { cid: data.Hash, url: `${entry.ipfsGateway || config.gateway}${data.Hash}` }
+  }
+
+  if (provider === 'web3storage' || provider === 'nftstorage') {
+    const res = await fetch(config.uploadUrl, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${entry.key}` },
+      body: file,
+    })
+    if (!res.ok) throw new Error(`${config.name}: ${res.status}`)
+    const data = await res.json()
+    const cid = data.cid || data.value?.cid
+    return { cid, url: `${entry.ipfsGateway || config.gateway}${cid}` }
+  }
+
+  if (provider === 'filebase') {
+    const res = await fetch(config.uploadUrl, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${entry.key}`, 'Content-Type': 'application/octet-stream' },
+      body: file,
+    })
+    if (!res.ok) throw new Error(`Filebase: ${res.status}`)
+    const data = await res.json()
+    return { cid: data.cid, url: `${entry.ipfsGateway || config.gateway}${data.cid}` }
+  }
+
+  // Custom provider
+  if (provider === 'custom' && entry.url) {
+    formData.append('file', file)
+    const headers: any = {}
+    if (entry.key) headers.Authorization = `Bearer ${entry.key}`
+    const res = await fetch(entry.url, { method: 'POST', headers, body: formData })
+    if (!res.ok) throw new Error(`Custom IPFS: ${res.status}`)
+    const data = await res.json()
+    const cid = data.cid || data.IpfsHash || data.Hash
+    return { cid, url: `${entry.ipfsGateway || ''}${cid}` }
+  }
+
+  throw new Error(`Unsupported IPFS provider: ${provider}`)
 }
 
 // ─── MdBookKeys — Session Export/Import Book ──────────────────────────
@@ -1927,21 +2019,37 @@ export function AgentStatusTicker() {
     let completed = 0
     const cids: string[] = []
 
-    // Get Pinata credentials for direct browser upload (bypasses Vercel 4.5MB limit)
+    // Check for BYOK IPFS key first, fall back to SoundChain's Pinata
+    const byokIpfs = getActiveIpfsKey()
     let pinataKeys: { apiKey: string; apiSecret: string; gateway: string; profileId: string } | null = null
-    try {
-      const tokenRes = await fetch('/api/operator/upload-token')
-      if (tokenRes.ok) pinataKeys = await tokenRes.json()
-    } catch {}
+    if (!byokIpfs) {
+      try {
+        const tokenRes = await fetch('/api/operator/upload-token')
+        if (tokenRes.ok) pinataKeys = await tokenRes.json()
+      } catch {}
+    }
+    const folder = operatorSubfolder?.split(':')[1] || 'uploads'
 
-    // Upload function for a single file — direct to Pinata (no size limit)
+    // Upload function — BYOK provider or SoundChain default
     const uploadOne = async (file: File) => {
-      if (!pinataKeys) throw new Error('Failed to get upload credentials')
+      // BYOK path — user's own IPFS provider
+      if (byokIpfs) {
+        const result = await uploadToIpfsProvider(file, byokIpfs, folder)
+        completed++
+        setOperatorCompleted(completed)
+        setOperatorProgress(Math.round((completed / total) * 100))
+        setOperatorLastCid(result.cid)
+        cids.push(result.cid)
+        return result
+      }
+
+      // Default path — SoundChain's Pinata
+      if (!pinataKeys) throw new Error('No IPFS credentials — add a key with: keys add ipfs <provider> <apiKey> <secret>')
       const formData = new FormData()
       formData.append('file', file)
       formData.append('pinataMetadata', JSON.stringify({
-        name: `operator/${pinataKeys.profileId}/${operatorSubfolder?.split(':')[1] || 'uploads'}/${file.name}`,
-        keyvalues: { uploadedBy: pinataKeys.profileId, source: 'operator', folder: operatorSubfolder?.split(':')[1] || '/' },
+        name: `operator/${pinataKeys.profileId}/${folder}/${file.name}`,
+        keyvalues: { uploadedBy: pinataKeys.profileId, source: 'operator', folder },
       }))
       formData.append('pinataOptions', JSON.stringify({ cidVersion: 1 }))
 
@@ -2609,6 +2717,8 @@ export function AgentStatusTicker() {
           if (parts.length < 2) {
             addLine('  usage: keys add <label> sk-ant-...', 'error')
             addLine('  usage: keys add <label> openclaw <url> <token>', 'error')
+            addLine('  usage: keys add <label> ipfs <provider> <apiKey> [secret]', 'error')
+            addLine('  providers: pinata, infura, web3storage, filebase, nftstorage, custom', 'info')
           } else {
             const label = parts[0]
             if (parts[1].startsWith('sk-ant-')) {
@@ -2623,8 +2733,22 @@ export function AgentStatusTicker() {
               if (getKeybook().activeId === entry.id) {
                 addLine(`  auto-activated — this key is now live.`, 'info')
               }
+            } else if (parts[1] === 'ipfs' && parts.length >= 4) {
+              const provider = parts[2] as IpfsProvider
+              if (!IPFS_PROVIDERS[provider]) {
+                addLine(`  unknown provider "${provider}". options: pinata, infura, web3storage, filebase, nftstorage, custom`, 'error')
+              } else {
+                const apiKey = parts[3]
+                const secret = parts[4] || undefined
+                const entry = keybookAddEntry(label, 'IPFS', { key: apiKey, secret, ipfsProvider: provider } as any)
+                addLine(`  saved "${label}" (IPFS/${IPFS_PROVIDERS[provider].name}) → keybook #${getKeybook().entries.length}`, 'success')
+                addLine(`  gateway: ${IPFS_PROVIDERS[provider].gateway}`, 'info')
+                addLine(`  Operator will now upload to YOUR ${IPFS_PROVIDERS[provider].name} account.`, 'info')
+              }
             } else {
-              addLine('  key must start with sk-ant- or use: keys add <label> openclaw <url> <token>', 'error')
+              addLine('  key must start with sk-ant- or use:', 'error')
+              addLine('    keys add <label> openclaw <url> <token>', 'error')
+              addLine('    keys add <label> ipfs <provider> <apiKey> [secret]', 'error')
             }
           }
         } else if (keysArgs.startsWith('use ')) {
@@ -2654,6 +2778,10 @@ export function AgentStatusTicker() {
           addLine('  keys                  — show all saved keys', 'info')
           addLine('  keys add <label> sk-ant-...              — save Claude key', 'info')
           addLine('  keys add <label> openclaw <url> <token>  — save OpenClaw key', 'info')
+          addLine('  keys add <label> ipfs pinata <key> <secret>  — BYOK Pinata', 'info')
+          addLine('  keys add <label> ipfs infura <id> <secret>   — BYOK Infura', 'info')
+          addLine('  keys add <label> ipfs web3storage <token>    — BYOK Web3.Storage', 'info')
+          addLine('  keys add <label> ipfs nftstorage <token>     — BYOK NFT.Storage', 'info')
           addLine('  keys use <# or label> — set active key for SMITH', 'info')
           addLine('  keys rm <# or label>  — remove a key', 'info')
         }
@@ -3389,6 +3517,11 @@ export function AgentStatusTicker() {
                   )}
                   {operatorNodeStats?.ipfs?.pins > 0 && (
                     <span className="text-[7px] font-mono text-gray-600">{operatorNodeStats.ipfs.pins} pins</span>
+                  )}
+                  {getActiveIpfsKey() && (
+                    <span className="text-[7px] font-mono px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                      BYOK:{IPFS_PROVIDERS[getActiveIpfsKey()!.ipfsProvider || 'pinata']?.name}
+                    </span>
                   )}
                 </div>
                 <div className="flex items-center gap-2">
