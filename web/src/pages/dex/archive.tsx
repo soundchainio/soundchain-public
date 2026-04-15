@@ -6,7 +6,7 @@ import { useEffect, useState, useCallback, ReactElement } from 'react'
 import { useMe } from 'hooks/useMe'
 import { useRouter } from 'next/router'
 import { TopNavBar } from 'components/TopNavBar'
-import { Bookmark, Grid, List, RefreshCw, Music, Image as ImageIcon, Film, MessageCircle, Heart, ExternalLink } from 'lucide-react'
+import { Bookmark, Grid, List, RefreshCw, Music, Image as ImageIcon, Film, MessageCircle, Heart, ExternalLink, Upload, HardDrive, Copy, Check } from 'lucide-react'
 
 export default function ArchivePage() {
   const me = useMe()
@@ -15,6 +15,11 @@ export default function ArchivePage() {
   const [loading, setLoading] = useState(true)
   const [totalCount, setTotalCount] = useState(0)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  const [activeTab, setActiveTab] = useState<'saved' | 'uploads'>('saved')
+  const [uploads, setUploads] = useState<any[]>([])
+  const [uploadsLoading, setUploadsLoading] = useState(false)
+  const [uploadsTotal, setUploadsTotal] = useState(0)
+  const [copiedCid, setCopiedCid] = useState<string | null>(null)
 
   const fetchBookmarks = useCallback(async (skip = 0) => {
     if (!me?.profile?.id) return
@@ -31,7 +36,21 @@ export default function ArchivePage() {
     setLoading(false)
   }, [me?.profile?.id])
 
-  useEffect(() => { fetchBookmarks() }, [fetchBookmarks])
+  const fetchUploads = useCallback(async (skip = 0) => {
+    setUploadsLoading(true)
+    try {
+      const r = await fetch(`/api/operator/uploads?limit=50&skip=${skip}`)
+      if (r.ok) {
+        const data = await r.json()
+        if (skip === 0) setUploads(data.uploads || [])
+        else setUploads(prev => [...prev, ...(data.uploads || [])])
+        setUploadsTotal(data.total || 0)
+      }
+    } catch {}
+    setUploadsLoading(false)
+  }, [])
+
+  useEffect(() => { fetchBookmarks(); fetchUploads() }, [fetchBookmarks, fetchUploads])
 
   return (
     <div className="min-h-screen bg-[#030303] text-white">
@@ -68,6 +87,82 @@ export default function ArchivePage() {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-4">
+        {/* Tab toggle: Saved | Uploads */}
+        <div className="flex items-center gap-1 mb-4">
+          <button onClick={() => setActiveTab('saved')} className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-mono font-bold transition ${activeTab === 'saved' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'text-gray-600 border border-white/5 hover:text-white'}`}>
+            <Bookmark className="w-3.5 h-3.5" /> Saved ({totalCount})
+          </button>
+          <button onClick={() => setActiveTab('uploads')} className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-mono font-bold transition ${activeTab === 'uploads' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'text-gray-600 border border-white/5 hover:text-white'}`}>
+            <Upload className="w-3.5 h-3.5" /> Uploads ({uploadsTotal})
+          </button>
+        </div>
+
+        {/* ─── UPLOADS TAB ─── */}
+        {activeTab === 'uploads' && (
+          <div>
+            {uploadsLoading && uploads.length === 0 && (
+              <div className="space-y-2">
+                {Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-12 bg-white/[0.02] rounded-lg animate-pulse" />)}
+              </div>
+            )}
+            {!uploadsLoading && uploads.length === 0 && (
+              <div className="text-center py-16">
+                <Upload className="w-12 h-12 text-gray-800 mx-auto mb-3" />
+                <p className="text-sm font-mono text-gray-600">No uploads yet</p>
+                <p className="text-[10px] font-mono text-gray-700 mt-1">Use Operator to upload files to IPFS</p>
+              </div>
+            )}
+            {uploads.length > 0 && (
+              <div className="border border-white/5 rounded-lg overflow-hidden">
+                {/* Header */}
+                <div className="grid grid-cols-12 gap-0 px-3 py-1.5 bg-white/[0.02] border-b border-white/5">
+                  <span className="col-span-1 text-[7px] font-mono text-gray-600">#</span>
+                  <span className="col-span-3 text-[7px] font-mono text-gray-600">FILE</span>
+                  <span className="col-span-2 text-[7px] font-mono text-gray-600">SIZE</span>
+                  <span className="col-span-2 text-[7px] font-mono text-gray-600">FOLDER</span>
+                  <span className="col-span-3 text-[7px] font-mono text-gray-600">CID</span>
+                  <span className="col-span-1 text-[7px] font-mono text-gray-600 text-right">DATE</span>
+                </div>
+                {uploads.map((u: any, i: number) => {
+                  const shortCid = u.cid ? `${u.cid.slice(0, 8)}...${u.cid.slice(-4)}` : '—'
+                  const isCopied = copiedCid === u.cid
+                  return (
+                    <div key={u.id || i} className="grid grid-cols-12 gap-0 px-3 py-2 items-center border-b border-white/[0.02] hover:bg-white/[0.03] transition">
+                      <span className="col-span-1 text-[8px] font-mono text-gray-600">{i + 1}</span>
+                      <div className="col-span-3 flex items-center gap-1.5 min-w-0">
+                        <HardDrive className="w-3 h-3 text-green-400 flex-shrink-0" />
+                        <span className="text-[9px] font-mono text-white truncate">{u.fileName}</span>
+                      </div>
+                      <span className="col-span-2 text-[8px] font-mono text-gray-500">
+                        {u.fileSize < 1024 ? `${u.fileSize} B` : u.fileSize < 1048576 ? `${(u.fileSize / 1024).toFixed(1)} KB` : `${(u.fileSize / 1048576).toFixed(1)} MB`}
+                      </span>
+                      <span className="col-span-2 text-[8px] font-mono text-green-400/60">{u.folder || '/uploads/'}</span>
+                      <div className="col-span-3 flex items-center gap-1">
+                        <a href={u.gateway || `https://gateway.pinata.cloud/ipfs/${u.cid}`} target="_blank" rel="noopener noreferrer" className="text-[7px] font-mono text-cyan-500/60 hover:text-cyan-400 truncate">
+                          {shortCid}
+                        </a>
+                        <button onClick={() => { navigator.clipboard.writeText(u.gateway || `https://gateway.pinata.cloud/ipfs/${u.cid}`); setCopiedCid(u.cid); setTimeout(() => setCopiedCid(null), 2000) }} className="flex-shrink-0">
+                          {isCopied ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3 text-gray-700 hover:text-cyan-400 transition" />}
+                        </button>
+                      </div>
+                      <span className="col-span-1 text-[7px] font-mono text-gray-700 text-right">
+                        {u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+            {uploads.length < uploadsTotal && (
+              <button onClick={() => fetchUploads(uploads.length)} disabled={uploadsLoading} className="w-full mt-4 py-2 text-[10px] font-mono text-green-400/60 hover:text-green-400 border border-white/5 rounded-lg transition disabled:opacity-50">
+                {uploadsLoading ? 'LOADING...' : `LOAD MORE (${uploads.length}/${uploadsTotal})`}
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* ─── SAVED TAB ─── */}
+        {activeTab === 'saved' && <>
         {loading && posts.length === 0 && (
           <div className="grid grid-cols-3 gap-2">
             {Array.from({ length: 9 }).map((_, i) => (
@@ -180,6 +275,7 @@ export default function ArchivePage() {
             {loading ? 'LOADING...' : `LOAD MORE (${posts.length}/${totalCount})`}
           </button>
         )}
+        </>}
       </div>
     </div>
   )

@@ -2045,6 +2045,15 @@ export function AgentStatusTicker() {
 
     // Upload function — BYOK provider or SoundChain default
     const uploadOne = async (file: File) => {
+      // Save upload to persistent history
+      const recordUpload = (cid: string, f: File) => {
+        fetch('/api/operator/uploads', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cid, fileName: f.name, fileSize: f.size, mimeType: f.type, folder, provider: byokIpfs?.ipfsProvider || 'pinata' }),
+        }).catch(() => {}) // fire-and-forget
+      }
+
       // BYOK path — user's own IPFS provider
       if (byokIpfs) {
         const result = await uploadToIpfsProvider(file, byokIpfs, folder)
@@ -2053,6 +2062,7 @@ export function AgentStatusTicker() {
         setOperatorProgress(Math.round((completed / total) * 100))
         setOperatorLastCid(result.cid)
         cids.push(result.cid)
+        recordUpload(result.cid, file)
         return result
       }
 
@@ -2082,6 +2092,7 @@ export function AgentStatusTicker() {
       setOperatorProgress(Math.round((completed / total) * 100))
       setOperatorLastCid(cid)
       cids.push(cid)
+      recordUpload(cid, file)
       return { cid, url: `${pinataKeys.gateway}${cid}`, size: file.size, name: file.name }
     }
 
@@ -3646,6 +3657,7 @@ export function AgentStatusTicker() {
                           { label: '/artwork/', info: 'cover art · IPFS' },
                           { label: '/avatar/', info: 'profile picture' },
                           { label: '/wall/', info: 'wall media' },
+                          { label: '/uploads/', info: 'operator transfers' },
                           { label: '/archive/', info: 'saved · bookmarks' },
                         ]},
                       { id: 'warroom', icon: '📁', label: 'War Room Shared', tag: 'team files', protocol: 'WebSocket',
