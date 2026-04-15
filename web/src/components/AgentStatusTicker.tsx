@@ -3525,7 +3525,11 @@ export function AgentStatusTicker() {
                               return (
                                 <button
                                   key={ci}
-                                  onClick={() => setOperatorSubfolder(isSelected ? null : folderKey)}
+                                  onClick={() => {
+                                    setOperatorSubfolder(isSelected ? null : folderKey)
+                                    // Auto-set parent destination when selecting subfolder
+                                    if (!isSelected) setOperatorDest(d.id)
+                                  }}
                                   className={`w-full flex items-center gap-2 px-2 py-1 rounded transition text-left ${
                                     isSelected
                                       ? 'bg-cyan-500/15 border border-cyan-500/30'
