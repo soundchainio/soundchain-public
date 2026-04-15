@@ -4302,7 +4302,6 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                 {[
                   ...(me?.profile ? [{ id: 'profile', label: 'Profile', route: `/dex/users/${me?.profile?.userHandle}` }] : []),
                   { id: 'nodes', label: 'Nodes', route: '/dex/nodes' },
-                  { id: 'announcements', label: 'News', route: '/dex/announcements' },
                   { id: 'explore', label: 'Explore', route: '/dex/explore' },
                   { id: 'users', label: 'Users', route: '/dex/users' },
                   { id: 'radio', label: 'Radio', route: '/radio' },
