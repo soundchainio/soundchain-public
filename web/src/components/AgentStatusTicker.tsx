@@ -1877,6 +1877,7 @@ export function AgentStatusTicker() {
   const [operatorProgress, setOperatorProgress] = useState(0)
   const [operatorLastCid, setOperatorLastCid] = useState<string | null>(null)
   const [operatorNodeStats, setOperatorNodeStats] = useState<any>(null)
+  const [operatorSubfolder, setOperatorSubfolder] = useState<string | null>(null)
   const operatorFileRef = useRef<HTMLInputElement>(null)
   const handleOperatorFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) setOperatorFiles(prev => [...prev, ...Array.from(e.target.files!)])
@@ -3515,16 +3516,29 @@ export function AgentStatusTicker() {
                           <span className="text-[6px] font-mono text-gray-700 flex-shrink-0">{d.protocol}</span>
                           {operatorDest === d.id && <span className="text-[8px] text-cyan-400">✓</span>}
                         </button>
-                        {/* Expanded children — inline directory listing + thumbnails */}
+                        {/* Expanded children — clickable folder selector + thumbnails */}
                         {operatorExpandedDest === d.id && (
                           <div className="ml-5 pl-2 border-l border-green-500/10 mt-0.5 mb-1 space-y-0.5">
-                            {d.children.map((c, ci) => (
-                              <div key={ci} className="flex items-center gap-2 px-2 py-0.5 rounded hover:bg-white/[0.03] transition">
-                                <span className="text-[7px] text-green-500/40">├─</span>
-                                <span className="text-[8px] font-mono text-green-400/80">{c.label}</span>
-                                <span className="text-[7px] font-mono text-gray-700 ml-auto">{c.info}</span>
-                              </div>
-                            ))}
+                            {d.children.map((c, ci) => {
+                              const folderKey = `${d.id}:${c.label}`
+                              const isSelected = operatorSubfolder === folderKey
+                              return (
+                                <button
+                                  key={ci}
+                                  onClick={() => setOperatorSubfolder(isSelected ? null : folderKey)}
+                                  className={`w-full flex items-center gap-2 px-2 py-1 rounded transition text-left ${
+                                    isSelected
+                                      ? 'bg-cyan-500/15 border border-cyan-500/30'
+                                      : 'hover:bg-white/[0.03] border border-transparent'
+                                  }`}
+                                >
+                                  <span className={`text-[7px] ${isSelected ? 'text-cyan-400' : 'text-green-500/40'}`}>├─</span>
+                                  <span className={`text-[8px] font-mono ${isSelected ? 'text-cyan-300 font-bold' : 'text-green-400/80'}`}>{c.label}</span>
+                                  <span className="text-[7px] font-mono text-gray-700 ml-auto">{c.info}</span>
+                                  {isSelected && <span className="text-[8px] text-cyan-400">◄</span>}
+                                </button>
+                              )
+                            })}
                             {/* Micro thumbnails — real IPFS content from user's profile */}
                             {d.id === 'profile' && operatorArchiveFiles.length > 0 && (
                               <div className="mt-1 pt-1 border-t border-green-500/5">
@@ -3597,14 +3611,14 @@ export function AgentStatusTicker() {
                     className="w-full py-1.5 rounded bg-green-500/20 border border-green-500/30 text-[9px] font-mono font-bold text-green-400 hover:bg-green-500/30 transition flex items-center justify-center gap-2"
                   >
                     <Zap className="w-3 h-3" />
-                    TRANSFER {operatorFiles.length} FILE{operatorFiles.length !== 1 ? 'S' : ''} → {operatorDest.toUpperCase()}
+                    TRANSFER {operatorFiles.length} FILE{operatorFiles.length !== 1 ? 'S' : ''} → {operatorSubfolder ? operatorSubfolder.split(':')[1] : operatorDest?.toUpperCase()}
                   </button>
                 )}
                 {/* Status line */}
                 <div className="flex items-center justify-between">
                   <span className="text-[8px] font-mono text-gray-600">
                     {operatorUploading ? 'uploading to IPFS...' :
-                     operatorFiles.length > 0 ? `${operatorFiles.length} file${operatorFiles.length !== 1 ? 's' : ''}${operatorDest ? ` → ${operatorDest}` : ' · select destination →'}` :
+                     operatorFiles.length > 0 ? `${operatorFiles.length} file${operatorFiles.length !== 1 ? 's' : ''}${operatorSubfolder ? ` → ${operatorSubfolder.replace(':', '/')}` : operatorDest ? ` → ${operatorDest}` : ' · select destination →'}` :
                      'drop files to begin'}
                   </span>
                   <span className="text-[7px] font-mono text-green-500/50">P2P · NO SUBSCRIPTION · FREE</span>
