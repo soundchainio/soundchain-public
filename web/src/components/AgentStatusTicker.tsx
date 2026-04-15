@@ -1998,10 +1998,23 @@ export function AgentStatusTicker() {
     let mounted = true
     ;(async () => {
       try {
-        const r = await fetch('/api/feed/tracks?limit=20')
+        const r = await fetch('/api/feed/tracks?limit=100')
         if (r.ok && mounted) {
           const data = await r.json()
-          setOperatorArchiveFiles(data.tracks || [])
+          const tracks = data.tracks || []
+          // Dedupe by trackEditionId — show one per edition with fraction
+          const seen = new Map<string, any>()
+          const deduped: any[] = []
+          for (const t of tracks) {
+            const edKey = t.trackEditionId || t._id || t.id
+            if (!seen.has(edKey)) {
+              seen.set(edKey, true)
+              // Count how many tracks share this edition
+              const edCount = t.trackEditionId ? tracks.filter((x: any) => x.trackEditionId === t.trackEditionId).length : 1
+              deduped.push({ ...t, _editionCount: edCount })
+            }
+          }
+          setOperatorArchiveFiles(deduped)
         }
       } catch {}
     })()
@@ -3705,14 +3718,19 @@ export function AgentStatusTicker() {
                                 </div>
                                 <div className="flex flex-wrap gap-1 px-1">
                                   {(operatorShowAllThumbs ? operatorArchiveFiles : operatorArchiveFiles.slice(0, 12)).map((t: any, ti: number) => (
-                                    <div key={t.id || ti} className="w-7 h-7 rounded overflow-hidden border border-green-500/10 hover:border-cyan-500/30 transition cursor-pointer" title={`${t.title || 'Untitled'} — ${t.artist || ''}`}
-                                      onClick={() => window.open(`/dex/track/${t.id}`, '_blank', 'noopener')}
+                                    <div key={t.id || ti} className="w-7 h-7 rounded overflow-hidden border border-green-500/10 hover:border-cyan-500/30 transition cursor-pointer relative" title={`${t.title || 'Untitled'} — ${t.artist || ''}${t._editionCount > 1 ? ` (1/${t._editionCount})` : ''}`}
+                                      onClick={() => window.open(`/dex/track/${t.id || t._id}`, '_blank', 'noopener')}
                                     >
                                       {t.artworkUrl ? (
                                         <img src={t.artworkUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
                                       ) : (
                                         <div className="w-full h-full bg-gradient-to-br from-green-900/30 to-cyan-900/30 flex items-center justify-center">
                                           <FileIcon className="w-2.5 h-2.5 text-green-500/30" />
+                                        </div>
+                                      )}
+                                      {t._editionCount > 1 && (
+                                        <div className="absolute bottom-0 right-0 bg-black/80 px-0.5 rounded-tl" style={{ fontSize: '5px', lineHeight: '8px' }}>
+                                          <span className="font-mono text-purple-300 font-bold">1/{t._editionCount}</span>
                                         </div>
                                       )}
                                     </div>
