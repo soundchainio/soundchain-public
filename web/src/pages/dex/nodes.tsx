@@ -73,7 +73,15 @@ export default function NodesPage() {
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null)
   const [pinging, setPinging] = useState(false)
   const [collectionView, setCollectionView] = useState<'cards' | 'table'>('table')
-  const [mobileTab, setMobileTab] = useState<'network' | 'feed'>('network')
+  const [mobileTab, setMobileTab] = useState<'network' | 'feed'>(() => {
+    if (typeof window === 'undefined') return 'feed'
+    const params = new URLSearchParams(window.location.search)
+    const tab = params.get('tab')
+    if (tab === 'network') return 'network'
+    if (tab === 'feed') return 'feed'
+    // Default: feed (since Feed pill is the primary entry point now)
+    return 'feed'
+  })
   const [feedPosts, setFeedPosts] = useState<any[]>([])
   const [feedLoading, setFeedLoading] = useState(false)
   const [feedCursor, setFeedCursor] = useState<string | null>(null)

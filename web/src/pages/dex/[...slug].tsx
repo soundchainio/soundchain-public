@@ -1279,6 +1279,13 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   const [swapFromAmount, setSwapFromAmount] = useState('')
 
   // Sync selectedView with URL changes (for back/forward navigation)
+  // Redirect /dex/feed → /dex/nodes?tab=feed (feed lives on Nodes now — no more Lambda)
+  useEffect(() => {
+    if (router.isReady && routeType === 'feed') {
+      router.replace('/dex/nodes?tab=feed')
+    }
+  }, [router.isReady, routeType])
+
   // Also sync when router becomes ready (router.query is empty until ready)
   // IMPORTANT: Must include routeId so /dex/users → /dex/users/handle triggers view change
   useEffect(() => {
@@ -4294,7 +4301,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
               <div className="flex items-center gap-1.5 min-w-max">
                 {[
                   ...(me?.profile ? [{ id: 'profile', label: 'Profile', route: `/dex/users/${me?.profile?.userHandle}` }] : []),
-                  { id: 'feed', label: 'Feed', route: '/dex/feed' },
+                  { id: 'feed', label: 'Feed', route: '/dex/nodes?tab=feed' },
                   { id: 'announcements', label: 'News', route: '/dex/announcements' },
                   { id: 'explore', label: 'Explore', route: '/dex/explore' },
                   { id: 'users', label: 'Users', route: '/dex/users' },
@@ -4302,7 +4309,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   { id: 'moltbook', label: 'Moltbook', route: '/backend' },
                   { id: 'library', label: 'Library', route: '/dex/library' },
                   { id: 'playlist', label: 'Playlists', route: '/dex/playlist' },
-                  { id: 'nodes', label: 'Nodes', route: '/dex/nodes' },
+                  { id: 'nodes', label: 'Nodes', route: '/dex/nodes?tab=network' },
                   { id: 'archive', label: 'Archive', route: '/dex/archive' },
                 ].map((item) => {
                   const isActive = selectedView === item.id || (item.id === 'profile' && isBioExpanded)
