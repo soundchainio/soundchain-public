@@ -7,8 +7,11 @@
 import { useEffect, useState, useCallback, useMemo, ReactElement } from 'react'
 import { useMe } from 'hooks/useMe'
 import { useRouter } from 'next/router'
-import { useGroupedTracksQuery } from 'lib/graphql'
+import { useGroupedTracksQuery, useFeedQuery } from 'lib/graphql'
+import { useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import { TopNavBar } from 'components/TopNavBar'
+import { Post } from 'components/Post/Post'
+import { PostSkeleton } from 'components/Post/PostSkeleton'
 import {
   HardDrive, Wifi, WifiOff, Activity, Globe, Radio, Shield, Zap,
   Server, Database, ArrowUpRight, ArrowDownLeft, RefreshCw, Terminal,
@@ -79,14 +82,31 @@ export default function NodesPage() {
     const tab = params.get('tab')
     if (tab === 'network') return 'network'
     if (tab === 'feed') return 'feed'
-    // Default: feed (since Feed pill is the primary entry point now)
     return 'feed'
   })
-  const [feedPosts, setFeedPosts] = useState<any[]>([])
-  const [feedLoading, setFeedLoading] = useState(false)
-  const [feedCursor, setFeedCursor] = useState<string | null>(null)
-  const [feedHasMore, setFeedHasMore] = useState(true)
-  const [expandedPostId, setExpandedPostId] = useState<string | null>(null)
+  // Real feed — same Apollo query as the original feed page
+  const { playlistState } = useAudioPlayerContext()
+  const { data: feedData, loading: feedLoading, fetchMore: feedFetchMore } = useFeedQuery({
+    variables: { page: { first: 20 } },
+    ssr: false,
+    errorPolicy: 'all',
+  })
+  const feedNodes = feedData?.feed?.nodes || []
+  const feedPageInfo = feedData?.feed?.pageInfo
+  const handleFeedPlayClicked = useCallback((trackId: string) => {
+    const tracks = feedNodes
+      .filter(fi => fi?.post?.track && !fi.post.track.deleted)
+      .map(fi => ({
+        src: fi.post.track!.playbackUrl,
+        trackId: fi.post.track!.id,
+        art: fi.post.track!.artworkUrl,
+        title: fi.post.track!.title,
+        artist: fi.post.track!.artist,
+        isFavorite: fi.post.track!.isFavorite,
+      }))
+    const idx = tracks.findIndex(t => t.trackId === trackId)
+    playlistState(tracks as any, idx)
+  }, [feedNodes, playlistState])
 
   // Fetch operator status
   const fetchStatus = useCallback(async () => {
@@ -152,29 +172,9 @@ export default function NodesPage() {
   })
   const collection = useMemo(() => tracksData?.groupedTracks?.nodes || [], [tracksData])
 
-  // Feed — direct Vercel endpoint, no Lambda
-  const fetchFeed = useCallback(async (cursor?: string | null) => {
-    if (!me?.profile?.id || feedLoading) return
-    setFeedLoading(true)
-    try {
-      const params = new URLSearchParams({ profileId: me.profile.id, limit: '20' })
-      if (cursor) params.set('cursor', cursor)
-      const r = await fetch(`/api/feed/posts?${params}`)
-      if (r.ok) {
-        const data = await r.json()
-        if (cursor) setFeedPosts(prev => [...prev, ...data.posts])
-        else setFeedPosts(data.posts || [])
-        setFeedCursor(data.endCursor)
-        setFeedHasMore(data.hasNextPage)
-      }
-    } catch {}
-    setFeedLoading(false)
-  }, [me?.profile?.id, feedLoading])
-
   useEffect(() => {
     fetchStatus()
     fetchAnalytics()
-    if (me?.profile?.id) fetchFeed()
     const iv = setInterval(fetchStatus, 15000)
     return () => clearInterval(iv)
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -498,117 +498,48 @@ export default function NodesPage() {
 
         </div>{/* end network column */}
 
-        {/* RIGHT: Feed timeline — hidden on mobile unless "feed" tab active */}
-        <div className={`${mobileTab === 'network' ? 'hidden lg:block' : ''} lg:w-[380px] lg:flex-shrink-0`}>
-          <div className="sticky top-16 space-y-2">
+        {/* RIGHT: Feed — uses the REAL <Post> component (same as original feed page) */}
+        <div className={`${mobileTab === 'network' ? 'hidden lg:block' : ''} lg:w-[420px] lg:flex-shrink-0`}>
+          <div className="space-y-2">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <Activity className="w-4 h-4 text-cyan-400" />
-                <h2 className="text-xs font-mono font-bold text-cyan-400 tracking-wider">LIVE FEED</h2>
-                <span className="text-[8px] font-mono text-gray-600">Vercel direct · no Lambda</span>
+                <h2 className="text-xs font-mono font-bold text-cyan-400 tracking-wider">FEED</h2>
+                <span className="text-[8px] font-mono text-gray-600">{feedNodes.length} posts</span>
               </div>
-              <button onClick={() => { setFeedPosts([]); setFeedCursor(null); setFeedHasMore(true); setTimeout(() => fetchFeed(), 50) }} className="text-[8px] font-mono text-gray-600 hover:text-cyan-400 transition">
-                <RefreshCw className="w-3 h-3" />
-              </button>
             </div>
 
-            <div className="max-h-[calc(100vh-200px)] overflow-y-auto space-y-2 pr-1 scrollbar-hide">
-              {feedPosts.length === 0 && !feedLoading && (
+            <div className="space-y-2">
+              {feedLoading && feedNodes.length === 0 && (
+                <div className="space-y-2">
+                  <PostSkeleton />
+                  <PostSkeleton />
+                  <PostSkeleton />
+                </div>
+              )}
+              {!feedLoading && feedNodes.length === 0 && (
                 <div className="text-center py-8 text-[10px] font-mono text-gray-700">
                   {me?.profile?.id ? 'No posts yet — follow users to fill your feed' : 'Sign in to see your feed'}
                 </div>
               )}
-              {feedPosts.map((post: any) => {
-                const isExpanded = expandedPostId === post.id
-                return (
-                <div key={post.id}
-                  onClick={() => setExpandedPostId(isExpanded ? null : post.id)}
-                  className={`p-3 rounded-lg border cursor-pointer transition-all ${
-                    isExpanded ? 'bg-black/60 border-cyan-500/30' : 'border-white/5 bg-black/40 hover:bg-black/60 hover:border-cyan-500/20'
-                  } group`}
-                >
-                  {/* Author */}
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-6 h-6 rounded-full overflow-hidden bg-gray-800 flex-shrink-0 cursor-pointer"
-                      onClick={(e) => { e.stopPropagation(); window.open(`/dex/users/${post.profile?.userHandle || post.profile?.id}`, '_blank', 'noopener') }}
-                    >
-                      {post.profile?.profilePicture ? (
-                        <img src={post.profile.profilePicture} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-cyan-900 to-purple-900" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <span className="text-[10px] font-mono text-white font-bold">{post.profile?.displayName || post.profile?.userHandle || 'Anonymous'}</span>
-                      {post.profile?.userHandle && <span className="text-[8px] font-mono text-gray-600 ml-1">@{post.profile.userHandle}</span>}
-                    </div>
-                    <span className="text-[7px] font-mono text-gray-700 flex-shrink-0">
-                      {post.createdAt ? new Date(post.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}
-                    </span>
-                  </div>
-                  {/* Body — parse emotes and clean embed URLs */}
-                  {post.body && (() => {
-                    // Extract emote/gif URLs from body
-                    const emoteRegex = /\|emote(?:gif)?:[^|]*\|(https?:\/\/[^\s|]+)/g
-                    const emotes: string[] = []
-                    let match
-                    while ((match = emoteRegex.exec(post.body)) !== null) emotes.push(match[1])
-                    // Clean body text: remove emote markup and raw URLs
-                    const cleanBody = post.body
-                      .replace(/\|emote(?:gif)?:[^|]*\|https?:\/\/[^\s|]*/g, '')
-                      .replace(/https?:\/\/\S+/g, '')
-                      .trim()
-                    return <>
-                      {cleanBody && <p className={`text-[10px] font-mono text-gray-300 leading-relaxed mb-2 ${isExpanded ? '' : 'line-clamp-3'}`}>{cleanBody}</p>}
-                      {emotes.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mb-2">
-                          {emotes.slice(0, isExpanded ? 10 : 2).map((url, ei) => (
-                            <img key={ei} src={url} alt="" className="h-8 rounded" loading="lazy" />
-                          ))}
-                        </div>
-                      )}
-                    </>
-                  })()}
-                  {/* Media — always visible, full width, autoplay embeds */}
-                  {(post.uploadedMediaUrl || post.mediaThumbnail) && (
-                    <div className="rounded overflow-hidden mb-2">
-                      {post.uploadedMediaType === 'video' ? (
-                        <video src={post.uploadedMediaUrl} className="w-full rounded max-h-64" controls autoPlay muted playsInline loop />
-                      ) : (
-                        <img src={post.mediaThumbnail || post.uploadedMediaUrl} alt="" className="w-full rounded" loading="lazy" />
-                      )}
-                    </div>
-                  )}
-                  {/* Embed links — YouTube, Spotify, etc — always render as iframe */}
-                  {post.mediaLink && (
-                    <div className="rounded overflow-hidden mb-2">
-                      <iframe
-                        src={post.mediaLink}
-                        className="w-full border-0 rounded"
-                        style={{ height: post.mediaLink.includes('spotify') ? '80px' : post.mediaLink.includes('soundcloud') ? '166px' : '200px' }}
-                        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                        loading="lazy"
-                      />
-                    </div>
-                  )}
-                  {/* Actions — always visible like real feed */}
-                  <FeedPostActions postId={post.id} reactions={post.totalReactions} comments={post.commentCount} reposts={post.repostCount} isExpanded={isExpanded} />
-                </div>
-                )
-              })}
+              {feedNodes.map((feedItem: any) => (
+                <Post
+                  key={feedItem.post.id}
+                  post={feedItem.post}
+                  handleOnPlayClicked={handleFeedPlayClicked}
+                />
+              ))}
               {/* Load more */}
-              {feedHasMore && feedPosts.length > 0 && (
+              {feedPageInfo?.hasNextPage && (
                 <button
-                  onClick={() => fetchFeed(feedCursor)}
-                  disabled={feedLoading}
-                  className="w-full py-2 text-[9px] font-mono text-cyan-400/60 hover:text-cyan-400 border border-white/5 rounded-lg hover:border-cyan-500/20 transition disabled:opacity-50"
+                  onClick={() => feedFetchMore({
+                    variables: { page: { first: 20, after: feedPageInfo.endCursor } },
+                  })}
+                  className="w-full py-2 text-[9px] font-mono text-cyan-400/60 hover:text-cyan-400 border border-white/5 rounded-lg hover:border-cyan-500/20 transition"
                 >
-                  {feedLoading ? 'LOADING...' : 'LOAD MORE'}
+                  LOAD MORE
                 </button>
               )}
-              {feedLoading && feedPosts.length === 0 && Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="p-3 rounded-lg border border-white/5 bg-black/40 animate-pulse h-24" />
-              ))}
             </div>
           </div>
         </div>
@@ -637,102 +568,6 @@ function StatBox({ icon, label, value, color }: { icon: React.ReactNode; label: 
         <span className="text-[8px] font-mono text-gray-600 tracking-wider">{label}</span>
       </div>
       <span className={`text-sm font-mono font-bold text-${color}-400`}>{value}</span>
-    </div>
-  )
-}
-
-// Feed post actions — wired to Vercel direct endpoints (no Lambda)
-function FeedPostActions({ postId, reactions, comments, reposts, isExpanded }: { postId: string; reactions: number; comments: number; reposts: number; isExpanded: boolean }) {
-  const [reactionCount, setReactionCount] = useState(reactions)
-  const [hasReacted, setHasReacted] = useState(false)
-  const [showReactions, setShowReactions] = useState(false)
-  const [commentText, setCommentText] = useState('')
-  const [showCommentInput, setShowCommentInput] = useState(false)
-  const [commentCount, setCommentCount] = useState(comments)
-  const [shared, setShared] = useState(false)
-
-  const react = async (type: string) => {
-    const action = hasReacted ? 'remove' : 'add'
-    await fetch('/api/posts/react', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ postId, type, action }),
-    })
-    setReactionCount(prev => hasReacted ? Math.max(0, prev - 1) : prev + 1)
-    setHasReacted(!hasReacted)
-    setShowReactions(false)
-  }
-
-  const submitComment = async () => {
-    if (!commentText.trim()) return
-    await fetch('/api/posts/comment', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ postId, body: commentText.trim() }),
-    })
-    setCommentText('')
-    setCommentCount(prev => prev + 1)
-    setShowCommentInput(false)
-  }
-
-  const repost = async () => {
-    await fetch('/api/posts/repost', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ postId }),
-    })
-  }
-
-  const share = () => {
-    navigator.clipboard.writeText(`${window.location.origin}/dex/post/${postId}`)
-    setShared(true)
-    setTimeout(() => setShared(false), 2000)
-  }
-
-  return (
-    <div className="mt-1.5 space-y-1.5" onClick={(e) => e.stopPropagation()}>
-      {/* Stats + action row */}
-      <div className="flex items-center gap-1">
-        <button onClick={() => setShowReactions(!showReactions)} className={`flex items-center gap-1 text-[8px] font-mono px-2 py-1 rounded transition ${hasReacted ? 'text-pink-400 bg-pink-500/10 border border-pink-500/20' : 'text-gray-500 hover:text-pink-400 border border-transparent hover:border-pink-500/20'}`}>
-          {hasReacted ? '❤️' : '🤍'} {reactionCount}
-        </button>
-        <button onClick={() => setShowCommentInput(!showCommentInput)} className="flex items-center gap-1 text-[8px] font-mono text-gray-500 hover:text-cyan-400 px-2 py-1 rounded transition hover:border-cyan-500/20 border border-transparent">
-          💬 {commentCount}
-        </button>
-        <button onClick={repost} className="flex items-center gap-1 text-[8px] font-mono text-gray-500 hover:text-green-400 px-2 py-1 rounded transition hover:border-green-500/20 border border-transparent">
-          🔄 {reposts}
-        </button>
-        <button onClick={share} className={`flex items-center gap-1 text-[8px] font-mono px-2 py-1 rounded transition border border-transparent ${shared ? 'text-cyan-400' : 'text-gray-500 hover:text-cyan-400'}`}>
-          {shared ? '✓ Copied' : '🔗 Share'}
-        </button>
-      </div>
-      {/* Reaction picker */}
-      {showReactions && (
-        <div className="flex items-center gap-1 px-1">
-          {['fire', 'heart', 'rocket', 'thumbsUp', 'mind_blown', 'clap'].map(type => (
-            <button key={type} onClick={() => react(type)} className="text-sm hover:scale-125 transition-transform">
-              {type === 'fire' ? '🔥' : type === 'heart' ? '❤️' : type === 'rocket' ? '🚀' : type === 'thumbsUp' ? '👍' : type === 'mind_blown' ? '🤯' : '👏'}
-            </button>
-          ))}
-        </div>
-      )}
-      {/* Comment input */}
-      {showCommentInput && (
-        <div className="flex items-center gap-1.5">
-          <input
-            type="text"
-            value={commentText}
-            onChange={(e) => setCommentText(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') submitComment() }}
-            placeholder="Write a comment..."
-            className="flex-1 text-[9px] font-mono bg-black/40 border border-white/10 rounded px-2 py-1 text-white placeholder-gray-600 outline-none focus:border-cyan-500/30"
-            autoFocus
-          />
-          <button onClick={submitComment} className="text-[8px] font-mono text-cyan-400 px-2 py-1 rounded bg-cyan-500/10 border border-cyan-500/20 hover:bg-cyan-500/20 transition">
-            Post
-          </button>
-        </div>
-      )}
     </div>
   )
 }
