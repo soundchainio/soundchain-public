@@ -9,7 +9,6 @@ import { Label } from 'components/Label'
 import { Form, Formik } from 'formik'
 import { useMe } from 'hooks/useMe'
 import { useMagicContext } from 'hooks/useMagicContext'
-import { useUpdateProfilePictureMutation } from 'lib/graphql'
 import Image from 'next/image'
 import * as yup from 'yup'
 import { createAvatar } from '@dicebear/core'
@@ -53,7 +52,6 @@ export const ProfilePictureForm = ({ afterSubmit, submitText, submitProps }: Pro
   const { account: walletAddress } = useMagicContext()
   const [defaultPicture, setDefaultPicture] = useState<string | null>(null)
   const [guestAvatar, setGuestAvatar] = useState<string | null>(null)
-  const [updateProfilePicture] = useUpdateProfilePictureMutation()
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<TabId>('generate')
   const [generativeSeed, setGenerativeSeed] = useState('')
@@ -102,13 +100,20 @@ export const ProfilePictureForm = ({ afterSubmit, submitText, submitProps }: Pro
   }
 
   const onSubmit = async ({ profilePicture }: FormValues) => {
-    await updateProfilePicture({
-      variables: { input: { profilePicture: profilePicture || defaultPicture } },
-    })
-    if (walletAddress && guestAvatar && profilePicture === guestAvatar) {
-      clearGuestAvatarAfterMigration(walletAddress)
+    setLoading(true)
+    try {
+      await fetch('/api/profile/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fields: { profilePicture: profilePicture || defaultPicture } }),
+      })
+      if (walletAddress && guestAvatar && profilePicture === guestAvatar) {
+        clearGuestAvatarAfterMigration(walletAddress)
+      }
+      afterSubmit()
+    } finally {
+      setLoading(false)
     }
-    afterSubmit()
   }
 
   const tabs: { id: TabId; label: string; icon: string }[] = [

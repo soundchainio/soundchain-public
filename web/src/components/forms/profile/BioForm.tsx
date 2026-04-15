@@ -3,7 +3,7 @@ import { getBodyCharacterCount } from 'components/Post/PostModal'
 import { TextareaField } from 'components/TextareaField'
 import { Form, Formik } from 'formik'
 import { useMe } from 'hooks/useMe'
-import { useUpdateProfileBioMutation } from 'lib/graphql'
+import { useState } from 'react'
 import * as yup from 'yup'
 
 interface BioFormProps {
@@ -30,11 +30,18 @@ const setMaxInputLength = (input: string) => {
 export const BioForm = ({ afterSubmit, submitText, submitProps }: BioFormProps) => {
   const me = useMe()
   const initialFormValues: FormValues = { bio: me?.profile?.bio || '' }
-  const [updateBio, { loading }] = useUpdateProfileBioMutation()
+  const [loading, setLoading] = useState(false)
 
   const handleSubmit = async ({ bio }: FormValues) => {
-    await updateBio({ variables: { input: { bio: bio as string } } })
-    afterSubmit()
+    setLoading(true)
+    try {
+      await fetch('/api/profile/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fields: { bio } }),
+      })
+      afterSubmit()
+    } finally { setLoading(false) }
   }
 
   return (

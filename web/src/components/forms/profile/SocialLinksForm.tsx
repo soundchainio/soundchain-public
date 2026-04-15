@@ -2,7 +2,7 @@ import { Button, ButtonProps } from 'components/common/Buttons/Button'
 import { InputField } from 'components/InputField'
 import { Form, Formik, FormikProps } from 'formik'
 import { useMe } from 'hooks/useMe'
-import { useUpdateSocialMediasMutation } from 'lib/graphql'
+import { useState } from 'react'
 import * as yup from 'yup'
 
 const getSocialMedias = (socialMedias: any) => ({
@@ -61,7 +61,7 @@ export const SocialLinksForm = ({ afterSubmit, submitText, submitProps }: Social
     discord: socialMedias.discord || '',
     telegram: socialMedias.telegram || '',
   }
-  const [updateSocialMedias, { loading }] = useUpdateSocialMediasMutation()
+  const [loading, setLoading] = useState(false)
 
   const handleSubmit = async ({
     soundcloud,
@@ -73,14 +73,17 @@ export const SocialLinksForm = ({ afterSubmit, submitText, submitProps }: Social
     discord,
     telegram,
   }: FormValues) => {
-    await updateSocialMedias({
-      variables: {
-        input: {
-          socialMedias: { soundcloud, spotify, bandcamp, facebook, instagram, linktree, discord, telegram },
-        },
-      },
-    })
-    afterSubmit()
+    setLoading(true)
+    try {
+      await fetch('/api/profile/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fields: { socialMedias: { soundcloud, spotify, bandcamp, facebook, instagram, linktree, discord, telegram } } }),
+      })
+      afterSubmit()
+    } finally {
+      setLoading(false)
+    }
   }
   if (!me) return null
 

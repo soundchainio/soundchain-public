@@ -2,7 +2,8 @@ import { Button, ButtonProps } from 'components/common/Buttons/Button'
 import { InputField } from 'components/InputField'
 import { Form, Formik } from 'formik'
 import { useMe } from 'hooks/useMe'
-import { useUpdateHandleMutation } from 'lib/graphql'
+import { useState } from 'react'
+import { toast } from 'react-toastify'
 import { handleRegex } from 'utils/Validation'
 import * as yup from 'yup'
 
@@ -29,11 +30,23 @@ const validationSchema: yup.Schema<FormValues> = yup.object().shape({
 export const HandleForm = ({ afterSubmit, submitText, submitProps }: HandleFormProps) => {
   const me = useMe()
   const initialFormValues: FormValues = { handle: me?.handle || '' }
-  const [updateHandle, { loading }] = useUpdateHandleMutation()
+  const [loading, setLoading] = useState(false)
 
   const handleSubmit = async ({ handle }: FormValues) => {
-    await updateHandle({ variables: { input: { handle } } })
-    afterSubmit()
+    setLoading(true)
+    try {
+      const res = await fetch('/api/profile/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fields: { handle } }),
+      })
+      if (!res.ok) {
+        const err = await res.json()
+        toast.error(err.error || 'Failed to update handle')
+        return
+      }
+      afterSubmit()
+    } finally { setLoading(false) }
   }
 
   return (

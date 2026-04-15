@@ -2,7 +2,7 @@ import { Button, ButtonProps } from 'components/common/Buttons/Button'
 import { InputField } from 'components/InputField'
 import { Form, Formik } from 'formik'
 import { useMe } from 'hooks/useMe'
-import { useUpdateProfileDisplayNameMutation } from 'lib/graphql'
+import { useState } from 'react'
 import * as yup from 'yup'
 
 interface DisplayNameFormProps {
@@ -27,11 +27,18 @@ const validationSchema: yup.Schema<FormValues> = yup.object().shape({
 export const DisplayNameForm = ({ afterSubmit, submitText, submitProps }: DisplayNameFormProps) => {
   const me = useMe()
   const initialFormValues: FormValues = { displayName: me?.profile?.displayName || '' }
-  const [updateDisplayName, { loading }] = useUpdateProfileDisplayNameMutation()
+  const [loading, setLoading] = useState(false)
 
   const handleSubmit = async ({ displayName }: FormValues) => {
-    await updateDisplayName({ variables: { input: { displayName } } })
-    afterSubmit()
+    setLoading(true)
+    try {
+      await fetch('/api/profile/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fields: { displayName } }),
+      })
+      afterSubmit()
+    } finally { setLoading(false) }
   }
 
   return (

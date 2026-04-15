@@ -18,7 +18,7 @@ import { EmoteRenderer } from '../EmoteRenderer'
 import { SharePostModal } from '../modals/SharePostModal'
 import { CreateStoryModal } from '../dex/CreateStoryModal'
 import { Share2, Film, MessageCircle, Trash2, ChevronDown } from 'lucide-react'
-import { useDeleteCommentMutation } from 'lib/graphql'
+// useDeleteCommentMutation migrated to Vercel direct (Phase 5c)
 
 interface CommentProps {
   commentId: string
@@ -38,7 +38,13 @@ export const Comment = ({ commentId, onReplyClick }: CommentProps) => {
   const [showShareModal, setShowShareModal] = useState(false)
   const [showStoryModal, setShowStoryModal] = useState(false)
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null)
-  const [deleteComment] = useDeleteCommentMutation()
+  const deleteComment = async ({ variables }: any) => {
+    await fetch('/api/posts/comment-delete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ commentId: variables.id }),
+    })
+  }
 
   useEffect(() => {
     setPortalContainer(document.body)

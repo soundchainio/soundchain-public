@@ -8,7 +8,6 @@ import { Label } from 'components/Label'
 import { Form, Formik } from 'formik'
 import { useMe } from 'hooks/useMe'
 import { useMagicContext } from 'hooks/useMagicContext'
-import { useUpdateCoverPictureMutation } from 'lib/graphql'
 import Image from 'next/image'
 import * as yup from 'yup'
 import { createAvatar } from '@dicebear/core'
@@ -55,7 +54,6 @@ const BORING_COVER_VARIANTS = ['marble', 'sunset', 'ring', 'bauhaus'] as const
 export const CoverPictureForm = ({ afterSubmit, submitText, submitProps, onReward }: CoverPictureFormProps) => {
   const me = useMe()
   const { account: walletAddress } = useMagicContext()
-  const [updateCoverPicture] = useUpdateCoverPictureMutation()
   const [loading, setLoading] = useState(false)
   const [imageUploaded, setImageUploaded] = useState(false)
   const [activeTab, setActiveTab] = useState<TabId>('generate')
@@ -92,12 +90,19 @@ export const CoverPictureForm = ({ afterSubmit, submitText, submitProps, onRewar
   }
 
   const onSubmit = async ({ coverPicture }: FormValues) => {
-    await updateCoverPicture({
-      variables: { input: { coverPicture } },
-    })
-    afterSubmit()
-    if (onReward && (imageUploaded || coverPicture)) {
-      onReward(1)
+    setLoading(true)
+    try {
+      await fetch('/api/profile/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fields: { coverPicture } }),
+      })
+      afterSubmit()
+      if (onReward && (imageUploaded || coverPicture)) {
+        onReward(1)
+      }
+    } finally {
+      setLoading(false)
     }
   }
 

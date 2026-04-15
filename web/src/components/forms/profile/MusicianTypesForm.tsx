@@ -2,7 +2,7 @@ import { Badge } from 'components/common/Badges/Badge'
 import { Button, ButtonProps } from 'components/common/Buttons/Button'
 import { Label } from 'components/Label'
 import { useMe } from 'hooks/useMe'
-import { MusicianType, useUpdateMusicianTypeMutation } from 'lib/graphql'
+import { MusicianType } from 'lib/graphql'
 import React, { useEffect, useState } from 'react'
 import { musicianTypes } from 'utils/MusicianTypes'
 
@@ -20,7 +20,7 @@ export const MusicianTypesForm = ({
   maxSelections = musicianTypes.length,
 }: MusicianTypesFormProps) => {
   const [types, setTypes] = useState<MusicianType[]>([])
-  const [updateMusicianType, { loading }] = useUpdateMusicianTypeMutation()
+  const [loading, setLoading] = useState(false)
   const me = useMe()
 
   useEffect(() => {
@@ -30,10 +30,17 @@ export const MusicianTypesForm = ({
   }, [me?.profile.musicianTypes])
 
   const onSubmit = async () => {
-    if (musicianTypes.length) {
-      await updateMusicianType({ variables: { input: { musicianTypes: types } } })
+    setLoading(true)
+    try {
+      await fetch('/api/profile/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fields: { musicianTypes: types } }),
+      })
+      afterSubmit()
+    } finally {
+      setLoading(false)
     }
-    afterSubmit()
   }
 
   const onTypeClick = (key: MusicianType) => {

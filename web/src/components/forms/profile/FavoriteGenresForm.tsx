@@ -1,7 +1,7 @@
 import { Badge } from 'components/common/Badges/Badge'
 import { Button, ButtonProps } from 'components/common/Buttons/Button'
 import { Label } from 'components/Label'
-import { Genre, useUpdateFavoriteGenresMutation } from 'lib/graphql'
+import { Genre } from 'lib/graphql'
 import React, { useEffect, useState } from 'react'
 import { GenreLabel, genres } from 'utils/Genres'
 
@@ -19,7 +19,7 @@ export const FavoriteGenresForm = ({
   initialGenres = [],
 }: FavoriteGenreFormProps) => {
   const [favoriteGenres, setFavoriteGenres] = useState<Genre[]>([])
-  const [updateFavoriteGenres, { loading }] = useUpdateFavoriteGenresMutation()
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     if (initialGenres.length) {
@@ -28,8 +28,17 @@ export const FavoriteGenresForm = ({
   }, [initialGenres])
 
   const handleSubmit = async () => {
-    await updateFavoriteGenres({ variables: { input: { favoriteGenres } } })
-    afterSubmit()
+    setLoading(true)
+    try {
+      await fetch('/api/profile/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fields: { favoriteGenres } }),
+      })
+      afterSubmit()
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleGenreClick = (genre: Genre) => {

@@ -5,7 +5,7 @@ import { useModalDispatch } from 'contexts/ModalContext'
 import { useMe } from 'hooks/useMe'
 import { ReactionEmoji } from 'icons/ReactionEmoji'
 import { delayFocus } from 'lib/delayFocus'
-import { ReactionType, useBookmarkPostMutation, useUnbookmarkPostMutation, useDeletePostMutation } from 'lib/graphql'
+import { ReactionType, useBookmarkPostMutation, useUnbookmarkPostMutation } from 'lib/graphql'
 import { createPostArchive, downloadArchive, generateArchiveFilename, isMobileDevice } from 'lib/postArchive'
 import NextLink from 'next/link'
 import { useRouter } from 'next/router'
@@ -95,12 +95,22 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
   const [bookmarkPost, { loading: bookmarking }] = useBookmarkPostMutation()
   const [unbookmarkPost, { loading: unbookmarking }] = useUnbookmarkPostMutation()
 
-  // Delete mutation
-  const [deletePost, { loading: deleting }] = useDeletePostMutation({
-    onCompleted: () => toast.success('Post deleted'),
-    onError: (err) => toast.error(`Failed to delete: ${err.message}`),
-    refetchQueries: ['Feed', 'Posts', 'WallPosts'],
-  })
+  // Delete — Vercel direct (no Lambda)
+  const [deleting, setDeleting] = useState(false)
+  const deletePost = async ({ variables }: { variables: { input: { postId: string } } }) => {
+    setDeleting(true)
+    try {
+      const res = await fetch('/api/posts/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ postId: variables.input.postId }),
+      })
+      if (res.ok) toast.success('Post deleted')
+      else toast.error('Failed to delete')
+    } catch (err: any) {
+      toast.error(`Failed to delete: ${err.message}`)
+    } finally { setDeleting(false) }
+  }
 
   // Sync local state with prop
   useEffect(() => {
