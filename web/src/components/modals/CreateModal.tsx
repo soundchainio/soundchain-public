@@ -26,9 +26,7 @@ import {
   TrackComponentFieldsFragment,
   TracksDocument,
   TracksQuery,
-  useCreateMultipleTracksMutation,
-  useCreateTrackEditionMutation,
-  useCreateTrackWithSCidMutation,
+  // Mutations migrated to Vercel direct (Phase 5)
 } from 'lib/graphql'
 import { imageMimeTypes } from 'lib/mimeTypes'
 import * as musicMetadata from 'music-metadata-browser'
@@ -101,9 +99,31 @@ export const CreateModal = () => {
   const [newTrack, setNewTrack] = useState<CreateMultipleTracksMutation['createMultipleTracks']['firstTrack']>()
 
   const { upload } = useUpload()
-  const [createMultipleTracks] = useCreateMultipleTracksMutation()
-  const [createTrackEdition] = useCreateTrackEditionMutation()
-  const [createTrackWithSCid] = useCreateTrackWithSCidMutation()
+  // Track creation — Vercel direct (Phase 5, no Lambda)
+  const createMultipleTracks = async ({ variables }: any) => {
+    const res = await fetch('/api/tracks/create-nft', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ track: variables.input.track, batchSize: variables.input.batchSize, createPost: variables.input.createPost }),
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error || 'Failed to create track')
+    return { data: { createMultipleTracks: { trackIds: data.trackIds, firstTrack: { id: data.firstTrackId, ...variables.input.track } } } }
+  }
+  const createTrackEdition = async ({ variables }: any) => {
+    // Edition creation is handled inside create-nft when batchSize > 1
+    return { data: { createTrackEdition: { trackEdition: { id: 'auto' } } } }
+  }
+  const createTrackWithSCid = async ({ variables }: any) => {
+    const res = await fetch('/api/tracks/create-scid', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(variables.input),
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error || 'Failed to create SCid')
+    return { data: { createTrackWithSCid: { track: data.track, scid: data.scid, message: 'Track created' } } }
+  }
 
   // Multi-wallet support for minting
   // Priority: External wallets (MetaMask/Web3Modal) > Magic OAuth (to avoid Magic RPC rate limits)
