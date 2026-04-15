@@ -1904,10 +1904,24 @@ export function AgentStatusTicker() {
     try {
       for (let i = 0; i < operatorFiles.length; i++) {
         const file = operatorFiles[i]
-        const formData = new FormData()
-        formData.append('file', file)
-        const res = await fetch('/api/operator/upload', { method: 'POST', body: formData })
-        if (!res.ok) throw new Error(`Upload failed: ${res.status}`)
+        // Read file as base64 for JSON upload (serverless-compatible)
+        const base64 = await new Promise<string>((resolve) => {
+          const reader = new FileReader()
+          reader.onload = () => {
+            const result = reader.result as string
+            resolve(result.split(',')[1]) // strip data:...;base64, prefix
+          }
+          reader.readAsDataURL(file)
+        })
+        const res = await fetch('/api/operator/upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fileData: base64, fileName: file.name, mimeType: file.type }),
+        })
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({ error: `HTTP ${res.status}` }))
+          throw new Error(err.error || `Upload failed: ${res.status}`)
+        }
         const data = await res.json()
         setOperatorLastCid(data.cid)
         setOperatorProgress(Math.round(((i + 1) / operatorFiles.length) * 100))

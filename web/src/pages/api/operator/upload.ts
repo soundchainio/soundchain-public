@@ -2,47 +2,15 @@
  * Operator Upload — Direct file upload to IPFS via Pinata
  * POST /api/operator/upload (multipart/form-data)
  * Auth required. Returns { cid, url, size, name }
+ *
+ * Uses raw buffer parsing — no external deps needed.
  */
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { authFromRequest } from 'lib/api/authJwt'
 
 export const config = {
-  api: { bodyParser: false },
+  api: { bodyParser: { sizeLimit: '100mb' } },
   maxDuration: 60,
-}
-
-async function parseMultipart(req: NextApiRequest): Promise<{ buffer: Buffer; fileName: string; mimeType: string }> {
-  return new Promise((resolve, reject) => {
-    const chunks: Buffer[] = []
-    req.on('data', (chunk: Buffer) => chunks.push(chunk))
-    req.on('end', () => {
-      const body = Buffer.concat(chunks)
-      const contentType = req.headers['content-type'] || ''
-      const boundaryMatch = contentType.match(/boundary=(.+)/)
-      if (!boundaryMatch) return reject(new Error('No boundary in content-type'))
-
-      const boundary = boundaryMatch[1]
-      const parts = body.toString('binary').split(`--${boundary}`)
-
-      for (const part of parts) {
-        if (part.includes('Content-Disposition: form-data') && part.includes('filename=')) {
-          const nameMatch = part.match(/filename="([^"]*)"/)
-          const typeMatch = part.match(/Content-Type:\s*(.+)\r?\n/)
-          const fileName = nameMatch?.[1] || 'upload'
-          const mimeType = typeMatch?.[1]?.trim() || 'application/octet-stream'
-
-          // Extract binary data after double newline
-          const headerEnd = part.indexOf('\r\n\r\n')
-          if (headerEnd === -1) continue
-          const dataStr = part.slice(headerEnd + 4).replace(/\r\n$/, '')
-          const buffer = Buffer.from(dataStr, 'binary')
-          return resolve({ buffer, fileName, mimeType })
-        }
-      }
-      reject(new Error('No file found in multipart body'))
-    })
-    req.on('error', reject)
-  })
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -56,11 +24,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (!apiKey || !apiSecret) return res.status(500).json({ error: 'IPFS not configured' })
 
   try {
-    const { buffer, fileName, mimeType } = await parseMultipart(req)
+    // Body is base64-encoded file data from client (simpler than multipart in serverless)
+    const { fileData, fileName, mimeType } = req.body
+    if (!fileData || !fileName) return res.status(400).json({ error: 'fileData and fileName required' })
+
+    const buffer = Buffer.from(fileData, 'base64')
 
     // Upload to Pinata
     const formData = new FormData()
-    formData.append('file', new Blob([buffer], { type: mimeType }), fileName)
+    formData.append('file', new Blob([buffer], { type: mimeType || 'application/octet-stream' }), fileName)
     formData.append('pinataMetadata', JSON.stringify({
       name: `operator/${auth.profileId}/${fileName}`,
       keyvalues: { uploadedBy: auth.profileId.toString(), source: 'operator' },
