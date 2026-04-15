@@ -70,6 +70,9 @@ export default function NodesPage() {
   const [nodes, setNodes] = useState(SWARM_NODES)
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null)
   const [pinging, setPinging] = useState(false)
+  const [collection, setCollection] = useState<any[]>([])
+  const [collectionView, setCollectionView] = useState<'cards' | 'table'>('table')
+  const [collectionLoading, setCollectionLoading] = useState(false)
 
   // Fetch operator status
   const fetchStatus = useCallback(async () => {
@@ -128,12 +131,27 @@ export default function NodesPage() {
     setPinging(false)
   }, [nodes])
 
+  // Fetch user's NFT collection for the directory browser
+  const fetchCollection = useCallback(async () => {
+    if (!me?.profile?.id) return
+    setCollectionLoading(true)
+    try {
+      const r = await fetch('/api/feed/tracks?limit=50')
+      if (r.ok) {
+        const data = await r.json()
+        setCollection(data.tracks || [])
+      }
+    } catch {}
+    setCollectionLoading(false)
+  }, [me?.profile?.id])
+
   useEffect(() => {
     fetchStatus()
     fetchAnalytics()
+    fetchCollection()
     const iv = setInterval(fetchStatus, 15000)
     return () => clearInterval(iv)
-  }, [fetchStatus, fetchAnalytics])
+  }, [fetchStatus, fetchAnalytics, fetchCollection])
 
   // Auto-ping on mount
   useEffect(() => { pingAll() }, []) // eslint-disable-line react-hooks/exhaustive-deps
@@ -305,6 +323,119 @@ export default function NodesPage() {
               <InfoRow label="Fee" value="0.05% on all transactions" />
             </div>
           </div>
+        </div>
+
+        {/* ─── Network Collection — NFTs/SCids on IPFS ─── */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <Database className="w-4 h-4 text-cyan-400" />
+              <h2 className="text-xs font-mono font-bold text-cyan-400 tracking-wider">NETWORK COLLECTION</h2>
+              <span className="text-[8px] font-mono text-gray-600">{collection.length} objects on IPFS</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <button onClick={() => setCollectionView('cards')} className={`px-2 py-0.5 rounded text-[8px] font-mono transition ${collectionView === 'cards' ? 'bg-cyan-500/20 text-cyan-400' : 'text-gray-600 hover:text-gray-400'}`}>CARDS</button>
+              <button onClick={() => setCollectionView('table')} className={`px-2 py-0.5 rounded text-[8px] font-mono transition ${collectionView === 'table' ? 'bg-cyan-500/20 text-cyan-400' : 'text-gray-600 hover:text-gray-400'}`}>TABLE</button>
+              <button onClick={fetchCollection} className="px-2 py-0.5 rounded text-[8px] font-mono text-gray-600 hover:text-cyan-400 transition">
+                <RefreshCw className={`w-3 h-3 inline ${collectionLoading ? 'animate-spin' : ''}`} />
+              </button>
+            </div>
+          </div>
+
+          {collectionView === 'cards' ? (
+            /* Mini card grid — like wallet page NFT cards */
+            <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-8 gap-2">
+              {collection.length === 0 && !collectionLoading && (
+                <div className="col-span-full text-center py-8 text-[10px] font-mono text-gray-700">No tracks found — upload via Operator or SCID</div>
+              )}
+              {collectionLoading && collection.length === 0 && Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="aspect-square rounded-lg bg-white/[0.02] border border-white/5 animate-pulse" />
+              ))}
+              {collection.map((track: any, i: number) => (
+                <div key={track.id || i} className="group relative rounded-lg overflow-hidden border border-white/5 hover:border-cyan-500/30 transition-all cursor-pointer bg-black/40 hover:bg-black/60"
+                  onClick={() => router.push(`/dex/track/${track.id}`)}
+                >
+                  <div className="aspect-square bg-gradient-to-br from-cyan-900/30 to-purple-900/30">
+                    {track.artworkUrl ? (
+                      <img src={track.artworkUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <HardDrive className="w-6 h-6 text-gray-700" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-1.5">
+                    <p className="text-[8px] font-mono text-white truncate font-bold">{track.title || 'Untitled'}</p>
+                    <p className="text-[7px] font-mono text-gray-600 truncate">{track.artist || 'Unknown'}</p>
+                    <div className="flex items-center gap-1 mt-0.5">
+                      {track.isNFT && <span className="text-[6px] font-mono text-purple-400 px-1 py-0 rounded bg-purple-500/10">NFT</span>}
+                      {track.ipfsHash && <span className="text-[6px] font-mono text-cyan-400 px-1 py-0 rounded bg-cyan-500/10">IPFS</span>}
+                      {track.streamCount > 0 && <span className="text-[6px] font-mono text-gray-600">{track.streamCount}x</span>}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            /* Blur-style data table */
+            <div className="border border-white/5 rounded-lg overflow-hidden">
+              {/* Header */}
+              <div className="grid grid-cols-12 gap-0 px-3 py-1.5 bg-white/[0.02] border-b border-white/5">
+                <span className="col-span-1 text-[7px] font-mono text-gray-600">#</span>
+                <span className="col-span-1 text-[7px] font-mono text-gray-600">ART</span>
+                <span className="col-span-3 text-[7px] font-mono text-gray-600">TITLE</span>
+                <span className="col-span-2 text-[7px] font-mono text-gray-600">ARTIST</span>
+                <span className="col-span-1 text-[7px] font-mono text-gray-600 text-right">PLAYS</span>
+                <span className="col-span-1 text-[7px] font-mono text-gray-600 text-right">TYPE</span>
+                <span className="col-span-2 text-[7px] font-mono text-gray-600 text-right">CID</span>
+                <span className="col-span-1 text-[7px] font-mono text-gray-600 text-right">PIN</span>
+              </div>
+              {/* Rows */}
+              <div className="max-h-[300px] overflow-y-auto">
+                {collection.length === 0 && !collectionLoading && (
+                  <div className="text-center py-6 text-[10px] font-mono text-gray-700">No data — upload tracks to populate</div>
+                )}
+                {collectionLoading && collection.length === 0 && Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="h-8 bg-white/[0.01] animate-pulse border-b border-white/[0.02]" />
+                ))}
+                {collection.map((track: any, i: number) => {
+                  const cid = track.ipfsHash || track.playbackUrl?.split('/ipfs/')?.[1]?.split('?')?.[0] || ''
+                  const shortCid = cid ? `${cid.slice(0, 6)}...${cid.slice(-4)}` : '—'
+                  return (
+                    <div key={track.id || i}
+                      onClick={() => router.push(`/dex/track/${track.id}`)}
+                      className="grid grid-cols-12 gap-0 px-3 py-1 items-center border-b border-white/[0.02] hover:bg-white/[0.03] cursor-pointer transition"
+                    >
+                      <span className="col-span-1 text-[8px] font-mono text-gray-600">{i + 1}</span>
+                      <div className="col-span-1">
+                        <div className="w-6 h-6 rounded overflow-hidden bg-gray-900">
+                          {track.artworkUrl ? (
+                            <img src={track.artworkUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-cyan-900/50 to-purple-900/50" />
+                          )}
+                        </div>
+                      </div>
+                      <span className="col-span-3 text-[9px] font-mono text-white truncate pr-2">{track.title || 'Untitled'}</span>
+                      <span className="col-span-2 text-[8px] font-mono text-gray-500 truncate">{track.artist || '—'}</span>
+                      <span className="col-span-1 text-[8px] font-mono text-gray-400 text-right">{track.streamCount || 0}</span>
+                      <span className="col-span-1 text-right">
+                        {track.isNFT ? (
+                          <span className="text-[7px] font-mono text-purple-400 px-1 rounded bg-purple-500/10">NFT</span>
+                        ) : (
+                          <span className="text-[7px] font-mono text-cyan-400 px-1 rounded bg-cyan-500/10">SCid</span>
+                        )}
+                      </span>
+                      <span className="col-span-2 text-[7px] font-mono text-cyan-500/60 text-right truncate" title={cid}>{shortCid}</span>
+                      <span className="col-span-1 text-right">
+                        {cid ? <span className="text-[7px] font-mono text-green-500">PINNED</span> : <span className="text-[7px] font-mono text-gray-700">—</span>}
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Supported protocols banner */}
