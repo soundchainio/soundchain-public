@@ -47,6 +47,10 @@ const VALID_EVENTS = [
   'open_warroom',     // Opened War Room
   'wallet_connect',   // Connected an external wallet
   'agent_interact',   // Interacted with a managed agent
+  'node_ping',        // Pinged P2P network nodes
+  'operator_upload',  // Uploaded file via Operator → IPFS
+  'operator_transfer',// Started an Operator transfer
+  'nodes_page_view',  // Visited the Nodes dashboard
 ]
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {

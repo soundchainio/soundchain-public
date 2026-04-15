@@ -4281,6 +4281,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   { id: 'moltbook', label: 'Moltbook', route: '/backend' },
                   { id: 'library', label: 'Library', route: '/dex/library' },
                   { id: 'playlist', label: 'Playlists', route: '/dex/playlist' },
+                  { id: 'nodes', label: 'Nodes', route: '/dex/nodes' },
                 ].map((item) => {
                   const isActive = selectedView === item.id || (item.id === 'profile' && isBioExpanded)
                   return (
