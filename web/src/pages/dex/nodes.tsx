@@ -590,14 +590,14 @@ export default function NodesPage() {
                     <span>{post.commentCount || 0} comments</span>
                     <span>{post.repostCount || 0} reposts</span>
                   </div>
-                  {/* Expanded: open full post link */}
+                  {/* Expanded: inline actions (no redirect) */}
                   {isExpanded && (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); router.push(`/dex/post/${post.id}`) }}
-                      className="mt-2 text-[8px] font-mono text-cyan-400 hover:text-cyan-300 transition"
-                    >
-                      Open full post →
-                    </button>
+                    <div className="mt-2 flex items-center gap-2">
+                      <button onClick={(e) => { e.stopPropagation() }} className="text-[8px] font-mono text-cyan-400/40 px-2 py-0.5 rounded border border-cyan-500/10">Reply</button>
+                      <button onClick={(e) => { e.stopPropagation() }} className="text-[8px] font-mono text-pink-400/40 px-2 py-0.5 rounded border border-pink-500/10">React</button>
+                      <button onClick={(e) => { e.stopPropagation() }} className="text-[8px] font-mono text-green-400/40 px-2 py-0.5 rounded border border-green-500/10">Repost</button>
+                      <button onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(`${window.location.origin}/dex/post/${post.id}`) }} className="text-[8px] font-mono text-gray-500 px-2 py-0.5 rounded border border-white/5 hover:text-cyan-400 transition">Share</button>
+                    </div>
                   )}
                 </div>
                 )
