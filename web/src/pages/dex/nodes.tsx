@@ -12,7 +12,7 @@ import { TopNavBar } from 'components/TopNavBar'
 import {
   HardDrive, Wifi, WifiOff, Activity, Globe, Radio, Shield, Zap,
   Server, Database, ArrowUpRight, ArrowDownLeft, RefreshCw, Terminal,
-  Eye, Clock, ChevronRight, Signal, Cpu, Lock, Music
+  Eye, Clock, ChevronRight, Signal, Cpu, Lock, Music, Film
 } from 'lucide-react'
 
 interface NodeStats {
@@ -538,14 +538,42 @@ export default function NodesPage() {
                       {post.createdAt ? new Date(post.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}
                     </span>
                   </div>
-                  {/* Body */}
-                  {post.body && (
-                    <p className={`text-[10px] font-mono text-gray-300 leading-relaxed mb-2 ${isExpanded ? '' : 'line-clamp-3'}`}>{post.body}</p>
-                  )}
-                  {/* Media thumbnail */}
-                  {(post.uploadedMediaUrl || post.mediaThumbnail) && (
+                  {/* Body — parse emotes and clean embed URLs */}
+                  {post.body && (() => {
+                    // Extract emote/gif URLs from body
+                    const emoteRegex = /\|emote(?:gif)?:[^|]*\|(https?:\/\/[^\s|]+)/g
+                    const emotes: string[] = []
+                    let match
+                    while ((match = emoteRegex.exec(post.body)) !== null) emotes.push(match[1])
+                    // Clean body text: remove emote markup and raw URLs
+                    const cleanBody = post.body
+                      .replace(/\|emote(?:gif)?:[^|]*\|https?:\/\/[^\s|]*/g, '')
+                      .replace(/https?:\/\/\S+/g, '')
+                      .trim()
+                    return <>
+                      {cleanBody && <p className={`text-[10px] font-mono text-gray-300 leading-relaxed mb-2 ${isExpanded ? '' : 'line-clamp-3'}`}>{cleanBody}</p>}
+                      {emotes.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mb-2">
+                          {emotes.slice(0, isExpanded ? 10 : 2).map((url, ei) => (
+                            <img key={ei} src={url} alt="" className="h-8 rounded" loading="lazy" />
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  })()}
+                  {/* Media — uploaded image/video or embed link thumbnail */}
+                  {(post.uploadedMediaUrl || post.mediaThumbnail || post.mediaLink) && (
                     <div className={`rounded overflow-hidden mb-2 ${isExpanded ? 'max-h-64' : 'max-h-32'} transition-all`}>
-                      <img src={post.mediaThumbnail || post.uploadedMediaUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
+                      {post.uploadedMediaUrl || post.mediaThumbnail ? (
+                        <img src={post.mediaThumbnail || post.uploadedMediaUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
+                      ) : post.mediaLink && isExpanded ? (
+                        <iframe src={post.mediaLink} className="w-full h-48 border-0 rounded" allow="autoplay; encrypted-media" loading="lazy" />
+                      ) : post.mediaLink ? (
+                        <div className="flex items-center gap-2 p-2 bg-white/[0.02] rounded border border-white/5">
+                          <Film className="w-4 h-4 text-cyan-400 flex-shrink-0" />
+                          <span className="text-[8px] font-mono text-cyan-400/60 truncate">{post.mediaLink}</span>
+                        </div>
+                      ) : null}
                     </div>
                   )}
                   {/* Stats */}

@@ -198,7 +198,7 @@ export default function ArchivePage() {
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center p-3">
                     <p className="text-[9px] font-mono text-gray-600 line-clamp-4 text-center">
-                      {(post.body || '').replace(/https?:\/\/\S+/g, '').replace(/\{[^}]+\}/g, '').trim() || 'Saved post'}
+                      {(post.body || '').replace(/\|emote(?:gif)?:[^|]*\|https?:\/\/[^\s|]*/g, '').replace(/\[emote:[^\]]*\]/g, '').replace(/https?:\/\/\S+/g, '').replace(/\{[^}]+\}/g, '').trim() || 'Saved post'}
                     </p>
                   </div>
                 )}
