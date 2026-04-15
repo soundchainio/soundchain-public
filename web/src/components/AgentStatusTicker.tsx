@@ -1897,29 +1897,42 @@ export function AgentStatusTicker() {
   }, [activeTab])
   // Operator transfer handler
   const [operatorError, setOperatorError] = useState<string | null>(null)
+  const [operatorCompleted, setOperatorCompleted] = useState(0)
   const handleOperatorTransfer = useCallback(async () => {
     if (!operatorFiles.length || !operatorDest || operatorUploading) return
     setOperatorUploading(true)
     setOperatorProgress(0)
     setOperatorLastCid(null)
     setOperatorError(null)
+    setOperatorCompleted(0)
+    const total = operatorFiles.length
+    let completed = 0
+    const cids: string[] = []
+
+    // Upload function for a single file
+    const uploadOne = async (file: File) => {
+      const formData = new FormData()
+      formData.append('file', file)
+      const res = await fetch('/api/operator/upload', { method: 'POST', body: formData })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: `HTTP ${res.status}` }))
+        throw new Error(`${file.name}: ${err.error || res.status}`)
+      }
+      const data = await res.json()
+      completed++
+      setOperatorCompleted(completed)
+      setOperatorProgress(Math.round((completed / total) * 100))
+      setOperatorLastCid(data.cid)
+      cids.push(data.cid)
+      return data
+    }
+
     try {
-      for (let i = 0; i < operatorFiles.length; i++) {
-        const file = operatorFiles[i]
-        // Use FormData for large files (WAV/FLAC can be 50MB+)
-        const formData = new FormData()
-        formData.append('file', file)
-        const res = await fetch('/api/operator/upload', {
-          method: 'POST',
-          body: formData,
-        })
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({ error: `HTTP ${res.status}` }))
-          throw new Error(err.error || `Upload failed: ${res.status}`)
-        }
-        const data = await res.json()
-        setOperatorLastCid(data.cid)
-        setOperatorProgress(Math.round(((i + 1) / operatorFiles.length) * 100))
+      // Parallel upload — 3 concurrent (like torrents seeding)
+      const CONCURRENCY = 3
+      for (let i = 0; i < total; i += CONCURRENCY) {
+        const batch = operatorFiles.slice(i, i + CONCURRENCY)
+        await Promise.all(batch.map(uploadOne))
       }
       setOperatorFiles([])
     } catch (err: any) {
@@ -3509,7 +3522,7 @@ export function AgentStatusTicker() {
                 {operatorUploading && (
                   <div className="space-y-0.5">
                     <div className="flex items-center justify-between">
-                      <span className="text-[8px] font-mono text-green-400 animate-pulse">TRANSFERRING...</span>
+                      <span className="text-[8px] font-mono text-green-400 animate-pulse">TRANSFERRING {operatorCompleted}/{operatorFiles.length + operatorCompleted}...</span>
                       <span className="text-[8px] font-mono text-green-400">{operatorProgress}%</span>
                     </div>
                     <div className="h-1 bg-green-500/10 rounded-full overflow-hidden">
