@@ -1878,6 +1878,7 @@ export function AgentStatusTicker() {
   const [operatorLastCid, setOperatorLastCid] = useState<string | null>(null)
   const [operatorNodeStats, setOperatorNodeStats] = useState<any>(null)
   const [operatorSubfolder, setOperatorSubfolder] = useState<string | null>(null)
+  const [operatorShowAllThumbs, setOperatorShowAllThumbs] = useState(false)
   const operatorFileRef = useRef<HTMLInputElement>(null)
   const handleOperatorFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) setOperatorFiles(prev => [...prev, ...Array.from(e.target.files!)])
@@ -1926,22 +1927,41 @@ export function AgentStatusTicker() {
     let completed = 0
     const cids: string[] = []
 
-    // Upload function for a single file
+    // Get Pinata credentials for direct browser upload (bypasses Vercel 4.5MB limit)
+    let pinataKeys: { apiKey: string; apiSecret: string; gateway: string; profileId: string } | null = null
+    try {
+      const tokenRes = await fetch('/api/operator/upload-token')
+      if (tokenRes.ok) pinataKeys = await tokenRes.json()
+    } catch {}
+
+    // Upload function for a single file — direct to Pinata (no size limit)
     const uploadOne = async (file: File) => {
+      if (!pinataKeys) throw new Error('Failed to get upload credentials')
       const formData = new FormData()
       formData.append('file', file)
-      const res = await fetch('/api/operator/upload', { method: 'POST', body: formData })
+      formData.append('pinataMetadata', JSON.stringify({
+        name: `operator/${pinataKeys.profileId}/${operatorSubfolder?.split(':')[1] || 'uploads'}/${file.name}`,
+        keyvalues: { uploadedBy: pinataKeys.profileId, source: 'operator', folder: operatorSubfolder?.split(':')[1] || '/' },
+      }))
+      formData.append('pinataOptions', JSON.stringify({ cidVersion: 1 }))
+
+      const res = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
+        method: 'POST',
+        headers: { pinata_api_key: pinataKeys.apiKey, pinata_secret_api_key: pinataKeys.apiSecret },
+        body: formData,
+      })
       if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: `HTTP ${res.status}` }))
-        throw new Error(`${file.name}: ${err.error || res.status}`)
+        const errText = await res.text().catch(() => `HTTP ${res.status}`)
+        throw new Error(`${file.name}: Pinata ${res.status} — ${errText.slice(0, 100)}`)
       }
-      const data = await res.json()
+      const result = await res.json()
+      const cid = result.IpfsHash
       completed++
       setOperatorCompleted(completed)
       setOperatorProgress(Math.round((completed / total) * 100))
-      setOperatorLastCid(data.cid)
-      cids.push(data.cid)
-      return data
+      setOperatorLastCid(cid)
+      cids.push(cid)
+      return { cid, url: `${pinataKeys.gateway}${cid}`, size: file.size, name: file.name }
     }
 
     try {
@@ -3551,8 +3571,10 @@ export function AgentStatusTicker() {
                                   <span className="text-[6px] font-mono text-green-500/40">{operatorArchiveFiles.length} files</span>
                                 </div>
                                 <div className="flex flex-wrap gap-1 px-1">
-                                  {operatorArchiveFiles.slice(0, 12).map((t: any, ti: number) => (
-                                    <div key={t.id || ti} className="w-7 h-7 rounded overflow-hidden border border-green-500/10 hover:border-cyan-500/30 transition cursor-pointer" title={`${t.title || 'Untitled'} — ${t.artist || ''}`}>
+                                  {(operatorShowAllThumbs ? operatorArchiveFiles : operatorArchiveFiles.slice(0, 12)).map((t: any, ti: number) => (
+                                    <div key={t.id || ti} className="w-7 h-7 rounded overflow-hidden border border-green-500/10 hover:border-cyan-500/30 transition cursor-pointer" title={`${t.title || 'Untitled'} — ${t.artist || ''}`}
+                                      onClick={() => window.open(`/dex/track/${t.id}`, '_blank', 'noopener')}
+                                    >
                                       {t.artworkUrl ? (
                                         <img src={t.artworkUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
                                       ) : (
@@ -3563,9 +3585,12 @@ export function AgentStatusTicker() {
                                     </div>
                                   ))}
                                   {operatorArchiveFiles.length > 12 && (
-                                    <div className="w-7 h-7 rounded border border-white/5 flex items-center justify-center">
-                                      <span className="text-[6px] font-mono text-gray-600">+{operatorArchiveFiles.length - 12}</span>
-                                    </div>
+                                    <button
+                                      onClick={() => setOperatorShowAllThumbs(!operatorShowAllThumbs)}
+                                      className="w-7 h-7 rounded border border-white/10 hover:border-cyan-500/30 flex items-center justify-center transition"
+                                    >
+                                      <span className="text-[6px] font-mono text-gray-500">{operatorShowAllThumbs ? '▲' : `+${operatorArchiveFiles.length - 12}`}</span>
+                                    </button>
                                   )}
                                 </div>
                               </div>
