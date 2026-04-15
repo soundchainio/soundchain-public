@@ -7,7 +7,7 @@
 import { useEffect, useState, useCallback, useMemo, ReactElement } from 'react'
 import { useMe } from 'hooks/useMe'
 import { useRouter } from 'next/router'
-import { useGroupedTracksQuery, useFeedQuery } from 'lib/graphql'
+import { useGroupedTracksQuery } from 'lib/graphql'
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import { TopNavBar } from 'components/TopNavBar'
 import { Post } from 'components/Post/Post'
@@ -84,15 +84,42 @@ export default function NodesPage() {
     if (tab === 'feed') return 'feed'
     return 'feed'
   })
-  // Real feed — same Apollo query as the original feed page
+  // Feed — Vercel direct route (Phase 6: kills Apollo/Lambda dependency for reads)
   const { playlistState } = useAudioPlayerContext()
-  const { data: feedData, loading: feedLoading, fetchMore: feedFetchMore } = useFeedQuery({
-    variables: { page: { first: 20 } },
-    ssr: false,
-    errorPolicy: 'all',
-  })
-  const feedNodes = feedData?.feed?.nodes || []
-  const feedPageInfo = feedData?.feed?.pageInfo
+  const [feedPosts, setFeedPosts] = useState<any[]>([])
+  const [feedLoading, setFeedLoading] = useState(true)
+  const [feedCursor, setFeedCursor] = useState<string | null>(null)
+  const [feedHasNext, setFeedHasNext] = useState(false)
+
+  const loadFeed = useCallback(async (cursor?: string | null) => {
+    try {
+      const params = new URLSearchParams({ limit: '20' })
+      if (me?.profile?.id) params.set('profileId', me.profile.id)
+      if (cursor) params.set('cursor', cursor)
+      const r = await fetch(`/api/feed/posts?${params.toString()}`, { credentials: 'include' })
+      if (!r.ok) throw new Error(`feed ${r.status}`)
+      const data = await r.json()
+      setFeedPosts(prev => cursor ? [...prev, ...data.posts] : data.posts)
+      setFeedHasNext(!!data.hasNextPage)
+      setFeedCursor(data.endCursor || null)
+    } catch (e) {
+      // leave existing posts intact on error
+    } finally {
+      setFeedLoading(false)
+    }
+  }, [me?.profile?.id])
+
+  useEffect(() => {
+    setFeedLoading(true)
+    loadFeed(null)
+  }, [loadFeed])
+
+  // Adapt to the {post: ...} shape the rest of nodes.tsx expects
+  const feedNodes = useMemo(() => feedPosts.map(p => ({ post: p })), [feedPosts])
+  const feedPageInfo = { hasNextPage: feedHasNext, endCursor: feedCursor }
+  const feedFetchMore = useCallback(() => {
+    if (feedCursor) loadFeed(feedCursor)
+  }, [feedCursor, loadFeed])
   const handleFeedPlayClicked = useCallback((trackId: string) => {
     const tracks = feedNodes
       .filter(fi => fi?.post?.track && !fi.post.track.deleted)
@@ -532,9 +559,7 @@ export default function NodesPage() {
               {/* Load more */}
               {feedPageInfo?.hasNextPage && (
                 <button
-                  onClick={() => feedFetchMore({
-                    variables: { page: { first: 20, after: feedPageInfo.endCursor } },
-                  })}
+                  onClick={() => feedFetchMore()}
                   className="w-full py-2 text-[9px] font-mono text-cyan-400/60 hover:text-cyan-400 border border-white/5 rounded-lg hover:border-cyan-500/20 transition"
                 >
                   LOAD MORE
