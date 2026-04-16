@@ -2,16 +2,15 @@ import { memo, useState, useRef, useCallback, useEffect } from 'react'
 import { useModalDispatch } from 'contexts/ModalContext'
 import { useMe } from 'hooks/useMe'
 import { Ellipsis } from 'icons/Ellipsis'
-import { PostQuery, Role, Track, useCommentsLazyQuery, PageInput } from 'lib/graphql'
+import { PostQuery, Role, Track } from 'lib/graphql'
 import Link from 'next/link'
 import ReactPlayer from 'react-player'
-import { Clock, Lock, MessageCircle, ExternalLink } from 'lucide-react'
+import { Clock, Lock, MessageCircle, ExternalLink, ChevronDown } from 'lucide-react'
 import { AuthorActionsType } from 'types/AuthorActionsType'
 import { canPlayWithReactPlayer, IdentifySource } from 'utils/NormalizeEmbedLinks'
 import { MediaProvider } from 'types/MediaProvider'
 import { LinkPreviewCard } from './LinkPreviewCard'
 import { MakePostPermanentModal } from '../modals/MakePostPermanentModal'
-import { Comment } from '../Comment/Comment'
 import { CommentSkeleton } from '../Comment/CommentSkeleton'
 import { NewCommentForm } from '../NewCommentForm'
 
@@ -64,7 +63,7 @@ import { NotAvailableMessage } from '../NotAvailableMessage'
 import { Timestamp } from '../Timestamp'
 import { PostSkeleton } from './PostSkeleton'
 import { RepostPreview } from './RepostPreview'
-import { PostBodyWithEmotes } from '../EmoteRenderer'
+import { PostBodyWithEmotes, EmoteRenderer } from '../EmoteRenderer'
 import { AutoplayVideo } from '../AutoplayMedia'
 import { NativeTweetCard } from './NativeTweetCard'
 import { FastAudioPlayer } from '../FastAudioPlayer'
@@ -148,21 +147,35 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
     return () => observer.disconnect()
   }, [])
 
-  const firstPage: PageInput = { first: 5 }
-  const [loadComments, { data: commentsData, loading: commentsLoading }] = useCommentsLazyQuery({
-    variables: { postId: post?.id || '', page: firstPage },
-    fetchPolicy: 'cache-and-network',
-  })
+  // Vercel direct comments — bypasses broken Apollo/GraphQL custom domain
+  const [commentsData, setCommentsData] = useState<any[] | null>(null)
+  const [commentsLoading, setCommentsLoading] = useState(false)
+  const commentsLoadedRef = useRef(false)
+
+  const fetchComments = useCallback(async (pid: string) => {
+    setCommentsLoading(true)
+    try {
+      const resp = await fetch(`/api/feed/comments?postId=${pid}&limit=5`)
+      if (resp.ok) {
+        const data = await resp.json()
+        setCommentsData(data.comments || [])
+      }
+    } catch { /* silent */ }
+    setCommentsLoading(false)
+  }, [])
 
   // Load comments on demand — prevents N+1 query flood on feed scroll
   const handleShowComments = useCallback(() => {
     if (!showComments && post?.id) {
       setShowComments(true)
-      loadComments({ variables: { postId: post.id, page: firstPage } })
+      if (!commentsLoadedRef.current) {
+        commentsLoadedRef.current = true
+        fetchComments(post.id)
+      }
     } else {
       setShowComments(!showComments)
     }
-  }, [showComments, post?.id, loadComments])
+  }, [showComments, post?.id, fetchComments])
 
   if (!post) return <PostSkeleton />
 
@@ -594,9 +607,9 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
         </div>
       )}
 
-      {/* Auto-load comments inline — show up to 3, then "View more" */}
-      {(post.commentCount ?? 0) > 0 && !showComments && !commentsData && (
-        <AutoLoadComments postId={post.id} loadComments={loadComments} setShowComments={setShowComments} firstPage={firstPage} />
+      {/* Auto-load comments on mount when post has comments */}
+      {(post.commentCount ?? 0) > 0 && !commentsData && !commentsLoading && !commentsLoadedRef.current && (
+        <AutoLoadComments postId={post.id} fetchComments={fetchComments} loadedRef={commentsLoadedRef} />
       )}
 
       {/* Threaded replies — auto-loaded, show up to 3 inline */}
@@ -605,12 +618,12 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
           <CommentSkeleton />
           <CommentSkeleton />
         </div>
-      ) : commentsData?.comments?.nodes?.length ? (
+      ) : commentsData && commentsData.length > 0 ? (
         <div className="mt-3 ml-2 pl-3 border-l-2 border-white/10 space-y-2">
-          {(showComments ? commentsData.comments.nodes : commentsData.comments.nodes.slice(0, 3)).map((comment: any) => (
-            <Comment
+          {(showComments ? commentsData : commentsData.slice(0, 3)).map((comment: any) => (
+            <InlineComment
               key={comment.id}
-              commentId={comment.id}
+              comment={comment}
               onReplyClick={(authorName?: string) => {
                 setReplyToCommentId(comment.id)
                 setReplyToName(authorName || null)
@@ -619,7 +632,7 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
               }}
             />
           ))}
-          {!showComments && commentsData.comments.nodes.length > 3 && (
+          {!showComments && commentsData.length > 3 && (
             <button
               onClick={() => setShowComments(true)}
               className="text-xs text-neutral-500 hover:text-cyan-400 transition-colors py-1"
@@ -627,9 +640,9 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
               View all {post.commentCount} comments
             </button>
           )}
-          {showComments && (post.commentCount ?? 0) > (commentsData.comments.nodes.length ?? 0) && (
+          {showComments && (post.commentCount ?? 0) > commentsData.length && (
             <button
-              onClick={() => loadComments({ variables: { postId: post.id, page: firstPage } })}
+              onClick={() => fetchComments(post.id)}
               className="text-xs text-neutral-500 hover:text-cyan-400 transition-colors py-1"
             >
               View more comments
@@ -651,8 +664,8 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
             if (!showComments) setShowComments(true)
             setReplyToCommentId(null)
             setReplyToName(null)
-            // Refetch root comments + replies by clearing cache and reloading
-            loadComments({ variables: { postId: post.id, page: firstPage }, fetchPolicy: 'network-only' })
+            // Refetch comments from Vercel direct endpoint
+            fetchComments(post.id)
           }}
           inputRef={commentInputRef}
           myReaction={post.myReaction}
@@ -692,17 +705,101 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
   )
 }
 
-// Auto-load comments on mount so they show inline
-const AutoLoadComments = ({ postId, loadComments, setShowComments, firstPage }: {
+// Auto-load comments on mount so they show inline (Vercel direct)
+const AutoLoadComments = ({ postId, fetchComments, loadedRef }: {
   postId: string
-  loadComments: (opts: any) => void
-  setShowComments: (v: boolean) => void
-  firstPage: PageInput
+  fetchComments: (pid: string) => void
+  loadedRef: React.MutableRefObject<boolean>
 }) => {
   useEffect(() => {
-    loadComments({ variables: { postId, page: firstPage } })
+    loadedRef.current = true
+    fetchComments(postId)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
   return null
+}
+
+// Inline comment renderer — renders comment data directly, no Apollo self-fetch
+const InlineComment = ({ comment, onReplyClick }: {
+  comment: any
+  onReplyClick?: (authorName?: string) => void
+}) => {
+  const isGuest = comment.isGuest && comment.walletAddress
+  const hasProfile = !!comment.profile
+
+  if (comment.deleted) return null
+
+  return (
+    <div className="flex items-start gap-2">
+      {isGuest ? (
+        <GuestAvatar walletAddress={comment.walletAddress} pixels={24} className="w-6 h-6 flex-shrink-0" />
+      ) : hasProfile ? (
+        <Avatar profile={comment.profile} pixels={24} className="w-6 h-6 flex-shrink-0" />
+      ) : (
+        <div className="w-6 h-6 rounded-full bg-neutral-700 flex items-center justify-center text-neutral-400 text-[10px] flex-shrink-0">?</div>
+      )}
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2 flex-wrap">
+          {isGuest ? (
+            <>
+              <span className="text-xs font-semibold text-neutral-200">
+                {formatWalletAddress(comment.walletAddress)}
+              </span>
+              <span className="text-[10px] px-1.5 py-0.5 bg-neutral-700 text-neutral-300 rounded-full font-medium">
+                Guest
+              </span>
+            </>
+          ) : hasProfile ? (
+            <Link href={`/dex/users/${comment.profile.userHandle}`}>
+              <DisplayName
+                name={comment.profile.displayName}
+                verified={comment.profile.verified}
+                teamMember={comment.profile.teamMember}
+                badges={comment.profile.badges}
+                className="text-xs"
+              />
+            </Link>
+          ) : (
+            <span className="text-xs text-neutral-400">Unknown user</span>
+          )}
+          <Timestamp className="text-gray-600 text-[10px]" datetime={comment.createdAt} small />
+        </div>
+        <div className="text-gray-300 text-xs mt-0.5 whitespace-pre-wrap break-words">
+          <EmoteRenderer text={comment.body} linkify />
+        </div>
+        {/* Action pills */}
+        <div className="flex items-center gap-2.5 mt-1.5">
+          {onReplyClick && (
+            <button
+              onClick={() => onReplyClick(comment.profile?.displayName || comment.profile?.userHandle || (isGuest ? formatWalletAddress(comment.walletAddress) : undefined))}
+              className="flex items-center gap-1 text-gray-600 hover:text-cyan-400 transition-colors text-[10px]"
+            >
+              <MessageCircle className="w-2.5 h-2.5" />
+              Reply
+            </button>
+          )}
+        </div>
+        {/* Inline replies */}
+        {comment.replies && comment.replies.length > 0 && (
+          <div className="mt-2 pl-3 border-l border-white/10 space-y-2">
+            {comment.replies.map((reply: any) => (
+              <InlineComment key={reply.id} comment={reply} onReplyClick={onReplyClick} />
+            ))}
+            {(comment.replyCount ?? 0) > comment.replies.length && (
+              <button
+                onClick={() => {
+                  if (comment.postId) window.location.href = `/posts/${comment.postId}`
+                }}
+                className="flex items-center gap-1 text-[10px] text-neutral-500 hover:text-cyan-400 transition-colors py-0.5"
+              >
+                <ChevronDown className="w-2.5 h-2.5" />
+                View {(comment.replyCount ?? 0) - comment.replies.length} more {(comment.replyCount ?? 0) - comment.replies.length === 1 ? 'reply' : 'replies'}
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  )
 }
 
 export const Post = memo(PostComponent, (prev, next) => {
