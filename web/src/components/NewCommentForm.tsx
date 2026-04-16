@@ -68,11 +68,24 @@ export const NewCommentForm = ({ postId, onSuccess, compact, inputRef, replyToCo
   const [localIsBookmarked, setLocalIsBookmarked] = useState(initialIsBookmarked ?? false)
   const [isDownloading, setIsDownloading] = useState(false)
   const isPostOwner = me?.profile?.id && postData?.profile?.id && me.profile.id === postData.profile.id
-  const [deletePost, { loading: deleting }] = useDeletePostMutation({
-    onCompleted: () => toast.success('Post deleted'),
-    onError: (err) => toast.error(`Failed to delete: ${err.message}`),
-    refetchQueries: ['Feed', 'Posts', 'WallPosts'],
-  })
+  // Delete — Vercel direct
+  const [deleting, setDeleting] = useState(false)
+  const deletePost = async ({ variables }: { variables: { input: { postId: string } } }) => {
+    setDeleting(true)
+    try {
+      const r = await fetch('/api/posts/delete', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ postId: variables.input.postId }),
+      })
+      if (r.ok) toast.success('Post deleted')
+      else {
+        const e = await r.json().catch(() => ({ error: `HTTP ${r.status}` }))
+        toast.error(`Failed to delete: ${e.error}`)
+      }
+    } finally { setDeleting(false) }
+  }
   const [selectedStickers, setSelectedStickers] = useState<Array<{url: string, name: string}>>([])
   const [embedUrl, setEmbedUrl] = useState('')
   const [linkPreview, setLinkPreview] = useState<string | undefined>(undefined)
@@ -123,27 +136,26 @@ export const NewCommentForm = ({ postId, onSuccess, compact, inputRef, replyToCo
     setLocalIsBookmarked(initialIsBookmarked ?? false)
   }, [initialIsBookmarked])
 
-  // Bookmark mutations
-  const [bookmarkPost, { loading: bookmarking }] = useBookmarkPostMutation()
-  const [unbookmarkPost, { loading: unbookmarking }] = useUnbookmarkPostMutation()
-
+  // Bookmark — Vercel direct
+  const [bookmarking, setBookmarking] = useState(false)
   const handleBookmarkClick = async () => {
-    if (!me) return
-    if (bookmarking || unbookmarking) return
+    if (!me || bookmarking) return
+    setBookmarking(true)
     try {
-      if (localIsBookmarked) {
-        await unbookmarkPost({ variables: { postId } })
-        setLocalIsBookmarked(false)
-        toast('Removed from bookmarks')
-      } else {
-        await bookmarkPost({ variables: { postId } })
-        setLocalIsBookmarked(true)
-        toast('Added to bookmarks')
-      }
+      const action = localIsBookmarked ? 'remove' : 'add'
+      const r = await fetch('/api/posts/bookmark', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ postId, action }),
+      })
+      if (!r.ok) throw new Error(`HTTP ${r.status}`)
+      setLocalIsBookmarked(!localIsBookmarked)
+      toast(localIsBookmarked ? 'Removed from bookmarks' : 'Added to bookmarks')
     } catch (err) {
       console.error('Bookmark error:', err)
       toast('Failed to update bookmark')
-    }
+    } finally { setBookmarking(false) }
   }
 
   const handleDownloadClick = async () => {
