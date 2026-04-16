@@ -15,9 +15,10 @@
 import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { X, Save, RefreshCw, Shuffle, User } from 'lucide-react'
+import { OPEN_SOURCE_AVATARS, AVATAR_CATEGORIES, filterAvatarsByCategory, AvatarCategory } from 'lib/nodeverse/openSourceAvatars'
 
 export interface CharacterConfig {
-  type: 'agent' | 'human'   // NEW: visual class — agents = pills, humans = full GLB
+  type: 'agent' | 'human' | 'opensource'  // visual class: pill / RPM GLB / curated CC0 GLB
   bodyColor: string         // hex (agent only)
   headShape: 'capsule' | 'sphere' | 'cube' | 'cone'
   height: number            // 0.6 - 1.4 multiplier
@@ -25,8 +26,11 @@ export interface CharacterConfig {
   glowColor: string         // hex
   name: string              // override @handle
   accessory: 'none' | 'crown' | 'halo' | 'antenna' | 'visor'
-  humanGlbUrl?: string      // NEW: Ready Player Me GLB URL for humans
-  humanAvatarPng?: string   // NEW: 2D preview thumbnail
+  humanGlbUrl?: string      // GLB URL (Ready Player Me OR open-source)
+  humanAvatarPng?: string   // 2D preview thumbnail
+  humanScale?: number       // model scale multiplier (open-source models vary wildly)
+  humanYOffset?: number     // vertical alignment offset
+  openSourceId?: string     // open-source avatar ID (if from OS library)
 }
 
 export const DEFAULT_CHARACTER: CharacterConfig = {
@@ -287,10 +291,10 @@ export function CharacterDesigner({ open, onClose, initialName }: CharacterDesig
   }
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 overflow-y-auto">
-      <div className="w-full max-w-3xl bg-[#0a0f1f] border border-cyan-500/30 rounded-xl shadow-2xl shadow-cyan-500/10 overflow-hidden my-4">
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-cyan-500/20 bg-black/40">
+    <div className="fixed inset-0 z-[200] flex items-start sm:items-center justify-center bg-black/40 backdrop-blur-sm p-2 sm:p-4 overflow-y-auto">
+      <div className="w-full max-w-3xl bg-[#0a0f1f] border border-cyan-500/30 rounded-xl shadow-2xl shadow-cyan-500/10 overflow-hidden my-2 sm:my-4">
+        {/* Header — sticky on mobile so user always knows where they are */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-cyan-500/20 bg-black/80 sticky top-0 z-10 backdrop-blur-md">
           <div className="flex items-center gap-2">
             <User className="w-4 h-4 text-cyan-400" />
             <h2 className="text-sm font-mono font-bold text-cyan-400 tracking-wider">CHARACTER DESIGNER</h2>
@@ -301,20 +305,26 @@ export function CharacterDesigner({ open, onClose, initialName }: CharacterDesig
           </button>
         </div>
 
-        {/* Type Toggle: AGENT (pill) vs HUMAN (Ready Player Me) */}
-        <div className="flex items-center gap-1 px-4 py-2 border-b border-cyan-500/10 bg-black/20">
-          <span className="text-[8px] font-mono text-gray-500 uppercase tracking-wider mr-2">CITIZEN CLASS:</span>
+        {/* Type Toggle: 3 modes — AGENT pill | HUMAN (RPM) | OPEN SOURCE (CC0) */}
+        <div className="flex items-center gap-1 px-4 py-2 border-b border-cyan-500/10 bg-black/60 backdrop-blur-md flex-wrap sticky top-[49px] z-10">
+          <span className="text-[8px] font-mono text-gray-500 uppercase tracking-wider mr-2 w-full sm:w-auto">CITIZEN CLASS:</span>
           <button
             onClick={() => update({ type: 'agent' })}
-            className={`flex-1 sm:flex-none px-4 py-1.5 rounded text-[10px] font-mono font-bold transition ${config.type === 'agent' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'bg-white/[0.02] text-gray-500 border border-white/5 hover:text-white'}`}
+            className={`flex-1 sm:flex-none px-3 py-1.5 rounded text-[10px] font-mono font-bold transition ${config.type === 'agent' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'bg-white/[0.02] text-gray-500 border border-white/5 hover:text-white'}`}
           >
-            🤖 AGENT (pill)
+            🤖 AGENT
           </button>
           <button
             onClick={() => update({ type: 'human' })}
-            className={`flex-1 sm:flex-none px-4 py-1.5 rounded text-[10px] font-mono font-bold transition ${config.type === 'human' ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' : 'bg-white/[0.02] text-gray-500 border border-white/5 hover:text-white'}`}
+            className={`flex-1 sm:flex-none px-3 py-1.5 rounded text-[10px] font-mono font-bold transition ${config.type === 'human' ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' : 'bg-white/[0.02] text-gray-500 border border-white/5 hover:text-white'}`}
           >
-            👤 HUMAN (Ready Player Me)
+            👤 HUMAN <span className="opacity-60 text-[8px]">(RPM)</span>
+          </button>
+          <button
+            onClick={() => update({ type: 'opensource' })}
+            className={`flex-1 sm:flex-none px-3 py-1.5 rounded text-[10px] font-mono font-bold transition ${config.type === 'opensource' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-white/[0.02] text-gray-500 border border-white/5 hover:text-white'}`}
+          >
+            🎨 OPEN SOURCE <span className="opacity-60 text-[8px]">(CC0)</span>
           </button>
         </div>
 
@@ -373,6 +383,23 @@ export function CharacterDesigner({ open, onClose, initialName }: CharacterDesig
           </div>
         )}
 
+        {/* OPEN SOURCE MODE — curated CC0/MIT GLB avatars (NO third-party deps) */}
+        {config.type === 'opensource' && (
+          <OpenSourceAvatarBrowser
+            selectedId={config.openSourceId}
+            currentName={config.name}
+            onPickAvatar={(av) => update({
+              humanGlbUrl: av.glbUrl,
+              humanAvatarPng: av.thumbnailUrl,
+              openSourceId: av.id,
+              humanScale: av.scale,
+              humanYOffset: av.yOffset,
+            })}
+            onClearAvatar={() => update({ humanGlbUrl: undefined, humanAvatarPng: undefined, openSourceId: undefined, humanScale: undefined, humanYOffset: undefined })}
+            onNameChange={(name) => update({ name })}
+          />
+        )}
+
         {/* AGENT MODE — original capsule designer */}
         {config.type === 'agent' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
@@ -388,7 +415,7 @@ export function CharacterDesigner({ open, onClose, initialName }: CharacterDesig
           </div>
 
           {/* Right: Controls */}
-          <div className="p-4 space-y-3 max-h-[400px] overflow-y-auto">
+          <div className="p-4 space-y-3">
             {/* Name */}
             <div>
               <label className="text-[9px] font-mono text-gray-500 uppercase tracking-wider mb-1 block">Display Name</label>
@@ -500,8 +527,8 @@ export function CharacterDesigner({ open, onClose, initialName }: CharacterDesig
         </div>
         )}{/* end agent mode */}
 
-        {/* Footer */}
-        <div className="px-4 py-3 border-t border-cyan-500/20 bg-black/40 flex items-center justify-between gap-2">
+        {/* Footer — sticky so SAVE is always one tap away */}
+        <div className="px-4 py-3 border-t border-cyan-500/20 bg-black/80 backdrop-blur-md flex items-center justify-between gap-2 sticky bottom-0 z-10">
           <button
             onClick={() => setConfig(DEFAULT_CHARACTER)}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded text-[10px] font-mono text-gray-400 hover:text-white border border-white/10 hover:border-white/20 transition"
@@ -523,6 +550,259 @@ export function CharacterDesigner({ open, onClose, initialName }: CharacterDesig
             </button>
           </div>
         </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Open-Source Avatar Browser ─────────────────────────────────
+// Renders the curated CC0/MIT avatar grid + 3D preview of the selected one.
+// No external services. No rate limits. No surprise pricing changes.
+// Frank's vision: "the biggest abyss of nodeverse accessories known to man,
+// woman, and agent."
+interface OpenSourceAvatarBrowserProps {
+  selectedId?: string
+  currentName: string
+  onPickAvatar: (av: typeof OPEN_SOURCE_AVATARS[number]) => void
+  onClearAvatar: () => void
+  onNameChange: (name: string) => void
+}
+
+function OpenSourceAvatarBrowser({ selectedId, currentName, onPickAvatar, onClearAvatar, onNameChange }: OpenSourceAvatarBrowserProps) {
+  const [category, setCategory] = useState<AvatarCategory | 'all'>('all')
+  const [search, setSearch] = useState('')
+  const previewRef = useRef<HTMLDivElement>(null)
+
+  const filtered = filterAvatarsByCategory(category).filter(a =>
+    !search || a.name.toLowerCase().includes(search.toLowerCase()) || a.tags.some(t => t.toLowerCase().includes(search.toLowerCase()))
+  )
+
+  const selected = OPEN_SOURCE_AVATARS.find(a => a.id === selectedId)
+
+  // ─── Live 3D preview of the selected avatar ──────────────
+  useEffect(() => {
+    if (!selected || !previewRef.current) return
+    const container = previewRef.current
+    const w = container.clientWidth || 300
+    const h = container.clientHeight || 300
+
+    const scene = new THREE.Scene()
+    scene.background = new THREE.Color(0x050a14)
+
+    const camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 100)
+    camera.position.set(0, 1.4, 3.5)
+    camera.lookAt(0, 1, 0)
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
+    renderer.setSize(w, h)
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+    container.appendChild(renderer.domElement)
+
+    // Lighting
+    scene.add(new THREE.AmbientLight(0xffffff, 0.7))
+    const dir = new THREE.DirectionalLight(0xffffff, 1.5)
+    dir.position.set(5, 8, 5)
+    scene.add(dir)
+    const cyan = new THREE.PointLight(0x22d3ee, 1.2, 15)
+    cyan.position.set(-3, 3, 3)
+    scene.add(cyan)
+    const purple = new THREE.PointLight(0xa855f7, 0.8, 15)
+    purple.position.set(3, 2, -2)
+    scene.add(purple)
+
+    // Floor disc + glow ring
+    const floorGeo = new THREE.CircleGeometry(2, 32)
+    const floorMat = new THREE.MeshStandardMaterial({ color: 0x1a2540, metalness: 0.7, roughness: 0.3 })
+    const floor = new THREE.Mesh(floorGeo, floorMat)
+    floor.rotation.x = -Math.PI / 2
+    scene.add(floor)
+    const ringGeo = new THREE.RingGeometry(1.0, 1.2, 32)
+    const ringMat = new THREE.MeshBasicMaterial({ color: 0x22c55e, transparent: true, opacity: 0.5, side: THREE.DoubleSide })
+    const ring = new THREE.Mesh(ringGeo, ringMat)
+    ring.rotation.x = -Math.PI / 2
+    ring.position.y = 0.01
+    scene.add(ring)
+
+    // Loading indicator (will be cleared once GLB loads)
+    const loadingGeo = new THREE.BoxGeometry(0.5, 0.5, 0.5)
+    const loadingMat = new THREE.MeshStandardMaterial({ color: 0x22c55e, emissive: 0x22c55e, emissiveIntensity: 0.5, wireframe: true })
+    const loadingCube = new THREE.Mesh(loadingGeo, loadingMat)
+    loadingCube.position.y = 1.2
+    scene.add(loadingCube)
+
+    let mixer: THREE.AnimationMixer | null = null
+    let model: THREE.Object3D | null = null
+    let cancelled = false
+
+    // Lazy-load GLTFLoader (matches RadioScene4D pattern)
+    import('three/examples/jsm/loaders/GLTFLoader.js').then(({ GLTFLoader }) => {
+      if (cancelled) return
+      const loader = new GLTFLoader()
+      loader.load(
+        selected.glbUrl,
+        (gltf) => {
+          if (cancelled) return
+          scene.remove(loadingCube)
+          model = gltf.scene
+          const scale = selected.scale ?? 1
+          model.scale.setScalar(scale)
+          model.position.y = selected.yOffset ?? 0
+          model.traverse((child: any) => {
+            if (child.isMesh) {
+              child.castShadow = true
+              child.receiveShadow = true
+            }
+          })
+          scene.add(model)
+          // Animations if available
+          if (gltf.animations && gltf.animations.length > 0) {
+            mixer = new THREE.AnimationMixer(model)
+            const clip = gltf.animations[0]
+            mixer.clipAction(clip).play()
+          }
+        },
+        undefined,
+        (err) => {
+          console.warn('Failed to load avatar GLB:', selected.glbUrl, err)
+        }
+      )
+    })
+
+    const clock = new THREE.Clock()
+    let raf = 0
+    const animate = () => {
+      raf = requestAnimationFrame(animate)
+      const dt = clock.getDelta()
+      if (mixer) mixer.update(dt)
+      if (model) model.rotation.y += 0.005
+      else loadingCube.rotation.y += 0.02
+      ring.rotation.z += 0.005
+      renderer.render(scene, camera)
+    }
+    animate()
+
+    return () => {
+      cancelled = true
+      cancelAnimationFrame(raf)
+      try { container.removeChild(renderer.domElement) } catch {}
+      renderer.dispose()
+      scene.traverse((obj: any) => {
+        if (obj.geometry) obj.geometry.dispose()
+        if (obj.material) {
+          if (Array.isArray(obj.material)) obj.material.forEach((m: any) => m.dispose())
+          else obj.material.dispose()
+        }
+      })
+    }
+  }, [selected])
+
+  return (
+    <div className="bg-black">
+      {!selected ? (
+        <>
+          {/* Header / search */}
+          <div className="px-4 py-2 bg-green-500/5 border-b border-green-500/10">
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <p className="text-[10px] font-mono text-green-300">
+                🎨 OPEN SOURCE LIBRARY · CC0 / MIT licensed · No third-party deps · Forever free
+              </p>
+            </div>
+            <input
+              type="text"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search by name or tag (animal, robot, human...)"
+              className="w-full bg-black/60 border border-white/10 rounded px-2 py-1.5 text-[10px] font-mono text-white outline-none focus:border-green-500/50"
+            />
+          </div>
+          {/* Category filter */}
+          <div className="flex items-center gap-1 px-4 py-2 border-b border-white/5 bg-black/20 overflow-x-auto">
+            {AVATAR_CATEGORIES.map(c => (
+              <button
+                key={c.id}
+                onClick={() => setCategory(c.id)}
+                className={`flex items-center gap-1 px-2 py-1 rounded text-[9px] font-mono whitespace-nowrap transition ${category === c.id ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-white/[0.02] text-gray-500 border border-white/5 hover:text-white'}`}
+              >
+                <span>{c.emoji}</span> {c.label}
+              </button>
+            ))}
+            <span className="ml-auto text-[8px] font-mono text-gray-600">{filtered.length} avatars</span>
+          </div>
+          {/* Avatar grid */}
+          <div className="p-3 grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-[420px] overflow-y-auto">
+            {filtered.map(av => (
+              <button
+                key={av.id}
+                onClick={() => onPickAvatar(av)}
+                className="group flex flex-col items-center gap-1 p-3 rounded border border-white/10 hover:border-green-500/40 bg-white/[0.02] hover:bg-green-500/5 transition"
+              >
+                <div className="w-full aspect-square rounded bg-gradient-to-br from-green-900/30 to-cyan-900/30 flex items-center justify-center text-4xl group-hover:scale-110 transition-transform">
+                  {av.emoji}
+                </div>
+                <div className="text-[10px] font-mono text-white text-center truncate w-full" title={av.name}>{av.name}</div>
+                <div className="flex items-center gap-1 text-[8px] font-mono">
+                  <span className="px-1 py-0.5 rounded bg-green-500/10 text-green-400 border border-green-500/20">{av.license}</span>
+                  {av.hasAnimations && <span className="px-1 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">▶</span>}
+                </div>
+              </button>
+            ))}
+            {filtered.length === 0 && (
+              <div className="col-span-full text-center py-8 text-[10px] font-mono text-gray-500">No avatars match — try a different category or search</div>
+            )}
+          </div>
+        </>
+      ) : (
+        <>
+          {/* Selected — show 3D preview */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
+            <div className="bg-black border-b md:border-b-0 md:border-r border-green-500/10">
+              <div ref={previewRef} className="w-full" style={{ height: '320px' }} />
+              <div className="px-3 py-2 flex items-center justify-between border-t border-green-500/10">
+                <span className="text-[8px] font-mono text-gray-600">LIVE PREVIEW · GLB loaded · auto-rotate</span>
+              </div>
+            </div>
+            <div className="p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="text-3xl">{selected.emoji}</div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-mono font-bold text-white truncate">{selected.name}</div>
+                  <div className="text-[9px] font-mono text-gray-500 capitalize">{selected.category} · {selected.source}</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-1 flex-wrap">
+                <span className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-green-500/10 text-green-400 border border-green-500/20">{selected.license}</span>
+                {selected.hasAnimations && <span className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">animated</span>}
+                {selected.tags.map(t => (
+                  <span key={t} className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-white/5 text-gray-400 border border-white/10">{t}</span>
+                ))}
+              </div>
+              <div className="text-[9px] font-mono text-gray-500 break-all px-1 py-1 rounded bg-black/40 border border-white/5">
+                {selected.glbUrl}
+              </div>
+              <div>
+                <label className="text-[9px] font-mono text-gray-500 uppercase tracking-wider mb-1 block">Display Name</label>
+                <input
+                  type="text"
+                  value={currentName}
+                  onChange={e => onNameChange(e.target.value)}
+                  placeholder="@handle or custom name"
+                  className="w-full bg-black/60 border border-white/10 rounded px-2 py-1.5 text-[11px] font-mono text-white outline-none focus:border-green-500/50"
+                  maxLength={16}
+                />
+              </div>
+              <button
+                onClick={onClearAvatar}
+                className="w-full py-1.5 rounded text-[10px] font-mono text-green-400 hover:bg-green-500/10 border border-green-500/20 transition"
+              >
+                ← Browse other avatars
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+      <div className="px-4 py-2 border-t border-cyan-500/10 bg-black/40 flex items-center justify-between text-[8px] font-mono text-gray-600">
+        <span>{OPEN_SOURCE_AVATARS.length} avatars · all CC0/MIT/CC-BY · ZERO third-party deps</span>
+        <span className="text-green-500">🌱 Phase 1 of ∞</span>
       </div>
     </div>
   )

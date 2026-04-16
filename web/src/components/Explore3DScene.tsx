@@ -222,18 +222,21 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
 
     // ─── Player Avatar — Humanoid GLB or Agent Pill ──────────
     const playerGroup = new THREE.Group()
-    const isHuman = character.type === 'human' && character.humanGlbUrl
+    // Both 'human' (RPM) and 'opensource' (CC0/MIT) modes load a GLB
+    const isGlbAvatar = (character.type === 'human' || character.type === 'opensource') && character.humanGlbUrl
 
-    if (isHuman) {
-      // HUMAN — load Ready Player Me GLB model
+    if (isGlbAvatar) {
+      // GLB AVATAR — RPM or open-source CC0/MIT humanoid
       const loader = new GLTFLoader()
       loader.load(
         character.humanGlbUrl!,
         (gltf) => {
           const model = gltf.scene
-          // RPM avatars are full-size (~1.7m). Scale to fit our world (slightly bigger feel).
-          model.scale.setScalar(1 * character.height)
-          model.position.y = 0
+          // Open-source models vary wildly in scale (Horse=0.015, Duck=0.5, Soldier=1.0).
+          // Use humanScale if provided (from open-source library), else default to 1.
+          const baseScale = character.humanScale ?? 1
+          model.scale.setScalar(baseScale * character.height)
+          model.position.y = character.humanYOffset ?? 0
           model.traverse((obj: any) => {
             if (obj.isMesh) {
               obj.castShadow = true
