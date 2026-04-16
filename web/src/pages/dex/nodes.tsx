@@ -248,9 +248,9 @@ export default function NodesPage() {
         </div>
       </div>
 
-      <div className="max-w-[1400px] mx-auto px-4 py-4 space-y-4">
+      <div className={`mx-auto py-4 space-y-4 ${mobileTab === 'feed' ? 'px-0 max-w-[680px] lg:max-w-[1400px] lg:px-4' : 'px-4 max-w-[1400px]'}`}>
         {/* Mobile tab toggle */}
-        <div className="flex items-center gap-1 lg:hidden">
+        <div className={`flex items-center gap-1 lg:hidden ${mobileTab === 'feed' ? 'px-2' : ''}`}>
           <button onClick={() => setMobileTab('network')} className={`flex-1 py-2 text-[10px] font-mono font-bold rounded-lg transition ${mobileTab === 'network' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-white/[0.02] text-gray-600 border border-white/5'}`}>
             NETWORK
           </button>
@@ -260,7 +260,7 @@ export default function NodesPage() {
         </div>
 
         {/* Top stats row */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2">
+        <div className={`grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2 ${mobileTab === 'feed' ? 'hidden lg:grid' : ''}`}>
           <StatBox icon={<Signal className="w-4 h-4 text-green-400" />} label="NODES" value={`${onlineCount}/${nodes.length}`} color="green" />
           <StatBox icon={<Database className="w-4 h-4 text-cyan-400" />} label="IPFS PINS" value={stats?.ipfs?.pins?.toLocaleString() || '...'} color="cyan" />
           <StatBox icon={<Activity className="w-4 h-4 text-purple-400" />} label="RELAYS" value={stats?.nostr?.relays?.toString() || '...'} color="purple" />
@@ -269,10 +269,10 @@ export default function NodesPage() {
           <StatBox icon={<Shield className="w-4 h-4 text-pink-400" />} label="PROTOCOL" value="DTLS 1.2" color="pink" />
         </div>
 
-        {/* ─── Split Layout: Network (left) + Feed (right) on desktop ─── */}
-        <div className="flex gap-4">
-        {/* LEFT: Network dashboard — full on mobile when "network" tab active, left column on desktop */}
-        <div className={`${mobileTab === 'feed' ? 'hidden lg:block' : ''} flex-1 min-w-0 space-y-4`}>
+        {/* ─── Split Layout: Network (left sidebar) + Feed (main) on desktop ─── */}
+        <div className="flex flex-col-reverse lg:flex-row gap-4">
+        {/* LEFT: Network dashboard — sidebar on desktop, hidden on mobile when feed active */}
+        <div className={`${mobileTab === 'feed' ? 'hidden lg:block' : ''} lg:w-[420px] lg:flex-shrink-0 min-w-0 space-y-4`}>
 
         {/* Node swarm grid */}
         <div>
@@ -525,8 +525,8 @@ export default function NodesPage() {
 
         </div>{/* end network column */}
 
-        {/* RIGHT: Feed — uses the REAL <Post> component (same as original feed page) */}
-        <div className={`${mobileTab === 'network' ? 'hidden lg:block' : 'w-full'} lg:w-[480px] lg:flex-shrink-0 min-w-0`}>
+        {/* MAIN: Feed — full width IG-style */}
+        <div className={`${mobileTab === 'network' ? 'hidden lg:block' : 'w-full'} flex-1 min-w-0`}>
           <div className="space-y-2">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
