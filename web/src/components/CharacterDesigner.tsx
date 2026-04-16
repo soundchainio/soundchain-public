@@ -257,7 +257,7 @@ export function CharacterDesigner({ open, onClose, initialName }: CharacterDesig
   }
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 overflow-y-auto">
       <div className="w-full max-w-3xl bg-[#0a0f1f] border border-cyan-500/30 rounded-xl shadow-2xl shadow-cyan-500/10 overflow-hidden my-4">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-cyan-500/20 bg-black/40">

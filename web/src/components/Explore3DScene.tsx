@@ -151,36 +151,52 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
     floor.receiveShadow = true
     scene.add(floor)
 
-    // ─── NODEVERSE LAND — owned squares glow with owner's color ──
+    // ─── NODEVERSE LAND ─ visible tier grid + owned glow ─────
     const landGroup = new THREE.Group()
-    ownedSquares.forEach(sq => {
-      const tileGeo = new THREE.PlaneGeometry(0.95, 0.95)
-      const tileMat = new THREE.MeshBasicMaterial({
-        color: sq.ownerColor || '#22d3ee',
-        transparent: true,
-        opacity: 0.35,
-        side: THREE.DoubleSide,
-      })
-      const tile = new THREE.Mesh(tileGeo, tileMat)
-      tile.position.set(sq.x, 0.05, sq.z)
-      tile.rotation.x = -Math.PI / 2
-      ;(tile as any).userData = { ownedSquare: sq }
-      landGroup.add(tile)
+    const ownedMap = new Map<string, any>()
+    ownedSquares.forEach(sq => ownedMap.set(`${sq.x},${sq.z}`, sq))
 
-      // Border edge for owned squares
-      const edgeGeo = new THREE.RingGeometry(0.45, 0.5, 4)
-      const edgeMat = new THREE.MeshBasicMaterial({
-        color: sq.ownerColor || '#22d3ee',
-        transparent: true,
-        opacity: 0.8,
-        side: THREE.DoubleSide,
-      })
-      const edge = new THREE.Mesh(edgeGeo, edgeMat)
-      edge.position.set(sq.x, 0.06, sq.z)
-      edge.rotation.x = -Math.PI / 2
-      edge.rotation.z = Math.PI / 4
-      landGroup.add(edge)
-    })
+    // Show tier colors for ALL squares within ±25 of player (performance — render only nearby)
+    // Origin=gold, Inner=purple, Mid=cyan, Outer=gray-dim
+    const RENDER_RADIUS = 25 // visible squares around origin (50×50 = 2500 tiles)
+    for (let x = -RENDER_RADIUS; x <= RENDER_RADIUS; x++) {
+      for (let z = -RENDER_RADIUS; z <= RENDER_RADIUS; z++) {
+        const dist = Math.sqrt(x * x + z * z)
+        const owned = ownedMap.get(`${x},${z}`)
+
+        let tileColor: number
+        let tileOpacity: number
+        if (owned) {
+          tileColor = new THREE.Color(owned.ownerColor || '#22d3ee').getHex()
+          tileOpacity = 0.5
+        } else if (dist <= 5) {
+          tileColor = 0xfacc15  // origin gold
+          tileOpacity = 0.18
+        } else if (dist <= 20) {
+          tileColor = 0xa855f7  // inner purple
+          tileOpacity = 0.10
+        } else if (dist <= 40) {
+          tileColor = 0x22d3ee  // mid cyan
+          tileOpacity = 0.06
+        } else {
+          tileColor = 0x666666  // outer dim
+          tileOpacity = 0.04
+        }
+
+        const tileGeo = new THREE.PlaneGeometry(0.95, 0.95)
+        const tileMat = new THREE.MeshBasicMaterial({
+          color: tileColor,
+          transparent: true,
+          opacity: tileOpacity,
+          side: THREE.DoubleSide,
+        })
+        const tile = new THREE.Mesh(tileGeo, tileMat)
+        tile.position.set(x, 0.05, z)
+        tile.rotation.x = -Math.PI / 2
+        ;(tile as any).userData = owned ? { ownedSquare: owned } : { availableSquare: { x, z, tier: dist <= 5 ? 'origin' : dist <= 20 ? 'inner' : dist <= 40 ? 'mid' : 'outer', price: dist <= 5 ? 1000 : dist <= 20 ? 100 : dist <= 40 ? 25 : 5 } }
+        landGroup.add(tile)
+      }
+    }
     scene.add(landGroup)
 
     // Origin marker (you spawn here)
@@ -384,35 +400,20 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
           return
         }
       }
-      // Second: owned land squares
+      // Second: land tiles (visible grid)
       const landHits = raycaster.intersectObjects(landGroup.children, true)
       if (landHits.length > 0) {
-        const sq = landHits[0].object.userData?.ownedSquare
-        if (sq) {
-          // Show owner info — already-owned square
-          alert(`Owned by @${sq.ownerHandle} · purchased for ${sq.price} OGUN · tier: ${sq.tier}`)
-          return
-        }
-      }
-      // Third: floor → potential land purchase
-      const floorHits = raycaster.intersectObject(floor)
-      if (floorHits.length > 0) {
-        const point = floorHits[0].point
-        const x = Math.round(point.x)
-        const z = Math.round(point.z)
-        // Bounds check
-        if (Math.abs(x) > 50 || Math.abs(z) > 50) return
-        // Already owned?
-        const owned = ownedSquares.find(s => s.x === x && s.z === z)
+        const tile = landHits[0].object
+        const owned = tile.userData?.ownedSquare
+        const available = tile.userData?.availableSquare
         if (owned) {
-          alert(`Owned by @${owned.ownerHandle} · ${owned.price} OGUN · ${owned.tier}`)
+          alert(`OWNED by @${owned.ownerHandle}\nPrice paid: ${owned.price} OGUN\nTier: ${owned.tier}`)
           return
         }
-        // Calculate price
-        const dist = Math.sqrt(x * x + z * z)
-        const price = dist <= 5 ? 1000 : dist <= 20 ? 100 : dist <= 40 ? 25 : 5
-        const tier = dist <= 5 ? 'origin' : dist <= 20 ? 'inner' : dist <= 40 ? 'mid' : 'outer'
-        setPurchaseModal({ x, z, price, tier })
+        if (available) {
+          setPurchaseModal(available)
+          return
+        }
       }
     }
     renderer.domElement.addEventListener('click', onClick)
