@@ -584,7 +584,7 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
       {/* (i) info pill — TOP right (was bottom — got cut off by mobile browser bar) */}
       <button
         onClick={() => setShowInfo(s => !s)}
-        className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/70 backdrop-blur border border-cyan-500/40 hover:border-cyan-400 hover:bg-cyan-500/10 transition flex items-center justify-center text-cyan-400 font-mono font-bold text-sm z-20"
+        className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/70 backdrop-blur border border-cyan-500/40 hover:border-cyan-400 hover:bg-cyan-500/10 transition flex items-center justify-center text-cyan-400 font-mono font-bold text-sm z-30"
         title="Show controls"
       >
         i
@@ -592,7 +592,7 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
 
       {/* Controls overlay — drops DOWN from (i) pill, always readable */}
       {showInfo && (
-        <div className="absolute top-14 right-3 max-w-[280px] z-10">
+        <div className="absolute top-14 right-3 max-w-[280px] z-30">
           <div className="rounded-lg bg-black/90 backdrop-blur border border-cyan-500/30 p-3 shadow-2xl shadow-cyan-500/10">
             <div className="flex items-center justify-between mb-2">
               <span className="text-[10px] font-mono font-bold text-cyan-400 tracking-wider">CONTROLS</span>
@@ -828,7 +828,7 @@ function WorldMiniMap({
   }, [playerPos, ownedSquares, residents, SIZE])
 
   return (
-    <div className="absolute top-3 right-14 z-20" style={{ width: SIZE }}>
+    <div className="absolute bottom-3 left-3 z-20" style={{ width: SIZE }}>
       <div className="rounded border border-cyan-500/30 bg-black/70 backdrop-blur overflow-hidden shadow-2xl shadow-cyan-500/10">
         {/* Header */}
         <div className="px-2 py-1 flex items-center justify-between border-b border-cyan-500/20">

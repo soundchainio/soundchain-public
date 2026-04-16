@@ -330,11 +330,12 @@ export function CharacterDesigner({ open, onClose, initialName }: CharacterDesig
                   </p>
                 </div>
                 <iframe
-                  src="https://demo.readyplayer.me/avatar?frameApi&clearCache&bodyType=halfbody"
+                  src="https://readyplayer.me/avatar?frameApi&clearCache"
                   className="w-full"
-                  style={{ height: '500px', border: 'none' }}
+                  style={{ height: '500px', border: 'none', background: '#000' }}
                   allow="camera *; microphone *; clipboard-write"
                   title="Ready Player Me Avatar Editor"
+                  loading="lazy"
                 />
               </div>
             ) : (
