@@ -16,10 +16,10 @@
  * to avoid TDZ in webpack bundle.
  */
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import * as THREE from 'three'
 import { useRouter } from 'next/router'
-import { User } from 'lucide-react'
+import { User, MapPin, Coins, X, Lock, Check } from 'lucide-react'
 import { CharacterDesigner, getStoredCharacter, type CharacterConfig } from './CharacterDesigner'
 
 interface Resident {
@@ -44,6 +44,22 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
   const [showInfo, setShowInfo] = useState(true)
   const [showDesigner, setShowDesigner] = useState(false)
   const [character, setCharacter] = useState<CharacterConfig>(() => getStoredCharacter())
+  // ─── Nodeverse Land state ────────────────────────────────
+  const [ownedSquares, setOwnedSquares] = useState<Array<{ x: number; z: number; ownerHandle: string; ownerColor: string; price: number; tier: string; label?: string }>>([])
+  const [landStats, setLandStats] = useState<{ totalOwned: number; totalRevenue: number } | null>(null)
+  const [hoveredSquare, setHoveredSquare] = useState<{ x: number; z: number; price: number; tier: string; owned?: any } | null>(null)
+  const [purchaseModal, setPurchaseModal] = useState<{ x: number; z: number; price: number; tier: string } | null>(null)
+  const [purchasing, setPurchasing] = useState(false)
+  const fetchLand = useCallback(() => {
+    fetch('/api/nodeverse/squares')
+      .then(r => r.json())
+      .then(data => {
+        setOwnedSquares(data.squares || [])
+        setLandStats(data.stats || null)
+      })
+      .catch(() => {})
+  }, [])
+  useEffect(() => { fetchLand() }, [fetchLand])
   // Listen for character updates from designer
   useEffect(() => {
     const handler = (e: any) => setCharacter(e.detail)
@@ -128,12 +144,44 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
     scene.add(gridHelper)
 
     // Floor plane (catches shadows) — brighter, more reflective
-    const floorGeo = new THREE.PlaneGeometry(80, 80)
+    const floorGeo = new THREE.PlaneGeometry(100, 100)
     const floorMat = new THREE.MeshStandardMaterial({ color: 0x1a2540, metalness: 0.6, roughness: 0.3 })
     const floor = new THREE.Mesh(floorGeo, floorMat)
     floor.rotation.x = -Math.PI / 2
     floor.receiveShadow = true
     scene.add(floor)
+
+    // ─── NODEVERSE LAND — owned squares glow with owner's color ──
+    const landGroup = new THREE.Group()
+    ownedSquares.forEach(sq => {
+      const tileGeo = new THREE.PlaneGeometry(0.95, 0.95)
+      const tileMat = new THREE.MeshBasicMaterial({
+        color: sq.ownerColor || '#22d3ee',
+        transparent: true,
+        opacity: 0.35,
+        side: THREE.DoubleSide,
+      })
+      const tile = new THREE.Mesh(tileGeo, tileMat)
+      tile.position.set(sq.x, 0.05, sq.z)
+      tile.rotation.x = -Math.PI / 2
+      ;(tile as any).userData = { ownedSquare: sq }
+      landGroup.add(tile)
+
+      // Border edge for owned squares
+      const edgeGeo = new THREE.RingGeometry(0.45, 0.5, 4)
+      const edgeMat = new THREE.MeshBasicMaterial({
+        color: sq.ownerColor || '#22d3ee',
+        transparent: true,
+        opacity: 0.8,
+        side: THREE.DoubleSide,
+      })
+      const edge = new THREE.Mesh(edgeGeo, edgeMat)
+      edge.position.set(sq.x, 0.06, sq.z)
+      edge.rotation.x = -Math.PI / 2
+      edge.rotation.z = Math.PI / 4
+      landGroup.add(edge)
+    })
+    scene.add(landGroup)
 
     // Origin marker (you spawn here)
     const originGeo = new THREE.RingGeometry(1, 1.2, 32)
@@ -321,20 +369,50 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
       mouse.x = ((clientX - rect.left) / rect.width) * 2 - 1
       mouse.y = -((clientY - rect.top) / rect.height) * 2 + 1
       raycaster.setFromCamera(mouse, camera)
-      const hits = raycaster.intersectObjects(residentMeshes.map(rm => rm.group), true)
-      if (hits.length > 0) {
-        const hit = hits[0].object
+      // First: residents/galleries
+      const residentHits = raycaster.intersectObjects(residentMeshes.map(rm => rm.group), true)
+      if (residentHits.length > 0) {
+        const hit = residentHits[0].object
         const data = (hit.userData?.resident || hit.parent?.children?.find((c: any) => c.userData?.resident)?.userData?.resident) as Resident | undefined
         const isGallery = hit.userData?.isGallery || hit.parent?.children?.find((c: any) => c.userData?.isGallery && c === hit)?.userData?.isGallery
         if (data?.userHandle || data?.id) {
           if (isGallery) {
-            // Hit the GALLERY archway → portal into their 3D gallery
             router.push(`/dex/gallery3d?handle=${data.userHandle || data.id}`)
           } else {
-            // Hit the body capsule → portal to their profile
             router.push(`/dex/users/${data.userHandle || data.id}`)
           }
+          return
         }
+      }
+      // Second: owned land squares
+      const landHits = raycaster.intersectObjects(landGroup.children, true)
+      if (landHits.length > 0) {
+        const sq = landHits[0].object.userData?.ownedSquare
+        if (sq) {
+          // Show owner info — already-owned square
+          alert(`Owned by @${sq.ownerHandle} · purchased for ${sq.price} OGUN · tier: ${sq.tier}`)
+          return
+        }
+      }
+      // Third: floor → potential land purchase
+      const floorHits = raycaster.intersectObject(floor)
+      if (floorHits.length > 0) {
+        const point = floorHits[0].point
+        const x = Math.round(point.x)
+        const z = Math.round(point.z)
+        // Bounds check
+        if (Math.abs(x) > 50 || Math.abs(z) > 50) return
+        // Already owned?
+        const owned = ownedSquares.find(s => s.x === x && s.z === z)
+        if (owned) {
+          alert(`Owned by @${owned.ownerHandle} · ${owned.price} OGUN · ${owned.tier}`)
+          return
+        }
+        // Calculate price
+        const dist = Math.sqrt(x * x + z * z)
+        const price = dist <= 5 ? 1000 : dist <= 20 ? 100 : dist <= 40 ? 25 : 5
+        const tier = dist <= 5 ? 'origin' : dist <= 20 ? 'inner' : dist <= 40 ? 'mid' : 'outer'
+        setPurchaseModal({ x, z, price, tier })
       }
     }
     renderer.domElement.addEventListener('click', onClick)
@@ -450,7 +528,7 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
         }
       })
     }
-  }, [residents, myHandle, router, character])
+  }, [residents, myHandle, router, character, ownedSquares])
 
   return (
     <div className="relative w-full h-full">
@@ -511,6 +589,93 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 mt-12 pointer-events-none">
           <div className="px-3 py-1.5 rounded-lg bg-cyan-500/20 backdrop-blur border border-cyan-500/40 text-[10px] font-mono text-cyan-300">
             ► PORTAL TO {hoveredResident.displayName}
+          </div>
+        </div>
+      )}
+
+      {/* Land stats badge — top center */}
+      {landStats && (
+        <div className="absolute top-3 left-1/2 -translate-x-1/2 pointer-events-none">
+          <div className="px-3 py-1 rounded bg-black/70 backdrop-blur border border-yellow-500/30 text-[9px] font-mono text-yellow-400 flex items-center gap-2">
+            <MapPin className="w-3 h-3" /> NODEVERSE LAND · {landStats.totalOwned}/10000 owned · {landStats.totalRevenue.toLocaleString()} OGUN circulated
+          </div>
+        </div>
+      )}
+
+      {/* Purchase modal — buy a land square */}
+      {purchaseModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => setPurchaseModal(null)}>
+          <div className="w-full max-w-md bg-[#0a0f1f] border border-yellow-500/30 rounded-xl shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-4 py-3 border-b border-yellow-500/20 bg-black/40">
+              <div className="flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-yellow-400" />
+                <span className="text-xs font-mono font-bold text-yellow-400">CLAIM NODEVERSE LAND</span>
+              </div>
+              <button onClick={() => setPurchaseModal(null)} className="p-1 hover:bg-white/10 rounded text-gray-400">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="p-4 space-y-3">
+              <div className="text-center py-3">
+                <div className="text-[10px] font-mono text-gray-500 mb-1">COORDINATES</div>
+                <div className="text-2xl font-mono font-bold text-cyan-400">
+                  ({purchaseModal.x}, {purchaseModal.z})
+                </div>
+                <div className="text-[9px] font-mono text-gray-600 mt-1">distance from origin: {Math.sqrt(purchaseModal.x ** 2 + purchaseModal.z ** 2).toFixed(1)} units</div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="p-3 rounded border border-white/5 bg-black/40">
+                  <div className="text-[8px] font-mono text-gray-600 uppercase">Tier</div>
+                  <div className={`text-sm font-mono font-bold ${purchaseModal.tier === 'origin' ? 'text-yellow-400' : purchaseModal.tier === 'inner' ? 'text-purple-400' : purchaseModal.tier === 'mid' ? 'text-cyan-400' : 'text-gray-400'}`}>
+                    {purchaseModal.tier.toUpperCase()}
+                  </div>
+                </div>
+                <div className="p-3 rounded border border-yellow-500/20 bg-yellow-500/5">
+                  <div className="text-[8px] font-mono text-gray-600 uppercase">Price</div>
+                  <div className="text-sm font-mono font-bold text-yellow-400 flex items-center gap-1">
+                    <Coins className="w-3 h-3" /> {purchaseModal.price} OGUN
+                  </div>
+                </div>
+              </div>
+              <div className="text-[9px] font-mono text-gray-600 leading-relaxed pt-2 border-t border-white/5">
+                Square is forever yours. Build a gallery, host events, rent to others.
+                <br />
+                Platform fee: <span className="text-yellow-500">{Math.ceil(purchaseModal.price * 0.0005)} OGUN (0.05%)</span> to SoundChain treasury.
+              </div>
+              <div className="flex items-center gap-2 pt-2">
+                <button onClick={() => setPurchaseModal(null)} className="flex-1 py-2 rounded text-[10px] font-mono text-gray-400 border border-white/10 hover:bg-white/5">
+                  Cancel
+                </button>
+                <button
+                  onClick={async () => {
+                    setPurchasing(true)
+                    try {
+                      const res = await fetch('/api/nodeverse/squares', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          x: purchaseModal.x,
+                          z: purchaseModal.z,
+                          ownerHandle: myHandle || 'anon',
+                          ownerColor: character.bodyColor,
+                        }),
+                      })
+                      if (res.ok) {
+                        setPurchaseModal(null)
+                        fetchLand() // refresh owned squares
+                      } else {
+                        const err = await res.json()
+                        alert(err.error || 'Purchase failed')
+                      }
+                    } finally { setPurchasing(false) }
+                  }}
+                  disabled={purchasing}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded text-[10px] font-mono font-bold bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 hover:bg-yellow-500/30 transition disabled:opacity-50"
+                >
+                  {purchasing ? 'CLAIMING...' : <><Lock className="w-3 h-3" /> CLAIM FOR {purchaseModal.price} OGUN</>}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
