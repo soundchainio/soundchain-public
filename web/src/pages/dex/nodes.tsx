@@ -526,7 +526,7 @@ export default function NodesPage() {
         </div>{/* end network column */}
 
         {/* RIGHT: Feed — uses the REAL <Post> component (same as original feed page) */}
-        <div className={`${mobileTab === 'network' ? 'hidden lg:block' : ''} lg:w-[420px] lg:flex-shrink-0`}>
+        <div className={`${mobileTab === 'network' ? 'hidden lg:block' : 'w-full'} lg:w-[480px] lg:flex-shrink-0 min-w-0`}>
           <div className="space-y-2">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
