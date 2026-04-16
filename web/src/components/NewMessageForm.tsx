@@ -4,7 +4,7 @@ import { useMe } from 'hooks/useMe'
 import { Send } from 'icons/Send'
 import { MutableRefObject, useState } from 'react'
 import * as yup from 'yup'
-import { SendMessageMutation, useSendMessageMutation } from '../lib/graphql'
+import { SendMessageMutation } from '../lib/graphql'
 import { FlexareaField } from './FlexareaField'
 import { StickerPicker } from './StickerPicker'
 import { GifPicker } from './GifPicker'
@@ -37,9 +37,6 @@ const validationSchema: yup.Schema<FormValues> = yup.object().shape({
 const initialValues: FormValues = { body: '' }
 
 export const NewMessageForm = ({ profileId, onNewMessage, bottomRef }: NewMessageFormProps) => {
-  const [sendMessage] = useSendMessageMutation({
-    onCompleted: data => onNewMessage(data),
-  })
   const me = useMe()
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const [showStickerPicker, setShowStickerPicker] = useState(false)
@@ -47,7 +44,19 @@ export const NewMessageForm = ({ profileId, onNewMessage, bottomRef }: NewMessag
   const [showStoryModal, setShowStoryModal] = useState(false)
 
   const handleSubmit = async ({ body }: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
-    await sendMessage({ variables: { input: { message: body, toId: profileId } } })
+    try {
+      const r = await fetch('/api/dm/send', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ toId: profileId, message: body }),
+      })
+      if (r.ok) {
+        const data = await r.json()
+        // Mimic the SendMessageMutation shape the parent consumer expects
+        onNewMessage({ sendMessage: data.message } as unknown as SendMessageMutation)
+      }
+    } catch {}
     resetForm()
     setShowEmojiPicker(false)
     setShowStickerPicker(false)

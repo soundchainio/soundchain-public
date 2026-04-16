@@ -563,12 +563,12 @@ export const NewCommentForm = ({ postId, onSuccess, compact, inputRef, replyToCo
                 <button
                   type="button"
                   onClick={handleBookmarkClick}
-                  disabled={bookmarking || unbookmarking}
+                  disabled={bookmarking}
                   className={`p-1.5 rounded-lg transition-all flex items-center gap-1 ${
                     localIsBookmarked
                       ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-400 ring-1 ring-cyan-400/50'
                       : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-white'
-                  } ${bookmarking || unbookmarking ? 'opacity-50' : ''}`}
+                  } ${bookmarking ? 'opacity-50' : ''}`}
                   title={localIsBookmarked ? 'Remove bookmark' : 'Bookmark'}
                 >
                   <Bookmark className={`w-4 h-4 ${localIsBookmarked ? 'fill-cyan-400' : ''}`} />

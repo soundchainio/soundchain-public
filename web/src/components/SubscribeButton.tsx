@@ -1,6 +1,5 @@
 import { useMe } from 'hooks/useMe'
 import { SubscribeBell } from 'icons/SubscribeBell'
-import { useSubscribeToProfileMutation, useUnsubscribeFromProfileMutation } from 'lib/graphql'
 import { useRouter } from 'next/router'
 import React from 'react'
 
@@ -11,28 +10,30 @@ interface SubscribeButtonProps {
 }
 
 export const SubscribeButton = ({ profileId, isSubscriber, small = false }: SubscribeButtonProps) => {
-  const [subscribeProfile, { loading: subscribeLoading }] = useSubscribeToProfileMutation()
-  const [unsubscribeProfile, { loading: unsubscribeLoading }] = useUnsubscribeFromProfileMutation()
+  const [pending, setPending] = React.useState(false)
   const router = useRouter()
   const me = useMe()
 
   const handleClick = async (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault()
-    if (subscribeLoading || unsubscribeLoading) {
-      return
-    }
+    if (pending) return
 
     if (!me) {
       router.push({ pathname: '/login', query: { callbackUrl: window.location.href } })
       return
     }
 
-    await fetch('/api/profile/subscribe', {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ targetProfileId: profileId, action: isSubscriber ? 'unsubscribe' : 'subscribe' }),
-    }).catch(() => {})
+    setPending(true)
+    try {
+      await fetch('/api/profile/subscribe', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ targetProfileId: profileId, action: isSubscriber ? 'unsubscribe' : 'subscribe' }),
+      })
+    } catch {} finally {
+      setPending(false)
+    }
   }
 
   if (me?.profile.id === profileId) {
