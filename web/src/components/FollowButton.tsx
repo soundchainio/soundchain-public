@@ -1,15 +1,6 @@
-import { ApolloCache, FetchResult } from '@apollo/client'
 import { Button } from 'components/common/Buttons/Button'
 import { useMe } from 'hooks/useMe'
 import { Checkmark } from 'icons/Checkmark'
-import {
-  ProfileByHandleDocument,
-  ProfileByHandleQuery,
-  ProfileByHandleQueryVariables,
-  useFollowProfileMutation,
-  User,
-  useUnfollowProfileMutation,
-} from 'lib/graphql'
 import { useRouter } from 'next/router'
 import React from 'react'
 
@@ -20,53 +11,30 @@ interface FollowButtonProps {
   followedHandle: string
 }
 
-function updateCache(variables: ProfileByHandleQueryVariables) {
-  return (cache: ApolloCache<User>, { data }: FetchResult) => {
-    const cachedData = cache.readQuery<ProfileByHandleQuery>({
-      query: ProfileByHandleDocument,
-      variables,
-    })
-
-    const incoming = data?.followProfile?.followedProfile || data?.unfollowProfile?.unfollowedProfile
-
-    cache.writeQuery({
-      query: ProfileByHandleDocument,
-      variables,
-      data: {
-        profileByHandle: {
-          ...cachedData?.profileByHandle,
-          isFollowed: incoming?.isFollowed || cachedData?.profileByHandle.isFollowed,
-          followerCount: incoming?.followerCount || cachedData?.profileByHandle.followerCount,
-        },
-      },
-    })
-  }
-}
-
 export const FollowButton = ({ followedId, isFollowed, showIcon, followedHandle }: FollowButtonProps) => {
   const me = useMe()
   const router = useRouter()
-  const [followProfile, { loading: followLoading }] = useFollowProfileMutation()
-  const [unfollowProfile, { loading: unfollowLoading }] = useUnfollowProfileMutation()
+  const [pending, setPending] = React.useState(false)
 
   const handleClick = async () => {
-    if (followLoading || unfollowLoading) {
-      return
-    }
-
+    if (pending) return
     if (!me) {
       router.push({ pathname: '/login', query: { callbackUrl: window.location.href } })
       return
     }
 
-    const toogle = isFollowed ? unfollowProfile : followProfile
-
-    await toogle({
-      variables: { input: { followedId } },
-      update: updateCache({ handle: followedHandle }),
-    })
-
-    router.replace(router.asPath)
+    setPending(true)
+    try {
+      await fetch('/api/follow/toggle', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ followedId, action: isFollowed ? 'unfollow' : 'follow' }),
+      })
+      router.replace(router.asPath)
+    } finally {
+      setPending(false)
+    }
   }
 
   if (me?.profile.id === followedId) {
