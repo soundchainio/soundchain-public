@@ -235,7 +235,7 @@ export default function LandAtlasPage() {
             </div>
             <div>
               <h1 className="text-sm font-mono font-bold text-yellow-400 tracking-wider">NODEVERSE LAND ATLAS</h1>
-              <p className="text-[9px] font-mono text-gray-600">10,000 premium squares · ∞ outer expansion · 0.05% perpetual fee</p>
+              <p className="text-[9px] font-mono text-gray-600">250,000 parcels · 16×16 each · ∞ outer expansion · 0.05% perpetual fee</p>
             </div>
           </div>
           {/* Wallet status */}
@@ -261,11 +261,11 @@ export default function LandAtlasPage() {
               <>
                 <div className="flex justify-between text-[10px] font-mono">
                   <span className="text-gray-400">Owned</span>
-                  <span className="text-yellow-400">{stats.totalOwned} / 10000</span>
+                  <span className="text-yellow-400">{stats.totalOwned.toLocaleString()} / 250,000</span>
                 </div>
                 <div className="flex justify-between text-[10px] font-mono">
                   <span className="text-gray-400">Available</span>
-                  <span className="text-green-400">{10000 - stats.totalOwned}</span>
+                  <span className="text-green-400">{(250000 - stats.totalOwned).toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-[10px] font-mono">
                   <span className="text-gray-400">OGUN circulated</span>

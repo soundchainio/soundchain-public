@@ -154,50 +154,60 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
     floor.receiveShadow = true
     scene.add(floor)
 
-    // ─── NODEVERSE LAND ─ visible tier grid + owned glow ─────
+    // ─── NODEVERSE PARCELS ─ Decentraland-style 16x16 land ──
+    // Each PARCEL is 16 units. World grid: 50×50 = 2500 parcels.
+    // You stand INSIDE a parcel — you don't buy tiles within it.
+    // To buy a parcel, use the mini-map / Land Atlas (zoom out view).
+    const PARCEL_SIZE = 16
     const landGroup = new THREE.Group()
     const ownedMap = new Map<string, any>()
     ownedSquares.forEach(sq => ownedMap.set(`${sq.x},${sq.z}`, sq))
 
-    // Show tier colors for ALL squares within ±25 of player (performance — render only nearby)
-    // Origin=gold, Inner=purple, Mid=cyan, Outer=gray-dim
-    const RENDER_RADIUS = 25 // visible squares around origin (50×50 = 2500 tiles)
-    for (let x = -RENDER_RADIUS; x <= RENDER_RADIUS; x++) {
-      for (let z = -RENDER_RADIUS; z <= RENDER_RADIUS; z++) {
-        const dist = Math.sqrt(x * x + z * z)
-        const owned = ownedMap.get(`${x},${z}`)
+    // Render parcels within ±48 units of origin (~6×6 visible parcels)
+    const RENDER_PARCELS = 3 // 6×6 = 36 visible parcels
+    for (let px = -RENDER_PARCELS; px <= RENDER_PARCELS; px++) {
+      for (let pz = -RENDER_PARCELS; pz <= RENDER_PARCELS; pz++) {
+        const dist = Math.sqrt(px * px + pz * pz)
+        const owned = ownedMap.get(`${px},${pz}`)
 
-        let tileColor: number
-        let tileOpacity: number
+        let parcelColor: number
+        let edgeOpacity: number
         if (owned) {
-          tileColor = new THREE.Color(owned.ownerColor || '#22d3ee').getHex()
-          tileOpacity = 0.5
-        } else if (dist <= 5) {
-          tileColor = 0xfacc15  // origin gold
-          tileOpacity = 0.18
-        } else if (dist <= 20) {
-          tileColor = 0xa855f7  // inner purple
-          tileOpacity = 0.10
-        } else if (dist <= 40) {
-          tileColor = 0x22d3ee  // mid cyan
-          tileOpacity = 0.06
+          parcelColor = new THREE.Color(owned.ownerColor || '#22d3ee').getHex()
+          edgeOpacity = 0.7
+        } else if (dist <= 1) {
+          parcelColor = 0xfacc15  // origin gold
+          edgeOpacity = 0.4
+        } else if (dist <= 3) {
+          parcelColor = 0xa855f7  // inner purple
+          edgeOpacity = 0.3
         } else {
-          tileColor = 0x666666  // outer dim
-          tileOpacity = 0.04
+          parcelColor = 0x22d3ee  // mid cyan
+          edgeOpacity = 0.2
         }
 
-        const tileGeo = new THREE.PlaneGeometry(0.95, 0.95)
-        const tileMat = new THREE.MeshBasicMaterial({
-          color: tileColor,
-          transparent: true,
-          opacity: tileOpacity,
-          side: THREE.DoubleSide,
-        })
-        const tile = new THREE.Mesh(tileGeo, tileMat)
-        tile.position.set(x, 0.05, z)
-        tile.rotation.x = -Math.PI / 2
-        ;(tile as any).userData = owned ? { ownedSquare: owned } : { availableSquare: { x, z, tier: dist <= 5 ? 'origin' : dist <= 20 ? 'inner' : dist <= 40 ? 'mid' : 'outer', price: dist <= 5 ? 1000 : dist <= 20 ? 100 : dist <= 40 ? 25 : 5 } }
-        landGroup.add(tile)
+        // PARCEL BOUNDARY — only borders, no fill (you walk inside parcels)
+        const parcelEdgeMat = new THREE.LineBasicMaterial({ color: parcelColor, transparent: true, opacity: edgeOpacity })
+        const points = [
+          new THREE.Vector3(px * PARCEL_SIZE - PARCEL_SIZE / 2, 0.1, pz * PARCEL_SIZE - PARCEL_SIZE / 2),
+          new THREE.Vector3(px * PARCEL_SIZE + PARCEL_SIZE / 2, 0.1, pz * PARCEL_SIZE - PARCEL_SIZE / 2),
+          new THREE.Vector3(px * PARCEL_SIZE + PARCEL_SIZE / 2, 0.1, pz * PARCEL_SIZE + PARCEL_SIZE / 2),
+          new THREE.Vector3(px * PARCEL_SIZE - PARCEL_SIZE / 2, 0.1, pz * PARCEL_SIZE + PARCEL_SIZE / 2),
+          new THREE.Vector3(px * PARCEL_SIZE - PARCEL_SIZE / 2, 0.1, pz * PARCEL_SIZE - PARCEL_SIZE / 2),
+        ]
+        const parcelEdgeGeo = new THREE.BufferGeometry().setFromPoints(points)
+        const parcelEdge = new THREE.Line(parcelEdgeGeo, parcelEdgeMat)
+        landGroup.add(parcelEdge)
+
+        // Owned parcels: subtle floor tint
+        if (owned) {
+          const fillGeo = new THREE.PlaneGeometry(PARCEL_SIZE * 0.95, PARCEL_SIZE * 0.95)
+          const fillMat = new THREE.MeshBasicMaterial({ color: parcelColor, transparent: true, opacity: 0.08, side: THREE.DoubleSide })
+          const fill = new THREE.Mesh(fillGeo, fillMat)
+          fill.position.set(px * PARCEL_SIZE, 0.06, pz * PARCEL_SIZE)
+          fill.rotation.x = -Math.PI / 2
+          landGroup.add(fill)
+        }
       }
     }
     scene.add(landGroup)
@@ -434,21 +444,8 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
           return
         }
       }
-      // Second: land tiles (visible grid)
-      const landHits = raycaster.intersectObjects(landGroup.children, true)
-      if (landHits.length > 0) {
-        const tile = landHits[0].object
-        const owned = tile.userData?.ownedSquare
-        const available = tile.userData?.availableSquare
-        if (owned) {
-          alert(`OWNED by @${owned.ownerHandle}\nPrice paid: ${owned.price} OGUN\nTier: ${owned.tier}`)
-          return
-        }
-        if (available) {
-          setPurchaseModal(available)
-          return
-        }
-      }
+      // Land purchases happen via mini-map / Land Atlas only (not by tapping floor).
+      // This prevents accidental purchase modals when walking around.
     }
     renderer.domElement.addEventListener('click', onClick)
     renderer.domElement.addEventListener('touchend', onClick as any)
@@ -634,7 +631,7 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
       {landStats && (
         <div className="absolute top-3 left-1/2 -translate-x-1/2 pointer-events-none">
           <div className="px-3 py-1 rounded bg-black/70 backdrop-blur border border-yellow-500/30 text-[9px] font-mono text-yellow-400 flex items-center gap-2">
-            <MapPin className="w-3 h-3" /> NODEVERSE LAND · {landStats.totalOwned}/10000 owned · {landStats.totalRevenue.toLocaleString()} OGUN circulated
+            <MapPin className="w-3 h-3" /> NODEVERSE · {landStats.totalOwned.toLocaleString()}/250,000 parcels owned · {landStats.totalRevenue.toLocaleString()} OGUN circulated
           </div>
         </div>
       )}
@@ -746,7 +743,7 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
 }
 
 // ─── World Mini-Map ─────────────────────────────────────────
-// Top-down 100×100 world view in top-right corner of Explore 3D.
+// Top-down 500×500 world view in bottom-left corner of Explore 3D.
 // Shows tier rings, owned squares, residents, your player position.
 function WorldMiniMap({
   playerPos,
@@ -778,35 +775,53 @@ function WorldMiniMap({
 
     const cx = SIZE / 2
     const cy = SIZE / 2
-    const scale = SIZE / 110 // ±55 visible (slight padding past 50)
+    // World is 500×500 parcels (±250). Show with padding.
+    const WORLD = 250
+    const scale = SIZE / (WORLD * 2.1)
 
-    // Tier rings (concentric circles)
-    ctx.strokeStyle = 'rgba(250,204,21,0.4)' // origin (gold)
+    // Tier zones — SQUARES (Decentraland/Sandbox style, not circles)
+    // Outer (full world)
+    ctx.fillStyle = 'rgba(102,102,102,0.05)'
+    ctx.fillRect(cx - WORLD * scale, cy - WORLD * scale, WORLD * 2 * scale, WORLD * 2 * scale)
+    ctx.strokeStyle = 'rgba(102,102,102,0.2)'
     ctx.lineWidth = 1
-    ctx.beginPath(); ctx.arc(cx, cy, 5 * scale, 0, Math.PI * 2); ctx.stroke()
-    ctx.strokeStyle = 'rgba(168,85,247,0.3)' // inner (purple)
-    ctx.beginPath(); ctx.arc(cx, cy, 20 * scale, 0, Math.PI * 2); ctx.stroke()
-    ctx.strokeStyle = 'rgba(34,211,238,0.25)' // mid (cyan)
-    ctx.beginPath(); ctx.arc(cx, cy, 40 * scale, 0, Math.PI * 2); ctx.stroke()
-    ctx.strokeStyle = 'rgba(102,102,102,0.2)' // outer (gray)
-    ctx.strokeRect(cx - 50 * scale, cy - 50 * scale, 100 * scale, 100 * scale)
+    ctx.strokeRect(cx - WORLD * scale, cy - WORLD * scale, WORLD * 2 * scale, WORLD * 2 * scale)
+
+    // Mid (within 100)
+    ctx.fillStyle = 'rgba(34,211,238,0.06)'
+    ctx.fillRect(cx - 100 * scale, cy - 100 * scale, 200 * scale, 200 * scale)
+    ctx.strokeStyle = 'rgba(34,211,238,0.3)'
+    ctx.strokeRect(cx - 100 * scale, cy - 100 * scale, 200 * scale, 200 * scale)
+
+    // Inner (within 30)
+    ctx.fillStyle = 'rgba(168,85,247,0.10)'
+    ctx.fillRect(cx - 30 * scale, cy - 30 * scale, 60 * scale, 60 * scale)
+    ctx.strokeStyle = 'rgba(168,85,247,0.4)'
+    ctx.strokeRect(cx - 30 * scale, cy - 30 * scale, 60 * scale, 60 * scale)
+
+    // Origin (5×5 premium center)
+    ctx.fillStyle = 'rgba(250,204,21,0.25)'
+    ctx.fillRect(cx - 5 * scale, cy - 5 * scale, 10 * scale, 10 * scale)
+    ctx.strokeStyle = 'rgba(250,204,21,0.6)'
+    ctx.strokeRect(cx - 5 * scale, cy - 5 * scale, 10 * scale, 10 * scale)
 
     // Origin crosshair
-    ctx.strokeStyle = 'rgba(34,211,238,0.5)'
+    ctx.strokeStyle = 'rgba(34,211,238,0.6)'
     ctx.lineWidth = 0.5
     ctx.beginPath(); ctx.moveTo(cx - 4, cy); ctx.lineTo(cx + 4, cy); ctx.stroke()
     ctx.beginPath(); ctx.moveTo(cx, cy - 4); ctx.lineTo(cx, cy + 4); ctx.stroke()
 
-    // Owned squares (color dots)
+    // Owned parcels (color squares)
     ownedSquares.forEach(sq => {
       ctx.fillStyle = sq.ownerColor || '#22d3ee'
-      ctx.fillRect(cx + sq.x * scale - 1, cy + sq.z * scale - 1, 2, 2)
+      const ps = Math.max(2, scale)
+      ctx.fillRect(cx + sq.x * scale - ps / 2, cy + sq.z * scale - ps / 2, ps, ps)
     })
 
     // Residents (small purple dots)
     residents.forEach(r => {
       if (!r.position) return
-      ctx.fillStyle = 'rgba(168,85,247,0.7)'
+      ctx.fillStyle = 'rgba(168,85,247,0.8)'
       ctx.beginPath(); ctx.arc(cx + r.position.x * scale, cy + r.position.z * scale, 1.5, 0, Math.PI * 2); ctx.fill()
     })
 
@@ -845,7 +860,7 @@ function WorldMiniMap({
         <canvas ref={canvasRef} style={{ width: SIZE, height: SIZE, display: 'block' }} />
         <div className="px-2 py-0.5 border-t border-cyan-500/10 flex items-center justify-between text-[7px] font-mono text-gray-600">
           <span>x:{playerPos.x.toFixed(0)} z:{playerPos.z.toFixed(0)}</span>
-          <span className="text-cyan-500">100×100 world</span>
+          <span className="text-cyan-500">500×500 · 250K parcels</span>
         </div>
       </div>
     </div>

@@ -1,39 +1,42 @@
 /**
- * NODEVERSE LAND — purchasable squares
+ * NODEVERSE LAND — purchasable parcels (Decentraland-style)
  *
- * GET  /api/nodeverse/squares — list all owned squares (+ optional bounds filter)
- * POST /api/nodeverse/squares — purchase a square (auth required)
+ * GET  /api/nodeverse/squares — list all owned parcels
+ * POST /api/nodeverse/squares — purchase a parcel (auth required)
  *
- * World grid: 100×100 = 10,000 squares (premium center)
- * Outer expansion zones can be added later (procedural)
+ * World grid: 500×500 = 250,000 parcels — beats Decentraland (90K),
+ * Sandbox (166K), Otherside (200K). Plus infinite outer expansion later.
+ * Each parcel = 16×16 units (matches Decentraland LAND size).
  *
  * Pricing tiers (OGUN):
- * - Origin (5×5 center): 1000 OGUN
- * - Inner ring (within 20 units of center): 100 OGUN
- * - Mid ring (20-40 units): 25 OGUN
- * - Outer ring (40-50 units): 5 OGUN
+ * - Origin (5×5 center, 25 parcels): 1000 OGUN
+ * - Inner (within 30 units, ~2,800 parcels): 100 OGUN
+ * - Mid (within 100 units, ~28,000 parcels): 25 OGUN
+ * - Outer (within 250 units, ~219,000 parcels): 5 OGUN
  *
- * Resale: owner can transfer / list. SoundChain takes 0.05% fee on every tx.
+ * Total floor revenue: ~2.1M OGUN at full sellout
+ * Plus 0.05% perpetual fee on every resale.
  */
 import type { NextApiRequest, NextApiResponse } from 'next'
 import clientPromise from 'lib/mongodb'
 import { authFromRequest } from 'lib/api/authJwt'
 
 const COLLECTION = 'nodeverse_squares'
+const WORLD_RADIUS = 250 // ±250 = 500×500 = 250,000 parcels
 
 function priceForSquare(x: number, z: number): number {
   const dist = Math.sqrt(x * x + z * z)
-  if (dist <= 5) return 1000   // Origin premium
-  if (dist <= 20) return 100   // Inner ring
-  if (dist <= 40) return 25    // Mid ring
-  return 5                     // Outer ring
+  if (dist <= 5) return 1000     // Origin premium (~25 parcels)
+  if (dist <= 30) return 100     // Inner ring (~2,800 parcels)
+  if (dist <= 100) return 25     // Mid ring (~28,000 parcels)
+  return 5                       // Outer ring (~219,000 parcels)
 }
 
 function tierForSquare(x: number, z: number): string {
   const dist = Math.sqrt(x * x + z * z)
   if (dist <= 5) return 'origin'
-  if (dist <= 20) return 'inner'
-  if (dist <= 40) return 'mid'
+  if (dist <= 30) return 'inner'
+  if (dist <= 100) return 'mid'
   return 'outer'
 }
 
@@ -43,11 +46,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const col = db.collection(COLLECTION)
 
   if (req.method === 'GET') {
-    // Optional bounds filter — minX, maxX, minZ, maxZ
-    const minX = parseInt(req.query.minX as string) || -50
-    const maxX = parseInt(req.query.maxX as string) || 50
-    const minZ = parseInt(req.query.minZ as string) || -50
-    const maxZ = parseInt(req.query.maxZ as string) || 50
+    // Optional bounds filter — defaults to whole 500×500 world
+    const minX = parseInt(req.query.minX as string) || -WORLD_RADIUS
+    const maxX = parseInt(req.query.maxX as string) || WORLD_RADIUS
+    const minZ = parseInt(req.query.minZ as string) || -WORLD_RADIUS
+    const maxZ = parseInt(req.query.maxZ as string) || WORLD_RADIUS
 
     const squares = await col.find({
       x: { $gte: minX, $lte: maxX },
@@ -71,7 +74,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       })),
       stats: {
         totalOwned: total,
+        totalParcels: 250000, // 500×500 grid
         totalRevenue: totalRevenue[0]?.sum || 0,
+        worldRadius: WORLD_RADIUS,
         floorPrices: { origin: 1000, inner: 100, mid: 25, outer: 5 },
       },
     })
@@ -86,9 +91,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ error: 'x and z required (integers)' })
     }
 
-    // Validate bounds (max 50 from origin in any direction = 100×100 grid)
-    if (Math.abs(x) > 50 || Math.abs(z) > 50) {
-      return res.status(400).json({ error: 'Coordinates out of bounds (max ±50)' })
+    // Validate bounds (max 250 from origin in any direction = 500×500 = 250K parcels)
+    if (Math.abs(x) > WORLD_RADIUS || Math.abs(z) > WORLD_RADIUS) {
+      return res.status(400).json({ error: `Coordinates out of bounds (max ±${WORLD_RADIUS})` })
     }
 
     // Check if already owned
