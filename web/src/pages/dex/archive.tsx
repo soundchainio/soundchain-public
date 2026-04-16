@@ -63,6 +63,40 @@ export default function ArchivePage() {
   return (
     <div className="min-h-screen bg-[#030303] text-white">
       <TopNavBar />
+
+      {/* Lower nav pills — so users aren't stuck on Archive */}
+      <div className="border-b border-white/5 bg-black/40 backdrop-blur-md">
+        <div className="flex items-center gap-1.5 px-3 pt-2 pb-2">
+          <div className="flex-1 overflow-x-auto scrollbar-hide bg-black/60 backdrop-blur-md rounded-full px-2 py-1">
+            <div className="flex items-center gap-1.5 min-w-max">
+              {[
+                ...(me?.profile ? [{ id: 'profile', label: 'Profile', route: `/dex/users/${me.profile.userHandle}` }] : []),
+                { id: 'nodes', label: 'Nodes', route: '/dex/nodes' },
+                { id: 'explore3d', label: 'Explore 3D', route: '/dex/explore3d' },
+                { id: 'explore', label: 'Explore', route: '/dex/explore' },
+                { id: 'users', label: 'Users', route: '/dex/users' },
+                { id: 'radio', label: 'Radio', route: '/radio' },
+                { id: 'moltbook', label: 'Moltbook', route: '/backend' },
+                { id: 'library', label: 'Library', route: '/dex/library' },
+                { id: 'playlist', label: 'Playlists', route: '/dex/playlist' },
+                { id: 'archive', label: 'Archive', route: '/dex/archive' },
+              ].map(item => (
+                <button
+                  key={item.id}
+                  onClick={() => router.push(item.route)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
+                    item.id === 'archive'
+                      ? 'bg-white/15 text-white border border-white/20'
+                      : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
       {/* Header */}
       <div className="border-b border-white/5 bg-black/60 backdrop-blur-md">
         <div className="max-w-4xl mx-auto px-4 py-4">

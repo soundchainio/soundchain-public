@@ -39,6 +39,13 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
   const [residents, setResidents] = useState<Resident[]>([])
   const [hoveredResident, setHoveredResident] = useState<Resident | null>(null)
   const [stats, setStats] = useState({ fps: 0, residents: 0, position: 'x:0 z:0' })
+  const [showInfo, setShowInfo] = useState(true)
+  // Auto-hide info card after 8 seconds (user can re-open via i pill)
+  useEffect(() => {
+    if (!showInfo) return
+    const t = setTimeout(() => setShowInfo(false), 8000)
+    return () => clearTimeout(t)
+  }, [showInfo])
 
   // Fetch residents to populate the grid
   useEffect(() => {
@@ -340,12 +347,45 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
         </div>
       </div>
 
-      {/* Controls hint */}
-      <div className="absolute bottom-3 left-3 pointer-events-none">
-        <div className="px-2 py-1 rounded bg-black/60 backdrop-blur border border-white/10 text-[8px] font-mono text-gray-500">
-          WASD / arrows to walk · click resident to portal in
+      {/* (i) info pill — bottom right, always visible */}
+      <button
+        onClick={() => setShowInfo(s => !s)}
+        className="absolute bottom-3 right-3 w-8 h-8 rounded-full bg-black/70 backdrop-blur border border-cyan-500/40 hover:border-cyan-400 hover:bg-cyan-500/10 transition flex items-center justify-center text-cyan-400 font-mono font-bold text-sm z-20"
+        title="Show controls"
+      >
+        i
+      </button>
+
+      {/* Controls overlay — shows on mount + when (i) tapped */}
+      {showInfo && (
+        <div className="absolute bottom-14 right-3 max-w-[280px] z-10">
+          <div className="rounded-lg bg-black/90 backdrop-blur border border-cyan-500/30 p-3 shadow-2xl shadow-cyan-500/10">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] font-mono font-bold text-cyan-400 tracking-wider">CONTROLS</span>
+              <button onClick={() => setShowInfo(false)} className="text-gray-500 hover:text-white text-xs">×</button>
+            </div>
+            <div className="space-y-1.5 text-[9px] font-mono text-gray-300">
+              <div className="flex items-center gap-2">
+                <span className="px-1.5 py-0.5 rounded bg-white/10 border border-white/20 text-cyan-400">W A S D</span>
+                <span className="text-gray-500">or</span>
+                <span className="px-1.5 py-0.5 rounded bg-white/10 border border-white/20 text-cyan-400">↑ ↓ ← →</span>
+                <span>walk</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="px-1.5 py-0.5 rounded bg-white/10 border border-white/20 text-cyan-400">CLICK</span>
+                <span>resident → PORTAL into their grid</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="px-1.5 py-0.5 rounded bg-white/10 border border-white/20 text-cyan-400">HOVER</span>
+                <span>shows resident name</span>
+              </div>
+              <div className="pt-1.5 mt-1.5 border-t border-cyan-500/20 text-[8px] text-cyan-500/60">
+                INTERNODES on the INTERNETS · PORTALNODES at work
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Hover tooltip */}
       {hoveredResident && (
