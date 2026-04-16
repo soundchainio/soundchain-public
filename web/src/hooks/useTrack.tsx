@@ -1,4 +1,4 @@
-import { TrackQuery, useToggleFavoriteMutation, useTrackLazyQuery } from 'lib/graphql-hooks'
+import { TrackQuery, useTrackLazyQuery } from 'lib/graphql-hooks'
 import { useRouter } from 'next/router'
 import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from 'react'
 import { errorHandler } from 'utils/errorHandler'
@@ -25,8 +25,17 @@ export function TrackProvider({ children }: TrackProviderProps) {
   const router = useRouter()
   const me = useMe()
   
-  const [toggleFavorite] = useToggleFavoriteMutation()
-  
+  // Favorite — Vercel direct (Phase 6d)
+  const toggleFavorite = useCallback(async ({ variables }: { variables: { trackId: string } }) => {
+    const r = await fetch('/api/tracks/favorite', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ trackId: variables.trackId }),
+    })
+    return r.ok ? r.json() : null
+  }, [])
+
   const [trackQuery, { data: trackData }] = useTrackLazyQuery()
 
   const setFavoriteTrack = useCallback(async (state: boolean) => {
@@ -34,7 +43,7 @@ export function TrackProvider({ children }: TrackProviderProps) {
     if (!trackData) return
 
     setIsFavoriteTrack(state)
-    await toggleFavorite({ variables: { trackId: trackData.track.id }, refetchQueries: ['FavoriteTracks'] })
+    await toggleFavorite({ variables: { trackId: trackData.track.id } })
 
   }, [me, router, toggleFavorite, trackData])
 

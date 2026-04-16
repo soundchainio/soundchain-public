@@ -5,7 +5,7 @@ import { useMe } from 'hooks/useMe'
 import { HeartBorder } from 'icons/HeartBorder'
 import { HeartFull } from 'icons/HeartFull'
 import { ReactionEmoji } from 'icons/ReactionEmoji'
-import { useGetOriginalPostFromTrackQuery, useToggleFavoriteMutation } from 'lib/graphql'
+import { useGetOriginalPostFromTrackQuery } from 'lib/graphql'
 import NextLink from 'next/link'
 import { useRouter } from 'next/router'
 
@@ -18,7 +18,14 @@ export const ViewPost = ({ trackId, isFavorited }: ViewPostProps) => {
   const me = useMe()
   const { currentSong, isFavorite: isSongOnPlayerFavorite, setPlayerFavorite } = useAudioPlayerContext()
   const router = useRouter()
-  const [toggleFavorite] = useToggleFavoriteMutation()
+  const toggleFavorite = async ({ variables }: { variables: { trackId: string } }) => {
+    await fetch('/api/tracks/favorite', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ trackId: variables.trackId }),
+    })
+  }
   const [isFavorite, setIsFavorite] = useState(isFavorited)
 
   const { data: originalPostData } = useGetOriginalPostFromTrackQuery({
@@ -31,7 +38,7 @@ export const ViewPost = ({ trackId, isFavorited }: ViewPostProps) => {
 
   const handleFavorite = async () => {
     if (me?.profile.id) {
-      await toggleFavorite({ variables: { trackId }, refetchQueries: ['FavoriteTracks'] })
+      await toggleFavorite({ variables: { trackId } })
       setIsFavorite(!isFavorite)
       if (currentSong?.trackId) setPlayerFavorite(!isFavorite)
     } else {

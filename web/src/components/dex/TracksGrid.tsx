@@ -6,7 +6,7 @@ import { InfiniteLoader } from 'components/InfiniteLoader'
 import { NoResultFound } from 'components/NoResultFound'
 import { TrackNFTCard } from 'components/dex/TrackNFTCard'
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer'
-import { SortOrder, SortTrackField, useGroupedTracksQuery, useToggleFavoriteMutation } from 'lib/graphql'
+import { SortOrder, SortTrackField, useGroupedTracksQuery } from 'lib/graphql'
 import React, { useCallback } from 'react'
 import { Card } from 'components/ui/card'
 import { Music } from 'lucide-react'
@@ -26,7 +26,14 @@ interface TracksGridProps {
 
 export const TracksGrid = ({ profileId, pageSize = 20 }: TracksGridProps) => {
   const { playlistState, currentSong, isPlaying } = useAudioPlayerContext()
-  const [toggleFavorite] = useToggleFavoriteMutation()
+  const toggleFavorite = async ({ variables }: { variables: { trackId: string } }) => {
+    await fetch('/api/tracks/favorite', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ trackId: variables.trackId }),
+    })
+  }
 
   const { data, loading, fetchMore, refetch } = useGroupedTracksQuery({
     variables: {

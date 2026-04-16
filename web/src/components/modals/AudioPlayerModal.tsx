@@ -15,7 +15,7 @@ import { Playlists } from 'icons/Playlists'
 import { Rewind } from 'icons/RewindButton'
 import { Repeat } from 'icons/Repeat'
 import { Shuffle } from 'icons/Shuffle'
-import { TrackDocument, useToggleFavoriteMutation } from 'lib/graphql'
+import { TrackDocument } from 'lib/graphql'
 import { useTrackComments } from 'hooks/useTrackComments'
 import NextLink from 'next/link'
 import { useRouter } from 'next/router'
@@ -79,7 +79,14 @@ const GradientProgressBar = ({
 export const AudioPlayerModal = () => {
   const router = useRouter()
   const modalState = useModalState()
-  const [toggleFavorite] = useToggleFavoriteMutation()
+  const toggleFavorite = async ({ variables }: { variables: { trackId: string } }) => {
+    await fetch('/api/tracks/favorite', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ trackId: variables.trackId }),
+    })
+  }
   const { dispatchShowAudioPlayerModal, dispatchShowPostModal } = useModalDispatch()
   const {
     currentSong,
