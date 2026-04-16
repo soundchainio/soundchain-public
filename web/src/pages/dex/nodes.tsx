@@ -4,7 +4,7 @@
  * Shows all connected peers, IPFS pins, relay health, bandwidth, swarm status.
  * Shell + Brain + Agent = Hybrid Grid Resident
  */
-import { useEffect, useState, useCallback, useMemo, ReactElement } from 'react'
+import { useEffect, useState, useCallback, useMemo, ReactElement, Component, ErrorInfo, ReactNode } from 'react'
 import { useMe } from 'hooks/useMe'
 import { useRouter } from 'next/router'
 import { useGroupedTracksQuery } from 'lib/graphql'
@@ -549,13 +549,16 @@ export default function NodesPage() {
                   {me?.profile?.id ? 'No posts yet — follow users to fill your feed' : 'Sign in to see your feed'}
                 </div>
               )}
-              {feedNodes.map((feedItem: any) => (
-                <Post
-                  key={feedItem.post.id}
-                  post={feedItem.post}
-                  handleOnPlayClicked={handleFeedPlayClicked}
-                />
-              ))}
+              {feedNodes
+                .filter((fi: any) => fi?.post?.id && fi?.post?.profile)
+                .map((feedItem: any) => (
+                  <PostErrorBoundary key={feedItem.post.id} postId={feedItem.post.id}>
+                    <Post
+                      post={feedItem.post}
+                      handleOnPlayClicked={handleFeedPlayClicked}
+                    />
+                  </PostErrorBoundary>
+                ))}
               {/* Load more */}
               {feedPageInfo?.hasNextPage && (
                 <button
@@ -604,6 +607,28 @@ function InfoRow({ label, value }: { label: string; value: string }) {
       <span className="text-[9px] font-mono text-gray-400">{value}</span>
     </div>
   )
+}
+
+// Per-post ErrorBoundary so one bad post can't crash /dex/nodes
+class PostErrorBoundary extends Component<{ postId: string; children: ReactNode }, { hasError: boolean }> {
+  constructor(props: { postId: string; children: ReactNode }) {
+    super(props)
+    this.state = { hasError: false }
+  }
+  static getDerivedStateFromError() { return { hasError: true } }
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error('[PostErrorBoundary] post', this.props.postId, error, info)
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-3 rounded-lg border border-red-500/20 bg-red-500/5 text-[9px] font-mono text-red-400/70">
+          post {this.props.postId.slice(0, 8)}… failed to render
+        </div>
+      )
+    }
+    return this.props.children
+  }
 }
 
 // Skip default Layout — use our own TopNavBar (matches dex page pattern)
