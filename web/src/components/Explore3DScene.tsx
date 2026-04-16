@@ -19,6 +19,8 @@
 import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { useRouter } from 'next/router'
+import { User } from 'lucide-react'
+import { CharacterDesigner, getStoredCharacter, type CharacterConfig } from './CharacterDesigner'
 
 interface Resident {
   id: string
@@ -40,6 +42,14 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
   const [hoveredResident, setHoveredResident] = useState<Resident | null>(null)
   const [stats, setStats] = useState({ fps: 0, residents: 0, position: 'x:0 z:0' })
   const [showInfo, setShowInfo] = useState(true)
+  const [showDesigner, setShowDesigner] = useState(false)
+  const [character, setCharacter] = useState<CharacterConfig>(() => getStoredCharacter())
+  // Listen for character updates from designer
+  useEffect(() => {
+    const handler = (e: any) => setCharacter(e.detail)
+    window.addEventListener('character-updated', handler)
+    return () => window.removeEventListener('character-updated', handler)
+  }, [])
   // Auto-hide info card after 8 seconds (user can re-open via i pill)
   useEffect(() => {
     if (!showInfo) return
@@ -133,30 +143,77 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
     origin.position.y = 0.01
     scene.add(origin)
 
-    // ─── Player Avatar (capsule placeholder) ─────────────────
+    // ─── Player Avatar (uses CharacterDesigner config) ───────
     const playerGroup = new THREE.Group()
-    const playerGeo = new THREE.CapsuleGeometry(0.4, 1, 4, 8)
-    const playerMat = new THREE.MeshStandardMaterial({ color: 0x22d3ee, emissive: 0x22d3ee, emissiveIntensity: 0.3, metalness: 0.5, roughness: 0.3 })
+    const bodyColorObj = new THREE.Color(character.bodyColor)
+    const glowColorObj = new THREE.Color(character.glowColor)
+    const playerMat = new THREE.MeshStandardMaterial({
+      color: bodyColorObj,
+      emissive: glowColorObj,
+      emissiveIntensity: character.glowIntensity,
+      metalness: 0.5,
+      roughness: 0.3,
+    })
+
+    // Body (capsule, scales with height)
+    const playerGeo = new THREE.CapsuleGeometry(0.4, 1 * character.height, 4, 8)
     const playerMesh = new THREE.Mesh(playerGeo, playerMat)
-    playerMesh.position.y = 1
+    playerMesh.position.y = 0.7 + (character.height - 1) * 0.5
     playerMesh.castShadow = true
     playerGroup.add(playerMesh)
 
-    // Player name label (sprite)
+    // Head (varies by shape)
+    let headGeo: THREE.BufferGeometry
+    switch (character.headShape) {
+      case 'sphere': headGeo = new THREE.SphereGeometry(0.3, 24, 24); break
+      case 'cube': headGeo = new THREE.BoxGeometry(0.5, 0.5, 0.5); break
+      case 'cone': headGeo = new THREE.ConeGeometry(0.3, 0.6, 24); break
+      case 'capsule':
+      default: headGeo = new THREE.CapsuleGeometry(0.25, 0.2, 8, 16); break
+    }
+    const head = new THREE.Mesh(headGeo, playerMat.clone())
+    head.position.y = 1.5 + (character.height - 1) * 1
+    head.castShadow = true
+    playerGroup.add(head)
+
+    // Accessory
+    if (character.accessory !== 'none') {
+      const accMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, emissive: 0xfacc15, emissiveIntensity: 0.6, metalness: 0.9, roughness: 0.1 })
+      let accMesh: THREE.Mesh | null = null
+      if (character.accessory === 'crown') {
+        accMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 0.15, 8), accMat)
+        accMesh.position.y = head.position.y + 0.35
+      } else if (character.accessory === 'halo') {
+        accMesh = new THREE.Mesh(new THREE.TorusGeometry(0.4, 0.04, 16, 32), accMat)
+        accMesh.position.y = head.position.y + 0.45
+        accMesh.rotation.x = Math.PI / 2
+      } else if (character.accessory === 'antenna') {
+        accMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.5), accMat)
+        accMesh.position.y = head.position.y + 0.45
+      } else if (character.accessory === 'visor') {
+        accMesh = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.1, 0.4), new THREE.MeshStandardMaterial({ color: 0x000000, emissive: 0x22d3ee, emissiveIntensity: 0.3, metalness: 0.9, roughness: 0.1, transparent: true, opacity: 0.85 }))
+        accMesh.position.y = head.position.y + 0.05
+        accMesh.position.z = 0.05
+      }
+      if (accMesh) playerGroup.add(accMesh)
+    }
+
+    // Player name label (sprite) — use custom name if set
+    const displayName = character.name || myHandle || 'YOU'
     const labelCanvas = document.createElement('canvas')
     labelCanvas.width = 256
     labelCanvas.height = 64
     const ctx = labelCanvas.getContext('2d')!
     ctx.fillStyle = 'rgba(0,0,0,0.7)'
     ctx.fillRect(0, 0, 256, 64)
-    ctx.fillStyle = '#22d3ee'
+    ctx.fillStyle = character.bodyColor
     ctx.font = 'bold 28px monospace'
     ctx.textAlign = 'center'
-    ctx.fillText(myHandle || 'YOU', 128, 42)
+    ctx.fillText(displayName, 128, 42)
     const labelTex = new THREE.CanvasTexture(labelCanvas)
     const labelSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: labelTex }))
     labelSprite.scale.set(2, 0.5, 1)
-    labelSprite.position.y = 2.2
+    labelSprite.position.y = 2.4 + (character.height - 1) * 1
     playerGroup.add(labelSprite)
 
     scene.add(playerGroup)
@@ -351,7 +408,7 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
         }
       })
     }
-  }, [residents, myHandle, router])
+  }, [residents, myHandle, router, character])
 
   return (
     <div className="relative w-full h-full">
@@ -415,6 +472,23 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
           </div>
         </div>
       )}
+
+      {/* Customize Avatar button — bottom right (NBA 2K style) */}
+      <button
+        onClick={() => setShowDesigner(true)}
+        className="absolute bottom-3 right-3 flex items-center gap-1.5 px-3 py-2 rounded-lg bg-purple-500/20 backdrop-blur border border-purple-500/40 hover:bg-purple-500/30 hover:border-purple-400 transition text-[10px] font-mono font-bold text-purple-300 z-20"
+        title="Customize your character"
+      >
+        <User className="w-3.5 h-3.5" />
+        CUSTOMIZE
+      </button>
+
+      {/* Character Designer Modal */}
+      <CharacterDesigner
+        open={showDesigner}
+        onClose={() => setShowDesigner(false)}
+        initialName={myHandle}
+      />
     </div>
   )
 }
