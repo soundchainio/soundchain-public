@@ -780,24 +780,53 @@ export function ProfileWall({ profileId, isOwnProfile: isOwnProfileProp, viewerP
     }
   }
 
-  const [deleteWallPost] = useMutation(DELETE_WALL_POST, {
-    onCompleted: () => refetch(),
-    onError: (err) => toast.error(`Delete failed: ${err?.message || 'Unknown error'}`),
-  })
+  // Wall mutations — Vercel direct (Phase 6c)
+  const postJson = React.useCallback(async (url: string, payload: any) => {
+    const r = await fetch(url, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({ error: `HTTP ${r.status}` }))
+      throw new Error(err.error || 'Request failed')
+    }
+    return r.json()
+  }, [])
 
-  const [pinWallPost] = useMutation(PIN_WALL_POST, {
-    onCompleted: () => refetch(),
-    onError: (err) => toast.error(`Pin failed: ${err?.message || 'Unknown error'}`),
-  })
+  const deleteWallPost = async ({ variables }: { variables: { wallPostId: string } }) => {
+    try {
+      await postJson('/api/wall/delete', variables)
+      refetch()
+    } catch (err: any) {
+      toast.error(`Delete failed: ${err?.message || 'Unknown error'}`)
+    }
+  }
 
-  const [updateWallPost, { loading: updating }] = useMutation(UPDATE_WALL_POST, {
-    onCompleted: () => {
+  const pinWallPost = async ({ variables }: { variables: { wallPostId: string } }) => {
+    try {
+      await postJson('/api/wall/pin', variables)
+      refetch()
+    } catch (err: any) {
+      toast.error(`Pin failed: ${err?.message || 'Unknown error'}`)
+    }
+  }
+
+  const [updating, setUpdating] = useState(false)
+  const updateWallPost = async ({ variables }: { variables: { wallPostId: string; body: string } }) => {
+    setUpdating(true)
+    try {
+      await postJson('/api/wall/update', variables)
       setEditingPostId(null)
       setEditBody('')
       refetch()
-    },
-    onError: (err) => toast.error(`Update failed: ${err?.message || 'Unknown error'}`),
-  })
+    } catch (err: any) {
+      toast.error(`Update failed: ${err?.message || 'Unknown error'}`)
+    } finally {
+      setUpdating(false)
+    }
+  }
 
   const handleSubmit = () => {
     // Combine text + sticker markdown + embed URL (same pattern as WaveformWithComments)
