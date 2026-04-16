@@ -1665,6 +1665,8 @@ const FURL_GAMES = [
 ]
 
 // ─── Prompt Suggester Data ─────────────────────────────────────────────
+// Shell + Brain + Agent = Hybrid Grid Resident. Academy L8 graduates only.
+// 60+ prompts organized by user type — artists, listeners, devs, collectors, agents, traders.
 const PROMPT_CATEGORIES = [
   {
     id: 'morning',
@@ -1677,6 +1679,49 @@ const PROMPT_CATEGORIES = [
       'what are the trending tracks right now?',
       'any new followers or DMs since yesterday?',
       'what should I focus on today?',
+      'summarize my activity in the last 24 hours',
+      'what agents completed tasks overnight?',
+      'any bugs reported in the last 12 hours?',
+      'who\'s online right now on soundchain?',
+      'what\'s the OGUN price doing today?',
+    ],
+  },
+  {
+    id: 'artist',
+    label: 'Artist',
+    icon: 'Palette',
+    color: 'text-purple-400',
+    prompts: [
+      'help me write a post about my new track',
+      'what makes a good NFT drop strategy?',
+      'how do I set up royalty splits for collabs?',
+      'best time to drop a new release for engagement?',
+      'how do I price my NFT editions?',
+      'walk me through uploading a SCid track',
+      'how do I promote my music to Moltbook agents?',
+      'write a hype caption for my upcoming drop',
+      'what genres are performing best this week?',
+      'how do I get featured on OGUN Radio?',
+      'compare SCid-only vs NFT mint rewards',
+      'should I release an edition of 1/10 or 1/100?',
+    ],
+  },
+  {
+    id: 'listener',
+    label: 'Listener',
+    icon: 'Compass',
+    color: 'text-pink-400',
+    prompts: [
+      'recommend me 5 tracks based on my listening history',
+      'who are the top artists I should follow?',
+      'what\'s new from artists I follow?',
+      'how do I earn OGUN from streaming?',
+      'what NFTs can I collect on a budget?',
+      'how do I claim my streaming rewards?',
+      'show me underrated artists I\'d like',
+      'explain the piggy bank listener rewards',
+      'how do I add tracks to my wall playlist?',
+      'what\'s the difference between Feed and Nodes?',
     ],
   },
   {
@@ -1690,19 +1735,13 @@ const PROMPT_CATEGORIES = [
       'what files were changed in the last 5 commits?',
       'run the tests and show me failures',
       'explain the architecture of this project',
-    ],
-  },
-  {
-    id: 'creative',
-    label: 'Create',
-    icon: 'Palette',
-    color: 'text-purple-400',
-    prompts: [
-      'help me write a post about my new track',
-      'what makes a good NFT drop strategy?',
-      'how do I set up royalty splits for collabs?',
-      'give me ideas for my profile customization',
-      'how do stories and reels work on soundchain?',
+      'how does the Vercel direct API route pattern work?',
+      'show me the authJwt helper and how auth works',
+      'walk me through the Operator IPFS upload flow',
+      'explain the Double Helix sync pattern',
+      'where is the AudioEngine and how does it work?',
+      'how do I add a new nav pill to the dex page?',
+      'what Lambda endpoints are still in use?',
     ],
   },
   {
@@ -1715,20 +1754,86 @@ const PROMPT_CATEGORIES = [
       'explain the WIN-WIN rewards system',
       'what is staking and how does it work?',
       'how do I swap POL for OGUN?',
-      'what are the platform fees?',
+      'what are the platform fees? (0.05% on all)',
+      'show me the OGUN contract address',
+      'what\'s the total OGUN supply and burn rate?',
+      'how does the royalty splitter contract work?',
+      'walk me through claiming my OGUN rewards',
+      'what\'s the LP staking APR right now?',
+      'compare SoundChain fees to OpenSea/Spotify',
+      'explain the treasury Gnosis Safe',
+    ],
+  },
+  {
+    id: 'collector',
+    label: 'Collector',
+    icon: 'Shield',
+    color: 'text-yellow-400',
+    prompts: [
+      'show me my NFT collection grouped by edition',
+      'what\'s the floor price of my NFTs?',
+      'sweep the cheapest 10 tracks from marketplace',
+      'how do I transfer an NFT to another wallet?',
+      'what\'s the most valuable NFT I own?',
+      'show me upcoming NFT drops this week',
+      'how do I verify an NFT is legit?',
+      'compare SCid vs NFT ownership rights',
+      'export my collection to a CSV',
+      'what\'s my total collection value in POL?',
+    ],
+  },
+  {
+    id: 'agent',
+    label: 'Agent',
+    icon: 'Sparkles',
+    color: 'text-violet-400',
+    prompts: [
+      'what agents are available in the fleet?',
+      'how do I register a new agent?',
+      'explain the 12 managed agents',
+      'how does agent_analytics collect data?',
+      'show me agent_login metrics from this week',
+      'what\'s the BYOK model for Anthropic keys?',
+      'how do I give my agent a wallet?',
+      'explain the OGUN agent economy',
+      'what is Triple Helix architecture?',
+      'how does Agent Eye catch browser bugs?',
+    ],
+  },
+  {
+    id: 'trader',
+    label: 'Trader',
+    icon: 'Zap',
+    color: 'text-red-400',
+    prompts: [
+      'what\'s OGUN doing vs POL this hour?',
+      'show me the trader bot P&L today',
+      'what are the top gainers on Polymarket?',
+      'explain the Razor v14 trading formula',
+      'what\'s the fear & greed index right now?',
+      'when was the last OGUN buy signal?',
+      'show me the candlestick chart for OGUN',
+      'what\'s the liquidity in the OGUN/POL pool?',
+      'alert me if OGUN drops below 0.04',
     ],
   },
   {
     id: 'explore',
     label: 'Explore',
     icon: 'Compass',
-    color: 'text-pink-400',
+    color: 'text-teal-400',
     prompts: [
       'what is FURL and how do I use it?',
       'what agents are available?',
       'how does the marketplace work?',
       'tell me about the triple helix architecture',
       'what is the difference between SCid and NFT?',
+      'explain the Nodes page and why it exists',
+      'what is BYOK and why should I bring my own key?',
+      'how does the Trinity Bar (FURL + Neural + Operator) work?',
+      'what\'s the vision for War Room?',
+      'how does SoundChain use IPFS, Nostr, and WebRTC together?',
+      'Shell + Brain + Agent = Hybrid Grid Resident — explain',
     ],
   },
 ] as const
@@ -3926,21 +4031,24 @@ export function AgentStatusTicker() {
             const isCli = jackMode === 'CLI_BRIDGE'
             const categories = isCli ? CLI_CHEAT_CATEGORIES : PROMPT_CATEGORIES
             return (
-            <div className={`border-t ${isCli ? 'border-cyan-500/20 bg-[#060608]' : 'border-white/5 bg-black/60'} flex-shrink-0 max-h-[200px] overflow-y-auto`}>
-              <div className="px-3 py-1.5">
-                <div className="flex items-center justify-between mb-1">
+            <div className={`border-t ${isCli ? 'border-cyan-500/20 bg-[#060608]' : 'border-white/5 bg-black/60'} flex-shrink-0 max-h-[450px] overflow-y-auto`}>
+              <div className="px-3 py-2">
+                <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-1.5">
-                    {isCli ? <Terminal className="w-3 h-3 text-cyan-400" /> : <Sparkles className="w-3 h-3 text-amber-400" />}
-                    <span className={`text-[9px] font-mono font-bold uppercase tracking-wider ${isCli ? 'text-cyan-400' : 'text-amber-400'}`}>
-                      {isCli ? 'War Room Cheat Codes' : 'Prompt Ideas'}
+                    {isCli ? <Terminal className="w-3.5 h-3.5 text-cyan-400" /> : <Sparkles className="w-3.5 h-3.5 text-amber-400" />}
+                    <span className={`text-[10px] font-mono font-bold uppercase tracking-wider ${isCli ? 'text-cyan-400' : 'text-amber-400'}`}>
+                      {isCli ? 'War Room Cheat Codes' : 'Prompt Library'}
+                    </span>
+                    <span className="text-[8px] font-mono text-gray-600">
+                      {categories.reduce((acc, c) => acc + c.prompts.length, 0)} prompts · {categories.length} categories
                     </span>
                   </div>
                   <button onClick={() => { setShowPromptSuggester(false); setOpenCategory(null) }} className="p-0.5 hover:bg-white/10 rounded">
-                    <X className="w-3 h-3 text-gray-500" />
+                    <X className="w-3.5 h-3.5 text-gray-500" />
                   </button>
                 </div>
                 {/* Category pills */}
-                <div className="flex items-center gap-1 mb-1.5 overflow-x-auto scrollbar-hide">
+                <div className="flex items-center gap-1 mb-2 overflow-x-auto scrollbar-hide pb-1">
                   {categories.map(cat => {
                     const Icon = CATEGORY_ICONS[cat.icon]
                     const isOpen = openCategory === cat.id
@@ -3960,12 +4068,15 @@ export function AgentStatusTicker() {
                     )
                   })}
                 </div>
-                {/* Expanded prompts for selected category */}
+                {/* Expanded prompts for selected category — scrollable list */}
                 {openCategory && (() => {
                   const cat = categories.find(c => c.id === openCategory)
                   if (!cat) return null
                   return (
-                    <div className="space-y-0.5">
+                    <div className="space-y-0.5 mb-2">
+                      <div className="text-[9px] font-mono text-gray-600 mb-1 px-1">
+                        {cat.prompts.length} {cat.label.toLowerCase()} prompts
+                      </div>
                       {cat.prompts.map((prompt, i) => (
                         <button
                           key={i}
@@ -3983,8 +4094,8 @@ export function AgentStatusTicker() {
                             setShowPromptSuggester(false)
                             setOpenCategory(null)
                           }}
-                          className={`w-full text-left px-2 py-1 rounded text-[10px] font-mono transition-colors truncate ${
-                            isCli ? 'text-cyan-400/70 hover:text-cyan-300 hover:bg-cyan-500/5' : 'text-gray-400 hover:text-white hover:bg-white/5'
+                          className={`w-full text-left px-2 py-1.5 rounded text-[10px] font-mono transition-colors leading-snug ${
+                            isCli ? 'text-cyan-400/70 hover:text-cyan-300 hover:bg-cyan-500/5 border border-transparent hover:border-cyan-500/20' : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10'
                           }`}
                         >
                           <span className={isCli ? 'text-cyan-600 mr-1' : 'text-gray-600 mr-1'}>{isCli ? '$' : '›'}</span>
@@ -3994,34 +4105,52 @@ export function AgentStatusTicker() {
                     </div>
                   )
                 })()}
-                {/* Show all categories collapsed as quick picks when none selected */}
+                {/* Show ALL prompts grouped by category — scrollable browse mode */}
                 {!openCategory && (
-                  <div className="space-y-0.5">
-                    {categories.map(cat => (
-                      <button
-                        key={cat.id}
-                        onClick={() => {
-                          const prompt = cat.prompts[0]
-                          if (isCli) {
-                            navigator.clipboard.writeText(prompt).then(() => {
-                              addLine(`  ✓ copied: ${prompt.length > 60 ? prompt.slice(0, 57) + '...' : prompt}`, 'success')
-                            }).catch(() => {
-                              addLine(`  clipboard denied — ${prompt}`, 'error')
-                            })
-                          } else {
-                            setCmdInput(prompt)
-                            inputRef.current?.focus()
-                          }
-                          setShowPromptSuggester(false)
-                        }}
-                        className={`w-full text-left px-2 py-1 rounded text-[10px] font-mono transition-colors truncate ${
-                          isCli ? 'text-cyan-400/70 hover:text-cyan-300 hover:bg-cyan-500/5' : 'text-gray-400 hover:text-white hover:bg-white/5'
-                        }`}
-                      >
-                        <span className={`mr-1 ${cat.color}`}>{isCli ? '$' : '›'}</span>
-                        {cat.prompts[0]}
-                      </button>
-                    ))}
+                  <div className="space-y-3">
+                    {categories.map(cat => {
+                      const Icon = CATEGORY_ICONS[cat.icon]
+                      return (
+                        <div key={cat.id}>
+                          {/* Category header */}
+                          <button
+                            onClick={() => setOpenCategory(cat.id)}
+                            className={`flex items-center gap-1.5 mb-1 px-1 hover:opacity-80 transition-opacity ${cat.color}`}
+                          >
+                            {Icon && <Icon className="w-3 h-3" />}
+                            <span className="text-[10px] font-mono font-bold uppercase tracking-wider">{cat.label}</span>
+                            <span className="text-[8px] font-mono text-gray-600">({cat.prompts.length})</span>
+                          </button>
+                          {/* All prompts in this category */}
+                          <div className="space-y-0.5">
+                            {cat.prompts.map((prompt, i) => (
+                              <button
+                                key={i}
+                                onClick={() => {
+                                  if (isCli) {
+                                    navigator.clipboard.writeText(prompt).then(() => {
+                                      addLine(`  ✓ copied: ${prompt.length > 60 ? prompt.slice(0, 57) + '...' : prompt}`, 'success')
+                                    }).catch(() => {
+                                      addLine(`  clipboard denied — ${prompt}`, 'error')
+                                    })
+                                  } else {
+                                    setCmdInput(prompt)
+                                    inputRef.current?.focus()
+                                  }
+                                  setShowPromptSuggester(false)
+                                }}
+                                className={`w-full text-left px-2 py-1 rounded text-[10px] font-mono transition-colors leading-snug ${
+                                  isCli ? 'text-cyan-400/70 hover:text-cyan-300 hover:bg-cyan-500/5' : 'text-gray-400 hover:text-white hover:bg-white/5'
+                                }`}
+                              >
+                                <span className={`mr-1 ${cat.color} opacity-50`}>{isCli ? '$' : '›'}</span>
+                                {prompt}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )
+                    })}
                   </div>
                 )}
               </div>
