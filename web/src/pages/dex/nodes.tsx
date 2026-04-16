@@ -620,13 +620,8 @@ class PostErrorBoundary extends Component<{ postId: string; children: ReactNode 
     console.error('[PostErrorBoundary] post', this.props.postId, error, info)
   }
   render() {
-    if (this.state.hasError) {
-      return (
-        <div className="p-3 rounded-lg border border-red-500/20 bg-red-500/5 text-[9px] font-mono text-red-400/70">
-          post {this.props.postId.slice(0, 8)}… failed to render
-        </div>
-      )
-    }
+    // Silently skip broken posts — no ugly banner between good posts
+    if (this.state.hasError) return null
     return this.props.children
   }
 }

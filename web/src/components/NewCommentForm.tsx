@@ -10,7 +10,7 @@ import Picker from '@emoji-mart/react'
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { getNormalizedLink, IdentifySource, hasLink } from 'utils/NormalizeEmbedLinks'
 import { MediaProvider } from 'types/MediaProvider'
-import { Smile, Sparkles, Link2, Send, X, Film, Video, Bookmark, ArrowDownToLine, Share2, Trash2 } from 'lucide-react'
+import { Smile, Sparkles, Link2, Send, X, Film, Video, Bookmark, ArrowDownToLine, Share2, Trash2, Repeat2 } from 'lucide-react'
 import { HandThumbUpIcon } from '@heroicons/react/24/outline'
 import { ReactionSelector } from 'components/ReactionSelector'
 import { ReactionEmoji } from 'icons/ReactionEmoji'
@@ -86,6 +86,8 @@ export const NewCommentForm = ({ postId, onSuccess, compact, inputRef, replyToCo
       }
     } finally { setDeleting(false) }
   }
+  const [isReposting, setIsReposting] = useState(false)
+  const [reposted, setReposted] = useState(false)
   const [selectedStickers, setSelectedStickers] = useState<Array<{url: string, name: string}>>([])
   const [embedUrl, setEmbedUrl] = useState('')
   const [linkPreview, setLinkPreview] = useState<string | undefined>(undefined)
@@ -499,6 +501,32 @@ export const NewCommentForm = ({ postId, onSuccess, compact, inputRef, replyToCo
               >
                 <Share2 className="w-4 h-4" />
                 <span className="text-[10px] font-medium hidden sm:inline">Share</span>
+              </button>
+
+              {/* Repost — X-style: reshares to your wall/feed with your avatar */}
+              <button
+                type="button"
+                onClick={async () => {
+                  if (isReposting) return
+                  setIsReposting(true)
+                  try {
+                    const res = await fetch('/api/posts/repost', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ postId }),
+                    })
+                    if (res.ok) {
+                      setReposted(true)
+                      setTimeout(() => setReposted(false), 3000)
+                    }
+                  } finally { setIsReposting(false) }
+                }}
+                disabled={isReposting}
+                className={`p-1.5 rounded-lg transition-all flex items-center gap-1 ${reposted ? 'bg-green-500/20 text-green-400' : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-green-400'} disabled:opacity-50`}
+                title="Repost to your wall & feed"
+              >
+                <Repeat2 className="w-4 h-4" />
+                <span className="text-[10px] font-medium hidden sm:inline">{reposted ? 'Reposted' : 'Repost'}</span>
               </button>
 
               {/* Separator */}
