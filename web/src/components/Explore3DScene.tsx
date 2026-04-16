@@ -18,6 +18,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react'
 import * as THREE from 'three'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { useRouter } from 'next/router'
 import { User, MapPin, Coins, X, Lock, Check } from 'lucide-react'
 import { CharacterDesigner, getStoredCharacter, type CharacterConfig } from './CharacterDesigner'
@@ -209,62 +210,93 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
     origin.position.y = 0.01
     scene.add(origin)
 
-    // ─── Player Avatar (uses CharacterDesigner config) ───────
+    // ─── Player Avatar — Humanoid GLB or Agent Pill ──────────
     const playerGroup = new THREE.Group()
-    const bodyColorObj = new THREE.Color(character.bodyColor)
-    const glowColorObj = new THREE.Color(character.glowColor)
-    const playerMat = new THREE.MeshStandardMaterial({
-      color: bodyColorObj,
-      emissive: glowColorObj,
-      emissiveIntensity: character.glowIntensity,
-      metalness: 0.5,
-      roughness: 0.3,
-    })
+    const isHuman = character.type === 'human' && character.humanGlbUrl
 
-    // Body (capsule, scales with height)
-    const playerGeo = new THREE.CapsuleGeometry(0.4, 1 * character.height, 4, 8)
-    const playerMesh = new THREE.Mesh(playerGeo, playerMat)
-    playerMesh.position.y = 0.7 + (character.height - 1) * 0.5
-    playerMesh.castShadow = true
-    playerGroup.add(playerMesh)
+    if (isHuman) {
+      // HUMAN — load Ready Player Me GLB model
+      const loader = new GLTFLoader()
+      loader.load(
+        character.humanGlbUrl!,
+        (gltf) => {
+          const model = gltf.scene
+          // RPM avatars are full-size (~1.7m). Scale to fit our world (slightly bigger feel).
+          model.scale.setScalar(1 * character.height)
+          model.position.y = 0
+          model.traverse((obj: any) => {
+            if (obj.isMesh) {
+              obj.castShadow = true
+              obj.receiveShadow = true
+            }
+          })
+          playerGroup.add(model)
+        },
+        undefined,
+        (err) => {
+          console.error('[Explore3D] GLB load failed, falling back to pill:', err)
+          // Fallback to capsule
+          const fallbackMat = new THREE.MeshStandardMaterial({ color: character.bodyColor, emissive: character.glowColor, emissiveIntensity: character.glowIntensity })
+          const fallback = new THREE.Mesh(new THREE.CapsuleGeometry(0.4, 1, 4, 8), fallbackMat)
+          fallback.position.y = 1
+          fallback.castShadow = true
+          playerGroup.add(fallback)
+        }
+      )
+    } else {
+      // AGENT — pill capsule + head (current design)
+      const bodyColorObj = new THREE.Color(character.bodyColor)
+      const glowColorObj = new THREE.Color(character.glowColor)
+      const playerMat = new THREE.MeshStandardMaterial({
+        color: bodyColorObj,
+        emissive: glowColorObj,
+        emissiveIntensity: character.glowIntensity,
+        metalness: 0.5,
+        roughness: 0.3,
+      })
 
-    // Head (varies by shape)
-    let headGeo: THREE.BufferGeometry
-    switch (character.headShape) {
-      case 'sphere': headGeo = new THREE.SphereGeometry(0.3, 24, 24); break
-      case 'cube': headGeo = new THREE.BoxGeometry(0.5, 0.5, 0.5); break
-      case 'cone': headGeo = new THREE.ConeGeometry(0.3, 0.6, 24); break
-      case 'capsule':
-      default: headGeo = new THREE.CapsuleGeometry(0.25, 0.2, 8, 16); break
-    }
-    const head = new THREE.Mesh(headGeo, playerMat.clone())
-    head.position.y = 1.5 + (character.height - 1) * 1
-    head.castShadow = true
-    playerGroup.add(head)
+      const playerGeo = new THREE.CapsuleGeometry(0.4, 1 * character.height, 4, 8)
+      const playerMesh = new THREE.Mesh(playerGeo, playerMat)
+      playerMesh.position.y = 0.7 + (character.height - 1) * 0.5
+      playerMesh.castShadow = true
+      playerGroup.add(playerMesh)
 
-    // Accessory
-    if (character.accessory !== 'none') {
-      const accMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, emissive: 0xfacc15, emissiveIntensity: 0.6, metalness: 0.9, roughness: 0.1 })
-      let accMesh: THREE.Mesh | null = null
-      if (character.accessory === 'crown') {
-        accMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 0.15, 8), accMat)
-        accMesh.position.y = head.position.y + 0.35
-      } else if (character.accessory === 'halo') {
-        accMesh = new THREE.Mesh(new THREE.TorusGeometry(0.4, 0.04, 16, 32), accMat)
-        accMesh.position.y = head.position.y + 0.45
-        accMesh.rotation.x = Math.PI / 2
-      } else if (character.accessory === 'antenna') {
-        accMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.5), accMat)
-        accMesh.position.y = head.position.y + 0.45
-      } else if (character.accessory === 'visor') {
-        accMesh = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.1, 0.4), new THREE.MeshStandardMaterial({ color: 0x000000, emissive: 0x22d3ee, emissiveIntensity: 0.3, metalness: 0.9, roughness: 0.1, transparent: true, opacity: 0.85 }))
-        accMesh.position.y = head.position.y + 0.05
-        accMesh.position.z = 0.05
+      let headGeo: THREE.BufferGeometry
+      switch (character.headShape) {
+        case 'sphere': headGeo = new THREE.SphereGeometry(0.3, 24, 24); break
+        case 'cube': headGeo = new THREE.BoxGeometry(0.5, 0.5, 0.5); break
+        case 'cone': headGeo = new THREE.ConeGeometry(0.3, 0.6, 24); break
+        case 'capsule':
+        default: headGeo = new THREE.CapsuleGeometry(0.25, 0.2, 8, 16); break
       }
-      if (accMesh) playerGroup.add(accMesh)
+      const head = new THREE.Mesh(headGeo, playerMat.clone())
+      head.position.y = 1.5 + (character.height - 1) * 1
+      head.castShadow = true
+      playerGroup.add(head)
+
+      if (character.accessory !== 'none') {
+        const accMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, emissive: 0xfacc15, emissiveIntensity: 0.6, metalness: 0.9, roughness: 0.1 })
+        let accMesh: THREE.Mesh | null = null
+        if (character.accessory === 'crown') {
+          accMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 0.15, 8), accMat)
+          accMesh.position.y = head.position.y + 0.35
+        } else if (character.accessory === 'halo') {
+          accMesh = new THREE.Mesh(new THREE.TorusGeometry(0.4, 0.04, 16, 32), accMat)
+          accMesh.position.y = head.position.y + 0.45
+          accMesh.rotation.x = Math.PI / 2
+        } else if (character.accessory === 'antenna') {
+          accMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.5), accMat)
+          accMesh.position.y = head.position.y + 0.45
+        } else if (character.accessory === 'visor') {
+          accMesh = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.1, 0.4), new THREE.MeshStandardMaterial({ color: 0x000000, emissive: 0x22d3ee, emissiveIntensity: 0.3, metalness: 0.9, roughness: 0.1, transparent: true, opacity: 0.85 }))
+          accMesh.position.y = head.position.y + 0.05
+          accMesh.position.z = 0.05
+        }
+        if (accMesh) playerGroup.add(accMesh)
+      }
     }
 
-    // Player name label (sprite) — use custom name if set
+    // Player name label (sprite) — works for both humans and agents
     const displayName = character.name || myHandle || 'YOU'
     const labelCanvas = document.createElement('canvas')
     labelCanvas.width = 256
@@ -272,14 +304,14 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
     const ctx = labelCanvas.getContext('2d')!
     ctx.fillStyle = 'rgba(0,0,0,0.7)'
     ctx.fillRect(0, 0, 256, 64)
-    ctx.fillStyle = character.bodyColor
+    ctx.fillStyle = isHuman ? '#a855f7' : character.bodyColor
     ctx.font = 'bold 28px monospace'
     ctx.textAlign = 'center'
     ctx.fillText(displayName, 128, 42)
     const labelTex = new THREE.CanvasTexture(labelCanvas)
     const labelSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: labelTex }))
     labelSprite.scale.set(2, 0.5, 1)
-    labelSprite.position.y = 2.4 + (character.height - 1) * 1
+    labelSprite.position.y = isHuman ? 2.0 * character.height + 0.3 : 2.4 + (character.height - 1) * 1
     playerGroup.add(labelSprite)
 
     scene.add(playerGroup)
