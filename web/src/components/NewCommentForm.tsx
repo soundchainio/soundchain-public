@@ -88,6 +88,9 @@ export const NewCommentForm = ({ postId, onSuccess, compact, inputRef, replyToCo
   }
   const [isReposting, setIsReposting] = useState(false)
   const [reposted, setReposted] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const [savedFolder, setSavedFolder] = useState<string>('posts')
   const [selectedStickers, setSelectedStickers] = useState<Array<{url: string, name: string}>>([])
   const [embedUrl, setEmbedUrl] = useState('')
   const [linkPreview, setLinkPreview] = useState<string | undefined>(undefined)
@@ -572,17 +575,38 @@ export const NewCommentForm = ({ postId, onSuccess, compact, inputRef, replyToCo
                 </div>
               )}
 
-              {/* Download pill — hide for NFT posts */}
-              {!hasTrack && postData && (
+              {/* Save pill — saves post to user's Archive with auto-categorization */}
+              {me && postData && (
                 <button
                   type="button"
-                  onClick={handleDownloadClick}
-                  disabled={isDownloading}
-                  className={`p-1.5 rounded-lg transition-all flex items-center gap-1 bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-white ${isDownloading ? 'opacity-50' : ''}`}
-                  title="Download"
+                  onClick={async () => {
+                    if (isSaving) return
+                    setIsSaving(true)
+                    try {
+                      const res = await fetch('/api/posts/bookmark', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ postId, action: saved ? 'remove' : 'add' }),
+                      })
+                      if (res.ok) {
+                        const data = await res.json()
+                        setSaved(!saved)
+                        if (!saved && data.folder) setSavedFolder(data.folder)
+                        // Fire analytics event for user scope data
+                        fetch('/api/agent/analytics-events', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ event: saved ? 'post_unsave' : 'post_save', meta: { postId, folder: data.folder } }),
+                        }).catch(() => {})
+                      }
+                    } finally { setIsSaving(false) }
+                  }}
+                  disabled={isSaving}
+                  className={`p-1.5 rounded-lg transition-all flex items-center gap-1 ${saved ? 'bg-gradient-to-r from-amber-500/20 to-yellow-500/20 text-amber-400 ring-1 ring-amber-400/50' : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-amber-400'} ${isSaving ? 'opacity-50' : ''}`}
+                  title={saved ? `Saved to /${savedFolder}/` : 'Save to Archive'}
                 >
-                  <ArrowDownToLine className={`w-4 h-4 ${isDownloading ? 'animate-pulse' : ''}`} />
-                  <span className="text-[10px] font-medium hidden sm:inline">Save</span>
+                  <ArrowDownToLine className={`w-4 h-4 ${isSaving ? 'animate-pulse' : ''}`} />
+                  <span className="text-[10px] font-medium hidden sm:inline">{saved ? `/${savedFolder}/` : 'Save'}</span>
                 </button>
               )}
 

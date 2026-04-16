@@ -14,22 +14,35 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const limit = Math.min(parseInt(req.query.limit as string) || 30, 100)
   const skip = parseInt(req.query.skip as string) || 0
+  const folder = (req.query.folder as string)?.trim() || ''
 
   try {
     const client = await clientPromise
     const db = client.db('soundchain')
 
+    // Build filter — optionally filter by folder (posts/reels/stories/music/media)
+    const filter: any = { profileId: auth.profileId }
+    if (folder) filter.folder = folder
+
     // Get bookmarks
     const bookmarks = await db.collection('bookmarks')
-      .find({ profileId: auth.profileId })
+      .find(filter)
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .toArray()
 
-    const totalCount = await db.collection('bookmarks').countDocuments({ profileId: auth.profileId })
+    const totalCount = await db.collection('bookmarks').countDocuments(filter)
 
-    if (bookmarks.length === 0) return res.status(200).json({ posts: [], totalCount })
+    // Folder counts for UI badges — ALWAYS return regardless of filter
+    const folderAgg = await db.collection('bookmarks').aggregate([
+      { $match: { profileId: auth.profileId } },
+      { $group: { _id: { $ifNull: ['$folder', 'posts'] }, count: { $sum: 1 } } },
+    ]).toArray()
+    const folderCounts: Record<string, number> = {}
+    folderAgg.forEach((f: any) => { folderCounts[f._id] = f.count })
+
+    if (bookmarks.length === 0) return res.status(200).json({ posts: [], totalCount, folderCounts })
 
     // Batch fetch posts
     const postIds = bookmarks.map(b => b.postId)
@@ -63,6 +76,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         commentCount: post.commentCount || 0,
         totalReactions: post.totalReactions || 0,
         bookmarkedAt: b.createdAt,
+        folder: b.folder || 'posts',
         profile: author ? {
           id: author._id.toString(),
           displayName: author.displayName,
@@ -73,7 +87,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     }).filter(Boolean)
 
-    return res.status(200).json({ posts: result, totalCount })
+    return res.status(200).json({ posts: result, totalCount, folderCounts })
   } catch (err: any) {
     return res.status(500).json({ error: err.message })
   }

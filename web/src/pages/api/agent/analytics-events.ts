@@ -51,6 +51,10 @@ const VALID_EVENTS = [
   'operator_upload',  // Uploaded file via Operator → IPFS
   'operator_transfer',// Started an Operator transfer
   'nodes_page_view',  // Visited the Nodes dashboard
+  'post_save',        // Saved a post to Archive (with auto-folder)
+  'post_unsave',      // Removed a post from Archive
+  'archive_view',     // Viewed the Archive page
+  'archive_folder_switch', // Switched folder in Archive (posts/reels/stories/music)
 ]
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {

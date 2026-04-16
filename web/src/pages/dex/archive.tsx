@@ -20,21 +20,29 @@ export default function ArchivePage() {
   const [uploadsLoading, setUploadsLoading] = useState(false)
   const [uploadsTotal, setUploadsTotal] = useState(0)
   const [copiedCid, setCopiedCid] = useState<string | null>(null)
+  const [folder, setFolder] = useState<string>('')
+  const [folderCounts, setFolderCounts] = useState<Record<string, number>>({})
 
-  const fetchBookmarks = useCallback(async (skip = 0) => {
+  const fetchBookmarks = useCallback(async (skip = 0, folderFilter = folder) => {
     if (!me?.profile?.id) return
     setLoading(true)
     try {
-      const r = await fetch(`/api/posts/bookmarks?limit=50&skip=${skip}`)
+      const params = new URLSearchParams({ limit: '50', skip: String(skip) })
+      if (folderFilter) params.set('folder', folderFilter)
+      const r = await fetch(`/api/posts/bookmarks?${params}`)
       if (r.ok) {
         const data = await r.json()
         if (skip === 0) setPosts(data.posts || [])
         else setPosts(prev => [...prev, ...(data.posts || [])])
         setTotalCount(data.totalCount || 0)
+        setFolderCounts(data.folderCounts || {})
       }
     } catch {}
     setLoading(false)
-  }, [me?.profile?.id])
+  }, [me?.profile?.id, folder])
+
+  // Re-fetch when folder changes
+  useEffect(() => { fetchBookmarks(0, folder) }, [folder]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchUploads = useCallback(async (skip = 0) => {
     setUploadsLoading(true)
@@ -163,6 +171,29 @@ export default function ArchivePage() {
 
         {/* ─── SAVED TAB ─── */}
         {activeTab === 'saved' && <>
+        {/* Folder sub-tabs: All / Posts / Reels / Stories / Music / Media */}
+        <div className="flex items-center gap-1 mb-3 overflow-x-auto scrollbar-hide">
+          {[
+            { id: '', label: 'All', count: Object.values(folderCounts).reduce((a: number, b: any) => a + b, 0) },
+            { id: 'posts', label: '/posts/', count: folderCounts.posts || 0 },
+            { id: 'reels', label: '/reels/', count: folderCounts.reels || 0 },
+            { id: 'stories', label: '/stories/', count: folderCounts.stories || 0 },
+            { id: 'music', label: '/music/', count: folderCounts.music || 0 },
+            { id: 'media', label: '/media/', count: folderCounts.media || 0 },
+          ].map(f => (
+            <button
+              key={f.id}
+              onClick={() => {
+                setFolder(f.id)
+                fetch('/api/agent/analytics-events', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ event: 'archive_folder_switch', meta: { folder: f.id || 'all' } }) }).catch(() => {})
+              }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-mono whitespace-nowrap transition ${folder === f.id ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'text-gray-600 border border-white/5 hover:text-white'}`}
+            >
+              {f.label} <span className="text-[8px] opacity-60">({f.count})</span>
+            </button>
+          ))}
+        </div>
+
         {loading && posts.length === 0 && (
           <div className="grid grid-cols-3 gap-2">
             {Array.from({ length: 9 }).map((_, i) => (
