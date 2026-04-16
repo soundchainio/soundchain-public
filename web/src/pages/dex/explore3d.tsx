@@ -89,8 +89,8 @@ export default function Explore3DPage() {
         </div>
       </div>
 
-      {/* The Grid */}
-      <div className="flex-1 relative" style={{ minHeight: 'calc(100vh - 110px)' }}>
+      {/* The Grid — explicit height so canvas always renders */}
+      <div className="relative w-full" style={{ height: 'calc(100vh - 200px)', minHeight: '500px' }}>
         <Explore3DScene
           myHandle={me?.profile?.userHandle || 'YOU'}
           myAvatar={me?.profile?.profilePicture}

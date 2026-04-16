@@ -71,6 +71,9 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
   useEffect(() => {
     if (!containerRef.current) return
     const container = containerRef.current
+    // Guard against 0-dimension container (parent flex hasn't laid out yet)
+    const w = container.clientWidth || window.innerWidth
+    const h = container.clientHeight || window.innerHeight - 200
 
     // ─── Scene Setup ─────────────────────────────────────────
     const scene = new THREE.Scene()
@@ -78,12 +81,12 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
     scene.fog = new THREE.Fog(0x0a0f1f, 50, 150)
 
     // Camera (third-person follow)
-    const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 200)
+    const camera = new THREE.PerspectiveCamera(75, w / h, 0.1, 200)
     camera.position.set(0, 4, 8)
 
     // Renderer
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
-    renderer.setSize(container.clientWidth, container.clientHeight)
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false })
+    renderer.setSize(w, h)
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     renderer.shadowMap.enabled = true
     renderer.shadowMap.type = THREE.PCFSoftShadowMap
@@ -258,11 +261,17 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
 
     // ─── Resize ──────────────────────────────────────────────
     const onResize = () => {
-      camera.aspect = container.clientWidth / container.clientHeight
+      const cw = container.clientWidth || window.innerWidth
+      const ch = container.clientHeight || window.innerHeight - 200
+      camera.aspect = cw / ch
       camera.updateProjectionMatrix()
-      renderer.setSize(container.clientWidth, container.clientHeight)
+      renderer.setSize(cw, ch)
     }
     window.addEventListener('resize', onResize)
+    // Re-fit after a tick to catch parent flex layout
+    const fitTimer1 = setTimeout(onResize, 100)
+    const fitTimer2 = setTimeout(onResize, 500)
+    const fitTimer3 = setTimeout(onResize, 1500)
 
     // ─── Animation Loop ──────────────────────────────────────
     let lastFrame = performance.now()
@@ -323,6 +332,9 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
     // ─── Cleanup ─────────────────────────────────────────────
     return () => {
       cancelAnimationFrame(rafId)
+      clearTimeout(fitTimer1)
+      clearTimeout(fitTimer2)
+      clearTimeout(fitTimer3)
       window.removeEventListener('keydown', onKeyDown)
       window.removeEventListener('keyup', onKeyUp)
       window.removeEventListener('resize', onResize)
