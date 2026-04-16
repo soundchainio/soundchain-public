@@ -9,10 +9,11 @@ const JWT_SECRET = process.env.JWT_SECRET || 'not-so-secret'
 const JWT_NAMESPACE = 'https://soundchain.io'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' })
+  if (req.method !== 'POST' && req.method !== 'DELETE') return res.status(405).json({ error: 'POST or DELETE only' })
 
-  const { endpoint, keys, device } = req.body
-  if (!endpoint || !keys) return res.status(400).json({ error: 'endpoint and keys required' })
+  const { endpoint, keys, device, deviceName, userAgent } = req.body
+  if (!endpoint) return res.status(400).json({ error: 'endpoint required' })
+  if (req.method === 'POST' && !keys) return res.status(400).json({ error: 'keys required' })
 
   // Get user from JWT
   let token = req.headers.authorization?.replace('Bearer ', '') || req.cookies?.token || ''
@@ -26,6 +27,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const client = await clientPromise
     const db = client.db('soundchain')
 
+    if (req.method === 'DELETE') {
+      await db.collection('pushsubscriptions').deleteMany({ endpoint, userId })
+      return res.status(200).json({ success: true })
+    }
+
     // Remove old subscriptions for this endpoint
     await db.collection('pushsubscriptions').deleteMany({ endpoint })
 
@@ -35,7 +41,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       profileId,
       endpoint,
       keys,
-      device: device || 'Unknown',
+      device: device || deviceName || 'Unknown',
+      userAgent: userAgent || '',
       createdAt: new Date(),
     })
 

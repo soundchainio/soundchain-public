@@ -285,21 +285,25 @@ export function usePushNotifications(): UsePushNotificationsReturn {
         }
       }
 
-      // Send subscription to server
+      // Send subscription to server via Vercel direct (no Lambda cold starts)
       const subscriptionJson = subscription.toJSON();
-      await subscribeMutation({
-        variables: {
-          input: {
-            endpoint: subscriptionJson.endpoint,
-            keys: {
-              p256dh: subscriptionJson.keys?.p256dh || '',
-              auth: subscriptionJson.keys?.auth || '',
-            },
-            userAgent: navigator.userAgent,
-            deviceName: getDeviceName(),
+      const res = await fetch('/api/push/save-subscription', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          endpoint: subscriptionJson.endpoint,
+          keys: {
+            p256dh: subscriptionJson.keys?.p256dh || '',
+            auth: subscriptionJson.keys?.auth || '',
           },
-        },
+          userAgent: navigator.userAgent,
+          deviceName: getDeviceName(),
+        }),
       });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+        throw new Error(errData.error || 'Failed to save subscription');
+      }
 
       setHasClientSubscription(true);
       await refetchSubscription();
@@ -333,10 +337,12 @@ export function usePushNotifications(): UsePushNotificationsReturn {
         // Unsubscribe from push manager
         await subscription.unsubscribe();
 
-        // Remove from server
-        await unsubscribeMutation({
-          variables: { endpoint: subscription.endpoint },
-        });
+        // Remove from server — Vercel direct
+        await fetch('/api/push/save-subscription', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ endpoint: subscription.endpoint }),
+        }).catch(() => {})
       }
 
       await refetchSubscription();

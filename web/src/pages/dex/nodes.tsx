@@ -230,12 +230,6 @@ export default function NodesPage() {
             </div>
             <div className="flex items-center gap-3">
               <button
-                onClick={() => router.push('/dex/feed')}
-                className="text-[10px] font-mono text-gray-500 hover:text-white transition px-3 py-1.5 rounded border border-white/10 hover:border-white/20"
-              >
-                BACK TO DEX
-              </button>
-              <button
                 onClick={pingAll}
                 disabled={pinging}
                 className="flex items-center gap-1.5 text-[10px] font-mono text-green-400 px-3 py-1.5 rounded bg-green-500/10 border border-green-500/20 hover:bg-green-500/20 transition disabled:opacity-50"
