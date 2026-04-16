@@ -17,16 +17,20 @@ import * as THREE from 'three'
 import { X, Save, RefreshCw, Shuffle, User } from 'lucide-react'
 
 export interface CharacterConfig {
-  bodyColor: string         // hex
+  type: 'agent' | 'human'   // NEW: visual class — agents = pills, humans = full GLB
+  bodyColor: string         // hex (agent only)
   headShape: 'capsule' | 'sphere' | 'cube' | 'cone'
   height: number            // 0.6 - 1.4 multiplier
   glowIntensity: number     // 0 - 1
   glowColor: string         // hex
   name: string              // override @handle
   accessory: 'none' | 'crown' | 'halo' | 'antenna' | 'visor'
+  humanGlbUrl?: string      // NEW: Ready Player Me GLB URL for humans
+  humanAvatarPng?: string   // NEW: 2D preview thumbnail
 }
 
 export const DEFAULT_CHARACTER: CharacterConfig = {
+  type: 'agent',
   bodyColor: '#22d3ee',
   headShape: 'sphere',
   height: 1.0,
@@ -83,9 +87,35 @@ export function CharacterDesigner({ open, onClose, initialName }: CharacterDesig
   const previewRef = useRef<HTMLDivElement>(null)
   const [saved, setSaved] = useState(false)
 
-  // ─── Live 3D Preview ─────────────────────────────────────
+  // ─── Ready Player Me message handler ─────────────────────
+  // Listens for avatar export from RPM iframe
   useEffect(() => {
-    if (!open || !previewRef.current) return
+    if (!open || config.type !== 'human') return
+    const handler = (event: MessageEvent) => {
+      // Validate origin (Ready Player Me sends from readyplayer.me)
+      if (typeof event.data !== 'string' && (!event.data || typeof event.data !== 'object')) return
+      let data = event.data
+      // RPM sends JSON strings sometimes
+      if (typeof data === 'string') {
+        try { data = JSON.parse(data) } catch { return }
+      }
+      // Avatar exported event
+      if (data?.eventName === 'v1.avatar.exported' || data?.source === 'readyplayerme') {
+        const url = data.data?.url || data.url
+        if (url && typeof url === 'string' && url.endsWith('.glb')) {
+          // Generate 2D preview URL from GLB url (RPM provides .png too)
+          const pngUrl = url.replace('.glb', '.png')
+          setConfig(prev => ({ ...prev, humanGlbUrl: url, humanAvatarPng: pngUrl }))
+        }
+      }
+    }
+    window.addEventListener('message', handler)
+    return () => window.removeEventListener('message', handler)
+  }, [open, config.type])
+
+  // ─── Live 3D Preview (agent pill only) ───────────────────
+  useEffect(() => {
+    if (!open || !previewRef.current || config.type !== 'agent') return
     const container = previewRef.current
     const w = container.clientWidth || 300
     const h = container.clientHeight || 300
@@ -271,7 +301,79 @@ export function CharacterDesigner({ open, onClose, initialName }: CharacterDesig
           </button>
         </div>
 
-        {/* Body — 3D Preview + Controls */}
+        {/* Type Toggle: AGENT (pill) vs HUMAN (Ready Player Me) */}
+        <div className="flex items-center gap-1 px-4 py-2 border-b border-cyan-500/10 bg-black/20">
+          <span className="text-[8px] font-mono text-gray-500 uppercase tracking-wider mr-2">CITIZEN CLASS:</span>
+          <button
+            onClick={() => update({ type: 'agent' })}
+            className={`flex-1 sm:flex-none px-4 py-1.5 rounded text-[10px] font-mono font-bold transition ${config.type === 'agent' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'bg-white/[0.02] text-gray-500 border border-white/5 hover:text-white'}`}
+          >
+            🤖 AGENT (pill)
+          </button>
+          <button
+            onClick={() => update({ type: 'human' })}
+            className={`flex-1 sm:flex-none px-4 py-1.5 rounded text-[10px] font-mono font-bold transition ${config.type === 'human' ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' : 'bg-white/[0.02] text-gray-500 border border-white/5 hover:text-white'}`}
+          >
+            👤 HUMAN (Ready Player Me)
+          </button>
+        </div>
+
+        {/* HUMAN MODE — Ready Player Me iframe */}
+        {config.type === 'human' && (
+          <div className="bg-black">
+            {!config.humanGlbUrl ? (
+              <div className="space-y-0">
+                <div className="px-4 py-2 bg-purple-500/5 border-b border-purple-500/10">
+                  <p className="text-[10px] font-mono text-purple-300">
+                    Build your humanoid avatar with face, hair, body, clothes — full Ready Player Me editor below.
+                    Click ✓ when done to save.
+                  </p>
+                </div>
+                <iframe
+                  src="https://demo.readyplayer.me/avatar?frameApi&clearCache&bodyType=halfbody"
+                  className="w-full"
+                  style={{ height: '500px', border: 'none' }}
+                  allow="camera *; microphone *; clipboard-write"
+                  title="Ready Player Me Avatar Editor"
+                />
+              </div>
+            ) : (
+              <div className="p-4 space-y-3">
+                <div className="aspect-square max-w-xs mx-auto bg-gradient-to-br from-purple-900/30 to-cyan-900/30 rounded-lg overflow-hidden border border-purple-500/20">
+                  {config.humanAvatarPng ? (
+                    <img src={config.humanAvatarPng} alt="Your avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-purple-400 font-mono text-xs">Humanoid loaded · {config.humanGlbUrl.slice(-12)}</div>
+                  )}
+                </div>
+                <div className="text-center space-y-2">
+                  <p className="text-[10px] font-mono text-green-400">✓ Humanoid avatar saved</p>
+                  <p className="text-[9px] font-mono text-gray-500 break-all px-4">{config.humanGlbUrl}</p>
+                  <button
+                    onClick={() => update({ humanGlbUrl: undefined, humanAvatarPng: undefined })}
+                    className="text-[9px] font-mono text-purple-400 hover:text-purple-300 underline"
+                  >
+                    Edit avatar
+                  </button>
+                </div>
+              </div>
+            )}
+            <div className="px-4 py-2 border-t border-cyan-500/10 bg-black/40 flex items-center justify-between">
+              <span className="text-[8px] font-mono text-gray-600">Powered by Ready Player Me · 100% free</span>
+              <input
+                type="text"
+                value={config.name}
+                onChange={e => update({ name: e.target.value })}
+                placeholder="Display name (max 16)"
+                className="bg-black/60 border border-white/10 rounded px-2 py-1 text-[10px] font-mono text-white outline-none focus:border-purple-500/50 w-44"
+                maxLength={16}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* AGENT MODE — original capsule designer */}
+        {config.type === 'agent' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
           {/* Left: 3D Preview */}
           <div className="bg-black border-b md:border-b-0 md:border-r border-cyan-500/10">
@@ -395,6 +497,7 @@ export function CharacterDesigner({ open, onClose, initialName }: CharacterDesig
             </div>
           </div>
         </div>
+        )}{/* end agent mode */}
 
         {/* Footer */}
         <div className="px-4 py-3 border-t border-cyan-500/20 bg-black/40 flex items-center justify-between gap-2">
