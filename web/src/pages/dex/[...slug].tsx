@@ -4303,6 +4303,8 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   ...(me?.profile ? [{ id: 'profile', label: 'Profile', route: `/dex/users/${me?.profile?.userHandle}` }] : []),
                   { id: 'nodes', label: 'Nodes', route: '/dex/nodes' },
                   { id: 'explore3d', label: 'Explore 3D', route: '/dex/explore3d' },
+                  { id: 'gallery3d', label: 'Gallery 3D', route: '/dex/gallery3d' },
+                  { id: 'arena', label: 'Arena', route: '/dex/arena' },
                   { id: 'explore', label: 'Explore', route: '/dex/explore' },
                   { id: 'users', label: 'Users', route: '/dex/users' },
                   { id: 'radio', label: 'Radio', route: '/radio' },

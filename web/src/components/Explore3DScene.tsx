@@ -258,6 +258,42 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
       ring.position.y = 0.02
       group.add(ring)
 
+      // GALLERY ARCHWAY — glowing torus behind resident
+      const archwayMat = new THREE.MeshStandardMaterial({
+        color: 0xfacc15,
+        emissive: 0xfacc15,
+        emissiveIntensity: 0.6,
+        metalness: 0.8,
+        roughness: 0.2,
+      })
+      const archwayGeo = new THREE.TorusGeometry(1.4, 0.08, 12, 32, Math.PI)
+      const archway = new THREE.Mesh(archwayGeo, archwayMat)
+      archway.position.set(0, 1.4, -1.5)
+      archway.rotation.z = 0
+      ;(archway as any).userData = { resident: r, isGallery: true }
+      group.add(archway)
+
+      // "GALLERY" label sprite above archway
+      const galleryLabelCanvas = document.createElement('canvas')
+      galleryLabelCanvas.width = 256
+      galleryLabelCanvas.height = 64
+      const glctx = galleryLabelCanvas.getContext('2d')!
+      glctx.fillStyle = 'rgba(0,0,0,0.8)'
+      glctx.fillRect(0, 0, 256, 64)
+      glctx.strokeStyle = '#facc15'
+      glctx.lineWidth = 2
+      glctx.strokeRect(2, 2, 252, 60)
+      glctx.fillStyle = '#facc15'
+      glctx.font = 'bold 22px monospace'
+      glctx.textAlign = 'center'
+      glctx.fillText('► GALLERY', 128, 38)
+      const galleryLabelTex = new THREE.CanvasTexture(galleryLabelCanvas)
+      const galleryLabel = new THREE.Sprite(new THREE.SpriteMaterial({ map: galleryLabelTex }))
+      galleryLabel.scale.set(1.5, 0.4, 1)
+      galleryLabel.position.set(0, 3, -1.5)
+      ;(galleryLabel as any).userData = { resident: r, isGallery: true }
+      group.add(galleryLabel)
+
       group.position.set(r.position?.x || 0, 0, r.position?.z || 0)
       scene.add(group)
       residentMeshes.push({ group, data: r })
@@ -288,10 +324,16 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
       const hits = raycaster.intersectObjects(residentMeshes.map(rm => rm.group), true)
       if (hits.length > 0) {
         const hit = hits[0].object
-        const data = (hit.userData?.resident || hit.parent?.children?.find(c => (c as any).userData?.resident)?.userData?.resident) as Resident | undefined
+        const data = (hit.userData?.resident || hit.parent?.children?.find((c: any) => c.userData?.resident)?.userData?.resident) as Resident | undefined
+        const isGallery = hit.userData?.isGallery || hit.parent?.children?.find((c: any) => c.userData?.isGallery && c === hit)?.userData?.isGallery
         if (data?.userHandle || data?.id) {
-          // PORTAL through to their personal grid
-          router.push(`/dex/users/${data.userHandle || data.id}`)
+          if (isGallery) {
+            // Hit the GALLERY archway → portal into their 3D gallery
+            router.push(`/dex/gallery3d?handle=${data.userHandle || data.id}`)
+          } else {
+            // Hit the body capsule → portal to their profile
+            router.push(`/dex/users/${data.userHandle || data.id}`)
+          }
         }
       }
     }
