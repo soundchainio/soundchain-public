@@ -50,6 +50,8 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
   const [hoveredSquare, setHoveredSquare] = useState<{ x: number; z: number; price: number; tier: string; owned?: any } | null>(null)
   const [purchaseModal, setPurchaseModal] = useState<{ x: number; z: number; price: number; tier: string } | null>(null)
   const [purchasing, setPurchasing] = useState(false)
+  // Player position state for mini-map
+  const [playerPos, setPlayerPos] = useState({ x: 0, z: 0 })
   const fetchLand = useCallback(() => {
     fetch('/api/nodeverse/squares')
       .then(r => r.json())
@@ -472,6 +474,8 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
           residents: residentMeshes.length,
           position: `x:${playerGroup.position.x.toFixed(1)} z:${playerGroup.position.z.toFixed(1)}`,
         }))
+        // Also update mini-map player position (throttled to 1Hz)
+        setPlayerPos({ x: playerGroup.position.x, z: playerGroup.position.z })
         frameCount = 0
         fpsLastUpdate = now
       }
@@ -681,6 +685,14 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
         </div>
       )}
 
+      {/* WORLD MAP — top-right mini-map showing whole Nodeverse */}
+      <WorldMiniMap
+        playerPos={playerPos}
+        ownedSquares={ownedSquares}
+        residents={residents}
+        onClickFullMap={() => router.push('/dex/land')}
+      />
+
       {/* Customize Avatar button — bottom right (NBA 2K style) */}
       <button
         onClick={() => setShowDesigner(true)}
@@ -697,6 +709,113 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
         onClose={() => setShowDesigner(false)}
         initialName={myHandle}
       />
+    </div>
+  )
+}
+
+// ─── World Mini-Map ─────────────────────────────────────────
+// Top-down 100×100 world view in top-right corner of Explore 3D.
+// Shows tier rings, owned squares, residents, your player position.
+function WorldMiniMap({
+  playerPos,
+  ownedSquares,
+  residents,
+  onClickFullMap,
+}: {
+  playerPos: { x: number; z: number }
+  ownedSquares: Array<{ x: number; z: number; ownerColor?: string }>
+  residents: Array<{ position?: { x: number; z: number } }>
+  onClickFullMap: () => void
+}) {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [expanded, setExpanded] = useState(false)
+  const SIZE = expanded ? 280 : 140
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')!
+    canvas.width = SIZE * window.devicePixelRatio
+    canvas.height = SIZE * window.devicePixelRatio
+    ctx.scale(window.devicePixelRatio, window.devicePixelRatio)
+    ctx.clearRect(0, 0, SIZE, SIZE)
+
+    // Background — slight darker than scene
+    ctx.fillStyle = 'rgba(5,8,20,0.85)'
+    ctx.fillRect(0, 0, SIZE, SIZE)
+
+    const cx = SIZE / 2
+    const cy = SIZE / 2
+    const scale = SIZE / 110 // ±55 visible (slight padding past 50)
+
+    // Tier rings (concentric circles)
+    ctx.strokeStyle = 'rgba(250,204,21,0.4)' // origin (gold)
+    ctx.lineWidth = 1
+    ctx.beginPath(); ctx.arc(cx, cy, 5 * scale, 0, Math.PI * 2); ctx.stroke()
+    ctx.strokeStyle = 'rgba(168,85,247,0.3)' // inner (purple)
+    ctx.beginPath(); ctx.arc(cx, cy, 20 * scale, 0, Math.PI * 2); ctx.stroke()
+    ctx.strokeStyle = 'rgba(34,211,238,0.25)' // mid (cyan)
+    ctx.beginPath(); ctx.arc(cx, cy, 40 * scale, 0, Math.PI * 2); ctx.stroke()
+    ctx.strokeStyle = 'rgba(102,102,102,0.2)' // outer (gray)
+    ctx.strokeRect(cx - 50 * scale, cy - 50 * scale, 100 * scale, 100 * scale)
+
+    // Origin crosshair
+    ctx.strokeStyle = 'rgba(34,211,238,0.5)'
+    ctx.lineWidth = 0.5
+    ctx.beginPath(); ctx.moveTo(cx - 4, cy); ctx.lineTo(cx + 4, cy); ctx.stroke()
+    ctx.beginPath(); ctx.moveTo(cx, cy - 4); ctx.lineTo(cx, cy + 4); ctx.stroke()
+
+    // Owned squares (color dots)
+    ownedSquares.forEach(sq => {
+      ctx.fillStyle = sq.ownerColor || '#22d3ee'
+      ctx.fillRect(cx + sq.x * scale - 1, cy + sq.z * scale - 1, 2, 2)
+    })
+
+    // Residents (small purple dots)
+    residents.forEach(r => {
+      if (!r.position) return
+      ctx.fillStyle = 'rgba(168,85,247,0.7)'
+      ctx.beginPath(); ctx.arc(cx + r.position.x * scale, cy + r.position.z * scale, 1.5, 0, Math.PI * 2); ctx.fill()
+    })
+
+    // YOUR PLAYER (cyan dot with pulse ring)
+    const px = cx + playerPos.x * scale
+    const py = cy + playerPos.z * scale
+    // Pulse ring
+    ctx.strokeStyle = '#22d3ee'
+    ctx.lineWidth = 1
+    ctx.beginPath(); ctx.arc(px, py, 4, 0, Math.PI * 2); ctx.stroke()
+    // Center dot
+    ctx.fillStyle = '#22d3ee'
+    ctx.beginPath(); ctx.arc(px, py, 2, 0, Math.PI * 2); ctx.fill()
+
+    // Border
+    ctx.strokeStyle = 'rgba(34,211,238,0.4)'
+    ctx.lineWidth = 1
+    ctx.strokeRect(0.5, 0.5, SIZE - 1, SIZE - 1)
+  }, [playerPos, ownedSquares, residents, SIZE])
+
+  return (
+    <div className="absolute top-3 right-14 z-20" style={{ width: SIZE }}>
+      <div className="rounded border border-cyan-500/30 bg-black/70 backdrop-blur overflow-hidden shadow-2xl shadow-cyan-500/10">
+        {/* Header */}
+        <div className="px-2 py-1 flex items-center justify-between border-b border-cyan-500/20">
+          <span className="text-[8px] font-mono font-bold text-cyan-400 tracking-wider">WORLD MAP</span>
+          <div className="flex items-center gap-1">
+            <button onClick={() => setExpanded(e => !e)} className="text-[8px] font-mono text-gray-500 hover:text-cyan-400 px-1">
+              {expanded ? '▾' : '▴'}
+            </button>
+            <button onClick={onClickFullMap} className="text-[8px] font-mono text-gray-500 hover:text-yellow-400 px-1" title="Open full atlas">
+              ⊞
+            </button>
+          </div>
+        </div>
+        <canvas ref={canvasRef} style={{ width: SIZE, height: SIZE, display: 'block' }} />
+        <div className="px-2 py-0.5 border-t border-cyan-500/10 flex items-center justify-between text-[7px] font-mono text-gray-600">
+          <span>x:{playerPos.x.toFixed(0)} z:{playerPos.z.toFixed(0)}</span>
+          <span className="text-cyan-500">100×100 world</span>
+        </div>
+      </div>
     </div>
   )
 }
