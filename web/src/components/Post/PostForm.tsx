@@ -208,9 +208,26 @@ export const PostForm = ({ ...props }: PostFormProps) => {
   const [uploadedMediaThumbnail, setUploadedMediaThumbnail] = useState<string | undefined>()
   const [showMusicAccordion, setShowMusicAccordion] = useState(false)
   const [showVideoAccordion, setShowVideoAccordion] = useState(false)
-  const [createPost] = useCreatePostMutation({ refetchQueries: ['Posts', 'Feed'] })
-  const [createRepost] = useCreateRepostMutation({ refetchQueries: ['Posts', 'Feed'] })
-  const [editPost] = useUpdatePostMutation()
+  // Post mutations — all Vercel direct (Phase 6d)
+  const postJson = async (url: string, payload: any) => {
+    const r = await fetch(url, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    if (!r.ok) {
+      const e = await r.json().catch(() => ({ error: `HTTP ${r.status}` }))
+      throw new Error(e.error || 'Request failed')
+    }
+    return r.json()
+  }
+  const createPost = async ({ variables }: { variables: { input: any } }) =>
+    postJson('/api/feed/create', variables.input)
+  const createRepost = async ({ variables }: { variables: { input: { body?: string; repostId: string } } }) =>
+    postJson('/api/posts/repost', variables.input)
+  const editPost = async ({ variables }: { variables: { input: { postId: string; body?: string; mediaLink?: string } } }) =>
+    postJson('/api/posts/edit', variables.input)
   const [getTrack, { data: track }] = useTrackLazyQuery()
   const { repostId, editPostId } = useModalState()
 
@@ -230,12 +247,11 @@ export const PostForm = ({ ...props }: PostFormProps) => {
           toast.success('Reposted successfully!')
           break
         case PostFormType.EDIT:
-          const updateParams: UpdatePostInput = { body: values.body, postId: editPostId as string }
-
-          if (props.postLink?.length) {
-            updateParams.mediaLink = props.postLink
+          const updateParams: { postId: string; body?: string; mediaLink?: string } = {
+            postId: editPostId as string,
+            body: values.body,
           }
-
+          if (props.postLink?.length) updateParams.mediaLink = props.postLink
           await editPost({ variables: { input: updateParams } })
           toast.success('Post updated!')
           break
