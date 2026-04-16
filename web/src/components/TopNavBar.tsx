@@ -278,8 +278,8 @@ export const TopNavBar = ({
           </div>
         )}
 
-        {/* Right Actions */}
-        <div className="flex items-center gap-3">
+        {/* Right Actions — scrollable on mobile so nothing gets cropped */}
+        <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide max-w-[60vw] sm:max-w-none flex-nowrap">
           {/* Custom Buttons */}
           {(LeftButton || RightButton) && (
             <div className="flex items-center gap-2">

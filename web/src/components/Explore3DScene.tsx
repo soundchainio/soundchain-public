@@ -74,8 +74,8 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
 
     // ─── Scene Setup ─────────────────────────────────────────
     const scene = new THREE.Scene()
-    scene.background = new THREE.Color(0x030308)
-    scene.fog = new THREE.Fog(0x030308, 30, 100)
+    scene.background = new THREE.Color(0x0a0f1f)
+    scene.fog = new THREE.Fog(0x0a0f1f, 50, 150)
 
     // Camera (third-person follow)
     const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 200)
@@ -89,26 +89,34 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
     renderer.shadowMap.type = THREE.PCFSoftShadowMap
     container.appendChild(renderer.domElement)
 
-    // ─── Lighting ────────────────────────────────────────────
-    const ambient = new THREE.AmbientLight(0x4040ff, 0.4)
+    // ─── Lighting (brightened — was too dark on mobile) ──────
+    const ambient = new THREE.AmbientLight(0xffffff, 0.7)
     scene.add(ambient)
-    const dir = new THREE.DirectionalLight(0x22d3ee, 0.8)
+    const dir = new THREE.DirectionalLight(0xffffff, 1.2)
     dir.position.set(10, 20, 10)
     dir.castShadow = true
     scene.add(dir)
-    const purpleLight = new THREE.PointLight(0xa855f7, 1, 30)
-    purpleLight.position.set(0, 8, 0)
+    // Cyan + purple atmosphere lights
+    const cyanLight = new THREE.PointLight(0x22d3ee, 2, 50)
+    cyanLight.position.set(-10, 10, 10)
+    scene.add(cyanLight)
+    const purpleLight = new THREE.PointLight(0xa855f7, 2, 50)
+    purpleLight.position.set(10, 10, -10)
     scene.add(purpleLight)
+    // Fill light from below for floor reflection
+    const fillLight = new THREE.PointLight(0x4040ff, 1, 30)
+    fillLight.position.set(0, 5, 0)
+    scene.add(fillLight)
 
     // ─── Grid Floor (cyberpunk) ──────────────────────────────
-    const gridHelper = new THREE.GridHelper(80, 40, 0x22d3ee, 0x1a4a5a)
+    const gridHelper = new THREE.GridHelper(80, 40, 0x22d3ee, 0x2a5a7a)
     ;(gridHelper.material as THREE.Material).transparent = true
-    ;(gridHelper.material as THREE.Material).opacity = 0.4
+    ;(gridHelper.material as THREE.Material).opacity = 0.7
     scene.add(gridHelper)
 
-    // Floor plane (catches shadows)
+    // Floor plane (catches shadows) — brighter, more reflective
     const floorGeo = new THREE.PlaneGeometry(80, 80)
-    const floorMat = new THREE.MeshStandardMaterial({ color: 0x050510, metalness: 0.8, roughness: 0.4 })
+    const floorMat = new THREE.MeshStandardMaterial({ color: 0x1a2540, metalness: 0.6, roughness: 0.3 })
     const floor = new THREE.Mesh(floorGeo, floorMat)
     floor.rotation.x = -Math.PI / 2
     floor.receiveShadow = true
@@ -347,36 +355,36 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
         </div>
       </div>
 
-      {/* (i) info pill — bottom right, always visible */}
+      {/* (i) info pill — TOP right (was bottom — got cut off by mobile browser bar) */}
       <button
         onClick={() => setShowInfo(s => !s)}
-        className="absolute bottom-3 right-3 w-8 h-8 rounded-full bg-black/70 backdrop-blur border border-cyan-500/40 hover:border-cyan-400 hover:bg-cyan-500/10 transition flex items-center justify-center text-cyan-400 font-mono font-bold text-sm z-20"
+        className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/70 backdrop-blur border border-cyan-500/40 hover:border-cyan-400 hover:bg-cyan-500/10 transition flex items-center justify-center text-cyan-400 font-mono font-bold text-sm z-20"
         title="Show controls"
       >
         i
       </button>
 
-      {/* Controls overlay — shows on mount + when (i) tapped */}
+      {/* Controls overlay — drops DOWN from (i) pill, always readable */}
       {showInfo && (
-        <div className="absolute bottom-14 right-3 max-w-[280px] z-10">
+        <div className="absolute top-14 right-3 max-w-[280px] z-10">
           <div className="rounded-lg bg-black/90 backdrop-blur border border-cyan-500/30 p-3 shadow-2xl shadow-cyan-500/10">
             <div className="flex items-center justify-between mb-2">
               <span className="text-[10px] font-mono font-bold text-cyan-400 tracking-wider">CONTROLS</span>
               <button onClick={() => setShowInfo(false)} className="text-gray-500 hover:text-white text-xs">×</button>
             </div>
             <div className="space-y-1.5 text-[9px] font-mono text-gray-300">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <span className="px-1.5 py-0.5 rounded bg-white/10 border border-white/20 text-cyan-400">W A S D</span>
                 <span className="text-gray-500">or</span>
                 <span className="px-1.5 py-0.5 rounded bg-white/10 border border-white/20 text-cyan-400">↑ ↓ ← →</span>
                 <span>walk</span>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="px-1.5 py-0.5 rounded bg-white/10 border border-white/20 text-cyan-400">CLICK</span>
+              <div className="flex items-start gap-2">
+                <span className="px-1.5 py-0.5 rounded bg-white/10 border border-white/20 text-cyan-400 flex-shrink-0">CLICK</span>
                 <span>resident → PORTAL into their grid</span>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="px-1.5 py-0.5 rounded bg-white/10 border border-white/20 text-cyan-400">HOVER</span>
+              <div className="flex items-start gap-2">
+                <span className="px-1.5 py-0.5 rounded bg-white/10 border border-white/20 text-cyan-400 flex-shrink-0">HOVER</span>
                 <span>shows resident name</span>
               </div>
               <div className="pt-1.5 mt-1.5 border-t border-cyan-500/20 text-[8px] text-cyan-500/60">
