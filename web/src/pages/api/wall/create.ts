@@ -21,18 +21,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const doc: any = {
       profileId: new ObjectId(targetProfileId),
       authorProfileId: auth.profileId,
-      body: body ? String(body).substring(0, 1000) : undefined,
-      replyToId: replyToId ? new ObjectId(replyToId) : undefined,
-      mediaUrl: mediaUrl || undefined,
-      mediaType: mediaType || undefined,
-      coverArtUrl: coverArtUrl || undefined,
-      mediaThumbnailUrl: mediaThumbnailUrl || undefined,
-      mediaTitle: mediaTitle ? String(mediaTitle).substring(0, 200) : undefined,
       deleted: false,
       pinned: false,
       createdAt: now,
       updatedAt: now,
     }
+    if (body) doc.body = String(body).substring(0, 1000)
+    if (replyToId) doc.replyToId = new ObjectId(replyToId)
+    if (mediaUrl) doc.mediaUrl = mediaUrl
+    if (mediaType) doc.mediaType = mediaType
+    if (coverArtUrl) doc.coverArtUrl = coverArtUrl
+    if (mediaThumbnailUrl) doc.mediaThumbnailUrl = mediaThumbnailUrl
+    if (mediaTitle) doc.mediaTitle = String(mediaTitle).substring(0, 200)
     const { insertedId } = await db.collection('wallposts').insertOne(doc)
 
     const author = await db.collection('profiles').findOne(

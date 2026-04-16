@@ -687,11 +687,20 @@ export function ProfileWall({ profileId, isOwnProfile: isOwnProfileProp, viewerP
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null)
   React.useEffect(() => { setPortalContainer(document.body) }, [])
 
-  // Wall posts
-  const { data, loading, refetch } = useQuery(WALL_POSTS_QUERY, {
-    variables: { profileId, page: { first: 20 * page } },
-    fetchPolicy: 'cache-and-network',
-  })
+  // Wall posts — Vercel direct (Phase 6c: kills Apollo/Lambda dependency)
+  const [wallData, setWallData] = useState<any>(null)
+  const [wallLoading, setWallLoading] = useState(true)
+  const refetchWall = React.useCallback(async () => {
+    if (!profileId) return
+    try {
+      const r = await fetch(`/api/wall/posts?profileId=${profileId}&limit=${20 * page}`, { credentials: 'include' })
+      if (r.ok) setWallData(await r.json())
+    } catch {} finally { setWallLoading(false) }
+  }, [profileId, page])
+  React.useEffect(() => { setWallLoading(true); refetchWall() }, [refetchWall])
+  const data = wallData
+  const loading = wallLoading
+  const refetch = refetchWall
 
   // THIS USER's tracks (what they created)
   const { data: userTracksData } = useGroupedTracksQuery({

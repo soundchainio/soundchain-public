@@ -39,8 +39,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const db = client.db('soundchain')
 
     // Fetch root comments (no replyToId) for this post
+    // $in: [null] matches BOTH missing AND null (legacy GraphQL inserted null, undefined gets coerced to null)
     const rootComments = await db.collection('comments')
-      .find({ postId: postOid, deleted: { $ne: true }, replyToId: { $exists: false } })
+      .find({ postId: postOid, deleted: { $ne: true }, replyToId: { $in: [null] } })
       .sort({ createdAt: 1 })
       .limit(limit)
       .toArray()

@@ -26,11 +26,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       postId: postOid,
       profileId: auth.profileId,
       body: String(body),
-      replyToId: replyToId ? new ObjectId(replyToId) : undefined,
       deleted: false,
       createdAt: now,
       updatedAt: now,
     }
+    if (replyToId) doc.replyToId = new ObjectId(replyToId)
     const { insertedId } = await db.collection('comments').insertOne(doc)
     await db.collection('posts').updateOne({ _id: postOid }, { $inc: { commentCount: 1 } })
     trackEvent('post_comment', { postId, commentId: insertedId.toString() }, auth.userId)
