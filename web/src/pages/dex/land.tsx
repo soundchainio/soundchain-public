@@ -15,7 +15,7 @@ import { ReactElement, useEffect, useRef, useState } from 'react'
 import { useMe } from 'hooks/useMe'
 import { useRouter } from 'next/router'
 import { TopNavBar } from 'components/TopNavBar'
-import { ArrowLeft, MapPin, Coins, Lock, Filter, ZoomIn, ZoomOut, Wallet, X, Globe2, Grid3x3 } from 'lucide-react'
+import { ArrowLeft, MapPin, Coins, Lock, Filter, ZoomIn, ZoomOut, Wallet, X, Globe2, Grid3x3, Search, Plane, Loader2 } from 'lucide-react'
 import { useMagicContext } from 'hooks/useMagicContext'
 import { feature } from 'topojson-client'
 import type { Topology, GeometryCollection } from 'topojson-specification'
@@ -67,6 +67,42 @@ export default function LandAtlasPage() {
   const [purchasing, setPurchasing] = useState(false)
   const [viewMode, setViewMode] = useState<ViewMode>('grid')
   const [worldGeo, setWorldGeo] = useState<FeatureCollection | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResult, setSearchResult] = useState<{ name: string; lat: number; lng: number } | null>(null)
+  const [searching, setSearching] = useState(false)
+  const [highlightedCountryId, setHighlightedCountryId] = useState<string | null>(null)
+
+  // ─── Geocode search via Nominatim (OpenStreetMap — free, no API key) ───
+  const searchLocation = async () => {
+    if (!searchQuery.trim()) return
+    setSearching(true)
+    try {
+      const q = encodeURIComponent(searchQuery.trim())
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=1`, {
+        headers: { 'User-Agent': 'SoundChain-Nodeverse/1.0' }, // Nominatim requires a user-agent
+      })
+      const data = await res.json()
+      if (data && data.length > 0) {
+        const { lat, lon, display_name } = data[0]
+        const latNum = parseFloat(lat)
+        const lngNum = parseFloat(lon)
+        setSearchResult({ name: display_name, lat: latNum, lng: lngNum })
+        // Pan + zoom to the location
+        const targetZoom = 8
+        setZoom(targetZoom)
+        setPan({ x: -lngNum * targetZoom, z: lngNum > 0 ? latNum * targetZoom : latNum * targetZoom })
+        // Auto-switch to Earth mode if not already
+        if (viewMode !== 'earth') setViewMode('earth')
+      } else {
+        setSearchResult(null)
+        alert('Location not found — try a different query')
+      }
+    } catch {
+      alert('Search failed — check your connection')
+    } finally {
+      setSearching(false)
+    }
+  }
 
   const fetchLand = () => {
     fetch('/api/nodeverse/squares')
@@ -224,7 +260,59 @@ export default function LandAtlasPage() {
         }
       })
 
+      // Search result pin (pulsing red beacon)
+      if (searchResult) {
+        const { x: sx, y: sy } = projectLngLat(searchResult.lng, searchResult.lat, zoom, cx, cy)
+        if (sx > -20 && sx < W + 20 && sy > -20 && sy < H + 20) {
+          // Pulsing outer ring
+          const pulse = 0.5 + 0.5 * Math.sin(Date.now() / 300)
+          ctx.globalAlpha = 0.3 + pulse * 0.4
+          ctx.fillStyle = '#ef4444'
+          ctx.beginPath()
+          ctx.arc(sx, sy, 16 + pulse * 6, 0, Math.PI * 2)
+          ctx.fill()
+          // Inner pin
+          ctx.globalAlpha = 1
+          ctx.fillStyle = '#ef4444'
+          ctx.beginPath()
+          ctx.arc(sx, sy, 6, 0, Math.PI * 2)
+          ctx.fill()
+          ctx.strokeStyle = '#ffffff'
+          ctx.lineWidth = 2
+          ctx.stroke()
+          // Label
+          ctx.fillStyle = '#ffffff'
+          ctx.font = 'bold 11px monospace'
+          ctx.textAlign = 'center'
+          const label = searchResult.name.split(',')[0] // Show just city name
+          ctx.fillText(`✈ ${label}`, sx, sy - 18)
+        }
+      }
+
+      // Country highlight (when clicked)
+      if (highlightedCountryId && worldGeo) {
+        const country = worldGeo.features.find((f: any) => f.id === highlightedCountryId)
+        if (country) {
+          ctx.globalAlpha = 0.3
+          ctx.beginPath()
+          drawGeometry(ctx, country.geometry, zoom, cx, cy)
+          ctx.fillStyle = '#22d3ee'
+          ctx.fill()
+          ctx.strokeStyle = '#22d3ee'
+          ctx.lineWidth = 2
+          ctx.globalAlpha = 0.8
+          ctx.stroke()
+        }
+      }
+
       ctx.globalAlpha = 1
+      // Request another frame for search pin animation
+      if (searchResult) {
+        requestAnimationFrame(() => {
+          const canvas2 = canvasRef.current
+          if (canvas2) canvas2.dispatchEvent(new Event('redraw'))
+        })
+      }
       return
     }
 
@@ -278,7 +366,7 @@ export default function LandAtlasPage() {
     drawSquare('#a855f7', 30)
     drawSquare('#22d3ee', 100)
     ctx.globalAlpha = 1
-  }, [owned, zoom, pan, tierFilter, viewMode, worldGeo, hoveredLandmark])
+  }, [owned, zoom, pan, tierFilter, viewMode, worldGeo, hoveredLandmark, searchResult, highlightedCountryId])
 
   // Mouse interaction
   const handleClick = (e: React.MouseEvent) => {
@@ -301,7 +389,23 @@ export default function LandAtlasPage() {
         setPurchaseModal({ x: parcelX, z: parcelZ, tier: 'landmark', price: hitLandmark.price, landmark: hitLandmark })
         return
       }
-      // Otherwise convert pixel → lat/lng → parcel x/z
+      // Check country hit (point-in-polygon via canvas isPointInPath)
+      if (worldGeo) {
+        const hitCountry = worldGeo.features.find((f: any) => {
+          const testCanvas = document.createElement('canvas')
+          const testCtx = testCanvas.getContext('2d')!
+          testCtx.beginPath()
+          drawGeometry(testCtx, f.geometry, zoom, cx, cy)
+          return testCtx.isPointInPath(mx, my)
+        })
+        if (hitCountry) {
+          const countryId = (hitCountry as any).id
+          // Toggle highlight — click again to deselect
+          setHighlightedCountryId(prev => prev === countryId ? null : countryId)
+        }
+      }
+
+      // Convert pixel → lat/lng → parcel x/z
       const { lng, lat } = unprojectXY(mx, my, zoom, cx, cy)
       if (Math.abs(lng) > 180 || Math.abs(lat) > 85) return
       const { x, z } = lngLatToParcel(lng, lat)
@@ -480,6 +584,53 @@ export default function LandAtlasPage() {
               </>
             )}
           </div>
+
+          {/* Earth-mode search + travel */}
+          {viewMode === 'earth' && (
+            <div className="space-y-2">
+              <div className="text-[9px] font-mono text-gray-500 uppercase mt-3 flex items-center gap-1">
+                <Search className="w-3 h-3" /> FLY TO LOCATION
+              </div>
+              <div className="flex items-center gap-1">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && searchLocation()}
+                  placeholder="San Jose, California..."
+                  className="flex-1 bg-black/60 border border-white/10 rounded px-2 py-1.5 text-[10px] font-mono text-white outline-none focus:border-cyan-500/50"
+                />
+                <button
+                  onClick={searchLocation}
+                  disabled={searching}
+                  className="p-1.5 rounded bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/30 transition disabled:opacity-50"
+                >
+                  {searching ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plane className="w-3.5 h-3.5" />}
+                </button>
+              </div>
+              {searchResult && (
+                <div className="p-2 rounded bg-red-500/10 border border-red-500/20 space-y-1">
+                  <div className="text-[9px] font-mono text-red-400 flex items-center gap-1">
+                    <span>✈</span> ARRIVED
+                  </div>
+                  <div className="text-[10px] font-mono text-white leading-tight">{searchResult.name.split(',').slice(0, 2).join(',')}</div>
+                  <div className="text-[8px] font-mono text-gray-500">{searchResult.lat.toFixed(4)}°, {searchResult.lng.toFixed(4)}°</div>
+                  <div className="text-[8px] font-mono text-gray-600">
+                    Parcel: ({lngLatToParcel(searchResult.lng, searchResult.lat).x}, {lngLatToParcel(searchResult.lng, searchResult.lat).z})
+                  </div>
+                  <button
+                    onClick={() => setSearchResult(null)}
+                    className="text-[8px] font-mono text-gray-500 hover:text-white underline"
+                  >
+                    clear pin
+                  </button>
+                </div>
+              )}
+              <div className="text-[8px] font-mono text-gray-600">
+                Powered by OpenStreetMap Nominatim · free · no API key
+              </div>
+            </div>
+          )}
 
           {/* Earth-mode landmarks list */}
           {viewMode === 'earth' && (
