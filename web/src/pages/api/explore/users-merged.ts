@@ -98,6 +98,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           favoriteGenres: 1,
           createdAt: 1,
           badges: 1,
+          nodeverseCharacter: 1,
         },
       }
     )
@@ -114,6 +115,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       favoriteGenres: p.favoriteGenres || [],
       createdAt: p.createdAt ? new Date(p.createdAt).toISOString() : new Date().toISOString(),
       badges: p.badges || [],
+      nodeverseCharacter: p.nodeverseCharacter || null,
       source: 'atlas',
     }))
 

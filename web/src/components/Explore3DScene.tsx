@@ -30,6 +30,7 @@ interface Resident {
   userHandle?: string
   profilePicture?: string
   position?: { x: number; z: number }
+  nodeverseCharacter?: CharacterConfig | null
 }
 
 interface Explore3DSceneProps {
@@ -98,11 +99,13 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
     fetch('/api/explore/users-merged?limit=50')
       .then(r => r.json())
       .then(data => {
-        const users = (data.users || []).slice(0, 30).map((u: any, i: number) => ({
+        const source = data.nodes || data.users || []
+        const users = source.slice(0, 30).map((u: any, i: number) => ({
           id: u.id || u._id,
           displayName: u.displayName || u.userHandle || 'Resident',
           userHandle: u.userHandle,
           profilePicture: u.profilePicture,
+          nodeverseCharacter: u.nodeverseCharacter || null,
           // Spread residents in a circle pattern
           position: {
             x: Math.cos((i / 30) * Math.PI * 2) * (8 + (i % 3) * 4),
@@ -359,14 +362,90 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
 
     residents.forEach(r => {
       const group = new THREE.Group()
-      const geo = new THREE.CapsuleGeometry(0.4, 1, 4, 8)
-      const color = new THREE.Color().setHSL(Math.random(), 0.7, 0.5)
-      const mat = new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.2, metalness: 0.4, roughness: 0.4 })
-      const mesh = new THREE.Mesh(geo, mat)
-      mesh.position.y = 1
-      mesh.castShadow = true
-      ;(mesh as any).userData = { resident: r }
-      group.add(mesh)
+
+      // Full character: use resident's saved nodeverseCharacter if present,
+      // else fall back to a deterministic capsule (stable color per user via id hash).
+      const ch = r.nodeverseCharacter
+      const bodyColor = ch?.bodyColor || (() => {
+        // Deterministic color from user id so same user gets same fallback look
+        let h = 0
+        for (let i = 0; i < r.id.length; i++) h = (h * 31 + r.id.charCodeAt(i)) >>> 0
+        return `hsl(${h % 360}, 70%, 55%)`
+      })()
+      const glowColor = ch?.glowColor || bodyColor
+      const glowIntensity = ch?.glowIntensity ?? 0.3
+      const height = ch?.height ?? 1.0
+      const headShape = ch?.headShape || 'capsule'
+
+      // Body capsule (scaled by height)
+      const bodyMat = new THREE.MeshStandardMaterial({
+        color: new THREE.Color(bodyColor),
+        emissive: new THREE.Color(glowColor),
+        emissiveIntensity: glowIntensity * 0.4,
+        metalness: 0.4,
+        roughness: 0.5,
+      })
+      const bodyGeo = new THREE.CapsuleGeometry(0.35, 0.9 * height, 4, 12)
+      const body = new THREE.Mesh(bodyGeo, bodyMat)
+      body.position.y = 0.8 + (height - 1) * 0.4
+      body.castShadow = true
+      ;(body as any).userData = { resident: r }
+      group.add(body)
+
+      // Head with optional skin tone
+      let headGeo: THREE.BufferGeometry
+      switch (headShape) {
+        case 'sphere': headGeo = new THREE.SphereGeometry(0.28, 16, 16); break
+        case 'cube': headGeo = new THREE.BoxGeometry(0.42, 0.42, 0.42); break
+        case 'cone': headGeo = new THREE.ConeGeometry(0.28, 0.5, 12); break
+        case 'capsule':
+        default: headGeo = new THREE.CapsuleGeometry(0.25, 0.2, 8, 16); break
+      }
+      const head = new THREE.Mesh(headGeo, buildHeadMaterial(ch?.face?.skinTone, bodyColor, glowColor, glowIntensity))
+      head.position.y = 1.5 + (height - 1) * 1
+      head.castShadow = true
+      ;(head as any).userData = { resident: r }
+      group.add(head)
+
+      // Face features (eyes, mouth, beard, paint) — identical to local player
+      group.add(buildFaceGroup(ch?.face, head.position.y))
+
+      // Outfit (hat, sunglasses, hoodie, pants, shoes)
+      group.add(buildOutfitGroup(ch?.outfit, ch?.outfitColors, computeAgentAnchors(height)))
+
+      // Accessory for parity with local player (crown/halo/antenna/visor)
+      if (ch?.accessory && ch.accessory !== 'none') {
+        const accMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, emissive: 0xfacc15, emissiveIntensity: 0.6, metalness: 0.9, roughness: 0.1 })
+        let accMesh: THREE.Mesh | null = null
+        const headTopY = head.position.y + 0.22
+        switch (ch.accessory) {
+          case 'crown': {
+            accMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.24, 0.12, 8, 1, true), accMat)
+            accMesh.position.y = headTopY + 0.06
+            break
+          }
+          case 'halo': {
+            accMesh = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.03, 8, 24), accMat)
+            accMesh.rotation.x = Math.PI / 2
+            accMesh.position.y = headTopY + 0.12
+            break
+          }
+          case 'antenna': {
+            accMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 0.35, 8), accMat)
+            accMesh.position.y = headTopY + 0.17
+            break
+          }
+          case 'visor': {
+            accMesh = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.08, 0.04), accMat)
+            accMesh.position.set(0, head.position.y + 0.04, 0.22)
+            break
+          }
+        }
+        if (accMesh) { accMesh.castShadow = true; group.add(accMesh) }
+      }
+
+      // Keep top-level ref for picking fallback
+      ;(group as any).userData = { resident: r }
 
       // Label
       const lblCanvas = document.createElement('canvas')
@@ -384,9 +463,9 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
       lblSprite.position.y = 2.2
       group.add(lblSprite)
 
-      // Portal ring under each resident
+      // Portal ring under each resident (tinted to body color)
       const ringGeo = new THREE.RingGeometry(0.7, 0.9, 32)
-      const ringMat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.4, side: THREE.DoubleSide })
+      const ringMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(bodyColor), transparent: true, opacity: 0.4, side: THREE.DoubleSide })
       const ring = new THREE.Mesh(ringGeo, ringMat)
       ring.rotation.x = -Math.PI / 2
       ring.position.y = 0.02
