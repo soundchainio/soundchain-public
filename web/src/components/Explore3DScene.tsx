@@ -53,6 +53,9 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
   const [purchasing, setPurchasing] = useState(false)
   // Player position state for mini-map
   const [playerPos, setPlayerPos] = useState({ x: 0, z: 0 })
+  // Mobile action refs — buttons toggle these, animate loop reads them
+  const runRef = useRef(false)
+  const jumpRef = useRef(false)
   const fetchLand = useCallback(() => {
     fetch('/api/nodeverse/squares')
       .then(r => r.json())
@@ -417,22 +420,12 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
     window.addEventListener('keydown', onKeyDown)
     window.addEventListener('keyup', onKeyUp)
 
-    // ─── Mouse / Touch — click resident to portal ────────────
-    const onClick = (event: MouseEvent | TouchEvent) => {
+    // ─── Click resident to portal (shared by mouse + tap) ────
+    const tryPortal = (clientX: number, clientY: number) => {
       const rect = renderer.domElement.getBoundingClientRect()
-      let clientX: number, clientY: number
-      if ('touches' in event) {
-        if (!event.touches[0]) return
-        clientX = event.touches[0].clientX
-        clientY = event.touches[0].clientY
-      } else {
-        clientX = event.clientX
-        clientY = event.clientY
-      }
       mouse.x = ((clientX - rect.left) / rect.width) * 2 - 1
       mouse.y = -((clientY - rect.top) / rect.height) * 2 + 1
       raycaster.setFromCamera(mouse, camera)
-      // First: residents/galleries
       const residentHits = raycaster.intersectObjects(residentMeshes.map(rm => rm.group), true)
       if (residentHits.length > 0) {
         const hit = residentHits[0].object
@@ -444,14 +437,61 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
           } else {
             router.push(`/dex/users/${data.userHandle || data.id}`)
           }
-          return
         }
       }
-      // Land purchases happen via mini-map / Land Atlas only (not by tapping floor).
-      // This prevents accidental purchase modals when walking around.
+      // Land purchases happen via mini-map / Land Atlas only.
     }
+    const onClick = (event: MouseEvent) => tryPortal(event.clientX, event.clientY)
     renderer.domElement.addEventListener('click', onClick)
-    renderer.domElement.addEventListener('touchend', onClick as any)
+
+    // ─── Touch joystick — drag anywhere to walk, tap to portal ─
+    // Mobile Chrome has no keyboard, so canvas drag drives movement.
+    // touchVec is consumed each frame in animate(); range -1..1.
+    const touchVec = { x: 0, z: 0 }
+    let touchStart: { x: number; y: number; t: number } | null = null
+    const TAP_PX = 10        // drag distance below this = tap
+    const TAP_MS = 250       // duration below this = tap
+    const JOY_RADIUS = 60    // px drag for full-speed walk
+
+    const onTouchStart = (e: TouchEvent) => {
+      const t = e.touches[0]
+      if (!t) return
+      touchStart = { x: t.clientX, y: t.clientY, t: performance.now() }
+      touchVec.x = 0
+      touchVec.z = 0
+    }
+    const onTouchMove = (e: TouchEvent) => {
+      if (!touchStart) return
+      const t = e.touches[0]
+      if (!t) return
+      const dx = t.clientX - touchStart.x
+      const dy = t.clientY - touchStart.y
+      if (Math.hypot(dx, dy) > TAP_PX) {
+        // Past tap threshold → joystick mode. Block page scroll.
+        if (e.cancelable) e.preventDefault()
+        touchVec.x = Math.max(-1, Math.min(1, dx / JOY_RADIUS))
+        touchVec.z = Math.max(-1, Math.min(1, dy / JOY_RADIUS))
+      }
+    }
+    const onTouchEnd = (e: TouchEvent) => {
+      const start = touchStart
+      touchStart = null
+      touchVec.x = 0
+      touchVec.z = 0
+      if (!start) return
+      const t = e.changedTouches[0]
+      if (!t) return
+      const dx = t.clientX - start.x
+      const dy = t.clientY - start.y
+      const dt = performance.now() - start.t
+      if (Math.hypot(dx, dy) < TAP_PX && dt < TAP_MS) {
+        tryPortal(t.clientX, t.clientY)
+      }
+    }
+    renderer.domElement.addEventListener('touchstart', onTouchStart, { passive: true })
+    renderer.domElement.addEventListener('touchmove', onTouchMove, { passive: false })
+    renderer.domElement.addEventListener('touchend', onTouchEnd)
+    renderer.domElement.addEventListener('touchcancel', onTouchEnd)
 
     // Hover detection
     const onMouseMove = (event: MouseEvent) => {
@@ -491,6 +531,10 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
     let fpsLastUpdate = lastFrame
     let rafId = 0
     const SPEED = 0.15
+    const RUN_MULT = 2.2
+    const GRAVITY = 22       // units/sec^2
+    const JUMP_FORCE = 8.5   // initial upward velocity
+    let vy = 0               // vertical velocity (jump physics)
 
     const animate = () => {
       rafId = requestAnimationFrame(animate)
@@ -512,17 +556,33 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
         fpsLastUpdate = now
       }
 
-      // Movement
+      // Movement (keyboard + touch joystick)
       const forward = (keys['w'] || keys['arrowup']) ? 1 : 0
       const back = (keys['s'] || keys['arrowdown']) ? 1 : 0
       const left = (keys['a'] || keys['arrowleft']) ? 1 : 0
       const right = (keys['d'] || keys['arrowright']) ? 1 : 0
-      playerGroup.position.z -= (forward - back) * SPEED
-      playerGroup.position.x += (right - left) * SPEED
-      // Rotate player to face direction
-      if (forward || back || left || right) {
-        const angle = Math.atan2(right - left, -(forward - back))
-        playerGroup.rotation.y = angle
+      // Sprint: Shift on desktop, mobile RUN button, or joystick at near-full extent
+      const touchMag = Math.hypot(touchVec.x, touchVec.z)
+      const isRunning = !!keys['shift'] || runRef.current || touchMag > 0.95
+      const speed = SPEED * (isRunning ? RUN_MULT : 1)
+      const dx = (right - left) + touchVec.x
+      const dz = -(forward - back) + touchVec.z
+      playerGroup.position.x += dx * speed
+      playerGroup.position.z += dz * speed
+      if (dx !== 0 || dz !== 0) {
+        playerGroup.rotation.y = Math.atan2(dx, dz)
+      }
+      // Jump (Space / mobile JUMP button) — only when grounded
+      const grounded = playerGroup.position.y <= 0.001 && vy <= 0
+      if ((keys[' '] || jumpRef.current) && grounded) {
+        vy = JUMP_FORCE
+        jumpRef.current = false
+      }
+      vy -= GRAVITY * dt
+      playerGroup.position.y += vy * dt
+      if (playerGroup.position.y < 0) {
+        playerGroup.position.y = 0
+        vy = 0
       }
 
       // Camera follow (third-person)
@@ -553,7 +613,10 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
       window.removeEventListener('keyup', onKeyUp)
       window.removeEventListener('resize', onResize)
       renderer.domElement.removeEventListener('click', onClick)
-      renderer.domElement.removeEventListener('touchend', onClick as any)
+      renderer.domElement.removeEventListener('touchstart', onTouchStart)
+      renderer.domElement.removeEventListener('touchmove', onTouchMove)
+      renderer.domElement.removeEventListener('touchend', onTouchEnd)
+      renderer.domElement.removeEventListener('touchcancel', onTouchEnd)
       renderer.domElement.removeEventListener('mousemove', onMouseMove)
       try { container.removeChild(renderer.domElement) } catch {}
       renderer.dispose()
@@ -605,8 +668,19 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
                 <span className="px-1.5 py-0.5 rounded bg-white/10 border border-white/20 text-cyan-400">↑ ↓ ← →</span>
                 <span>walk</span>
               </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="px-1.5 py-0.5 rounded bg-white/10 border border-white/20 text-cyan-400">SHIFT</span>
+                <span>run</span>
+                <span className="text-gray-500">·</span>
+                <span className="px-1.5 py-0.5 rounded bg-white/10 border border-white/20 text-cyan-400">SPACE</span>
+                <span>jump</span>
+              </div>
               <div className="flex items-start gap-2">
-                <span className="px-1.5 py-0.5 rounded bg-white/10 border border-white/20 text-cyan-400 flex-shrink-0">CLICK</span>
+                <span className="px-1.5 py-0.5 rounded bg-white/10 border border-white/20 text-cyan-400 flex-shrink-0">DRAG</span>
+                <span>(mobile) hold &amp; drag to walk · joystick to edge = run</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="px-1.5 py-0.5 rounded bg-white/10 border border-white/20 text-cyan-400 flex-shrink-0">TAP</span>
                 <span>resident → PORTAL into their grid</span>
               </div>
               <div className="flex items-start gap-2">
@@ -725,15 +799,42 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
         onClickFullMap={() => router.push('/dex/land')}
       />
 
-      {/* Customize Avatar button — bottom right (NBA 2K style) */}
-      <button
-        onClick={() => setShowDesigner(true)}
-        className="absolute bottom-3 right-3 flex items-center gap-1.5 px-3 py-2 rounded-lg bg-purple-500/20 backdrop-blur border border-purple-500/40 hover:bg-purple-500/30 hover:border-purple-400 transition text-[10px] font-mono font-bold text-purple-300 z-20"
-        title="Customize your character"
-      >
-        <User className="w-3.5 h-3.5" />
-        CUSTOMIZE
-      </button>
+      {/* Mobile action buttons — RUN / JUMP / CUSTOMIZE (bottom right stack) */}
+      <div className="absolute bottom-3 right-3 flex items-end gap-2 z-20">
+        {/* RUN — hold to sprint */}
+        <button
+          onTouchStart={() => { runRef.current = true }}
+          onTouchEnd={() => { runRef.current = false }}
+          onTouchCancel={() => { runRef.current = false }}
+          onMouseDown={() => { runRef.current = true }}
+          onMouseUp={() => { runRef.current = false }}
+          onMouseLeave={() => { runRef.current = false }}
+          className="md:hidden w-14 h-14 rounded-full bg-cyan-500/20 backdrop-blur border border-cyan-500/40 active:bg-cyan-500/40 active:border-cyan-300 transition text-[10px] font-mono font-bold text-cyan-300 flex items-center justify-center select-none"
+          style={{ touchAction: 'none' }}
+          title="Hold to run"
+        >
+          RUN
+        </button>
+        {/* JUMP — tap to jump */}
+        <button
+          onTouchStart={(e) => { e.preventDefault(); jumpRef.current = true }}
+          onClick={() => { jumpRef.current = true }}
+          className="md:hidden w-14 h-14 rounded-full bg-yellow-500/20 backdrop-blur border border-yellow-500/40 active:bg-yellow-500/40 active:border-yellow-300 transition text-[10px] font-mono font-bold text-yellow-300 flex items-center justify-center select-none"
+          style={{ touchAction: 'none' }}
+          title="Jump"
+        >
+          JUMP
+        </button>
+        {/* CUSTOMIZE — desktop + mobile */}
+        <button
+          onClick={() => setShowDesigner(true)}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-purple-500/20 backdrop-blur border border-purple-500/40 hover:bg-purple-500/30 hover:border-purple-400 transition text-[10px] font-mono font-bold text-purple-300"
+          title="Customize your character"
+        >
+          <User className="w-3.5 h-3.5" />
+          CUSTOMIZE
+        </button>
+      </div>
 
       {/* Character Designer Modal */}
       <CharacterDesigner
