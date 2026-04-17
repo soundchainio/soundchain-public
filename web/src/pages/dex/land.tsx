@@ -65,6 +65,7 @@ export default function LandAtlasPage() {
   const [purchaseModal, setPurchaseModal] = useState<{ x: number; z: number; tier: string; price: number; landmark?: typeof FAMOUS_LANDMARKS[number] } | null>(null)
   const [tierFilter, setTierFilter] = useState<string>('')
   const [purchasing, setPurchasing] = useState(false)
+  const [receipt, setReceipt] = useState<{ x: number; z: number; tier: string; price: number; fee: number; owner: string; timestamp: string; landmark?: string } | null>(null)
   const [viewMode, setViewMode] = useState<ViewMode>('grid')
   const [worldGeo, setWorldGeo] = useState<FeatureCollection | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
@@ -482,6 +483,18 @@ export default function LandAtlasPage() {
         }),
       })
       if (res.ok) {
+        const data = await res.json()
+        const fee = Math.ceil(purchaseModal.price * 0.0005)
+        setReceipt({
+          x: purchaseModal.x,
+          z: purchaseModal.z,
+          tier: purchaseModal.landmark ? 'S (landmark)' : purchaseModal.tier,
+          price: purchaseModal.price,
+          fee,
+          owner: me.handle || 'anon',
+          timestamp: new Date().toISOString(),
+          landmark: purchaseModal.landmark?.name,
+        })
         setPurchaseModal(null)
         fetchLand()
       } else {
@@ -813,6 +826,83 @@ export default function LandAtlasPage() {
                   {purchasing ? 'CLAIMING...' : <><Lock className="w-3 h-3" /> CLAIM FOR {purchaseModal.price} OGUN</>}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── PURCHASE RECEIPT — ledger proof of transaction ─── */}
+      {receipt && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setReceipt(null)}>
+          <div className="w-full max-w-md bg-[#0a0f1f] border border-green-500/30 rounded-xl shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-4 py-3 border-b border-green-500/20 bg-green-500/5">
+              <div className="flex items-center gap-2">
+                <span className="text-base">✅</span>
+                <span className="text-xs font-mono font-bold text-green-400">PARCEL CLAIMED — TRANSACTION RECEIPT</span>
+              </div>
+              <button onClick={() => setReceipt(null)} className="p-1 hover:bg-white/10 rounded text-gray-400"><X className="w-4 h-4" /></button>
+            </div>
+            <div className="p-4 space-y-3">
+              {receipt.landmark && (
+                <div className="text-center py-2 px-3 rounded bg-yellow-500/10 border border-yellow-500/20">
+                  <div className="text-[10px] font-mono text-yellow-400">🌟 PREMIUM LANDMARK</div>
+                  <div className="text-sm font-mono text-white">{receipt.landmark}</div>
+                </div>
+              )}
+              <div className="text-center py-2">
+                <div className="text-[9px] font-mono text-gray-500 uppercase">Parcel Coordinates</div>
+                <div className="text-xl font-mono font-bold text-cyan-400">({receipt.x}, {receipt.z})</div>
+              </div>
+
+              {/* Ledger details */}
+              <div className="space-y-2 p-3 rounded bg-black/60 border border-white/10">
+                <div className="text-[9px] font-mono text-gray-500 uppercase border-b border-white/5 pb-1 mb-2">LEDGER PROOF</div>
+                <div className="flex justify-between text-[10px] font-mono">
+                  <span className="text-gray-400">Owner</span>
+                  <span className="text-cyan-400">@{receipt.owner}</span>
+                </div>
+                <div className="flex justify-between text-[10px] font-mono">
+                  <span className="text-gray-400">Tier</span>
+                  <span className="text-yellow-400">{receipt.tier.toUpperCase()}</span>
+                </div>
+                <div className="flex justify-between text-[10px] font-mono">
+                  <span className="text-gray-400">Price</span>
+                  <span className="text-yellow-400">{receipt.price} OGUN</span>
+                </div>
+                <div className="flex justify-between text-[10px] font-mono">
+                  <span className="text-gray-400">Platform Fee (0.05%)</span>
+                  <span className="text-yellow-400">{receipt.fee} OGUN</span>
+                </div>
+                <div className="flex justify-between text-[10px] font-mono">
+                  <span className="text-gray-400">Treasury</span>
+                  <span className="text-gray-500 text-[8px]">0x519bed3f...e703b</span>
+                </div>
+                <div className="flex justify-between text-[10px] font-mono">
+                  <span className="text-gray-400">Timestamp</span>
+                  <span className="text-gray-300">{new Date(receipt.timestamp).toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-[10px] font-mono">
+                  <span className="text-gray-400">Status</span>
+                  <span className="text-green-400">✅ CONFIRMED (off-chain)</span>
+                </div>
+                <div className="flex justify-between text-[10px] font-mono">
+                  <span className="text-gray-400">On-chain TX</span>
+                  <span className="text-gray-500 italic text-[8px]">pending — Phase 2: NFT contract mint</span>
+                </div>
+              </div>
+
+              <div className="text-[8px] font-mono text-gray-600 leading-relaxed border-t border-white/5 pt-2">
+                This parcel is recorded in the SoundChain Nodeverse ledger (MongoDB). On-chain
+                ownership via NFT contract is coming in the next phase. The 0.05% platform fee
+                ({receipt.fee} OGUN) goes to the SoundChain Treasury Gnosis Safe for ecosystem development.
+              </div>
+
+              <button
+                onClick={() => setReceipt(null)}
+                className="w-full py-2 rounded text-[10px] font-mono font-bold bg-green-500/20 text-green-400 border border-green-500/30 hover:bg-green-500/30 transition"
+              >
+                CLOSE RECEIPT
+              </button>
             </div>
           </div>
         </div>
