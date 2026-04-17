@@ -16,7 +16,17 @@ import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { X, Save, RefreshCw, Shuffle, User, Smile } from 'lucide-react'
 import { OPEN_SOURCE_AVATARS, AVATAR_CATEGORIES, filterAvatarsByCategory, AvatarCategory } from 'lib/nodeverse/openSourceAvatars'
-import type { Outfit, OutfitColors } from 'lib/nodeverse/wearables'
+import { WEARABLE_SLOTS, wearablesForSlot, getWearable, type Outfit, type OutfitColors, type WearableSlot } from 'lib/nodeverse/wearables'
+import {
+  buildFaceGroup,
+  buildOutfitGroup,
+  buildHeadMaterial,
+  computeAgentAnchors,
+  DEFAULT_FACE,
+  type FaceConfig,
+} from 'lib/nodeverse/characterMesh'
+export { DEFAULT_FACE } from 'lib/nodeverse/characterMesh'
+export type { FaceConfig } from 'lib/nodeverse/characterMesh'
 
 export interface CharacterConfig {
   type: 'agent' | 'human' | 'opensource'  // visual class: pill / RPM GLB / curated CC0 GLB
@@ -37,29 +47,9 @@ export interface CharacterConfig {
   face?: FaceConfig         // close-up face designer: skin tone, eyes, mouth, beard, paint
 }
 
-// ─── Face Designer (NBA 2K close-up mode) ─────────────────────
-export interface FaceConfig {
-  skinTone?: string                                                        // hex override for head material
-  eyeColor?: string                                                        // hex
-  eyeStyle?: 'normal' | 'glow' | 'cyber' | 'narrow' | 'wide' | 'closed'
-  mouthStyle?: 'neutral' | 'smile' | 'frown' | 'smirk' | 'open'
-  mouthColor?: string                                                      // hex for lips
-  beard?: 'none' | 'stubble' | 'goatee' | 'full' | 'mustache'
-  beardColor?: string                                                      // hex for facial hair
-  facePaint?: 'none' | 'warrior' | 'cyber' | 'tribal' | 'tear' | 'scar'
-  paintColor?: string                                                      // hex for face paint
-}
-
-export const DEFAULT_FACE: FaceConfig = {
-  eyeColor: '#ffffff',
-  eyeStyle: 'normal',
-  mouthStyle: 'neutral',
-  mouthColor: '#ef4444',
-  beard: 'none',
-  beardColor: '#1a1a1a',
-  facePaint: 'none',
-  paintColor: '#22d3ee',
-}
+// FaceConfig + DEFAULT_FACE moved to lib/nodeverse/characterMesh.ts (shared
+// between CharacterDesigner and Explore3DScene). Re-exported above for
+// backward compat with any external imports.
 
 export const DEFAULT_CHARACTER: CharacterConfig = {
   type: 'agent',
@@ -92,6 +82,30 @@ export function saveCharacter(config: CharacterConfig) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(config))
     window.dispatchEvent(new CustomEvent('character-updated', { detail: config }))
   } catch {}
+  // Fire-and-forget Mongo sync — if logged in, server stores it on profile so
+  // other devices pick it up on next load. If 401 (guest), silently no-op.
+  try {
+    fetch('/api/profile/character', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ character: config }),
+    }).catch(() => {})
+  } catch {}
+}
+
+// Fetch the authoritative saved character from the server (logged-in users).
+// Falls back to null for guests / 401. Callers should localStorage-cache it.
+export async function loadRemoteCharacter(): Promise<CharacterConfig | null> {
+  if (typeof window === 'undefined') return null
+  try {
+    const res = await fetch('/api/profile/character', { credentials: 'include' })
+    if (!res.ok) return null
+    const data = await res.json()
+    return (data?.character as CharacterConfig) || null
+  } catch {
+    return null
+  }
 }
 
 // Preset color palette (one-tap themes)
@@ -121,7 +135,25 @@ export function CharacterDesigner({ open, onClose, initialName }: CharacterDesig
   })
   const previewRef = useRef<HTMLDivElement>(null)
   const [saved, setSaved] = useState(false)
-  const [showFace, setShowFace] = useState(false)  // close-up face designer mode (NBA 2K style)
+  const [activePanel, setActivePanel] = useState<'body' | 'face' | 'fit'>('body')
+  const showFace = activePanel === 'face'
+  const showFit = activePanel === 'fit'
+
+  // On open, pull the authoritative character from Mongo (if logged in).
+  // Merges into local state + localStorage so the designer opens with the
+  // latest look, regardless of which device last saved.
+  useEffect(() => {
+    if (!open) return
+    let cancelled = false
+    loadRemoteCharacter().then(remote => {
+      if (cancelled || !remote) return
+      const merged = { ...DEFAULT_CHARACTER, ...remote, name: remote.name || initialName || '' }
+      setConfig(merged)
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(merged)) } catch {}
+      window.dispatchEvent(new CustomEvent('character-updated', { detail: merged }))
+    })
+    return () => { cancelled = true }
+  }, [open, initialName])
 
   // ─── Ready Player Me message handler ─────────────────────
   // Listens for avatar export from RPM iframe
@@ -229,186 +261,16 @@ export function CharacterDesigner({ open, onClose, initialName }: CharacterDesig
       case 'capsule':
       default: headGeo = new THREE.CapsuleGeometry(0.25, 0.2, 8, 16); break
     }
-    const headMatOverride = config.face?.skinTone
-      ? new THREE.MeshStandardMaterial({ color: new THREE.Color(config.face.skinTone), emissive: glowColorObj, emissiveIntensity: config.glowIntensity * 0.5, metalness: 0.2, roughness: 0.6 })
-      : bodyMat.clone()
-    const head = new THREE.Mesh(headGeo, headMatOverride)
+    const head = new THREE.Mesh(headGeo, buildHeadMaterial(config.face?.skinTone, config.bodyColor, config.glowColor, config.glowIntensity))
     head.position.y = 1.5 + (config.height - 1) * 1
     head.castShadow = true
     charGroup.add(head)
 
-    // ─── Face features (close-up designer + always-visible) ───
-    const face = { ...DEFAULT_FACE, ...(config.face || {}) }
-    const headY = head.position.y
-    const faceZ = 0.28  // push face features slightly forward of head center
-    const faceGroup = new THREE.Group()
-    faceGroup.position.copy(head.position)
-    charGroup.add(faceGroup)
+    // Face features — shared builder so designer + world look identical
+    charGroup.add(buildFaceGroup(config.face, head.position.y))
 
-    // Eyes
-    const eyeColor = new THREE.Color(face.eyeColor || '#ffffff')
-    const eyeMat = face.eyeStyle === 'glow' || face.eyeStyle === 'cyber'
-      ? new THREE.MeshStandardMaterial({ color: eyeColor, emissive: eyeColor, emissiveIntensity: 1.2, metalness: 0.9, roughness: 0.1 })
-      : new THREE.MeshStandardMaterial({ color: eyeColor, metalness: 0.5, roughness: 0.3 })
-    if (face.eyeStyle !== 'closed') {
-      const eyeSep = 0.11
-      const eyeY = 0.05
-      if (face.eyeStyle === 'cyber') {
-        // horizontal visor bar
-        const bar = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.04, 0.02), eyeMat)
-        bar.position.set(0, eyeY, faceZ)
-        faceGroup.add(bar)
-      } else if (face.eyeStyle === 'narrow') {
-        ;[-1, 1].forEach(side => {
-          const eye = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.02, 0.02), eyeMat)
-          eye.position.set(side * eyeSep, eyeY, faceZ)
-          faceGroup.add(eye)
-        })
-      } else {
-        const eyeRad = face.eyeStyle === 'wide' ? 0.055 : 0.04
-        ;[-1, 1].forEach(side => {
-          const eyeWhite = new THREE.Mesh(new THREE.SphereGeometry(eyeRad, 12, 12), eyeMat)
-          eyeWhite.position.set(side * eyeSep, eyeY, faceZ)
-          faceGroup.add(eyeWhite)
-          // pupil (always dark)
-          const pupil = new THREE.Mesh(new THREE.SphereGeometry(eyeRad * 0.5, 12, 12), new THREE.MeshStandardMaterial({ color: 0x000000 }))
-          pupil.position.set(side * eyeSep, eyeY, faceZ + eyeRad * 0.6)
-          faceGroup.add(pupil)
-        })
-      }
-    }
-
-    // Mouth
-    const mouthMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(face.mouthColor || '#ef4444'), metalness: 0.2, roughness: 0.7 })
-    const mouthY = -0.1
-    switch (face.mouthStyle) {
-      case 'smile': {
-        const mouth = new THREE.Mesh(new THREE.TorusGeometry(0.08, 0.012, 6, 16, Math.PI), mouthMat)
-        mouth.position.set(0, mouthY, faceZ)
-        mouth.rotation.z = Math.PI
-        faceGroup.add(mouth)
-        break
-      }
-      case 'frown': {
-        const mouth = new THREE.Mesh(new THREE.TorusGeometry(0.08, 0.012, 6, 16, Math.PI), mouthMat)
-        mouth.position.set(0, mouthY - 0.02, faceZ)
-        faceGroup.add(mouth)
-        break
-      }
-      case 'smirk': {
-        const mouth = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.015, 0.02), mouthMat)
-        mouth.position.set(0.02, mouthY, faceZ)
-        mouth.rotation.z = 0.2
-        faceGroup.add(mouth)
-        break
-      }
-      case 'open': {
-        const mouth = new THREE.Mesh(new THREE.SphereGeometry(0.05, 12, 12), new THREE.MeshStandardMaterial({ color: 0x1a0000 }))
-        mouth.position.set(0, mouthY, faceZ)
-        faceGroup.add(mouth)
-        break
-      }
-      case 'neutral':
-      default: {
-        const mouth = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.015, 0.02), mouthMat)
-        mouth.position.set(0, mouthY, faceZ)
-        faceGroup.add(mouth)
-      }
-    }
-
-    // Beard / facial hair
-    const beardMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(face.beardColor || '#1a1a1a'), metalness: 0.1, roughness: 0.95 })
-    switch (face.beard) {
-      case 'stubble': {
-        // scattered dots across jaw
-        for (let i = 0; i < 30; i++) {
-          const dot = new THREE.Mesh(new THREE.SphereGeometry(0.006, 4, 4), beardMat)
-          const angle = (Math.random() - 0.5) * Math.PI
-          const radius = 0.22 + Math.random() * 0.04
-          dot.position.set(Math.sin(angle) * radius, mouthY + (Math.random() - 0.2) * 0.1, Math.cos(angle) * radius * 0.9)
-          faceGroup.add(dot)
-        }
-        break
-      }
-      case 'goatee': {
-        const goatee = new THREE.Mesh(new THREE.SphereGeometry(0.06, 12, 12), beardMat)
-        goatee.scale.set(0.7, 1, 0.4)
-        goatee.position.set(0, mouthY - 0.09, faceZ - 0.02)
-        faceGroup.add(goatee)
-        break
-      }
-      case 'mustache': {
-        const mus = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.025, 0.03), beardMat)
-        mus.position.set(0, mouthY + 0.04, faceZ)
-        faceGroup.add(mus)
-        break
-      }
-      case 'full': {
-        const beard = new THREE.Mesh(
-          new THREE.SphereGeometry(0.24, 16, 12, 0, Math.PI * 2, Math.PI * 0.4, Math.PI * 0.5),
-          beardMat,
-        )
-        beard.position.set(0, -0.05, 0)
-        beard.scale.z = 0.75
-        faceGroup.add(beard)
-        break
-      }
-    }
-
-    // Face paint / markings
-    if (face.facePaint && face.facePaint !== 'none') {
-      const paintColor = new THREE.Color(face.paintColor || '#22d3ee')
-      const paintMat = new THREE.MeshStandardMaterial({ color: paintColor, emissive: paintColor, emissiveIntensity: 0.6, metalness: 0.3, roughness: 0.5, transparent: true, opacity: 0.9 })
-      switch (face.facePaint) {
-        case 'warrior': {
-          // two horizontal stripes across eyes
-          ;[-1, 1].forEach(side => {
-            const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.02, 0.01), paintMat)
-            stripe.position.set(side * 0.11, 0.05, faceZ + 0.005)
-            faceGroup.add(stripe)
-          })
-          break
-        }
-        case 'cyber': {
-          // vertical line under one eye
-          const line = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.08, 0.01), paintMat)
-          line.position.set(0.11, -0.03, faceZ + 0.005)
-          faceGroup.add(line)
-          // small cheek dot
-          const dot = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.02, 0.01), paintMat)
-          dot.position.set(-0.13, -0.04, faceZ + 0.005)
-          faceGroup.add(dot)
-          break
-        }
-        case 'tribal': {
-          // angular cheek markings
-          ;[-1, 1].forEach(side => {
-            for (let i = 0; i < 3; i++) {
-              const mark = new THREE.Mesh(new THREE.BoxGeometry(0.025, 0.008, 0.01), paintMat)
-              mark.position.set(side * (0.13 + i * 0.015), -0.02 - i * 0.02, faceZ + 0.005)
-              mark.rotation.z = side * 0.3
-              faceGroup.add(mark)
-            }
-          })
-          break
-        }
-        case 'tear': {
-          // single drop below eye
-          const tear = new THREE.Mesh(new THREE.SphereGeometry(0.01, 8, 8), paintMat)
-          tear.position.set(-0.11, -0.02, faceZ + 0.005)
-          faceGroup.add(tear)
-          break
-        }
-        case 'scar': {
-          const scarMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(face.paintColor || '#ef4444'), metalness: 0.1, roughness: 0.8 })
-          const scar = new THREE.Mesh(new THREE.BoxGeometry(0.015, 0.12, 0.008), scarMat)
-          scar.position.set(0.09, 0.02, faceZ + 0.003)
-          scar.rotation.z = 0.15
-          faceGroup.add(scar)
-          break
-        }
-      }
-    }
+    // Outfit — shared builder, iterates all equipped slots
+    charGroup.add(buildOutfitGroup(config.outfit, config.outfitColors, computeAgentAnchors(config.height)))
 
     // Accessory
     if (config.accessory !== 'none') {
@@ -644,21 +506,95 @@ export function CharacterDesigner({ open, onClose, initialName }: CharacterDesig
               />
             </div>
 
-            {/* BODY / FACE sub-tab — NBA 2K close-up mode */}
-            <div className="grid grid-cols-2 gap-1 border border-white/10 rounded p-0.5 bg-black/40">
+            {/* BODY / FACE / FIT sub-tab */}
+            <div className="grid grid-cols-3 gap-1 border border-white/10 rounded p-0.5 bg-black/40">
               <button
-                onClick={() => setShowFace(false)}
-                className={`flex items-center justify-center gap-1 px-2 py-1.5 rounded text-[10px] font-mono font-bold transition ${!showFace ? 'bg-cyan-500/20 text-cyan-400' : 'text-gray-500 hover:text-white'}`}
+                onClick={() => setActivePanel('body')}
+                className={`flex items-center justify-center gap-1 px-2 py-1.5 rounded text-[10px] font-mono font-bold transition ${activePanel === 'body' ? 'bg-cyan-500/20 text-cyan-400' : 'text-gray-500 hover:text-white'}`}
               >
                 <User className="w-3 h-3" /> BODY
               </button>
               <button
-                onClick={() => setShowFace(true)}
-                className={`flex items-center justify-center gap-1 px-2 py-1.5 rounded text-[10px] font-mono font-bold transition ${showFace ? 'bg-pink-500/20 text-pink-400' : 'text-gray-500 hover:text-white'}`}
+                onClick={() => setActivePanel('face')}
+                className={`flex items-center justify-center gap-1 px-2 py-1.5 rounded text-[10px] font-mono font-bold transition ${activePanel === 'face' ? 'bg-pink-500/20 text-pink-400' : 'text-gray-500 hover:text-white'}`}
               >
-                <Smile className="w-3 h-3" /> FACE <span className="opacity-50 text-[8px]">close-up</span>
+                <Smile className="w-3 h-3" /> FACE
+              </button>
+              <button
+                onClick={() => setActivePanel('fit')}
+                className={`flex items-center justify-center gap-1 px-2 py-1.5 rounded text-[10px] font-mono font-bold transition ${activePanel === 'fit' ? 'bg-purple-500/20 text-purple-400' : 'text-gray-500 hover:text-white'}`}
+              >
+                👕 FIT
               </button>
             </div>
+
+            {showFit && (() => {
+              const outfit = config.outfit || {}
+              const colors = config.outfitColors || {}
+              const equipItem = (slot: WearableSlot, id: string | null) => {
+                const next = { ...outfit }
+                if (id) next[slot] = id; else delete next[slot]
+                update({ outfit: next })
+              }
+              const setSlotColor = (slot: WearableSlot, color: string | undefined) => {
+                const next = { ...colors }
+                if (color) next[slot] = color; else delete next[slot]
+                update({ outfitColors: next })
+              }
+              return (
+                <div className="space-y-3">
+                  <p className="text-[9px] font-mono text-purple-300 bg-purple-500/5 border border-purple-500/10 rounded px-2 py-1.5">
+                    Hat · sunglasses · hoodie · pants · shoes. Mix it up — it all carries into Explore 3D.
+                  </p>
+                  {WEARABLE_SLOTS.map(slot => {
+                    const equippedId = outfit[slot]
+                    const equipped = getWearable(equippedId)
+                    return (
+                      <div key={slot} className="border border-white/10 rounded p-2 bg-white/[0.02]">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider">{slot}</span>
+                          {equipped && (
+                            <button onClick={() => equipItem(slot, null)} className="text-[8px] font-mono text-gray-500 hover:text-red-400">remove</button>
+                          )}
+                        </div>
+                        <div className="grid grid-cols-6 gap-1 mb-1">
+                          {wearablesForSlot(slot).map(w => (
+                            <button
+                              key={w.id}
+                              onClick={() => equipItem(slot, w.id)}
+                              className={`flex flex-col items-center p-1.5 rounded text-[8px] font-mono uppercase transition ${equippedId === w.id ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40 scale-105' : 'bg-black/40 text-gray-500 border border-white/5 hover:text-white'}`}
+                              title={w.name}
+                            >
+                              <span className="text-lg leading-none">{w.emoji}</span>
+                              <span className="truncate max-w-full mt-0.5">{w.name}</span>
+                            </button>
+                          ))}
+                        </div>
+                        {equipped && (
+                          <div className="flex items-center gap-2 flex-wrap">
+                            {['#1a1a1a', '#ffffff', '#22d3ee', '#a855f7', '#ec4899', '#22c55e', '#facc15', '#ef4444', '#3b82f6', equipped.defaultColor].map(c => (
+                              <button
+                                key={c}
+                                onClick={() => setSlotColor(slot, c)}
+                                className={`w-5 h-5 rounded-full border-2 transition ${colors[slot] === c ? 'border-white scale-110' : 'border-white/20 hover:border-white/40'}`}
+                                style={{ backgroundColor: c }}
+                              />
+                            ))}
+                            <input type="color" value={colors[slot] || equipped.defaultColor} onChange={e => setSlotColor(slot, e.target.value)} className="w-5 h-5 rounded cursor-pointer bg-transparent border border-white/10" />
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                  <button
+                    onClick={() => update({ outfit: {}, outfitColors: {} })}
+                    className="w-full py-1.5 rounded text-[9px] font-mono text-gray-400 hover:text-white border border-white/10 hover:border-purple-500/30 hover:bg-purple-500/5 transition"
+                  >
+                    Strip everything
+                  </button>
+                </div>
+              )
+            })()}
 
             {showFace && (() => {
               const face = { ...DEFAULT_FACE, ...(config.face || {}) }
@@ -769,7 +705,7 @@ export function CharacterDesigner({ open, onClose, initialName }: CharacterDesig
               )
             })()}
 
-            {!showFace && (<>
+            {activePanel === 'body' && (<>
             {/* Body Color */}
             <div>
               <label className="text-[9px] font-mono text-gray-500 uppercase tracking-wider mb-1 block">Body Color</label>
@@ -864,7 +800,7 @@ export function CharacterDesigner({ open, onClose, initialName }: CharacterDesig
                 ))}
               </div>
             </div>
-            </>)}{/* end !showFace body controls */}
+            </>)}{/* end body-panel controls */}
           </div>
         </div>
         )}{/* end agent mode */}

@@ -21,7 +21,8 @@ import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { useRouter } from 'next/router'
 import { User, MapPin, Coins, X, Lock, Check } from 'lucide-react'
-import { CharacterDesigner, getStoredCharacter, type CharacterConfig } from './CharacterDesigner'
+import { CharacterDesigner, getStoredCharacter, loadRemoteCharacter, saveCharacter, type CharacterConfig } from './CharacterDesigner'
+import { buildFaceGroup, buildOutfitGroup, buildHeadMaterial, computeAgentAnchors } from 'lib/nodeverse/characterMesh'
 
 interface Resident {
   id: string
@@ -71,6 +72,19 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
     const handler = (e: any) => setCharacter(e.detail)
     window.addEventListener('character-updated', handler)
     return () => window.removeEventListener('character-updated', handler)
+  }, [])
+
+  // On mount, if logged in, pull authoritative character from Mongo so
+  // switching devices shows the same look. Guests (401) no-op and keep
+  // whatever localStorage had. Remote wins when present.
+  useEffect(() => {
+    let cancelled = false
+    loadRemoteCharacter().then(remote => {
+      if (cancelled || !remote) return
+      setCharacter(prev => ({ ...prev, ...remote }))
+      try { saveCharacter({ ...remote }) } catch {}
+    })
+    return () => { cancelled = true }
   }, [])
   // Auto-hide info card after 8 seconds (user can re-open via i pill)
   useEffect(() => {
@@ -285,10 +299,16 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
         case 'capsule':
         default: headGeo = new THREE.CapsuleGeometry(0.25, 0.2, 8, 16); break
       }
-      const head = new THREE.Mesh(headGeo, playerMat.clone())
+      const head = new THREE.Mesh(headGeo, buildHeadMaterial(character.face?.skinTone, character.bodyColor, character.glowColor, character.glowIntensity))
       head.position.y = 1.5 + (character.height - 1) * 1
       head.castShadow = true
       playerGroup.add(head)
+
+      // Face features follow the player into the world
+      playerGroup.add(buildFaceGroup(character.face, head.position.y))
+
+      // Outfit — hat, sunglasses, hoodie, pants, shoes all render here
+      playerGroup.add(buildOutfitGroup(character.outfit, character.outfitColors, computeAgentAnchors(character.height)))
 
       if (character.accessory !== 'none') {
         const accMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, emissive: 0xfacc15, emissiveIntensity: 0.6, metalness: 0.9, roughness: 0.1 })
