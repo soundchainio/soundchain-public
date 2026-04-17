@@ -34,6 +34,7 @@ import {
   type PlacedBuildable,
 } from 'lib/nodeverse/buildables'
 import FrameBindModal from './FrameBindModal'
+import GameHostModal, { type GameSession } from './GameHostModal'
 
 interface Resident {
   id: string
@@ -79,6 +80,8 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
   const [deleteCandidate, setDeleteCandidate] = useState<PlacedBuildable | null>(null)
   const [bindFrameCandidate, setBindFrameCandidate] = useState<PlacedBuildable | null>(null)
   const [drivingVehicle, setDrivingVehicle] = useState<PlacedBuildable | null>(null)
+  const [gameSessions, setGameSessions] = useState<GameSession[]>([])
+  const [gameModalOpen, setGameModalOpen] = useState(false)
   // Refs used by raycast handlers so they can read latest state without re-subscribing.
   const editModeRef = useRef(editMode); editModeRef.current = editMode
   const pendingRef = useRef<BuildableItem | null>(pendingBuildable); pendingRef.current = pendingBuildable
@@ -105,6 +108,19 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
       .catch(() => {})
   }, [])
   useEffect(() => { fetchBuildables() }, [fetchBuildables])
+
+  // Phase 5 — live game sessions (refresh every 30s so beacons + the HUD pill stay current).
+  const fetchGameSessions = useCallback(() => {
+    fetch('/api/nodeverse/game-sessions')
+      .then(r => r.json())
+      .then(data => setGameSessions(data.sessions || []))
+      .catch(() => {})
+  }, [])
+  useEffect(() => {
+    fetchGameSessions()
+    const t = setInterval(fetchGameSessions, 30000)
+    return () => clearInterval(t)
+  }, [fetchGameSessions])
 
   // Place a buildable at a tapped world position. Caller has already verified
   // the tap hit the ground (raycast). parcelX/Z derive from world position.
@@ -1095,6 +1111,35 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
         🔨 {editMode ? 'BUILDING' : 'BUILD'}
       </button>
 
+      {/* PHASE 5 — game host / spectate button. Context-aware:
+          - If a session exists at the player's current parcel → SPECTATE (pink pulse)
+          - If it's your parcel and no session → HOST GAME
+          - Otherwise → subtle tooltip ("walk onto a live parcel") */}
+      {(() => {
+        const curParcelX = Math.round(playerPos.x / 16)
+        const curParcelZ = Math.round(playerPos.z / 16)
+        const sessionHere = gameSessions.find(s => s.parcelX === curParcelX && s.parcelZ === curParcelZ) || null
+        const parcelIsMine = ownedSquares.some(sq => sq.x === curParcelX && sq.z === curParcelZ && sq.ownerHandle === myHandle)
+        const canInteract = !!sessionHere || parcelIsMine
+        const liveCount = gameSessions.length
+        return (
+          <button
+            onClick={() => setGameModalOpen(true)}
+            disabled={!canInteract}
+            title={sessionHere ? 'Spectate live session' : parcelIsMine ? 'Host a game session on your parcel' : 'Walk onto your parcel or a live parcel'}
+            className={`absolute top-14 left-24 z-30 px-3 py-1.5 rounded font-mono text-[10px] font-bold border backdrop-blur transition flex items-center gap-1.5 ${
+              sessionHere
+                ? 'bg-pink-500/30 text-pink-200 border-pink-400 shadow-[0_0_16px_rgba(236,72,153,0.6)] animate-pulse'
+                : parcelIsMine
+                  ? 'bg-black/60 text-cyan-300 border-cyan-500/40 hover:bg-cyan-500/10'
+                  : 'bg-black/40 text-neutral-500 border-neutral-700 opacity-60 cursor-not-allowed'
+            }`}
+          >
+            📺 {sessionHere ? 'SPECTATE' : parcelIsMine ? 'HOST GAME' : `LIVE (${liveCount})`}
+          </button>
+        )
+      })()}
+
       {/* BUILD MODE — pending selection indicator (above palette) */}
       {editMode && pendingBuildable && (
         <div className="absolute top-24 left-3 z-30 px-3 py-1.5 rounded bg-orange-500/20 backdrop-blur border border-orange-400/50 text-[10px] font-mono text-orange-300 flex items-center gap-2">
@@ -1226,6 +1271,25 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
           }}
         />
       )}
+
+      {/* PHASE 5 — game host / spectate modal */}
+      {gameModalOpen && (() => {
+        const curParcelX = Math.round(playerPos.x / 16)
+        const curParcelZ = Math.round(playerPos.z / 16)
+        const sessionHere = gameSessions.find(s => s.parcelX === curParcelX && s.parcelZ === curParcelZ) || null
+        const parcelIsMine = ownedSquares.some(sq => sq.x === curParcelX && sq.z === curParcelZ && sq.ownerHandle === myHandle)
+        return (
+          <GameHostModal
+            parcelX={curParcelX}
+            parcelZ={curParcelZ}
+            isOwner={parcelIsMine}
+            existingSession={sessionHere}
+            myHandle={myHandle}
+            onClose={() => setGameModalOpen(false)}
+            onChanged={fetchGameSessions}
+          />
+        )
+      })()}
 
       {/* PHASE 4 — vehicle HUD (exit button persists new parked position) */}
       {drivingVehicle && (
