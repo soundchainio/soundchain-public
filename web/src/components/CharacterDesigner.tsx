@@ -14,8 +14,9 @@
 
 import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
-import { X, Save, RefreshCw, Shuffle, User } from 'lucide-react'
+import { X, Save, RefreshCw, Shuffle, User, Smile } from 'lucide-react'
 import { OPEN_SOURCE_AVATARS, AVATAR_CATEGORIES, filterAvatarsByCategory, AvatarCategory } from 'lib/nodeverse/openSourceAvatars'
+import type { Outfit, OutfitColors } from 'lib/nodeverse/wearables'
 
 export interface CharacterConfig {
   type: 'agent' | 'human' | 'opensource'  // visual class: pill / RPM GLB / curated CC0 GLB
@@ -31,6 +32,33 @@ export interface CharacterConfig {
   humanScale?: number       // model scale multiplier (open-source models vary wildly)
   humanYOffset?: number     // vertical alignment offset
   openSourceId?: string     // open-source avatar ID (if from OS library)
+  outfit?: Outfit           // equipped wearables by slot: hat, sunglasses, hoodie, pants, shoes...
+  outfitColors?: OutfitColors // per-slot color overrides
+  face?: FaceConfig         // close-up face designer: skin tone, eyes, mouth, beard, paint
+}
+
+// ─── Face Designer (NBA 2K close-up mode) ─────────────────────
+export interface FaceConfig {
+  skinTone?: string                                                        // hex override for head material
+  eyeColor?: string                                                        // hex
+  eyeStyle?: 'normal' | 'glow' | 'cyber' | 'narrow' | 'wide' | 'closed'
+  mouthStyle?: 'neutral' | 'smile' | 'frown' | 'smirk' | 'open'
+  mouthColor?: string                                                      // hex for lips
+  beard?: 'none' | 'stubble' | 'goatee' | 'full' | 'mustache'
+  beardColor?: string                                                      // hex for facial hair
+  facePaint?: 'none' | 'warrior' | 'cyber' | 'tribal' | 'tear' | 'scar'
+  paintColor?: string                                                      // hex for face paint
+}
+
+export const DEFAULT_FACE: FaceConfig = {
+  eyeColor: '#ffffff',
+  eyeStyle: 'normal',
+  mouthStyle: 'neutral',
+  mouthColor: '#ef4444',
+  beard: 'none',
+  beardColor: '#1a1a1a',
+  facePaint: 'none',
+  paintColor: '#22d3ee',
 }
 
 export const DEFAULT_CHARACTER: CharacterConfig = {
@@ -42,6 +70,9 @@ export const DEFAULT_CHARACTER: CharacterConfig = {
   glowColor: '#22d3ee',
   name: '',
   accessory: 'none',
+  outfit: {},
+  outfitColors: {},
+  face: { ...DEFAULT_FACE },
 }
 
 const STORAGE_KEY = 'soundchain_character'
@@ -90,6 +121,7 @@ export function CharacterDesigner({ open, onClose, initialName }: CharacterDesig
   })
   const previewRef = useRef<HTMLDivElement>(null)
   const [saved, setSaved] = useState(false)
+  const [showFace, setShowFace] = useState(false)  // close-up face designer mode (NBA 2K style)
 
   // ─── Ready Player Me message handler ─────────────────────
   // Listens for avatar export from RPM iframe
@@ -127,8 +159,15 @@ export function CharacterDesigner({ open, onClose, initialName }: CharacterDesig
     const scene = new THREE.Scene()
     scene.background = new THREE.Color(0x0a0f1f)
 
-    const camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 100)
-    camera.position.set(0, 1.2, 4)
+    const camera = new THREE.PerspectiveCamera(showFace ? 28 : 45, w / h, 0.1, 100)
+    // Close-up face mode: camera tracks head height, tight zoom. Full body: wide view.
+    const headCamY = 1.5 + (config.height - 1) * 1
+    if (showFace) {
+      camera.position.set(0, headCamY + 0.05, 1.4)
+      camera.lookAt(0, headCamY, 0)
+    } else {
+      camera.position.set(0, 1.2, 4)
+    }
 
     const renderer = new THREE.WebGLRenderer({ antialias: true })
     renderer.setSize(w, h)
@@ -190,10 +229,186 @@ export function CharacterDesigner({ open, onClose, initialName }: CharacterDesig
       case 'capsule':
       default: headGeo = new THREE.CapsuleGeometry(0.25, 0.2, 8, 16); break
     }
-    const head = new THREE.Mesh(headGeo, bodyMat.clone())
+    const headMatOverride = config.face?.skinTone
+      ? new THREE.MeshStandardMaterial({ color: new THREE.Color(config.face.skinTone), emissive: glowColorObj, emissiveIntensity: config.glowIntensity * 0.5, metalness: 0.2, roughness: 0.6 })
+      : bodyMat.clone()
+    const head = new THREE.Mesh(headGeo, headMatOverride)
     head.position.y = 1.5 + (config.height - 1) * 1
     head.castShadow = true
     charGroup.add(head)
+
+    // ─── Face features (close-up designer + always-visible) ───
+    const face = { ...DEFAULT_FACE, ...(config.face || {}) }
+    const headY = head.position.y
+    const faceZ = 0.28  // push face features slightly forward of head center
+    const faceGroup = new THREE.Group()
+    faceGroup.position.copy(head.position)
+    charGroup.add(faceGroup)
+
+    // Eyes
+    const eyeColor = new THREE.Color(face.eyeColor || '#ffffff')
+    const eyeMat = face.eyeStyle === 'glow' || face.eyeStyle === 'cyber'
+      ? new THREE.MeshStandardMaterial({ color: eyeColor, emissive: eyeColor, emissiveIntensity: 1.2, metalness: 0.9, roughness: 0.1 })
+      : new THREE.MeshStandardMaterial({ color: eyeColor, metalness: 0.5, roughness: 0.3 })
+    if (face.eyeStyle !== 'closed') {
+      const eyeSep = 0.11
+      const eyeY = 0.05
+      if (face.eyeStyle === 'cyber') {
+        // horizontal visor bar
+        const bar = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.04, 0.02), eyeMat)
+        bar.position.set(0, eyeY, faceZ)
+        faceGroup.add(bar)
+      } else if (face.eyeStyle === 'narrow') {
+        ;[-1, 1].forEach(side => {
+          const eye = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.02, 0.02), eyeMat)
+          eye.position.set(side * eyeSep, eyeY, faceZ)
+          faceGroup.add(eye)
+        })
+      } else {
+        const eyeRad = face.eyeStyle === 'wide' ? 0.055 : 0.04
+        ;[-1, 1].forEach(side => {
+          const eyeWhite = new THREE.Mesh(new THREE.SphereGeometry(eyeRad, 12, 12), eyeMat)
+          eyeWhite.position.set(side * eyeSep, eyeY, faceZ)
+          faceGroup.add(eyeWhite)
+          // pupil (always dark)
+          const pupil = new THREE.Mesh(new THREE.SphereGeometry(eyeRad * 0.5, 12, 12), new THREE.MeshStandardMaterial({ color: 0x000000 }))
+          pupil.position.set(side * eyeSep, eyeY, faceZ + eyeRad * 0.6)
+          faceGroup.add(pupil)
+        })
+      }
+    }
+
+    // Mouth
+    const mouthMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(face.mouthColor || '#ef4444'), metalness: 0.2, roughness: 0.7 })
+    const mouthY = -0.1
+    switch (face.mouthStyle) {
+      case 'smile': {
+        const mouth = new THREE.Mesh(new THREE.TorusGeometry(0.08, 0.012, 6, 16, Math.PI), mouthMat)
+        mouth.position.set(0, mouthY, faceZ)
+        mouth.rotation.z = Math.PI
+        faceGroup.add(mouth)
+        break
+      }
+      case 'frown': {
+        const mouth = new THREE.Mesh(new THREE.TorusGeometry(0.08, 0.012, 6, 16, Math.PI), mouthMat)
+        mouth.position.set(0, mouthY - 0.02, faceZ)
+        faceGroup.add(mouth)
+        break
+      }
+      case 'smirk': {
+        const mouth = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.015, 0.02), mouthMat)
+        mouth.position.set(0.02, mouthY, faceZ)
+        mouth.rotation.z = 0.2
+        faceGroup.add(mouth)
+        break
+      }
+      case 'open': {
+        const mouth = new THREE.Mesh(new THREE.SphereGeometry(0.05, 12, 12), new THREE.MeshStandardMaterial({ color: 0x1a0000 }))
+        mouth.position.set(0, mouthY, faceZ)
+        faceGroup.add(mouth)
+        break
+      }
+      case 'neutral':
+      default: {
+        const mouth = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.015, 0.02), mouthMat)
+        mouth.position.set(0, mouthY, faceZ)
+        faceGroup.add(mouth)
+      }
+    }
+
+    // Beard / facial hair
+    const beardMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(face.beardColor || '#1a1a1a'), metalness: 0.1, roughness: 0.95 })
+    switch (face.beard) {
+      case 'stubble': {
+        // scattered dots across jaw
+        for (let i = 0; i < 30; i++) {
+          const dot = new THREE.Mesh(new THREE.SphereGeometry(0.006, 4, 4), beardMat)
+          const angle = (Math.random() - 0.5) * Math.PI
+          const radius = 0.22 + Math.random() * 0.04
+          dot.position.set(Math.sin(angle) * radius, mouthY + (Math.random() - 0.2) * 0.1, Math.cos(angle) * radius * 0.9)
+          faceGroup.add(dot)
+        }
+        break
+      }
+      case 'goatee': {
+        const goatee = new THREE.Mesh(new THREE.SphereGeometry(0.06, 12, 12), beardMat)
+        goatee.scale.set(0.7, 1, 0.4)
+        goatee.position.set(0, mouthY - 0.09, faceZ - 0.02)
+        faceGroup.add(goatee)
+        break
+      }
+      case 'mustache': {
+        const mus = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.025, 0.03), beardMat)
+        mus.position.set(0, mouthY + 0.04, faceZ)
+        faceGroup.add(mus)
+        break
+      }
+      case 'full': {
+        const beard = new THREE.Mesh(
+          new THREE.SphereGeometry(0.24, 16, 12, 0, Math.PI * 2, Math.PI * 0.4, Math.PI * 0.5),
+          beardMat,
+        )
+        beard.position.set(0, -0.05, 0)
+        beard.scale.z = 0.75
+        faceGroup.add(beard)
+        break
+      }
+    }
+
+    // Face paint / markings
+    if (face.facePaint && face.facePaint !== 'none') {
+      const paintColor = new THREE.Color(face.paintColor || '#22d3ee')
+      const paintMat = new THREE.MeshStandardMaterial({ color: paintColor, emissive: paintColor, emissiveIntensity: 0.6, metalness: 0.3, roughness: 0.5, transparent: true, opacity: 0.9 })
+      switch (face.facePaint) {
+        case 'warrior': {
+          // two horizontal stripes across eyes
+          ;[-1, 1].forEach(side => {
+            const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.02, 0.01), paintMat)
+            stripe.position.set(side * 0.11, 0.05, faceZ + 0.005)
+            faceGroup.add(stripe)
+          })
+          break
+        }
+        case 'cyber': {
+          // vertical line under one eye
+          const line = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.08, 0.01), paintMat)
+          line.position.set(0.11, -0.03, faceZ + 0.005)
+          faceGroup.add(line)
+          // small cheek dot
+          const dot = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.02, 0.01), paintMat)
+          dot.position.set(-0.13, -0.04, faceZ + 0.005)
+          faceGroup.add(dot)
+          break
+        }
+        case 'tribal': {
+          // angular cheek markings
+          ;[-1, 1].forEach(side => {
+            for (let i = 0; i < 3; i++) {
+              const mark = new THREE.Mesh(new THREE.BoxGeometry(0.025, 0.008, 0.01), paintMat)
+              mark.position.set(side * (0.13 + i * 0.015), -0.02 - i * 0.02, faceZ + 0.005)
+              mark.rotation.z = side * 0.3
+              faceGroup.add(mark)
+            }
+          })
+          break
+        }
+        case 'tear': {
+          // single drop below eye
+          const tear = new THREE.Mesh(new THREE.SphereGeometry(0.01, 8, 8), paintMat)
+          tear.position.set(-0.11, -0.02, faceZ + 0.005)
+          faceGroup.add(tear)
+          break
+        }
+        case 'scar': {
+          const scarMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(face.paintColor || '#ef4444'), metalness: 0.1, roughness: 0.8 })
+          const scar = new THREE.Mesh(new THREE.BoxGeometry(0.015, 0.12, 0.008), scarMat)
+          scar.position.set(0.09, 0.02, faceZ + 0.003)
+          scar.rotation.z = 0.15
+          faceGroup.add(scar)
+          break
+        }
+      }
+    }
 
     // Accessory
     if (config.accessory !== 'none') {
@@ -266,22 +481,22 @@ export function CharacterDesigner({ open, onClose, initialName }: CharacterDesig
         }
       })
     }
-  }, [open, config])
+  }, [open, config, showFace])
 
   if (!open) return null
 
   const update = (patch: Partial<CharacterConfig>) => setConfig(prev => ({ ...prev, ...patch }))
 
   const randomize = () => {
-    setConfig({
+    setConfig(prev => ({
+      ...prev,
       bodyColor: PRESET_COLORS[Math.floor(Math.random() * PRESET_COLORS.length)],
       headShape: (['capsule', 'sphere', 'cube', 'cone'] as const)[Math.floor(Math.random() * 4)],
       height: 0.7 + Math.random() * 0.6,
       glowIntensity: Math.random() * 0.8,
       glowColor: PRESET_COLORS[Math.floor(Math.random() * PRESET_COLORS.length)],
-      name: config.name,
       accessory: (['none', 'crown', 'halo', 'antenna', 'visor'] as const)[Math.floor(Math.random() * 5)],
-    })
+    }))
   }
 
   const handleSave = () => {
@@ -429,6 +644,132 @@ export function CharacterDesigner({ open, onClose, initialName }: CharacterDesig
               />
             </div>
 
+            {/* BODY / FACE sub-tab — NBA 2K close-up mode */}
+            <div className="grid grid-cols-2 gap-1 border border-white/10 rounded p-0.5 bg-black/40">
+              <button
+                onClick={() => setShowFace(false)}
+                className={`flex items-center justify-center gap-1 px-2 py-1.5 rounded text-[10px] font-mono font-bold transition ${!showFace ? 'bg-cyan-500/20 text-cyan-400' : 'text-gray-500 hover:text-white'}`}
+              >
+                <User className="w-3 h-3" /> BODY
+              </button>
+              <button
+                onClick={() => setShowFace(true)}
+                className={`flex items-center justify-center gap-1 px-2 py-1.5 rounded text-[10px] font-mono font-bold transition ${showFace ? 'bg-pink-500/20 text-pink-400' : 'text-gray-500 hover:text-white'}`}
+              >
+                <Smile className="w-3 h-3" /> FACE <span className="opacity-50 text-[8px]">close-up</span>
+              </button>
+            </div>
+
+            {showFace && (() => {
+              const face = { ...DEFAULT_FACE, ...(config.face || {}) }
+              const updateFace = (patch: Partial<FaceConfig>) => update({ face: { ...face, ...patch } })
+              return (
+                <>
+                  {/* Skin Tone */}
+                  <div>
+                    <label className="text-[9px] font-mono text-gray-500 uppercase tracking-wider mb-1 block">Skin Tone</label>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {['#f5c89c', '#e8b48a', '#d49b7a', '#a87456', '#7a4e35', '#4a2e1f', '#22d3ee', '#a855f7'].map(c => (
+                        <button
+                          key={c}
+                          onClick={() => updateFace({ skinTone: c })}
+                          className={`w-7 h-7 rounded border-2 transition ${face.skinTone === c ? 'border-white scale-110' : 'border-white/20 hover:border-white/40'}`}
+                          style={{ backgroundColor: c }}
+                        />
+                      ))}
+                      <input type="color" value={face.skinTone || config.bodyColor} onChange={e => updateFace({ skinTone: e.target.value })} className="w-7 h-7 rounded cursor-pointer bg-transparent border border-white/10" />
+                      <button onClick={() => updateFace({ skinTone: undefined })} className="text-[9px] font-mono text-gray-400 hover:text-white px-2 py-1 rounded border border-white/10">clear</button>
+                    </div>
+                  </div>
+
+                  {/* Eye Style */}
+                  <div>
+                    <label className="text-[9px] font-mono text-gray-500 uppercase tracking-wider mb-1 block">Eyes</label>
+                    <div className="grid grid-cols-6 gap-1 mb-1">
+                      {(['normal', 'glow', 'cyber', 'narrow', 'wide', 'closed'] as const).map(s => (
+                        <button key={s} onClick={() => updateFace({ eyeStyle: s })} className={`px-1 py-1.5 rounded text-[8px] font-mono uppercase transition ${face.eyeStyle === s ? 'bg-pink-500/20 text-pink-400 border border-pink-500/30' : 'bg-white/[0.02] text-gray-500 border border-white/5 hover:text-white'}`}>
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {['#ffffff', '#22d3ee', '#a855f7', '#ec4899', '#22c55e', '#facc15', '#ef4444', '#3b82f6'].map(c => (
+                        <button key={c} onClick={() => updateFace({ eyeColor: c })} className={`w-5 h-5 rounded-full border-2 transition ${face.eyeColor === c ? 'border-white scale-110' : 'border-white/20 hover:border-white/40'}`} style={{ backgroundColor: c, boxShadow: face.eyeStyle === 'glow' || face.eyeStyle === 'cyber' ? `0 0 6px ${c}` : undefined }} />
+                      ))}
+                      <input type="color" value={face.eyeColor || '#ffffff'} onChange={e => updateFace({ eyeColor: e.target.value })} className="w-5 h-5 rounded cursor-pointer bg-transparent border border-white/10" />
+                    </div>
+                  </div>
+
+                  {/* Mouth */}
+                  <div>
+                    <label className="text-[9px] font-mono text-gray-500 uppercase tracking-wider mb-1 block">Mouth</label>
+                    <div className="grid grid-cols-5 gap-1 mb-1">
+                      {(['neutral', 'smile', 'frown', 'smirk', 'open'] as const).map(s => (
+                        <button key={s} onClick={() => updateFace({ mouthStyle: s })} className={`px-1 py-1.5 rounded text-[8px] font-mono uppercase transition ${face.mouthStyle === s ? 'bg-pink-500/20 text-pink-400 border border-pink-500/30' : 'bg-white/[0.02] text-gray-500 border border-white/5 hover:text-white'}`}>
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {['#ef4444', '#f59e0b', '#ec4899', '#a855f7', '#000000', '#ffffff'].map(c => (
+                        <button key={c} onClick={() => updateFace({ mouthColor: c })} className={`w-5 h-5 rounded-full border-2 transition ${face.mouthColor === c ? 'border-white scale-110' : 'border-white/20 hover:border-white/40'}`} style={{ backgroundColor: c }} />
+                      ))}
+                      <input type="color" value={face.mouthColor || '#ef4444'} onChange={e => updateFace({ mouthColor: e.target.value })} className="w-5 h-5 rounded cursor-pointer bg-transparent border border-white/10" />
+                    </div>
+                  </div>
+
+                  {/* Beard / Facial Hair */}
+                  <div>
+                    <label className="text-[9px] font-mono text-gray-500 uppercase tracking-wider mb-1 block">Facial Hair</label>
+                    <div className="grid grid-cols-5 gap-1 mb-1">
+                      {(['none', 'stubble', 'mustache', 'goatee', 'full'] as const).map(s => (
+                        <button key={s} onClick={() => updateFace({ beard: s })} className={`px-1 py-1.5 rounded text-[8px] font-mono uppercase transition ${face.beard === s ? 'bg-pink-500/20 text-pink-400 border border-pink-500/30' : 'bg-white/[0.02] text-gray-500 border border-white/5 hover:text-white'}`}>
+                          {s === 'none' ? '—' : s}
+                        </button>
+                      ))}
+                    </div>
+                    {face.beard !== 'none' && (
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {['#1a1a1a', '#5c4033', '#8b4513', '#c9a064', '#fbbf24', '#e5e7eb', '#a855f7', '#22d3ee'].map(c => (
+                          <button key={c} onClick={() => updateFace({ beardColor: c })} className={`w-5 h-5 rounded-full border-2 transition ${face.beardColor === c ? 'border-white scale-110' : 'border-white/20 hover:border-white/40'}`} style={{ backgroundColor: c }} />
+                        ))}
+                        <input type="color" value={face.beardColor || '#1a1a1a'} onChange={e => updateFace({ beardColor: e.target.value })} className="w-5 h-5 rounded cursor-pointer bg-transparent border border-white/10" />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Face Paint / Marks */}
+                  <div>
+                    <label className="text-[9px] font-mono text-gray-500 uppercase tracking-wider mb-1 block">Face Paint / Marks</label>
+                    <div className="grid grid-cols-6 gap-1 mb-1">
+                      {(['none', 'warrior', 'cyber', 'tribal', 'tear', 'scar'] as const).map(s => (
+                        <button key={s} onClick={() => updateFace({ facePaint: s })} className={`px-1 py-1.5 rounded text-[8px] font-mono uppercase transition ${face.facePaint === s ? 'bg-pink-500/20 text-pink-400 border border-pink-500/30' : 'bg-white/[0.02] text-gray-500 border border-white/5 hover:text-white'}`}>
+                          {s === 'none' ? '—' : s}
+                        </button>
+                      ))}
+                    </div>
+                    {face.facePaint !== 'none' && (
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {['#22d3ee', '#a855f7', '#ec4899', '#22c55e', '#facc15', '#ef4444', '#ffffff', '#000000'].map(c => (
+                          <button key={c} onClick={() => updateFace({ paintColor: c })} className={`w-5 h-5 rounded-full border-2 transition ${face.paintColor === c ? 'border-white scale-110' : 'border-white/20 hover:border-white/40'}`} style={{ backgroundColor: c, boxShadow: `0 0 6px ${c}` }} />
+                        ))}
+                        <input type="color" value={face.paintColor || '#22d3ee'} onChange={e => updateFace({ paintColor: e.target.value })} className="w-5 h-5 rounded cursor-pointer bg-transparent border border-white/10" />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Reset face */}
+                  <button
+                    onClick={() => update({ face: { ...DEFAULT_FACE } })}
+                    className="w-full py-1.5 rounded text-[9px] font-mono text-gray-400 hover:text-white border border-white/10 hover:border-pink-500/30 hover:bg-pink-500/5 transition"
+                  >
+                    Reset face to default
+                  </button>
+                </>
+              )
+            })()}
+
+            {!showFace && (<>
             {/* Body Color */}
             <div>
               <label className="text-[9px] font-mono text-gray-500 uppercase tracking-wider mb-1 block">Body Color</label>
@@ -523,6 +864,7 @@ export function CharacterDesigner({ open, onClose, initialName }: CharacterDesig
                 ))}
               </div>
             </div>
+            </>)}{/* end !showFace body controls */}
           </div>
         </div>
         )}{/* end agent mode */}
