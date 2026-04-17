@@ -33,6 +33,7 @@ import {
   type BuildableItem,
   type PlacedBuildable,
 } from 'lib/nodeverse/buildables'
+import FrameBindModal from './FrameBindModal'
 
 interface Resident {
   id: string
@@ -76,6 +77,7 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
   const [pendingBuildable, setPendingBuildable] = useState<BuildableItem | null>(null)
   const [pendingColor, setPendingColor] = useState<string | null>(null)
   const [deleteCandidate, setDeleteCandidate] = useState<PlacedBuildable | null>(null)
+  const [bindFrameCandidate, setBindFrameCandidate] = useState<PlacedBuildable | null>(null)
   // Refs used by raycast handlers so they can read latest state without re-subscribing.
   const editModeRef = useRef(editMode); editModeRef.current = editMode
   const pendingRef = useRef<BuildableItem | null>(pendingBuildable); pendingRef.current = pendingBuildable
@@ -646,9 +648,9 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
           let pb = hit.userData?.buildable as PlacedBuildable | undefined
           if (!pb && hit.parent) pb = hit.parent.userData?.buildable as PlacedBuildable | undefined
           if (pb) {
-            // Edit mode: tap any placed item → delete confirm.
-            // Frame-binding UI ships in Phase 3 (next commit).
-            setDeleteCandidate(pb)
+            const item = getBuildable(pb.buildableId)
+            if (item?.category === 'frame') setBindFrameCandidate(pb)
+            else setDeleteCandidate(pb)
             return
           }
         }
@@ -1180,6 +1182,22 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
             </div>
           </div>
         </div>
+      )}
+
+      {/* BUILD MODE — frame bind modal (pick NFT/SCID/post to mount) */}
+      {bindFrameCandidate && (
+        <FrameBindModal
+          candidate={bindFrameCandidate}
+          buildableCategory={getBuildable(bindFrameCandidate.buildableId)?.category || 'frame'}
+          buildableKind={bindFrameCandidate.buildableId}
+          onClose={() => setBindFrameCandidate(null)}
+          onBound={fetchBuildables}
+          onDelete={() => {
+            const pb = bindFrameCandidate
+            setBindFrameCandidate(null)
+            setDeleteCandidate(pb)
+          }}
+        />
       )}
 
       {/* WORLD MAP — top-right mini-map showing whole Nodeverse */}
