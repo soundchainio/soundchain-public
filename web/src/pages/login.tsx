@@ -61,6 +61,29 @@ function isMobileSafari(): boolean {
   return isSafariBrowser() && /iPhone|iPad|iPod/i.test(ua);
 }
 
+// PHASE 6: try Vercel-direct login before hitting the (currently flaky) Lambda.
+// `magic` is the live Magic SDK instance — we use it to pull email + publicAddress
+// from `getMetadata()`, same trust model as /api/auth/register.
+// Returns the JWT on success, or null on any failure (caller should fall back to Apollo).
+async function tryLoginByMagicToken(magic: any): Promise<string | null> {
+  try {
+    const meta = await magic?.user?.getMetadata?.();
+    const email = meta?.email;
+    const publicAddress = meta?.publicAddress;
+    if (!email && !publicAddress) return null;
+    const res = await fetch('/api/auth/login-by-magic-token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, publicAddress }),
+    });
+    if (!res.ok) return null;
+    const json = await res.json().catch(() => null);
+    return json?.data?.login?.jwt || null;
+  } catch (_) {
+    return null;
+  }
+}
+
 const Overlay = styled.div`
   position: fixed;
   top: 0;
@@ -296,6 +319,14 @@ export default function LoginPage() {
 
           const isLoggedIn = await Promise.race([isLoggedInPromise, timeoutPromise]);
           if (isLoggedIn) {
+            // PHASE 6: Vercel-direct first, Apollo fallback
+            const directJwt = await tryLoginByMagicToken(magic);
+            if (directJwt) {
+              await setJwt(directJwt);
+              await new Promise(resolve => setTimeout(resolve, 200));
+              await handlePostLoginRedirect(undefined, true);
+              return;
+            }
             const loginResult = await login({ variables: { input: { token: storedToken } } });
             if (loginResult.data?.login.jwt) {
               await setJwt(loginResult.data.login.jwt);
@@ -356,6 +387,30 @@ export default function LoginPage() {
             scope: ['openid', 'email', 'profile'],
           });
           if (result?.magic?.idToken) {
+            // PHASE 6: try Vercel-direct first — use userMetadata from popup result
+            // (avoids an extra getMetadata() round-trip, and works even if the
+            // popup Magic instance is already torn down).
+            const popupEmail = result?.magic?.userMetadata?.email;
+            const popupAddr = result?.magic?.userMetadata?.publicAddress;
+            if (popupEmail || popupAddr) {
+              try {
+                const directRes = await fetch('/api/auth/login-by-magic-token', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ email: popupEmail, publicAddress: popupAddr }),
+                });
+                if (directRes.ok) {
+                  const directJson = await directRes.json().catch(() => null);
+                  const directJwt = directJson?.data?.login?.jwt;
+                  if (directJwt) {
+                    await setJwt(directJwt);
+                    localStorage.setItem('didToken', result.magic.idToken);
+                    await handlePostLoginRedirect(undefined, true);
+                    return;
+                  }
+                }
+              } catch (_) { /* fall through to Apollo */ }
+            }
             const loginResult = await login({ variables: { input: { token: result.magic.idToken } } });
             if (loginResult.data?.login.jwt) {
               await setJwt(loginResult.data.login.jwt);
@@ -597,18 +652,53 @@ export default function LoginPage() {
     setCreateLoading(true);
 
     try {
-      const { data } = await createHdAccountMutation({
-        variables: {
-          input: {
+      // PHASE 6: Vercel-direct first (bypasses the flaky api.soundchain.io Lambda hop).
+      // /api/auth/register already supports email-only HD account creation —
+      // `magicWalletAddress` is optional, HD wallet is derived server-side.
+      let jwt: string | null = null;
+      let hdWalletAddress: string | null = null;
+      try {
+        const directRes = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
             email: createEmail.trim().toLowerCase(),
             handle: createHandle.trim(),
-            displayName: createDisplayName.trim() || undefined,
-          },
-        },
-      });
+            displayName: createDisplayName.trim() || createHandle.trim(),
+          }),
+        });
+        const directJson = await directRes.json().catch(() => ({}));
+        if (directRes.ok && directJson?.data?.register?.jwt) {
+          jwt = directJson.data.register.jwt;
+        } else if (directRes.status === 409 && typeof directJson?.error === 'string') {
+          // Field conflict (email/handle taken) — surface and stop, don't fall through to Lambda
+          throw new Error(directJson.error);
+        }
+      } catch (directErr: any) {
+        // 409s get re-thrown above; everything else falls through to Apollo fallback
+        if (directErr?.message && /already|taken|exists/i.test(directErr.message)) {
+          throw directErr;
+        }
+        console.warn('[Auth] Vercel direct register failed, falling back to Apollo:', directErr);
+      }
 
-      if (data?.createHdAccount?.jwt) {
-        const { jwt, hdWalletAddress } = data.createHdAccount;
+      if (!jwt) {
+        const { data } = await createHdAccountMutation({
+          variables: {
+            input: {
+              email: createEmail.trim().toLowerCase(),
+              handle: createHandle.trim(),
+              displayName: createDisplayName.trim() || undefined,
+            },
+          },
+        });
+        if (data?.createHdAccount?.jwt) {
+          jwt = data.createHdAccount.jwt;
+          hdWalletAddress = data.createHdAccount.hdWalletAddress || null;
+        }
+      }
+
+      if (jwt) {
         setCreatedWalletAddress(hdWalletAddress || null);
         await setJwt(jwt);
 
@@ -685,6 +775,28 @@ export default function LoginPage() {
         }
 
         if (oauthResult?.magic?.idToken) {
+          // PHASE 6: Vercel-direct first using redirect-result userMetadata
+          const redirectEmail = oauthResult?.magic?.userMetadata?.email;
+          const redirectAddr = oauthResult?.magic?.userMetadata?.publicAddress;
+          if (redirectEmail || redirectAddr) {
+            try {
+              const directRes = await fetch('/api/auth/login-by-magic-token', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: redirectEmail, publicAddress: redirectAddr }),
+              });
+              if (directRes.ok) {
+                const directJson = await directRes.json().catch(() => null);
+                const directJwt = directJson?.data?.login?.jwt;
+                if (directJwt) {
+                  await setJwt(directJwt);
+                  localStorage.setItem('didToken', oauthResult.magic.idToken);
+                  await handlePostLoginRedirect(undefined, true);
+                  return;
+                }
+              }
+            } catch (_) { /* fall through to Apollo */ }
+          }
           const loginResult = await login({ variables: { input: { token: oauthResult.magic.idToken } } });
           if (loginResult.data?.login.jwt) {
             await setJwt(loginResult.data.login.jwt);
@@ -705,6 +817,13 @@ export default function LoginPage() {
           await magic.auth.loginWithCredential();
           const didToken = await magic.user.getIdToken();
           localStorage.setItem('didToken', didToken);
+          // PHASE 6: Vercel-direct first
+          const directJwt = await tryLoginByMagicToken(magic);
+          if (directJwt) {
+            await setJwt(directJwt);
+            await handlePostLoginRedirect(undefined, true);
+            return;
+          }
           const loginResult = await login({ variables: { input: { token: didToken } } });
           if (loginResult.data?.login.jwt) {
             await setJwt(loginResult.data.login.jwt);
@@ -720,6 +839,13 @@ export default function LoginPage() {
           const fallbackToken = await magic.user.getIdToken();
           if (fallbackToken) {
             localStorage.setItem('didToken', fallbackToken);
+            // PHASE 6: Vercel-direct first
+            const directJwt = await tryLoginByMagicToken(magic);
+            if (directJwt) {
+              await setJwt(directJwt);
+              await handlePostLoginRedirect(undefined, true);
+              return;
+            }
             const loginResult = await login({ variables: { input: { token: fallbackToken } } });
             if (loginResult.data?.login.jwt) {
               await setJwt(loginResult.data.login.jwt);
