@@ -48,9 +48,13 @@ const sections = [
 export default function UnifiedCreateAccountPage() {
   const router = useRouter()
   const { magic } = useMagicContext()
-  const [register, { loading }] = useRegisterMutation()
+  const [register, { loading: registerLoading }] = useRegisterMutation()
+  const [submitting, setSubmitting] = useState(false)
+  const loading = submitting || registerLoading
   const [email, setEmail] = useState<string>('')
   const [token, setToken] = useState<string>('')
+  const [magicWalletAddress, setMagicWalletAddress] = useState<string>('')
+  const [oauthProvider, setOauthProvider] = useState<string>('')
   const [termsAccepted, setTermsAccepted] = useState<boolean>(false)
   const [accountCreated, setAccountCreated] = useState<boolean>(false)
   const [completedSections, setCompletedSections] = useState<Set<string>>(new Set())
@@ -82,6 +86,8 @@ export default function UnifiedCreateAccountPage() {
           const email = metaData?.email
           setToken(token)
           email && setEmail(email)
+          if (metaData?.publicAddress) setMagicWalletAddress(metaData.publicAddress)
+          if ((metaData as any)?.oauthProvider) setOauthProvider((metaData as any).oauthProvider)
         } else {
           router.push('/login')
         }
@@ -121,14 +127,57 @@ export default function UnifiedCreateAccountPage() {
   }
 
   const handleSubmit = async (values: FormValues, { setErrors }: FormikHelpers<FormValues>) => {
+    setSubmitting(true)
+    // Vercel direct first (Phase 6 — bypasses Lambda 504s on api.soundchain.io)
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...values,
+          email,
+          magicWalletAddress,
+          oauthProvider,
+        }),
+      })
+      const json = await res.json().catch(() => ({}))
+      if (res.ok && json?.data?.register?.jwt) {
+        setJwt(json.data.register.jwt)
+        setAccountCreated(true)
+        markSectionComplete('basics')
+        return
+      }
+      // Map field errors back to the form when possible
+      if (res.status === 409 && typeof json?.error === 'string') {
+        const msg = json.error as string
+        if (/username/i.test(msg)) setErrors({ handle: msg } as any)
+        else if (/email/i.test(msg)) setErrors({ displayName: msg } as any) // no email field on this form, surface near top
+        else setErrors({ handle: msg } as any)
+        return
+      }
+      if (res.status === 400 && typeof json?.error === 'string') {
+        const msg = json.error as string
+        if (/handle|username|characters/i.test(msg)) setErrors({ handle: msg } as any)
+        else setErrors({ displayName: msg } as any)
+        return
+      }
+      // 5xx or unexpected — fall through to Apollo fallback below
+      console.warn('[register] Vercel direct failed, falling back to Apollo:', res.status, json)
+    } catch (directErr) {
+      console.warn('[register] Vercel direct threw, falling back to Apollo:', directErr)
+    } finally {
+      setSubmitting(false)
+    }
+
+    // Apollo (Lambda) fallback — kept so a Vercel outage still has a path
     try {
       const { data } = await register({ variables: { input: { token, ...values } } })
       setJwt(data?.register.jwt)
       setAccountCreated(true)
       markSectionComplete('basics')
     } catch (error: any) {
-      const formatted = formatValidationErrors<FormValues>(error.graphQLErrors[0])
-      setErrors(formatted)
+      const formatted = formatValidationErrors<FormValues>(error.graphQLErrors?.[0])
+      setErrors(formatted as any)
     }
   }
 
