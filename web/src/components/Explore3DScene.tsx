@@ -23,6 +23,16 @@ import { useRouter } from 'next/router'
 import { User, MapPin, Coins, X, Lock, Check } from 'lucide-react'
 import { CharacterDesigner, getStoredCharacter, loadRemoteCharacter, saveCharacter, type CharacterConfig } from './CharacterDesigner'
 import { buildFaceGroup, buildOutfitGroup, buildHeadMaterial, computeAgentAnchors } from 'lib/nodeverse/characterMesh'
+import {
+  BUILDABLE_CATALOG,
+  BUILDABLE_CATEGORIES,
+  buildablesByCategory,
+  buildBuildableMesh,
+  getBuildable,
+  type BuildableCategory,
+  type BuildableItem,
+  type PlacedBuildable,
+} from 'lib/nodeverse/buildables'
 
 interface Resident {
   id: string
@@ -58,6 +68,18 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
   // Mobile action refs — buttons toggle these, animate loop reads them
   const runRef = useRef(false)
   const jumpRef = useRef(false)
+  // ─── BUILD MODE (Phase 2) — place walls, sofas, NFT frames, vehicles ─────
+  const [editMode, setEditMode] = useState(false)
+  const [placedBuildables, setPlacedBuildables] = useState<PlacedBuildable[]>([])
+  const [showPalette, setShowPalette] = useState(false)
+  const [paletteCategory, setPaletteCategory] = useState<BuildableCategory>('furniture')
+  const [pendingBuildable, setPendingBuildable] = useState<BuildableItem | null>(null)
+  const [pendingColor, setPendingColor] = useState<string | null>(null)
+  const [deleteCandidate, setDeleteCandidate] = useState<PlacedBuildable | null>(null)
+  // Refs used by raycast handlers so they can read latest state without re-subscribing.
+  const editModeRef = useRef(editMode); editModeRef.current = editMode
+  const pendingRef = useRef<BuildableItem | null>(pendingBuildable); pendingRef.current = pendingBuildable
+  const pendingColorRef = useRef<string | null>(pendingColor); pendingColorRef.current = pendingColor
   const fetchLand = useCallback(() => {
     fetch('/api/nodeverse/squares')
       .then(r => r.json())
@@ -68,6 +90,70 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
       .catch(() => {})
   }, [])
   useEffect(() => { fetchLand() }, [fetchLand])
+
+  // Buildables in render range (±3 parcels from origin, matching scene render loop)
+  const fetchBuildables = useCallback(() => {
+    const qs = new URLSearchParams({ minParcelX: '-3', maxParcelX: '3', minParcelZ: '-3', maxParcelZ: '3' })
+    fetch(`/api/nodeverse/buildables?${qs}`)
+      .then(r => r.json())
+      .then(data => setPlacedBuildables(data.buildables || []))
+      .catch(() => {})
+  }, [])
+  useEffect(() => { fetchBuildables() }, [fetchBuildables])
+
+  // Place a buildable at a tapped world position. Caller has already verified
+  // the tap hit the ground (raycast). parcelX/Z derive from world position.
+  const placeBuildableAt = useCallback(async (worldX: number, worldZ: number) => {
+    const item = pendingRef.current
+    if (!item) return
+    const color = pendingColorRef.current
+    const PARCEL_SIZE = 16
+    const parcelX = Math.round(worldX / PARCEL_SIZE)
+    const parcelZ = Math.round(worldZ / PARCEL_SIZE)
+    const localX = worldX - parcelX * PARCEL_SIZE
+    const localZ = worldZ - parcelZ * PARCEL_SIZE
+    try {
+      const res = await fetch('/api/nodeverse/buildables', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          buildableId: item.id,
+          parcelX,
+          parcelZ,
+          localX,
+          localY: 0,
+          localZ,
+          rotY: 0,
+          color,
+        }),
+      })
+      if (res.ok) {
+        fetchBuildables()
+        // Keep pending item selected so user can rapid-place
+      } else {
+        const err = await res.json().catch(() => ({}))
+        alert(err.error || 'Place failed — do you own this parcel?')
+      }
+    } catch (e: any) {
+      alert(e?.message || 'Place failed')
+    }
+  }, [fetchBuildables])
+
+  const deleteBuildable = useCallback(async (b: PlacedBuildable) => {
+    try {
+      const res = await fetch(`/api/nodeverse/buildables?id=${encodeURIComponent(b.id)}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      })
+      if (res.ok) fetchBuildables()
+      else alert('Delete failed')
+    } catch (e: any) {
+      alert(e?.message || 'Delete failed')
+    } finally {
+      setDeleteCandidate(null)
+    }
+  }, [fetchBuildables])
   // Listen for character updates from designer
   useEffect(() => {
     const handler = (e: any) => setCharacter(e.detail)
@@ -512,6 +598,31 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
       residentMeshes.push({ group, data: r })
     })
 
+    // ─── PLACED BUILDABLES (Phase 2 — walls, floors, furniture, frames, vehicles) ──
+    const PARCEL_SIZE_BUILD = 16
+    const buildableMeshes: Array<{ group: THREE.Group; data: PlacedBuildable }> = []
+    placedBuildables.forEach(pb => {
+      const item = getBuildable(pb.buildableId)
+      if (!item) return
+      // Load texture asynchronously for frame buildables with bound assets
+      let texture: THREE.Texture | null = null
+      if (pb.boundAssetImageUrl && item.category === 'frame') {
+        const loader = new THREE.TextureLoader()
+        loader.setCrossOrigin('anonymous')
+        texture = loader.load(pb.boundAssetImageUrl, undefined, undefined, () => { /* silent on fail */ })
+      }
+      const mesh = buildBuildableMesh(item, pb.color || undefined, pb.scale ?? 1, texture)
+      mesh.position.set(
+        pb.parcelX * PARCEL_SIZE_BUILD + pb.localX,
+        pb.localY || 0,
+        pb.parcelZ * PARCEL_SIZE_BUILD + pb.localZ,
+      )
+      mesh.rotation.y = pb.rotY || 0
+      mesh.traverse((obj: any) => { obj.userData = { buildable: pb } })
+      scene.add(mesh)
+      buildableMeshes.push({ group: mesh, data: pb })
+    })
+
     // ─── Movement (WASD + Arrow keys) ────────────────────────
     const keys: Record<string, boolean> = {}
     const onKeyDown = (e: KeyboardEvent) => { keys[e.key.toLowerCase()] = true }
@@ -520,11 +631,41 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
     window.addEventListener('keyup', onKeyUp)
 
     // ─── Click resident to portal (shared by mouse + tap) ────
+    // In edit mode: tap ground with pending item = place; tap existing buildable = select for delete/bind.
     const tryPortal = (clientX: number, clientY: number) => {
       const rect = renderer.domElement.getBoundingClientRect()
       mouse.x = ((clientX - rect.left) / rect.width) * 2 - 1
       mouse.y = -((clientY - rect.top) / rect.height) * 2 + 1
       raycaster.setFromCamera(mouse, camera)
+
+      if (editModeRef.current) {
+        // Check if user tapped an existing buildable (any parcel — select = open actions)
+        const bHits = raycaster.intersectObjects(buildableMeshes.map(b => b.group), true)
+        if (bHits.length > 0) {
+          const hit: any = bHits[0].object
+          let pb = hit.userData?.buildable as PlacedBuildable | undefined
+          if (!pb && hit.parent) pb = hit.parent.userData?.buildable as PlacedBuildable | undefined
+          if (pb) {
+            // Edit mode: tap any placed item → delete confirm.
+            // Frame-binding UI ships in Phase 3 (next commit).
+            setDeleteCandidate(pb)
+            return
+          }
+        }
+        // Place pending item on ground
+        if (pendingRef.current) {
+          const groundHits = raycaster.intersectObject(floor, false)
+          if (groundHits.length > 0) {
+            const p = groundHits[0].point
+            placeBuildableAt(p.x, p.z)
+          }
+          return
+        }
+        // Edit mode with no pending item + no buildable hit → noop
+        return
+      }
+
+      // Normal mode: portal into residents / galleries
       const residentHits = raycaster.intersectObjects(residentMeshes.map(rm => rm.group), true)
       if (residentHits.length > 0) {
         const hit = residentHits[0].object
@@ -537,8 +678,24 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
             router.push(`/dex/users/${data.userHandle || data.id}`)
           }
         }
+        return
       }
-      // Land purchases happen via mini-map / Land Atlas only.
+      // Non-edit tap on frame buildable → open bind modal so owner can set asset.
+      const bHits = raycaster.intersectObjects(buildableMeshes.map(b => b.group), true)
+      if (bHits.length > 0) {
+        const hit: any = bHits[0].object
+        let pb = hit.userData?.buildable as PlacedBuildable | undefined
+        if (!pb && hit.parent) pb = hit.parent.userData?.buildable as PlacedBuildable | undefined
+        if (pb) {
+          const item = getBuildable(pb.buildableId)
+          if (item?.category === 'frame' && pb.boundAssetId) {
+            // Open asset — route based on type
+            if (pb.boundAssetType === 'post') router.push(`/posts/${pb.boundAssetId}`)
+            else if (pb.boundAssetType === 'scid') router.push(`/dex/track/${pb.boundAssetId}`)
+            else if (pb.boundAssetType === 'nft') router.push(`/dex/nft/${pb.boundAssetId}`)
+          }
+        }
+      }
     }
     const onClick = (event: MouseEvent) => tryPortal(event.clientX, event.clientY)
     renderer.domElement.addEventListener('click', onClick)
@@ -727,7 +884,7 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
         }
       })
     }
-  }, [residents, myHandle, router, character, ownedSquares])
+  }, [residents, myHandle, router, character, ownedSquares, placedBuildables, placeBuildableAt])
 
   return (
     <div className="relative w-full h-full">
@@ -883,6 +1040,141 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
                   className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded text-[10px] font-mono font-bold bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 hover:bg-yellow-500/30 transition disabled:opacity-50"
                 >
                   {purchasing ? 'CLAIMING...' : <><Lock className="w-3 h-3" /> CLAIM FOR {purchaseModal.price} OGUN</>}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* BUILD MODE HUD — toggle button (mid-right) */}
+      <button
+        onClick={() => {
+          setEditMode(v => {
+            const next = !v
+            if (!next) { setPendingBuildable(null); setPendingColor(null); setShowPalette(false) }
+            else setShowPalette(true)
+            return next
+          })
+        }}
+        className={`absolute top-14 left-3 z-30 px-3 py-1.5 rounded font-mono text-[10px] font-bold border backdrop-blur transition flex items-center gap-1.5 ${
+          editMode
+            ? 'bg-orange-500/30 text-orange-300 border-orange-400 shadow-[0_0_12px_rgba(251,146,60,0.5)]'
+            : 'bg-black/60 text-purple-300 border-purple-500/40 hover:bg-purple-500/10'
+        }`}
+      >
+        🔨 {editMode ? 'BUILDING' : 'BUILD'}
+      </button>
+
+      {/* BUILD MODE — pending selection indicator (above palette) */}
+      {editMode && pendingBuildable && (
+        <div className="absolute top-24 left-3 z-30 px-3 py-1.5 rounded bg-orange-500/20 backdrop-blur border border-orange-400/50 text-[10px] font-mono text-orange-300 flex items-center gap-2">
+          <span className="text-base">{pendingBuildable.emoji}</span>
+          <span>TAP GROUND → place {pendingBuildable.name}</span>
+          <button onClick={() => setPendingBuildable(null)} className="ml-2 text-gray-400 hover:text-white">×</button>
+        </div>
+      )}
+
+      {/* BUILD PALETTE — bottom sheet on mobile, side panel on desktop */}
+      {editMode && showPalette && (
+        <div className="absolute bottom-20 left-0 right-0 z-30 pointer-events-auto">
+          <div className="mx-3 rounded-lg bg-black/90 backdrop-blur border border-purple-500/40 shadow-2xl overflow-hidden max-h-[50vh]">
+            <div className="flex items-center justify-between px-3 py-2 border-b border-purple-500/20 bg-black/40">
+              <span className="text-[10px] font-mono font-bold text-purple-300 tracking-wider">🔨 BUILD PALETTE</span>
+              <button onClick={() => setShowPalette(false)} className="text-gray-400 hover:text-white text-xs p-1">×</button>
+            </div>
+            {/* Category tabs */}
+            <div className="flex gap-1 px-2 py-2 border-b border-white/5 overflow-x-auto">
+              {BUILDABLE_CATEGORIES.map(cat => (
+                <button
+                  key={cat}
+                  onClick={() => setPaletteCategory(cat)}
+                  className={`px-2.5 py-1 rounded text-[9px] font-mono uppercase whitespace-nowrap transition ${
+                    paletteCategory === cat
+                      ? 'bg-purple-500/30 text-purple-300 border border-purple-400/50'
+                      : 'bg-white/[0.03] text-gray-500 border border-white/5 hover:text-white'
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+            {/* Item grid */}
+            <div className="p-2 grid grid-cols-4 sm:grid-cols-6 gap-1.5 overflow-y-auto max-h-[28vh]">
+              {buildablesByCategory(paletteCategory).map(item => (
+                <button
+                  key={item.id}
+                  onClick={() => { setPendingBuildable(item); setPendingColor(null) }}
+                  className={`flex flex-col items-center gap-0.5 p-2 rounded border transition ${
+                    pendingBuildable?.id === item.id
+                      ? 'bg-orange-500/30 border-orange-400 text-orange-300 scale-105'
+                      : 'bg-black/40 border-white/5 text-gray-400 hover:text-white hover:border-purple-500/30'
+                  }`}
+                  title={item.name}
+                >
+                  <span className="text-xl leading-none">{item.emoji}</span>
+                  <span className="text-[8px] font-mono uppercase truncate max-w-full">{item.name}</span>
+                </button>
+              ))}
+            </div>
+            {/* Color picker for pending item */}
+            {pendingBuildable && (
+              <div className="px-2 py-2 border-t border-white/5 bg-black/30">
+                <div className="text-[8px] font-mono text-gray-500 uppercase mb-1">Color · {pendingBuildable.name}</div>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {[pendingBuildable.defaultColor, '#22d3ee', '#a855f7', '#ec4899', '#22c55e', '#facc15', '#ef4444', '#ffffff', '#000000'].map(c => (
+                    <button
+                      key={c}
+                      onClick={() => setPendingColor(c)}
+                      className={`w-5 h-5 rounded-full border-2 transition ${pendingColor === c ? 'border-white scale-110' : 'border-white/20 hover:border-white/40'}`}
+                      style={{ backgroundColor: c }}
+                    />
+                  ))}
+                  <input
+                    type="color"
+                    value={pendingColor || pendingBuildable.defaultColor}
+                    onChange={e => setPendingColor(e.target.value)}
+                    className="w-5 h-5 rounded cursor-pointer bg-transparent border border-white/10"
+                  />
+                  <button
+                    onClick={() => setPendingColor(null)}
+                    className="text-[8px] font-mono text-gray-400 hover:text-white px-2 py-0.5 rounded border border-white/10"
+                  >
+                    default
+                  </button>
+                </div>
+              </div>
+            )}
+            <div className="px-3 py-1.5 border-t border-purple-500/20 bg-black/40 text-[8px] font-mono text-purple-400/60">
+              💡 Tap the ground on your parcel to place. Tap any placed item to delete or bind.
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* BUILD MODE — delete confirm dialog */}
+      {deleteCandidate && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => setDeleteCandidate(null)}>
+          <div className="w-full max-w-sm bg-[#0a0f1f] border border-red-500/40 rounded-xl overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-4 py-3 border-b border-red-500/20 bg-black/40">
+              <span className="text-xs font-mono font-bold text-red-400">REMOVE FROM PARCEL</span>
+              <button onClick={() => setDeleteCandidate(null)} className="p-1 text-gray-400"><X className="w-4 h-4" /></button>
+            </div>
+            <div className="p-4 space-y-3">
+              <div className="text-center">
+                <div className="text-3xl mb-2">{getBuildable(deleteCandidate.buildableId)?.emoji || '📦'}</div>
+                <div className="text-sm font-mono text-white">{getBuildable(deleteCandidate.buildableId)?.name || deleteCandidate.buildableId}</div>
+                <div className="text-[9px] font-mono text-gray-500 mt-1">parcel ({deleteCandidate.parcelX}, {deleteCandidate.parcelZ})</div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button onClick={() => setDeleteCandidate(null)} className="flex-1 py-2 rounded text-[10px] font-mono text-gray-400 border border-white/10 hover:bg-white/5">
+                  Cancel
+                </button>
+                <button
+                  onClick={() => deleteBuildable(deleteCandidate)}
+                  className="flex-1 py-2 rounded text-[10px] font-mono font-bold bg-red-500/20 text-red-300 border border-red-500/40 hover:bg-red-500/30"
+                >
+                  Delete
                 </button>
               </div>
             </div>

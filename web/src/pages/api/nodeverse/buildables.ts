@@ -30,16 +30,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const parcelX = req.query.parcelX !== undefined ? parseInt(req.query.parcelX as string) : null
     const parcelZ = req.query.parcelZ !== undefined ? parseInt(req.query.parcelZ as string) : null
     const ownerId = (req.query.ownerId as string) || ''
+    // BBox: minParcelX/maxParcelX/minParcelZ/maxParcelZ — used by Explore3DScene
+    // to fetch all buildables in the visible render range (±3 parcels by default).
+    const minX = req.query.minParcelX !== undefined ? parseInt(req.query.minParcelX as string) : null
+    const maxX = req.query.maxParcelX !== undefined ? parseInt(req.query.maxParcelX as string) : null
+    const minZ = req.query.minParcelZ !== undefined ? parseInt(req.query.minParcelZ as string) : null
+    const maxZ = req.query.maxParcelZ !== undefined ? parseInt(req.query.maxParcelZ as string) : null
     const query: any = {}
     if (parcelX !== null && parcelZ !== null) {
       query.parcelX = parcelX
       query.parcelZ = parcelZ
+    } else if (minX !== null && maxX !== null && minZ !== null && maxZ !== null) {
+      query.parcelX = { $gte: minX, $lte: maxX }
+      query.parcelZ = { $gte: minZ, $lte: maxZ }
     } else if (ownerId) {
       try { query.ownerId = new ObjectId(ownerId) } catch { return res.status(400).json({ error: 'bad ownerId' }) }
     } else {
-      return res.status(400).json({ error: 'parcelX+parcelZ or ownerId required' })
+      return res.status(400).json({ error: 'parcelX+parcelZ, bbox, or ownerId required' })
     }
-    const docs = await buildables.find(query).limit(MAX_PER_PARCEL).toArray()
+    // Bbox can return many items across parcels; cap at 2000 (10 parcels × 200).
+    const docs = await buildables.find(query).limit(2000).toArray()
     return res.status(200).json({
       buildables: docs.map((d) => ({
         ...d,
