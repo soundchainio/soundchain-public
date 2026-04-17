@@ -392,7 +392,14 @@ export function CharacterDesigner({ open, onClose, initialName }: CharacterDesig
             🤖 AGENT
           </button>
           <button
-            onClick={() => update({ type: 'human' })}
+            onClick={() => {
+              // Clear open-source GLB data so RPM iframe shows fresh
+              if (config.openSourceId) {
+                update({ type: 'human', humanGlbUrl: undefined, humanAvatarPng: undefined, openSourceId: undefined, humanScale: undefined, humanYOffset: undefined })
+              } else {
+                update({ type: 'human' })
+              }
+            }}
             className={`flex-1 sm:flex-none px-3 py-1.5 rounded text-[10px] font-mono font-bold transition ${config.type === 'human' ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' : 'bg-white/[0.02] text-gray-500 border border-white/5 hover:text-white'}`}
           >
             👤 HUMAN <span className="opacity-60 text-[8px]">(RPM)</span>
