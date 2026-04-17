@@ -78,10 +78,13 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
   const [pendingColor, setPendingColor] = useState<string | null>(null)
   const [deleteCandidate, setDeleteCandidate] = useState<PlacedBuildable | null>(null)
   const [bindFrameCandidate, setBindFrameCandidate] = useState<PlacedBuildable | null>(null)
+  const [drivingVehicle, setDrivingVehicle] = useState<PlacedBuildable | null>(null)
   // Refs used by raycast handlers so they can read latest state without re-subscribing.
   const editModeRef = useRef(editMode); editModeRef.current = editMode
   const pendingRef = useRef<BuildableItem | null>(pendingBuildable); pendingRef.current = pendingBuildable
   const pendingColorRef = useRef<string | null>(pendingColor); pendingColorRef.current = pendingColor
+  // Phase 4 — current vehicle being ridden. Ref lets animate loop read it without re-subscribing.
+  const drivingRef = useRef<{ group: any; data: PlacedBuildable } | null>(null)
   const fetchLand = useCallback(() => {
     fetch('/api/nodeverse/squares')
       .then(r => r.json())
@@ -682,7 +685,7 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
         }
         return
       }
-      // Non-edit tap on frame buildable → open bind modal so owner can set asset.
+      // Non-edit tap on buildable — frames open their asset, vehicles toggle mount.
       const bHits = raycaster.intersectObjects(buildableMeshes.map(b => b.group), true)
       if (bHits.length > 0) {
         const hit: any = bHits[0].object
@@ -691,10 +694,23 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
         if (pb) {
           const item = getBuildable(pb.buildableId)
           if (item?.category === 'frame' && pb.boundAssetId) {
-            // Open asset — route based on type
             if (pb.boundAssetType === 'post') router.push(`/posts/${pb.boundAssetId}`)
             else if (pb.boundAssetType === 'scid') router.push(`/dex/track/${pb.boundAssetId}`)
             else if (pb.boundAssetType === 'nft') router.push(`/dex/nft/${pb.boundAssetId}`)
+          } else if (item?.category === 'vehicle') {
+            // Phase 4 — mount vehicle. Find the matching mesh by placement id,
+            // teleport player onto it, then the animate loop locks the vehicle to the player.
+            const entry = buildableMeshes.find(bm => bm.data.id === pb!.id)
+            if (entry) {
+              if (drivingRef.current?.data.id === pb.id) {
+                drivingRef.current = null
+                setDrivingVehicle(null)
+              } else {
+                playerGroup.position.set(entry.group.position.x, 0, entry.group.position.z)
+                drivingRef.current = { group: entry.group, data: pb }
+                setDrivingVehicle(pb)
+              }
+            }
           }
         }
       }
@@ -822,13 +838,24 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
       // Sprint: Shift on desktop, mobile RUN button, or joystick at near-full extent
       const touchMag = Math.hypot(touchVec.x, touchVec.z)
       const isRunning = !!keys['shift'] || runRef.current || touchMag > 0.95
-      const speed = SPEED * (isRunning ? RUN_MULT : 1)
+      // Phase 4 — if riding a vehicle, swap walk speed for the vehicle's driveSpeed (units/sec → per-frame).
+      const driving = drivingRef.current
+      const driveItem = driving ? getBuildable(driving.data.buildableId) : null
+      const speed = driveItem?.driveSpeed
+        ? (driveItem.driveSpeed / 60) * (isRunning ? 1.3 : 1)
+        : SPEED * (isRunning ? RUN_MULT : 1)
       const dx = (right - left) + touchVec.x
       const dz = -(forward - back) + touchVec.z
       playerGroup.position.x += dx * speed
       playerGroup.position.z += dz * speed
       if (dx !== 0 || dz !== 0) {
         playerGroup.rotation.y = Math.atan2(dx, dz)
+      }
+      // Lock vehicle mesh to player so it rides along.
+      if (driving) {
+        driving.group.position.x = playerGroup.position.x
+        driving.group.position.z = playerGroup.position.z
+        driving.group.rotation.y = playerGroup.rotation.y
       }
       // Jump (Space / mobile JUMP button) — only when grounded
       const grounded = playerGroup.position.y <= 0.001 && vy <= 0
@@ -1198,6 +1225,52 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
             setDeleteCandidate(pb)
           }}
         />
+      )}
+
+      {/* PHASE 4 — vehicle HUD (exit button persists new parked position) */}
+      {drivingVehicle && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 bg-black/80 backdrop-blur border border-cyan-500/50 rounded-full px-4 py-2 shadow-[0_0_20px_rgba(6,182,212,0.4)]">
+          <span className="text-2xl">{getBuildable(drivingVehicle.buildableId)?.emoji || '🚗'}</span>
+          <span className="text-xs font-mono text-cyan-300">RIDING {getBuildable(drivingVehicle.buildableId)?.name.toUpperCase()}</span>
+          <button
+            onClick={() => {
+              const d = drivingRef.current
+              drivingRef.current = null
+              setDrivingVehicle(null)
+              if (!d) return
+              // Persist vehicle's new parked position relative to its original parcel.
+              const PARCEL_SIZE = 16
+              const newLocalX = d.group.position.x - d.data.parcelX * PARCEL_SIZE
+              const newLocalZ = d.group.position.z - d.data.parcelZ * PARCEL_SIZE
+              if (Math.abs(newLocalX) > 8.4 || Math.abs(newLocalZ) > 8.4) {
+                // Drove off-parcel — snap mesh back to origin locally; server keeps original position.
+                d.group.position.x = d.data.parcelX * PARCEL_SIZE + d.data.localX
+                d.group.position.z = d.data.parcelZ * PARCEL_SIZE + d.data.localZ
+                return
+              }
+              fetch('/api/nodeverse/buildables', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                  id: d.data.id,
+                  buildableId: d.data.buildableId,
+                  parcelX: d.data.parcelX,
+                  parcelZ: d.data.parcelZ,
+                  localX: newLocalX,
+                  localY: 0,
+                  localZ: newLocalZ,
+                  rotY: d.group.rotation.y,
+                  color: d.data.color || undefined,
+                  scale: d.data.scale ?? 1,
+                }),
+              }).then(() => fetchBuildables()).catch(() => {})
+            }}
+            className="ml-2 px-3 py-1 rounded-full text-[10px] font-mono font-bold bg-red-500/20 text-red-300 border border-red-500/40 hover:bg-red-500/30"
+          >
+            EXIT
+          </button>
+        </div>
       )}
 
       {/* WORLD MAP — top-right mini-map showing whole Nodeverse */}
