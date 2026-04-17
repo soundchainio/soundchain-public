@@ -17,6 +17,9 @@ import { useRouter } from 'next/router'
 import { TopNavBar } from 'components/TopNavBar'
 import { ArrowLeft, MapPin, Coins, Lock, Filter, ZoomIn, ZoomOut, Wallet, X, Globe2, Grid3x3, Search, Plane, Loader2 } from 'lucide-react'
 import { useMagicContext } from 'hooks/useMagicContext'
+import { config } from '../../config'
+import Web3 from 'web3'
+import { toast } from 'react-toastify'
 import { feature } from 'topojson-client'
 import type { Topology, GeometryCollection } from 'topojson-specification'
 import type { Feature, FeatureCollection, Geometry } from 'geojson'
@@ -51,6 +54,11 @@ function getTier(x: number, z: number): keyof typeof TIER_COLORS {
 
 type ViewMode = 'grid' | 'earth'
 
+const OGUN_ABI = [
+  { inputs: [{ name: 'recipient', type: 'address' }, { name: 'amount', type: 'uint256' }], name: 'transfer', outputs: [{ name: '', type: 'bool' }], stateMutability: 'nonpayable', type: 'function' },
+  { inputs: [{ name: 'account', type: 'address' }], name: 'balanceOf', outputs: [{ name: '', type: 'uint256' }], stateMutability: 'view', type: 'function' },
+]
+
 export default function LandAtlasPage() {
   const me = useMe()
   const router = useRouter()
@@ -65,7 +73,7 @@ export default function LandAtlasPage() {
   const [purchaseModal, setPurchaseModal] = useState<{ x: number; z: number; tier: string; price: number; landmark?: typeof FAMOUS_LANDMARKS[number] } | null>(null)
   const [tierFilter, setTierFilter] = useState<string>('')
   const [purchasing, setPurchasing] = useState(false)
-  const [receipt, setReceipt] = useState<{ x: number; z: number; tier: string; price: number; fee: number; owner: string; timestamp: string; landmark?: string } | null>(null)
+  const [receipt, setReceipt] = useState<{ x: number; z: number; tier: string; price: number; fee: number; owner: string; timestamp: string; landmark?: string; txHash?: string } | null>(null)
   const [viewMode, setViewMode] = useState<ViewMode>('grid')
   const [worldGeo, setWorldGeo] = useState<FeatureCollection | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
@@ -469,8 +477,49 @@ export default function LandAtlasPage() {
 
   const purchase = async () => {
     if (!purchaseModal || !me) return
+
+    // ─── Step 1: Get web3 + wallet ─────────────────────────
+    const magic = (window as any).__magic
+    if (!magic) {
+      toast.error('Wallet not connected — log in first')
+      return
+    }
+    let web3: Web3
+    try {
+      web3 = new Web3(magic.rpcProvider as any)
+    } catch {
+      toast.error('Failed to connect wallet provider')
+      return
+    }
+    const accounts = await web3.eth.getAccounts()
+    const from = accounts[0]
+    if (!from) {
+      toast.error('No wallet account found')
+      return
+    }
+
+    // ─── Step 2: Check OGUN balance ────────────────────────
+    const ogunAddress = config.ogunTokenAddress
+    const ogunContract = new web3.eth.Contract(OGUN_ABI as any, ogunAddress)
+    const balanceWei = await ogunContract.methods.balanceOf(from).call()
+    const balance = parseFloat(web3.utils.fromWei(String(balanceWei), 'ether'))
+    if (balance < purchaseModal.price) {
+      toast.error(`Insufficient OGUN — need ${purchaseModal.price}, have ${balance.toFixed(2)}`)
+      return
+    }
+
     setPurchasing(true)
     try {
+      // ─── Step 3: Transfer OGUN to treasury ───────────────
+      const treasuryAddress = config.treasuryAddress
+      const amountWei = web3.utils.toWei(purchaseModal.price.toString(), 'ether')
+      toast.info(`Transferring ${purchaseModal.price} OGUN to treasury...`, { autoClose: 5000 })
+
+      const tx = await ogunContract.methods.transfer(treasuryAddress, amountWei).send({ from })
+      const txHash = tx.transactionHash
+      toast.success(`OGUN transferred! TX: ${txHash.slice(0, 10)}...`)
+
+      // ─── Step 4: Record parcel with TX proof ─────────────
       const res = await fetch('/api/nodeverse/squares', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -480,10 +529,10 @@ export default function LandAtlasPage() {
           ownerHandle: me.handle,
           ownerColor: '#22d3ee',
           label: purchaseModal.landmark ? `${purchaseModal.landmark.emoji} ${purchaseModal.landmark.name}` : null,
+          txHash,
         }),
       })
       if (res.ok) {
-        const data = await res.json()
         const fee = Math.ceil(purchaseModal.price * 0.0005)
         setReceipt({
           x: purchaseModal.x,
@@ -494,12 +543,21 @@ export default function LandAtlasPage() {
           owner: me.handle || 'anon',
           timestamp: new Date().toISOString(),
           landmark: purchaseModal.landmark?.name,
+          txHash,
         })
         setPurchaseModal(null)
         fetchLand()
+        toast.success('Parcel claimed! Check your receipt.')
       } else {
         const err = await res.json()
-        alert(err.error || 'Purchase failed')
+        toast.error(err.error || 'Purchase recording failed — but OGUN was transferred. Contact support with TX hash: ' + txHash)
+      }
+    } catch (error: any) {
+      console.error('Parcel purchase error:', error)
+      if (error?.code === 4001 || error?.message?.includes('denied')) {
+        toast.error('Transaction rejected by wallet')
+      } else {
+        toast.error(error?.message || 'Purchase failed')
       }
     } finally { setPurchasing(false) }
   }
@@ -883,18 +941,38 @@ export default function LandAtlasPage() {
                 </div>
                 <div className="flex justify-between text-[10px] font-mono">
                   <span className="text-gray-400">Status</span>
-                  <span className="text-green-400">✅ CONFIRMED (off-chain)</span>
+                  <span className="text-green-400">{receipt.txHash ? '✅ ON-CHAIN CONFIRMED' : '⏳ off-chain only'}</span>
                 </div>
-                <div className="flex justify-between text-[10px] font-mono">
-                  <span className="text-gray-400">On-chain TX</span>
-                  <span className="text-gray-500 italic text-[8px]">pending — Phase 2: NFT contract mint</span>
-                </div>
+                {receipt.txHash && (
+                  <div className="flex justify-between items-center text-[10px] font-mono">
+                    <span className="text-gray-400">TX Hash</span>
+                    <a
+                      href={`https://polygonscan.com/tx/${receipt.txHash}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-cyan-400 hover:text-cyan-300 underline text-[8px] break-all max-w-[200px] truncate"
+                    >
+                      {receipt.txHash.slice(0, 10)}...{receipt.txHash.slice(-8)}
+                    </a>
+                  </div>
+                )}
+                {!receipt.txHash && (
+                  <div className="flex justify-between text-[10px] font-mono">
+                    <span className="text-gray-400">On-chain TX</span>
+                    <span className="text-gray-500 italic text-[8px]">no OGUN moved — test purchase</span>
+                  </div>
+                )}
               </div>
 
               <div className="text-[8px] font-mono text-gray-600 leading-relaxed border-t border-white/5 pt-2">
-                This parcel is recorded in the SoundChain Nodeverse ledger (MongoDB). On-chain
-                ownership via NFT contract is coming in the next phase. The 0.05% platform fee
-                ({receipt.fee} OGUN) goes to the SoundChain Treasury Gnosis Safe for ecosystem development.
+                {receipt.txHash ? (
+                  <>OGUN transferred on-chain to SoundChain Treasury Gnosis Safe. Verify on Polygonscan.
+                  The 0.05% platform fee ({receipt.fee} OGUN) supports ecosystem development.
+                  NFT ownership mint coming next phase.</>
+                ) : (
+                  <>This was a test purchase (no OGUN moved). Future purchases require on-chain
+                  OGUN transfer before parcel is recorded.</>
+                )}
               </div>
 
               <button

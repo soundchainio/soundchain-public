@@ -86,7 +86,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const auth = await authFromRequest(req)
     if (!auth) return res.status(401).json({ error: 'Unauthenticated' })
 
-    const { x, z, ownerHandle, ownerColor, label } = req.body || {}
+    const { x, z, ownerHandle, ownerColor, label, txHash } = req.body || {}
     if (typeof x !== 'number' || typeof z !== 'number') {
       return res.status(400).json({ error: 'x and z required (integers)' })
     }
@@ -106,8 +106,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const tier = tierForSquare(x, z)
     const fee = Math.ceil(price * 0.0005) // 0.05% to treasury
 
-    // TODO: Verify OGUN balance + execute on-chain transfer
-    // For now, just record the purchase (off-chain ledger)
+    // txHash required — OGUN must be transferred to treasury BEFORE we record ownership
+    if (!txHash || typeof txHash !== 'string') {
+      return res.status(400).json({ error: 'txHash required — OGUN transfer to treasury must happen first' })
+    }
+
     const doc = {
       x,
       z,
@@ -118,6 +121,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       tier,
       fee,
       label: label || null,
+      txHash,
       purchasedAt: new Date(),
     }
 
@@ -127,11 +131,30 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     fetch(`${req.headers.origin || 'https://soundchain.io'}/api/agent/analytics-events`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ event: 'land_purchase', meta: { x, z, price, tier, fee } }),
+      body: JSON.stringify({ event: 'land_purchase', meta: { x, z, price, tier, fee, txHash } }),
     }).catch(() => {})
 
     return res.status(200).json({ ok: true, square: doc })
   }
 
-  return res.status(405).json({ error: 'GET or POST only' })
+  // DELETE — refund a parcel (owner only, only if no on-chain TX or test purchase)
+  if (req.method === 'DELETE') {
+    const auth = await authFromRequest(req)
+    if (!auth) return res.status(401).json({ error: 'Unauthenticated' })
+
+    const x = parseInt(req.query.x as string)
+    const z = parseInt(req.query.z as string)
+    if (isNaN(x) || isNaN(z)) return res.status(400).json({ error: 'x and z query params required' })
+
+    const existing = await col.findOne({ x, z })
+    if (!existing) return res.status(404).json({ error: 'Parcel not found' })
+    if (existing.ownerId?.toString() !== auth.profileId?.toString()) {
+      return res.status(403).json({ error: 'Not your parcel' })
+    }
+
+    await col.deleteOne({ x, z })
+    return res.status(200).json({ ok: true, refunded: { x, z } })
+  }
+
+  return res.status(405).json({ error: 'GET, POST, or DELETE' })
 }
