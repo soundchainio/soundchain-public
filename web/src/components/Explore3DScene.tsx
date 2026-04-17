@@ -317,14 +317,14 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
     const ctx = labelCanvas.getContext('2d')!
     ctx.fillStyle = 'rgba(0,0,0,0.7)'
     ctx.fillRect(0, 0, 256, 64)
-    ctx.fillStyle = isHuman ? '#a855f7' : character.bodyColor
+    ctx.fillStyle = isGlbAvatar ? '#a855f7' : character.bodyColor
     ctx.font = 'bold 28px monospace'
     ctx.textAlign = 'center'
     ctx.fillText(displayName, 128, 42)
     const labelTex = new THREE.CanvasTexture(labelCanvas)
     const labelSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: labelTex }))
     labelSprite.scale.set(2, 0.5, 1)
-    labelSprite.position.y = isHuman ? 2.0 * character.height + 0.3 : 2.4 + (character.height - 1) * 1
+    labelSprite.position.y = isGlbAvatar ? 2.0 * character.height + 0.3 : 2.4 + (character.height - 1) * 1
     playerGroup.add(labelSprite)
 
     scene.add(playerGroup)
