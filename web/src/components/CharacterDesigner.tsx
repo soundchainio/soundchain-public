@@ -472,6 +472,8 @@ export function CharacterDesigner({ open, onClose, initialName }: CharacterDesig
           <OpenSourceAvatarBrowser
             selectedId={config.openSourceId}
             currentName={config.name}
+            config={config}
+            onUpdate={update}
             onPickAvatar={(av) => update({
               humanGlbUrl: av.glbUrl,
               humanAvatarPng: av.thumbnailUrl,
@@ -848,12 +850,14 @@ export function CharacterDesigner({ open, onClose, initialName }: CharacterDesig
 interface OpenSourceAvatarBrowserProps {
   selectedId?: string
   currentName: string
+  config: CharacterConfig
+  onUpdate: (patch: Partial<CharacterConfig>) => void
   onPickAvatar: (av: typeof OPEN_SOURCE_AVATARS[number]) => void
   onClearAvatar: () => void
   onNameChange: (name: string) => void
 }
 
-function OpenSourceAvatarBrowser({ selectedId, currentName, onPickAvatar, onClearAvatar, onNameChange }: OpenSourceAvatarBrowserProps) {
+function OpenSourceAvatarBrowser({ selectedId, currentName, config, onUpdate, onPickAvatar, onClearAvatar, onNameChange }: OpenSourceAvatarBrowserProps) {
   const [category, setCategory] = useState<AvatarCategory | 'all'>('all')
   const [search, setSearch] = useState('')
   const previewRef = useRef<HTMLDivElement>(null)
@@ -864,7 +868,7 @@ function OpenSourceAvatarBrowser({ selectedId, currentName, onPickAvatar, onClea
 
   const selected = OPEN_SOURCE_AVATARS.find(a => a.id === selectedId)
 
-  // ─── Live 3D preview of the selected avatar ──────────────
+  // ─── Live 3D preview of the selected avatar (reactive to config) ──
   useEffect(() => {
     if (!selected || !previewRef.current) return
     const container = previewRef.current
@@ -888,38 +892,49 @@ function OpenSourceAvatarBrowser({ selectedId, currentName, onPickAvatar, onClea
     const dir = new THREE.DirectionalLight(0xffffff, 1.5)
     dir.position.set(5, 8, 5)
     scene.add(dir)
-    const cyan = new THREE.PointLight(0x22d3ee, 1.2, 15)
-    cyan.position.set(-3, 3, 3)
-    scene.add(cyan)
-    const purple = new THREE.PointLight(0xa855f7, 0.8, 15)
-    purple.position.set(3, 2, -2)
-    scene.add(purple)
+    const cyanLight = new THREE.PointLight(0x22d3ee, 1.2, 15)
+    cyanLight.position.set(-3, 3, 3)
+    scene.add(cyanLight)
+    const purpleLight = new THREE.PointLight(0xa855f7, 0.8, 15)
+    purpleLight.position.set(3, 2, -2)
+    scene.add(purpleLight)
 
-    // Floor disc + glow ring
+    // Floor disc
     const floorGeo = new THREE.CircleGeometry(2, 32)
     const floorMat = new THREE.MeshStandardMaterial({ color: 0x1a2540, metalness: 0.7, roughness: 0.3 })
     const floor = new THREE.Mesh(floorGeo, floorMat)
     floor.rotation.x = -Math.PI / 2
     scene.add(floor)
+
+    // Glow ring — reactive to config.glowColor + glowIntensity
     const ringGeo = new THREE.RingGeometry(1.0, 1.2, 32)
-    const ringMat = new THREE.MeshBasicMaterial({ color: 0x22c55e, transparent: true, opacity: 0.5, side: THREE.DoubleSide })
+    const ringMat = new THREE.MeshBasicMaterial({
+      color: new THREE.Color(config.glowColor),
+      transparent: true,
+      opacity: config.glowIntensity,
+      side: THREE.DoubleSide,
+    })
     const ring = new THREE.Mesh(ringGeo, ringMat)
     ring.rotation.x = -Math.PI / 2
     ring.position.y = 0.01
     scene.add(ring)
 
-    // Loading indicator (will be cleared once GLB loads)
+    // Loading indicator
     const loadingGeo = new THREE.BoxGeometry(0.5, 0.5, 0.5)
-    const loadingMat = new THREE.MeshStandardMaterial({ color: 0x22c55e, emissive: 0x22c55e, emissiveIntensity: 0.5, wireframe: true })
+    const loadingMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(config.glowColor), emissive: new THREE.Color(config.glowColor), emissiveIntensity: 0.5, wireframe: true })
     const loadingCube = new THREE.Mesh(loadingGeo, loadingMat)
     loadingCube.position.y = 1.2
     scene.add(loadingCube)
+
+    // Avatar group (holds model + accessories)
+    const avatarGroup = new THREE.Group()
+    scene.add(avatarGroup)
 
     let mixer: THREE.AnimationMixer | null = null
     let model: THREE.Object3D | null = null
     let cancelled = false
 
-    // Lazy-load GLTFLoader (matches RadioScene4D pattern)
+    // Lazy-load GLTFLoader
     import('three/examples/jsm/loaders/GLTFLoader.js').then(({ GLTFLoader }) => {
       if (cancelled) return
       const loader = new GLTFLoader()
@@ -929,27 +944,87 @@ function OpenSourceAvatarBrowser({ selectedId, currentName, onPickAvatar, onClea
           if (cancelled) return
           scene.remove(loadingCube)
           model = gltf.scene
-          const scale = selected.scale ?? 1
-          model.scale.setScalar(scale)
+          const baseScale = selected.scale ?? 1
+          model.scale.setScalar(baseScale * config.height)
           model.position.y = selected.yOffset ?? 0
+
+          // Apply tint if bodyColor is not default cyan
+          if (config.bodyColor !== '#22d3ee') {
+            const tintColor = new THREE.Color(config.bodyColor)
+            model.traverse((child: any) => {
+              if (child.isMesh && child.material) {
+                const mat = child.material.clone()
+                mat.color.multiply(tintColor)
+                child.material = mat
+              }
+            })
+          }
+
           model.traverse((child: any) => {
             if (child.isMesh) {
               child.castShadow = true
               child.receiveShadow = true
             }
           })
-          scene.add(model)
-          // Animations if available
+          avatarGroup.add(model)
+
+          // Animations
           if (gltf.animations && gltf.animations.length > 0) {
             mixer = new THREE.AnimationMixer(model)
-            const clip = gltf.animations[0]
-            mixer.clipAction(clip).play()
+            mixer.clipAction(gltf.animations[0]).play()
+          }
+
+          // Accessory — attached above the model's bounding box
+          if (config.accessory !== 'none') {
+            const bbox = new THREE.Box3().setFromObject(model)
+            const topY = bbox.max.y + 0.15
+            const accMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, emissive: 0xfacc15, emissiveIntensity: 0.6, metalness: 0.9, roughness: 0.1 })
+            let accMesh: THREE.Mesh | null = null
+            switch (config.accessory) {
+              case 'crown':
+                accMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 0.12, 8), accMat)
+                accMesh.position.y = topY
+                break
+              case 'halo':
+                accMesh = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.03, 16, 32), accMat)
+                accMesh.position.y = topY + 0.1
+                accMesh.rotation.x = Math.PI / 2
+                break
+              case 'antenna':
+                accMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.4), accMat)
+                accMesh.position.y = topY + 0.15
+                break
+              case 'visor':
+                accMesh = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.08, 0.3), new THREE.MeshStandardMaterial({ color: 0x000000, emissive: new THREE.Color(config.glowColor), emissiveIntensity: 0.3, metalness: 0.9, roughness: 0.1, transparent: true, opacity: 0.85 }))
+                accMesh.position.y = topY - (bbox.max.y - bbox.min.y) * 0.15
+                accMesh.position.z = 0.05
+                break
+            }
+            if (accMesh) avatarGroup.add(accMesh)
+          }
+
+          // Name label sprite above model
+          if (config.name) {
+            const bbox2 = new THREE.Box3().setFromObject(avatarGroup)
+            const labelCanvas = document.createElement('canvas')
+            labelCanvas.width = 256
+            labelCanvas.height = 64
+            const ctx2 = labelCanvas.getContext('2d')!
+            ctx2.fillStyle = 'rgba(0,0,0,0.7)'
+            ctx2.fillRect(0, 0, 256, 64)
+            ctx2.fillStyle = config.glowColor
+            ctx2.font = 'bold 28px monospace'
+            ctx2.textAlign = 'center'
+            ctx2.fillText(config.name.slice(0, 16), 128, 42)
+            const tex = new THREE.CanvasTexture(labelCanvas)
+            const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex }))
+            sprite.scale.set(1.5, 0.4, 1)
+            sprite.position.y = bbox2.max.y + 0.3
+            avatarGroup.add(sprite)
           }
         },
         undefined,
-        (err) => {
-          console.warn('Failed to load avatar GLB:', selected.glbUrl, err)
-        }
+        (err) => console.warn('Failed to load avatar GLB:', selected.glbUrl, err)
       )
     })
 
@@ -959,8 +1034,8 @@ function OpenSourceAvatarBrowser({ selectedId, currentName, onPickAvatar, onClea
       raf = requestAnimationFrame(animate)
       const dt = clock.getDelta()
       if (mixer) mixer.update(dt)
-      if (model) model.rotation.y += 0.005
-      else loadingCube.rotation.y += 0.02
+      avatarGroup.rotation.y += 0.005
+      if (!model) loadingCube.rotation.y += 0.02
       ring.rotation.z += 0.005
       renderer.render(scene, camera)
     }
@@ -979,7 +1054,7 @@ function OpenSourceAvatarBrowser({ selectedId, currentName, onPickAvatar, onClea
         }
       })
     }
-  }, [selected])
+  }, [selected, config.height, config.glowColor, config.glowIntensity, config.bodyColor, config.accessory, config.name])
 
   return (
     <div className="bg-black">
@@ -1038,32 +1113,30 @@ function OpenSourceAvatarBrowser({ selectedId, currentName, onPickAvatar, onClea
         </>
       ) : (
         <>
-          {/* Selected — show 3D preview */}
+          {/* Selected — 3D preview + NBA 2K-style customization panel */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
             <div className="bg-black border-b md:border-b-0 md:border-r border-green-500/10">
               <div ref={previewRef} className="w-full" style={{ height: '320px' }} />
               <div className="px-3 py-2 flex items-center justify-between border-t border-green-500/10">
-                <span className="text-[8px] font-mono text-gray-600">LIVE PREVIEW · GLB loaded · auto-rotate</span>
-              </div>
-            </div>
-            <div className="p-4 space-y-3">
-              <div className="flex items-center gap-2">
-                <div className="text-3xl">{selected.emoji}</div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-mono font-bold text-white truncate">{selected.name}</div>
-                  <div className="text-[9px] font-mono text-gray-500 capitalize">{selected.category} · {selected.source}</div>
+                <span className="text-[8px] font-mono text-gray-600">LIVE PREVIEW · auto-rotate · reactive</span>
+                <div className="flex items-center gap-1">
+                  <span className="px-1.5 py-0.5 rounded text-[8px] font-mono bg-green-500/10 text-green-400 border border-green-500/20">{selected.license}</span>
+                  {selected.hasAnimations && <span className="px-1.5 py-0.5 rounded text-[8px] font-mono bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">▶ anim</span>}
                 </div>
               </div>
-              <div className="flex items-center gap-1 flex-wrap">
-                <span className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-green-500/10 text-green-400 border border-green-500/20">{selected.license}</span>
-                {selected.hasAnimations && <span className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">animated</span>}
-                {selected.tags.map(t => (
-                  <span key={t} className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-white/5 text-gray-400 border border-white/10">{t}</span>
-                ))}
+            </div>
+            {/* Right: Customization controls */}
+            <div className="p-4 space-y-3 overflow-y-auto" style={{ maxHeight: '420px' }}>
+              {/* Model info header */}
+              <div className="flex items-center gap-2">
+                <div className="text-2xl">{selected.emoji}</div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-mono font-bold text-white truncate">{selected.name}</div>
+                  <div className="text-[8px] font-mono text-gray-500 capitalize">{selected.category} · {selected.source}</div>
+                </div>
               </div>
-              <div className="text-[9px] font-mono text-gray-500 break-all px-1 py-1 rounded bg-black/40 border border-white/5">
-                {selected.glbUrl}
-              </div>
+
+              {/* Display Name */}
               <div>
                 <label className="text-[9px] font-mono text-gray-500 uppercase tracking-wider mb-1 block">Display Name</label>
                 <input
@@ -1075,10 +1148,54 @@ function OpenSourceAvatarBrowser({ selectedId, currentName, onPickAvatar, onClea
                   maxLength={16}
                 />
               </div>
-              <button
-                onClick={onClearAvatar}
-                className="w-full py-1.5 rounded text-[10px] font-mono text-green-400 hover:bg-green-500/10 border border-green-500/20 transition"
-              >
+
+              {/* Height / Scale */}
+              <div>
+                <label className="text-[9px] font-mono text-gray-500 uppercase tracking-wider mb-1 flex items-center justify-between">
+                  <span>Height / Scale</span><span className="text-green-400">{(config.height * 100).toFixed(0)}%</span>
+                </label>
+                <input type="range" min="0.5" max="2.0" step="0.05" value={config.height} onChange={e => onUpdate({ height: parseFloat(e.target.value) })} className="w-full accent-green-400" />
+              </div>
+
+              {/* Tint Color (multiplied onto model materials) */}
+              <div>
+                <label className="text-[9px] font-mono text-gray-500 uppercase tracking-wider mb-1 block">Tint / Overlay Color</label>
+                <div className="flex items-center gap-2 flex-wrap">
+                  {['#22d3ee', '#a855f7', '#ec4899', '#22c55e', '#f59e0b', '#ef4444', '#3b82f6', '#eab308', '#ffffff'].map(c => (
+                    <button key={c} onClick={() => onUpdate({ bodyColor: c })} className={`w-6 h-6 rounded border-2 transition ${config.bodyColor === c ? 'border-white scale-110' : 'border-white/20 hover:border-white/40'}`} style={{ backgroundColor: c }} />
+                  ))}
+                  <input type="color" value={config.bodyColor} onChange={e => onUpdate({ bodyColor: e.target.value })} className="w-6 h-6 rounded cursor-pointer bg-transparent border border-white/10" />
+                </div>
+                <div className="text-[8px] font-mono text-gray-600 mt-1">Multiplied onto model materials. White = no tint.</div>
+              </div>
+
+              {/* Glow Ring */}
+              <div>
+                <label className="text-[9px] font-mono text-gray-500 uppercase tracking-wider mb-1 flex items-center justify-between">
+                  <span>Glow Ring</span><span className="text-green-400">{(config.glowIntensity * 100).toFixed(0)}%</span>
+                </label>
+                <input type="range" min="0" max="1" step="0.05" value={config.glowIntensity} onChange={e => onUpdate({ glowIntensity: parseFloat(e.target.value) })} className="w-full accent-green-400" />
+                <div className="flex items-center gap-2 flex-wrap mt-1">
+                  {['#22d3ee', '#a855f7', '#ec4899', '#22c55e', '#facc15', '#ef4444', '#3b82f6', '#ffffff'].map(c => (
+                    <button key={c} onClick={() => onUpdate({ glowColor: c })} className={`w-5 h-5 rounded border-2 transition ${config.glowColor === c ? 'border-white scale-110' : 'border-white/20 hover:border-white/40'}`} style={{ backgroundColor: c, boxShadow: `0 0 6px ${c}` }} />
+                  ))}
+                </div>
+              </div>
+
+              {/* Accessory */}
+              <div>
+                <label className="text-[9px] font-mono text-gray-500 uppercase tracking-wider mb-1 block">Accessory</label>
+                <div className="grid grid-cols-5 gap-1">
+                  {(['none', 'crown', 'halo', 'antenna', 'visor'] as const).map(acc => (
+                    <button key={acc} onClick={() => onUpdate({ accessory: acc })} className={`px-2 py-1.5 rounded text-[8px] font-mono uppercase transition ${config.accessory === acc ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' : 'bg-white/[0.02] text-gray-500 border border-white/5 hover:text-white'}`}>
+                      {acc === 'none' ? '—' : acc}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Browse other */}
+              <button onClick={onClearAvatar} className="w-full py-1.5 rounded text-[10px] font-mono text-green-400 hover:bg-green-500/10 border border-green-500/20 transition">
                 ← Browse other avatars
               </button>
             </div>
