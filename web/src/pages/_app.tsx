@@ -34,6 +34,7 @@ const Web3ModalProvider = dynamic(() => import('contexts/Web3ModalContext').then
 const UnifiedWalletProvider = dynamic(() => import('contexts/UnifiedWalletContext').then(mod => mod.UnifiedWalletProvider), { ssr: false })
 const RadioProvider = dynamic(() => import('contexts/RadioContext').then(mod => mod.RadioProvider), { ssr: false })
 const PushEnableFloat = dynamic(() => import('components/PushEnableFloat').then(mod => mod.PushEnableFloat), { ssr: false })
+const FederatedSearchLauncher = dynamic(() => import('components/FederatedSearchLauncher'), { ssr: false })
 
 // Capacitor native app detection and safe area handling
 const CapacitorInit = dynamic(() => import('hooks/useCapacitor').then(mod => {
@@ -291,6 +292,7 @@ function SoundchainApp({ Component, pageProps }: CustomAppProps) {
         ) : (
           <SoundchainMainLayout Component={Component} pageProps={pageProps} />
         )}
+        <FederatedSearchLauncher />
       </AppErrorBoundary>
     </>
   )
