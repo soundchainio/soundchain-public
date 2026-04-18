@@ -244,8 +244,12 @@
         setTimeout(function(){
           sendInput('export PATH="$PATH:$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:/usr/local/bin:/opt/homebrew/bin:$HOME/.npm-global/bin"\n');
         }, 1200);
-        // Auto-launch Claude Code
-        setTimeout(function(){ try { fitAddon.fit(); } catch(e){} sendResize(); sendInput('claude\n'); }, 2000);
+        // Show hint instead of auto-launching (Jeremy's Mac Pro 2013 can't run claude locally)
+        setTimeout(function(){
+          try { fitAddon.fit(); } catch(e){} sendResize();
+          term.writeln('\r\n\x1b[36m[FURL] Ready. Type \x1b[1mclaude\x1b[22m to start Claude Code.\x1b[0m');
+          term.writeln('\x1b[33m[FURL] Mac Pro 2013 users: SSH into war room first → ssh soundchain@192.168.1.27\x1b[0m\r\n');
+        }, 2000);
       } else {
         // Reconnection — just send enter to refresh prompt, don't relaunch claude
         setTimeout(function(){ try { fitAddon.fit(); } catch(e){} sendResize(); sendInput('\n'); }, 500);
