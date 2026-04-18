@@ -240,22 +240,13 @@ export const TopNavBar = ({
           <MiniSphere size={32} />
         </Link>
 
-        {/* Desktop Navigation */}
-        {me ? (
-          <div className="hidden md:flex flex-1 items-center">
-            <NavBar />
-          </div>
-        ) : (
-          !isLoginPage &&
-          !isCreateAccount && (
-            <div className="hidden md:flex items-center gap-3">
-              <Link href="/" passHref className="flex items-center gap-2">
-                <MiniSphere size={32} />
-                <span className="text-white font-semibold text-lg">SoundCh<span className="matrix-ai">ai</span>n</span>
-              </Link>
-            </div>
-          )
-        )}
+        {/* Desktop Navigation — Nodeverse era (no legacy NavBar) */}
+        <div className="hidden md:flex items-center gap-3">
+          <Link href="/dex/nodes" passHref className="flex items-center gap-2">
+            <MiniSphere size={32} />
+            <span className="text-white font-semibold text-lg">SoundCh<span className="matrix-ai">ai</span>n</span>
+          </Link>
+        </div>
 
         {/* Login Button for Non-Logged Users */}
         {!me && !isLoginPage && !isCreateAccount && (

@@ -1,12 +1,11 @@
-// Handle /dex base route - regular catch-all [...slug] only handles /dex/*
-// This file handles /dex specifically
+// /dex → redirect to /dex/nodes (the new Nodeverse landing page)
+// The old /dex feed view is deprecated — Nodes page is the new home.
+import { GetServerSideProps } from 'next'
 
-import DEXDashboard, { getServerSideProps as gSSP } from './[...slug]'
+export const getServerSideProps: GetServerSideProps = async () => {
+  return { redirect: { destination: '/dex/nodes', permanent: false } }
+}
 
-export const getServerSideProps = gSSP
-
-// Attach the getLayout from the main component
-const Page = DEXDashboard as any
-Page.getLayout = (DEXDashboard as any).getLayout
-
-export default Page
+export default function DexRedirect() {
+  return null
+}
