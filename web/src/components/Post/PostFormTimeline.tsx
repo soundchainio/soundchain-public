@@ -30,7 +30,7 @@ import { MediaLink } from './PostLinkInput'
 import { useMe } from 'hooks/useMe'
 import { EmoteTextInput, getDisplayLength } from './EmoteTextInput'
 
-export const PostFormTimeline = () => {
+export const PostFormTimeline = ({ onPosted }: { onPosted?: () => void } = {}) => {
   const me = useMe()
   const apolloClient = useApolloClient()
 
@@ -139,6 +139,7 @@ export const PostFormTimeline = () => {
       setUploadedMediaUrl(undefined)
       setUploadedMediaType(undefined)
       setUploadedMediaThumbnail(undefined)
+      onPosted?.()
     } catch (error: any) {
       console.error('Post creation error:', error)
       console.error('Error message:', error?.message)

@@ -11,6 +11,7 @@ import { useGroupedTracksQuery } from 'lib/graphql'
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import { TopNavBar } from 'components/TopNavBar'
 import { Post } from 'components/Post/Post'
+import { PostFormTimeline } from 'components/Post/PostFormTimeline'
 import { PostSkeleton } from 'components/Post/PostSkeleton'
 import {
   HardDrive, Wifi, WifiOff, Activity, Globe, Radio, Shield, Zap,
@@ -564,6 +565,12 @@ export default function NodesPage() {
                 <span className="text-[8px] font-mono text-gray-600">{feedNodes.length} posts</span>
               </div>
             </div>
+
+            {me?.profile && (
+              <div className="mb-2">
+                <PostFormTimeline onPosted={() => loadFeed(null)} />
+              </div>
+            )}
 
             <div className="space-y-2">
               {feedLoading && feedNodes.length === 0 && (
