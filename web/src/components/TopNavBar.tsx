@@ -12,7 +12,7 @@ import { useMeQuery } from 'lib/graphql'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useMagicContext } from 'hooks/useMagicContext'
-import { Users, ChevronDown, Copy, Check, Wallet, ExternalLink, MessageCircle, X, Brain, HardDrive } from 'lucide-react'
+import { Users, ChevronDown, Copy, Check, Wallet, ExternalLink, MessageCircle, X, Brain, HardDrive, PiggyBank, Music } from 'lucide-react'
 
 import { Button } from './common/Buttons/Button'
 import { SoundChainPopOver } from './common/PopOverButton/PopOverButton'
@@ -299,6 +299,36 @@ export const TopNavBar = ({
           >
             <HardDrive className="w-4 h-4 text-green-400" />
           </button>
+
+          {/* PiggyBank — WIN-WIN Streaming Rewards (matches dex schema action pills) */}
+          <Link href="/stake" passHref>
+            <button
+              className="p-1.5 rounded-full bg-pink-500/10 border border-pink-500/20 hover:border-pink-400/40 hover:bg-pink-500/20 transition-all"
+              title="WIN-WIN Streaming Rewards"
+            >
+              <PiggyBank className="w-4 h-4 text-pink-400" />
+            </button>
+          </Link>
+
+          {/* Moltbook — Agent Playground */}
+          <Link href="/backend" passHref>
+            <button
+              className="p-1.5 rounded-full bg-red-500/10 border border-red-500/20 hover:border-red-400/40 hover:bg-red-500/20 transition-all flex items-center justify-center w-7 h-7"
+              title="Moltbook — Agent Playground"
+            >
+              <span className="text-sm leading-none">🦞</span>
+            </button>
+          </Link>
+
+          {/* Mint+ — Publish Track */}
+          <Link href="/upload" passHref>
+            <button
+              className="p-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 hover:border-purple-400/40 hover:bg-purple-500/20 transition-all"
+              title="Publish Track"
+            >
+              <Music className="w-4 h-4 text-purple-400" />
+            </button>
+          </Link>
 
           {/* Social Links - Always visible */}
           <SoundChainPopOver icon={SocialIcon}>

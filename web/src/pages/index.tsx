@@ -1,10 +1,10 @@
 import { GetServerSideProps } from 'next'
 
-// Redirect all traffic to /dex
+// All entry points land on /dex/nodes — Nodes is the new feed home.
 export const getServerSideProps: GetServerSideProps = async () => {
   return {
     redirect: {
-      destination: '/dex',
+      destination: '/dex/nodes',
       permanent: false,
     },
   }

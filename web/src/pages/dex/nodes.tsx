@@ -20,6 +20,8 @@ import { PostSkeleton } from 'components/Post/PostSkeleton'
 // so the ellipsis → Edit/Delete flow works on /dex/nodes.
 const AuthorActionsModal = dynamic(() => import('components/modals/AuthorActionsModal').then(m => m.AuthorActionsModal), { ssr: false })
 const PostModal = dynamic(() => import('components/Post/PostModal').then(m => m.PostModal), { ssr: false })
+// 24hr Stories/Reels bar — match the dex schema feed header so users see reels here too.
+const StoriesBar = dynamic(() => import('components/dex/StoriesBar').then(m => m.StoriesBar), { ssr: false })
 import {
   HardDrive, Wifi, WifiOff, Activity, Globe, Radio, Shield, Zap,
   Server, Database, ArrowUpRight, ArrowDownLeft, RefreshCw, Terminal,
@@ -573,6 +575,9 @@ export default function NodesPage() {
                 <span className="text-[8px] font-mono text-gray-600">{feedNodes.length} posts</span>
               </div>
             </div>
+
+            {/* 24hr Stories/Reels — matches dex schema feed */}
+            <StoriesBar />
 
             {me?.profile && (
               <div className="mb-2">

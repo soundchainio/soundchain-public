@@ -16,10 +16,10 @@ interface HomePageProps {
 }
 
 export const getServerSideProps: GetServerSideProps<HomePageProps> = async context => {
-  // GHOST: Redirect all /home requests to /dex (legacy page deprecated)
+  // GHOST: Redirect /home → /dex/nodes (legacy page deprecated; Nodes is the new feed home)
   return {
     redirect: {
-      destination: '/dex',
+      destination: '/dex/nodes',
       permanent: true, // 301 redirect - SEO friendly
     },
   }
