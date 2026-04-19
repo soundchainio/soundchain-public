@@ -12,7 +12,6 @@
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { Logo } from 'icons/Logo'
-import { OgunPriceTicker } from 'components/OgunPriceTicker'
 import { useMagicContext } from 'hooks/useMagicContext'
 import { useMe } from 'hooks/useMe'
 import { useModalDispatch } from 'contexts/ModalContext'
@@ -85,9 +84,6 @@ export function DexNavBar() {
                 Top100Token <ExternalLink className="w-2.5 h-2.5" />
               </a>
             </div>
-
-            {/* OGUN Price Ticker */}
-            <OgunPriceTicker />
 
             {/* Wallet */}
             {account ? (

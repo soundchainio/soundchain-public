@@ -48,7 +48,8 @@ module.exports = withPWA({
   // User sees /users/handle but Next.js renders /dex/users/handle internally
   async rewrites() {
     return [
-      // Profile pages
+      // Profile pages + users list
+      { source: '/users', destination: '/dex/users' },
       { source: '/users/:handle', destination: '/dex/users/:handle' },
       { source: '/artist/:handle', destination: '/dex/users/:handle' },
       // Track detail
