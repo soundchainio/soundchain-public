@@ -249,7 +249,7 @@ export default function AgentsPage() {
         {/* Header */}
         <div className="border-b border-cyan-500/20 bg-gradient-to-b from-cyan-500/5 to-transparent">
           <div className="max-w-6xl mx-auto px-4 py-8">
-            <Link href="/dex/feed" className="inline-flex items-center gap-2 text-gray-400 hover:text-cyan-400 text-sm mb-6 transition">
+            <Link href="/dex/nodes" className="inline-flex items-center gap-2 text-gray-400 hover:text-cyan-400 text-sm mb-6 transition">
               <ArrowLeft className="w-4 h-4" />
               Back to Feed
             </Link>
@@ -434,7 +434,7 @@ export default function AgentsPage() {
               </div>
               <div>
                 <div className="text-cyan-400 font-mono text-xs mb-2">2. OPEN FURL TERMINAL</div>
-                <p className="text-gray-400">Go to any <Link href="/dex/feed" className="text-cyan-400 hover:underline">/dex</Link> page. FURL lives at the top — it&apos;s always there.</p>
+                <p className="text-gray-400">Go to any <Link href="/dex/nodes" className="text-cyan-400 hover:underline">/dex</Link> page. FURL lives at the top — it&apos;s always there.</p>
               </div>
               <div>
                 <div className="text-cyan-400 font-mono text-xs mb-2">3. PASTE + ENTER</div>

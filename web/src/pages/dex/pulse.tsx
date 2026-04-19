@@ -1171,7 +1171,7 @@ function PulsePage() {
       <div className="flex items-center justify-between px-3 py-2" style={{ backgroundColor: WA.header, paddingTop: 'max(0.5rem, env(safe-area-inset-top, 0.5rem))' }}>
         <div className="flex items-center gap-2">
           {/* SoundChain logo — back to DEX */}
-          <Link href="/dex/feed" className="flex items-center p-1 rounded-lg hover:bg-white/10 transition-colors">
+          <Link href="/dex/nodes" className="flex items-center p-1 rounded-lg hover:bg-white/10 transition-colors">
             <MiniSphere size={28} />
           </Link>
           <h1 className="text-lg font-bold" style={{ color: WA.text }}>
@@ -1256,7 +1256,7 @@ function PulsePage() {
       {/* DEX nav strip — browser only, hidden in standalone PWA */}
       {!isStandalone && (
         <div className="flex items-center gap-3 px-3 py-1.5 overflow-x-auto scrollbar-hide border-b" style={{ backgroundColor: WA.bgDarker, borderColor: WA.border }}>
-          <Link href="/dex/feed" className="text-[11px] font-medium whitespace-nowrap hover:opacity-80 transition-opacity" style={{ color: WA.accent }}>
+          <Link href="/dex/nodes" className="text-[11px] font-medium whitespace-nowrap hover:opacity-80 transition-opacity" style={{ color: WA.accent }}>
             Feed
           </Link>
           <Link href="/dex/explore" className="text-[11px] font-medium whitespace-nowrap hover:opacity-80 transition-opacity" style={{ color: WA.text_secondary }}>

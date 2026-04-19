@@ -114,7 +114,7 @@ export default function BookmarksPage() {
                 When you save posts, they&apos;ll appear here.
               </p>
               <Link
-                href="/dex"
+                href="/dex/nodes"
                 className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-black font-medium rounded-full transition-colors"
               >
                 Explore Feed

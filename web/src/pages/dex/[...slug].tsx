@@ -1330,7 +1330,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   // Navigate to a view and update URL
   const navigateToView = useCallback((view: string, id?: string) => {
     if (view === 'dashboard' || view === 'home') {
-      router.push('/dex', undefined, { shallow: true })
+      router.push('/dex/nodes', undefined, { shallow: true })
     } else if (id) {
       router.push(`/dex/${view}/${id}`, undefined, { shallow: true })
     } else {
@@ -5243,7 +5243,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     <p className="text-gray-500 text-sm mb-4">{postDetailError.message}</p>
                     <Button
                       variant="outline"
-                      onClick={() => router.push('/dex/feed')}
+                      onClick={() => router.push('/dex/nodes')}
                       className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10"
                     >
                       Go to Feed
@@ -5275,7 +5275,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     <div className="mt-6 px-4 text-center">
                       <Button
                         variant="outline"
-                        onClick={() => router.push('/dex/feed')}
+                        onClick={() => router.push('/dex/nodes')}
                         className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10"
                       >
                         <MessageCircle className="w-4 h-4 mr-2" />
@@ -5289,7 +5289,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     <p className="text-neutral-400 mb-4">Post not found</p>
                     <Button
                       variant="outline"
-                      onClick={() => router.push('/dex/feed')}
+                      onClick={() => router.push('/dex/nodes')}
                       className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10"
                     >
                       Go to Feed
@@ -7373,7 +7373,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => { setSelectedView('feed'); router.push('/dex/feed', undefined, { shallow: true }); }}
+                      onClick={() => { setSelectedView('feed'); router.push('/dex/nodes', undefined, { shallow: true }); }}
                       className="w-8 h-8 p-0 hover:bg-red-500/20"
                       title="Close"
                     >

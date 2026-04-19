@@ -451,7 +451,7 @@ const KNOWLEDGE: Record<string, string[]> = {
     'DM notifications come via Web Push and Nostr (Bitchat app).',
   ],
   social: [
-    'Social feed at /dex/feed: share posts with text, images, videos, audio, and embeds (YouTube, Spotify, SoundCloud, Bandcamp).',
+    'Social feed at /dex/nodes: share posts with text, images, videos, audio, and embeds (YouTube, Spotify, SoundCloud, Bandcamp).',
     'Follow artists and fans. Quick DM from follower/following lists.',
     'Notifications: new followers, comments, reactions, NFT sales, streaming milestones — all via Web Push + Nostr (FREE).',
     'Embed support: YouTube (all formats), Spotify, SoundCloud, Bandcamp, Apple Music — auto-rendered in posts.',
@@ -833,7 +833,7 @@ function furlRespondExact(q: string, activeN: number, agents: AgentInfo[], ogun:
 
   // ── Feed ──
   if (/\bfeed\b|timeline|what's new|latest posts/.test(q)) {
-    return [`your feed shows posts from people you follow. go to /dex/feed or tap Feed in the nav.`]
+    return [`your feed shows posts from people you follow. go to /dex/nodes or tap Feed in the nav.`]
   }
 
   // No exact match found

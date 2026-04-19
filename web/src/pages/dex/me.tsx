@@ -21,7 +21,7 @@ export default function MyProfileRedirect() {
       router.replace(`/dex/users/${handle}${params ? `?${params}` : ''}`)
     } else {
       // No profile yet (new user or not logged in) — go to feed
-      router.replace('/dex/feed')
+      router.replace('/dex/nodes')
     }
   }, [me, router])
 

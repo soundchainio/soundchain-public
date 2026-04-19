@@ -262,7 +262,7 @@ export default function WarRoomPage() {
           <h1 className="text-xl font-mono font-bold text-cyan-400 mb-2">SOUNDCHAIN WAR ROOM</h1>
           <p className="text-sm text-gray-500 mb-2">Access restricted to War Room members.</p>
           <p className="text-xs text-gray-600">Your handle: @{myHandle || 'unknown'}</p>
-          <a href="/dex/feed" className="mt-4 inline-block px-6 py-2 bg-gray-800 text-white rounded-lg text-sm hover:bg-gray-700 transition">Back to Feed</a>
+          <a href="/dex/nodes" className="mt-4 inline-block px-6 py-2 bg-gray-800 text-white rounded-lg text-sm hover:bg-gray-700 transition">Back to Feed</a>
         </div>
       </div>
     )

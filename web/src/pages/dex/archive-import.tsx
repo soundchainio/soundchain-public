@@ -82,7 +82,7 @@ export default function ArchiveImportPage() {
       }
 
       // Navigate to feed
-      router.push('/dex')
+      router.push('/dex/nodes')
     } catch (err: any) {
       console.error('Repost failed:', err)
       toast.error(err.message || 'Failed to repost from archive')
@@ -145,7 +145,7 @@ export default function ArchiveImportPage() {
           {me && !importedData && (
             <ArchiveImport
               onImport={handleImport}
-              onCancel={() => router.push('/dex')}
+              onCancel={() => router.push('/dex/nodes')}
             />
           )}
 

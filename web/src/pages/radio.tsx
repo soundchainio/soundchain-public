@@ -1013,7 +1013,7 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
             </button>
             {/* Micro nav pills */}
             {[
-              { label: 'Feed', icon: '📱', link: '/dex/feed' },
+              { label: 'Feed', icon: '📱', link: '/dex/nodes' },
               { label: 'Explore', icon: '🔍', link: '/dex/explore' },
               // { label: 'Marketplace', icon: '🛒', link: '/dex/marketplace' }, // GHOSTED — storefronts on profiles now
               { label: 'Artists', icon: '🎤', link: '/dex/users' },

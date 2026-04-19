@@ -120,7 +120,7 @@ export default function ArchivePage() {
               <button onClick={() => fetchBookmarks()} className="text-[10px] font-mono text-gray-500 hover:text-cyan-400 px-3 py-1.5 rounded border border-white/10 transition">
                 <RefreshCw className={`w-3 h-3 inline ${loading ? 'animate-spin' : ''}`} /> Refresh
               </button>
-              <button onClick={() => router.push('/dex/feed')} className="text-[10px] font-mono text-gray-500 hover:text-white px-3 py-1.5 rounded border border-white/10 transition">
+              <button onClick={() => router.push('/dex/nodes')} className="text-[10px] font-mono text-gray-500 hover:text-white px-3 py-1.5 rounded border border-white/10 transition">
                 BACK
               </button>
             </div>

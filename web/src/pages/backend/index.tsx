@@ -1031,7 +1031,7 @@ export default function MoltbookPlayground() {
         {/* Mobile Bottom Navigation */}
         <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#030d1b] border-t border-cyan-900/30 px-4 py-2 z-50">
           <div className="flex items-center justify-around">
-            <Link href="/dex" className="flex flex-col items-center gap-1 text-gray-400 hover:text-white">
+            <Link href="/dex/nodes" className="flex flex-col items-center gap-1 text-gray-400 hover:text-white">
               <Home className="w-5 h-5" />
               <span className="text-[10px]">Home</span>
             </Link>
