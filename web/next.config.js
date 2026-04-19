@@ -7,36 +7,38 @@ const withPWA = require('next-pwa')({
   sw: 'sw.js',
   // Custom worker directory for push notification handlers
   customWorkerDir: 'worker',
-  // Exclude some precaching for faster SW updates
-  buildExcludes: [/chunks\/.*$/, /middleware-manifest\.json$/],
-  // Use NetworkFirst for page navigations so stale SW cache never blocks pages
-  // Pulse uses NetworkOnly to prevent #310 crashes from stale cached JS
+  // Exclude ALL chunks from precaching — forces fresh fetch on every deploy
+  buildExcludes: [/chunks\/.*$/, /middleware-manifest\.json$/, /\.map$/],
+  // ZERO stale cache for pages — users ALWAYS get fresh content after deploy.
+  // Only static assets (images, fonts) get cached. No more "clear cache" needed.
   runtimeCaching: [
     {
-      urlPattern: /\/(dex\/)?pulse/,
+      // ALL page navigations — NEVER serve from cache
+      urlPattern: /^https:\/\/soundchain\.(io|fm)\/.*/,
       handler: 'NetworkOnly',
     },
     {
-      // Login: NEVER cache. SW was breaking login when Lambda 504'd.
-      urlPattern: /\/login/,
+      // Next.js data fetches — NEVER serve stale
+      urlPattern: /\/_next\/data\/.+\/.+\.json$/,
       handler: 'NetworkOnly',
     },
     {
-      urlPattern: /^https:\/\/.*\/(radio|dex|backend|get-verified).*$/,
-      handler: 'NetworkFirst',
+      // Static assets (JS/CSS bundles) — cache with revalidation
+      // These have content-hashed filenames so new deploys = new URLs automatically
+      urlPattern: /\/_next\/static\/.*/,
+      handler: 'CacheFirst',
       options: {
-        cacheName: 'pages',
-        networkTimeoutSeconds: 5,
-        expiration: { maxEntries: 32, maxAgeSeconds: 24 * 60 * 60 },
+        cacheName: 'static-assets',
+        expiration: { maxEntries: 200, maxAgeSeconds: 30 * 24 * 60 * 60 },
       },
     },
     {
-      urlPattern: /\/_next\/data\/.+\/.+\.json$/,
-      handler: 'NetworkFirst',
+      // Images — cache for performance
+      urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp|ico)$/,
+      handler: 'CacheFirst',
       options: {
-        cacheName: 'next-data',
-        networkTimeoutSeconds: 10,
-        expiration: { maxEntries: 32, maxAgeSeconds: 24 * 60 * 60 },
+        cacheName: 'images',
+        expiration: { maxEntries: 100, maxAgeSeconds: 7 * 24 * 60 * 60 },
       },
     },
   ],
