@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from 'react'
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { Plus, ChevronLeft, ChevronRight, Lock, Sparkles } from 'lucide-react'
 import { Avatar } from 'components/Avatar'
@@ -92,22 +92,28 @@ export const StoriesBar = ({ onCreateStory, onViewStory, deepLinkStoryId, deepLi
   const [selectedUserId, setSelectedUserId] = useState<string | undefined>()
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null)
 
-  // Fetch real stories from API
-  const { data: storiesData, loading: storiesLoading, refetch: refetchStories } = useQuery(PUBLIC_STORIES, {
-    variables: { limit: 50 },
-    fetchPolicy: 'network-only',  // Always fetch fresh data
-  })
-
+  // Fetch stories from Vercel-direct API (bypasses Lambda)
+  const [storiesRaw, setStoriesRaw] = useState<any[]>([])
+  const [storiesLoading, setStoriesLoading] = useState(true)
+  const fetchStories = useCallback(() => {
+    fetch('/api/feed/stories?limit=50')
+      .then(r => r.json())
+      .then(data => setStoriesRaw(data.stories || []))
+      .catch(() => {})
+      .finally(() => setStoriesLoading(false))
+  }, [])
+  useEffect(() => { fetchStories() }, [fetchStories])
+  const refetchStories = fetchStories
 
   // Transform API data to Story format, grouped by profile
   // Only shows REAL stories - no placeholders
   const stories: Story[] = useMemo(() => {
-    if (!storiesData?.publicStories || storiesData.publicStories.length === 0) {
+    if (!storiesRaw || storiesRaw.length === 0) {
       return []
     }
 
     // Group stories by profileId (or walletAddress for guests)
-    const grouped = storiesData.publicStories.reduce((acc: any, story: any) => {
+    const grouped = storiesRaw.reduce((acc: any, story: any) => {
       // Prefer denormalized creator fields (helix pattern), fallback to profile field resolver
       const avatarUrl = story.creatorAvatarUrl || story.profile?.profilePicture
       const displayName = story.creatorDisplayName || story.profile?.displayName
@@ -151,12 +157,12 @@ export const StoriesBar = ({ onCreateStory, onViewStory, deepLinkStoryId, deepLi
 
   // Transform stories into StoryUser format for StoryViewer
   const storyUsersForViewer = useMemo(() => {
-    if (!storiesData?.publicStories || storiesData.publicStories.length === 0) {
+    if (!storiesRaw || storiesRaw.length === 0) {
       return []
     }
 
     // Group raw story data by profileId for the viewer
-    const grouped = storiesData.publicStories.reduce((acc: any, story: any) => {
+    const grouped = storiesRaw.reduce((acc: any, story: any) => {
       // Prefer denormalized creator fields (helix pattern), fallback to profile field resolver
       const avatarUrl = story.creatorAvatarUrl || story.profile?.profilePicture
       const displayName = story.creatorDisplayName || story.profile?.displayName

@@ -236,7 +236,7 @@ export const TopNavBar = ({
       {/* Main Header Bar - Clean & Modern */}
       <div className="relative z-10 flex h-14 items-center justify-between bg-black/95 backdrop-blur-md border-b border-white/5 px-4">
         {/* Mobile Logo - with energy glow */}
-        <Link href="/dex" className="flex items-center gap-2 md:hidden" passHref>
+        <Link href="/dex/nodes" className="flex items-center gap-2 md:hidden" passHref>
           <MiniSphere size={32} />
         </Link>
 
