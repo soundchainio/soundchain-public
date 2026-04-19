@@ -15,6 +15,7 @@ import { breakpointsNumber } from 'utils/breakpoints'
 import { Header } from './Header'
 import ConfirmDeleteEditionModal from './modals/ConfirmDeleteEditionModal'
 import { TagManager } from './TagManager'
+import { DexNavBar } from './DexNavBar'
 import { TopNavBar, TopNavBarProps } from './TopNavBar'
 
 // Decentralized notification components (no SMS/Twilio - pure web!)
@@ -89,7 +90,7 @@ export const Layout = ({ children, className }: LayoutProps) => {
     return (
       <div className="flex min-h-screen flex-col bg-black">
         {canInsertScript && <TagManager />}
-        <TopNavBar {...topNavBarProps} />
+        <DexNavBar />
         <div className="flex flex-1 flex-col bg-black px-4 pt-4 pb-safe sm:mx-auto sm:w-full sm:max-w-lg lg:px-8">
           {children}
         </div>
@@ -117,7 +118,7 @@ export const Layout = ({ children, className }: LayoutProps) => {
         <div className="flex h-full flex-1 overflow-hidden">
           <div className="flex w-0 flex-1 flex-col overflow-hidden">
             <MiniRadioBar />
-            <TopNavBar {...topNavBarProps} />
+            <DexNavBar />
             <div id="top-sheet"></div>
             <main id="main" className="relative flex-1 overflow-y-auto bg-gray-10 focus:outline-none">
               <div className={classNames('h-full pb-24', className)}>{children}</div>
