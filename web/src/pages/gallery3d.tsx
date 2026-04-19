@@ -32,8 +32,13 @@ export default function Gallery3DPage() {
   const [theme, setTheme] = useState<Theme>(themeParam)
   const [ownerProfileId, setOwnerProfileId] = useState<string | undefined>(undefined)
 
-  // Resolve handle → profileId
+  // Resolve handle → profileId (auto-loads YOUR gallery if no handle param)
   useEffect(() => {
+    // If no handle param but user is logged in, show their own gallery
+    if (!handleParam && me?.profile?.id) {
+      setOwnerProfileId(me.profile.id)
+      return
+    }
     if (!handleParam) return
     if (handleParam === me?.profile?.userHandle) {
       setOwnerProfileId(me.profile.id)

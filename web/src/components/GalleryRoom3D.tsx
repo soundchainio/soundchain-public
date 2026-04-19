@@ -15,7 +15,8 @@
 import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { useRouter } from 'next/router'
-import { Music, X, Heart, Share2, ExternalLink } from 'lucide-react'
+import { Music, X, Heart, Share2, Play, Pause, Volume2, Copy, Check } from 'lucide-react'
+import { toast } from 'react-toastify'
 
 interface Track {
   id: string
@@ -23,6 +24,7 @@ interface Track {
   artist?: string
   artworkUrl?: string
   playbackUrl?: string
+  audioUrl?: string
   isNFT?: boolean
   editionSize?: number
   ipfsHash?: string
@@ -57,7 +59,18 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
     fetch(`/api/feed/tracks?profileId=${ownerProfileId}&limit=20`)
       .then(r => r.json())
       .then(data => {
-        const ts = (data.tracks || []).filter((t: any) => t.id && t.title).slice(0, 16)
+        // Deduplicate multi-edition tracks — show one frame per unique title
+        const seen = new Set<string>()
+        const ts = (data.tracks || []).filter((t: any) => {
+          if (!t.id || !t.title) return false
+          const key = t.title.toLowerCase().trim()
+          if (seen.has(key)) return false
+          seen.add(key)
+          return true
+        }).map((t: any) => ({
+          ...t,
+          playbackUrl: t.audioUrl || t.playbackUrl,
+        })).slice(0, 16)
         setTracks(ts)
         setLoading(false)
       })
@@ -477,11 +490,57 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
                 <X className="w-4 h-4 text-gray-400" />
               </button>
             </div>
-            <div className="aspect-square bg-black">
+            {/* Artwork + inline player overlay */}
+            <div className="aspect-square bg-black relative group">
               {selectedTrack.artworkUrl ? (
                 <img src={selectedTrack.artworkUrl} alt="" className="w-full h-full object-cover" />
               ) : (
-                <div className="w-full h-full bg-gradient-to-br from-yellow-900/30 to-purple-900/30" />
+                <div className="w-full h-full bg-gradient-to-br from-yellow-900/30 to-purple-900/30 flex items-center justify-center">
+                  <Music className="w-12 h-12 text-yellow-500/30" />
+                </div>
+              )}
+              {/* Inline play button overlay */}
+              {(selectedTrack.playbackUrl || selectedTrack.audioUrl) && (
+                <button
+                  onClick={() => {
+                    const url = selectedTrack.playbackUrl || selectedTrack.audioUrl
+                    if (!url) return
+                    // Toggle play/pause for this track
+                    const existing = audioRefsMap.current.get(selectedTrack.id)
+                    if (existing && !existing.paused) {
+                      existing.pause()
+                      setNowPlaying(null)
+                    } else {
+                      // Stop all other audio first
+                      audioRefsMap.current.forEach(a => { a.pause(); a.currentTime = 0 })
+                      if (existing) {
+                        existing.play().catch(() => {})
+                      } else {
+                        const audio = new Audio(url)
+                        audio.crossOrigin = 'anonymous'
+                        audioRefsMap.current.set(selectedTrack.id, audio)
+                        audio.play().catch(() => {})
+                        audio.onended = () => setNowPlaying(null)
+                      }
+                      setNowPlaying(selectedTrack.id)
+                    }
+                  }}
+                  className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <div className="w-16 h-16 rounded-full bg-black/70 border-2 border-cyan-400 flex items-center justify-center">
+                    {nowPlaying === selectedTrack.id ? <Pause className="w-7 h-7 text-cyan-400" /> : <Play className="w-7 h-7 text-cyan-400 ml-1" />}
+                  </div>
+                </button>
+              )}
+              {/* Now playing indicator */}
+              {nowPlaying === selectedTrack.id && (
+                <div className="absolute bottom-2 left-2 right-2 flex items-center gap-2 px-2 py-1 rounded bg-black/70 backdrop-blur">
+                  <Volume2 className="w-3 h-3 text-cyan-400 animate-pulse" />
+                  <div className="flex-1 h-1 bg-white/10 rounded overflow-hidden">
+                    <div className="h-full bg-cyan-400 rounded animate-pulse" style={{ width: '60%' }} />
+                  </div>
+                  <span className="text-[8px] font-mono text-cyan-400">PLAYING</span>
+                </div>
               )}
             </div>
             <div className="p-4 space-y-2">
@@ -493,14 +552,42 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
                 {selectedTrack.ipfsHash && <span className="text-cyan-400 px-1.5 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/20">IPFS</span>}
               </div>
               <div className="flex items-center gap-2 pt-2">
-                <button onClick={() => router.push(`/dex/track/${selectedTrack.id}`)} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 text-[10px] font-mono hover:bg-cyan-500/30 transition">
-                  <ExternalLink className="w-3 h-3" /> Open Track
+                {/* Play inline — no redirect */}
+                <button
+                  onClick={() => {
+                    const url = selectedTrack.playbackUrl || selectedTrack.audioUrl
+                    if (!url) { toast.error('No audio available'); return }
+                    audioRefsMap.current.forEach(a => { a.pause(); a.currentTime = 0 })
+                    const audio = new Audio(url)
+                    audio.crossOrigin = 'anonymous'
+                    audioRefsMap.current.set(selectedTrack.id, audio)
+                    audio.play().catch(() => toast.error('Playback failed'))
+                    setNowPlaying(selectedTrack.id)
+                    audio.onended = () => setNowPlaying(null)
+                  }}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 text-[10px] font-mono hover:bg-cyan-500/30 transition"
+                >
+                  {nowPlaying === selectedTrack.id ? <><Pause className="w-3 h-3" /> Now Playing</> : <><Play className="w-3 h-3" /> Play Track</>}
                 </button>
-                <button onClick={() => { fetch('/api/posts/bookmark', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ postId: selectedTrack.id, action: 'add' }) }).catch(() => {}) }} className="flex items-center justify-center gap-1.5 py-2 px-3 rounded bg-amber-500/20 border border-amber-500/30 text-amber-400 text-[10px] font-mono hover:bg-amber-500/30 transition">
+                {/* Save to archive */}
+                <button
+                  onClick={() => {
+                    fetch('/api/feed/posts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'bookmark', trackId: selectedTrack.id }) }).catch(() => {})
+                    toast.success('Saved to your archive!')
+                  }}
+                  className="flex items-center justify-center gap-1.5 py-2 px-3 rounded bg-amber-500/20 border border-amber-500/30 text-amber-400 text-[10px] font-mono hover:bg-amber-500/30 transition"
+                >
                   <Heart className="w-3 h-3" /> Save
                 </button>
-                <button onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/dex/track/${selectedTrack.id}`) }} className="flex items-center justify-center gap-1.5 py-2 px-3 rounded bg-white/5 border border-white/10 text-gray-400 text-[10px] font-mono hover:bg-white/10 transition">
-                  <Share2 className="w-3 h-3" /> Share
+                {/* Share — copy link */}
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(`${window.location.origin}/track/${selectedTrack.id}`)
+                    toast.success('Link copied!')
+                  }}
+                  className="flex items-center justify-center gap-1.5 py-2 px-3 rounded bg-white/5 border border-white/10 text-gray-400 text-[10px] font-mono hover:bg-white/10 transition"
+                >
+                  <Copy className="w-3 h-3" /> Share
                 </button>
               </div>
             </div>
