@@ -1,6 +1,5 @@
 import { useModalDispatch, useModalState } from 'contexts/ModalContext'
 import GraphemeSplitter from 'grapheme-splitter'
-import { usePostLazyQuery } from 'lib/graphql'
 import { useCallback, useEffect, useState } from 'react'
 import { PostFormType } from 'types/PostFormType'
 import { getNormalizedLink, hasLink } from '../../utils/NormalizeEmbedLinks'
@@ -43,7 +42,8 @@ export const PostModal = () => {
   const { showNewPost, repostId, editPostId, trackId } = useModalState()
   const { dispatchShowPostModal, dispatchSetRepostId, dispatchSetEditPostId } = useModalDispatch()
 
-  const [getPost, { data: editingPost }] = usePostLazyQuery()
+  // Vercel-direct prefill — Apollo is dead on `api.soundchain.io` reads (Bug #49)
+  const [editingPost, setEditingPost] = useState<{ post: { body: string; mediaLink: string | null } } | null>(null)
 
   const initialValues = { body: editingPost?.post.body || '' }
 
@@ -73,10 +73,20 @@ export const PostModal = () => {
   }, [originalLink])
 
   useEffect(() => {
-    if (editPostId) {
-      getPost({ variables: { id: editPostId } })
+    if (!editPostId) {
+      setEditingPost(null)
+      return
     }
-  }, [editPostId, getPost])
+    let cancelled = false
+    fetch(`/api/feed/post?id=${encodeURIComponent(editPostId)}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (cancelled || !data?.post) return
+        setEditingPost({ post: { body: data.post.body || '', mediaLink: data.post.mediaLink || null } })
+      })
+      .catch(() => { /* leave editingPost null — form opens with empty body */ })
+    return () => { cancelled = true }
+  }, [editPostId])
 
   useEffect(() => {
     const delayDebounce = setTimeout(async () => {

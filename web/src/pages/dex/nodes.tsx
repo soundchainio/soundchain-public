@@ -9,10 +9,17 @@ import { useMe } from 'hooks/useMe'
 import { useRouter } from 'next/router'
 import { useGroupedTracksQuery } from 'lib/graphql'
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer'
+import dynamic from 'next/dynamic'
 import { TopNavBar } from 'components/TopNavBar'
 import { Post } from 'components/Post/Post'
 import { PostFormTimeline } from 'components/Post/PostFormTimeline'
 import { PostSkeleton } from 'components/Post/PostSkeleton'
+
+// Nodes page uses a custom getLayout (skips default <Layout>), so the modals
+// mounted there (AuthorActionsModal + PostModal) never render. Mount them here
+// so the ellipsis → Edit/Delete flow works on /dex/nodes.
+const AuthorActionsModal = dynamic(() => import('components/modals/AuthorActionsModal').then(m => m.AuthorActionsModal), { ssr: false })
+const PostModal = dynamic(() => import('components/Post/PostModal').then(m => m.PostModal), { ssr: false })
 import {
   HardDrive, Wifi, WifiOff, Activity, Globe, Radio, Shield, Zap,
   Server, Database, ArrowUpRight, ArrowDownLeft, RefreshCw, Terminal,
@@ -609,6 +616,10 @@ export default function NodesPage() {
         </div>
 
         </div>{/* end split layout */}
+
+        {/* Modals — normally mounted in <Layout>, but Nodes bypasses it */}
+        <AuthorActionsModal />
+        <PostModal />
 
         {/* Supported protocols banner */}
         <div className="p-3 rounded-lg border border-white/5 bg-black/30 flex items-center justify-between flex-wrap gap-2">
