@@ -23,7 +23,7 @@ const PostModal = dynamic(() => import('components/Post/PostModal').then(m => m.
 import {
   HardDrive, Wifi, WifiOff, Activity, Globe, Radio, Shield, Zap,
   Server, Database, ArrowUpRight, ArrowDownLeft, RefreshCw, Terminal,
-  Eye, Clock, ChevronRight, Signal, Cpu, Lock, Music, Film
+  Eye, Clock, ChevronRight, ChevronDown, Signal, Cpu, Lock, Music, Film, PenLine
 } from 'lucide-react'
 
 interface NodeStats {
@@ -84,6 +84,7 @@ export default function NodesPage() {
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null)
   const [pinging, setPinging] = useState(false)
   const [collectionView, setCollectionView] = useState<'cards' | 'table'>('table')
+  const [composerOpen, setComposerOpen] = useState(false)
   const [mobileTab, setMobileTab] = useState<'network' | 'feed'>(() => {
     if (typeof window === 'undefined') return 'feed'
     const params = new URLSearchParams(window.location.search)
@@ -575,7 +576,24 @@ export default function NodesPage() {
 
             {me?.profile && (
               <div className="mb-2">
-                <PostFormTimeline onPosted={() => loadFeed(null)} />
+                <button
+                  onClick={() => setComposerOpen(o => !o)}
+                  className="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-white/5 bg-black/40 hover:bg-black/60 transition"
+                  aria-expanded={composerOpen}
+                >
+                  <span className="flex items-center gap-2">
+                    <PenLine className="w-3.5 h-3.5 text-cyan-400" />
+                    <span className="text-[10px] font-mono font-bold text-cyan-400 tracking-wider">COMPOSE POST</span>
+                  </span>
+                  {composerOpen
+                    ? <ChevronDown className="w-4 h-4 text-gray-500" />
+                    : <ChevronRight className="w-4 h-4 text-gray-500" />}
+                </button>
+                {composerOpen && (
+                  <div className="mt-2">
+                    <PostFormTimeline onPosted={() => { loadFeed(null); setComposerOpen(false) }} />
+                  </div>
+                )}
               </div>
             )}
 
