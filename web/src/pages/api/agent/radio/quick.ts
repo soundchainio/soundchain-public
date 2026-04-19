@@ -45,7 +45,7 @@ export default async function handler(
     const lyrics = listenData.data?.lyrics || {}
 
     // Build shareable text formats
-    const shortFormat = `🎵 Now playing: "${track.title}" by ${track.artist} | ${analysis.tempo_bpm || '?'} BPM | ${analysis.key || '?'} ${analysis.mode || ''} | ${analysis.mood || 'vibing'} | soundchain.io/dex/track/${track.id}`
+    const shortFormat = `🎵 Now playing: "${track.title}" by ${track.artist} | ${analysis.tempo_bpm || '?'} BPM | ${analysis.key || '?'} ${analysis.mode || ''} | ${analysis.mood || 'vibing'} | soundchain.io/track/${track.id}`
 
     const mediumFormat = `🎵 Just listened to "${track.title}" on OGUN Radio
 
@@ -55,7 +55,7 @@ export default async function handler(
 • Mood: ${analysis.mood || 'unknown'}
 ${lyrics.has_lyrics ? `• Lyrics: ${lyrics.sentiment?.overall || 'neutral'} sentiment, themes of ${(lyrics.themes || []).slice(0, 2).join(', ')}` : '• Instrumental track'}
 
-🔗 Listen: soundchain.io/dex/track/${track.id}
+🔗 Listen: soundchain.io/track/${track.id}
 📻 OGUN Radio: soundchain.io/api/agent/radio`
 
     const fullFormat = `🎵 **OGUN Radio Report**
@@ -83,7 +83,7 @@ ${lyrics.hook_lines?.length ? `• Hook: "${lyrics.hook_lines[0]}"` : ''}` : '**
 **Play Count:** ${track.play_count || 0}
 
 🔗 **Links:**
-• Track: soundchain.io/dex/track/${track.id}
+• Track: soundchain.io/track/${track.id}
 • Radio: soundchain.io/api/agent/radio
 • Listen API: soundchain.io/api/agent/radio/listen
 
@@ -99,7 +99,7 @@ ${lyrics.hook_lines?.length ? `• Hook: "${lyrics.hook_lines[0]}"` : ''}` : '**
         id: track.id,
         title: track.title,
         artist: track.artist,
-        url: `https://soundchain.io/dex/track/${track.id}`
+        url: `https://soundchain.io/track/${track.id}`
       },
       shareable: {
         short: shortFormat,

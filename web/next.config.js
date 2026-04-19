@@ -13,7 +13,7 @@ const withPWA = require('next-pwa')({
   // Pulse uses NetworkOnly to prevent #310 crashes from stale cached JS
   runtimeCaching: [
     {
-      urlPattern: /\/dex\/pulse/,
+      urlPattern: /\/(dex\/)?pulse/,
       handler: 'NetworkOnly',
     },
     {
@@ -44,60 +44,69 @@ const withPWA = require('next-pwa')({
 
 module.exports = withPWA({
   reactStrictMode: false,
-  // Redirect all legacy routes to DEX (modern UI)
+  // Rewrites: top-level URLs silently serve content from /dex/ mega-router
+  // User sees /users/handle but Next.js renders /dex/users/handle internally
+  async rewrites() {
+    return [
+      // Profile pages
+      { source: '/users/:handle', destination: '/dex/users/:handle' },
+      { source: '/artist/:handle', destination: '/dex/users/:handle' },
+      // Track detail
+      { source: '/track/:id', destination: '/dex/track/:id' },
+      // Settings
+      { source: '/settings', destination: '/dex/settings' },
+      { source: '/settings/:path*', destination: '/dex/settings/:path*' },
+      // Wallet
+      { source: '/wallet', destination: '/dex/wallet' },
+      { source: '/wallet/:path*', destination: '/dex/wallet/:path*' },
+      // Playlist
+      { source: '/playlist/:id', destination: '/dex/playlist/:id' },
+      // Post detail
+      { source: '/post/:id', destination: '/dex/post/:id' },
+      // Messages
+      { source: '/messages', destination: '/dex/messages' },
+      { source: '/messages/:id', destination: '/dex/messages/:id' },
+      // Explore / Library / Marketplace (rendered by mega-router)
+      { source: '/explore', destination: '/dex/explore' },
+      { source: '/library', destination: '/dex/library' },
+      // marketplace ghosted — shop lives on user profiles now
+      // Notifications
+      { source: '/notifications', destination: '/dex/notifications' },
+      // Staking
+      { source: '/staking', destination: '/dex/staking' },
+      // Stories
+      { source: '/story/:path*', destination: '/dex/story/:path*' },
+      // Announcements
+      { source: '/announcements', destination: '/dex/announcements' },
+      // Feedback
+      { source: '/feedback', destination: '/dex/feedback' },
+    ]
+  },
+  // Redirects: old /dex/ URLs → clean top-level URLs
   async redirects() {
     return [
-      // Main routes → DEX feed
-      { source: '/', destination: '/dex/feed', permanent: false },
-      { source: '/home', destination: '/dex/feed', permanent: false },
-      // NOTE: /posts/:id redirect removed - posts/[id].tsx handles bot detection for OG tags
-      // and redirects non-bots to /dex/post/:id via getServerSideProps
-
-      // Tracks → DEX track view
-      { source: '/tracks/:id', destination: '/dex/track/:id', permanent: false },
-
-      // Messages → DEX messages
-      { source: '/messages', destination: '/dex/messages', permanent: false },
-      { source: '/messages/:id', destination: '/dex/messages', permanent: false },
-
-      // Notifications → DEX notifications
-      { source: '/notifications', destination: '/dex/notifications', permanent: false },
-
-      // Library → DEX library
-      { source: '/library', destination: '/dex/library', permanent: false },
-
-      // Marketplace → DEX marketplace
-      { source: '/marketplace', destination: '/dex/marketplace', permanent: false },
-
-      // Settings → DEX settings
-      { source: '/settings', destination: '/dex/settings', permanent: false },
-      { source: '/settings/:path*', destination: '/dex/settings', permanent: false },
-
-      // Staking/rewards → DEX staking
-      { source: '/stake', destination: '/dex/staking', permanent: false },
-      { source: '/lp-stake', destination: '/dex/staking', permanent: false },
-      { source: '/airdrop', destination: '/dex/staking', permanent: false },
-      { source: '/ogun', destination: '/dex/staking', permanent: false },
-
-      // Wallet → DEX wallet
-      { source: '/wallet', destination: '/dex/wallet', permanent: false },
-      { source: '/wallet/:path*', destination: '/dex/wallet', permanent: false },
-
-      // Top tracks / explore → DEX explore
-      { source: '/top-tracks', destination: '/dex/explore', permanent: false },
-
-      // Roadmap → DEX announcements
-      { source: '/roadmap', destination: '/dex/announcements', permanent: false },
-
-      // User profiles → DEX profile
-      { source: '/users/:handle', destination: '/dex/users/:handle', permanent: false },
-      // Artist vanity URLs → DEX profile (Bug #8)
-      { source: '/artist/:handle', destination: '/dex/users/:handle', permanent: false },
-      // Track by mongo ID shortcut (Bug #9)
-      { source: '/track/:id', destination: '/dex/track/:id', permanent: false },
-
-      // Claim badge → DEX
-      { source: '/claim-badge-profile', destination: '/dex/feed', permanent: false },
+      // Old /dex/ paths → new top-level (301 permanent)
+      { source: '/dex/users/:handle', destination: '/users/:handle', permanent: true },
+      { source: '/dex/track/:id', destination: '/track/:id', permanent: true },
+      { source: '/dex/settings', destination: '/settings', permanent: true },
+      { source: '/dex/settings/:path*', destination: '/settings/:path*', permanent: true },
+      { source: '/dex/wallet', destination: '/wallet', permanent: true },
+      { source: '/dex/wallet/:path*', destination: '/wallet/:path*', permanent: true },
+      { source: '/dex/playlist/:id', destination: '/playlist/:id', permanent: true },
+      { source: '/dex/post/:id', destination: '/post/:id', permanent: true },
+      { source: '/dex/messages', destination: '/messages', permanent: true },
+      { source: '/dex/messages/:id', destination: '/messages/:id', permanent: true },
+      { source: '/dex/explore', destination: '/explore', permanent: true },
+      { source: '/dex/library', destination: '/library', permanent: true },
+      { source: '/dex/marketplace', destination: '/marketplace', permanent: true },
+      { source: '/dex/notifications', destination: '/notifications', permanent: true },
+      { source: '/dex/staking', destination: '/staking', permanent: true },
+      { source: '/dex/story/:path*', destination: '/story/:path*', permanent: true },
+      { source: '/dex/announcements', destination: '/announcements', permanent: true },
+      { source: '/dex/feedback', destination: '/feedback', permanent: true },
+      // Legacy aliases
+      { source: '/tracks/:id', destination: '/track/:id', permanent: true },
+      { source: '/claim-badge-profile', destination: '/nodes', permanent: false },
     ]
   },
   // Enable scroll position restoration on back/forward navigation

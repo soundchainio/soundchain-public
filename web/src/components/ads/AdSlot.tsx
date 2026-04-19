@@ -199,7 +199,7 @@ export const AdSlot = ({ slot, format = 'auto', className = '' }: AdSlotProps) =
   // ─── Priority 3: SoundChain promo placeholder ───
   return (
     <div className={`overflow-hidden ${className}`}>
-      <Link href="/dex/announcements" className="block">
+      <Link href="/announcements" className="block">
         <div className={`relative bg-gradient-to-r ${placeholder.gradient} border border-white/5 rounded-lg p-4 hover:border-cyan-500/30 transition-all duration-300 cursor-pointer group`}>
           <div className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-r from-cyan-500/5 to-purple-500/5" />
           <div className="relative flex items-center gap-3">

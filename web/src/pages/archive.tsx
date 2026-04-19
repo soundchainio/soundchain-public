@@ -73,12 +73,12 @@ export default function ArchivePage() {
                 ...(me?.profile ? [{ id: 'profile', label: 'Profile', route: `/dex/users/${me.profile.userHandle}` }] : []),
                 { id: 'nodes', label: 'Nodes', route: '/nodes' },
                 { id: 'explore3d', label: 'Explore 3D', route: '/explore3d' },
-                { id: 'explore', label: 'Explore', route: '/dex/explore' },
-                { id: 'users', label: 'Users', route: '/dex/users' },
+                { id: 'explore', label: 'Explore', route: '/explore' },
+                { id: 'users', label: 'Users', route: '/users' },
                 { id: 'radio', label: 'Radio', route: '/radio' },
                 { id: 'moltbook', label: 'Moltbook', route: '/backend' },
-                { id: 'library', label: 'Library', route: '/dex/library' },
-                { id: 'playlist', label: 'Playlists', route: '/dex/playlist' },
+                { id: 'library', label: 'Library', route: '/library' },
+                { id: 'playlist', label: 'Playlists', route: '/playlist' },
                 { id: 'archive', label: 'Archive', route: '/archive' },
               ].map(item => (
                 <button

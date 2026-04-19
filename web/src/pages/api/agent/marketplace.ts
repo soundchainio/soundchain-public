@@ -161,7 +161,7 @@ export default async function handler(
         _raw_listing_item: listingItem,
 
         // Links
-        view_url: `https://soundchain.io/dex/track/${listing.id}`,
+        view_url: `https://soundchain.io/track/${listing.id}`,
         buy_endpoint: '/api/agent/buy'
       }
     })

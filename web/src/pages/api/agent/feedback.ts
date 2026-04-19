@@ -142,7 +142,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       type: doc.type,
       status: doc.status,
       view_all: 'GET /api/agent/feedback',
-      web_view: 'https://soundchain.io/dex/feedback',
+      web_view: 'https://soundchain.io/feedback',
       meta: {
         request_id: requestId,
         timestamp: new Date().toISOString(),

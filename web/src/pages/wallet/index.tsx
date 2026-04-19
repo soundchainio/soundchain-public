@@ -4,7 +4,7 @@ import { GetServerSideProps } from 'next'
 export const getServerSideProps: GetServerSideProps = async () => {
   return {
     redirect: {
-      destination: '/dex/wallet',
+      destination: '/wallet',
       permanent: true, // 301 redirect - SEO friendly
     },
   }

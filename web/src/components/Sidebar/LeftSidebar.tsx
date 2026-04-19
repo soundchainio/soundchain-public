@@ -235,7 +235,7 @@ export const LeftSidebar = () => {
                 <h3 className="text-white font-bold">Your Playlists</h3>
               </div>
               <Link
-                href="/dex/playlist"
+                href="/playlist"
                 className="text-xs text-green-400 hover:text-green-300 font-medium"
               >
                 View All
@@ -283,7 +283,7 @@ export const LeftSidebar = () => {
                 <ListMusic className="w-10 h-10 text-gray-600 mx-auto mb-2" />
                 <p className="text-gray-400 text-sm mb-3">No playlists yet</p>
                 <Link
-                  href="/dex/playlist"
+                  href="/playlist"
                   className="inline-flex items-center gap-1.5 px-4 py-2 bg-green-500 text-black text-sm font-semibold rounded-lg hover:bg-green-400 transition-colors"
                 >
                   <ListMusic className="w-4 h-4" />
@@ -332,7 +332,7 @@ export const LeftSidebar = () => {
                 <Heart className="w-3.5 h-3.5 text-pink-400" />
                 Favorites
               </h4>
-              <Link href="/dex/library" className="text-cyan-400 text-xs hover:underline">
+              <Link href="/library" className="text-cyan-400 text-xs hover:underline">
                 View all
               </Link>
             </div>
@@ -361,14 +361,14 @@ export const LeftSidebar = () => {
         <div className="bg-neutral-900/80 rounded-2xl p-3 border border-neutral-800">
           <div className="space-y-1">
             <Link
-              href="/dex/wallet"
+              href="/wallet"
               className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-neutral-800 transition-all"
             >
               <Wallet className="w-4 h-4" />
               <span className="text-sm">Wallet</span>
             </Link>
             <Link
-              href="/dex/settings"
+              href="/settings"
               className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-neutral-800 transition-all"
             >
               <Settings className="w-4 h-4" />

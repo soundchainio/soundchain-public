@@ -392,7 +392,7 @@ export const StoriesBar = ({ onCreateStory, onViewStory, deepLinkStoryId, deepLi
 
         {/* "See All" button at end */}
         <button
-          onClick={() => router.push('/dex/stories')}
+          onClick={() => router.push('/stories')}
           className="flex flex-col items-center gap-1 flex-shrink-0 group px-2"
         >
           <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full border border-white/10 bg-white/5 flex items-center justify-center group-hover:border-cyan-500/50 group-hover:bg-cyan-500/10 transition-all">

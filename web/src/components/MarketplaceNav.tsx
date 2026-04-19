@@ -44,7 +44,7 @@ export const MarketplaceNav = ({ title, icon }: MarketplaceNavProps) => {
           <Link href="/nodes" className="text-xs text-gray-400 hover:text-cyan-400 transition-colors hidden sm:inline">
             Home
           </Link>
-          <Link href="/dex/marketplace" className="text-xs text-gray-400 hover:text-cyan-400 transition-colors">
+          <Link href="/marketplace" className="text-xs text-gray-400 hover:text-cyan-400 transition-colors">
             Market
           </Link>
         </div>

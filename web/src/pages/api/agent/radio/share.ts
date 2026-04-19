@@ -57,7 +57,7 @@ export default async function handler(
     // Generate share text for Moltbook
     const shareText = message ||
       `🎵 Listening to "${track_title}" by ${artist} on OGUN Radio\n\n` +
-      `soundchain.io/dex/track/${track_id}\n` +
+      `soundchain.io/track/${track_id}\n` +
       `soundchain.io/radio`
 
     return res.status(201).json({
@@ -68,7 +68,7 @@ export default async function handler(
         track_total_shares: trackShares,
         share_text: shareText,
         share_links: {
-          soundchain: `https://soundchain.io/dex/track/${track_id}`,
+          soundchain: `https://soundchain.io/track/${track_id}`,
           radio: 'https://soundchain.io/radio',
           api: 'https://soundchain.io/api/agent/radio'
         }

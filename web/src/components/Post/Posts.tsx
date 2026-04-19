@@ -291,7 +291,7 @@ export const Posts = ({ profileId, disableVirtualization, viewMode: externalView
         <p className="text-neutral-300 text-sm font-medium">Your feed is quiet</p>
         <p className="text-neutral-500 text-xs text-center max-w-xs">Follow artists and creators to see their posts here, or explore what&apos;s trending.</p>
         <a
-          href="/dex/explore"
+          href="/explore"
           className="px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white text-sm rounded-lg transition-colors"
         >
           Explore SoundChain

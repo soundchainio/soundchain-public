@@ -73,7 +73,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       requireInteraction: true,  // Stays on screen until dismissed
       vibrate: [200, 100, 200, 100, 300],  // Custom vibration pattern
       data: {
-        url: '/dex/wallet',
+        url: '/wallet',
         type: 'trade_alert',
       }
     })

@@ -158,7 +158,7 @@ function formatTrackForBroadcast(track: RadioTrack): string {
   }
   if (track.owner) lines.push(``, `Owner: @${track.owner.handle}`)
   if (track.scid) lines.push(`SCID: ${track.scid}`)
-  lines.push(``, `Listen: soundchain.io/dex/track/${track.id}`)
+  lines.push(``, `Listen: soundchain.io/track/${track.id}`)
   lines.push(`Radio: soundchain.io/api/agent/radio`)
   lines.push(``, `*OGUN - The gas powering the L2 music economy*`)
 

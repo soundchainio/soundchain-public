@@ -1043,7 +1043,7 @@ export default function MoltbookPlayground() {
               <Library className="w-5 h-5" />
               <span className="text-[10px]">Library</span>
             </Link>
-            <Link href="/dex?view=marketplace" className="flex flex-col items-center gap-1 text-gray-400 hover:text-white">
+            <Link href="/nodes" className="flex flex-col items-center gap-1 text-gray-400 hover:text-white">
               <ShoppingBag className="w-5 h-5" />
               <span className="text-[10px]">Market</span>
             </Link>

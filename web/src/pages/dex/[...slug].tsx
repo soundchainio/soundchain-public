@@ -3390,7 +3390,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                       {/* Action Buttons */}
                       <div className="p-3 grid grid-cols-2 gap-2">
                         <button
-                          onClick={() => { setShowWinWinStatsModal(false); router.push('/dex/staking') }}
+                          onClick={() => { setShowWinWinStatsModal(false); router.push('/staking') }}
                           disabled={myTotalUnclaimed <= 0}
                           className={`py-2 font-bold rounded-lg text-sm flex items-center justify-center gap-1 transition-all ${
                             myTotalUnclaimed > 0
@@ -3402,7 +3402,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                           Claim
                         </button>
                         <button
-                          onClick={() => { setShowWinWinStatsModal(false); router.push('/dex/staking') }}
+                          onClick={() => { setShowWinWinStatsModal(false); router.push('/staking') }}
                           disabled={myTotalUnclaimed <= 0}
                           className={`py-2 font-bold rounded-lg text-sm flex items-center justify-center gap-1 transition-all ${
                             myTotalUnclaimed > 0
@@ -3575,13 +3575,13 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     setExploreSearchQuery(e.target.value)
                     if (e.target.value.length >= 2 && selectedView !== 'explore') {
                       setSelectedView('explore')
-                      router.push('/dex/explore', undefined, { shallow: true })
+                      router.push('/explore', undefined, { shallow: true })
                     }
                   }}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && exploreSearchQuery.length >= 1) {
                       setSelectedView('explore')
-                      router.push('/dex/explore', undefined, { shallow: true })
+                      router.push('/explore', undefined, { shallow: true })
                     }
                   }}
                   className="w-60 bg-black/40 border border-cyan-500/20 rounded-full px-4 py-2 pl-10 text-sm focus:outline-none focus:border-cyan-500/50 transition-colors"
@@ -3788,7 +3788,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     {/* Action Buttons */}
                     <div className="p-3 grid grid-cols-2 gap-2">
                       <button
-                        onClick={() => { setShowWinWinStatsModal(false); router.push('/dex/staking') }}
+                        onClick={() => { setShowWinWinStatsModal(false); router.push('/staking') }}
                         disabled={myTotalUnclaimed <= 0}
                         className={`py-2 font-bold rounded-lg text-sm flex items-center justify-center gap-1 transition-all ${
                           myTotalUnclaimed > 0
@@ -3800,7 +3800,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         Claim
                       </button>
                       <button
-                        onClick={() => { setShowWinWinStatsModal(false); router.push('/dex/staking') }}
+                        onClick={() => { setShowWinWinStatsModal(false); router.push('/staking') }}
                         disabled={myTotalUnclaimed <= 0}
                         className={`py-2 font-bold rounded-lg text-sm flex items-center justify-center gap-1 transition-all ${
                           myTotalUnclaimed > 0
@@ -4002,7 +4002,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                                 )}
                               </Button>
                             </Link>
-                            <Link href="/dex/nearby">
+                            <Link href="/nearby">
                               <Button variant="ghost" className="w-full justify-start text-sm hover:bg-cyan-500/10 relative" onClick={() => { setShowUserMenu(false); setSelectedView('nearby'); }}>
                                 <Radio className="w-4 h-4 mr-3 text-green-400" />
                                 <span className="flex-1 text-left">Nearby</span>
@@ -4013,7 +4013,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
                           {/* Main Menu Items */}
                           <div className="py-3 space-y-1 border-b border-cyan-500/30">
-                            <Link href="/dex/wallet">
+                            <Link href="/wallet">
                               <Button variant="ghost" className="w-full justify-start text-sm hover:bg-cyan-500/10" onClick={() => {setShowUserMenu(false); setSelectedView('wallet')}}>
                                 <WalletIcon className="w-4 h-4 mr-3" />
                                 <span className="flex-1 text-left">Wallet</span>
@@ -4026,14 +4026,14 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                                 <ExternalLink className="w-3 h-3" />
                               </Button>
                             </Link>
-                            <Link href="/dex/feedback">
+                            <Link href="/feedback">
                               <Button variant="ghost" className="w-full justify-start text-sm hover:bg-cyan-500/10" onClick={() => {setShowUserMenu(false); setSelectedView('feedback')}}>
                                 <Feedback className="w-4 h-4 mr-3" />
                                 <span className="flex-1 text-left">Leave Feedback</span>
                               </Button>
                             </Link>
                             {userData?.me?.roles?.includes(Role.Admin) && (
-                              <Link href="/dex/admin">
+                              <Link href="/admin">
                                 <Button variant="ghost" className="w-full justify-start text-sm hover:bg-cyan-500/10" onClick={() => {setShowUserMenu(false); setSelectedView('admin')}}>
                                   <VerifiedIcon className="w-4 h-4 mr-3" />
                                   <span className="flex-1 text-left">Admin Panel</span>
@@ -4235,7 +4235,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                                   )}
 
                                   {/* Link to full settings page */}
-                                  <Link href="/dex/settings" onClick={() => setShowUserMenu(false)}>
+                                  <Link href="/settings" onClick={() => setShowUserMenu(false)}>
                                     <p className="text-xs text-cyan-400 hover:text-cyan-300 cursor-pointer">
                                       More settings →
                                     </p>
@@ -4306,12 +4306,12 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   { id: 'land', label: 'Land', route: '/land' },
                   { id: 'gallery3d', label: 'Gallery 3D', route: '/gallery3d' },
                   { id: 'arena', label: 'Arena', route: '/arena' },
-                  { id: 'explore', label: 'Explore', route: '/dex/explore' },
-                  { id: 'users', label: 'Users', route: '/dex/users' },
+                  { id: 'explore', label: 'Explore', route: '/explore' },
+                  { id: 'users', label: 'Users', route: '/users' },
                   { id: 'radio', label: 'Radio', route: '/radio' },
                   { id: 'moltbook', label: 'Moltbook', route: '/backend' },
-                  { id: 'library', label: 'Library', route: '/dex/library' },
-                  { id: 'playlist', label: 'Playlists', route: '/dex/playlist' },
+                  { id: 'library', label: 'Library', route: '/library' },
+                  { id: 'playlist', label: 'Playlists', route: '/playlist' },
                   { id: 'archive', label: 'Archive', route: '/archive' },
                 ].map((item) => {
                   const isActive = selectedView === item.id || (item.id === 'profile' && isBioExpanded)
@@ -5496,11 +5496,11 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   <Zap className="w-5 h-5 text-cyan-400" />
                   <span className="text-[10px] text-gray-200">Radio</span>
                 </button>
-                <button onClick={() => router.push('/dex/users')} className="flex flex-col items-center gap-1 p-3 rounded-lg bg-white/10 hover:bg-white/20 ring-1 ring-white/15 transition-all">
+                <button onClick={() => router.push('/users')} className="flex flex-col items-center gap-1 p-3 rounded-lg bg-white/10 hover:bg-white/20 ring-1 ring-white/15 transition-all">
                   <Users className="w-5 h-5 text-indigo-400" />
                   <span className="text-[10px] text-gray-200">Users</span>
                 </button>
-                <button onClick={() => router.push('/dex/playlist')} className="flex flex-col items-center gap-1 p-3 rounded-lg bg-white/10 hover:bg-white/20 ring-1 ring-white/15 transition-all">
+                <button onClick={() => router.push('/playlist')} className="flex flex-col items-center gap-1 p-3 rounded-lg bg-white/10 hover:bg-white/20 ring-1 ring-white/15 transition-all">
                   <Music className="w-5 h-5 text-purple-400" />
                   <span className="text-[10px] text-gray-200">Playlists</span>
                 </button>
@@ -5511,7 +5511,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="text-sm font-semibold text-white">New Users</h3>
-                    <button onClick={() => router.push('/dex/users')} className="text-xs text-cyan-400 hover:text-cyan-300">See all</button>
+                    <button onClick={() => router.push('/users')} className="text-xs text-cyan-400 hover:text-cyan-300">See all</button>
                   </div>
                   <div className="overflow-x-auto scrollbar-hide">
                     <div className="flex gap-3 min-w-max pb-1">
@@ -6739,56 +6739,56 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
               {routeId === 'bio' && (
                 <Card className="retro-card p-6">
                   <div className="flex items-center gap-3 mb-4">
-                    <Link href="/dex/settings" className="text-cyan-400 hover:text-cyan-300">← Back</Link>
+                    <Link href="/settings" className="text-cyan-400 hover:text-cyan-300">← Back</Link>
                     <h2 className="retro-title text-xl">Edit Bio</h2>
                   </div>
-                  <BioForm afterSubmit={() => router.push('/dex/settings')} submitText="Save Bio" />
+                  <BioForm afterSubmit={() => router.push('/settings')} submitText="Save Bio" />
                 </Card>
               )}
               {routeId === 'profile-picture' && (
                 <Card className="retro-card p-6">
                   <div className="flex items-center gap-3 mb-4">
-                    <Link href="/dex/settings" className="text-cyan-400 hover:text-cyan-300">← Back</Link>
+                    <Link href="/settings" className="text-cyan-400 hover:text-cyan-300">← Back</Link>
                     <h2 className="retro-title text-xl">Profile Picture</h2>
                   </div>
-                  <ProfilePictureForm afterSubmit={() => router.push('/dex/settings')} submitText="Save Picture" />
+                  <ProfilePictureForm afterSubmit={() => router.push('/settings')} submitText="Save Picture" />
                 </Card>
               )}
               {routeId === 'cover-picture' && (
                 <Card className="retro-card p-6">
                   <div className="flex items-center gap-3 mb-4">
-                    <Link href="/dex/settings" className="text-cyan-400 hover:text-cyan-300">← Back</Link>
+                    <Link href="/settings" className="text-cyan-400 hover:text-cyan-300">← Back</Link>
                     <h2 className="retro-title text-xl">Cover Picture</h2>
                   </div>
-                  <CoverPictureForm afterSubmit={() => router.push('/dex/settings')} submitText="Save Cover" />
+                  <CoverPictureForm afterSubmit={() => router.push('/settings')} submitText="Save Cover" />
                 </Card>
               )}
               {routeId === 'social-links' && (
                 <Card className="retro-card p-6">
                   <div className="flex items-center gap-3 mb-4">
-                    <Link href="/dex/settings" className="text-cyan-400 hover:text-cyan-300">← Back</Link>
+                    <Link href="/settings" className="text-cyan-400 hover:text-cyan-300">← Back</Link>
                     <h2 className="retro-title text-xl">Social Links</h2>
                   </div>
-                  <SocialLinksForm afterSubmit={() => router.push('/dex/settings')} submitText="Save Links" />
+                  <SocialLinksForm afterSubmit={() => router.push('/settings')} submitText="Save Links" />
                 </Card>
               )}
               {routeId === 'security' && (
                 <Card className="retro-card p-6">
                   <div className="flex items-center gap-3 mb-4">
-                    <Link href="/dex/settings" className="text-cyan-400 hover:text-cyan-300">← Back</Link>
+                    <Link href="/settings" className="text-cyan-400 hover:text-cyan-300">← Back</Link>
                     <h2 className="retro-title text-xl">Security</h2>
                   </div>
-                  <SecurityForm afterSubmit={() => router.push('/dex/settings')} />
+                  <SecurityForm afterSubmit={() => router.push('/settings')} />
                 </Card>
               )}
               {routeId === 'notifications' && (
                 <Card className="retro-card p-6">
                   <div className="flex items-center gap-3 mb-4">
-                    <Link href="/dex/settings" className="text-cyan-400 hover:text-cyan-300">← Back</Link>
+                    <Link href="/settings" className="text-cyan-400 hover:text-cyan-300">← Back</Link>
                     <h2 className="retro-title text-xl">Notifications</h2>
                   </div>
                   <NotificationSettingsForm
-                    afterSubmit={() => router.push('/dex/settings')}
+                    afterSubmit={() => router.push('/settings')}
                     initialValues={{
                       phoneNumber: userData?.me?.phoneNumber,
                       notifyOnFollow: userData?.me?.notifyOnFollow,
@@ -6806,25 +6806,25 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
               {routeId === 'username' && (
                 <Card className="retro-card p-6">
                   <div className="flex items-center gap-3 mb-4">
-                    <Link href="/dex/settings" className="text-cyan-400 hover:text-cyan-300">← Back</Link>
+                    <Link href="/settings" className="text-cyan-400 hover:text-cyan-300">← Back</Link>
                     <h2 className="retro-title text-xl">Edit Username</h2>
                   </div>
-                  <HandleForm afterSubmit={() => router.push('/dex/settings')} submitText="Save Username" />
+                  <HandleForm afterSubmit={() => router.push('/settings')} submitText="Save Username" />
                 </Card>
               )}
               {routeId === 'display-name' && (
                 <Card className="retro-card p-6">
                   <div className="flex items-center gap-3 mb-4">
-                    <Link href="/dex/settings" className="text-cyan-400 hover:text-cyan-300">← Back</Link>
+                    <Link href="/settings" className="text-cyan-400 hover:text-cyan-300">← Back</Link>
                     <h2 className="retro-title text-xl">Edit Display Name</h2>
                   </div>
-                  <DisplayNameForm afterSubmit={() => router.push('/dex/settings')} submitText="Save Name" />
+                  <DisplayNameForm afterSubmit={() => router.push('/settings')} submitText="Save Name" />
                 </Card>
               )}
               {routeId === 'profile-song' && (
                 <Card className="retro-card p-6">
                   <div className="flex items-center gap-3 mb-4">
-                    <Link href="/dex/settings" className="text-cyan-400 hover:text-cyan-300">← Back</Link>
+                    <Link href="/settings" className="text-cyan-400 hover:text-cyan-300">← Back</Link>
                     <h2 className="retro-title text-xl">Profile Song</h2>
                   </div>
                   <p className="text-gray-400 text-sm mb-4">Choose which track auto-plays when others visit your profile. You can pick an NFT track or wall-uploaded audio.</p>
@@ -6859,7 +6859,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                           onClick={async () => {
                             await updateFeaturedTrack({ variables: { input: { featuredTrackId: track.id, featuredAudioUrl: '', featuredAudioTitle: '', featuredAudioArtist: '', featuredAudioCoverUrl: '' } } })
                             toast.success(`Profile song set to "${track.title}"`)
-                            router.push('/dex/settings')
+                            router.push('/settings')
                           }}
                           className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all ${isSelected ? 'bg-amber-500/10 border border-amber-500/50' : 'bg-gray-800/50 hover:bg-gray-700/50 border border-transparent'}`}
                         >
@@ -6937,7 +6937,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   </div>
 
                   <div className="space-y-3">
-                    <Link href="/dex/settings/display-name">
+                    <Link href="/settings/display-name">
                       <Card className="metadata-section p-4 hover:border-cyan-500/50 transition-all cursor-pointer">
                         <div className="flex items-center justify-between">
                           <div className="flex-1 min-w-0">
@@ -6950,7 +6950,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         </div>
                       </Card>
                     </Link>
-                    <Link href="/dex/settings/username">
+                    <Link href="/settings/username">
                       <Card className="metadata-section p-4 hover:border-cyan-500/50 transition-all cursor-pointer">
                         <div className="flex items-center justify-between">
                           <div className="flex-1 min-w-0">
@@ -6963,7 +6963,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         </div>
                       </Card>
                     </Link>
-                    <Link href="/dex/settings/bio">
+                    <Link href="/settings/bio">
                       <Card className="metadata-section p-4 hover:border-cyan-500/50 transition-all cursor-pointer">
                         <div className="flex items-center justify-between">
                           <div className="flex-1 min-w-0">
@@ -6976,7 +6976,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         </div>
                       </Card>
                     </Link>
-                    <Link href="/dex/settings/profile-picture">
+                    <Link href="/settings/profile-picture">
                       <Card className="metadata-section p-4 hover:border-cyan-500/50 transition-all cursor-pointer">
                         <div className="flex items-center justify-between">
                           <div>
@@ -6987,7 +6987,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         </div>
                       </Card>
                     </Link>
-                    <Link href="/dex/settings/cover-picture">
+                    <Link href="/settings/cover-picture">
                       <Card className="metadata-section p-4 hover:border-cyan-500/50 transition-all cursor-pointer">
                         <div className="flex items-center justify-between">
                           <div>
@@ -6998,7 +6998,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         </div>
                       </Card>
                     </Link>
-                    <Link href="/dex/settings/social-links">
+                    <Link href="/settings/social-links">
                       <Card className="metadata-section p-4 hover:border-cyan-500/50 transition-all cursor-pointer">
                         <div className="flex items-center justify-between">
                           <div>
@@ -7009,7 +7009,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         </div>
                       </Card>
                     </Link>
-                    <Link href="/dex/settings/profile-song">
+                    <Link href="/settings/profile-song">
                       <Card className="metadata-section p-4 hover:border-amber-500/50 transition-all cursor-pointer">
                         <div className="flex items-center justify-between">
                           <div>
@@ -7026,7 +7026,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         </div>
                       </Card>
                     </Link>
-                    <Link href="/dex/settings/security">
+                    <Link href="/settings/security">
                       <Card className="metadata-section p-4 hover:border-cyan-500/50 transition-all cursor-pointer">
                         <div className="flex items-center justify-between">
                           <div>
@@ -7039,7 +7039,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         </div>
                       </Card>
                     </Link>
-                    <Link href="/dex/settings/notifications">
+                    <Link href="/settings/notifications">
                       <Card className="metadata-section p-4 hover:border-cyan-500/50 transition-all cursor-pointer">
                         <div className="flex items-center justify-between">
                           <div>
@@ -8355,7 +8355,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         ) : isViewingOwnProfile ? (
                           <>
                             <button
-                              onClick={() => router.push('/dex/settings', undefined, { shallow: false })}
+                              onClick={() => router.push('/settings', undefined, { shallow: false })}
                               className="px-4 py-2 text-sm bg-gray-800 hover:bg-gray-700 rounded-lg flex items-center gap-2 transition-colors"
                             >
                               <Settings className="w-4 h-4" />

@@ -299,7 +299,7 @@ export default async function handler(
         wallet: agentWallet.address
       },
       view_on_polygonscan: `https://polygonscan.com/tx/${buyTx.hash}`,
-      view_nft: `https://soundchain.io/dex/track/${listing_id}`,
+      view_nft: `https://soundchain.io/track/${listing_id}`,
       next_steps: {
         view_collection: 'GET /api/agent/collection - See your NFTs',
         keep_earning: 'POST /api/agent/play - Stream more to earn OGUN'

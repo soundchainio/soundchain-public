@@ -4,7 +4,7 @@ import { GetServerSideProps } from 'next'
 export const getServerSideProps: GetServerSideProps = async () => {
   return {
     redirect: {
-      destination: '/dex/settings/musician-type',
+      destination: '/settings/musician-type',
       permanent: true, // 301 redirect - SEO friendly
     },
   }

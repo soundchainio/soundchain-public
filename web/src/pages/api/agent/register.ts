@@ -78,7 +78,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           agent_id: `sc_${existingAgent.agent_name}`,
           handle: normalizedName,
           polygon_address: existingAgent.polygon_address,
-          profile_url: `https://soundchain.io/dex/users/${normalizedName}`,
+          profile_url: `https://soundchain.io/users/${normalizedName}`,
         },
       })
     }
@@ -189,7 +189,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       agent: {
         agent_id: `sc_${normalizedName}`,
         handle: `@${normalizedName}`,
-        profile_url: `https://soundchain.io/dex/users/${normalizedName}`,
+        profile_url: `https://soundchain.io/users/${normalizedName}`,
         polygon_address: address,
         wallet_type: 'HD (multi-chain)',
       },

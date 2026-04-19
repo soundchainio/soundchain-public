@@ -858,7 +858,7 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
                           {/* Action Buttons */}
                           <div className="p-3 grid grid-cols-2 gap-2">
                             <button
-                              onClick={() => { setShowWinWinStatsModal(false); router.push('/dex/staking') }}
+                              onClick={() => { setShowWinWinStatsModal(false); router.push('/staking') }}
                               disabled={myTotalUnclaimed <= 0}
                               className={`py-2 font-bold rounded-lg text-sm flex items-center justify-center gap-1 transition-all ${
                                 myTotalUnclaimed > 0
@@ -870,7 +870,7 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
                               Claim
                             </button>
                             <button
-                              onClick={() => { setShowWinWinStatsModal(false); router.push('/dex/staking') }}
+                              onClick={() => { setShowWinWinStatsModal(false); router.push('/staking') }}
                               disabled={myTotalUnclaimed <= 0}
                               className={`py-2 font-bold rounded-lg text-sm flex items-center justify-center gap-1 transition-all ${
                                 myTotalUnclaimed > 0
@@ -1014,16 +1014,16 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
             {/* Micro nav pills */}
             {[
               { label: 'Feed', icon: '📱', link: '/nodes' },
-              { label: 'Explore', icon: '🔍', link: '/dex/explore' },
-              // { label: 'Marketplace', icon: '🛒', link: '/dex/marketplace' }, // GHOSTED — storefronts on profiles now
-              { label: 'Artists', icon: '🎤', link: '/dex/users' },
-              { label: 'Playlists', icon: '🎧', link: '/dex/playlists' },
-              { label: 'Wallet', icon: '💰', link: '/dex/wallet' },
-              { label: 'Staking', icon: '🔒', link: '/dex/wallet' },
+              { label: 'Explore', icon: '🔍', link: '/explore' },
+              // { label: 'Marketplace', icon: '🛒', link: '/marketplace' }, // GHOSTED — storefronts on profiles now
+              { label: 'Artists', icon: '🎤', link: '/users' },
+              { label: 'Playlists', icon: '🎧', link: '/playlists' },
+              { label: 'Wallet', icon: '💰', link: '/wallet' },
+              { label: 'Staking', icon: '🔒', link: '/wallet' },
               { label: 'Moltbook', icon: '🦞', link: 'https://www.moltbook.com', external: true },
               { label: 'Pulse', icon: '💬', link: '/pulse' },
-              { label: 'Library', icon: '📚', link: '/dex/library' },
-              { label: 'SCID', icon: '🏆', link: '/dex/wallet' },
+              { label: 'Library', icon: '📚', link: '/library' },
+              { label: 'SCID', icon: '🏆', link: '/wallet' },
             ].map((pill) => (
               <button
                 key={pill.label}

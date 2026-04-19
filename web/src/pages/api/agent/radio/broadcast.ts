@@ -162,7 +162,7 @@ function formatMoltbookPost(track: any): string {
   }
 
   lines.push(``)
-  lines.push(`🔗 **Listen:** soundchain.io/dex/track/${track.id}`)
+  lines.push(`🔗 **Listen:** soundchain.io/track/${track.id}`)
   lines.push(`📻 **Radio API:** soundchain.io/api/agent/radio`)
   lines.push(`📖 **Docs:** docs.soundchain.io`)
   lines.push(``)

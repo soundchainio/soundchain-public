@@ -131,14 +131,14 @@ export const MiniProfileDashboard = () => {
               <span className="text-sm font-medium">My Wall</span>
             </Link>
             <Link
-              href="/dex/explore"
+              href="/explore"
               className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-400 hover:text-green-400 hover:bg-green-500/10 transition-all"
             >
               <Radio className="w-4 h-4" />
               <span className="text-sm font-medium">Explore</span>
             </Link>
             <Link
-              href="/dex/users"
+              href="/users"
               className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-400 hover:text-indigo-400 hover:bg-indigo-500/10 transition-all"
             >
               <Users className="w-4 h-4" />
@@ -146,14 +146,14 @@ export const MiniProfileDashboard = () => {
             </Link>
             {/* Marketplace ghosted — storefronts on profiles (Shop tab) */}
             <Link
-              href="/dex/wallet"
+              href="/wallet"
               className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-400 hover:text-purple-400 hover:bg-purple-500/10 transition-all"
             >
               <Wallet className="w-4 h-4" />
               <span className="text-sm font-medium">Wallet</span>
             </Link>
             <Link
-              href="/dex/settings"
+              href="/settings"
               className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all"
             >
               <Settings className="w-4 h-4" />
@@ -200,7 +200,7 @@ export const MiniProfileDashboard = () => {
                 <Heart className="w-3.5 h-3.5 text-pink-400" />
                 Favorites
               </h4>
-              <Link href="/dex/library" className="text-cyan-400 text-xs hover:underline">
+              <Link href="/library" className="text-cyan-400 text-xs hover:underline">
                 View all
               </Link>
             </div>
@@ -228,7 +228,7 @@ export const MiniProfileDashboard = () => {
         {/* Playlists Preview */}
         <div className="bg-neutral-900/80 rounded-2xl p-3 border border-neutral-800">
           <Link
-            href="/dex/playlist"
+            href="/playlist"
             className="flex items-center gap-3 px-2 py-2 rounded-lg text-gray-400 hover:text-green-400 hover:bg-green-500/10 transition-all"
           >
             <ListMusic className="w-4 h-4" />

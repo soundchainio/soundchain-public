@@ -130,7 +130,7 @@ export const RightSidebar = () => {
           </div>
 
           <Link
-            href="/dex/explore"
+            href="/explore"
             className="block w-full mt-3 py-2 text-center text-cyan-400 text-sm hover:bg-cyan-500/10 rounded-lg transition-colors"
           >
             See all trending
@@ -187,7 +187,7 @@ export const RightSidebar = () => {
           </div>
 
           <Link
-            href="/dex/explore"
+            href="/explore"
             className="block w-full mt-3 py-2 text-center text-purple-400 text-sm hover:bg-purple-500/10 rounded-lg transition-colors"
           >
             Discover more
@@ -328,7 +328,7 @@ export const RightSidebar = () => {
           <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 text-xs text-gray-600">
             <Link href="/terms" className="hover:text-gray-400">Terms</Link>
             <Link href="/privacy" className="hover:text-gray-400">Privacy</Link>
-            <Link href="/dex/feedback" className="hover:text-gray-400">Feedback</Link>
+            <Link href="/feedback" className="hover:text-gray-400">Feedback</Link>
           </div>
           <p className="text-gray-700 text-xs mt-2">© 2026 SoundChain</p>
         </div>
