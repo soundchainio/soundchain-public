@@ -206,7 +206,7 @@ function SoundchainSSRLayout({ Component, pageProps }: CustomAppProps) {
 function SoundchainApp({ Component, pageProps }: CustomAppProps) {
   const router = useRouter()
   // Pulse has its own PWA manifest — don't include the main manifest on Pulse pages
-  const isPulsePage = router.pathname === '/dex/pulse'
+  const isPulsePage = router.pathname === '/pulse'
 
   // SSR-only pages bypass all client-only providers for full server rendering
   // This includes pages with ssrOnly flag OR pages with isBot in pageProps

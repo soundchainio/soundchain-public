@@ -17,7 +17,7 @@ export const MarketplaceNav = ({ title, icon }: MarketplaceNavProps) => {
       <div className="flex items-center justify-between max-w-screen-2xl mx-auto">
         {/* Left: Logo + Back */}
         <div className="flex items-center space-x-3">
-          <Link href="/dex/nodes" className="flex items-center space-x-2 flex-shrink-0">
+          <Link href="/nodes" className="flex items-center space-x-2 flex-shrink-0">
             <Logo className="h-9 w-9 sm:h-12 sm:w-12" />
             <span className="text-xl font-bold bg-gradient-to-r from-orange-400 via-yellow-400 to-cyan-400 bg-clip-text text-transparent hidden lg:block">
               SoundChain
@@ -41,7 +41,7 @@ export const MarketplaceNav = ({ title, icon }: MarketplaceNavProps) => {
 
         {/* Right: Quick Links */}
         <div className="flex items-center space-x-3">
-          <Link href="/dex/nodes" className="text-xs text-gray-400 hover:text-cyan-400 transition-colors hidden sm:inline">
+          <Link href="/nodes" className="text-xs text-gray-400 hover:text-cyan-400 transition-colors hidden sm:inline">
             Home
           </Link>
           <Link href="/dex/marketplace" className="text-xs text-gray-400 hover:text-cyan-400 transition-colors">

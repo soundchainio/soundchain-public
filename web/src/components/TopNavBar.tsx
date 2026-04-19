@@ -236,13 +236,13 @@ export const TopNavBar = ({
       {/* Main Header Bar - Clean & Modern */}
       <div className="relative z-10 flex h-14 items-center justify-between bg-black/95 backdrop-blur-md border-b border-white/5 px-4">
         {/* Mobile Logo - with energy glow */}
-        <Link href="/dex/nodes" className="flex items-center gap-2 md:hidden" passHref>
+        <Link href="/nodes" className="flex items-center gap-2 md:hidden" passHref>
           <MiniSphere size={32} />
         </Link>
 
         {/* Desktop Navigation — Nodeverse era (no legacy NavBar) */}
         <div className="hidden md:flex items-center gap-3">
-          <Link href="/dex/nodes" passHref className="flex items-center gap-2">
+          <Link href="/nodes" passHref className="flex items-center gap-2">
             <MiniSphere size={32} />
             <span className="text-white font-semibold text-lg">SoundCh<span className="matrix-ai">ai</span>n</span>
           </Link>
@@ -341,7 +341,7 @@ export const TopNavBar = ({
               <WalletButton />
 
               {/* Pulse — Messaging & Notifications */}
-              <Link href="/dex/pulse" passHref>
+              <Link href="/pulse" passHref>
                 <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#00a884]/10 hover:bg-[#00a884]/20 border border-[#00a884]/30 transition-all relative">
                   <MessageCircle className="w-4 h-4 text-[#00a884]" />
                   <span className="text-xs font-semibold text-[#00a884] hidden sm:inline">Pulse</span>

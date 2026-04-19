@@ -941,7 +941,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list')
 
-  // Track if user explicitly navigated to their own profile via /dex/me
+  // Track if user explicitly navigated to their own profile via /me
   // This ensures isViewingOwnProfile is true even before data loads
   const isExplicitOwnProfileRoute = routeType === 'me'
 
@@ -951,7 +951,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
       case 'explore': return 'explore'
       case 'library': return 'library'
       case 'profile': return 'profile'
-      case 'me': return 'profile' // /dex/me -> own profile (forces isViewingOwnProfile = true)
+      case 'me': return 'profile' // /me -> own profile (forces isViewingOwnProfile = true)
       case 'track': return 'track'
       case 'post': return 'post' // /dex/post/:id -> single post view
       case 'playlist': return 'playlist'
@@ -1279,10 +1279,10 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   const [swapFromAmount, setSwapFromAmount] = useState('')
 
   // Sync selectedView with URL changes (for back/forward navigation)
-  // Redirect /dex/feed → /dex/nodes?tab=feed (feed lives on Nodes now — no more Lambda)
+  // Redirect /dex/feed → /nodes?tab=feed (feed lives on Nodes now — no more Lambda)
   useEffect(() => {
     if (router.isReady && routeType === 'feed') {
-      router.replace('/dex/nodes?tab=feed')
+      router.replace('/nodes?tab=feed')
     }
   }, [router.isReady, routeType])
 
@@ -1330,7 +1330,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   // Navigate to a view and update URL
   const navigateToView = useCallback((view: string, id?: string) => {
     if (view === 'dashboard' || view === 'home') {
-      router.push('/dex/nodes', undefined, { shallow: true })
+      router.push('/nodes', undefined, { shallow: true })
     } else if (id) {
       router.push(`/dex/${view}/${id}`, undefined, { shallow: true })
     } else {
@@ -2055,7 +2055,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
   // Merge profile data from either query source
   // IMPORTANT: This MUST be defined BEFORE isViewingOwnProfile which depends on it
-  // PRIORITY: If /dex/me route, use current user's profile (no external query needed)
+  // PRIORITY: If /me route, use current user's profile (no external query needed)
   const viewingProfile = isExplicitOwnProfileRoute
     ? (userData?.me?.profile || me?.profile)
     : (profileDetailData?.profile || profileByHandleData?.profileByHandle || atlasFallbackProfile)
@@ -2237,10 +2237,10 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   const myUserHandle = me?.profile?.userHandle || userData?.me?.profile?.userHandle
 
   // Check if viewing own profile
-  // PRIORITY: If user navigated to /dex/me, they ARE viewing their own profile (no comparison needed)
+  // PRIORITY: If user navigated to /me, they ARE viewing their own profile (no comparison needed)
   // Otherwise, try multiple comparisons
   const isViewingOwnProfile = selectedView === 'profile' && (
-    // EXPLICIT: User navigated to /dex/me - this IS their own profile
+    // EXPLICIT: User navigated to /me - this IS their own profile
     isExplicitOwnProfileRoute ||
     // COMPARISON: Check if viewingProfile matches logged-in user
     (Boolean(viewingProfile?.id) && (
@@ -3901,7 +3901,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                 variant="ghost"
                 size="sm"
                 className="hover:bg-cyan-500/10"
-                onClick={() => router.push('/dex/pulse', undefined, { shallow: false })}
+                onClick={() => router.push('/pulse', undefined, { shallow: false })}
               >
                 <MessageCircle className="w-5 h-5" />
               </Button>
@@ -4301,18 +4301,18 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
               <div className="flex items-center gap-1.5 min-w-max">
                 {[
                   ...(me?.profile ? [{ id: 'profile', label: 'Profile', route: `/dex/users/${me?.profile?.userHandle}` }] : []),
-                  { id: 'nodes', label: 'Nodes', route: '/dex/nodes' },
-                  { id: 'explore3d', label: 'Explore 3D', route: '/dex/explore3d' },
-                  { id: 'land', label: 'Land', route: '/dex/land' },
-                  { id: 'gallery3d', label: 'Gallery 3D', route: '/dex/gallery3d' },
-                  { id: 'arena', label: 'Arena', route: '/dex/arena' },
+                  { id: 'nodes', label: 'Nodes', route: '/nodes' },
+                  { id: 'explore3d', label: 'Explore 3D', route: '/explore3d' },
+                  { id: 'land', label: 'Land', route: '/land' },
+                  { id: 'gallery3d', label: 'Gallery 3D', route: '/gallery3d' },
+                  { id: 'arena', label: 'Arena', route: '/arena' },
                   { id: 'explore', label: 'Explore', route: '/dex/explore' },
                   { id: 'users', label: 'Users', route: '/dex/users' },
                   { id: 'radio', label: 'Radio', route: '/radio' },
                   { id: 'moltbook', label: 'Moltbook', route: '/backend' },
                   { id: 'library', label: 'Library', route: '/dex/library' },
                   { id: 'playlist', label: 'Playlists', route: '/dex/playlist' },
-                  { id: 'archive', label: 'Archive', route: '/dex/archive' },
+                  { id: 'archive', label: 'Archive', route: '/archive' },
                 ].map((item) => {
                   const isActive = selectedView === item.id || (item.id === 'profile' && isBioExpanded)
                   return (
@@ -4845,7 +4845,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                 setExpandedPillId(null)
                 switch (action) {
                   case 'profile': router.push(`/dex/users/${profile.userHandle}`); break
-                  case 'dm': router.push(`/dex/pulse`); break
+                  case 'dm': router.push(`/pulse`); break
                   case 'tip': router.push(`/dex/users/${profile.userHandle}?tab=tip`); break
                   case 'wall': router.push(`/dex/users/${profile.userHandle}?tab=wall`); break
                   case 'manager': router.push(`/dex/users/${profile.userHandle}?tab=manager`); break
@@ -5243,7 +5243,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     <p className="text-gray-500 text-sm mb-4">{postDetailError.message}</p>
                     <Button
                       variant="outline"
-                      onClick={() => router.push('/dex/nodes')}
+                      onClick={() => router.push('/nodes')}
                       className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10"
                     >
                       Go to Feed
@@ -5275,7 +5275,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     <div className="mt-6 px-4 text-center">
                       <Button
                         variant="outline"
-                        onClick={() => router.push('/dex/nodes')}
+                        onClick={() => router.push('/nodes')}
                         className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10"
                       >
                         <MessageCircle className="w-4 h-4 mr-2" />
@@ -5289,7 +5289,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     <p className="text-neutral-400 mb-4">Post not found</p>
                     <Button
                       variant="outline"
-                      onClick={() => router.push('/dex/nodes')}
+                      onClick={() => router.push('/nodes')}
                       className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10"
                     >
                       Go to Feed
@@ -7373,7 +7373,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => { setSelectedView('feed'); router.push('/dex/nodes', undefined, { shallow: true }); }}
+                      onClick={() => { setSelectedView('feed'); router.push('/nodes', undefined, { shallow: true }); }}
                       className="w-8 h-8 p-0 hover:bg-red-500/20"
                       title="Close"
                     >
@@ -8027,7 +8027,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
             </div>
           )}
 
-          {/* Profile View - /dex/profile/[handle] or /dex/me */}
+          {/* Profile View - /dex/profile/[handle] or /me */}
           {selectedView === 'profile' && (routeId || isExplicitOwnProfileRoute) && router.isReady && (
             <ProfileErrorBoundary>
             <div className="relative pb-32 overflow-y-auto min-h-screen" style={{ WebkitOverflowScrolling: 'touch' }}>
@@ -8419,7 +8419,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                           <button
                             onClick={() => {
                               if (!me) { router.push('/login'); return; }
-                              router.push(`/dex/pulse?call=${viewingProfile.id}&name=${encodeURIComponent(viewingProfile.displayName || '')}&avatar=${encodeURIComponent(viewingProfile.profilePicture || '')}`)
+                              router.push(`/pulse?call=${viewingProfile.id}&name=${encodeURIComponent(viewingProfile.displayName || '')}&avatar=${encodeURIComponent(viewingProfile.profilePicture || '')}`)
                             }}
                             className="p-2 text-sm bg-green-600/20 hover:bg-green-600/30 text-green-400 rounded-lg transition-colors"
                             title="Voice call"

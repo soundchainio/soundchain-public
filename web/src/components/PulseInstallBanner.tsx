@@ -66,7 +66,7 @@ export function PulseInstallBanner() {
         </div>
 
         <Link
-          href="/dex/pulse"
+          href="/pulse"
           onClick={dismiss}
           className="block w-full py-2.5 rounded-xl bg-[#00a884] text-white text-sm font-bold text-center hover:bg-[#00c49a] transition-colors"
         >

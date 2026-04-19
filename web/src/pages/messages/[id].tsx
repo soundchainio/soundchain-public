@@ -5,7 +5,7 @@ interface MessagePageParams extends ParsedUrlQuery {
   id: string
 }
 
-// GHOST: Redirect /messages/[id] to /dex/messages/[id] (legacy page deprecated)
+// GHOST: Redirect /messages/[id] to /messages/[id] (legacy page deprecated)
 export const getServerSideProps: GetServerSideProps<{}, MessagePageParams> = async context => {
   const profileId = context.params?.id
 
@@ -15,7 +15,7 @@ export const getServerSideProps: GetServerSideProps<{}, MessagePageParams> = asy
 
   return {
     redirect: {
-      destination: `/dex/messages/${profileId}`,
+      destination: `/messages/${profileId}`,
       permanent: true, // 301 redirect - SEO friendly
     },
   }

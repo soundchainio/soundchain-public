@@ -1,10 +1,10 @@
 import { GetServerSideProps } from 'next'
 
-// GHOST: Redirect /messages to /dex/messages (legacy page deprecated)
+// GHOST: Redirect /messages to /messages (legacy page deprecated)
 export const getServerSideProps: GetServerSideProps = async () => {
   return {
     redirect: {
-      destination: '/dex/messages',
+      destination: '/messages',
       permanent: true, // 301 redirect - SEO friendly
     },
   }

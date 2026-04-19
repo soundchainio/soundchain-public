@@ -117,7 +117,7 @@ export const MiniProfileDashboard = () => {
         <div className="bg-neutral-900/80 rounded-2xl p-2 border border-neutral-800">
           <div className="space-y-0.5">
             <Link
-              href="/dex/nodes"
+              href="/nodes"
               className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-400 hover:text-cyan-400 hover:bg-cyan-500/10 transition-all"
             >
               <Rss className="w-4 h-4" />

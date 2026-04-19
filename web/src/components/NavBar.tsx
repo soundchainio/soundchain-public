@@ -72,7 +72,7 @@ export const NavBar = () => {
 
         {/* Center Nav - Clean & Minimal */}
         <div className="flex items-center gap-1">
-          <NavItem href="/dex/nodes" label="Home" icon={Home} isActive={isActive('/dex')} />
+          <NavItem href="/nodes" label="Home" icon={Home} isActive={isActive('/dex')} />
           <NavItem href={me ? '/explore' : '/login'} label="Explore" icon={Compass} isActive={isActive('/explore')} />
           <NavItem href={me ? '/library' : '/login'} label="Library" icon={Library} isActive={isActive('/library')} />
           {/* Create Button - Accent Color */}

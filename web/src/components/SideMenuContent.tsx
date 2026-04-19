@@ -192,7 +192,7 @@ export const SideMenuContent = ({}: SideMenuContentProps) => {
               />
               <MenuLink icon={Feedback} label="Feedback" href="/feedback" />
               <MenuLink icon={Code} label="Developers" href="/developers" />
-              <MenuLink icon={Terminal} label="Agent Feed 🤖" href="/dex/agent-feed" />
+              <MenuLink icon={Terminal} label="Agent Feed 🤖" href="/agent-feed" />
               {me.roles.includes(Role.Admin) ? (
                 <MenuLink
                   icon={Verified}

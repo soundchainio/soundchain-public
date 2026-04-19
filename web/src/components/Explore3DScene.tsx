@@ -694,7 +694,7 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
         const isGallery = hit.userData?.isGallery || hit.parent?.children?.find((c: any) => c.userData?.isGallery && c === hit)?.userData?.isGallery
         if (data?.userHandle || data?.id) {
           if (isGallery) {
-            router.push(`/dex/gallery3d?handle=${data.userHandle || data.id}`)
+            router.push(`/gallery3d?handle=${data.userHandle || data.id}`)
           } else {
             router.push(`/dex/users/${data.userHandle || data.id}`)
           }
@@ -1342,7 +1342,7 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
         playerPos={playerPos}
         ownedSquares={ownedSquares}
         residents={residents}
-        onClickFullMap={() => router.push('/dex/land')}
+        onClickFullMap={() => router.push('/land')}
       />
 
       {/* Mobile action buttons — RUN / JUMP / CUSTOMIZE (bottom right stack) */}

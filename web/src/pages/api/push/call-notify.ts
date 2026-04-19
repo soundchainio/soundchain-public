@@ -72,7 +72,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       badge: '/favicons/favicon-32x32.png',
       data: {
         type: 'incoming_call',
-        url: '/dex/pulse',
+        url: '/pulse',
         callId,
         callerName,
       },

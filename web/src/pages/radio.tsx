@@ -1013,7 +1013,7 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
             </button>
             {/* Micro nav pills */}
             {[
-              { label: 'Feed', icon: '📱', link: '/dex/nodes' },
+              { label: 'Feed', icon: '📱', link: '/nodes' },
               { label: 'Explore', icon: '🔍', link: '/dex/explore' },
               // { label: 'Marketplace', icon: '🛒', link: '/dex/marketplace' }, // GHOSTED — storefronts on profiles now
               { label: 'Artists', icon: '🎤', link: '/dex/users' },
@@ -1021,7 +1021,7 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
               { label: 'Wallet', icon: '💰', link: '/dex/wallet' },
               { label: 'Staking', icon: '🔒', link: '/dex/wallet' },
               { label: 'Moltbook', icon: '🦞', link: 'https://www.moltbook.com', external: true },
-              { label: 'Pulse', icon: '💬', link: '/dex/pulse' },
+              { label: 'Pulse', icon: '💬', link: '/pulse' },
               { label: 'Library', icon: '📚', link: '/dex/library' },
               { label: 'SCID', icon: '🏆', link: '/dex/wallet' },
             ].map((pill) => (

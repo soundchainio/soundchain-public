@@ -67,7 +67,7 @@ const NotificationRow = ({ notificationId }: NotificationRowProps) => {
 
   // Extract common fields from the polymorphic notification
   const n = notification as Record<string, unknown>
-  const link = (n.link as string) || '/dex/nodes'
+  const link = (n.link as string) || '/nodes'
   const createdAt = n.createdAt as string
   const name = (n.followerName || n.commenterName || n.reactorName || n.bidderName || n.buyerName || '') as string
   const picture = (n.followerPicture || n.commenterPicture || n.reactorPicture || '') as string | null
@@ -75,7 +75,7 @@ const NotificationRow = ({ notificationId }: NotificationRowProps) => {
   // Open notification links in system browser (Safari) when running as PWA standalone
   // Prevents glitchy main-site layout loading inside the Pulse PWA shell
   const handleTap = () => {
-    if (!link || link === '/dex' || link === '/dex/nodes') return
+    if (!link || link === '/dex' || link === '/nodes') return
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone === true
     if (isStandalone) {
       window.open(link, '_blank', 'noopener,noreferrer')

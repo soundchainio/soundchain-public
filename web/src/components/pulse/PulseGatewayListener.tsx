@@ -2,7 +2,7 @@
  * PulseGatewayListener — Global notification listener.
  *
  * Mounted in Layout.tsx so notifications work across ALL pages,
- * not just when on /dex/pulse.
+ * not just when on /pulse.
  *
  * Strategy:
  *   1. Try OpenClaw WebSocket gateway (real-time)
@@ -120,7 +120,7 @@ const PulseGatewayListener = () => {
     const unsubMessage = on('message.received', (payload) => {
       const sender = (payload.senderName as string) || 'Someone'
       const preview = (payload.message as string) || ''
-      showPulseToast(sender, preview, () => router.push('/dex/pulse'))
+      showPulseToast(sender, preview, () => router.push('/pulse'))
     })
 
     const unsubNotification = on('notification', (payload) => {
@@ -155,7 +155,7 @@ const PulseGatewayListener = () => {
 
   // Polling fallback — poll chats every 8s when WebSocket isn't available
   // Skip polling on the Pulse page itself (pulse.tsx has its own faster polling)
-  const isOnPulse = router.pathname === '/dex/pulse'
+  const isOnPulse = router.pathname === '/pulse'
   const shouldPoll = !connected && !!me && !isOnPulse
 
   const { data: chatsData } = useChatsQuery({
@@ -189,7 +189,7 @@ const PulseGatewayListener = () => {
           ? rawMsg.replace(/!\[!?emote:[^\]]*\]\([^)]*\)/g, '😎')
           : rawMsg
 
-        showPulseToast(sender, preview, () => router.push('/dex/pulse'))
+        showPulseToast(sender, preview, () => router.push('/pulse'))
       }
 
       prev.set(profileId, chat.createdAt)

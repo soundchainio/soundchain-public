@@ -78,7 +78,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const stakeText = doc.stakes > 0 ? ` · Stakes: ${doc.stakes} OGUN` : ''
       const opponentText = doc.opponentHandle ? `@${doc.opponentHandle}` : 'ANYONE'
       await db.collection('posts').insertOne({
-        message: `🎮 ARENA CHALLENGE!\n\n@${doc.challengerHandle} challenges ${opponentText} to ${doc.game}${stakeText}\n\nPlatform: ${doc.platform}${doc.message ? `\n"${doc.message}"` : ''}\n\nAccept the challenge at soundchain.io/dex/arena`,
+        message: `🎮 ARENA CHALLENGE!\n\n@${doc.challengerHandle} challenges ${opponentText} to ${doc.game}${stakeText}\n\nPlatform: ${doc.platform}${doc.message ? `\n"${doc.message}"` : ''}\n\nAccept the challenge at soundchain.io/arena`,
         profileId: 'arena_agent',
         type: 'arena_challenge',
         arenaId: result.insertedId.toString(),

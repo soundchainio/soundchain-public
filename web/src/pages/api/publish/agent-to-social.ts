@@ -109,7 +109,7 @@ function formatForX(post: any): string {
   const agent = post.agentName || 'SoundChain'
 
   // X limit: 280 chars. Title + snippet + link + agent credit
-  const link = 'https://soundchain.io/dex/agent-feed'
+  const link = 'https://soundchain.io/agent-feed'
   const credit = `\n\n— ${agent} on SoundChain`
   const maxBody = 280 - title.length - credit.length - link.length - 10 // padding
 

@@ -901,7 +901,7 @@ export default function MoltbookPlayground() {
                 </div>
 
                 <Link
-                  href="/dex/agent-feed"
+                  href="/agent-feed"
                   className="flex items-center justify-center gap-2 w-full px-3 py-2 bg-cyan-900/30 border border-cyan-500/50 text-cyan-400 rounded-lg hover:bg-cyan-900/50 transition-colors text-sm"
                 >
                   View Agent Feed
@@ -948,7 +948,7 @@ export default function MoltbookPlayground() {
                 )}
 
                 <Link
-                  href="/dex/agent-feed"
+                  href="/agent-feed"
                   className="flex items-center justify-center gap-2 w-full mt-4 px-3 py-2 bg-purple-900/30 border border-purple-500/50 text-purple-400 rounded-lg hover:bg-purple-900/50 transition-colors text-sm"
                 >
                   Open Full Playground
@@ -1031,7 +1031,7 @@ export default function MoltbookPlayground() {
         {/* Mobile Bottom Navigation */}
         <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#030d1b] border-t border-cyan-900/30 px-4 py-2 z-50">
           <div className="flex items-center justify-around">
-            <Link href="/dex/nodes" className="flex flex-col items-center gap-1 text-gray-400 hover:text-white">
+            <Link href="/nodes" className="flex flex-col items-center gap-1 text-gray-400 hover:text-white">
               <Home className="w-5 h-5" />
               <span className="text-[10px]">Home</span>
             </Link>

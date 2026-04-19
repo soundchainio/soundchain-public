@@ -122,7 +122,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               body: doc.message.length > 80 ? doc.message.slice(0, 77) + '...' : doc.message,
               icon: '/favicons/android-chrome-192x192.png',
               badge: '/favicons/favicon-32x32.png',
-              data: { type: 'dm', url: '/dex/pulse' },
+              data: { type: 'dm', url: '/pulse' },
               tag: `dm-${result.insertedId}`,
             })
 

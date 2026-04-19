@@ -480,7 +480,7 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
                 Archive saves your 24-hour post directly to your device as a <span className="text-amber-400">.soundchain</span> file - no cloud, no servers, just you.
               </p>
               <p className="text-xs text-neutral-400 leading-relaxed">
-                Re-upload anytime at <span className="text-cyan-400">/dex/archive-import</span> to repost your content. True digital ownership, the Web3 way.
+                Re-upload anytime at <span className="text-cyan-400">/archive-import</span> to repost your content. True digital ownership, the Web3 way.
               </p>
               {/* Arrow - only show on desktop */}
               <div className="hidden sm:block absolute top-full right-4 border-8 border-transparent border-t-neutral-800" />

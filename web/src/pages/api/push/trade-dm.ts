@@ -101,7 +101,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         tag: `trade-dm-${Date.now()}`,
         requireInteraction: true,
         vibrate: [200, 100, 200, 100, 300],
-        data: { url: '/dex/pulse', type: 'trade_dm' },
+        data: { url: '/pulse', type: 'trade_dm' },
       })
 
       for (const sub of subs) {

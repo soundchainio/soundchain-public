@@ -173,7 +173,7 @@ export const BottomNavBar = () => {
       <nav id="bottom-nav-bar" className="inset-x-0 flex items-center bg-black py-2 shadow-2xl md:hidden border-t border-neutral-800/50">
         <div className="w-full">
           <div className="flex w-full items-end">
-            <NavBarButton label="" path="/dex/nodes" icon={Home} color="yellow" alwaysShowLabel />
+            <NavBarButton label="" path="/nodes" icon={Home} color="yellow" alwaysShowLabel />
             <NavBarButton
               id="nav-explore-"
               label=""
@@ -203,7 +203,7 @@ export const BottomNavBar = () => {
               label=""
               icon={Inbox}
               color="purple-green"
-              path={me ? '/dex/pulse' : '/login'}
+              path={me ? '/pulse' : '/login'}
               badge={me ? InboxBadgeWrapper : undefined}
               alwaysShowLabel
             />

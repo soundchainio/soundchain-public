@@ -825,7 +825,7 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
   const handleShareToPulse = () => {
     setShowShareMenu(false)
     onClose()
-    router.push(`/dex/pulse?share=${encodeURIComponent(playlistShareUrl)}`)
+    router.push(`/pulse?share=${encodeURIComponent(playlistShareUrl)}`)
   }
 
   const handleRemoveTrack = async (playlistItemId: string) => {

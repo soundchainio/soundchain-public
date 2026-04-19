@@ -19,7 +19,7 @@ export const config = {
   claimOgunAddress: process.env.NEXT_PUBLIC_AIRDROP_CONTRACT_ADDRESS,
   ogunTokenAddress: process.env.NEXT_PUBLIC_OGUN_ADRESS,
   polygonscan: process.env.NEXT_PUBLIC_POLYGONSCAN,
-  redirectUrlPostLogin: '/dex/nodes?tab=feed',
+  redirectUrlPostLogin: '/nodes?tab=feed',
   // Platform fee rate: 0.05% (0.0005) - applied to sale price for marketplace
   soundchainFee: parseFloat(process.env.NEXT_PUBLIC_SOUNDCHAIN_FEE || '0.0005'),
   // Flat fee per NFT minted (in POL) - 0.01 POL per NFT
