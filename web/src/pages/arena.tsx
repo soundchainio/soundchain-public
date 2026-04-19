@@ -18,7 +18,7 @@
 import { ReactElement, useEffect, useState, useCallback } from 'react'
 import { useMe } from 'hooks/useMe'
 import { useRouter } from 'next/router'
-import { TopNavBar } from 'components/TopNavBar'
+import { DexNavBar } from 'components/DexNavBar'
 import { ArrowLeft, Gamepad2, Trophy, Users, Eye, Coins, Zap, Lock, Radio, ExternalLink, Swords, Plus, Send, X, Loader2 } from 'lucide-react'
 import { toast } from 'react-toastify'
 
@@ -149,7 +149,7 @@ export default function ArenaPage() {
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
-      <TopNavBar />
+      <DexNavBar />
 
       {/* Lower nav pills */}
       <div className="border-b border-red-500/10 bg-black/40 backdrop-blur-md">

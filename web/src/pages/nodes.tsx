@@ -10,7 +10,7 @@ import { useRouter } from 'next/router'
 import { useGroupedTracksQuery } from 'lib/graphql'
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import dynamic from 'next/dynamic'
-import { TopNavBar } from 'components/TopNavBar'
+import { DexNavBar } from 'components/DexNavBar'
 import { Post } from 'components/Post/Post'
 import { PostFormTimeline } from 'components/Post/PostFormTimeline'
 import { PostSkeleton } from 'components/Post/PostSkeleton'
@@ -225,7 +225,7 @@ export default function NodesPage() {
 
   return (
     <div className="min-h-screen bg-[#030303] text-white">
-      <TopNavBar />
+      <DexNavBar />
 
       {/* Lower nav pills — matches dex page nav so users aren't stuck */}
       <div className="border-b border-white/5 bg-black/40 backdrop-blur-md">

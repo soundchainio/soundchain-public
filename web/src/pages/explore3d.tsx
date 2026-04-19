@@ -12,7 +12,7 @@ import { ReactElement } from 'react'
 import dynamic from 'next/dynamic'
 import { useMe } from 'hooks/useMe'
 import { useRouter } from 'next/router'
-import { TopNavBar } from 'components/TopNavBar'
+import { DexNavBar } from 'components/DexNavBar'
 import { ArrowLeft } from 'lucide-react'
 
 // IMPORTANT: dynamic import + ssr:false avoids TDZ in webpack bundle
@@ -35,7 +35,7 @@ export default function Explore3DPage() {
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
-      <TopNavBar />
+      <DexNavBar />
 
       {/* Lower nav pills — so users aren't stuck on Explore 3D */}
       <div className="border-b border-cyan-500/10 bg-black/40 backdrop-blur-md">

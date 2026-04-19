@@ -5,7 +5,7 @@
 import { useEffect, useState, useCallback, ReactElement } from 'react'
 import { useMe } from 'hooks/useMe'
 import { useRouter } from 'next/router'
-import { TopNavBar } from 'components/TopNavBar'
+import { DexNavBar } from 'components/DexNavBar'
 import { Bookmark, Grid, List, RefreshCw, Music, Image as ImageIcon, Film, MessageCircle, Heart, ExternalLink, Upload, HardDrive, Copy, Check } from 'lucide-react'
 
 export default function ArchivePage() {
@@ -62,7 +62,7 @@ export default function ArchivePage() {
 
   return (
     <div className="min-h-screen bg-[#030303] text-white">
-      <TopNavBar />
+      <DexNavBar />
 
       {/* Lower nav pills — so users aren't stuck on Archive */}
       <div className="border-b border-white/5 bg-black/40 backdrop-blur-md">

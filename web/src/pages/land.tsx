@@ -14,7 +14,7 @@
 import { ReactElement, useEffect, useRef, useState } from 'react'
 import { useMe } from 'hooks/useMe'
 import { useRouter } from 'next/router'
-import { TopNavBar } from 'components/TopNavBar'
+import { DexNavBar } from 'components/DexNavBar'
 import { ArrowLeft, MapPin, Coins, Lock, Filter, ZoomIn, ZoomOut, Wallet, X, Globe2, Grid3x3, Search, Plane, Loader2 } from 'lucide-react'
 import { useMagicContext } from 'hooks/useMagicContext'
 import { config } from '../config'
@@ -564,7 +564,7 @@ export default function LandAtlasPage() {
 
   return (
     <div className="min-h-screen bg-[#030308] text-white flex flex-col">
-      <TopNavBar />
+      <DexNavBar />
 
       {/* Lower nav */}
       <div className="border-b border-yellow-500/10 bg-black/40 backdrop-blur-md">

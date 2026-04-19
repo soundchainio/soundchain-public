@@ -6,7 +6,7 @@ import { ReactElement, useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { useMe } from 'hooks/useMe'
 import { useRouter } from 'next/router'
-import { TopNavBar } from 'components/TopNavBar'
+import { DexNavBar } from 'components/DexNavBar'
 import { ArrowLeft, Palette } from 'lucide-react'
 
 const GalleryRoom3D = dynamic(() => import('components/GalleryRoom3D'), {
@@ -54,7 +54,7 @@ export default function Gallery3DPage() {
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
-      <TopNavBar />
+      <DexNavBar />
 
       {/* Lower nav pills */}
       <div className="border-b border-yellow-500/10 bg-black/40 backdrop-blur-md">
