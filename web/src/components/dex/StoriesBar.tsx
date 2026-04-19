@@ -153,7 +153,7 @@ export const StoriesBar = ({ onCreateStory, onViewStory, deepLinkStoryId, deepLi
     }, {})
 
     return Object.values(grouped) as Story[]
-  }, [storiesData])
+  }, [storiesRaw])
 
   // Transform stories into StoryUser format for StoryViewer
   const storyUsersForViewer = useMemo(() => {
@@ -214,7 +214,7 @@ export const StoriesBar = ({ onCreateStory, onViewStory, deepLinkStoryId, deepLi
     }, {})
 
     return Object.values(grouped)
-  }, [storiesData])
+  }, [storiesRaw])
 
   // Set up portal container on mount (client-side only)
   useEffect(() => {
