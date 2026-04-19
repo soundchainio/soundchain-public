@@ -617,7 +617,9 @@ export default function NodesPage() {
 
         </div>{/* end split layout */}
 
-        {/* Modals — normally mounted in <Layout>, but Nodes bypasses it */}
+        {/* Modals — normally mounted in <Layout>, but Nodes bypasses it.
+            #modals portal target must exist before these mount or ClientOnlyPortal renders null. */}
+        <div id="modals" className="absolute z-20 w-full" />
         <AuthorActionsModal />
         <PostModal />
 
