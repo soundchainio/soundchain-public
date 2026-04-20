@@ -15,9 +15,10 @@ import { Logo } from 'icons/Logo'
 import { useMagicContext } from 'hooks/useMagicContext'
 import { useMe } from 'hooks/useMe'
 import { useModalDispatch } from 'contexts/ModalContext'
-import { Music, Search, ExternalLink, MessageCircle, Bell } from 'lucide-react'
+import { Music, Search, ExternalLink, MessageCircle, Bell, Radio, PiggyBank, Sparkles } from 'lucide-react'
 import { useState } from 'react'
 import { NotificationBadge } from './NotificationBadge'
+import { Avatar } from './Avatar'
 
 export function DexNavBar() {
   const me = useMe()
@@ -101,9 +102,37 @@ export function DexNavBar() {
               </button>
             )}
 
+            {/* Bitchat (Nearby) */}
+            <Link href="/nearby" className="flex-shrink-0" title="Nearby — Bitchat">
+              <button className="p-1.5 rounded-full bg-green-500/10 hover:bg-green-500/20 border border-green-500/30 transition">
+                <Radio className="w-4 h-4 text-green-400" />
+              </button>
+            </Link>
+
+            {/* PiggyBank (WIN-WIN Rewards) */}
+            <Link href="/stake" className="flex-shrink-0" title="PiggyBank — WIN-WIN Rewards">
+              <button className="p-1.5 rounded-full bg-pink-500/10 hover:bg-pink-500/20 border border-pink-500/30 transition">
+                <PiggyBank className="w-4 h-4 text-pink-400" />
+              </button>
+            </Link>
+
+            {/* Moltbook (Agent Playground) */}
+            <Link href="/backend" className="flex-shrink-0" title="Moltbook — Agent Playground">
+              <button className="p-1.5 rounded-full bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 transition w-7 h-7 flex items-center justify-center">
+                <span className="text-sm leading-none">🦞</span>
+              </button>
+            </Link>
+
+            {/* Vibes (Social) */}
+            <Link href="/dex/users" className="flex-shrink-0" title="Vibes — Social">
+              <button className="p-1.5 rounded-full bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 transition">
+                <Sparkles className="w-4 h-4 text-purple-400" />
+              </button>
+            </Link>
+
             {/* Pulse */}
             {me && (
-              <Link href="/pulse">
+              <Link href="/pulse" className="flex-shrink-0">
                 <button className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-full bg-[#00a884]/10 hover:bg-[#00a884]/20 border border-[#00a884]/30 transition-all relative">
                   <MessageCircle className="w-4 h-4 text-[#00a884]" />
                   <span className="text-xs font-semibold text-[#00a884] hidden sm:inline">Pulse</span>
@@ -113,7 +142,7 @@ export function DexNavBar() {
 
             {/* Notifications Bell */}
             {me && (
-              <Link href="/notifications">
+              <Link href="/notifications" className="flex-shrink-0">
                 <button className="relative p-1.5 rounded-full hover:bg-white/10 transition">
                   <Bell className="w-4 h-4 text-gray-400" />
                   <NotificationBadge />
@@ -121,9 +150,20 @@ export function DexNavBar() {
               </Link>
             )}
 
+            {/* Profile Avatar */}
+            {me?.profile?.userHandle && (
+              <Link
+                href={`/profiles/${me.profile.userHandle}`}
+                className="flex-shrink-0 p-0.5 rounded-full hover:bg-white/10 transition"
+                aria-label="Profile"
+              >
+                <Avatar linkToProfile={false} profile={{ profilePicture: me.profile.profilePicture }} pixels={28} />
+              </Link>
+            )}
+
             {/* Login for non-auth */}
             {!me && (
-              <Link href="/login">
+              <Link href="/login" className="flex-shrink-0">
                 <button className="px-4 py-1.5 bg-cyan-500 hover:bg-cyan-400 text-black font-semibold rounded-lg transition text-sm">
                   Sign In
                 </button>

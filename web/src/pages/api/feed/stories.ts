@@ -62,6 +62,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         attachedTrackTitle: s.attachedTrackTitle || null,
         attachedTrackArtist: s.attachedTrackArtist || null,
         attachedTrackCoverUrl: s.attachedTrackCoverUrl || null,
+        // Nested attachedTrack — StoryViewer expects this shape (currentStory.attachedTrack.audioUrl).
+        // Without it, hasTrackAudio is false and reel audio never plays.
+        attachedTrack: s.attachedTrackIpfsUrl ? {
+          id: s.attachedTrackId || null,
+          title: s.attachedTrackTitle || null,
+          artist: s.attachedTrackArtist || null,
+          coverUrl: s.attachedTrackCoverUrl || null,
+          audioUrl: s.attachedTrackIpfsUrl,
+        } : null,
         profile: prof ? {
           id: prof._id.toString(),
           userHandle: prof.userHandle,

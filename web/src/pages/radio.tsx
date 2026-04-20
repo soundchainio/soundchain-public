@@ -67,6 +67,7 @@ import 'react-toastify/dist/ReactToastify.css'
 import { ReactElement } from 'react'
 import { CustomLayout } from './_app'
 import { CreateStoryModal } from 'components/dex/CreateStoryModal'
+import { DexNavBar } from 'components/DexNavBar'
 
 // GraphQL queries for PiggyBank rewards data
 const PROFILE_STREAMING_REWARDS_QUERY = gql`
@@ -1899,7 +1900,12 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
 }
 
 // Custom layout - radio page is standalone, no default Layout wrapper
-// Must include ModalProvider since useModalDispatch is used in the page
+// Must include ModalProvider since useModalDispatch is used in the page.
+// Mount the global DexNavBar above the radio so the top header matches
+// every other page in the app (Frank's systematic-global-nav request).
 OGUNRadio.getLayout = ((page: ReactElement) => (
-  <ModalProvider>{page}</ModalProvider>
+  <ModalProvider>
+    <DexNavBar />
+    {page}
+  </ModalProvider>
 )) as CustomLayout
