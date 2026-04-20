@@ -86,25 +86,14 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
   const ytPlayerReady = useRef(false)
   const ytBlockTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Autoplay on scroll — muted video plays when 50% visible (like X/Instagram)
-  // Auto-unmute after first user interaction (click/tap anywhere on page)
+  // Autoplay on scroll — muted video plays when 25%+ visible (IG/TikTok/X pattern).
+  // Stays muted until user taps the inline unmute button on the player itself.
+  // (We removed the global auto-unmute-on-first-interaction because StoriesBar
+  // at the top of the feed was triggering it before the user ever reached the
+  // first YouTube embed, which made the browser block the unmuted autoplay.)
   const [isPlayerInView, setIsPlayerInView] = useState(false)
   const [isPlayerMuted, setIsPlayerMuted] = useState(true)
   const playerContainerRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const unmute = () => {
-      setIsPlayerMuted(false)
-      document.removeEventListener('click', unmute)
-      document.removeEventListener('touchstart', unmute)
-    }
-    document.addEventListener('click', unmute, { once: true })
-    document.addEventListener('touchstart', unmute, { once: true })
-    return () => {
-      document.removeEventListener('click', unmute)
-      document.removeEventListener('touchstart', unmute)
-    }
-  }, [])
 
   // Detect YouTube age-restricted/blocked embeds via timeout.
   // YouTube's IFrame API never initializes for age-gated content,
