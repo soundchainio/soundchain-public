@@ -140,8 +140,8 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
     const el = playerContainerRef.current
     if (!el) return
     const observer = new IntersectionObserver(
-      ([entry]) => setIsPlayerInView(entry.isIntersecting && entry.intersectionRatio >= 0.5),
-      { threshold: [0.5] }
+      ([entry]) => setIsPlayerInView(entry.isIntersecting && entry.intersectionRatio >= 0.25),
+      { threshold: [0.25] }
     )
     observer.observe(el)
     return () => observer.disconnect()
@@ -458,7 +458,6 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
                       config={{
                         youtube: {
                           playerVars: { modestbranding: 1, rel: 0, playsinline: 1, mute: isPlayerMuted ? 1 : 0, autoplay: 1, origin: typeof window !== 'undefined' ? window.location.origin : '' },
-                          embedOptions: { host: 'https://www.youtube-nocookie.com' },
                         },
                         vimeo: { playerOptions: { responsive: true, playsinline: true } },
                         facebook: { appId: '' },
