@@ -1083,11 +1083,20 @@ export default function LandAtlasPage() {
               <div className="text-[9px] font-mono text-gray-600 leading-relaxed pt-2 border-t border-white/5">
                 Forever yours. Build, host, rent. Platform fee: <span className="text-yellow-500">{Math.ceil(purchaseModal.price * 0.0005)} OGUN (0.05%)</span> to treasury.
               </div>
+              {/* COMING SOON — sales paused while treasury is funded */}
+              <div className="p-3 rounded bg-yellow-500/10 border border-yellow-500/30 text-center space-y-2 mt-2">
+                <div className="text-sm font-mono font-bold text-yellow-400 flex items-center justify-center gap-2">
+                  🚀 COMING SOON
+                </div>
+                <div className="text-[10px] font-mono text-gray-400">
+                  Land sales opening soon! The Nodeverse economy is being funded with 12.225M OGUN to back all 250,000 parcels.
+                </div>
+                <div className="text-[9px] font-mono text-cyan-400">
+                  Explore the map · Scout your location · Be ready for launch day
+                </div>
+              </div>
               <div className="flex items-center gap-2 pt-2">
-                <button onClick={() => setPurchaseModal(null)} className="flex-1 py-2 rounded text-[10px] font-mono text-gray-400 border border-white/10 hover:bg-white/5">Cancel</button>
-                <button onClick={purchase} disabled={purchasing || !me} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded text-[10px] font-mono font-bold bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 hover:bg-yellow-500/30 transition disabled:opacity-50">
-                  {purchasing ? 'CLAIMING...' : <><Lock className="w-3 h-3" /> CLAIM FOR {purchaseModal.price} OGUN</>}
-                </button>
+                <button onClick={() => setPurchaseModal(null)} className="w-full py-2 rounded text-[10px] font-mono text-gray-400 border border-white/10 hover:bg-white/5">Close</button>
               </div>
             </div>
           </div>

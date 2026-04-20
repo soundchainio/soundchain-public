@@ -143,7 +143,7 @@ export default function EarthMap({ ownedSquares, searchResult, onClaimParcel }: 
                   }}
                   style={{ marginTop: '6px', width: '100%', padding: '6px', background: '#1a1a2e', color: '#facc15', border: '1px solid #facc15', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}
                 >
-                  CLAIM THIS LANDMARK
+                  🚀 COMING SOON
                 </button>
               </div>
             </Popup>
@@ -186,7 +186,7 @@ export default function EarthMap({ ownedSquares, searchResult, onClaimParcel }: 
                     }}
                     style={{ marginTop: '6px', width: '100%', padding: '6px', background: '#1a1a2e', color: '#22d3ee', border: '1px solid #22d3ee', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}
                   >
-                    CLAIM PARCEL HERE
+                    🚀 COMING SOON
                   </button>
                 </div>
               </Popup>

@@ -83,6 +83,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   if (req.method === 'POST') {
+    // ─── PARCEL SALES PAUSED — treasury funding in progress ───
+    // Frank is transferring 12.225M OGUN to Gnosis Safe to back all 250K parcels.
+    // Re-enable by removing this block once treasury is funded.
+    return res.status(503).json({
+      error: 'COMING SOON — Land sales opening soon! Treasury funding in progress.',
+      message: '250,000 parcels mapped to real Earth geography. Funding the Nodeverse economy with OGUN. Stay tuned!',
+      parcelsAvailable: 250000,
+      status: 'funding_in_progress',
+    })
+    // ─── END PAUSE ───
+
     const auth = await authFromRequest(req)
     if (!auth) return res.status(401).json({ error: 'Unauthenticated' })
 
