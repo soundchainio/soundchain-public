@@ -185,16 +185,40 @@ function SoundchainMainLayout({ Component, pageProps }: CustomAppProps) {
 
 function SoundchainPageLayout({ Component, pageProps }: CustomAppProps) {
   if (!Component.getLayout) return <></>
+  // Must match SoundchainMainLayout's provider chain — standalone pages
+  // (nodes, explore3d, land, arena, gallery3d) need ALL providers,
+  // not just a subset. Missing providers = useMe crash, Post crash, etc.
   return (
+    <AgentManagerProvider>
     <ApolloProvider pageProps={pageProps}>
       <MagicProvider>
-        <ModalProvider>
-          <WalletProvider>
-            {Component.getLayout(<Component {...pageProps} />)}
-          </WalletProvider>
-        </ModalProvider>
+        <Web3ModalProvider>
+          <ModalProvider>
+            <StateProvider>
+              <PanelProvider>
+                <WalletProvider>
+                  <UnifiedWalletProvider>
+                    <AudioPlayerProvider>
+                    <RadioProvider>
+                    <TrackProvider>
+                      <HideBottomNavBarProvider>
+                        <LayoutContextProvider>
+                          <HeartbeatProvider />
+                          {Component.getLayout(<Component {...pageProps} />)}
+                        </LayoutContextProvider>
+                      </HideBottomNavBarProvider>
+                    </TrackProvider>
+                    </RadioProvider>
+                  </AudioPlayerProvider>
+                  </UnifiedWalletProvider>
+                </WalletProvider>
+              </PanelProvider>
+            </StateProvider>
+          </ModalProvider>
+        </Web3ModalProvider>
       </MagicProvider>
     </ApolloProvider>
+    </AgentManagerProvider>
   )
 }
 
