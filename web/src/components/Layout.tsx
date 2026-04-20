@@ -90,7 +90,6 @@ export const Layout = ({ children, className }: LayoutProps) => {
     return (
       <div className="flex min-h-screen flex-col bg-black">
         {canInsertScript && <TagManager />}
-        <DexNavBar />
         <div className="flex flex-1 flex-col bg-black px-4 pt-4 pb-safe sm:mx-auto sm:w-full sm:max-w-lg lg:px-8">
           {children}
         </div>

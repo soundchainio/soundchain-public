@@ -86,11 +86,9 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
   const ytPlayerReady = useRef(false)
   const ytBlockTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Autoplay on scroll — muted video plays when 25%+ visible (IG/TikTok/X pattern).
-  // Stays muted until user taps the inline unmute button on the player itself.
-  // (We removed the global auto-unmute-on-first-interaction because StoriesBar
-  // at the top of the feed was triggering it before the user ever reached the
-  // first YouTube embed, which made the browser block the unmuted autoplay.)
+  // Autoplay on scroll — muted video plays when 50%+ visible (IG/TikTok/X pattern).
+  // Auto-unmutes after the first user gesture on the page so subsequent videos
+  // play with sound once the user has interacted.
   const [isPlayerInView, setIsPlayerInView] = useState(false)
   const [isPlayerMuted, setIsPlayerMuted] = useState(true)
   const playerContainerRef = useRef<HTMLDivElement>(null)
@@ -129,11 +127,22 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
     const el = playerContainerRef.current
     if (!el) return
     const observer = new IntersectionObserver(
-      ([entry]) => setIsPlayerInView(entry.isIntersecting && entry.intersectionRatio >= 0.25),
-      { threshold: [0.25] }
+      ([entry]) => setIsPlayerInView(entry.isIntersecting && entry.intersectionRatio >= 0.5),
+      { threshold: [0.5] }
     )
     observer.observe(el)
     return () => observer.disconnect()
+  }, [])
+
+  // Auto-unmute on first user gesture so later embeds play with sound.
+  useEffect(() => {
+    const handler = () => setIsPlayerMuted(false)
+    document.addEventListener('click', handler, { once: true })
+    document.addEventListener('touchstart', handler, { once: true })
+    return () => {
+      document.removeEventListener('click', handler)
+      document.removeEventListener('touchstart', handler)
+    }
   }, [])
 
   // Vercel direct comments — bypasses broken Apollo/GraphQL custom domain
@@ -447,6 +456,7 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
                       config={{
                         youtube: {
                           playerVars: { modestbranding: 1, rel: 0, playsinline: 1, mute: isPlayerMuted ? 1 : 0, autoplay: 1, origin: typeof window !== 'undefined' ? window.location.origin : '' },
+                          embedOptions: { host: 'https://www.youtube-nocookie.com' },
                         },
                         vimeo: { playerOptions: { responsive: true, playsinline: true } },
                         facebook: { appId: '' },
