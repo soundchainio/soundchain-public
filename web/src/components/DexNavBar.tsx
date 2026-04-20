@@ -15,7 +15,7 @@ import { Logo } from 'icons/Logo'
 import { useMagicContext } from 'hooks/useMagicContext'
 import { useMe } from 'hooks/useMe'
 import { useModalDispatch } from 'contexts/ModalContext'
-import { Music, Search, ExternalLink, MessageCircle, Bell, Radio, PiggyBank, Sparkles } from 'lucide-react'
+import { Music, Search, ExternalLink, MessageCircle, Bell, Radio, Sparkles } from 'lucide-react'
 import { useState } from 'react'
 import { NotificationBadge } from './NotificationBadge'
 import { Avatar } from './Avatar'
@@ -109,12 +109,11 @@ export function DexNavBar() {
               </button>
             </Link>
 
-            {/* PiggyBank (WIN-WIN Rewards) */}
-            <Link href="/stake" className="flex-shrink-0" title="PiggyBank — WIN-WIN Rewards">
-              <button className="p-1.5 rounded-full bg-pink-500/10 hover:bg-pink-500/20 border border-pink-500/30 transition">
-                <PiggyBank className="w-4 h-4 text-pink-400" />
-              </button>
-            </Link>
+            {/* PiggyBank (WIN-WIN Rewards) — HIDDEN from top header nav bar.
+                Routed to legacy /stake which renders the 2M-OGUN airdrop hero page.
+                Re-enable when the WIN-WIN accordion modal is extracted from
+                dex/[...slug].tsx into a shared component and dispatched inline
+                (no route change). See CLAUDE.md Apr 19 late session. */}
 
             {/* Moltbook (Agent Playground) */}
             <Link href="/backend" className="flex-shrink-0" title="Moltbook — Agent Playground">

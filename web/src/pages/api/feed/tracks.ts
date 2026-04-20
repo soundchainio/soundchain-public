@@ -59,6 +59,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         album: t.album,
         artworkUrl: t.artworkUrl,
         audioUrl: t.playbackUrl || t.assetUrl,
+        playbackUrl: t.playbackUrl || t.assetUrl,
         streamCount: t.streamCount || t.playbackCount || 0,
         genres: t.genres || [],
         isNft: !!t.contractAddress,
