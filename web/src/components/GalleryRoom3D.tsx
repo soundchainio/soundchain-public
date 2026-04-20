@@ -579,14 +579,23 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
                 <button
                   onClick={() => {
                     const url = selectedTrack.playbackUrl || selectedTrack.audioUrl
-                    if (!url) { toast.error('No audio available'); return }
-                    audioRefsMap.current.forEach(a => { a.pause(); a.currentTime = 0 })
-                    const audio = new Audio(url)
+                    if (!url) { toast.error('No audio URL on this track'); return }
+                    // Stop all other audio
+                    audioRefsMap.current.forEach(a => { try { a.pause(); a.currentTime = 0 } catch {} })
+                    // Try playing
+                    toast.info(`Loading audio...`, { autoClose: 2000 })
+                    const audio = new Audio()
                     audio.crossOrigin = 'anonymous'
-                    audioRefsMap.current.set(selectedTrack.id, audio)
-                    audio.play().catch(() => toast.error('Playback failed'))
-                    setNowPlaying(selectedTrack.id)
+                    audio.src = url
+                    audio.oncanplay = () => {
+                      audio.play().then(() => {
+                        setNowPlaying(selectedTrack.id)
+                        toast.success('Playing!')
+                      }).catch(err => toast.error(`Playback blocked: ${err.message}`))
+                    }
+                    audio.onerror = () => toast.error(`Audio failed to load — URL may be broken or CORS blocked`)
                     audio.onended = () => setNowPlaying(null)
+                    audioRefsMap.current.set(selectedTrack.id, audio)
                   }}
                   className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 text-[10px] font-mono hover:bg-cyan-500/30 transition"
                 >
