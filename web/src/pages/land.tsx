@@ -23,6 +23,10 @@ import { toast } from 'react-toastify'
 import { feature } from 'topojson-client'
 import type { Topology, GeometryCollection } from 'topojson-specification'
 import type { Feature, FeatureCollection, Geometry } from 'geojson'
+import dynamic from 'next/dynamic'
+
+// Leaflet EarthMap — god's eye view with satellite tiles, street-level zoom
+const EarthMap = dynamic(() => import('components/EarthMap'), { ssr: false })
 import { FAMOUS_LANDMARKS, projectLngLat, unprojectXY, parcelToLngLat, lngLatToParcel } from 'lib/nodeverse/landmarks'
 import { WORLD_CITIES, getCitiesForCountry, cityBounds, type City } from 'lib/nodeverse/worldCities'
 
@@ -951,10 +955,27 @@ export default function LandAtlasPage() {
           </div>
         </div>
 
-        {/* Right: 2D atlas canvas */}
+        {/* Right: Map area */}
         <div className="flex-1 relative overflow-hidden" style={{ minHeight: '500px' }}>
-          {/* God's-eye breadcrumb — World > Country > City. Tap any crumb to pop back. */}
+          {/* EARTH MODE — Leaflet interactive map with satellite tiles */}
           {viewMode === 'earth' && (
+            <EarthMap
+              ownedSquares={owned}
+              searchResult={searchResult}
+              onClaimParcel={(x, z, lat, lng) => {
+                const tier = getTier(x, z)
+                setPurchaseModal({ x, z, tier, price: TIER_PRICES[tier] })
+              }}
+            />
+          )}
+
+          {/* GRID MODE — original canvas */}
+          {viewMode === 'grid' && (
+            <div className="absolute inset-0 w-full h-full" style={{ display: 'block' }}>{"" /* placeholder to keep grid rendering below */}</div>
+          )}
+
+          {/* Grid mode breadcrumb placeholder for backward compat */}
+          {viewMode === 'earth_disabled_old_canvas' && (
             <div className="absolute top-2 left-2 right-2 z-10 flex items-center gap-1.5 flex-wrap bg-black/70 backdrop-blur-md border border-cyan-500/30 rounded-full px-3 py-1.5 shadow-[0_0_20px_rgba(34,211,238,0.15)]">
               <Globe2 className="w-3 h-3 text-cyan-400 flex-shrink-0" />
               {drillPath.map((level, i) => {
