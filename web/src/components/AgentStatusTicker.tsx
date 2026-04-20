@@ -3544,16 +3544,21 @@ export function AgentStatusTicker() {
               >
                 MINI
               </button>
-              {/* Fullscreen toggle (mobile only) */}
+              {/* Fullscreen toggle — visible on all screens so mobile xterm users can enter/exit fullscreen */}
               <button
                 onClick={(e) => { e.stopPropagation(); setTerminalMode(fullscreen ? 'default' : 'fullscreen') }}
-                className="sm:hidden p-1 hover:bg-white/10 rounded transition-colors"
+                className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[8px] font-mono font-bold tracking-wider transition-colors border ${
+                  fullscreen
+                    ? 'bg-cyan-500/20 text-cyan-300 border-cyan-400/60'
+                    : 'bg-white/[0.03] text-gray-300 border-white/10 hover:text-cyan-300 hover:border-cyan-500/40'
+                }`}
                 title={fullscreen ? 'Exit fullscreen' : 'Fullscreen'}
               >
                 {fullscreen
-                  ? <Minimize2 className="w-3.5 h-3.5 text-cyan-400" />
-                  : <Maximize2 className="w-3.5 h-3.5 text-gray-400" />
+                  ? <Minimize2 className="w-3.5 h-3.5" />
+                  : <Maximize2 className="w-3.5 h-3.5" />
                 }
+                <span>FULL</span>
               </button>
               <button
                 onClick={(e) => { e.stopPropagation(); setTerminalMode('default'); setExpanded(false) }}

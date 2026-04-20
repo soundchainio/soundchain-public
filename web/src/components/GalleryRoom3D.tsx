@@ -54,6 +54,12 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
   const [nowPlaying, setNowPlaying] = useState<string | null>(null)
   const audioRefsMap = useRef<Map<string, HTMLAudioElement>>(new Map())
 
+  // Furniture state — declared before the scene-building useEffect that reads placedFurniture
+  const [showCustomize, setShowCustomize] = useState(false)
+  const [furnitureCategory, setFurnitureCategory] = useState<FurnitureCategory | 'all'>('all')
+  const [placedFurniture, setPlacedFurniture] = useState<PlacedFurniture[]>(() => getPlacedFurniture(ownerHandle))
+  const [placingItem, setPlacingItem] = useState<string | null>(null)
+
   // Fetch owner's tracks (NFTs + SCids)
   useEffect(() => {
     if (!ownerProfileId) { setLoading(false); return }
@@ -474,12 +480,6 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
       })
     }
   }, [tracks, theme, loading, nowPlaying, placedFurniture])
-
-  // ─── Furniture State ────────────────────────────────────────
-  const [showCustomize, setShowCustomize] = useState(false)
-  const [furnitureCategory, setFurnitureCategory] = useState<FurnitureCategory | 'all'>('all')
-  const [placedFurniture, setPlacedFurniture] = useState<PlacedFurniture[]>(() => getPlacedFurniture(ownerHandle))
-  const [placingItem, setPlacingItem] = useState<string | null>(null)
 
   const addFurniture = useCallback((itemId: string) => {
     const item = getFurnitureById(itemId)
