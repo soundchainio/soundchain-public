@@ -54,14 +54,16 @@ import { useOpenClawGateway } from 'hooks/useOpenClawGateway'
 import { usePushNotifications } from 'hooks/usePushNotifications'
 import {
   useMeQuery,
-  useChatsQuery,
-  useChatHistoryLazyQuery,
+  useChatsQuery,       // kept as fallback type reference
+  useChatHistoryLazyQuery, // kept as fallback type reference
   useSendMessageMutation,
   useResetUnreadMessageCountMutation,
   useUnreadMessageCountLazyQuery,
   useExploreUsersLazyQuery,
   ChatsDocument,
 } from 'lib/graphql'
+// Vercel-direct chat fetching (kills Apollo → Lambda dependency for chat reads)
+import { useState as useStateChat, useEffect as useEffectChat, useCallback as useCallbackChat } from 'react'
 
 import { EmoteRenderer } from 'components/EmoteRenderer'
 import { useWebRTCCall, type CallMode } from 'hooks/useWebRTCCall'
@@ -297,23 +299,46 @@ function PulsePage() {
   // Track previous chat state for new-message toast detection
   const prevChatsRef = useRef<Map<string, string>>(new Map()) // profileId → lastMessage createdAt
 
-  // GraphQL data layer — poll every 5s for near-realtime DM awareness
-  // Polling pauses while user is actively typing in chat (prevents text field bugs on iOS)
-  const { data: chatsData, loading: chatsLoading, error: chatsError, refetch: refetchChats, startPolling, stopPolling } = useChatsQuery({
-    pollInterval: 5000,
-    skip: meLoading || !me,  // Don't query until auth is ready
-    fetchPolicy: 'cache-and-network',  // Always fetch fresh, don't rely on stale cache
-    onError: (err) => console.error('[Pulse] Chats query error:', err.message),
-  })
-  // Stabilize startPolling/stopPolling via refs — Apollo does NOT guarantee referential stability
-  // and using them as useCallback deps causes cascade re-renders (#310 on mobile Safari)
-  const startPollingRef = useRef(startPolling)
-  const stopPollingRef = useRef(stopPolling)
-  startPollingRef.current = startPolling
-  stopPollingRef.current = stopPolling
+  // ─── Vercel-direct chat data (kills Apollo → Lambda for reads) ───
+  const [chatsRaw, setChatsRaw] = useState<any[]>([])
+  const [chatsLoading, setChatsLoading] = useState(true)
+  const [chatsError, setChatsError] = useState<any>(null)
+  const fetchChatsVercel = useCallback(() => {
+    if (!me) return
+    fetch('/api/pulse/chats')
+      .then(r => r.json())
+      .then(data => { setChatsRaw(data.chats || []); setChatsError(null) })
+      .catch(e => setChatsError(e))
+      .finally(() => setChatsLoading(false))
+  }, [me])
+  useEffect(() => { fetchChatsVercel() }, [fetchChatsVercel])
+  // Poll every 5s for near-realtime DM awareness
+  useEffect(() => {
+    if (!me) return
+    const interval = setInterval(fetchChatsVercel, 5000)
+    return () => clearInterval(interval)
+  }, [me, fetchChatsVercel])
+  const refetchChats = fetchChatsVercel
+  const startPollingRef = useRef(() => {})
+  const stopPollingRef = useRef(() => {})
+  // Shim chatsData shape to match old Apollo format
+  const chatsData = { chats: { nodes: chatsRaw } }
 
-  const [loadHistory, { data: historyData, loading: historyLoading, refetch: refetchHistory }] =
-    useChatHistoryLazyQuery({ fetchPolicy: 'network-only' })
+  // Chat history — Vercel-direct
+  const [historyNodes, setHistoryNodes] = useState<any[]>([])
+  const [historyLoading, setHistoryLoading] = useState(false)
+  const loadHistory = useCallback(({ variables }: { variables: { profileId: string } }) => {
+    setHistoryLoading(true)
+    fetch(`/api/pulse/history?profileId=${variables.profileId}`)
+      .then(r => r.json())
+      .then(data => setHistoryNodes(data.chatHistory?.nodes || []))
+      .catch(() => {})
+      .finally(() => setHistoryLoading(false))
+  }, [])
+  const refetchHistory = useCallback(() => {
+    if (selectedChat?.profileId) loadHistory({ variables: { profileId: selectedChat.profileId } })
+  }, [selectedChat?.profileId, loadHistory])
+  const historyData = { chatHistory: { nodes: historyNodes } }
   const refetchHistoryRef = useRef(refetchHistory)
   refetchHistoryRef.current = refetchHistory
   const [sendMessage, { loading: sending }] = useSendMessageMutation({
