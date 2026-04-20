@@ -2,26 +2,30 @@
  * DexNavBar — the global top header nav bar mounted on every page (except /login).
  *
  * Pills behave identically to the profile mega-router's inline nav
- * (pages/dex/[...slug].tsx:3180-4281). Phased port — this file picks up
- * one accordion at a time so each ship is bisect-friendly.
+ * (pages/dex/[...slug].tsx:3180-4281). Phased port — each ship is bisect-friendly.
  *
- * Phase A1 (LANDED): PiggyBank → WIN-WIN accordion modal with Catalog/Listener
- *                    tabs, backed by scidsByProfile + myListenerRewards queries.
- * Phase A2 (next):   Nearby → Bitchat dropdown (ConcertChat embed).
- * Phase A3 (next):   Vibes → social links dropdown.
- * Phase A4 (next):   Bell → notifications popover; Avatar → user menu.
- * Phase B (next):    delete the ~1,100 lines of inline nav in [...slug].tsx.
+ * Phase A1 (LANDED): PiggyBank → WIN-WIN accordion (Catalog/Listener tabs).
+ * Phase A2 (LANDED): Nearby → Bitchat accordion (ConcertChat embed).
+ * Phase A3 (LANDED): Vibes → social links accordion.
+ * Phase A4 (LANDED): Bell → notifications popover (anon users still route).
+ * Phase A5 (deferred): Avatar → full user menu (verification + account settings
+ *                      accordions; state-coupled to mega-router, keep simple
+ *                      link for now).
+ * Phase B (deferred): delete the ~1,100 lines of inline nav in [...slug].tsx.
+ * Phase C (deferred): FURL AgentStatusTicker → persistent collapsible dock
+ *                     in _app.tsx (4,367-line ticker needs its own session).
  *
  * Used by: Layout.tsx + direct mounts on nodes, explore3d, land, arena,
  * gallery3d, archive, radio.
  */
 import { gql, useQuery } from '@apollo/client'
+import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   Music, Search, ExternalLink, MessageCircle, Bell, Radio, Sparkles,
-  PiggyBank, Coins, Headphones, Wallet, Zap, X,
+  PiggyBank, Coins, Headphones, Wallet, Zap, X, Users,
 } from 'lucide-react'
 import { Logo } from 'icons/Logo'
 import { useMagicContext } from 'hooks/useMagicContext'
@@ -29,6 +33,10 @@ import { useMe } from 'hooks/useMe'
 import { useModalDispatch } from 'contexts/ModalContext'
 import { NotificationBadge } from './NotificationBadge'
 import { Avatar } from './Avatar'
+
+// Dynamic imports — both depend on browser-only APIs (geolocation / apollo cache)
+const ConcertChat = dynamic(() => import('components/dex/ConcertChat').then(m => m.ConcertChat), { ssr: false })
+const Notifications = dynamic(() => import('components/Notifications').then(m => m.Notifications), { ssr: false })
 
 const PROFILE_STREAMING_REWARDS_QUERY = gql`
   query ProfileStreamingRewards($profileId: String!) {
@@ -53,6 +61,8 @@ const MY_LISTENER_REWARDS_QUERY = gql`
   }
 `
 
+type OpenPanel = 'none' | 'nearby' | 'winwin' | 'vibes' | 'bell'
+
 export function DexNavBar() {
   const me = useMe()
   const router = useRouter()
@@ -60,10 +70,13 @@ export function DexNavBar() {
   const { dispatchShowCreateModal } = useModalDispatch()
   const [searchQuery, setSearchQuery] = useState('')
 
-  // WIN-WIN accordion state
-  const [showWinWin, setShowWinWin] = useState(false)
+  // Single source of truth — only one panel can be open at a time.
+  const [openPanel, setOpenPanel] = useState<OpenPanel>('none')
   const [winWinTab, setWinWinTab] = useState<'catalog' | 'listener'>('catalog')
-  const winWinRef = useRef<HTMLDivElement | null>(null)
+  const panelRef = useRef<HTMLDivElement | null>(null)
+
+  const toggle = (panel: OpenPanel) => setOpenPanel(prev => (prev === panel ? 'none' : panel))
+  const close = () => setOpenPanel('none')
 
   // Rewards queries — gated on auth so anonymous users never fire them
   const { data: streamingData, loading: streamingLoading } = useQuery(PROFILE_STREAMING_REWARDS_QUERY, {
@@ -98,15 +111,15 @@ export function DexNavBar() {
     }, 0)
   }, [streamingData])
 
-  // Click outside to close accordion
+  // Click-outside to close whatever's open
   useEffect(() => {
-    if (!showWinWin) return
+    if (openPanel === 'none') return
     const onDown = (e: MouseEvent) => {
-      if (winWinRef.current && !winWinRef.current.contains(e.target as Node)) setShowWinWin(false)
+      if (panelRef.current && !panelRef.current.contains(e.target as Node)) close()
     }
     document.addEventListener('mousedown', onDown)
     return () => document.removeEventListener('mousedown', onDown)
-  }, [showWinWin])
+  }, [openPanel])
 
   const handleMintClick = () => {
     if (me) dispatchShowCreateModal(true)
@@ -118,6 +131,9 @@ export function DexNavBar() {
   const listenerToday = listenerData?.myListenerRewards?.tracksStreamedToday || 0
   const listenerDaily = listenerData?.myListenerRewards?.dailyEarned || 0
   const listenerDailyLimit = listenerData?.myListenerRewards?.dailyLimit || 50
+
+  // Shared popover wrapper classes — fixed-centered on mobile, absolute-right on desktop.
+  const popoverBase = 'fixed sm:absolute left-1/2 sm:left-auto sm:right-0 top-14 sm:top-12 -translate-x-1/2 sm:translate-x-0 z-[99] shadow-2xl overflow-hidden rounded-lg'
 
   return (
     <header className="sticky top-0 z-50" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
@@ -160,8 +176,8 @@ export function DexNavBar() {
             </div>
           </div>
 
-          {/* Right: action pills */}
-          <div className="flex items-center gap-1 sm:gap-2 lg:gap-3 flex-shrink-0">
+          {/* Right: action pills — shared panelRef for click-outside */}
+          <div className="flex items-center gap-1 sm:gap-2 lg:gap-3 flex-shrink-0" ref={panelRef}>
             <div className="hidden xl:flex items-center gap-2 text-[10px] font-mono text-gray-500">
               <a href="https://www.dappradar.com/dapp/soundchain" target="_blank" rel="noreferrer" className="hover:text-cyan-400 transition flex items-center gap-0.5">
                 DappRadar <ExternalLink className="w-2.5 h-2.5" />
@@ -186,29 +202,56 @@ export function DexNavBar() {
               </button>
             )}
 
-            {/* Nearby (Bitchat) — Phase A2 will swap to accordion modal */}
-            <Link href="/nearby" className="flex-shrink-0" title="Nearby — Bitchat">
-              <button className="p-1.5 rounded-full bg-green-500/10 hover:bg-green-500/20 border border-green-500/30 transition">
+            {/* Nearby (Bitchat) — accordion modal */}
+            <div className="relative flex-shrink-0">
+              <button
+                onClick={() => toggle('nearby')}
+                className="p-1.5 rounded-full bg-green-500/10 hover:bg-green-500/20 border border-green-500/30 transition"
+                title="Nearby — Bitchat"
+              >
                 <Radio className="w-4 h-4 text-green-400" />
               </button>
-            </Link>
+              {openPanel === 'nearby' && (
+                <div
+                  className={`${popoverBase} w-[calc(100vw-2rem)] sm:w-96 max-w-[24rem] max-h-[80vh] border-2 border-green-500/50 bg-gradient-to-b from-neutral-900 via-green-950/10 to-neutral-900`}
+                  onClick={e => e.stopPropagation()}
+                >
+                  <div className="flex items-center justify-between p-3 border-b border-green-500/30 bg-gradient-to-r from-green-900/50 to-cyan-900/50">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-cyan-500 flex items-center justify-center">
+                        <Radio className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-cyan-400">Nearby</h3>
+                        <p className="text-[10px] text-green-300/80">Chat via Bitchat</p>
+                      </div>
+                    </div>
+                    <button onClick={close} className="w-6 h-6 flex items-center justify-center rounded hover:bg-green-500/20" aria-label="Close">
+                      <X className="w-4 h-4 text-green-400" />
+                    </button>
+                  </div>
+                  <div className="max-h-[60vh] overflow-y-auto">
+                    <ConcertChat showBitchatPromo={true} compact={true} />
+                  </div>
+                </div>
+              )}
+            </div>
 
-            {/* PiggyBank — WIN-WIN Rewards accordion (Phase A1) */}
-            <div className="relative flex-shrink-0" ref={winWinRef}>
+            {/* PiggyBank — WIN-WIN Rewards accordion */}
+            <div className="relative flex-shrink-0">
               <button
-                onClick={() => setShowWinWin(v => !v)}
+                onClick={() => toggle('winwin')}
                 className="p-1.5 rounded-full bg-pink-500/10 hover:bg-pink-500/20 border border-pink-500/30 transition"
                 title="WIN-WIN Streaming Rewards"
               >
                 <PiggyBank className="w-4 h-4 text-pink-400" />
               </button>
 
-              {showWinWin && (
+              {openPanel === 'winwin' && (
                 <div
-                  className="fixed sm:absolute left-1/2 sm:left-auto sm:right-0 top-14 sm:top-12 -translate-x-1/2 sm:translate-x-0 w-[calc(100vw-2rem)] sm:w-80 max-w-[20rem] z-[99] shadow-2xl max-h-[80vh] overflow-hidden border-2 border-orange-500/50 bg-gradient-to-b from-neutral-900 via-orange-950/10 to-neutral-900 rounded-lg"
+                  className={`${popoverBase} w-[calc(100vw-2rem)] sm:w-80 max-w-[20rem] max-h-[80vh] border-2 border-orange-500/50 bg-gradient-to-b from-neutral-900 via-orange-950/10 to-neutral-900`}
                   onClick={e => e.stopPropagation()}
                 >
-                  {/* Header */}
                   <div className="flex items-center justify-between p-3 border-b border-orange-500/30 bg-gradient-to-r from-orange-900/50 to-yellow-900/50">
                     <div className="flex items-center gap-2">
                       <div className="relative">
@@ -224,16 +267,11 @@ export function DexNavBar() {
                         <p className="text-[10px] text-cyan-400/80">Stream to Earn OGUN</p>
                       </div>
                     </div>
-                    <button
-                      onClick={() => setShowWinWin(false)}
-                      className="w-6 h-6 flex items-center justify-center rounded hover:bg-orange-500/20"
-                      aria-label="Close"
-                    >
+                    <button onClick={close} className="w-6 h-6 flex items-center justify-center rounded hover:bg-orange-500/20" aria-label="Close">
                       <X className="w-4 h-4 text-orange-400" />
                     </button>
                   </div>
 
-                  {/* Tabs */}
                   {me && (
                     <div className="flex border-b border-orange-500/20">
                       <button
@@ -261,7 +299,6 @@ export function DexNavBar() {
                     </div>
                   )}
 
-                  {/* Catalog Tab */}
                   {me && winWinTab === 'catalog' && (
                     <div className="p-3 border-b border-orange-500/20">
                       <div className="text-[10px] text-orange-400/80 uppercase tracking-wider mb-2 text-center">
@@ -296,7 +333,6 @@ export function DexNavBar() {
                     </div>
                   )}
 
-                  {/* Listener Tab */}
                   {me && winWinTab === 'listener' && (
                     <div className="p-3 border-b border-cyan-500/20">
                       <div className="text-[10px] text-cyan-400/80 uppercase tracking-wider mb-2 text-center">
@@ -334,7 +370,6 @@ export function DexNavBar() {
                     </div>
                   )}
 
-                  {/* Universal rate */}
                   <div className="p-3 border-b border-orange-500/20">
                     <div className="text-center p-2 bg-gradient-to-br from-green-500/10 to-cyan-500/10 rounded-lg border border-green-500/30">
                       <div className="text-[10px] text-green-400/80">All Tracks Earn Equal Rewards</div>
@@ -343,7 +378,6 @@ export function DexNavBar() {
                     </div>
                   </div>
 
-                  {/* Unclaimed */}
                   {totalUnclaimed > 0 && (
                     <div className="px-3 pt-2 text-center">
                       <p className="text-xs text-yellow-400 font-semibold">
@@ -352,10 +386,9 @@ export function DexNavBar() {
                     </div>
                   )}
 
-                  {/* Actions */}
                   <div className="p-3 grid grid-cols-2 gap-2">
                     <button
-                      onClick={() => { setShowWinWin(false); router.push('/staking') }}
+                      onClick={() => { close(); router.push('/staking') }}
                       disabled={totalUnclaimed <= 0}
                       className={`py-2 font-bold rounded-lg text-sm flex items-center justify-center gap-1 transition-all ${
                         totalUnclaimed > 0
@@ -366,7 +399,7 @@ export function DexNavBar() {
                       <Wallet className="w-3 h-3" /> Claim
                     </button>
                     <button
-                      onClick={() => { setShowWinWin(false); router.push('/staking') }}
+                      onClick={() => { close(); router.push('/staking') }}
                       disabled={totalUnclaimed <= 0}
                       className={`py-2 font-bold rounded-lg text-sm flex items-center justify-center gap-1 transition-all ${
                         totalUnclaimed > 0
@@ -394,12 +427,90 @@ export function DexNavBar() {
               </button>
             </Link>
 
-            {/* Vibes — Phase A3 will swap to accordion modal */}
-            <Link href="/dex/users" className="flex-shrink-0" title="Vibes — Social">
-              <button className="p-1.5 rounded-full bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 transition">
+            {/* Vibes — social links accordion */}
+            <div className="relative flex-shrink-0">
+              <button
+                onClick={() => toggle('vibes')}
+                className="p-1.5 rounded-full bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 transition"
+                title="Vibes — Social Links"
+              >
                 <Sparkles className="w-4 h-4 text-purple-400" />
               </button>
-            </Link>
+
+              {openPanel === 'vibes' && (
+                <div
+                  className={`${popoverBase} w-[calc(100vw-2rem)] sm:w-72 max-w-[18rem] border-2 border-purple-500/50 bg-gradient-to-b from-neutral-900 via-purple-950/10 to-neutral-900`}
+                  onClick={e => e.stopPropagation()}
+                >
+                  <div className="flex items-center justify-between p-3 border-b border-purple-500/30 bg-gradient-to-r from-purple-900/50 to-cyan-900/50">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center">
+                        <Users className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400">Vibes</h3>
+                        <p className="text-[10px] text-purple-300/80">Connect with SoundChain</p>
+                      </div>
+                    </div>
+                    <button onClick={close} className="w-6 h-6 flex items-center justify-center rounded hover:bg-purple-500/20" aria-label="Close">
+                      <X className="w-4 h-4 text-purple-400" />
+                    </button>
+                  </div>
+
+                  <div className="p-3 space-y-2">
+                    <a href="https://twitter.com/soundchain_io" target="_blank" rel="noreferrer" className="flex items-center gap-3 p-2 rounded-lg bg-blue-500/10 border border-blue-500/20 hover:bg-blue-500/20 transition-all">
+                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
+                        <span className="text-white text-sm">𝕏</span>
+                      </div>
+                      <div>
+                        <div className="font-semibold text-white text-xs">Twitter / X</div>
+                        <div className="text-[10px] text-blue-400">@soundchain_io</div>
+                      </div>
+                    </a>
+                    <a href="https://discord.gg/5yZG6BTTHV" target="_blank" rel="noreferrer" className="flex items-center gap-3 p-2 rounded-lg bg-indigo-500/10 border border-indigo-500/20 hover:bg-indigo-500/20 transition-all">
+                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-400 to-indigo-600 flex items-center justify-center">
+                        <span className="text-white text-sm">🎮</span>
+                      </div>
+                      <div>
+                        <div className="font-semibold text-white text-xs">Discord</div>
+                        <div className="text-[10px] text-indigo-400">Join Community</div>
+                      </div>
+                    </a>
+                    <a href="https://t.me/+DbHfqlVpV644ZGMx" target="_blank" rel="noreferrer" className="flex items-center gap-3 p-2 rounded-lg bg-cyan-500/10 border border-cyan-500/20 hover:bg-cyan-500/20 transition-all">
+                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center">
+                        <span className="text-white text-sm">✈️</span>
+                      </div>
+                      <div>
+                        <div className="font-semibold text-white text-xs">Telegram</div>
+                        <div className="text-[10px] text-cyan-400">Join Chat</div>
+                      </div>
+                    </a>
+                    <a href="https://instagram.com/soundchain.io" target="_blank" rel="noreferrer" className="flex items-center gap-3 p-2 rounded-lg bg-pink-500/10 border border-pink-500/20 hover:bg-pink-500/20 transition-all">
+                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-pink-400 via-purple-500 to-orange-400 flex items-center justify-center">
+                        <span className="text-white text-sm">📷</span>
+                      </div>
+                      <div>
+                        <div className="font-semibold text-white text-xs">Instagram</div>
+                        <div className="text-[10px] text-pink-400">@soundchain.io</div>
+                      </div>
+                    </a>
+                    <a href="https://youtube.com/channel/UC-TJ1KIYWCYLtngwaELgyLQ" target="_blank" rel="noreferrer" className="flex items-center gap-3 p-2 rounded-lg bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 transition-all">
+                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center">
+                        <span className="text-white text-sm">▶️</span>
+                      </div>
+                      <div>
+                        <div className="font-semibold text-white text-xs">YouTube</div>
+                        <div className="text-[10px] text-red-400">SoundChain</div>
+                      </div>
+                    </a>
+                  </div>
+
+                  <div className="px-3 pb-2 text-center border-t border-purple-500/20 pt-2">
+                    <p className="text-[9px] text-gray-500">SOUNDCHAIN · THE FUTURE OF MUSIC</p>
+                  </div>
+                </div>
+              )}
+            </div>
 
             {me && (
               <Link href="/pulse" className="flex-shrink-0">
@@ -410,15 +521,42 @@ export function DexNavBar() {
               </Link>
             )}
 
-            {me && (
-              <Link href="/notifications" className="flex-shrink-0">
-                <button className="relative p-1.5 rounded-full hover:bg-white/10 transition">
+            {/* Notifications Bell — popover (auth) or route (anon) */}
+            {me ? (
+              <div className="relative flex-shrink-0">
+                <button
+                  onClick={() => toggle('bell')}
+                  className="relative p-1.5 rounded-full hover:bg-white/10 transition"
+                  title="Notifications"
+                >
                   <Bell className="w-4 h-4 text-gray-400" />
                   <NotificationBadge />
                 </button>
-              </Link>
-            )}
 
+                {openPanel === 'bell' && (
+                  <div
+                    className={`${popoverBase} w-[calc(100vw-2rem)] sm:w-96 max-w-[24rem] max-h-[70vh] border-2 border-cyan-500/50 bg-gradient-to-b from-neutral-900 via-cyan-950/10 to-neutral-900`}
+                    onClick={e => e.stopPropagation()}
+                  >
+                    <div className="flex items-center justify-between p-3 border-b border-cyan-500/30">
+                      <h3 className="text-sm font-bold flex items-center gap-2">
+                        <Bell className="w-4 h-4 text-yellow-400" />
+                        Notifications
+                      </h3>
+                      <button onClick={close} className="w-6 h-6 flex items-center justify-center rounded hover:bg-white/10" aria-label="Close">
+                        <X className="w-4 h-4 text-gray-400" />
+                      </button>
+                    </div>
+                    <div className="overflow-y-auto max-h-[calc(70vh-60px)]">
+                      <Notifications closePopOver={close} />
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : null}
+
+            {/* Profile Avatar — link for now; full user-menu accordion (verification,
+                account settings) stays in mega-router until Phase A5 ports it. */}
             {me?.profile?.userHandle && (
               <Link
                 href={`/profiles/${me.profile.userHandle}`}
