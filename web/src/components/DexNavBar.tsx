@@ -26,11 +26,22 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   Music, Search, ExternalLink, MessageCircle, Bell, Radio, Sparkles,
   PiggyBank, Coins, Headphones, Wallet, Zap, X, Users,
+  ShieldCheck, Settings as SettingsIcon, AtSign, ChevronUp, ChevronDown,
+  Check, Copy, AlertCircle, LogOut, User as UserIcon,
 } from 'lucide-react'
 import { Logo } from 'icons/Logo'
 import { useMagicContext } from 'hooks/useMagicContext'
 import { useMe } from 'hooks/useMe'
 import { useModalDispatch } from 'contexts/ModalContext'
+import {
+  ProfileVerificationStatusType,
+  useCreateProfileVerificationRequestMutation,
+  useProfileVerificationRequestQuery,
+  useUpdateHandleMutation,
+  useUpdateProfileDisplayNameMutation,
+} from 'lib/graphql'
+import { setJwt } from 'lib/apollo'
+import { config } from 'config'
 import { NotificationBadge } from './NotificationBadge'
 import { Avatar } from './Avatar'
 
@@ -61,7 +72,7 @@ const MY_LISTENER_REWARDS_QUERY = gql`
   }
 `
 
-type OpenPanel = 'none' | 'nearby' | 'winwin' | 'vibes' | 'bell'
+type OpenPanel = 'none' | 'nearby' | 'winwin' | 'vibes' | 'bell' | 'avatar'
 
 export function DexNavBar() {
   const me = useMe()
@@ -77,6 +88,112 @@ export function DexNavBar() {
 
   const toggle = (panel: OpenPanel) => setOpenPanel(prev => (prev === panel ? 'none' : panel))
   const close = () => setOpenPanel('none')
+
+  // Avatar user-menu state (mirrors mega-router at pages/dex/[...slug].tsx:1082-1097)
+  const [showVerification, setShowVerification] = useState(false)
+  const [verifySoundcloud, setVerifySoundcloud] = useState('')
+  const [verifyYoutube, setVerifyYoutube] = useState('')
+  const [verifyBandcamp, setVerifyBandcamp] = useState('')
+  const [verifyLoading, setVerifyLoading] = useState(false)
+  const [verifySuccess, setVerifySuccess] = useState(false)
+  const [verifyError, setVerifyError] = useState<string | null>(null)
+
+  const [showAccountSettings, setShowAccountSettings] = useState(false)
+  const [editDisplayName, setEditDisplayName] = useState('')
+  const [editHandle, setEditHandle] = useState('')
+  const [accountSettingsSaving, setAccountSettingsSaving] = useState(false)
+  const [accountSettingsSuccess, setAccountSettingsSuccess] = useState<string | null>(null)
+  const [nostrPubkeyCopied, setNostrPubkeyCopied] = useState(false)
+
+  const [updateDisplayName] = useUpdateProfileDisplayNameMutation()
+  const [updateHandle] = useUpdateHandleMutation()
+  const [createVerificationRequest] = useCreateProfileVerificationRequestMutation()
+  const { data: verificationData } = useProfileVerificationRequestQuery({ skip: !me })
+  const existingRequest = verificationData?.profileVerificationRequest
+
+  // Seed edit fields once we have a profile
+  useEffect(() => {
+    if (me?.profile) {
+      setEditDisplayName(prev => prev || me.profile?.displayName || '')
+      setEditHandle(prev => prev || me.profile?.userHandle || '')
+    }
+  }, [me?.profile?.id])
+
+  const handleVerificationSubmit = async () => {
+    if (!verifySoundcloud && !verifyYoutube && !verifyBandcamp) {
+      setVerifyError('Please provide at least one link')
+      return
+    }
+    setVerifyLoading(true)
+    setVerifyError(null)
+    try {
+      await createVerificationRequest({
+        variables: {
+          input: {
+            soundcloud: verifySoundcloud || undefined,
+            youtube: verifyYoutube || undefined,
+            bandcamp: verifyBandcamp || undefined,
+          },
+        },
+      })
+      setVerifySuccess(true)
+      setVerifySoundcloud('')
+      setVerifyYoutube('')
+      setVerifyBandcamp('')
+    } catch (err: any) {
+      setVerifyError(err?.message || 'Failed to submit request')
+    } finally {
+      setVerifyLoading(false)
+    }
+  }
+
+  const handleSaveDisplayName = async () => {
+    if (!editDisplayName.trim()) return
+    setAccountSettingsSaving(true)
+    setAccountSettingsSuccess(null)
+    try {
+      await updateDisplayName({
+        variables: { input: { displayName: editDisplayName.trim() } },
+        refetchQueries: ['Me'],
+      })
+      setAccountSettingsSuccess('Display name saved!')
+      setTimeout(() => setAccountSettingsSuccess(null), 2000)
+    } catch (error) {
+      console.error('Failed to update display name:', error)
+    }
+    setAccountSettingsSaving(false)
+  }
+
+  const handleSaveHandle = async () => {
+    if (!editHandle.trim()) return
+    setAccountSettingsSaving(true)
+    setAccountSettingsSuccess(null)
+    try {
+      await updateHandle({
+        variables: { input: { handle: editHandle.trim() } },
+        refetchQueries: ['Me'],
+      })
+      setAccountSettingsSuccess('Username saved!')
+      setTimeout(() => setAccountSettingsSuccess(null), 2000)
+    } catch (error) {
+      console.error('Failed to update handle:', error)
+    }
+    setAccountSettingsSaving(false)
+  }
+
+  const onLogout = async () => {
+    try {
+      localStorage.removeItem('didToken')
+      localStorage.removeItem('jwt_fallback')
+      localStorage.removeItem('connectedWalletAddress')
+      localStorage.removeItem('connectedWalletType')
+      await setJwt()
+      window.location.href = '/login'
+    } catch (error) {
+      console.error('Logout error:', error)
+      window.location.href = '/login'
+    }
+  }
 
   // Rewards queries — gated on auth so anonymous users never fire them
   const { data: streamingData, loading: streamingLoading } = useQuery(PROFILE_STREAMING_REWARDS_QUERY, {
@@ -555,16 +672,238 @@ export function DexNavBar() {
               </div>
             ) : null}
 
-            {/* Profile Avatar — link for now; full user-menu accordion (verification,
-                account settings) stays in mega-router until Phase A5 ports it. */}
+            {/* Avatar user menu — verification + account settings accordions + logout */}
             {me?.profile?.userHandle && (
-              <Link
-                href={`/profiles/${me.profile.userHandle}`}
-                className="flex-shrink-0 p-0.5 rounded-full hover:bg-white/10 transition"
-                aria-label="Profile"
-              >
-                <Avatar linkToProfile={false} profile={{ profilePicture: me.profile.profilePicture }} pixels={28} />
-              </Link>
+              <div className="relative flex-shrink-0">
+                <button
+                  onClick={() => toggle('avatar')}
+                  className="p-0.5 rounded-full hover:bg-white/10 hover:ring-2 hover:ring-cyan-400 transition"
+                  aria-label="Account menu"
+                >
+                  <Avatar linkToProfile={false} profile={{ profilePicture: me.profile.profilePicture }} pixels={28} />
+                </button>
+
+                {openPanel === 'avatar' && (
+                  <div
+                    className={`${popoverBase} w-[calc(100vw-2rem)] sm:w-80 max-w-[22rem] max-h-[85vh] overflow-y-auto border-2 border-cyan-500/50 bg-gradient-to-b from-neutral-900 via-cyan-950/10 to-neutral-900`}
+                    onClick={e => e.stopPropagation()}
+                  >
+                    {/* Header */}
+                    <div className="flex items-center gap-3 p-3 border-b border-cyan-500/30 bg-gradient-to-r from-cyan-900/30 to-purple-900/30">
+                      <Avatar linkToProfile={false} profile={{ profilePicture: me.profile.profilePicture }} pixels={48} />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-bold text-white truncate">
+                          {me.profile.displayName || me.profile.userHandle || 'User'}
+                        </div>
+                        <div className="text-[11px] text-cyan-400 truncate">@{me.profile.userHandle}</div>
+                      </div>
+                      <button onClick={close} className="w-6 h-6 flex items-center justify-center rounded hover:bg-white/10" aria-label="Close">
+                        <X className="w-4 h-4 text-gray-400" />
+                      </button>
+                    </div>
+
+                    {/* Quick nav */}
+                    <div className="py-2 border-b border-cyan-500/20">
+                      <Link href={`/profiles/${me.profile.userHandle}`} onClick={close} className="flex items-center gap-3 px-3 py-2 text-sm text-white hover:bg-cyan-500/10">
+                        <UserIcon className="w-4 h-4 text-cyan-400" />
+                        <span className="flex-1">My Profile</span>
+                      </Link>
+                      <Link href="/wallet" onClick={close} className="flex items-center gap-3 px-3 py-2 text-sm text-white hover:bg-cyan-500/10">
+                        <Wallet className="w-4 h-4 text-cyan-400" />
+                        <span className="flex-1">Wallet</span>
+                      </Link>
+                      <Link href="/messages" onClick={close} className="flex items-center gap-3 px-3 py-2 text-sm text-white hover:bg-cyan-500/10">
+                        <MessageCircle className="w-4 h-4 text-cyan-400" />
+                        <span className="flex-1">Inbox</span>
+                      </Link>
+                    </div>
+
+                    {/* Get Verified accordion */}
+                    <div className="py-1 border-b border-cyan-500/20">
+                      <button
+                        onClick={() => setShowVerification(v => !v)}
+                        className="w-full flex items-center gap-3 px-3 py-2 text-sm text-white hover:bg-cyan-500/10"
+                      >
+                        <ShieldCheck className="w-4 h-4 text-purple-400" />
+                        <span className="flex-1 text-left">Get Verified</span>
+                        {existingRequest?.status === ProfileVerificationStatusType.Approved ? (
+                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-green-500/20 text-green-400">Verified</span>
+                        ) : existingRequest?.status === ProfileVerificationStatusType.Pending ? (
+                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-400">Pending</span>
+                        ) : (
+                          showVerification ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />
+                        )}
+                      </button>
+
+                      {showVerification && (
+                        <div className="mx-3 mb-2 px-3 py-3 space-y-3 bg-black/30 rounded-lg border border-purple-500/20">
+                          {existingRequest?.status === ProfileVerificationStatusType.Approved ? (
+                            <div className="flex items-center gap-2 text-green-400 text-xs">
+                              <Check className="w-3 h-3" /> Your profile is verified
+                            </div>
+                          ) : existingRequest?.status === ProfileVerificationStatusType.Pending ? (
+                            <div className="flex items-center gap-2 text-yellow-400 text-xs">
+                              <AlertCircle className="w-3 h-3" /> Verification request under review
+                            </div>
+                          ) : verifySuccess ? (
+                            <div className="flex items-center gap-2 text-green-400 text-xs">
+                              <Check className="w-3 h-3" /> Request submitted — we'll review shortly
+                            </div>
+                          ) : (
+                            <>
+                              <p className="text-[10px] text-gray-400">Provide at least one link to verify your artist identity.</p>
+                              {verifyError && <p className="text-[10px] text-red-400">{verifyError}</p>}
+                              <input
+                                type="url"
+                                value={verifySoundcloud}
+                                onChange={e => setVerifySoundcloud(e.target.value)}
+                                placeholder="SoundCloud URL"
+                                className="w-full bg-black/50 border border-purple-500/20 rounded px-2.5 py-1.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-purple-400"
+                              />
+                              <input
+                                type="url"
+                                value={verifyYoutube}
+                                onChange={e => setVerifyYoutube(e.target.value)}
+                                placeholder="YouTube URL"
+                                className="w-full bg-black/50 border border-purple-500/20 rounded px-2.5 py-1.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-purple-400"
+                              />
+                              <input
+                                type="url"
+                                value={verifyBandcamp}
+                                onChange={e => setVerifyBandcamp(e.target.value)}
+                                placeholder="Bandcamp URL"
+                                className="w-full bg-black/50 border border-purple-500/20 rounded px-2.5 py-1.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-purple-400"
+                              />
+                              <button
+                                onClick={handleVerificationSubmit}
+                                disabled={verifyLoading || (!verifySoundcloud && !verifyYoutube && !verifyBandcamp)}
+                                className="w-full py-1.5 text-xs font-semibold rounded bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white disabled:opacity-40 disabled:cursor-not-allowed"
+                              >
+                                {verifyLoading ? 'Submitting…' : 'Submit for Review'}
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Account Settings accordion */}
+                    <div className="py-1 border-b border-cyan-500/20">
+                      <button
+                        onClick={() => setShowAccountSettings(v => !v)}
+                        className="w-full flex items-center gap-3 px-3 py-2 text-sm text-white hover:bg-cyan-500/10"
+                      >
+                        <SettingsIcon className="w-4 h-4 text-cyan-400" />
+                        <span className="flex-1 text-left">Account Settings</span>
+                        {showAccountSettings ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                      </button>
+
+                      {showAccountSettings && (
+                        <div className="mx-3 mb-2 px-3 py-3 space-y-3 bg-black/30 rounded-lg border border-cyan-500/20">
+                          {accountSettingsSuccess && (
+                            <div className="flex items-center gap-2 text-green-400 text-xs bg-green-500/10 px-2 py-1.5 rounded">
+                              <Check className="w-3 h-3" /> {accountSettingsSuccess}
+                            </div>
+                          )}
+
+                          <div className="space-y-1.5">
+                            <label className="text-[10px] text-gray-400 flex items-center gap-1.5">
+                              <UserIcon className="w-3 h-3" /> Display Name
+                            </label>
+                            <div className="flex gap-2">
+                              <input
+                                type="text"
+                                value={editDisplayName}
+                                onChange={e => setEditDisplayName(e.target.value)}
+                                className="flex-1 bg-black/50 border border-cyan-500/30 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-cyan-500"
+                                placeholder="Display name"
+                              />
+                              <button
+                                onClick={handleSaveDisplayName}
+                                disabled={accountSettingsSaving || !editDisplayName.trim()}
+                                className="px-3 text-xs font-semibold bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/50 rounded text-cyan-300 disabled:opacity-40 disabled:cursor-not-allowed"
+                              >
+                                {accountSettingsSaving ? '…' : 'Save'}
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <label className="text-[10px] text-gray-400 flex items-center gap-1.5">
+                              <AtSign className="w-3 h-3" /> Username
+                            </label>
+                            <div className="flex gap-2">
+                              <input
+                                type="text"
+                                value={editHandle}
+                                onChange={e => setEditHandle(e.target.value)}
+                                className="flex-1 bg-black/50 border border-cyan-500/30 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-cyan-500"
+                                placeholder="username"
+                              />
+                              <button
+                                onClick={handleSaveHandle}
+                                disabled={accountSettingsSaving || !editHandle.trim() || editHandle.trim().length < 2}
+                                className="px-3 text-xs font-semibold bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/50 rounded text-cyan-300 disabled:opacity-40 disabled:cursor-not-allowed"
+                              >
+                                {accountSettingsSaving ? '…' : 'Save'}
+                              </button>
+                            </div>
+                            <p className="text-[10px] text-gray-500">soundchain.io/dex/users/{editHandle || 'username'}</p>
+                          </div>
+
+                          {me?.nostrPubkey && (
+                            <div className="space-y-1.5">
+                              <label className="text-[10px] text-gray-400 flex items-center gap-1.5">
+                                <Radio className="w-3 h-3 text-orange-400" /> Nostr Identity
+                              </label>
+                              <div className="flex items-center gap-2 bg-gradient-to-r from-orange-500/10 to-purple-500/10 border border-orange-500/30 rounded px-2.5 py-1.5">
+                                <code className="flex-1 text-[10px] text-orange-300 font-mono truncate">
+                                  {me.nostrPubkey.slice(0, 12)}…{me.nostrPubkey.slice(-8)}
+                                </code>
+                                <button
+                                  onClick={async () => {
+                                    try {
+                                      await navigator.clipboard.writeText(me.nostrPubkey || '')
+                                      setNostrPubkeyCopied(true)
+                                      setTimeout(() => setNostrPubkeyCopied(false), 2000)
+                                    } catch {}
+                                  }}
+                                  className="p-1 bg-orange-500/20 hover:bg-orange-500/30 rounded"
+                                  title="Copy Nostr pubkey"
+                                >
+                                  {nostrPubkeyCopied ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3 text-orange-400" />}
+                                </button>
+                              </div>
+                              <p className="text-[10px] text-gray-500">Add this pubkey in Bitchat to receive notifications</p>
+                            </div>
+                          )}
+
+                          <Link href="/settings" onClick={close}>
+                            <span className="text-[11px] text-cyan-400 hover:text-cyan-300 cursor-pointer">More settings →</span>
+                          </Link>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Logout */}
+                    <div className="py-1">
+                      <button
+                        onClick={() => { close(); onLogout() }}
+                        className="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-400 hover:bg-red-500/10"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        <span className="flex-1 text-left">Logout</span>
+                      </button>
+                    </div>
+
+                    {/* Footer */}
+                    <div className="px-3 py-2 border-t border-cyan-500/20 flex items-center justify-between text-[10px] text-gray-500">
+                      <Link href="/privacy-policy" onClick={close} className="hover:text-cyan-400">PRIVACY POLICY</Link>
+                      <span>v {config.appVersion}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
 
             {!me && (
