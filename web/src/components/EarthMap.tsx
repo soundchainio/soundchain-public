@@ -85,6 +85,12 @@ export default function EarthMap({ ownedSquares, searchResult, onClaimParcel }: 
         zoom={3}
         style={{ width: '100%', height: '100%', minHeight: '500px', background: '#0a1530' }}
         zoomControl={true}
+        scrollWheelZoom={true}
+        dragging={true}
+        touchZoom={true}
+        doubleClickZoom={true}
+        boxZoom={true}
+        tap={true}
         whenReady={() => setMapReady(true)}
       >
         <LayersControl position="topright">

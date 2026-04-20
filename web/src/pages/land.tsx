@@ -956,7 +956,7 @@ export default function LandAtlasPage() {
         </div>
 
         {/* Right: Map area */}
-        <div className="flex-1 relative overflow-hidden" style={{ minHeight: '500px' }}>
+        <div className="flex-1 relative" style={{ minHeight: '500px' }}>
           {/* EARTH MODE — Leaflet interactive map with satellite tiles */}
           {viewMode === 'earth' && (
             <EarthMap

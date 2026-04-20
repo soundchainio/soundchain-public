@@ -431,9 +431,24 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
     }
   }, [tracks, theme, loading, nowPlaying])
 
+  // Auto-focus container for keyboard events
+  useEffect(() => {
+    if (containerRef.current) containerRef.current.focus()
+  }, [loading])
+
   return (
-    <div className="relative w-full h-full">
-      <div ref={containerRef} className="absolute inset-0" style={{ cursor: 'grab' }} />
+    <div className="relative w-full h-full" tabIndex={0} onFocus={() => containerRef.current?.focus()}>
+      <div ref={containerRef} className="absolute inset-0" tabIndex={0} style={{ cursor: 'grab', outline: 'none' }} onClick={() => containerRef.current?.focus()} />
+
+      {/* Mobile touch controls — D-pad overlay */}
+      <div className="absolute bottom-16 left-3 z-10 sm:hidden flex flex-col items-center gap-1">
+        <button onTouchStart={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'w' }))} onTouchEnd={() => window.dispatchEvent(new KeyboardEvent('keyup', { key: 'w' }))} className="w-10 h-10 rounded bg-white/10 backdrop-blur border border-white/20 flex items-center justify-center text-white text-lg active:bg-white/20">↑</button>
+        <div className="flex gap-1">
+          <button onTouchStart={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'a' }))} onTouchEnd={() => window.dispatchEvent(new KeyboardEvent('keyup', { key: 'a' }))} className="w-10 h-10 rounded bg-white/10 backdrop-blur border border-white/20 flex items-center justify-center text-white text-lg active:bg-white/20">←</button>
+          <button onTouchStart={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 's' }))} onTouchEnd={() => window.dispatchEvent(new KeyboardEvent('keyup', { key: 's' }))} className="w-10 h-10 rounded bg-white/10 backdrop-blur border border-white/20 flex items-center justify-center text-white text-lg active:bg-white/20">↓</button>
+          <button onTouchStart={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'd' }))} onTouchEnd={() => window.dispatchEvent(new KeyboardEvent('keyup', { key: 'd' }))} className="w-10 h-10 rounded bg-white/10 backdrop-blur border border-white/20 flex items-center justify-center text-white text-lg active:bg-white/20">→</button>
+        </div>
+      </div>
 
       {/* HUD */}
       <div className="absolute top-3 left-3 pointer-events-none space-y-1 max-w-[60vw]">
@@ -546,12 +561,20 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
             <div className="p-4 space-y-2">
               <h3 className="text-lg font-mono font-bold text-white">{selectedTrack.title}</h3>
               <p className="text-sm font-mono text-gray-400">{selectedTrack.artist || ownerHandle}</p>
-              <div className="flex items-center gap-2 text-[10px] font-mono">
+              <div className="flex items-center gap-2 text-[10px] font-mono flex-wrap">
                 {selectedTrack.isNFT && <span className="text-purple-400 px-1.5 py-0.5 rounded bg-purple-500/10 border border-purple-500/20">NFT</span>}
                 {selectedTrack.editionSize && selectedTrack.editionSize > 1 && <span className="text-yellow-400 px-1.5 py-0.5 rounded bg-yellow-500/10 border border-yellow-500/20">1/{selectedTrack.editionSize}</span>}
                 {selectedTrack.ipfsHash && <span className="text-cyan-400 px-1.5 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/20">IPFS</span>}
+                {(selectedTrack.playbackUrl || selectedTrack.audioUrl) && <span className="text-green-400 px-1.5 py-0.5 rounded bg-green-500/10 border border-green-500/20">▶ audio</span>}
+                {!(selectedTrack.playbackUrl || selectedTrack.audioUrl) && <span className="text-red-400 px-1.5 py-0.5 rounded bg-red-500/10 border border-red-500/20">no audio</span>}
               </div>
-              <div className="flex items-center gap-2 pt-2">
+              {/* Track details — stays in this card, never redirects */}
+              <div className="p-2 rounded bg-black/40 border border-white/5 text-[9px] font-mono text-gray-500 space-y-1">
+                <div className="flex justify-between"><span>Track ID</span><span className="text-gray-400">{selectedTrack.id.slice(0, 12)}...</span></div>
+                {selectedTrack.artist && <div className="flex justify-between"><span>Artist</span><span className="text-cyan-400">@{selectedTrack.artist}</span></div>}
+                <div className="flex justify-between"><span>Audio</span><span className="text-gray-400 truncate max-w-[180px]">{selectedTrack.playbackUrl || selectedTrack.audioUrl || 'none'}</span></div>
+              </div>
+              <div className="flex items-center gap-2 pt-1">
                 {/* Play inline — no redirect */}
                 <button
                   onClick={() => {
