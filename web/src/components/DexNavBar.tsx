@@ -49,6 +49,15 @@ import { Avatar } from './Avatar'
 const ConcertChat = dynamic(() => import('components/dex/ConcertChat').then(m => m.ConcertChat), { ssr: false })
 const Notifications = dynamic(() => import('components/Notifications').then(m => m.Notifications), { ssr: false })
 
+// FURL AgentStatusTicker — 4,367 lines of xterm + tunnel + wallet telemetry.
+// Mounted inside DexNavBar so every page that renders the nav also gets the ticker
+// without per-page wiring. Single-source-of-truth: future ticker placement changes
+// happen in one file. ssr:false because it depends on window/localStorage/SpeechRecognition.
+const AgentStatusTicker = dynamic(
+  () => import('components/AgentStatusTicker').then(m => m.AgentStatusTicker),
+  { ssr: false },
+)
+
 const PROFILE_STREAMING_REWARDS_QUERY = gql`
   query ProfileStreamingRewards($profileId: String!) {
     scidsByProfile(profileId: $profileId) {
@@ -916,6 +925,20 @@ export function DexNavBar() {
           </div>
         </div>
       </nav>
+
+      {/* FURL ticker — auth-gated; anon users see a slim promo strip instead */}
+      {me ? (
+        <AgentStatusTicker />
+      ) : (
+        <div className="w-full h-7 flex items-center justify-center px-3 bg-black/80 border-b border-white/5">
+          <span className="text-[10px] font-mono text-gray-500">
+            <span className="text-cyan-500/40">✶</span>
+            <span className="mx-1.5">FURL — AI-powered forge terminal</span>
+            <span className="text-gray-600">·</span>
+            <span className="ml-1.5 text-cyan-500/50">available for members</span>
+          </span>
+        </div>
+      )}
     </header>
   )
 }

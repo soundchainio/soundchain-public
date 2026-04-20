@@ -65,7 +65,6 @@ import { ToastContainer, toast } from 'react-toastify'
 import dynamic from 'next/dynamic'
 import { useUnifiedWallet } from 'contexts/UnifiedWalletContext'
 import { LeftSidebar, RightSidebar, MiniProfileDashboard } from 'components/Sidebar'
-import { AgentStatusTicker } from 'components/AgentStatusTicker'
 import { TopNavBar } from 'components/TopNavBar'
 import { PlaylistCard, PlaylistDetail, CreatePlaylistModal } from 'components/Playlist'
 import { DMModal } from 'components/modals/DMModal'
@@ -3177,20 +3176,10 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
       {/* REMOVED ScrollingBackground - it was covering user's real cover art with Unsplash placeholders */}
 
       <div className="relative pb-20">
-        {/* Global top header nav — ported to DexNavBar (Phase B: Apr 19 2026) */}
+        {/* Global top header nav + FURL ticker — both ported to DexNavBar
+            (Phase B + C: Apr 19 2026). DexNavBar renders the ticker inside its
+            header so every page with DexNavBar gets the ticker automatically. */}
         <DexNavBar />
-
-        {/* FURL — Agent Status Ticker (auth-gated) */}
-        {me ? <AgentStatusTicker /> : (
-          <div className="w-full h-7 flex items-center justify-center px-3 bg-black/80 border-b border-white/5">
-            <span className="text-[10px] font-mono text-gray-500">
-              <span className="text-cyan-500/40">✶</span>
-              <span className="mx-1.5">FURL — AI-powered forge terminal</span>
-              <span className="text-gray-600">·</span>
-              <span className="ml-1.5 text-cyan-500/50">available for members</span>
-            </span>
-          </div>
-        )}
 
         {/* Profile Header removed - Feed/Stories bar stays at top for clean layout */}
 
