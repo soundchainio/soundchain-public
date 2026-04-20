@@ -63,6 +63,9 @@ export interface PlacedBuildable {
   boundAssetId?: string      // NFT edition id, SCID, or post id
   boundAssetImageUrl?: string // denormalized thumb URL for texture load
   boundAssetTitle?: string    // for click modal
+  // Denormalized audio URL for SCID/audio-post frames — click the frame to play in place
+  // instead of route-pushing to the track detail page.
+  boundAssetAudioUrl?: string
   placedAt?: string | Date
 }
 

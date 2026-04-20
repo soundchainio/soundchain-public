@@ -79,6 +79,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       boundAssetId,
       boundAssetImageUrl,
       boundAssetTitle,
+      boundAssetAudioUrl,
     } = body
 
     if (!buildableId || !getBuildable(buildableId)) return res.status(400).json({ error: 'invalid buildableId' })
@@ -114,6 +115,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       boundAssetId: boundAssetId || null,
       boundAssetImageUrl: boundAssetImageUrl || null,
       boundAssetTitle: boundAssetTitle || null,
+      boundAssetAudioUrl: boundAssetAudioUrl || null,
       placedAt: new Date(),
     }
 

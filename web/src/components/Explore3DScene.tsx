@@ -88,6 +88,14 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
   const pendingColorRef = useRef<string | null>(pendingColor); pendingColorRef.current = pendingColor
   // Phase 4 — current vehicle being ridden. Ref lets animate loop read it without re-subscribing.
   const drivingRef = useRef<{ group: any; data: PlacedBuildable } | null>(null)
+  // Frame-in-place audio playback — SCID/audio-post frames play on click instead of routing away.
+  // Ref survives re-renders so a tap can stop the previous audio before starting a new one.
+  const frameAudioRef = useRef<{ el: HTMLAudioElement; buildableId: string } | null>(null)
+  const [playingFrameId, setPlayingFrameId] = useState<string | null>(null)
+  useEffect(() => () => {
+    // Unmount cleanup — stop any in-frame audio when leaving the scene
+    if (frameAudioRef.current) { try { frameAudioRef.current.el.pause() } catch {} ; frameAudioRef.current = null }
+  }, [])
   const fetchLand = useCallback(() => {
     fetch('/api/nodeverse/squares')
       .then(r => r.json())
@@ -710,7 +718,25 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
         if (pb) {
           const item = getBuildable(pb.buildableId)
           if (item?.category === 'frame' && pb.boundAssetId) {
-            if (pb.boundAssetType === 'post') router.push(`/posts/${pb.boundAssetId}`)
+            // Audio in frame — SCID (always audio) or audio-type post. Click plays/pauses
+            // in place instead of routing away. Second click on a different frame stops
+            // the previous audio and starts the new one.
+            if (pb.boundAssetAudioUrl && (pb.boundAssetType === 'scid' || pb.boundAssetType === 'post')) {
+              const current = frameAudioRef.current
+              if (current && current.buildableId === pb.id) {
+                // Same frame — toggle
+                if (current.el.paused) { current.el.play().catch(() => {}); setPlayingFrameId(pb.id) }
+                else { current.el.pause(); setPlayingFrameId(null) }
+              } else {
+                if (current) { try { current.el.pause() } catch {} }
+                const el = new Audio(pb.boundAssetAudioUrl)
+                el.crossOrigin = 'anonymous'
+                el.onended = () => { setPlayingFrameId(null); frameAudioRef.current = null }
+                el.play().catch(() => {})
+                frameAudioRef.current = { el, buildableId: pb.id }
+                setPlayingFrameId(pb.id)
+              }
+            } else if (pb.boundAssetType === 'post') router.push(`/posts/${pb.boundAssetId}`)
             else if (pb.boundAssetType === 'scid') router.push(`/dex/track/${pb.boundAssetId}`)
             else if (pb.boundAssetType === 'nft') router.push(`/dex/nft/${pb.boundAssetId}`)
           } else if (item?.category === 'vehicle') {
@@ -1255,6 +1281,31 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
           </div>
         </div>
       )}
+
+      {/* Now-playing pill — visible whenever an audio frame is playing */}
+      {playingFrameId && (() => {
+        const pb = placedBuildables.find(b => b.id === playingFrameId)
+        if (!pb) return null
+        return (
+          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] flex items-center gap-2 px-3 py-2 rounded-full bg-black/80 backdrop-blur border border-cyan-500/40 shadow-[0_0_20px_rgba(34,211,238,0.3)]">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-400"></span>
+            </span>
+            <span className="text-[10px] font-mono text-cyan-300 font-bold tracking-wide">▶ {pb.boundAssetTitle || 'Now playing'}</span>
+            <button
+              onClick={() => {
+                if (frameAudioRef.current) { try { frameAudioRef.current.el.pause() } catch {} ; frameAudioRef.current = null }
+                setPlayingFrameId(null)
+              }}
+              className="ml-1 p-0.5 rounded hover:bg-white/10 text-gray-400"
+              title="Stop"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          </div>
+        )
+      })()}
 
       {/* BUILD MODE — frame bind modal (pick NFT/SCID/post to mount) */}
       {bindFrameCandidate && (

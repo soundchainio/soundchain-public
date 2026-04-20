@@ -31,6 +31,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         .limit(100)
         .project({
           title: 1, artist: 1, artworkUrl: 1,
+          playbackUrl: 1, assetUrl: 1,
           contractAddress: 1, tokenId: 1, createdAt: 1,
         })
         .toArray(),
@@ -50,6 +51,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       title: t.title || 'Untitled',
       artist: t.artist || '',
       imageUrl: t.artworkUrl || null,
+      audioUrl: t.playbackUrl || t.assetUrl || null,
       isNft: Boolean(t.contractAddress && t.tokenId),
     }))
 
@@ -61,6 +63,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         id: p._id.toString(),
         title: (p.body || '').slice(0, 60),
         imageUrl: p.mediaThumbnail || p.uploadedMediaUrl || null,
+        audioUrl: p.uploadedMediaType === 'audio' ? p.uploadedMediaUrl || null : null,
         mediaType: p.uploadedMediaType || 'image',
       }))
 

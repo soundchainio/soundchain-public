@@ -8,6 +8,7 @@ interface Asset {
   id: string
   title: string
   imageUrl: string | null
+  audioUrl?: string | null
   artist?: string
 }
 
@@ -74,6 +75,7 @@ export default function FrameBindModal({ candidate, buildableKind, onClose, onBo
           boundAssetId: asset.id,
           boundAssetImageUrl: asset.imageUrl,
           boundAssetTitle: asset.title,
+          boundAssetAudioUrl: asset.audioUrl || null,
         }),
       })
       if (res.ok) {
@@ -113,6 +115,7 @@ export default function FrameBindModal({ candidate, buildableKind, onClose, onBo
           boundAssetId: null,
           boundAssetImageUrl: null,
           boundAssetTitle: null,
+          boundAssetAudioUrl: null,
         }),
       })
       onBound()

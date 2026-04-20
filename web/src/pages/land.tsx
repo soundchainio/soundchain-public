@@ -24,6 +24,7 @@ import { feature } from 'topojson-client'
 import type { Topology, GeometryCollection } from 'topojson-specification'
 import type { Feature, FeatureCollection, Geometry } from 'geojson'
 import { FAMOUS_LANDMARKS, projectLngLat, unprojectXY, parcelToLngLat, lngLatToParcel } from 'lib/nodeverse/landmarks'
+import { WORLD_CITIES, getCitiesForCountry, cityBounds, type City } from 'lib/nodeverse/worldCities'
 
 interface Square {
   x: number
@@ -80,6 +81,102 @@ export default function LandAtlasPage() {
   const [searchResult, setSearchResult] = useState<{ name: string; lat: number; lng: number } | null>(null)
   const [searching, setSearching] = useState(false)
   const [highlightedCountryId, setHighlightedCountryId] = useState<string | null>(null)
+  // ─── GOD'S-EYE DRILL-DOWN (World → Country → City → Parcel) ───────────────
+  // drillPath[0] is always World. Each step pushes a new level; clicking a
+  // breadcrumb pops back. Zoom/pan are animated to fit the new level's bounds.
+  type DrillLevel = {
+    type: 'world' | 'country' | 'city'
+    id: string
+    name: string
+    bounds?: { minLng: number; maxLng: number; minLat: number; maxLat: number }
+    center?: { lng: number; lat: number }
+    countryId?: string  // for city level — which country it belongs to
+  }
+  const [drillPath, setDrillPath] = useState<DrillLevel[]>([{ type: 'world', id: 'world', name: 'World' }])
+  const currentDrill = drillPath[drillPath.length - 1]
+  // Visible cities at the current drill level (country → its cities)
+  const visibleCities: City[] = currentDrill.type === 'country'
+    ? getCitiesForCountry(currentDrill.countryId || currentDrill.id)
+    : []
+
+  // ─── Drill-down helpers ──────────────────────────────────────────────────
+  // Compute lat/lng bounding box of any GeoJSON geometry (Polygon or MultiPolygon).
+  const computeGeometryBounds = (geom: any) => {
+    let minLng = Infinity, maxLng = -Infinity, minLat = Infinity, maxLat = -Infinity
+    const visit = (coords: any) => {
+      if (typeof coords[0] === 'number') {
+        const [lng, lat] = coords
+        if (lng < minLng) minLng = lng
+        if (lng > maxLng) maxLng = lng
+        if (lat < minLat) minLat = lat
+        if (lat > maxLat) maxLat = lat
+      } else {
+        coords.forEach(visit)
+      }
+    }
+    visit(geom.coordinates)
+    return { minLng, maxLng, minLat, maxLat }
+  }
+
+  // Fit a lat/lng bounding box into the current canvas — computes zoom (px/°)
+  // and pan so the bbox center lands at canvas center with ~85% fill margin.
+  const fitBoundsToCanvas = (bounds: { minLng: number; maxLng: number; minLat: number; maxLat: number }) => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const W = canvas.clientWidth
+    const H = canvas.clientHeight
+    const lngSpan = Math.max(0.1, bounds.maxLng - bounds.minLng)
+    const latSpan = Math.max(0.1, bounds.maxLat - bounds.minLat)
+    const margin = 0.85
+    const zLng = (W * margin) / lngSpan
+    const zLat = (H * margin) / latSpan
+    const newZoom = Math.max(1, Math.min(60, Math.min(zLng, zLat)))
+    const centerLng = (bounds.minLng + bounds.maxLng) / 2
+    const centerLat = (bounds.minLat + bounds.maxLat) / 2
+    setZoom(newZoom)
+    setPan({ x: -centerLng * newZoom, z: centerLat * newZoom })
+  }
+
+  // Drill into a country — zoom to its geometry bounds and update breadcrumb.
+  const drillToCountry = (countryFeature: any) => {
+    const bounds = computeGeometryBounds(countryFeature.geometry)
+    const countryId = String(countryFeature.id || '')
+    const name = countryFeature.properties?.name || countryFeature.properties?.NAME || `Country ${countryId}`
+    setDrillPath([
+      { type: 'world', id: 'world', name: 'World' },
+      { type: 'country', id: countryId, name, bounds, countryId },
+    ])
+    setHighlightedCountryId(countryId)
+    setViewMode('earth')
+    fitBoundsToCanvas(bounds)
+  }
+
+  // Drill into a city — zoom to a 0.25° box around center.
+  const drillToCity = (city: City, parentCountry: DrillLevel) => {
+    const bounds = cityBounds(city)
+    setDrillPath([
+      { type: 'world', id: 'world', name: 'World' },
+      parentCountry,
+      { type: 'city', id: `city_${city.name}`, name: city.name, bounds, center: { lng: city.lng, lat: city.lat }, countryId: parentCountry.countryId },
+    ])
+    setViewMode('earth')
+    fitBoundsToCanvas(bounds)
+  }
+
+  // Pop the drill path back to a given index.
+  const drillBackTo = (index: number) => {
+    const trimmed = drillPath.slice(0, index + 1)
+    setDrillPath(trimmed)
+    const target = trimmed[trimmed.length - 1]
+    if (target.type === 'world') {
+      setHighlightedCountryId(null)
+      setZoom(3)
+      setPan({ x: 0, z: 0 })
+    } else if (target.bounds) {
+      if (target.type === 'country') setHighlightedCountryId(target.id)
+      fitBoundsToCanvas(target.bounds)
+    }
+  }
 
   // ─── Geocode search via Nominatim (OpenStreetMap — free, no API key) ───
   const searchLocation = async () => {
@@ -137,10 +234,14 @@ export default function LandAtlasPage() {
       .catch(() => {})
   }, [viewMode, worldGeo])
 
-  // Reset zoom + pan when toggling modes (different scales)
+  // Reset zoom + pan when toggling modes (different scales).
+  // Skip the reset when we're drilled below world level — drillTo* has already
+  // set the zoom/pan to fit a country/city bbox and we must not stomp it.
   useEffect(() => {
+    if (drillPath.length > 1) return
     if (viewMode === 'earth') { setZoom(3); setPan({ x: 0, z: 0 }) }
     else { setZoom(8); setPan({ x: 0, z: 0 }) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewMode])
 
   // Render the atlas to canvas
@@ -298,6 +399,38 @@ export default function LandAtlasPage() {
         }
       }
 
+      // City pins — visible when drilled into a country. Tap to zoom to city.
+      if (currentDrill.type === 'country' && visibleCities.length > 0) {
+        visibleCities.forEach(city => {
+          const { x, y } = projectLngLat(city.lng, city.lat, zoom, cx, cy)
+          if (x < -10 || x > W + 10 || y < -10 || y > H + 10) return
+          // Pin size scales with population (bigger cities = bigger targets).
+          const r = Math.max(4, Math.min(10, Math.log10(city.population || 1) - 3))
+          // Glow
+          ctx.globalAlpha = 0.4
+          ctx.fillStyle = '#22d3ee'
+          ctx.beginPath()
+          ctx.arc(x, y, r + 4, 0, Math.PI * 2)
+          ctx.fill()
+          // Pin
+          ctx.globalAlpha = 1
+          ctx.fillStyle = '#22d3ee'
+          ctx.beginPath()
+          ctx.arc(x, y, r, 0, Math.PI * 2)
+          ctx.fill()
+          ctx.strokeStyle = '#0a0a0a'
+          ctx.lineWidth = 1.5
+          ctx.stroke()
+          // Label when zoomed in enough
+          if (zoom >= 4) {
+            ctx.fillStyle = '#e2e8f0'
+            ctx.font = 'bold 10px monospace'
+            ctx.textAlign = 'center'
+            ctx.fillText(city.name, x, y - r - 4)
+          }
+        })
+      }
+
       // Country highlight (when clicked)
       if (highlightedCountryId && worldGeo) {
         const country = worldGeo.features.find((f: any) => f.id === highlightedCountryId)
@@ -375,7 +508,7 @@ export default function LandAtlasPage() {
     drawSquare('#a855f7', 30)
     drawSquare('#22d3ee', 100)
     ctx.globalAlpha = 1
-  }, [owned, zoom, pan, tierFilter, viewMode, worldGeo, hoveredLandmark, searchResult, highlightedCountryId])
+  }, [owned, zoom, pan, tierFilter, viewMode, worldGeo, hoveredLandmark, searchResult, highlightedCountryId, drillPath])
 
   // Mouse interaction
   const handleClick = (e: React.MouseEvent) => {
@@ -398,8 +531,21 @@ export default function LandAtlasPage() {
         setPurchaseModal({ x: parcelX, z: parcelZ, tier: 'landmark', price: hitLandmark.price, landmark: hitLandmark })
         return
       }
-      // Check country hit (point-in-polygon via canvas isPointInPath)
-      if (worldGeo) {
+      // Check city pin hit (only at country drill level) — big target, tap to drill.
+      if (currentDrill.type === 'country' && visibleCities.length > 0) {
+        const hitCity = visibleCities.find(c => {
+          const { x, y } = projectLngLat(c.lng, c.lat, zoom, cx, cy)
+          return Math.hypot(x - mx, y - my) < 14
+        })
+        if (hitCity) {
+          drillToCity(hitCity, currentDrill)
+          return
+        }
+      }
+
+      // Check country hit (point-in-polygon via canvas isPointInPath) — only at world level.
+      // At country+ levels, clicks inside the country body drop straight to parcel purchase.
+      if (worldGeo && currentDrill.type === 'world') {
         const hitCountry = worldGeo.features.find((f: any) => {
           const testCanvas = document.createElement('canvas')
           const testCtx = testCanvas.getContext('2d')!
@@ -408,13 +554,12 @@ export default function LandAtlasPage() {
           return testCtx.isPointInPath(mx, my)
         })
         if (hitCountry) {
-          const countryId = (hitCountry as any).id
-          // Toggle highlight — click again to deselect
-          setHighlightedCountryId(prev => prev === countryId ? null : countryId)
+          drillToCountry(hitCountry)
+          return
         }
       }
 
-      // Convert pixel → lat/lng → parcel x/z
+      // Convert pixel → lat/lng → parcel x/z — parcel purchase at country/city level.
       const { lng, lat } = unprojectXY(mx, my, zoom, cx, cy)
       if (Math.abs(lng) > 180 || Math.abs(lat) > 85) return
       const { x, z } = lngLatToParcel(lng, lat)
@@ -799,7 +944,7 @@ export default function LandAtlasPage() {
 
           <div className="text-[8px] font-mono text-gray-600 leading-relaxed pt-3 border-t border-white/5">
             {viewMode === 'earth' ? (
-              <>🌍 Earth Mode: parcels mapped to real-world geography. Tap any continent to claim land in that region. Gold pins are landmark Tier S premium parcels.</>
+              <>🌍 Earth Mode: god&apos;s-eye drill-down. Tap a country to zoom in, tap a city pin to go deeper, then tap the ground to claim a parcel. Gold pins are Tier S landmark parcels · breadcrumb at top pops back.</>
             ) : (
               <>Click any square to claim it. Owned squares show owner color. Multi-level (above/underground) coming soon.</>
             )}
@@ -808,6 +953,45 @@ export default function LandAtlasPage() {
 
         {/* Right: 2D atlas canvas */}
         <div className="flex-1 relative overflow-hidden" style={{ minHeight: '500px' }}>
+          {/* God's-eye breadcrumb — World > Country > City. Tap any crumb to pop back. */}
+          {viewMode === 'earth' && (
+            <div className="absolute top-2 left-2 right-2 z-10 flex items-center gap-1.5 flex-wrap bg-black/70 backdrop-blur-md border border-cyan-500/30 rounded-full px-3 py-1.5 shadow-[0_0_20px_rgba(34,211,238,0.15)]">
+              <Globe2 className="w-3 h-3 text-cyan-400 flex-shrink-0" />
+              {drillPath.map((level, i) => {
+                const isLast = i === drillPath.length - 1
+                return (
+                  <span key={`${level.type}_${level.id}`} className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => !isLast && drillBackTo(i)}
+                      disabled={isLast}
+                      className={`text-[10px] font-mono transition ${
+                        isLast
+                          ? 'text-cyan-300 font-bold cursor-default'
+                          : 'text-gray-400 hover:text-cyan-300 underline-offset-2 hover:underline'
+                      }`}
+                    >
+                      {level.name}
+                    </button>
+                    {!isLast && <span className="text-gray-600 text-[10px]">›</span>}
+                  </span>
+                )
+              })}
+              {drillPath.length > 1 && (
+                <button
+                  onClick={() => drillBackTo(0)}
+                  className="ml-auto text-[9px] font-mono text-gray-500 hover:text-white px-2 py-0.5 rounded border border-white/10 hover:border-white/30 transition"
+                  title="Zoom back to world view"
+                >
+                  ⌂ Earth
+                </button>
+              )}
+              {currentDrill.type === 'country' && visibleCities.length > 0 && (
+                <span className="text-[9px] font-mono text-gray-500 ml-auto">
+                  {visibleCities.length} cities · tap to drill
+                </span>
+              )}
+            </div>
+          )}
           <canvas
             ref={canvasRef}
             onClick={handleClick}

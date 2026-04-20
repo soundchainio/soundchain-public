@@ -2063,7 +2063,10 @@ export function AgentStatusTicker() {
   const { ogunBalance, balance: polBalance } = useMagicContext()
   const me = useMe()
   const [expanded, setExpanded] = useState(false)
-  const [fullscreen, setFullscreen] = useState(false)
+  // default = embedded in cockpit, mini = floating picture-in-picture (pages stay usable), fullscreen = takes over viewport
+  const [terminalMode, setTerminalMode] = useState<'default' | 'mini' | 'fullscreen'>('default')
+  const fullscreen = terminalMode === 'fullscreen'
+  const miniMode = terminalMode === 'mini'
   const [activeTab, setActiveTab] = useState<PanelTab>('terminal')
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null)
   // Operator — selected local files + destination + upload state + node stats
@@ -2372,7 +2375,7 @@ export function AgentStatusTicker() {
     if (xtermIframeRef.current) {
       setTimeout(() => { try { xtermIframeRef.current?.contentWindow?.postMessage({ type: 'furl-fit' }, '*') } catch {} }, 100)
     }
-  }, [fullscreen])
+  }, [terminalMode])
 
   // Admin on localhost = voice settings access
   const isAdminLocal = typeof window !== 'undefined' && (
@@ -3454,14 +3457,16 @@ export function AgentStatusTicker() {
 
       {/* Expanded Panel */}
       {expanded && (
-        <div className={`bg-gray-900/95 backdrop-blur-md border-b overflow-hidden flex flex-col transition-all ${
+        <div className={`bg-gray-900/95 backdrop-blur-md border overflow-hidden flex flex-col transition-all ${
           fullscreen
             ? 'fixed inset-0 z-[200] max-h-none border-none'
-            : jackMode === 'CLI_BRIDGE'
-              ? 'border-cyan-500/30 shadow-[0_0_20px_rgba(34,211,238,0.15)] max-h-[700px]'
-              : jackMode === 'JACKED_IN'
-                ? `${forgeMode ? 'border-orange-500/20 shadow-[0_0_15px_rgba(249,115,22,0.1)]' : 'border-green-500/20 shadow-[0_0_15px_rgba(34,197,94,0.1)]'} ${selectedAgent ? 'max-h-[600px]' : 'max-h-[520px]'}`
-                : `border-white/10 ${selectedAgent ? 'max-h-[600px]' : 'max-h-[520px]'}`
+            : miniMode
+              ? 'fixed bottom-20 right-3 left-auto w-[min(360px,calc(100vw-1.5rem))] max-h-[340px] z-[100] rounded-xl border-cyan-500/40 shadow-[0_0_24px_rgba(34,211,238,0.25)]'
+              : jackMode === 'CLI_BRIDGE'
+                ? 'border-b border-cyan-500/30 shadow-[0_0_20px_rgba(34,211,238,0.15)] max-h-[700px]'
+                : jackMode === 'JACKED_IN'
+                  ? `border-b ${forgeMode ? 'border-orange-500/20 shadow-[0_0_15px_rgba(249,115,22,0.1)]' : 'border-green-500/20 shadow-[0_0_15px_rgba(34,197,94,0.1)]'} ${selectedAgent ? 'max-h-[600px]' : 'max-h-[520px]'}`
+                  : `border-b border-white/10 ${selectedAgent ? 'max-h-[600px]' : 'max-h-[520px]'}`
         }`}>
           {/* Panel Header with Tabs */}
           <div className="flex items-center justify-between px-3 py-2 border-b border-white/5 flex-shrink-0">
@@ -3527,9 +3532,21 @@ export function AgentStatusTicker() {
                 <Shield className="w-2.5 h-2.5 text-cyan-400" />
                 <span className="text-[8px] font-mono text-cyan-400 font-bold">THE ONE</span>
               </div>
+              {/* Mini pill — floating PiP mode so pages behind stay usable */}
+              <button
+                onClick={(e) => { e.stopPropagation(); setTerminalMode(miniMode ? 'default' : 'mini') }}
+                className={`px-1.5 py-0.5 rounded text-[8px] font-mono font-bold tracking-wider transition-colors border ${
+                  miniMode
+                    ? 'bg-cyan-500/20 text-cyan-300 border-cyan-400/60'
+                    : 'bg-white/[0.03] text-gray-400 border-white/10 hover:text-cyan-300 hover:border-cyan-500/40'
+                }`}
+                title={miniMode ? 'Exit mini mode' : 'Mini mode (navigate behind terminal)'}
+              >
+                MINI
+              </button>
               {/* Fullscreen toggle (mobile only) */}
               <button
-                onClick={(e) => { e.stopPropagation(); setFullscreen(!fullscreen) }}
+                onClick={(e) => { e.stopPropagation(); setTerminalMode(fullscreen ? 'default' : 'fullscreen') }}
                 className="sm:hidden p-1 hover:bg-white/10 rounded transition-colors"
                 title={fullscreen ? 'Exit fullscreen' : 'Fullscreen'}
               >
@@ -3539,7 +3556,7 @@ export function AgentStatusTicker() {
                 }
               </button>
               <button
-                onClick={(e) => { e.stopPropagation(); setFullscreen(false); setExpanded(false) }}
+                onClick={(e) => { e.stopPropagation(); setTerminalMode('default'); setExpanded(false) }}
                 className="p-1 hover:bg-white/10 rounded transition-colors"
               >
                 <X className="w-3.5 h-3.5 text-gray-400" />
@@ -3554,7 +3571,7 @@ export function AgentStatusTicker() {
             {/* Mobile: Agents tab */}
             {activeTab === 'agents' && (
               <div className="flex-1 overflow-y-auto">
-                <div className={`flex flex-col ${fullscreen ? '' : selectedAgent ? 'max-h-[360px]' : 'max-h-[200px]'} transition-all`}>
+                <div className={`flex flex-col ${fullscreen ? '' : miniMode ? 'max-h-[140px]' : selectedAgent ? 'max-h-[360px]' : 'max-h-[200px]'} transition-all`}>
                   <div className="py-1 overflow-y-auto">
                     <div className="grid grid-cols-3 gap-0.5 px-1">
                       {agents.map(agent => {
@@ -3599,9 +3616,9 @@ export function AgentStatusTicker() {
             {/* Mobile: Terminal tab */}
             {activeTab === 'terminal' && (
               jackMode === 'CLI_BRIDGE' ? (
-                <div ref={xtermContainerMobileRef} className={`border-t border-cyan-500/20 flex-1 bg-[#0a0a0a] ${fullscreen ? 'min-h-0' : 'min-h-[300px] max-h-[450px]'}`} style={{ overflow: 'hidden' }} />
+                <div ref={xtermContainerMobileRef} className={`border-t border-cyan-500/20 flex-1 bg-[#0a0a0a] ${fullscreen ? 'min-h-0' : miniMode ? 'min-h-[180px] max-h-[240px]' : 'min-h-[300px] max-h-[450px]'}`} style={{ overflow: 'hidden' }} />
               ) : (
-                <div ref={termRef} className={`border-t border-white/5 px-3 py-2 overflow-y-auto flex-1 ${fullscreen ? 'min-h-0' : 'min-h-[200px] max-h-[350px]'}`}>
+                <div ref={termRef} className={`border-t border-white/5 px-3 py-2 overflow-y-auto flex-1 ${fullscreen ? 'min-h-0' : miniMode ? 'min-h-[140px] max-h-[200px]' : 'min-h-[200px] max-h-[350px]'}`}>
                   {termHistory.map((line, i) => (
                     <TermLine key={i} text={line.text} type={line.type} />
                   ))}
@@ -3968,9 +3985,9 @@ export function AgentStatusTicker() {
               </button>
               {colTerminal && (
                 jackMode === 'CLI_BRIDGE' ? (
-                  <div ref={xtermContainerDesktopRef} className="flex-1 min-h-[250px] max-h-[400px] bg-[#0a0a0a]" style={{ overflow: 'hidden' }} />
+                  <div ref={xtermContainerDesktopRef} className={`flex-1 bg-[#0a0a0a] ${miniMode ? 'min-h-[180px] max-h-[240px]' : 'min-h-[250px] max-h-[400px]'}`} style={{ overflow: 'hidden' }} />
                 ) : (
-                  <div ref={termRef} className="flex-1 px-3 py-2 overflow-y-auto min-h-[180px] max-h-[350px]">
+                  <div ref={termRef} className={`flex-1 px-3 py-2 overflow-y-auto ${miniMode ? 'min-h-[130px] max-h-[200px]' : 'min-h-[180px] max-h-[350px]'}`}>
                     {termHistory.map((line, i) => (
                       <TermLine key={i} text={line.text} type={line.type} />
                     ))}
