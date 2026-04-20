@@ -12,11 +12,12 @@
  * Themes: 'modern' | 'cyberpunk' | 'vinyl' | 'vault'
  */
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import * as THREE from 'three'
 import { useRouter } from 'next/router'
-import { Music, X, Heart, Share2, Play, Pause, Volume2, Copy, Check } from 'lucide-react'
+import { Music, X, Heart, Share2, Play, Pause, Volume2, Copy, Check, Paintbrush, Plus } from 'lucide-react'
 import { toast } from 'react-toastify'
+import { FURNITURE_CATALOG, FURNITURE_CATEGORIES, filterByCategory, getPlacedFurniture, savePlacedFurniture, getFurnitureById, type PlacedFurniture, type FurnitureCategory } from 'lib/nodeverse/galleryFurniture'
 
 interface Track {
   id: string
@@ -341,6 +342,49 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
     window.addEventListener('resize', onResize)
     const fitTimer = setTimeout(onResize, 200)
 
+    // ─── Placed Furniture (procedural Three.js geometry) ───────
+    placedFurniture.forEach(pf => {
+      const item = getFurnitureById(pf.itemId)
+      if (!item) return
+      const color = new THREE.Color(pf.color)
+      const mat = new THREE.MeshStandardMaterial({ color, metalness: 0.3, roughness: 0.7 })
+
+      let mesh: THREE.Mesh
+      if (item.category === 'rugs') {
+        // Flat plane for rugs
+        mesh = new THREE.Mesh(new THREE.PlaneGeometry(item.width, item.depth), mat)
+        mesh.rotation.x = -Math.PI / 2
+      } else if (item.category === 'plants') {
+        // Cylinder trunk + sphere foliage
+        const group = new THREE.Group()
+        const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.08, item.height * 0.4, 8), new THREE.MeshStandardMaterial({ color: '#5c4033' }))
+        trunk.position.y = item.height * 0.2
+        group.add(trunk)
+        const foliage = new THREE.Mesh(new THREE.SphereGeometry(item.width * 0.8, 12, 12), mat)
+        foliage.position.y = item.height * 0.6
+        group.add(foliage)
+        // Pot
+        const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.15, 0.25, 8), new THREE.MeshStandardMaterial({ color: '#8b4513' }))
+        pot.position.y = 0.125
+        group.add(pot)
+        group.position.set(pf.x, item.yOffset, pf.z)
+        group.rotation.y = pf.rotation
+        scene.add(group)
+        return
+      } else if (item.category === 'lighting' && item.id === 'neon-sign') {
+        mesh = new THREE.Mesh(new THREE.BoxGeometry(item.width, item.height, item.depth),
+          new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 1.5 }))
+      } else {
+        // Default: box geometry
+        mesh = new THREE.Mesh(new THREE.BoxGeometry(item.width, item.height, item.depth), mat)
+      }
+      mesh.position.set(pf.x, item.yOffset + item.height / 2, pf.z)
+      mesh.rotation.y = pf.rotation
+      mesh.castShadow = true
+      mesh.receiveShadow = true
+      scene.add(mesh)
+    })
+
     // ─── Animation Loop ──────────────────────────────────────
     const SPEED = 0.18
     const PLAYER_BOUNDS = 19
@@ -429,7 +473,37 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         }
       })
     }
-  }, [tracks, theme, loading, nowPlaying])
+  }, [tracks, theme, loading, nowPlaying, placedFurniture])
+
+  // ─── Furniture State ────────────────────────────────────────
+  const [showCustomize, setShowCustomize] = useState(false)
+  const [furnitureCategory, setFurnitureCategory] = useState<FurnitureCategory | 'all'>('all')
+  const [placedFurniture, setPlacedFurniture] = useState<PlacedFurniture[]>(() => getPlacedFurniture(ownerHandle))
+  const [placingItem, setPlacingItem] = useState<string | null>(null)
+
+  const addFurniture = useCallback((itemId: string) => {
+    const item = getFurnitureById(itemId)
+    if (!item) return
+    const newPlaced: PlacedFurniture = {
+      itemId,
+      x: (Math.random() - 0.5) * 10,
+      z: (Math.random() - 0.5) * 10,
+      rotation: 0,
+      color: item.color,
+    }
+    const updated = [...placedFurniture, newPlaced]
+    setPlacedFurniture(updated)
+    savePlacedFurniture(ownerHandle, updated)
+    toast.success(`${item.emoji} ${item.name} placed!`)
+    setPlacingItem(null)
+  }, [placedFurniture, ownerHandle])
+
+  const removeFurniture = useCallback((index: number) => {
+    const updated = placedFurniture.filter((_, i) => i !== index)
+    setPlacedFurniture(updated)
+    savePlacedFurniture(ownerHandle, updated)
+    toast.success('Furniture removed')
+  }, [placedFurniture, ownerHandle])
 
   // Auto-focus container for keyboard events
   useEffect(() => {
@@ -466,11 +540,86 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
       </div>
 
       {/* Controls hint */}
-      <div className="absolute bottom-3 left-3 pointer-events-none">
+      <div className="absolute bottom-3 left-3 pointer-events-none hidden sm:block">
         <div className="px-2 py-1 rounded bg-black/60 backdrop-blur border border-white/10 text-[8px] font-mono text-gray-500">
           WASD walk · click frame for details · approach to hear audio
         </div>
       </div>
+
+      {/* CUSTOMIZE pill — bottom right */}
+      <button
+        onClick={() => setShowCustomize(true)}
+        className="absolute bottom-3 right-3 z-10 flex items-center gap-1.5 px-3 py-2 rounded-lg bg-yellow-500/20 border border-yellow-500/40 text-yellow-400 text-[10px] font-mono font-bold hover:bg-yellow-500/30 transition backdrop-blur"
+      >
+        <Paintbrush className="w-4 h-4" /> CUSTOMIZE
+      </button>
+
+      {/* Furniture placement count */}
+      {placedFurniture.length > 0 && (
+        <div className="absolute bottom-3 right-36 z-10 px-2 py-1 rounded bg-black/60 backdrop-blur border border-white/10 text-[8px] font-mono text-gray-400">
+          {placedFurniture.length} items placed
+        </div>
+      )}
+
+      {/* CUSTOMIZE MODAL — furniture catalog */}
+      {showCustomize && (
+        <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setShowCustomize(false)}>
+          <div className="w-full max-w-lg bg-[#0a0f1f] border border-yellow-500/30 rounded-t-xl sm:rounded-xl shadow-2xl overflow-hidden max-h-[70vh]" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-4 py-3 border-b border-yellow-500/20 bg-black/40 sticky top-0 z-10">
+              <div className="flex items-center gap-2">
+                <Paintbrush className="w-4 h-4 text-yellow-400" />
+                <span className="text-xs font-mono font-bold text-yellow-400">CUSTOMIZE GALLERY</span>
+                <span className="text-[8px] font-mono text-gray-600">{placedFurniture.length} items</span>
+              </div>
+              <button onClick={() => setShowCustomize(false)} className="p-1 hover:bg-white/10 rounded"><X className="w-4 h-4 text-gray-400" /></button>
+            </div>
+
+            {/* Category filter */}
+            <div className="flex items-center gap-1 px-4 py-2 border-b border-white/5 bg-black/20 overflow-x-auto">
+              {FURNITURE_CATEGORIES.map(c => (
+                <button key={c.id} onClick={() => setFurnitureCategory(c.id)}
+                  className={`flex items-center gap-1 px-2 py-1 rounded text-[9px] font-mono whitespace-nowrap transition ${furnitureCategory === c.id ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' : 'bg-white/[0.02] text-gray-500 border border-white/5 hover:text-white'}`}
+                >{c.emoji} {c.label}</button>
+              ))}
+            </div>
+
+            {/* Furniture grid */}
+            <div className="p-3 grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-[35vh] overflow-y-auto">
+              {filterByCategory(furnitureCategory).map(item => (
+                <button key={item.id} onClick={() => addFurniture(item.id)}
+                  className="group flex flex-col items-center gap-1 p-3 rounded border border-white/10 hover:border-yellow-500/40 bg-white/[0.02] hover:bg-yellow-500/5 transition"
+                >
+                  <div className="text-3xl group-hover:scale-110 transition-transform">{item.emoji}</div>
+                  <div className="text-[9px] font-mono text-white text-center truncate w-full">{item.name}</div>
+                  <div className="w-4 h-4 rounded-full border border-white/20" style={{ backgroundColor: item.color }} />
+                </button>
+              ))}
+            </div>
+
+            {/* Placed items list — remove button */}
+            {placedFurniture.length > 0 && (
+              <div className="px-4 py-2 border-t border-white/5 max-h-[15vh] overflow-y-auto">
+                <div className="text-[9px] font-mono text-gray-500 uppercase mb-1">Placed Items</div>
+                <div className="space-y-1">
+                  {placedFurniture.map((pf, i) => {
+                    const item = getFurnitureById(pf.itemId)
+                    return (
+                      <div key={i} className="flex items-center justify-between px-2 py-1 rounded bg-black/40 border border-white/5">
+                        <span className="text-[9px] font-mono text-gray-400">{item?.emoji} {item?.name}</span>
+                        <button onClick={() => removeFurniture(i)} className="text-[8px] font-mono text-red-400 hover:text-red-300">remove</button>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            <div className="px-4 py-2 border-t border-white/5 bg-black/40 text-[8px] font-mono text-gray-600">
+              Tap any item to place it randomly in your gallery. Furniture saves to your device.
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Loading state */}
       {loading && (
