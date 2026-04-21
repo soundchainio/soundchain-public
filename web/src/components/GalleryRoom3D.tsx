@@ -644,82 +644,86 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
 
       {/* Frame detail modal */}
       {selectedTrack && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => setSelectedTrack(null)}>
-          <div className="w-full max-w-md bg-[#0a0f1f] border border-yellow-500/30 rounded-xl shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-4 py-3 border-b border-yellow-500/20 bg-black/40">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm p-3 sm:p-4" onClick={() => setSelectedTrack(null)}>
+          <div className="w-full max-w-sm sm:max-w-md bg-[#0a0f1f] border border-yellow-500/30 rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]" onClick={e => e.stopPropagation()}>
+            {/* Header — sticky, always shows X chevron */}
+            <div className="flex items-center justify-between px-4 py-2.5 border-b border-yellow-500/20 bg-black/60 flex-shrink-0">
               <div className="flex items-center gap-2">
                 <Music className="w-4 h-4 text-yellow-400" />
                 <span className="text-xs font-mono font-bold text-yellow-400">FRAME DETAIL</span>
               </div>
-              <button onClick={() => setSelectedTrack(null)} className="p-1 hover:bg-white/10 rounded">
-                <X className="w-4 h-4 text-gray-400" />
+              <button onClick={() => setSelectedTrack(null)} className="p-1.5 hover:bg-white/10 rounded-full border border-white/10" aria-label="Close">
+                <X className="w-4 h-4 text-gray-300" />
               </button>
             </div>
-            {/* Artwork — clean, no manual play overlay (inline AudioPlayer below handles playback) */}
-            <div className="aspect-square bg-black relative">
-              {selectedTrack.artworkUrl ? (
-                <img src={selectedTrack.artworkUrl} alt="" className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-yellow-900/30 to-purple-900/30 flex items-center justify-center">
-                  <Music className="w-12 h-12 text-yellow-500/30" />
+            {/* Scrollable body — artwork + playbar + meta all live here, footer stays reachable */}
+            <div className="flex-1 overflow-y-auto">
+              {/* Artwork — shrunk on mobile so the card isn't a full-screen render */}
+              <div className="h-40 sm:aspect-square sm:h-auto bg-black relative">
+                {selectedTrack.artworkUrl ? (
+                  <img src={selectedTrack.artworkUrl} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-yellow-900/30 to-purple-900/30 flex items-center justify-center">
+                    <Music className="w-12 h-12 text-yellow-500/30" />
+                  </div>
+                )}
+              </div>
+              {/* Inline canonical AudioPlayer — plays IN this card, not in the bottom sticky bar.
+                  Stop all proximity-audio first so the scene loop doesn't fight this player. */}
+              {(selectedTrack.playbackUrl || selectedTrack.audioUrl) && (
+                <div
+                  className="p-3 bg-black"
+                  onClickCapture={() => {
+                    audioRefsMap.current.forEach(a => { try { a.pause(); a.currentTime = 0 } catch {} })
+                  }}
+                >
+                  <AudioPlayer
+                    src={(selectedTrack.playbackUrl || selectedTrack.audioUrl) as string}
+                    title={selectedTrack.title}
+                    artist={selectedTrack.artist || ownerHandle}
+                    art={selectedTrack.artworkUrl}
+                    trackId={selectedTrack.id}
+                  />
                 </div>
               )}
-            </div>
-            {/* Inline canonical AudioPlayer — plays IN this card, not in the bottom sticky bar.
-                Stop all proximity-audio first so the scene loop doesn't fight this player. */}
-            {(selectedTrack.playbackUrl || selectedTrack.audioUrl) && (
-              <div
-                className="p-3 bg-black"
-                onClickCapture={() => {
-                  audioRefsMap.current.forEach(a => { try { a.pause(); a.currentTime = 0 } catch {} })
-                }}
-              >
-                <AudioPlayer
-                  src={(selectedTrack.playbackUrl || selectedTrack.audioUrl) as string}
-                  title={selectedTrack.title}
-                  artist={selectedTrack.artist || ownerHandle}
-                  art={selectedTrack.artworkUrl}
-                  trackId={selectedTrack.id}
-                />
-              </div>
-            )}
-            <div className="p-4 space-y-2">
-              <h3 className="text-lg font-mono font-bold text-white">{selectedTrack.title}</h3>
-              <p className="text-sm font-mono text-gray-400">{selectedTrack.artist || ownerHandle}</p>
-              <div className="flex items-center gap-2 text-[10px] font-mono flex-wrap">
-                {selectedTrack.isNFT && <span className="text-purple-400 px-1.5 py-0.5 rounded bg-purple-500/10 border border-purple-500/20">NFT</span>}
-                {selectedTrack.editionSize && selectedTrack.editionSize > 1 && <span className="text-yellow-400 px-1.5 py-0.5 rounded bg-yellow-500/10 border border-yellow-500/20">1/{selectedTrack.editionSize}</span>}
-                {selectedTrack.ipfsHash && <span className="text-cyan-400 px-1.5 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/20">IPFS</span>}
-                {(selectedTrack.playbackUrl || selectedTrack.audioUrl) && <span className="text-green-400 px-1.5 py-0.5 rounded bg-green-500/10 border border-green-500/20">▶ audio</span>}
-                {!(selectedTrack.playbackUrl || selectedTrack.audioUrl) && <span className="text-red-400 px-1.5 py-0.5 rounded bg-red-500/10 border border-red-500/20">no audio</span>}
-              </div>
-              {/* Track details — stays in this card, never redirects */}
-              <div className="p-2 rounded bg-black/40 border border-white/5 text-[9px] font-mono text-gray-500 space-y-1">
-                <div className="flex justify-between"><span>Track ID</span><span className="text-gray-400">{selectedTrack.id.slice(0, 12)}...</span></div>
-                {selectedTrack.artist && <div className="flex justify-between"><span>Artist</span><span className="text-cyan-400">@{selectedTrack.artist}</span></div>}
-                <div className="flex justify-between"><span>Audio</span><span className="text-gray-400 truncate max-w-[180px]">{selectedTrack.playbackUrl || selectedTrack.audioUrl || 'none'}</span></div>
-              </div>
-              <div className="flex items-center gap-2 pt-1">
-                {/* Save to archive */}
-                <button
-                  onClick={() => {
-                    fetch('/api/feed/posts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'bookmark', trackId: selectedTrack.id }) }).catch(() => {})
-                    toast.success('Saved to your archive!')
-                  }}
-                  className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded bg-amber-500/20 border border-amber-500/30 text-amber-400 text-[10px] font-mono hover:bg-amber-500/30 transition"
-                >
-                  <Heart className="w-3 h-3" /> Save
-                </button>
-                {/* Share — copy link */}
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(`${window.location.origin}/track/${selectedTrack.id}`)
-                    toast.success('Link copied!')
-                  }}
-                  className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded bg-white/5 border border-white/10 text-gray-400 text-[10px] font-mono hover:bg-white/10 transition"
-                >
-                  <Copy className="w-3 h-3" /> Share
-                </button>
+              <div className="p-4 space-y-2">
+                <h3 className="text-lg font-mono font-bold text-white">{selectedTrack.title}</h3>
+                <p className="text-sm font-mono text-gray-400">{selectedTrack.artist || ownerHandle}</p>
+                <div className="flex items-center gap-2 text-[10px] font-mono flex-wrap">
+                  {selectedTrack.isNFT && <span className="text-purple-400 px-1.5 py-0.5 rounded bg-purple-500/10 border border-purple-500/20">NFT</span>}
+                  {selectedTrack.editionSize && selectedTrack.editionSize > 1 && <span className="text-yellow-400 px-1.5 py-0.5 rounded bg-yellow-500/10 border border-yellow-500/20">1/{selectedTrack.editionSize}</span>}
+                  {selectedTrack.ipfsHash && <span className="text-cyan-400 px-1.5 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/20">IPFS</span>}
+                  {(selectedTrack.playbackUrl || selectedTrack.audioUrl) && <span className="text-green-400 px-1.5 py-0.5 rounded bg-green-500/10 border border-green-500/20">▶ audio</span>}
+                  {!(selectedTrack.playbackUrl || selectedTrack.audioUrl) && <span className="text-red-400 px-1.5 py-0.5 rounded bg-red-500/10 border border-red-500/20">no audio</span>}
+                </div>
+                {/* Track details — stays in this card, never redirects */}
+                <div className="p-2 rounded bg-black/40 border border-white/5 text-[9px] font-mono text-gray-500 space-y-1">
+                  <div className="flex justify-between"><span>Track ID</span><span className="text-gray-400">{selectedTrack.id.slice(0, 12)}...</span></div>
+                  {selectedTrack.artist && <div className="flex justify-between"><span>Artist</span><span className="text-cyan-400">@{selectedTrack.artist}</span></div>}
+                  <div className="flex justify-between"><span>Audio</span><span className="text-gray-400 truncate max-w-[180px]">{selectedTrack.playbackUrl || selectedTrack.audioUrl || 'none'}</span></div>
+                </div>
+                <div className="flex items-center gap-2 pt-1">
+                  {/* Save to archive */}
+                  <button
+                    onClick={() => {
+                      fetch('/api/feed/posts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'bookmark', trackId: selectedTrack.id }) }).catch(() => {})
+                      toast.success('Saved to your archive!')
+                    }}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded bg-amber-500/20 border border-amber-500/30 text-amber-400 text-[10px] font-mono hover:bg-amber-500/30 transition"
+                  >
+                    <Heart className="w-3 h-3" /> Save
+                  </button>
+                  {/* Share — copy link */}
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(`${window.location.origin}/track/${selectedTrack.id}`)
+                      toast.success('Link copied!')
+                    }}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded bg-white/5 border border-white/10 text-gray-400 text-[10px] font-mono hover:bg-white/10 transition"
+                  >
+                    <Copy className="w-3 h-3" /> Share
+                  </button>
+                </div>
               </div>
             </div>
           </div>
