@@ -2,15 +2,20 @@ import { useEffect, useRef, useState } from 'react'
 
 import Hls from 'hls.js'
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer'
+import { useLogStream } from 'hooks/useLogStream'
+import { useMagicContext } from 'hooks/useMagicContext'
+import { useMe } from 'hooks/useMe'
 import { Info } from 'icons/Info'
 import { Pause } from 'icons/Pause'
 import { Play } from 'icons/Play'
 import Link from 'next/link'
+import { toast } from 'react-toastify'
 import { remainingTime, timeFromSecs } from 'utils/calculateTime'
 
 import { AudioSlider } from 'components/ui/audio-slider'
 
 import Asset from './Asset/Asset'
+import { DailyLimitToast, OgunRewardToast } from './common/OgunRewardToast'
 
 export interface Song {
   src: string
@@ -26,7 +31,37 @@ export const AudioPlayer = ({ src, title, artist, art, trackId }: Song) => {
   const [playState, setPlayState] = useState<number>(0)
   const [duration, setDuration] = useState<number>()
   const audioRef = useRef<HTMLAudioElement>(null)
-  const { isPlaying: isBottomPlayerPlaying, togglePlay: pauseBottomPlayer } = useAudioPlayerContext()
+  const {
+    isPlaying: isBottomPlayerPlaying,
+    togglePlay: pauseBottomPlayer,
+    currentSong: bottomPlayerSong,
+  } = useAudioPlayerContext()
+
+  const me = useMe()
+  const { account: walletAddress } = useMagicContext()
+
+  const streamLoggedForCurrentPlay = useRef(false)
+  const { logStream } = useLogStream({
+    minDuration: 30,
+    onReward: (reward) => {
+      if (reward > 0) {
+        toast(<OgunRewardToast amount={reward} trackTitle={title || undefined} />, {
+          position: 'bottom-right',
+          autoClose: 4000,
+          hideProgressBar: true,
+          className: 'ogun-reward-toast',
+          bodyClassName: 'ogun-reward-toast-body',
+        })
+      }
+    },
+    onDailyLimitReached: () => {
+      toast(<DailyLimitToast trackTitle={title || undefined} />, {
+        position: 'bottom-right',
+        autoClose: 4000,
+        className: 'ogun-limit-toast',
+      })
+    },
+  })
 
   const togglePlay = () => {
     if (playing) {
@@ -48,14 +83,35 @@ export const AudioPlayer = ({ src, title, artist, art, trackId }: Song) => {
   }
 
   useEffect(() => {
+    // New src loaded → allow a fresh stream log for this play session
+    streamLoggedForCurrentPlay.current = false
+
     let hls: Hls
     let audioEl: HTMLAudioElement | null = null
     const handleTimeUpdate = () => {
-      if (audioEl) setPlayState(Math.floor(audioEl.currentTime))
+      if (!audioEl) return
+      setPlayState(Math.floor(audioEl.currentTime))
+
+      // Log stream at 30s mark for OGUN rewards (WIN-WIN).
+      // Guard: skip if the global bottom player is already tracking this same
+      // track — AudioEngine will log it, no need to double-count.
+      if (
+        !streamLoggedForCurrentPlay.current &&
+        trackId &&
+        bottomPlayerSong?.trackId !== trackId &&
+        audioEl.currentTime >= 30
+      ) {
+        streamLoggedForCurrentPlay.current = true
+        const playDuration = Math.floor(audioEl.currentTime)
+        logStream(trackId, playDuration, walletAddress || undefined, me?.profile?.id)
+          .catch(err => console.warn('[OGUN] AudioPlayer failed to log stream at 30s:', err))
+      }
     }
     const handleEnded = () => {
       setPlayState(0)
       setPlaying(false)
+      // Reset so a loop / replay can log again at the next 30s mark
+      streamLoggedForCurrentPlay.current = false
     }
 
     if (audioRef.current) {
