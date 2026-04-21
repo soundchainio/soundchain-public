@@ -84,3 +84,58 @@ export interface CustomToolResult {
   data: unknown
   error?: string
 }
+
+// ─── Memory Backend — where a user's agent diary lives ──────────
+
+export const MEMORY_BACKEND = {
+  LOCAL_DEVICE: 'LOCAL_DEVICE',     // Client-side localStorage/IndexedDB. Server emits intents; client persists.
+  CLOUD_MONGO: 'CLOUD_MONGO',       // SoundChain's Atlas (agent_memories collection). Fast, centralized.
+  NOSTR: 'NOSTR',                   // NIP-44 self-encrypted events published to Nostr relays. Max sovereignty.
+  BYOM: 'BYOM',                     // Bring Your Own Mongo — user points at their own cluster.
+} as const
+
+export type MemoryBackend = typeof MEMORY_BACKEND[keyof typeof MEMORY_BACKEND]
+
+// ─── Memory Intent — server → client instruction for LOCAL_DEVICE users ───
+
+export const MEMORY_INTENT_ACTION = {
+  WRITE: 'WRITE',                         // Client persists this row to localStorage
+  UPSERT_OBSERVATION: 'UPSERT_OBSERVATION', // Client upserts (dedup by postId) observed post
+} as const
+
+export type MemoryIntentAction = typeof MEMORY_INTENT_ACTION[keyof typeof MEMORY_INTENT_ACTION]
+
+export interface MemoryIntent {
+  action: MemoryIntentAction
+  agentHandle: string
+  row: Record<string, unknown>
+}
+
+// ─── Tool Execution Context — per-session state passed to handlers ───
+
+export interface ToolContext {
+  agentHandle?: string
+  userId?: string
+  backend?: MemoryBackend               // resolved once per session
+  localMemory?: MemoryRow[]             // passed in request body by client, used by memory_read when backend=LOCAL_DEVICE
+  emit?: (event: Record<string, unknown>) => void  // SSE write callback, used to emit memory_intent events
+}
+
+export interface MemoryRow {
+  agentHandle: string
+  userId?: string
+  kind: 'OBSERVED_POST' | 'NOTE' | 'REFLECTION'
+  content: string
+  postId?: string
+  source?: string
+  authorHandle?: string | null
+  authorDisplayName?: string | null
+  link?: string | null
+  wallOwnerHandle?: string | null
+  postUrl?: string
+  tags?: string[]
+  firstSeenAt?: Date | string
+  lastSeenAt?: Date | string
+  createdAt?: Date | string
+  seenCount?: number
+}

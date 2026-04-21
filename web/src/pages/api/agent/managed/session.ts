@@ -28,7 +28,10 @@
 
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { streamManagedSession, getAgentDefinition, getAllAgentHandles } from 'lib/managed-agents'
+import { MEMORY_BACKEND, type MemoryBackend, type MemoryRow } from 'lib/managed-agents/types'
 import { authFromRequest } from 'lib/api/authJwt'
+import clientPromise from 'lib/mongodb'
+import { ObjectId } from 'mongodb'
 
 // ─── Rate Limit ──────────────────────────────────────────────────
 
@@ -69,7 +72,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(429).json({ verdict: 'RATE_LIMITED' })
   }
 
-  const { agent, messages, anthropicKey } = req.body || {}
+  const { agent, messages, anthropicKey, localMemory } = req.body || {}
 
   // Validate agent handle
   if (!agent || typeof agent !== 'string') {
@@ -100,6 +103,38 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const auth = await authFromRequest(req)
   const userId = auth?.userId
 
+  // Resolve the user's memory backend preference.
+  // Default LOCAL_DEVICE for new users (their device is the source of truth for their diary).
+  // LOCAL_DEVICE activates ONLY when the client also sends a `localMemory` array —
+  // this signals client-side support. If the client doesn't signal yet, we fall back
+  // to CLOUD_MONGO transparently so existing clients keep working.
+  let backend: MemoryBackend = MEMORY_BACKEND.CLOUD_MONGO
+  let clientLocalMemory: MemoryRow[] | undefined
+  if (userId) {
+    try {
+      const client = await clientPromise
+      const db = client.db('soundchain')
+      const user = await db.collection('users').findOne(
+        { _id: new ObjectId(userId) },
+        { projection: { memoryBackend: 1 } },
+      )
+      const pref = (user?.memoryBackend as MemoryBackend) || MEMORY_BACKEND.LOCAL_DEVICE
+      if (pref === MEMORY_BACKEND.LOCAL_DEVICE && Array.isArray(localMemory)) {
+        backend = MEMORY_BACKEND.LOCAL_DEVICE
+        clientLocalMemory = (localMemory as MemoryRow[]).slice(0, 500) // cap at 500 rows
+      } else if (pref === MEMORY_BACKEND.NOSTR || pref === MEMORY_BACKEND.BYOM) {
+        // Reserved backends fall back to cloud until their plumbing ships.
+        backend = MEMORY_BACKEND.CLOUD_MONGO
+      } else if (pref === MEMORY_BACKEND.CLOUD_MONGO) {
+        backend = MEMORY_BACKEND.CLOUD_MONGO
+      }
+      // else LOCAL_DEVICE pref without localMemory array → silent fallback to CLOUD_MONGO
+    } catch {
+      // If backend resolution fails, default to cloud — never break the session.
+      backend = MEMORY_BACKEND.CLOUD_MONGO
+    }
+  }
+
   // Stream the managed session
-  return streamManagedSession(res, agent, cappedMessages, anthropicKey, userId)
+  return streamManagedSession(res, agent, cappedMessages, anthropicKey, userId, backend, clientLocalMemory)
 }

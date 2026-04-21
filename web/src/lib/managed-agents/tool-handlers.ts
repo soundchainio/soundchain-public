@@ -16,7 +16,7 @@
 import clientPromise from 'lib/mongodb'
 import { ObjectId } from 'mongodb'
 import { ethers } from 'ethers'
-import type { CustomToolResult } from './types'
+import { MEMORY_BACKEND, MEMORY_INTENT_ACTION, type CustomToolResult, type ToolContext, type MemoryRow } from './types'
 
 // ─── In-memory cache (per Lambda container) ──────────────────────
 // Critical for M0 free tier protection — agents hammer the same queries.
@@ -85,7 +85,10 @@ const REWARDS_ABI = [
 
 // ─── Tool Router ─────────────────────────────────────────────────
 
-// Tools that are safe to cache (read-only, deterministic-ish)
+// Tools that are safe to cache (read-only, deterministic-ish).
+// memory_read is intentionally NOT cached — with LOCAL_DEVICE backend the input
+// (client's localMemory array) changes per request, and caching would serve stale
+// snapshots of the user's diary.
 const CACHEABLE_TOOLS = new Set([
   'soundchain_query',
   'ogun_contract_read',
@@ -98,12 +101,18 @@ const CACHEABLE_TOOLS = new Set([
 export async function handleCustomTool(
   toolName: string,
   input: Record<string, unknown>,
-  agentHandle?: string,
-  userId?: string,
+  ctx: ToolContext = {},
 ): Promise<CustomToolResult> {
-  // Cache key includes agentHandle + userId so per-user-per-agent memory
-  // reads never leak across identities.
-  const cacheScope = { ...input, __agent: agentHandle || '', __user: userId || '' }
+  const { agentHandle, userId, backend = MEMORY_BACKEND.CLOUD_MONGO } = ctx
+
+  // Cache key scopes: agent + user + backend so one user's cached result never
+  // leaks across identities or across a backend switch (cloud ↔ device).
+  const cacheScope = {
+    ...input,
+    __agent: agentHandle || '',
+    __user: userId || '',
+    __backend: backend,
+  }
 
   // Check cache for read-only tools — protects M0 connection limit
   if (CACHEABLE_TOOLS.has(toolName)) {
@@ -134,13 +143,13 @@ export async function handleCustomTool(
         result = await handlePlatformStats(input)
         break
       case 'feed_read':
-        result = await handleFeedRead(input, agentHandle, userId)
+        result = await handleFeedRead(input, ctx)
         break
       case 'memory_read':
-        result = await handleMemoryRead(input, agentHandle, userId)
+        result = await handleMemoryRead(input, ctx)
         break
       case 'memory_write':
-        return await handleMemoryWrite(input, agentHandle, userId)  // Writes — never cache
+        return await handleMemoryWrite(input, ctx)  // Writes — never cache
       case 'feed_post':
         return await handleFeedPost(input)  // Writes — never cache
       default:
@@ -443,7 +452,8 @@ async function handlePlatformStats(input: Record<string, unknown>): Promise<Cust
 
 const URL_REGEX = /https?:\/\/[^\s]+/i
 
-async function handleFeedRead(input: Record<string, unknown>, agentHandle?: string, userId?: string): Promise<CustomToolResult> {
+async function handleFeedRead(input: Record<string, unknown>, ctx: ToolContext): Promise<CustomToolResult> {
+  const { agentHandle, userId, backend = MEMORY_BACKEND.CLOUD_MONGO, emit } = ctx
   const source = ((input.source as string) || 'BOTH').toUpperCase()
   if (!['FEED', 'WALL', 'BOTH'].includes(source)) {
     return { success: 'NO', data: null, error: `Invalid source "${source}" — use FEED, WALL, or BOTH` }
@@ -593,37 +603,71 @@ async function handleFeedRead(input: Record<string, unknown>, agentHandle?: stri
       .slice(0, limit)
   }
 
-  // Auto-log observations to THIS user's private agent memory.
-  // Anonymous callers (no userId) still get the feed, just no persistent diary.
+  // Auto-log observations. Destination depends on the user's memory backend:
+  //   LOCAL_DEVICE → emit SSE `memory_intent` events; client persists to localStorage
+  //   CLOUD_MONGO  → upsert to agent_memories collection (existing behavior)
+  //   Anonymous (no userId) → skip auto-log entirely, no orphan rows
+  let autoLogged: string = 'NO'
   if (agentHandle && userId && merged.length > 0) {
     const now = new Date()
-    const ops = merged.map(p => ({
-      updateOne: {
-        filter: { agentHandle, userId, kind: 'OBSERVED_POST', postId: p.postId },
-        update: {
-          $setOnInsert: {
-            agentHandle,
-            userId,
-            kind: 'OBSERVED_POST',
-            postId: p.postId,
-            source: p.source,
-            authorHandle: p.author?.handle || null,
-            authorDisplayName: p.author?.displayName || null,
-            content: (p.body || '').slice(0, 1000),
-            link: p.embeddedLink || null,
-            wallOwnerHandle: p.wallOwnerHandle || null,
-            postUrl: p.postUrl,
-            firstSeenAt: now,
-          },
-          $set: { lastSeenAt: now },
-          $inc: { seenCount: 1 },
-        },
-        upsert: true,
-      },
+    const rows = merged.map(p => ({
+      agentHandle,
+      userId,
+      kind: 'OBSERVED_POST' as const,
+      postId: p.postId,
+      source: p.source,
+      authorHandle: p.author?.handle || null,
+      authorDisplayName: p.author?.displayName || null,
+      content: (p.body || '').slice(0, 1000),
+      link: p.embeddedLink || null,
+      wallOwnerHandle: p.wallOwnerHandle || null,
+      postUrl: p.postUrl,
+      firstSeenAt: now,
+      lastSeenAt: now,
     }))
-    db.collection('agent_memories').bulkWrite(ops, { ordered: false }).catch(err => {
-      console.error('[agent_memories] auto-log failed:', err.message)
-    })
+
+    if (backend === MEMORY_BACKEND.LOCAL_DEVICE && emit) {
+      // Emit one SSE intent per observation. Client dedupes by {agentHandle, postId}.
+      for (const row of rows) {
+        emit({
+          type: 'memory_intent',
+          action: MEMORY_INTENT_ACTION.UPSERT_OBSERVATION,
+          agentHandle,
+          row,
+        })
+      }
+      autoLogged = 'EMITTED_TO_CLIENT'
+    } else {
+      // CLOUD_MONGO path — fire-and-forget bulk upsert
+      const ops = rows.map(r => ({
+        updateOne: {
+          filter: { agentHandle, userId, kind: 'OBSERVED_POST', postId: r.postId },
+          update: {
+            $setOnInsert: {
+              agentHandle: r.agentHandle,
+              userId: r.userId,
+              kind: r.kind,
+              postId: r.postId,
+              source: r.source,
+              authorHandle: r.authorHandle,
+              authorDisplayName: r.authorDisplayName,
+              content: r.content,
+              link: r.link,
+              wallOwnerHandle: r.wallOwnerHandle,
+              postUrl: r.postUrl,
+              firstSeenAt: now,
+            },
+            $set: { lastSeenAt: now },
+            $inc: { seenCount: 1 },
+          },
+          upsert: true,
+        },
+      }))
+      db.collection('agent_memories').bulkWrite(ops, { ordered: false }).catch(err => {
+        console.error('[agent_memories] auto-log failed:', err.message)
+      })
+      autoLogged = 'WRITTEN_TO_CLOUD'
+    }
   }
 
   return {
@@ -635,7 +679,8 @@ async function handleFeedRead(input: Record<string, unknown>, agentHandle?: stri
         targetProfile: targetProfile || null,
         onlyWithLinks: onlyWithLinks ? 'YES' : 'NO',
       },
-      autoLogged: agentHandle && userId ? 'YES' : 'NO',
+      backend,
+      autoLogged,
       count: merged.length,
       posts: merged,
     },
@@ -644,7 +689,8 @@ async function handleFeedRead(input: Record<string, unknown>, agentHandle?: stri
 
 // ─── Memory Read Handler ─────────────────────────────────────────
 
-async function handleMemoryRead(input: Record<string, unknown>, agentHandle?: string, userId?: string): Promise<CustomToolResult> {
+async function handleMemoryRead(input: Record<string, unknown>, ctx: ToolContext): Promise<CustomToolResult> {
+  const { agentHandle, userId, backend = MEMORY_BACKEND.CLOUD_MONGO, localMemory } = ctx
   if (!agentHandle) {
     return { success: 'NO', data: null, error: 'memory_read requires agent context — session must pass agentHandle' }
   }
@@ -659,16 +705,49 @@ async function handleMemoryRead(input: Record<string, unknown>, agentHandle?: st
   const authorHandle = (input.authorHandle as string | undefined)?.trim()
   const containsText = (input.containsText as string | undefined)?.trim()
   const limit = Math.min(Math.max(Number(input.limit) || 15, 1), 50)
+  const textRegex = containsText
+    ? new RegExp(containsText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i')
+    : null
 
+  // LOCAL_DEVICE: read from the client-supplied localMemory array, scoped to this agent.
+  // Client's localStorage is the source of truth; server just filters + sorts.
+  if (backend === MEMORY_BACKEND.LOCAL_DEVICE) {
+    const rows = (localMemory || []).filter(m => {
+      if (m.agentHandle !== agentHandle) return false
+      if (kind !== 'ANY' && m.kind !== kind) return false
+      if (authorHandle && m.authorHandle !== authorHandle) return false
+      if (textRegex && !textRegex.test(m.content || '')) return false
+      return true
+    })
+    rows.sort((a, b) => {
+      const ta = new Date(a.lastSeenAt || a.firstSeenAt || a.createdAt || 0).getTime()
+      const tb = new Date(b.lastSeenAt || b.firstSeenAt || b.createdAt || 0).getTime()
+      return tb - ta
+    })
+    const clipped = rows.slice(0, limit).map(({ agentHandle: _a, userId: _u, ...rest }) => rest)
+    return {
+      success: 'YES',
+      data: {
+        agent: agentHandle,
+        scope: 'PRIVATE_TO_VIEWER',
+        backend,
+        source: 'CLIENT_LOCAL_MEMORY',
+        filter: { kind, authorHandle: authorHandle || 'ANY', containsText: containsText || null },
+        count: clipped.length,
+        memories: clipped,
+      },
+    }
+  }
+
+  // CLOUD_MONGO path (default + fallback for reserved backends)
   const client = await clientPromise
   const db = client.db('soundchain')
 
   const filter: any = { agentHandle, userId }
   if (kind !== 'ANY') filter.kind = kind
   if (authorHandle) filter.authorHandle = authorHandle
-  if (containsText) {
-    const escaped = containsText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-    filter.content = { $regex: escaped, $options: 'i' }
+  if (containsText && textRegex) {
+    filter.content = { $regex: textRegex.source, $options: 'i' }
   }
 
   const memories = await db.collection('agent_memories')
@@ -683,6 +762,8 @@ async function handleMemoryRead(input: Record<string, unknown>, agentHandle?: st
     data: {
       agent: agentHandle,
       scope: 'PRIVATE_TO_VIEWER',
+      backend,
+      source: 'CLOUD_MONGO',
       filter: { kind, authorHandle: authorHandle || 'ANY', containsText: containsText || null },
       count: memories.length,
       memories,
@@ -692,7 +773,8 @@ async function handleMemoryRead(input: Record<string, unknown>, agentHandle?: st
 
 // ─── Memory Write Handler ────────────────────────────────────────
 
-async function handleMemoryWrite(input: Record<string, unknown>, agentHandle?: string, userId?: string): Promise<CustomToolResult> {
+async function handleMemoryWrite(input: Record<string, unknown>, ctx: ToolContext): Promise<CustomToolResult> {
+  const { agentHandle, userId, backend = MEMORY_BACKEND.CLOUD_MONGO, emit } = ctx
   if (!agentHandle) {
     return { success: 'NO', data: null, error: 'memory_write requires agent context — session must pass agentHandle' }
   }
@@ -709,11 +791,42 @@ async function handleMemoryWrite(input: Record<string, unknown>, agentHandle?: s
   }
   const kind = (input.kind as string) === 'REFLECTION' ? 'REFLECTION' : 'NOTE'
   const tags = Array.isArray(input.tags) ? (input.tags as string[]).filter(t => typeof t === 'string').slice(0, 10) : []
+  const now = new Date()
 
+  // LOCAL_DEVICE: emit SSE intent; client persists to localStorage. Server holds nothing.
+  if (backend === MEMORY_BACKEND.LOCAL_DEVICE && emit) {
+    const row: MemoryRow = {
+      agentHandle,
+      userId,
+      kind,
+      content,
+      tags,
+      createdAt: now,
+      lastSeenAt: now,
+    }
+    emit({
+      type: 'memory_intent',
+      action: MEMORY_INTENT_ACTION.WRITE,
+      agentHandle,
+      row,
+    })
+    return {
+      success: 'YES',
+      data: {
+        agent: agentHandle,
+        scope: 'PRIVATE_TO_VIEWER',
+        backend,
+        destination: 'CLIENT_DEVICE',
+        kind,
+        preview: content.slice(0, 100) + (content.length > 100 ? '...' : ''),
+        saved: 'YES',
+      },
+    }
+  }
+
+  // CLOUD_MONGO path
   const client = await clientPromise
   const db = client.db('soundchain')
-
-  const now = new Date()
   const doc = {
     agentHandle,
     userId,
@@ -731,6 +844,8 @@ async function handleMemoryWrite(input: Record<string, unknown>, agentHandle?: s
       memoryId: insertedId.toString(),
       agent: agentHandle,
       scope: 'PRIVATE_TO_VIEWER',
+      backend,
+      destination: 'CLOUD_MONGO',
       kind,
       preview: content.slice(0, 100) + (content.length > 100 ? '...' : ''),
       saved: 'YES',

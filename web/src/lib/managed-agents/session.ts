@@ -20,7 +20,7 @@ import type Anthropic from '@anthropic-ai/sdk'
 import { resolveClient } from './client'
 import { getAgentDefinition } from './agents'
 import { handleCustomTool } from './tool-handlers'
-import { SESSION_STATUS, SSE_EVENT_TYPE, type SessionStatus } from './types'
+import { SESSION_STATUS, SSE_EVENT_TYPE, MEMORY_BACKEND, type SessionStatus, type MemoryBackend, type MemoryRow, type ToolContext } from './types'
 
 // ─── Agent ID Cache ──────────────────────────────────────────────
 // Cache created agent IDs so we don't re-create on every request.
@@ -107,6 +107,8 @@ export async function streamManagedSession(
   messages: Array<{ role: string; content: string }>,
   userKey?: string,
   userId?: string,
+  backend: MemoryBackend = MEMORY_BACKEND.CLOUD_MONGO,
+  localMemory?: MemoryRow[],
 ): Promise<void> {
   // Resolve client (BYOK or platform)
   const resolved = resolveClient(userKey)
@@ -202,7 +204,14 @@ export async function streamManagedSession(
             const toolEvent = eventsById.get(eventId)
             if (!toolEvent || toolEvent.type !== 'agent.custom_tool_use') continue
 
-            const result = await handleCustomTool(toolEvent.name, toolEvent.input || {}, handle, userId)
+            const toolCtx: ToolContext = {
+              agentHandle: handle,
+              userId,
+              backend,
+              localMemory,
+              emit: writeSSE,
+            }
+            const result = await handleCustomTool(toolEvent.name, toolEvent.input || {}, toolCtx)
             writeSSE({
               type: SSE_EVENT_TYPE.TOOL_RESULT,
               tool: toolEvent.name,
