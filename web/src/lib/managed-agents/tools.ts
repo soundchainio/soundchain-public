@@ -215,6 +215,71 @@ export const TOOL_FEED_READ: CustomToolDefinition = {
   },
 }
 
+// ─── Memory Read Tool ────────────────────────────────────────────
+
+export const TOOL_MEMORY_READ: CustomToolDefinition = {
+  type: 'custom',
+  name: 'memory_read',
+  description:
+    'Read YOUR OWN past memories — posts you\'ve observed via feed_read, notes you\'ve written, reflections you\'ve saved. ' +
+    'This is your diary. Use it to answer "what have I seen from furdA1 recently?", "what did I learn about Coachella?", ' +
+    'or to recall a track drop you noticed last week. Each agent has its own isolated memory.',
+  input_schema: {
+    type: 'object',
+    properties: {
+      kind: {
+        type: 'string',
+        enum: ['OBSERVED_POST', 'NOTE', 'REFLECTION', 'ANY'],
+        description: 'Filter by memory type. OBSERVED_POST = auto-logged from feed_read. NOTE/REFLECTION = things you wrote via memory_write. Default ANY.',
+      },
+      authorHandle: {
+        type: 'string',
+        description: 'For OBSERVED_POST: filter to posts authored by this handle (e.g. "furdA1").',
+      },
+      containsText: {
+        type: 'string',
+        description: 'Free-text substring match against memory content (case-insensitive).',
+      },
+      limit: {
+        type: 'number',
+        description: 'Max memories to return (default 15, max 50)',
+      },
+    },
+  },
+}
+
+// ─── Memory Write Tool ───────────────────────────────────────────
+
+export const TOOL_MEMORY_WRITE: CustomToolDefinition = {
+  type: 'custom',
+  name: 'memory_write',
+  description:
+    'Write a durable note or reflection to YOUR OWN memory. Use this at the end of a thought to record ' +
+    'insights, patterns, or decisions you want to remember across future sessions. ' +
+    'Example reflections: "Frank\'s posts lean toward Coachella and live streams", "User prefers OGUN balance checks over staking". ' +
+    'Feed observations are auto-logged — only use this for things that aren\'t already captured.',
+  input_schema: {
+    type: 'object',
+    properties: {
+      content: {
+        type: 'string',
+        description: 'The memory content (max 2000 chars). Write in first person — "I noticed that..."',
+      },
+      kind: {
+        type: 'string',
+        enum: ['NOTE', 'REFLECTION'],
+        description: 'NOTE = short factual observation. REFLECTION = synthesized insight. Default NOTE.',
+      },
+      tags: {
+        type: 'array',
+        items: { type: 'string' },
+        description: 'Optional tags for later retrieval (e.g. ["frank", "coachella", "youtube"])',
+      },
+    },
+    required: ['content'],
+  },
+}
+
 // ─── All Custom Tools ────────────────────────────────────────────
 
 export const ALL_CUSTOM_TOOLS: CustomToolDefinition[] = [
@@ -225,12 +290,14 @@ export const ALL_CUSTOM_TOOLS: CustomToolDefinition[] = [
   TOOL_PLATFORM_STATS,
   TOOL_FEED_POST,
   TOOL_FEED_READ,
+  TOOL_MEMORY_READ,
+  TOOL_MEMORY_WRITE,
 ]
 
-// Per-agent tool assignments
+// Per-agent tool assignments — every agent gets memory so they can watch and learn
 export const TOOLS_BY_ROLE = {
   ORCHESTRATOR: ALL_CUSTOM_TOOLS,
-  FEATURE: [TOOL_SOUNDCHAIN_QUERY, TOOL_FEED_READ, TOOL_PLATFORM_STATS, TOOL_RADIO],
-  UTILITY: [TOOL_SOUNDCHAIN_QUERY, TOOL_OGUN_CONTRACT, TOOL_IPFS],
-  SOCIAL: [TOOL_SOUNDCHAIN_QUERY, TOOL_FEED_POST, TOOL_FEED_READ, TOOL_PLATFORM_STATS, TOOL_RADIO],
+  FEATURE: [TOOL_SOUNDCHAIN_QUERY, TOOL_FEED_READ, TOOL_PLATFORM_STATS, TOOL_RADIO, TOOL_MEMORY_READ, TOOL_MEMORY_WRITE],
+  UTILITY: [TOOL_SOUNDCHAIN_QUERY, TOOL_OGUN_CONTRACT, TOOL_IPFS, TOOL_MEMORY_READ, TOOL_MEMORY_WRITE],
+  SOCIAL: [TOOL_SOUNDCHAIN_QUERY, TOOL_FEED_POST, TOOL_FEED_READ, TOOL_PLATFORM_STATS, TOOL_RADIO, TOOL_MEMORY_READ, TOOL_MEMORY_WRITE],
 } as const

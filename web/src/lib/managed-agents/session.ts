@@ -201,7 +201,7 @@ export async function streamManagedSession(
             const toolEvent = eventsById.get(eventId)
             if (!toolEvent || toolEvent.type !== 'agent.custom_tool_use') continue
 
-            const result = await handleCustomTool(toolEvent.name, toolEvent.input || {})
+            const result = await handleCustomTool(toolEvent.name, toolEvent.input || {}, handle)
             writeSSE({
               type: SSE_EVENT_TYPE.TOOL_RESULT,
               tool: toolEvent.name,

@@ -98,10 +98,12 @@ const CACHEABLE_TOOLS = new Set([
 export async function handleCustomTool(
   toolName: string,
   input: Record<string, unknown>,
+  agentHandle?: string,
 ): Promise<CustomToolResult> {
   // Check cache for read-only tools — protects M0 connection limit
+  // Cache key includes agentHandle so per-agent memory tools don't collide
   if (CACHEABLE_TOOLS.has(toolName)) {
-    const key = cacheKey(toolName, input)
+    const key = cacheKey(toolName, { ...input, __agent: agentHandle || '' })
     const cached = getCached(key)
     if (cached) {
       console.log(`[managed-agents] cache HIT ${toolName}`)
@@ -128,8 +130,13 @@ export async function handleCustomTool(
         result = await handlePlatformStats(input)
         break
       case 'feed_read':
-        result = await handleFeedRead(input)
+        result = await handleFeedRead(input, agentHandle)
         break
+      case 'memory_read':
+        result = await handleMemoryRead(input, agentHandle)
+        break
+      case 'memory_write':
+        return await handleMemoryWrite(input, agentHandle)  // Writes — never cache
       case 'feed_post':
         return await handleFeedPost(input)  // Writes — never cache
       default:
@@ -138,7 +145,7 @@ export async function handleCustomTool(
 
     // Cache successful read results
     if (CACHEABLE_TOOLS.has(toolName) && result.success === 'YES') {
-      setCached(cacheKey(toolName, input), result)
+      setCached(cacheKey(toolName, { ...input, __agent: agentHandle || '' }), result)
     }
 
     return result
@@ -432,7 +439,7 @@ async function handlePlatformStats(input: Record<string, unknown>): Promise<Cust
 
 const URL_REGEX = /https?:\/\/[^\s]+/i
 
-async function handleFeedRead(input: Record<string, unknown>): Promise<CustomToolResult> {
+async function handleFeedRead(input: Record<string, unknown>, agentHandle?: string): Promise<CustomToolResult> {
   const source = ((input.source as string) || 'BOTH').toUpperCase()
   if (!['FEED', 'WALL', 'BOTH'].includes(source)) {
     return { success: 'NO', data: null, error: `Invalid source "${source}" — use FEED, WALL, or BOTH` }
@@ -582,6 +589,37 @@ async function handleFeedRead(input: Record<string, unknown>): Promise<CustomToo
       .slice(0, limit)
   }
 
+  // Auto-log observations to the agent's memory — fire-and-forget, don't block the response
+  if (agentHandle && merged.length > 0) {
+    const now = new Date()
+    const ops = merged.map(p => ({
+      updateOne: {
+        filter: { agentHandle, kind: 'OBSERVED_POST', postId: p.postId },
+        update: {
+          $setOnInsert: {
+            agentHandle,
+            kind: 'OBSERVED_POST',
+            postId: p.postId,
+            source: p.source,
+            authorHandle: p.author?.handle || null,
+            authorDisplayName: p.author?.displayName || null,
+            content: (p.body || '').slice(0, 1000),
+            link: p.embeddedLink || null,
+            wallOwnerHandle: p.wallOwnerHandle || null,
+            postUrl: p.postUrl,
+            firstSeenAt: now,
+          },
+          $set: { lastSeenAt: now },
+          $inc: { seenCount: 1 },
+        },
+        upsert: true,
+      },
+    }))
+    db.collection('agent_memories').bulkWrite(ops, { ordered: false }).catch(err => {
+      console.error('[agent_memories] auto-log failed:', err.message)
+    })
+  }
+
   return {
     success: 'YES',
     data: {
@@ -591,8 +629,88 @@ async function handleFeedRead(input: Record<string, unknown>): Promise<CustomToo
         targetProfile: targetProfile || null,
         onlyWithLinks: onlyWithLinks ? 'YES' : 'NO',
       },
+      autoLogged: agentHandle ? 'YES' : 'NO',
       count: merged.length,
       posts: merged,
+    },
+  }
+}
+
+// ─── Memory Read Handler ─────────────────────────────────────────
+
+async function handleMemoryRead(input: Record<string, unknown>, agentHandle?: string): Promise<CustomToolResult> {
+  if (!agentHandle) {
+    return { success: 'NO', data: null, error: 'memory_read requires agent context — session must pass agentHandle' }
+  }
+  const kind = (input.kind as string) || 'ANY'
+  const authorHandle = (input.authorHandle as string | undefined)?.trim()
+  const containsText = (input.containsText as string | undefined)?.trim()
+  const limit = Math.min(Math.max(Number(input.limit) || 15, 1), 50)
+
+  const client = await clientPromise
+  const db = client.db('soundchain')
+
+  const filter: any = { agentHandle }
+  if (kind !== 'ANY') filter.kind = kind
+  if (authorHandle) filter.authorHandle = authorHandle
+  if (containsText) {
+    const escaped = containsText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    filter.content = { $regex: escaped, $options: 'i' }
+  }
+
+  const memories = await db.collection('agent_memories')
+    .find(filter)
+    .sort({ lastSeenAt: -1, firstSeenAt: -1, createdAt: -1 })
+    .limit(limit)
+    .project({ _id: 0, agentHandle: 0 })
+    .toArray()
+
+  return {
+    success: 'YES',
+    data: {
+      agent: agentHandle,
+      filter: { kind, authorHandle: authorHandle || 'ANY', containsText: containsText || null },
+      count: memories.length,
+      memories,
+    },
+  }
+}
+
+// ─── Memory Write Handler ────────────────────────────────────────
+
+async function handleMemoryWrite(input: Record<string, unknown>, agentHandle?: string): Promise<CustomToolResult> {
+  if (!agentHandle) {
+    return { success: 'NO', data: null, error: 'memory_write requires agent context — session must pass agentHandle' }
+  }
+  const content = (input.content as string)?.trim()
+  if (!content || content.length > 2000) {
+    return { success: 'NO', data: null, error: 'content required, 1-2000 chars' }
+  }
+  const kind = (input.kind as string) === 'REFLECTION' ? 'REFLECTION' : 'NOTE'
+  const tags = Array.isArray(input.tags) ? (input.tags as string[]).filter(t => typeof t === 'string').slice(0, 10) : []
+
+  const client = await clientPromise
+  const db = client.db('soundchain')
+
+  const now = new Date()
+  const doc = {
+    agentHandle,
+    kind,
+    content,
+    tags,
+    createdAt: now,
+    lastSeenAt: now,
+  }
+  const { insertedId } = await db.collection('agent_memories').insertOne(doc)
+
+  return {
+    success: 'YES',
+    data: {
+      memoryId: insertedId.toString(),
+      agent: agentHandle,
+      kind,
+      preview: content.slice(0, 100) + (content.length > 100 ? '...' : ''),
+      saved: 'YES',
     },
   }
 }

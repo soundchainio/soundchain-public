@@ -25,7 +25,7 @@ export interface AgentDefinition {
   role: AgentRole
   system: string
   description: string
-  customTools: CustomToolDefinition[]
+  customTools: readonly CustomToolDefinition[]
   builtinToolsEnabled: string[]
   builtinToolsDisabled: string[]
 }
