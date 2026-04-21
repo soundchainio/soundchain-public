@@ -14,6 +14,7 @@
  */
 
 import clientPromise from 'lib/mongodb'
+import { ObjectId } from 'mongodb'
 import { ethers } from 'ethers'
 import type { CustomToolResult } from './types'
 
@@ -91,6 +92,7 @@ const CACHEABLE_TOOLS = new Set([
   'ipfs_query',
   'radio_now_playing',
   'platform_stats',
+  'feed_read',
 ])
 
 export async function handleCustomTool(
@@ -124,6 +126,9 @@ export async function handleCustomTool(
         break
       case 'platform_stats':
         result = await handlePlatformStats(input)
+        break
+      case 'feed_read':
+        result = await handleFeedRead(input)
         break
       case 'feed_post':
         return await handleFeedPost(input)  // Writes — never cache
@@ -421,6 +426,175 @@ async function handlePlatformStats(input: Record<string, unknown>): Promise<Cust
   }
 
   return { success: 'YES', data: stats }
+}
+
+// ─── Feed Read Handler ───────────────────────────────────────────
+
+const URL_REGEX = /https?:\/\/[^\s]+/i
+
+async function handleFeedRead(input: Record<string, unknown>): Promise<CustomToolResult> {
+  const source = ((input.source as string) || 'BOTH').toUpperCase()
+  if (!['FEED', 'WALL', 'BOTH'].includes(source)) {
+    return { success: 'NO', data: null, error: `Invalid source "${source}" — use FEED, WALL, or BOTH` }
+  }
+  const handle = (input.handle as string | undefined)?.trim()
+  const onlyWithLinks = input.onlyWithLinks === 'YES'
+  const limit = Math.min(Math.max(Number(input.limit) || 10, 1), 25)
+
+  const client = await clientPromise
+  const db = client.db('soundchain')
+
+  let targetProfileId: ObjectId | null = null
+  let targetProfile: { displayName?: string; userHandle?: string } | null = null
+  if (handle) {
+    const profile = await db.collection('profiles').findOne(
+      { userHandle: handle },
+      { projection: { displayName: 1, userHandle: 1 } },
+    )
+    if (!profile) {
+      return { success: 'NO', data: null, error: `No profile found for handle "${handle}"` }
+    }
+    targetProfileId = profile._id
+    targetProfile = { displayName: profile.displayName, userHandle: profile.userHandle }
+  }
+
+  type Hydrated = {
+    postId: string
+    source: 'FEED' | 'WALL'
+    body: string
+    embeddedLink: string | null
+    mediaThumbnail: string | null
+    uploadedMediaUrl: string | null
+    uploadedMediaType: string | null
+    author: { displayName?: string; handle?: string; verified?: boolean } | null
+    wallOwnerHandle?: string
+    commentCount: number
+    totalReactions: number
+    createdAt: Date
+    postUrl: string
+  }
+
+  const fetchFromFeed = async (): Promise<Hydrated[]> => {
+    const filter: any = { deleted: { $ne: true } }
+    if (targetProfileId) filter.profileId = targetProfileId
+    if (onlyWithLinks) {
+      filter.$or = [
+        { mediaLink: { $exists: true, $nin: [null, ''] } },
+        { uploadedMediaUrl: { $exists: true, $nin: [null, ''] } },
+        { body: { $regex: URL_REGEX } },
+      ]
+    }
+    const posts = await db.collection('posts')
+      .find(filter)
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .toArray()
+    if (!posts.length) return []
+    const authorIds = Array.from(new Set(posts.map(p => p.profileId?.toString()).filter(Boolean)))
+      .map(id => new ObjectId(id))
+    const authors = await db.collection('profiles')
+      .find({ _id: { $in: authorIds } })
+      .project({ displayName: 1, userHandle: 1, verified: 1 })
+      .toArray()
+    const authorMap = new Map(authors.map(a => [a._id.toString(), a]))
+    return posts.map(p => {
+      const author = authorMap.get(p.profileId?.toString())
+      return {
+        postId: p._id.toString(),
+        source: 'FEED' as const,
+        body: p.body || '',
+        embeddedLink: p.mediaLink || null,
+        mediaThumbnail: p.mediaThumbnail || null,
+        uploadedMediaUrl: p.uploadedMediaUrl || null,
+        uploadedMediaType: p.uploadedMediaType || null,
+        author: author ? {
+          displayName: author.displayName,
+          handle: author.userHandle,
+          verified: author.verified || false,
+        } : null,
+        commentCount: p.commentCount || 0,
+        totalReactions: p.totalReactions || 0,
+        createdAt: p.createdAt,
+        postUrl: `https://soundchain.io/posts/${p._id.toString()}`,
+      }
+    })
+  }
+
+  const fetchFromWall = async (): Promise<Hydrated[]> => {
+    const filter: any = { deleted: { $ne: true } }
+    if (targetProfileId) filter.profileId = targetProfileId
+    if (onlyWithLinks) {
+      filter.$or = [
+        { mediaUrl: { $exists: true, $nin: [null, ''] } },
+        { body: { $regex: URL_REGEX } },
+      ]
+    }
+    const posts = await db.collection('wallposts')
+      .find(filter)
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .toArray()
+    if (!posts.length) return []
+    const profileIds = Array.from(new Set(
+      posts.flatMap(p => [p.authorProfileId?.toString(), p.profileId?.toString()]).filter(Boolean),
+    )).map(id => new ObjectId(id))
+    const profiles = await db.collection('profiles')
+      .find({ _id: { $in: profileIds } })
+      .project({ displayName: 1, userHandle: 1, verified: 1 })
+      .toArray()
+    const profileMap = new Map(profiles.map(p => [p._id.toString(), p]))
+    return posts.map(p => {
+      const author = profileMap.get(p.authorProfileId?.toString())
+      const owner = profileMap.get(p.profileId?.toString())
+      return {
+        postId: p._id.toString(),
+        source: 'WALL' as const,
+        body: p.body || '',
+        embeddedLink: p.mediaUrl || null,
+        mediaThumbnail: p.mediaThumbnailUrl || p.coverArtUrl || null,
+        uploadedMediaUrl: p.mediaUrl || null,
+        uploadedMediaType: p.mediaType || null,
+        author: author ? {
+          displayName: author.displayName,
+          handle: author.userHandle,
+          verified: author.verified || false,
+        } : null,
+        wallOwnerHandle: owner?.userHandle,
+        commentCount: 0,
+        totalReactions: 0,
+        createdAt: p.createdAt,
+        postUrl: owner?.userHandle
+          ? `https://soundchain.io/dex/users/${owner.userHandle}?wall=${p._id.toString()}`
+          : `https://soundchain.io/posts/${p._id.toString()}`,
+      }
+    })
+  }
+
+  let merged: Hydrated[] = []
+  if (source === 'FEED') {
+    merged = await fetchFromFeed()
+  } else if (source === 'WALL') {
+    merged = await fetchFromWall()
+  } else {
+    const [f, w] = await Promise.all([fetchFromFeed(), fetchFromWall()])
+    merged = [...f, ...w]
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, limit)
+  }
+
+  return {
+    success: 'YES',
+    data: {
+      filter: {
+        source,
+        handle: handle || 'ANY',
+        targetProfile: targetProfile || null,
+        onlyWithLinks: onlyWithLinks ? 'YES' : 'NO',
+      },
+      count: merged.length,
+      posts: merged,
+    },
+  }
 }
 
 // ─── Feed Post Handler ───────────────────────────────────────────

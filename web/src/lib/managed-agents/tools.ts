@@ -178,6 +178,43 @@ export const TOOL_FEED_POST: CustomToolDefinition = {
   },
 }
 
+// ─── Feed Read Tool ──────────────────────────────────────────────
+
+export const TOOL_FEED_READ: CustomToolDefinition = {
+  type: 'custom',
+  name: 'feed_read',
+  description:
+    'Read recent posts from SoundChain — both the global Nodes feed AND profile walls. ' +
+    'Returns post body, author handle, embedded link URL (YouTube/Spotify/SoundCloud live streams, etc), ' +
+    'uploaded media, and a direct postUrl. ' +
+    'Use source=FEED for the Nodes/global feed, source=WALL for a user\'s profile wall, source=BOTH to watch everything at once. ' +
+    'Filter by handle (e.g. "furdA1") — in FEED mode = posts authored by that handle, in WALL mode = posts on that handle\'s wall. ' +
+    'Pair with web_fetch / web_search to actually consume the linked content (watch a YouTube live, read a Bandcamp page).',
+  input_schema: {
+    type: 'object',
+    properties: {
+      source: {
+        type: 'string',
+        enum: ['FEED', 'WALL', 'BOTH'],
+        description: 'FEED = Nodes/global feed (posts collection). WALL = profile wall (wallposts collection). BOTH = merged. Default BOTH.',
+      },
+      handle: {
+        type: 'string',
+        description: 'User handle to filter by (e.g. "furdA1"). In FEED mode filters author; in WALL mode filters wall owner.',
+      },
+      onlyWithLinks: {
+        type: 'string',
+        enum: ['YES', 'NO'],
+        description: 'YES = only posts with embedded URLs (YouTube/Spotify/etc). NO = all posts. Default NO.',
+      },
+      limit: {
+        type: 'number',
+        description: 'Max posts to return (default 10, max 25)',
+      },
+    },
+  },
+}
+
 // ─── All Custom Tools ────────────────────────────────────────────
 
 export const ALL_CUSTOM_TOOLS: CustomToolDefinition[] = [
@@ -187,12 +224,13 @@ export const ALL_CUSTOM_TOOLS: CustomToolDefinition[] = [
   TOOL_RADIO,
   TOOL_PLATFORM_STATS,
   TOOL_FEED_POST,
+  TOOL_FEED_READ,
 ]
 
 // Per-agent tool assignments
 export const TOOLS_BY_ROLE = {
   ORCHESTRATOR: ALL_CUSTOM_TOOLS,
-  FEATURE: [TOOL_SOUNDCHAIN_QUERY, TOOL_PLATFORM_STATS, TOOL_RADIO],
+  FEATURE: [TOOL_SOUNDCHAIN_QUERY, TOOL_FEED_READ, TOOL_PLATFORM_STATS, TOOL_RADIO],
   UTILITY: [TOOL_SOUNDCHAIN_QUERY, TOOL_OGUN_CONTRACT, TOOL_IPFS],
-  SOCIAL: [TOOL_SOUNDCHAIN_QUERY, TOOL_FEED_POST, TOOL_PLATFORM_STATS, TOOL_RADIO],
+  SOCIAL: [TOOL_SOUNDCHAIN_QUERY, TOOL_FEED_POST, TOOL_FEED_READ, TOOL_PLATFORM_STATS, TOOL_RADIO],
 } as const
