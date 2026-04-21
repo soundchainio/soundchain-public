@@ -60,6 +60,7 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
   const [furnitureCategory, setFurnitureCategory] = useState<FurnitureCategory | 'all'>('all')
   const [placedFurniture, setPlacedFurniture] = useState<PlacedFurniture[]>(() => getPlacedFurniture(ownerHandle))
   const [placingItem, setPlacingItem] = useState<string | null>(null)
+  const [hideFurnitureCount, setHideFurnitureCount] = useState(false)
 
   // Fetch owner's tracks (NFTs + SCids)
   useEffect(() => {
@@ -602,10 +603,11 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         </button>
       </div>
 
-      {/* Furniture placement count — above the pills so no overlap */}
-      {placedFurniture.length > 0 && (
-        <div className="absolute bottom-14 right-3 z-10 px-2 py-1 rounded bg-black/60 backdrop-blur border border-white/10 text-[8px] font-mono text-gray-400">
+      {/* Furniture placement count — dismissable */}
+      {placedFurniture.length > 0 && !hideFurnitureCount && (
+        <div className="absolute bottom-14 right-3 z-10 flex items-center gap-1 px-2 py-1 rounded bg-black/60 backdrop-blur border border-white/10 text-[8px] font-mono text-gray-400">
           {placedFurniture.length} items placed
+          <button onClick={() => setHideFurnitureCount(true)} className="ml-1 hover:text-white"><X className="w-3 h-3" /></button>
         </div>
       )}
 
