@@ -3457,17 +3457,20 @@ export function AgentStatusTicker() {
 
       {/* Expanded Panel */}
       {expanded && (
-        <div className={`bg-gray-900/95 backdrop-blur-md border overflow-hidden flex flex-col transition-all ${
-          fullscreen
-            ? 'fixed inset-0 z-[200] max-h-none border-none'
-            : miniMode
-              ? 'fixed bottom-20 right-3 left-auto w-[min(360px,calc(100vw-1.5rem))] max-h-[340px] z-[100] rounded-xl border-cyan-500/40 shadow-[0_0_24px_rgba(34,211,238,0.25)]'
-              : jackMode === 'CLI_BRIDGE'
-                ? 'border-b border-cyan-500/30 shadow-[0_0_20px_rgba(34,211,238,0.15)] max-h-[700px]'
-                : jackMode === 'JACKED_IN'
-                  ? `border-b ${forgeMode ? 'border-orange-500/20 shadow-[0_0_15px_rgba(249,115,22,0.1)]' : 'border-green-500/20 shadow-[0_0_15px_rgba(34,197,94,0.1)]'} ${selectedAgent ? 'max-h-[600px]' : 'max-h-[520px]'}`
-                  : `border-b border-white/10 ${selectedAgent ? 'max-h-[600px]' : 'max-h-[520px]'}`
-        }`}>
+        <div
+          className={`bg-gray-900/95 backdrop-blur-md border overflow-hidden flex flex-col transition-all ${
+            fullscreen
+              ? 'fixed inset-0 z-[200] max-h-none border-none'
+              : miniMode
+                ? 'fixed bottom-20 right-3 left-auto w-[min(360px,calc(100vw-1.5rem))] max-h-[340px] z-[100] rounded-xl border-cyan-500/40 shadow-[0_0_24px_rgba(34,211,238,0.25)]'
+                : jackMode === 'CLI_BRIDGE'
+                  ? 'border-b border-cyan-500/30 shadow-[0_0_20px_rgba(34,211,238,0.15)] max-h-[700px]'
+                  : jackMode === 'JACKED_IN'
+                    ? `border-b ${forgeMode ? 'border-orange-500/20 shadow-[0_0_15px_rgba(249,115,22,0.1)]' : 'border-green-500/20 shadow-[0_0_15px_rgba(34,197,94,0.1)]'} ${selectedAgent ? 'max-h-[600px]' : 'max-h-[520px]'}`
+                    : `border-b border-white/10 ${selectedAgent ? 'max-h-[600px]' : 'max-h-[520px]'}`
+          }`}
+          style={fullscreen ? { paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' } : undefined}
+        >
           {/* Panel Header with Tabs */}
           <div className="flex items-center justify-between px-3 py-2 border-b border-white/5 flex-shrink-0">
             <div className="flex items-center gap-3">
