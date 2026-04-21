@@ -61,6 +61,7 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
   const [placedFurniture, setPlacedFurniture] = useState<PlacedFurniture[]>(() => getPlacedFurniture(ownerHandle))
   const [placingItem, setPlacingItem] = useState<string | null>(null)
   const [hideFurnitureCount, setHideFurnitureCount] = useState(false)
+  const [inviting, setInviting] = useState(false)
 
   // Fetch owner's tracks (NFTs + SCids)
   useEffect(() => {
@@ -577,23 +578,32 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         </button>
         {/* INVITE — post to Nodes feed */}
         <button
-          onClick={() => {
-            const url = `${window.location.origin}/gallery3d?handle=${ownerHandle}`
-            fetch('/api/feed/create', {
-              method: 'POST',
-              credentials: 'include',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                body: `🖼 Come visit my Gallery!\n\nWalk through, check out my collection, vibe to the music.\n\n👉 ${url}`,
-              }),
-            }).then(r => {
-              if (r.ok) toast.success('Gallery invite posted to feed!')
-              else toast.error('Post failed — are you logged in?')
-            }).catch(() => toast.error('Post failed — check connection'))
+          onClick={async () => {
+            if (inviting) return
+            setInviting(true)
+            const tid = toast.loading('Posting invite to feed…')
+            try {
+              const url = `${window.location.origin}/gallery3d?handle=${ownerHandle}`
+              const r = await fetch('/api/feed/create', {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  body: `🖼 Come visit my Gallery!\n\nWalk through, check out my collection, vibe to the music.\n\n👉 ${url}`,
+                }),
+              })
+              if (r.ok) toast.update(tid, { render: 'Gallery invite posted to feed!', type: 'success', isLoading: false, autoClose: 3000 })
+              else toast.update(tid, { render: 'Post failed — are you logged in?', type: 'error', isLoading: false, autoClose: 4000 })
+            } catch {
+              toast.update(tid, { render: 'Post failed — check connection', type: 'error', isLoading: false, autoClose: 4000 })
+            } finally {
+              setInviting(false)
+            }
           }}
-          className="flex items-center gap-1 px-2.5 py-2 rounded-lg bg-purple-500/20 border border-purple-500/40 text-purple-400 text-[9px] font-mono font-bold hover:bg-purple-500/30 transition backdrop-blur active:scale-95"
+          disabled={inviting}
+          className="flex items-center gap-1 px-2.5 py-2 rounded-lg bg-purple-500/20 border border-purple-500/40 text-purple-400 text-[9px] font-mono font-bold hover:bg-purple-500/30 transition backdrop-blur active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <Share2 className="w-3 h-3" /> INVITE
+          <Share2 className="w-3 h-3" /> {inviting ? 'POSTING…' : 'INVITE'}
         </button>
         {/* CUSTOMIZE — furniture */}
         <button

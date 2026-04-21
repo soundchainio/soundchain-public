@@ -4,6 +4,7 @@ import {
   useTrackLazyQuery,
 } from 'lib/graphql'
 import { useRouter } from 'next/router'
+import { toast } from 'react-toastify'
 import { AuthorActionsType } from 'types/AuthorActionsType'
 import { ModalsPortal } from '../ModalsPortal'
 import { Pencil, Trash2, X } from 'lucide-react'
@@ -26,10 +27,23 @@ export const AuthorActionsModal = () => {
 
   // Delete mutations — Vercel direct (Phase 5)
   const deleteComment = async ({ variables }: any) => {
-    await fetch('/api/posts/comment-delete', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ commentId: variables.id }) })
+    const r = await fetch('/api/posts/comment-delete', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ commentId: variables.id }),
+    })
+    return r.ok
   }
   const deletePost = async ({ variables }: any) => {
-    await fetch('/api/posts/delete', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ postId: variables.input?.postId || variables.id }) })
+    const postId = variables.input?.postId || variables.id
+    const r = await fetch('/api/posts/delete', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ postId }),
+    })
+    return { ok: r.ok, postId }
   }
 
   const onOutsideClick = () => {
@@ -76,15 +90,31 @@ export const AuthorActionsModal = () => {
 
   const onDelete = async () => {
     switch (authorActionsType) {
-      case AuthorActionsType.POST:
-        await deletePost({ variables: { input: { postId: authorActionsId } } })
-        if (router.asPath.includes('/posts/')) {
-          router.back()
+      case AuthorActionsType.POST: {
+        const tid = toast.loading('Deleting post…')
+        const { ok, postId } = await deletePost({ variables: { input: { postId: authorActionsId } } })
+        if (ok) {
+          toast.update(tid, { render: 'Post deleted', type: 'success', isLoading: false, autoClose: 2500 })
+          // Broadcast so local-state feeds (e.g. /nodes) can filter the post out without a refetch
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('soundchain:postDeleted', { detail: { postId } }))
+          }
+          if (router.asPath.includes('/posts/')) {
+            router.back()
+          }
+        } else {
+          toast.update(tid, { render: 'Delete failed — try again', type: 'error', isLoading: false, autoClose: 4000 })
         }
         break
-      case AuthorActionsType.COMMENT:
-        await deleteComment({ variables: { input: { commentId: authorActionsId } } })
+      }
+      case AuthorActionsType.COMMENT: {
+        const tid = toast.loading('Deleting comment…')
+        const ok = await deleteComment({ variables: { input: { commentId: authorActionsId } } })
+        toast.update(tid, ok
+          ? { render: 'Comment deleted', type: 'success', isLoading: false, autoClose: 2500 }
+          : { render: 'Delete failed — try again', type: 'error', isLoading: false, autoClose: 4000 })
         break
+      }
       case AuthorActionsType.NFT:
         onDeleteNFT()
         break

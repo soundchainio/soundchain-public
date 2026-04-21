@@ -80,6 +80,7 @@ export default function ArenaPage() {
   const [showCreateChallenge, setShowCreateChallenge] = useState(false)
   const [newChallenge, setNewChallenge] = useState({ opponentHandle: '', game: 'NBA 2K26', platform: 'Any', stakes: 0, message: '' })
   const [creating, setCreating] = useState(false)
+  const [postingToFeed, setPostingToFeed] = useState<Set<string>>(new Set())
 
   const fetchChallenges = useCallback(() => {
     fetch('/api/arena/challenges?status=all')
@@ -280,6 +281,9 @@ export default function ArenaPage() {
                       >COPY</button>
                       <button
                         onClick={async () => {
+                          if (postingToFeed.has(c._id)) return
+                          setPostingToFeed(prev => new Set(prev).add(c._id))
+                          const tid = toast.loading('Posting challenge to feed…')
                           try {
                             const url = `${window.location.origin}/arena`
                             const r = await fetch('/api/feed/create', {
@@ -290,12 +294,17 @@ export default function ArenaPage() {
                                 body: `🎮 ARENA CHALLENGE!\n\n@${c.challengerHandle} vs ${c.opponentHandle || 'ANYONE'} — ${c.game}${c.stakes > 0 ? ` · ${c.stakes} OGUN on the line!` : ''}\n\nWatch or accept at ${url}`,
                               }),
                             })
-                            if (r.ok) toast.success('Challenge posted to feed!')
-                            else toast.error('Post failed — are you logged in?')
-                          } catch { toast.error('Failed to post') }
+                            if (r.ok) toast.update(tid, { render: 'Challenge posted to feed!', type: 'success', isLoading: false, autoClose: 3000 })
+                            else toast.update(tid, { render: 'Post failed — are you logged in?', type: 'error', isLoading: false, autoClose: 4000 })
+                          } catch {
+                            toast.update(tid, { render: 'Failed to post — check connection', type: 'error', isLoading: false, autoClose: 4000 })
+                          } finally {
+                            setPostingToFeed(prev => { const next = new Set(prev); next.delete(c._id); return next })
+                          }
                         }}
-                        className="flex-1 py-1 rounded text-[9px] font-mono text-purple-400 border border-purple-500/20 hover:bg-purple-500/10"
-                      >POST TO FEED</button>
+                        disabled={postingToFeed.has(c._id)}
+                        className="flex-1 py-1 rounded text-[9px] font-mono text-purple-400 border border-purple-500/20 hover:bg-purple-500/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >{postingToFeed.has(c._id) ? 'POSTING…' : 'POST TO FEED'}</button>
                     </div>
                     {canAccept && (
                       <div className="flex items-center gap-1 mt-1">

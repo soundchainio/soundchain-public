@@ -125,6 +125,19 @@ export default function NodesPage() {
     loadFeed(null)
   }, [loadFeed])
 
+  // Remove a post from the local feed state as soon as AuthorActionsModal confirms deletion.
+  // The backend already marks deleted + clears feeditems; this just avoids a refetch roundtrip.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const onDeleted = (e: Event) => {
+      const postId = (e as CustomEvent<{ postId: string }>).detail?.postId
+      if (!postId) return
+      setFeedPosts(prev => prev.filter(p => p?.id !== postId))
+    }
+    window.addEventListener('soundchain:postDeleted', onDeleted)
+    return () => window.removeEventListener('soundchain:postDeleted', onDeleted)
+  }, [])
+
   // Adapt to the {post: ...} shape the rest of nodes.tsx expects
   const feedNodes = useMemo(() => feedPosts.map(p => ({ post: p })), [feedPosts])
   const feedPageInfo = { hasNextPage: feedHasNext, endCursor: feedCursor }
