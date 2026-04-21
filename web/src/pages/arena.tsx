@@ -282,14 +282,16 @@ export default function ArenaPage() {
                         onClick={async () => {
                           try {
                             const url = `${window.location.origin}/arena`
-                            await fetch('/api/feed/create', {
+                            const r = await fetch('/api/feed/create', {
                               method: 'POST',
+                              credentials: 'include',
                               headers: { 'Content-Type': 'application/json' },
                               body: JSON.stringify({
-                                message: `🎮 ARENA CHALLENGE!\n\n@${c.challengerHandle} vs ${c.opponentHandle || 'ANYONE'} — ${c.game}${c.stakes > 0 ? ` · ${c.stakes} OGUN on the line!` : ''}\n\nWatch or accept at ${url}`,
+                                body: `🎮 ARENA CHALLENGE!\n\n@${c.challengerHandle} vs ${c.opponentHandle || 'ANYONE'} — ${c.game}${c.stakes > 0 ? ` · ${c.stakes} OGUN on the line!` : ''}\n\nWatch or accept at ${url}`,
                               }),
                             })
-                            toast.success('Challenge posted to feed!')
+                            if (r.ok) toast.success('Challenge posted to feed!')
+                            else toast.error('Post failed — are you logged in?')
                           } catch { toast.error('Failed to post') }
                         }}
                         className="flex-1 py-1 rounded text-[9px] font-mono text-purple-400 border border-purple-500/20 hover:bg-purple-500/10"

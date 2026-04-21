@@ -581,9 +581,10 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
             const url = `${window.location.origin}/gallery3d?handle=${ownerHandle}`
             fetch('/api/feed/create', {
               method: 'POST',
+              credentials: 'include',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                message: `🖼 Come visit my Gallery!\n\nWalk through, check out my collection, vibe to the music.\n\n👉 ${url}`,
+                body: `🖼 Come visit my Gallery!\n\nWalk through, check out my collection, vibe to the music.\n\n👉 ${url}`,
               }),
             }).then(r => {
               if (r.ok) toast.success('Gallery invite posted to feed!')
