@@ -28,6 +28,7 @@
 
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { streamManagedSession, getAgentDefinition, getAllAgentHandles } from 'lib/managed-agents'
+import { authFromRequest } from 'lib/api/authJwt'
 
 // ─── Rate Limit ──────────────────────────────────────────────────
 
@@ -94,6 +95,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   // Cap conversation history
   const cappedMessages = messages.slice(-20)
 
+  // Resolve viewer identity for per-user agent memory.
+  // Anonymous callers get a working session but no persistent diary.
+  const auth = await authFromRequest(req)
+  const userId = auth?.userId
+
   // Stream the managed session
-  return streamManagedSession(res, agent, cappedMessages, anthropicKey)
+  return streamManagedSession(res, agent, cappedMessages, anthropicKey, userId)
 }

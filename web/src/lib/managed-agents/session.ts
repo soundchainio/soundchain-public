@@ -106,6 +106,7 @@ export async function streamManagedSession(
   handle: string,
   messages: Array<{ role: string; content: string }>,
   userKey?: string,
+  userId?: string,
 ): Promise<void> {
   // Resolve client (BYOK or platform)
   const resolved = resolveClient(userKey)
@@ -201,7 +202,7 @@ export async function streamManagedSession(
             const toolEvent = eventsById.get(eventId)
             if (!toolEvent || toolEvent.type !== 'agent.custom_tool_use') continue
 
-            const result = await handleCustomTool(toolEvent.name, toolEvent.input || {}, handle)
+            const result = await handleCustomTool(toolEvent.name, toolEvent.input || {}, handle, userId)
             writeSSE({
               type: SSE_EVENT_TYPE.TOOL_RESULT,
               tool: toolEvent.name,

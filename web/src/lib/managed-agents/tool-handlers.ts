@@ -99,11 +99,15 @@ export async function handleCustomTool(
   toolName: string,
   input: Record<string, unknown>,
   agentHandle?: string,
+  userId?: string,
 ): Promise<CustomToolResult> {
+  // Cache key includes agentHandle + userId so per-user-per-agent memory
+  // reads never leak across identities.
+  const cacheScope = { ...input, __agent: agentHandle || '', __user: userId || '' }
+
   // Check cache for read-only tools — protects M0 connection limit
-  // Cache key includes agentHandle so per-agent memory tools don't collide
   if (CACHEABLE_TOOLS.has(toolName)) {
-    const key = cacheKey(toolName, { ...input, __agent: agentHandle || '' })
+    const key = cacheKey(toolName, cacheScope)
     const cached = getCached(key)
     if (cached) {
       console.log(`[managed-agents] cache HIT ${toolName}`)
@@ -130,13 +134,13 @@ export async function handleCustomTool(
         result = await handlePlatformStats(input)
         break
       case 'feed_read':
-        result = await handleFeedRead(input, agentHandle)
+        result = await handleFeedRead(input, agentHandle, userId)
         break
       case 'memory_read':
-        result = await handleMemoryRead(input, agentHandle)
+        result = await handleMemoryRead(input, agentHandle, userId)
         break
       case 'memory_write':
-        return await handleMemoryWrite(input, agentHandle)  // Writes — never cache
+        return await handleMemoryWrite(input, agentHandle, userId)  // Writes — never cache
       case 'feed_post':
         return await handleFeedPost(input)  // Writes — never cache
       default:
@@ -145,7 +149,7 @@ export async function handleCustomTool(
 
     // Cache successful read results
     if (CACHEABLE_TOOLS.has(toolName) && result.success === 'YES') {
-      setCached(cacheKey(toolName, { ...input, __agent: agentHandle || '' }), result)
+      setCached(cacheKey(toolName, cacheScope), result)
     }
 
     return result
@@ -439,7 +443,7 @@ async function handlePlatformStats(input: Record<string, unknown>): Promise<Cust
 
 const URL_REGEX = /https?:\/\/[^\s]+/i
 
-async function handleFeedRead(input: Record<string, unknown>, agentHandle?: string): Promise<CustomToolResult> {
+async function handleFeedRead(input: Record<string, unknown>, agentHandle?: string, userId?: string): Promise<CustomToolResult> {
   const source = ((input.source as string) || 'BOTH').toUpperCase()
   if (!['FEED', 'WALL', 'BOTH'].includes(source)) {
     return { success: 'NO', data: null, error: `Invalid source "${source}" — use FEED, WALL, or BOTH` }
@@ -589,15 +593,17 @@ async function handleFeedRead(input: Record<string, unknown>, agentHandle?: stri
       .slice(0, limit)
   }
 
-  // Auto-log observations to the agent's memory — fire-and-forget, don't block the response
-  if (agentHandle && merged.length > 0) {
+  // Auto-log observations to THIS user's private agent memory.
+  // Anonymous callers (no userId) still get the feed, just no persistent diary.
+  if (agentHandle && userId && merged.length > 0) {
     const now = new Date()
     const ops = merged.map(p => ({
       updateOne: {
-        filter: { agentHandle, kind: 'OBSERVED_POST', postId: p.postId },
+        filter: { agentHandle, userId, kind: 'OBSERVED_POST', postId: p.postId },
         update: {
           $setOnInsert: {
             agentHandle,
+            userId,
             kind: 'OBSERVED_POST',
             postId: p.postId,
             source: p.source,
@@ -629,7 +635,7 @@ async function handleFeedRead(input: Record<string, unknown>, agentHandle?: stri
         targetProfile: targetProfile || null,
         onlyWithLinks: onlyWithLinks ? 'YES' : 'NO',
       },
-      autoLogged: agentHandle ? 'YES' : 'NO',
+      autoLogged: agentHandle && userId ? 'YES' : 'NO',
       count: merged.length,
       posts: merged,
     },
@@ -638,9 +644,16 @@ async function handleFeedRead(input: Record<string, unknown>, agentHandle?: stri
 
 // ─── Memory Read Handler ─────────────────────────────────────────
 
-async function handleMemoryRead(input: Record<string, unknown>, agentHandle?: string): Promise<CustomToolResult> {
+async function handleMemoryRead(input: Record<string, unknown>, agentHandle?: string, userId?: string): Promise<CustomToolResult> {
   if (!agentHandle) {
     return { success: 'NO', data: null, error: 'memory_read requires agent context — session must pass agentHandle' }
+  }
+  if (!userId) {
+    return {
+      success: 'NO',
+      data: null,
+      error: 'Sign in to SoundChain to give this agent a private memory. Anonymous sessions have no diary.',
+    }
   }
   const kind = (input.kind as string) || 'ANY'
   const authorHandle = (input.authorHandle as string | undefined)?.trim()
@@ -650,7 +663,7 @@ async function handleMemoryRead(input: Record<string, unknown>, agentHandle?: st
   const client = await clientPromise
   const db = client.db('soundchain')
 
-  const filter: any = { agentHandle }
+  const filter: any = { agentHandle, userId }
   if (kind !== 'ANY') filter.kind = kind
   if (authorHandle) filter.authorHandle = authorHandle
   if (containsText) {
@@ -662,13 +675,14 @@ async function handleMemoryRead(input: Record<string, unknown>, agentHandle?: st
     .find(filter)
     .sort({ lastSeenAt: -1, firstSeenAt: -1, createdAt: -1 })
     .limit(limit)
-    .project({ _id: 0, agentHandle: 0 })
+    .project({ _id: 0, agentHandle: 0, userId: 0 })
     .toArray()
 
   return {
     success: 'YES',
     data: {
       agent: agentHandle,
+      scope: 'PRIVATE_TO_VIEWER',
       filter: { kind, authorHandle: authorHandle || 'ANY', containsText: containsText || null },
       count: memories.length,
       memories,
@@ -678,9 +692,16 @@ async function handleMemoryRead(input: Record<string, unknown>, agentHandle?: st
 
 // ─── Memory Write Handler ────────────────────────────────────────
 
-async function handleMemoryWrite(input: Record<string, unknown>, agentHandle?: string): Promise<CustomToolResult> {
+async function handleMemoryWrite(input: Record<string, unknown>, agentHandle?: string, userId?: string): Promise<CustomToolResult> {
   if (!agentHandle) {
     return { success: 'NO', data: null, error: 'memory_write requires agent context — session must pass agentHandle' }
+  }
+  if (!userId) {
+    return {
+      success: 'NO',
+      data: null,
+      error: 'Sign in to SoundChain to save memories. Anonymous sessions cannot persist a diary.',
+    }
   }
   const content = (input.content as string)?.trim()
   if (!content || content.length > 2000) {
@@ -695,6 +716,7 @@ async function handleMemoryWrite(input: Record<string, unknown>, agentHandle?: s
   const now = new Date()
   const doc = {
     agentHandle,
+    userId,
     kind,
     content,
     tags,
@@ -708,6 +730,7 @@ async function handleMemoryWrite(input: Record<string, unknown>, agentHandle?: s
     data: {
       memoryId: insertedId.toString(),
       agent: agentHandle,
+      scope: 'PRIVATE_TO_VIEWER',
       kind,
       preview: content.slice(0, 100) + (content.length > 100 ? '...' : ''),
       saved: 'YES',
