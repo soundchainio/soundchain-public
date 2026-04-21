@@ -267,8 +267,36 @@ export default function ArenaPage() {
                     </div>
                     {c.message && <div className="text-[9px] font-mono text-gray-500 italic mb-2">"{c.message}"</div>}
                     {c.winner && <div className="text-[9px] font-mono text-yellow-400">🏆 Winner: @{c.winner}</div>}
+                    {/* Share challenge */}
+                    <div className="flex items-center gap-1 mt-2">
+                      <button
+                        onClick={() => {
+                          const url = `${window.location.origin}/arena`
+                          const text = `🎮 ${c.challengerHandle} vs ${c.opponentHandle || c.acceptedBy || 'ANYONE'} — ${c.game}${c.stakes > 0 ? ` · ${c.stakes} OGUN` : ''}\n\n${url}`
+                          navigator.clipboard.writeText(text)
+                          toast.success('Challenge copied! Share via text.')
+                        }}
+                        className="flex-1 py-1 rounded text-[9px] font-mono text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/10"
+                      >COPY</button>
+                      <button
+                        onClick={async () => {
+                          try {
+                            const url = `${window.location.origin}/arena`
+                            await fetch('/api/feed/create', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                message: `🎮 ARENA CHALLENGE!\n\n@${c.challengerHandle} vs ${c.opponentHandle || 'ANYONE'} — ${c.game}${c.stakes > 0 ? ` · ${c.stakes} OGUN on the line!` : ''}\n\nWatch or accept at ${url}`,
+                              }),
+                            })
+                            toast.success('Challenge posted to feed!')
+                          } catch { toast.error('Failed to post') }
+                        }}
+                        className="flex-1 py-1 rounded text-[9px] font-mono text-purple-400 border border-purple-500/20 hover:bg-purple-500/10"
+                      >POST TO FEED</button>
+                    </div>
                     {canAccept && (
-                      <div className="flex items-center gap-1 mt-2">
+                      <div className="flex items-center gap-1 mt-1">
                         <button onClick={() => respondChallenge(c._id, 'accept')} className="flex-1 py-1 rounded text-[9px] font-mono font-bold bg-green-500/20 text-green-400 border border-green-500/30 hover:bg-green-500/30">ACCEPT</button>
                         <button onClick={() => respondChallenge(c._id, 'decline')} className="flex-1 py-1 rounded text-[9px] font-mono text-gray-400 border border-white/10 hover:bg-white/5">DECLINE</button>
                       </div>

@@ -547,13 +547,46 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         </div>
       </div>
 
-      {/* CUSTOMIZE pill — bottom right */}
-      <button
-        onClick={() => setShowCustomize(true)}
-        className="absolute bottom-3 right-3 z-10 flex items-center gap-1.5 px-3 py-2 rounded-lg bg-yellow-500/20 border border-yellow-500/40 text-yellow-400 text-[10px] font-mono font-bold hover:bg-yellow-500/30 transition backdrop-blur"
-      >
-        <Paintbrush className="w-4 h-4" /> CUSTOMIZE
-      </button>
+      {/* Bottom pills — SHARE + CUSTOMIZE */}
+      <div className="absolute bottom-3 right-3 z-10 flex items-center gap-2">
+        {/* Copy link for text/social sharing */}
+        <button
+          onClick={() => {
+            const url = `${window.location.origin}/gallery3d?handle=${ownerHandle}`
+            navigator.clipboard.writeText(url)
+            toast.success('Gallery link copied! Share via text or social.')
+          }}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-cyan-500/20 border border-cyan-500/40 text-cyan-400 text-[10px] font-mono font-bold hover:bg-cyan-500/30 transition backdrop-blur"
+        >
+          <Copy className="w-3.5 h-3.5" /> SHARE
+        </button>
+        {/* Post gallery invite to Nodes feed */}
+        <button
+          onClick={async () => {
+            try {
+              const url = `${window.location.origin}/gallery3d?handle=${ownerHandle}`
+              await fetch('/api/feed/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  message: `🖼 Come visit my Gallery!\n\nWalk through, check out my collection, vibe to the music.\n\n👉 ${url}`,
+                }),
+              })
+              toast.success('Gallery invite posted to feed! Others can tap to enter.')
+            } catch { toast.error('Failed to post — try again') }
+          }}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-purple-500/20 border border-purple-500/40 text-purple-400 text-[10px] font-mono font-bold hover:bg-purple-500/30 transition backdrop-blur"
+        >
+          <Share2 className="w-3.5 h-3.5" /> INVITE
+        </button>
+        {/* Customize furniture */}
+        <button
+          onClick={() => setShowCustomize(true)}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-yellow-500/20 border border-yellow-500/40 text-yellow-400 text-[10px] font-mono font-bold hover:bg-yellow-500/30 transition backdrop-blur"
+        >
+          <Paintbrush className="w-4 h-4" /> CUSTOMIZE
+        </button>
+      </div>
 
       {/* Furniture placement count */}
       {placedFurniture.length > 0 && (
