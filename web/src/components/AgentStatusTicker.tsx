@@ -3472,15 +3472,15 @@ export function AgentStatusTicker() {
           style={fullscreen ? { paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' } : undefined}
         >
           {/* Panel Header with Tabs */}
-          <div className="flex items-center justify-between px-3 py-2 border-b border-white/5 flex-shrink-0">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
+          <div className="flex items-center justify-between px-3 py-2 border-b border-white/5 flex-shrink-0 gap-2">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <div className="flex items-center gap-2 flex-shrink-0">
                 <Terminal className="w-3.5 h-3.5 text-cyan-400" />
                 <span className="text-xs font-mono text-cyan-400 font-bold tracking-wide">FURL</span>
                 <span className="text-[10px] font-mono text-gray-500">v{suiteVersion}</span>
               </div>
               {/* Tabs — visible on all screens, scrollable on mobile */}
-              <div className="flex items-center gap-1 ml-2 overflow-x-auto whitespace-nowrap scrollbar-hide max-w-[calc(100vw-200px)] sm:max-w-none">
+              <div className="flex items-center gap-1 ml-2 overflow-x-auto whitespace-nowrap scrollbar-hide flex-1 min-w-0">
                 <button
                   onClick={(e) => { e.stopPropagation(); setActiveTab('agents') }}
                   className={`text-[9px] font-mono px-2 py-0.5 rounded transition-colors ${
@@ -3529,11 +3529,11 @@ export function AgentStatusTicker() {
               {/* Desktop label (hidden on mobile) */}
               <span className="hidden sm:inline text-[9px] font-mono text-gray-600 ml-2">COCKPIT</span>
             </div>
-            <div className="flex items-center gap-2">
-              {/* THE ONE badge */}
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              {/* THE ONE badge — icon only on narrow mobile fullscreen, full label elsewhere */}
               <div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/20" title={`Verified: ${FURL_IDENTITY.signature} · Session: ${FURL_IDENTITY.sessionId}`}>
                 <Shield className="w-2.5 h-2.5 text-cyan-400" />
-                <span className="text-[8px] font-mono text-cyan-400 font-bold">THE ONE</span>
+                <span className={`text-[8px] font-mono text-cyan-400 font-bold ${fullscreen ? 'hidden sm:inline' : ''}`}>THE ONE</span>
               </div>
               {/* Mini pill — floating PiP mode so pages behind stay usable */}
               <button
