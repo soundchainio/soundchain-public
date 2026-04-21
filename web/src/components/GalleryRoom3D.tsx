@@ -18,6 +18,7 @@ import { useRouter } from 'next/router'
 import { Music, X, Heart, Share2, Play, Pause, Volume2, Copy, Check, Paintbrush, Plus } from 'lucide-react'
 import { toast } from 'react-toastify'
 import { FURNITURE_CATALOG, FURNITURE_CATEGORIES, filterByCategory, getPlacedFurniture, savePlacedFurniture, getFurnitureById, type PlacedFurniture, type FurnitureCategory } from 'lib/nodeverse/galleryFurniture'
+import { AudioPlayer } from 'components/AudioPlayer'
 
 interface Track {
   id: string
@@ -654,8 +655,8 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
                 <X className="w-4 h-4 text-gray-400" />
               </button>
             </div>
-            {/* Artwork + inline player overlay */}
-            <div className="aspect-square bg-black relative group">
+            {/* Artwork — clean, no manual play overlay (inline AudioPlayer below handles playback) */}
+            <div className="aspect-square bg-black relative">
               {selectedTrack.artworkUrl ? (
                 <img src={selectedTrack.artworkUrl} alt="" className="w-full h-full object-cover" />
               ) : (
@@ -663,50 +664,25 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
                   <Music className="w-12 h-12 text-yellow-500/30" />
                 </div>
               )}
-              {/* Inline play button overlay */}
-              {(selectedTrack.playbackUrl || selectedTrack.audioUrl) && (
-                <button
-                  onClick={() => {
-                    const url = selectedTrack.playbackUrl || selectedTrack.audioUrl
-                    if (!url) return
-                    // Toggle play/pause for this track
-                    const existing = audioRefsMap.current.get(selectedTrack.id)
-                    if (existing && !existing.paused) {
-                      existing.pause()
-                      setNowPlaying(null)
-                    } else {
-                      // Stop all other audio first
-                      audioRefsMap.current.forEach(a => { a.pause(); a.currentTime = 0 })
-                      if (existing) {
-                        existing.play().catch(() => {})
-                      } else {
-                        const audio = new Audio(url)
-                        audio.crossOrigin = 'anonymous'
-                        audioRefsMap.current.set(selectedTrack.id, audio)
-                        audio.play().catch(() => {})
-                        audio.onended = () => setNowPlaying(null)
-                      }
-                      setNowPlaying(selectedTrack.id)
-                    }
-                  }}
-                  className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <div className="w-16 h-16 rounded-full bg-black/70 border-2 border-cyan-400 flex items-center justify-center">
-                    {nowPlaying === selectedTrack.id ? <Pause className="w-7 h-7 text-cyan-400" /> : <Play className="w-7 h-7 text-cyan-400 ml-1" />}
-                  </div>
-                </button>
-              )}
-              {/* Now playing indicator */}
-              {nowPlaying === selectedTrack.id && (
-                <div className="absolute bottom-2 left-2 right-2 flex items-center gap-2 px-2 py-1 rounded bg-black/70 backdrop-blur">
-                  <Volume2 className="w-3 h-3 text-cyan-400 animate-pulse" />
-                  <div className="flex-1 h-1 bg-white/10 rounded overflow-hidden">
-                    <div className="h-full bg-cyan-400 rounded animate-pulse" style={{ width: '60%' }} />
-                  </div>
-                  <span className="text-[8px] font-mono text-cyan-400">PLAYING</span>
-                </div>
-              )}
             </div>
+            {/* Inline canonical AudioPlayer — plays IN this card, not in the bottom sticky bar.
+                Stop all proximity-audio first so the scene loop doesn't fight this player. */}
+            {(selectedTrack.playbackUrl || selectedTrack.audioUrl) && (
+              <div
+                className="p-3 bg-black"
+                onClickCapture={() => {
+                  audioRefsMap.current.forEach(a => { try { a.pause(); a.currentTime = 0 } catch {} })
+                }}
+              >
+                <AudioPlayer
+                  src={(selectedTrack.playbackUrl || selectedTrack.audioUrl) as string}
+                  title={selectedTrack.title}
+                  artist={selectedTrack.artist || ownerHandle}
+                  art={selectedTrack.artworkUrl}
+                  trackId={selectedTrack.id}
+                />
+              </div>
+            )}
             <div className="p-4 space-y-2">
               <h3 className="text-lg font-mono font-bold text-white">{selectedTrack.title}</h3>
               <p className="text-sm font-mono text-gray-400">{selectedTrack.artist || ownerHandle}</p>
@@ -724,39 +700,13 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
                 <div className="flex justify-between"><span>Audio</span><span className="text-gray-400 truncate max-w-[180px]">{selectedTrack.playbackUrl || selectedTrack.audioUrl || 'none'}</span></div>
               </div>
               <div className="flex items-center gap-2 pt-1">
-                {/* Play inline — no redirect */}
-                <button
-                  onClick={() => {
-                    const url = selectedTrack.playbackUrl || selectedTrack.audioUrl
-                    if (!url) { toast.error('No audio URL on this track'); return }
-                    // Stop all other audio
-                    audioRefsMap.current.forEach(a => { try { a.pause(); a.currentTime = 0 } catch {} })
-                    // Try playing
-                    toast.info(`Loading audio...`, { autoClose: 2000 })
-                    const audio = new Audio()
-                    audio.crossOrigin = 'anonymous'
-                    audio.src = url
-                    audio.oncanplay = () => {
-                      audio.play().then(() => {
-                        setNowPlaying(selectedTrack.id)
-                        toast.success('Playing!')
-                      }).catch(err => toast.error(`Playback blocked: ${err.message}`))
-                    }
-                    audio.onerror = () => toast.error(`Audio failed to load — URL may be broken or CORS blocked`)
-                    audio.onended = () => setNowPlaying(null)
-                    audioRefsMap.current.set(selectedTrack.id, audio)
-                  }}
-                  className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 text-[10px] font-mono hover:bg-cyan-500/30 transition"
-                >
-                  {nowPlaying === selectedTrack.id ? <><Pause className="w-3 h-3" /> Now Playing</> : <><Play className="w-3 h-3" /> Play Track</>}
-                </button>
                 {/* Save to archive */}
                 <button
                   onClick={() => {
                     fetch('/api/feed/posts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'bookmark', trackId: selectedTrack.id }) }).catch(() => {})
                     toast.success('Saved to your archive!')
                   }}
-                  className="flex items-center justify-center gap-1.5 py-2 px-3 rounded bg-amber-500/20 border border-amber-500/30 text-amber-400 text-[10px] font-mono hover:bg-amber-500/30 transition"
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded bg-amber-500/20 border border-amber-500/30 text-amber-400 text-[10px] font-mono hover:bg-amber-500/30 transition"
                 >
                   <Heart className="w-3 h-3" /> Save
                 </button>
@@ -766,7 +716,7 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
                     navigator.clipboard.writeText(`${window.location.origin}/track/${selectedTrack.id}`)
                     toast.success('Link copied!')
                   }}
-                  className="flex items-center justify-center gap-1.5 py-2 px-3 rounded bg-white/5 border border-white/10 text-gray-400 text-[10px] font-mono hover:bg-white/10 transition"
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded bg-white/5 border border-white/10 text-gray-400 text-[10px] font-mono hover:bg-white/10 transition"
                 >
                   <Copy className="w-3 h-3" /> Share
                 </button>
