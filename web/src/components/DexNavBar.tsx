@@ -255,8 +255,16 @@ export function DexNavBar() {
       if (el.closest?.('[data-popover]')) return
       close()
     }
-    document.addEventListener('mousedown', onDown)
-    return () => document.removeEventListener('mousedown', onDown)
+    // Use 'click' not 'mousedown' — mousedown fires BEFORE Link click handlers,
+    // which unmounts the popover and cancels navigation. Bug killed avatar menu.
+    document.addEventListener('click', onDown)
+    // Close on route change (Link navigation completes → panel closes)
+    const onRoute = () => close()
+    router.events.on('routeChangeStart', onRoute)
+    return () => {
+      document.removeEventListener('click', onDown)
+      router.events.off('routeChangeStart', onRoute)
+    }
   }, [openPanel])
 
   const handleMintClick = () => {
@@ -726,15 +734,15 @@ export function DexNavBar() {
 
                     {/* Quick nav */}
                     <div className="py-2 border-b border-cyan-500/20">
-                      <Link href={`/users/${me.profile.userHandle}`} onClick={close} className="flex items-center gap-3 px-3 py-2 text-sm text-white hover:bg-cyan-500/10">
+                      <Link href={`/users/${me.profile.userHandle}`} className="flex items-center gap-3 px-3 py-2 text-sm text-white hover:bg-cyan-500/10">
                         <UserIcon className="w-4 h-4 text-cyan-400" />
                         <span className="flex-1">My Profile</span>
                       </Link>
-                      <Link href="/wallet" onClick={close} className="flex items-center gap-3 px-3 py-2 text-sm text-white hover:bg-cyan-500/10">
+                      <Link href="/wallet" className="flex items-center gap-3 px-3 py-2 text-sm text-white hover:bg-cyan-500/10">
                         <Wallet className="w-4 h-4 text-cyan-400" />
                         <span className="flex-1">Wallet</span>
                       </Link>
-                      <Link href="/messages" onClick={close} className="flex items-center gap-3 px-3 py-2 text-sm text-white hover:bg-cyan-500/10">
+                      <Link href="/messages" className="flex items-center gap-3 px-3 py-2 text-sm text-white hover:bg-cyan-500/10">
                         <MessageCircle className="w-4 h-4 text-cyan-400" />
                         <span className="flex-1">Inbox</span>
                       </Link>
@@ -851,7 +859,7 @@ export function DexNavBar() {
                     {/* Admin: Verify Users — only for furdA1, jeremy_soundchain, tito */}
                     {me?.profile?.userHandle && ['furdA1', 'jeremy_soundchain', 'tito'].includes(me.profile.userHandle) && (
                       <div className="py-1 border-b border-yellow-500/30">
-                        <Link href="/manage-requests" onClick={close} className="flex items-center gap-3 px-3 py-2 text-sm text-yellow-400 hover:bg-yellow-500/10">
+                        <Link href="/manage-requests" className="flex items-center gap-3 px-3 py-2 text-sm text-yellow-400 hover:bg-yellow-500/10">
                           <ShieldCheck className="w-4 h-4 text-yellow-400" />
                           <span className="flex-1">Admin: Verify Users</span>
                           <span className="text-[9px] px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">ADMIN</span>
