@@ -2599,6 +2599,26 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
         const amountWei = ethers.utils.parseEther(transferAmount)
         const feeWei = ethers.utils.parseEther(platformFee.toFixed(18))
 
+        // Health check — test Magic RPC before wasting time on retries
+        try {
+          const testProvider = new ethers.providers.Web3Provider((magic as any).rpcProvider, { chainId: 137, name: 'matic' })
+          await Promise.race([
+            testProvider.getBlockNumber(),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 5000)),
+          ])
+        } catch {
+          toast.error(
+            'Magic wallet service is temporarily down. Your funds are safe.\n\n' +
+            'Options:\n' +
+            '1. Try again in a few minutes\n' +
+            '2. Use HD wallet (if funded)\n' +
+            '3. Connect MetaMask/WalletConnect',
+            { autoClose: 10000 }
+          )
+          setIsTransferringToken(false)
+          return
+        }
+
         // Retry helper for Magic RPC calls ([-32603] is transient)
         const magicRetry = async <T,>(fn: () => Promise<T>, label: string, retries = 3): Promise<T> => {
           for (let i = 0; i < retries; i++) {
