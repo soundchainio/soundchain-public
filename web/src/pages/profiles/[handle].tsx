@@ -76,7 +76,7 @@ export const getServerSideProps: GetServerSideProps<ProfilePageProps, ProfilePag
   // For regular users, redirect to DEX
   return {
     redirect: {
-      destination: `/dex/users/${handle}`,
+      destination: `/users/${handle}`,
       permanent: true, // 301 redirect - SEO friendly
     },
   }

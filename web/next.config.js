@@ -85,23 +85,11 @@ module.exports = withPWA({
       { source: '/feedback', destination: '/dex/feedback' },
     ]
   },
-  // Redirects: old /dex/ URLs → clean top-level URLs
+  // Redirects: legacy aliases only (NO /dex/ → top-level here — rewrites handle that)
+  // The /pages/dex/*.tsx redirect stubs handle old /dex/ bookmarks.
+  // DO NOT add /dex/users → /users redirects — they loop with the rewrites above.
   async redirects() {
     return [
-      // Old /dex/ paths → new top-level (301 permanent)
-      { source: '/dex/users/:handle', destination: '/users/:handle', permanent: true },
-      { source: '/dex/track/:id', destination: '/track/:id', permanent: true },
-      { source: '/dex/settings', destination: '/settings', permanent: true },
-      { source: '/dex/settings/:path*', destination: '/settings/:path*', permanent: true },
-      { source: '/dex/wallet', destination: '/wallet', permanent: true },
-      { source: '/dex/wallet/:path*', destination: '/wallet/:path*', permanent: true },
-      { source: '/dex/playlist/:id', destination: '/playlist/:id', permanent: true },
-      { source: '/dex/post/:id', destination: '/post/:id', permanent: true },
-      { source: '/dex/messages', destination: '/messages', permanent: true },
-      { source: '/dex/messages/:id', destination: '/messages/:id', permanent: true },
-      { source: '/dex/explore', destination: '/explore', permanent: true },
-      { source: '/dex/library', destination: '/library', permanent: true },
-      { source: '/dex/marketplace', destination: '/marketplace', permanent: true },
       { source: '/dex/notifications', destination: '/notifications', permanent: true },
       { source: '/dex/staking', destination: '/staking', permanent: true },
       { source: '/dex/story/:path*', destination: '/story/:path*', permanent: true },
