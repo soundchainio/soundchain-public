@@ -45,6 +45,200 @@
   --sc-scrollbar-track: #eceef1;
 }
 
+/* ============================================
+   LIGHT MODE BROAD OVERRIDES
+   Flips common hardcoded Tailwind dark surfaces
+   to the light token palette so legacy components
+   (DexNavBar, Post cards, modals, etc.) actually
+   repaint when the user picks Light/Auto. Accent
+   colors (cyan/purple/pink/orange) intentionally
+   left alone — only neutral greys flip.
+   ============================================ */
+
+/* Solid neutral surfaces → light card / page bg */
+:root[data-theme="light"] .bg-gray-900,
+:root[data-theme="light"] .bg-gray-800,
+:root[data-theme="light"] .bg-gray-1A,
+:root[data-theme="light"] .bg-neutral-900,
+:root[data-theme="light"] .bg-neutral-800,
+:root[data-theme="light"] .bg-zinc-900,
+:root[data-theme="light"] .bg-zinc-800,
+:root[data-theme="light"] .bg-stone-900,
+:root[data-theme="light"] .bg-slate-900,
+:root[data-theme="light"] .bg-slate-800 {
+  background-color: var(--sc-card) !important;
+}
+
+:root[data-theme="light"] .bg-black {
+  background-color: var(--sc-bg) !important;
+}
+
+/* Translucent dark overlays — soften to light wash */
+:root[data-theme="light"] .bg-black\/95,
+:root[data-theme="light"] .bg-black\/90,
+:root[data-theme="light"] .bg-black\/80,
+:root[data-theme="light"] .bg-gray-900\/95,
+:root[data-theme="light"] .bg-gray-900\/90,
+:root[data-theme="light"] .bg-gray-900\/80,
+:root[data-theme="light"] .bg-neutral-900\/95,
+:root[data-theme="light"] .bg-neutral-900\/90,
+:root[data-theme="light"] .bg-neutral-900\/80 {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+}
+
+:root[data-theme="light"] .bg-black\/70,
+:root[data-theme="light"] .bg-black\/60,
+:root[data-theme="light"] .bg-black\/50 {
+  background-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+:root[data-theme="light"] .bg-black\/40,
+:root[data-theme="light"] .bg-black\/30,
+:root[data-theme="light"] .bg-black\/20 {
+  background-color: rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Light text → dark foreground */
+:root[data-theme="light"] .text-white,
+:root[data-theme="light"] .text-gray-100,
+:root[data-theme="light"] .text-gray-200,
+:root[data-theme="light"] .text-neutral-100,
+:root[data-theme="light"] .text-neutral-200,
+:root[data-theme="light"] .text-zinc-100,
+:root[data-theme="light"] .text-zinc-200,
+:root[data-theme="light"] .text-stone-100,
+:root[data-theme="light"] .text-slate-100,
+:root[data-theme="light"] .text-slate-200 {
+  color: var(--sc-fg) !important;
+}
+
+/* Muted greys → muted foreground */
+:root[data-theme="light"] .text-gray-300,
+:root[data-theme="light"] .text-gray-400,
+:root[data-theme="light"] .text-gray-500,
+:root[data-theme="light"] .text-neutral-300,
+:root[data-theme="light"] .text-neutral-400,
+:root[data-theme="light"] .text-neutral-500,
+:root[data-theme="light"] .text-zinc-300,
+:root[data-theme="light"] .text-zinc-400,
+:root[data-theme="light"] .text-zinc-500,
+:root[data-theme="light"] .text-slate-400,
+:root[data-theme="light"] .text-slate-500 {
+  color: var(--sc-fg-muted) !important;
+}
+
+/* Dark borders → light border */
+:root[data-theme="light"] .border-gray-900,
+:root[data-theme="light"] .border-gray-800,
+:root[data-theme="light"] .border-gray-700,
+:root[data-theme="light"] .border-neutral-900,
+:root[data-theme="light"] .border-neutral-800,
+:root[data-theme="light"] .border-neutral-700,
+:root[data-theme="light"] .border-zinc-900,
+:root[data-theme="light"] .border-zinc-800,
+:root[data-theme="light"] .border-zinc-700,
+:root[data-theme="light"] .border-white\/10,
+:root[data-theme="light"] .border-white\/20 {
+  border-color: var(--sc-border) !important;
+}
+
+/* Form inputs — counter the global !important block at lines ~624-686 */
+:root[data-theme="light"] input,
+:root[data-theme="light"] textarea,
+:root[data-theme="light"] select,
+:root[data-theme="light"] input:focus,
+:root[data-theme="light"] textarea:focus,
+:root[data-theme="light"] select:focus {
+  color: var(--sc-input-fg) !important;
+  -webkit-text-fill-color: var(--sc-input-fg) !important;
+}
+
+:root[data-theme="light"] input::placeholder,
+:root[data-theme="light"] textarea::placeholder {
+  color: var(--sc-input-placeholder) !important;
+  -webkit-text-fill-color: var(--sc-input-placeholder) !important;
+}
+
+:root[data-theme="light"] input[type="number"] {
+  color: var(--sc-input-fg) !important;
+  -webkit-text-fill-color: var(--sc-input-fg) !important;
+  color-scheme: light;
+}
+
+:root[data-theme="light"] select {
+  color: var(--sc-input-fg) !important;
+  -webkit-text-fill-color: var(--sc-input-fg) !important;
+}
+
+:root[data-theme="light"] select option {
+  background-color: var(--sc-input-bg) !important;
+  color: var(--sc-input-fg) !important;
+}
+
+:root[data-theme="light"] select option:hover,
+:root[data-theme="light"] select option:checked {
+  background-color: var(--sc-card-elev) !important;
+  color: var(--sc-input-fg) !important;
+}
+
+/* Retro/NFT card components */
+:root[data-theme="light"] .retro-card,
+:root[data-theme="light"] .nft-card-modern {
+  background: var(--sc-card) !important;
+  border-color: var(--sc-border) !important;
+}
+
+:root[data-theme="light"] .nft-card-modern .card-title,
+:root[data-theme="light"] .nft-card-modern .price-value {
+  color: var(--sc-fg) !important;
+}
+
+:root[data-theme="light"] .nft-card-modern .card-subtitle,
+:root[data-theme="light"] .nft-card-modern .price-usd {
+  color: var(--sc-fg-muted) !important;
+}
+
+:root[data-theme="light"] .card-clean {
+  background: var(--sc-card-elev) !important;
+  border-color: var(--sc-border) !important;
+}
+
+/* Metadata cards (NFT flip card back) */
+:root[data-theme="light"] .metadata-section,
+:root[data-theme="light"] .metadata-section-compact {
+  background: var(--sc-card-elev) !important;
+  border-color: var(--sc-border) !important;
+}
+
+:root[data-theme="light"] .metadata-value {
+  color: var(--sc-fg) !important;
+}
+
+/* Legacy utility classes */
+:root[data-theme="light"] .darkGreyBackgroundColor {
+  background-color: var(--sc-card) !important;
+}
+
+:root[data-theme="light"] .grey80BackgroundColor {
+  background-color: var(--sc-card-elev) !important;
+}
+
+/* Secondary button — dark by default */
+:root[data-theme="light"] .btn-secondary {
+  background: rgba(0, 0, 0, 0.06) !important;
+  border-color: var(--sc-border) !important;
+  color: var(--sc-fg) !important;
+}
+
+:root[data-theme="light"] .btn-secondary:hover {
+  background: rgba(0, 0, 0, 0.10) !important;
+}
+
+/* Toastify dark toasts — flip to light */
+:root[data-theme="light"] .Toastify__close-button svg {
+  fill: var(--sc-fg) !important;
+}
+
 /* Agent feed animations */
 @keyframes fadeIn {
   from {
@@ -293,6 +487,10 @@ html.capacitor-app header.sticky {
   padding-top: env(safe-area-inset-top);
   /* Match safe area bg to header */
   background-color: rgba(0, 0, 0, 0.95);
+}
+
+html.capacitor-app[data-theme="light"] header.sticky {
+  background-color: rgba(255, 255, 255, 0.95);
 }
 
 /* Capacitor: Bottom nav respects home indicator safe area */
@@ -1818,5 +2016,13 @@ input[type="number"]::-webkit-outer-spin-button {
     -webkit-backdrop-filter: none !important;
     backdrop-filter: none !important;
     background-color: rgba(0, 0, 0, 0.85) !important;
+  }
+
+  /* Light mode: mobile fallback uses light wash instead of opaque black */
+  :root[data-theme="light"] .backdrop-blur-sm,
+  :root[data-theme="light"] .backdrop-blur-md,
+  :root[data-theme="light"] .backdrop-blur-lg,
+  :root[data-theme="light"] .backdrop-blur-xl {
+    background-color: rgba(255, 255, 255, 0.92) !important;
   }
 }
