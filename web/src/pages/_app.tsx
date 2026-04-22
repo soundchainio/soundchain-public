@@ -19,6 +19,7 @@ import Router, { useRouter } from 'next/router'
 import Script from 'next/script'
 import NProgress from 'nprogress'
 import React, { ReactElement } from 'react'
+import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import 'styles/audio-player.css'
 import 'styles/bottom-audio-player.css'
@@ -205,6 +206,20 @@ function SoundchainPageLayout({ Component, pageProps }: CustomAppProps) {
                         <LayoutContextProvider>
                           <HeartbeatProvider />
                           {Component.getLayout(<Component {...pageProps} />)}
+                          {/* Standalone pages bypass Layout.tsx (which owns the
+                              global ToastContainer), so mount one here too —
+                              otherwise toast.loading/update fires but never renders
+                              on /nodes, /gallery3d, /explore3d, /land, /arena. */}
+                          <ToastContainer
+                            position="top-center"
+                            autoClose={6 * 1000}
+                            toastStyle={{
+                              backgroundColor: '#202020',
+                              color: 'white',
+                              fontSize: '12px',
+                              textAlign: 'center',
+                            }}
+                          />
                         </LayoutContextProvider>
                       </HideBottomNavBarProvider>
                     </TrackProvider>
