@@ -59,6 +59,7 @@ const AgentStatusTicker = dynamic(
   () => import('components/AgentStatusTicker').then(m => m.AgentStatusTicker),
   { ssr: false },
 )
+import { OgunPriceTicker } from 'components/OgunPriceTicker'
 
 const PROFILE_STREAMING_REWARDS_QUERY = gql`
   query ProfileStreamingRewards($profileId: String!) {
@@ -1001,6 +1002,9 @@ export function DexNavBar() {
           </span>
         </div>
       )}
+
+      {/* Scrolling data ticker — OGUN price, MCap, chain data, links */}
+      <OgunPriceTicker />
     </header>
   )
 }
