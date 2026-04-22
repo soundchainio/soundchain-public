@@ -244,8 +244,10 @@
         setTimeout(function(){
           sendInput('export PATH="$PATH:$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:/usr/local/bin:/opt/homebrew/bin:$HOME/.npm-global/bin"\n');
         }, 1200);
-        // Auto-launch Claude Code (Jeremy uses MCP now, not FURL terminal)
+        // Auto-launch Claude Code + auto-scope 4 MDs
         setTimeout(function(){ try { fitAddon.fit(); } catch(e){} sendResize(); sendInput('claude\n'); }, 2000);
+        // After Claude loads (~8s), auto-run /scope to read all 4 MDs
+        setTimeout(function(){ sendInput('/scope\n'); }, 10000);
       } else {
         // Reconnection — just send enter to refresh prompt, don't relaunch claude
         setTimeout(function(){ try { fitAddon.fit(); } catch(e){} sendResize(); sendInput('\n'); }, 500);
