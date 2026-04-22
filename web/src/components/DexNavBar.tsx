@@ -342,10 +342,10 @@ export function DexNavBar() {
               </button>
               {openPanel === 'nearby' && (
                 <div
-                  className={`${popoverBase} w-[calc(100vw-2rem)] sm:w-96 max-w-[24rem] max-h-[80vh] border-2 border-green-500/50 bg-gradient-to-b from-neutral-900 via-green-950/10 to-neutral-900`}
+                  className={`${popoverBase} w-[calc(100vw-2rem)] sm:w-96 max-w-[24rem] max-h-[80vh] border-2 border-green-500/50 bg-neutral-900`}
                   onClick={e => e.stopPropagation()}
                 >
-                  <div className="flex items-center justify-between p-3 border-b border-green-500/30 bg-gradient-to-r from-green-900/50 to-cyan-900/50">
+                  <div className="flex items-center justify-between p-3 border-b border-green-500/30 bg-green-950">
                     <div className="flex items-center gap-2">
                       <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-cyan-500 flex items-center justify-center">
                         <Radio className="w-5 h-5 text-white" />
@@ -378,10 +378,10 @@ export function DexNavBar() {
 
               {openPanel === 'winwin' && (
                 <div
-                  className={`${popoverBase} w-[calc(100vw-2rem)] sm:w-80 max-w-[20rem] max-h-[80vh] border-2 border-orange-500/50 bg-gradient-to-b from-neutral-900 via-orange-950/10 to-neutral-900`}
+                  className={`${popoverBase} w-[calc(100vw-2rem)] sm:w-80 max-w-[20rem] max-h-[80vh] border-2 border-orange-500/50 bg-neutral-900`}
                   onClick={e => e.stopPropagation()}
                 >
-                  <div className="flex items-center justify-between p-3 border-b border-orange-500/30 bg-gradient-to-r from-orange-900/50 to-yellow-900/50">
+                  <div className="flex items-center justify-between p-3 border-b border-orange-500/30 bg-orange-950">
                     <div className="flex items-center gap-2">
                       <div className="relative">
                         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-yellow-500 flex items-center justify-center">
@@ -568,10 +568,10 @@ export function DexNavBar() {
 
               {openPanel === 'vibes' && (
                 <div
-                  className={`${popoverBase} w-[calc(100vw-2rem)] sm:w-72 max-w-[18rem] border-2 border-purple-500/50 bg-gradient-to-b from-neutral-900 via-purple-950/10 to-neutral-900`}
+                  className={`${popoverBase} w-[calc(100vw-2rem)] sm:w-72 max-w-[18rem] border-2 border-purple-500/50 bg-neutral-900`}
                   onClick={e => e.stopPropagation()}
                 >
-                  <div className="flex items-center justify-between p-3 border-b border-purple-500/30 bg-gradient-to-r from-purple-900/50 to-cyan-900/50">
+                  <div className="flex items-center justify-between p-3 border-b border-purple-500/30 bg-purple-950">
                     <div className="flex items-center gap-2">
                       <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center">
                         <Users className="w-5 h-5 text-white" />
@@ -664,7 +664,7 @@ export function DexNavBar() {
 
                 {openPanel === 'bell' && (
                   <div
-                    className={`${popoverBase} w-[calc(100vw-2rem)] sm:w-96 max-w-[24rem] max-h-[70vh] border-2 border-cyan-500/50 bg-gradient-to-b from-neutral-900 via-cyan-950/10 to-neutral-900`}
+                    className={`${popoverBase} w-[calc(100vw-2rem)] sm:w-96 max-w-[24rem] max-h-[70vh] border-2 border-cyan-500/50 bg-neutral-900`}
                     onClick={e => e.stopPropagation()}
                   >
                     <div className="flex items-center justify-between p-3 border-b border-cyan-500/30">
@@ -697,11 +697,11 @@ export function DexNavBar() {
 
                 {openPanel === 'avatar' && (
                   <div
-                    className={`${popoverBase} w-[calc(100vw-2rem)] sm:w-80 max-w-[22rem] max-h-[85vh] overflow-y-auto border-2 border-cyan-500/50 bg-gradient-to-b from-neutral-900 via-cyan-950/10 to-neutral-900`}
+                    className={`${popoverBase} w-[calc(100vw-2rem)] sm:w-80 max-w-[22rem] max-h-[85vh] overflow-y-auto border-2 border-cyan-500/50 bg-neutral-900`}
                     onClick={e => e.stopPropagation()}
                   >
                     {/* Header */}
-                    <div className="flex items-center gap-3 p-3 border-b border-cyan-500/30 bg-gradient-to-r from-cyan-900/30 to-purple-900/30">
+                    <div className="flex items-center gap-3 p-3 border-b border-cyan-500/30 bg-cyan-950">
                       <Avatar linkToProfile={false} profile={{ profilePicture: me.profile.profilePicture }} pixels={48} />
                       <div className="flex-1 min-w-0">
                         <div className="text-sm font-bold text-white truncate">
@@ -716,7 +716,7 @@ export function DexNavBar() {
 
                     {/* Quick nav */}
                     <div className="py-2 border-b border-cyan-500/20">
-                      <Link href={`/profiles/${me.profile.userHandle}`} onClick={close} className="flex items-center gap-3 px-3 py-2 text-sm text-white hover:bg-cyan-500/10">
+                      <Link href={`/users/${me.profile.userHandle}`} onClick={close} className="flex items-center gap-3 px-3 py-2 text-sm text-white hover:bg-cyan-500/10">
                         <UserIcon className="w-4 h-4 text-cyan-400" />
                         <span className="flex-1">My Profile</span>
                       </Link>
