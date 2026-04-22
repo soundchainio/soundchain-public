@@ -2513,18 +2513,27 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     const platformFee = amount * platformFeeRate
     const totalNeeded = amount + platformFee
 
-    // Get balance for selected wallet
+    // Get balance via DIRECT Polygon RPC — never through Magic RPC
+    // Magic RPC fails with [-32603] and returns 0 balances. Direct RPC
+    // reads from publicnode.com, same as QuickSwap/Uniswap/OpenSea.
+    const { getPolBalance: directPol, getOgunBalance: directOgun } = await import('lib/directRpc')
     let currentBalance: number
-    if (transferSourceWallet === 'oauth' || transferSourceWallet === 'hd' || transferSourceWallet === 'legacy') {
+    try {
       currentBalance = tokenTransferType === 'POL'
-        ? parseFloat(maticBalance || '0')
-        : parseFloat(ogunBalance || '0')
-    } else {
-      // External wallet - get balance from connectedExternalWallets
-      const extWallet = connectedExternalWallets?.find(w => w.address.toLowerCase() === transferSourceWallet.toLowerCase())
-      currentBalance = tokenTransferType === 'POL'
-        ? parseFloat(extWallet?.balance || '0')
-        : parseFloat(extWallet?.ogunBalance || '0')
+        ? parseFloat(await directPol(fromAddress))
+        : parseFloat(await directOgun(fromAddress))
+    } catch {
+      // Fallback to cached values if direct RPC also fails
+      if (transferSourceWallet === 'oauth' || transferSourceWallet === 'hd' || transferSourceWallet === 'legacy') {
+        currentBalance = tokenTransferType === 'POL'
+          ? parseFloat(maticBalance || '0')
+          : parseFloat(ogunBalance || '0')
+      } else {
+        const extWallet = connectedExternalWallets?.find(w => w.address.toLowerCase() === transferSourceWallet.toLowerCase())
+        currentBalance = tokenTransferType === 'POL'
+          ? parseFloat(extWallet?.balance || '0')
+          : parseFloat(extWallet?.ogunBalance || '0')
+      }
     }
 
     if (totalNeeded > currentBalance) {
