@@ -73,7 +73,13 @@
   background-color: var(--sc-bg) !important;
 }
 
-/* Translucent dark overlays — soften to light wash */
+/* ============================================
+   LIGHT MODE — GLOBAL SWEEP
+   Every dark background class used anywhere in
+   the app gets flipped here. No exceptions.
+   ============================================ */
+
+/* === OPAQUE DARK BACKGROUNDS → LIGHT === */
 :root[data-theme="light"] .bg-black\/95,
 :root[data-theme="light"] .bg-black\/90,
 :root[data-theme="light"] .bg-black\/80,
@@ -82,43 +88,118 @@
 :root[data-theme="light"] .bg-gray-900\/80,
 :root[data-theme="light"] .bg-neutral-900\/95,
 :root[data-theme="light"] .bg-neutral-900\/90,
-:root[data-theme="light"] .bg-neutral-900\/80 {
+:root[data-theme="light"] .bg-neutral-900\/80,
+:root[data-theme="light"] .bg-neutral-800\/80 {
   background-color: rgba(255, 255, 255, 0.95) !important;
 }
 
+/* === MEDIUM TRANSLUCENT → LIGHT WASH === */
 :root[data-theme="light"] .bg-black\/70,
 :root[data-theme="light"] .bg-black\/60,
-:root[data-theme="light"] .bg-black\/50 {
-  background-color: rgba(0, 0, 0, 0.06) !important;
+:root[data-theme="light"] .bg-black\/50,
+:root[data-theme="light"] .bg-gray-900\/50,
+:root[data-theme="light"] .bg-gray-800\/50,
+:root[data-theme="light"] .bg-gray-700\/50,
+:root[data-theme="light"] .bg-neutral-900\/50,
+:root[data-theme="light"] .bg-neutral-800\/50,
+:root[data-theme="light"] .bg-neutral-700\/50 {
+  background-color: rgba(0, 0, 0, 0.05) !important;
 }
 
+/* === LIGHT TRANSLUCENT → BARELY THERE === */
 :root[data-theme="light"] .bg-black\/40,
 :root[data-theme="light"] .bg-black\/30,
-:root[data-theme="light"] .bg-black\/20 {
-  background-color: rgba(0, 0, 0, 0.04) !important;
+:root[data-theme="light"] .bg-black\/20,
+:root[data-theme="light"] .bg-black\/10,
+:root[data-theme="light"] .bg-gray-900\/30,
+:root[data-theme="light"] .bg-gray-800\/40,
+:root[data-theme="light"] .bg-gray-800\/30,
+:root[data-theme="light"] .bg-neutral-800\/30 {
+  background-color: rgba(0, 0, 0, 0.03) !important;
 }
 
-/* Login page ALWAYS dark — animated background needs dark theme regardless */
-:root[data-theme="light"] .force-dark,
-:root[data-theme="light"] .force-dark * {
-  --sc-bg: #101010 !important;
-  --sc-fg: #ffffff !important;
-  color: inherit;
-}
-:root[data-theme="light"] .force-dark .bg-black\/40 { background-color: rgba(0,0,0,0.4) !important; }
-:root[data-theme="light"] .force-dark .bg-black\/50 { background-color: rgba(0,0,0,0.5) !important; }
-:root[data-theme="light"] .force-dark .text-white { color: #ffffff !important; }
-:root[data-theme="light"] .force-dark .border-white\/10 { border-color: rgba(255,255,255,0.1) !important; }
-:root[data-theme="light"] .force-dark .placeholder-gray-500::placeholder { color: #6b7280 !important; }
-
-/* Hardcoded hex dark backgrounds used across pages */
+/* === HARDCODED HEX DARK BACKGROUNDS === */
 :root[data-theme="light"] .bg-\[\#030303\],
 :root[data-theme="light"] .bg-\[\#030308\],
 :root[data-theme="light"] .bg-\[\#0a0f1f\],
 :root[data-theme="light"] .bg-\[\#0a0a0a\],
 :root[data-theme="light"] .bg-\[\#050a14\],
-:root[data-theme="light"] .bg-\[\#101010\] {
+:root[data-theme="light"] .bg-\[\#061220\],
+:root[data-theme="light"] .bg-\[\#101010\],
+:root[data-theme="light"] .bg-\[\#19191A\],
+:root[data-theme="light"] .bg-\[\#1f2c34\] {
   background-color: var(--sc-bg) !important;
+}
+
+/* === SOLID GRAY/NEUTRAL SURFACES → LIGHT CARDS === */
+:root[data-theme="light"] .bg-gray-700,
+:root[data-theme="light"] .bg-gray-600 {
+  background-color: var(--sc-card-elev) !important;
+}
+
+/* === BACKDROP BLUR SURFACES (nav, modals) === */
+:root[data-theme="light"] .backdrop-blur-xl,
+:root[data-theme="light"] .backdrop-blur-md,
+:root[data-theme="light"] .backdrop-blur-sm {
+  --tw-backdrop-blur: blur(12px);
+}
+
+/* === GRADIENT BACKGROUNDS → FLAT LIGHT === */
+:root[data-theme="light"] .bg-gradient-to-b,
+:root[data-theme="light"] .bg-gradient-to-t,
+:root[data-theme="light"] .bg-gradient-to-r,
+:root[data-theme="light"] .bg-gradient-to-br {
+  background-image: none !important;
+  background-color: var(--sc-bg) !important;
+}
+
+/* === WHITE/10 AND WHITE/20 BORDERS → LIGHT BORDERS === */
+:root[data-theme="light"] .border-white\/5,
+:root[data-theme="light"] .border-white\/10,
+:root[data-theme="light"] .border-white\/20,
+:root[data-theme="light"] .border-white\/30 {
+  border-color: var(--sc-border) !important;
+}
+
+/* === SHADOW ADJUSTMENTS === */
+:root[data-theme="light"] .shadow-lg,
+:root[data-theme="light"] .shadow-2xl {
+  --tw-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --tw-shadow-colored: 0 4px 12px var(--tw-shadow-color);
+}
+
+/* === SCROLLBAR IN LIGHT MODE === */
+:root[data-theme="light"] {
+  --sc-scrollbar-thumb: #c4c4c4;
+  --sc-scrollbar-track: #f0f0f0;
+}
+
+/* === Login page ALWAYS dark === */
+:root[data-theme="light"] .force-dark,
+:root[data-theme="light"] .force-dark * {
+  --sc-bg: #101010 !important;
+  --sc-fg: #ffffff !important;
+  background-image: none;
+}
+:root[data-theme="light"] .force-dark .bg-black\/40 { background-color: rgba(0,0,0,0.4) !important; }
+:root[data-theme="light"] .force-dark .bg-black\/50 { background-color: rgba(0,0,0,0.5) !important; }
+:root[data-theme="light"] .force-dark .bg-black\/60 { background-color: rgba(0,0,0,0.6) !important; }
+:root[data-theme="light"] .force-dark .bg-black\/80 { background-color: rgba(0,0,0,0.8) !important; }
+:root[data-theme="light"] .force-dark .bg-black { background-color: #000 !important; }
+:root[data-theme="light"] .force-dark .bg-gray-900 { background-color: #111827 !important; }
+:root[data-theme="light"] .force-dark .bg-neutral-900 { background-color: #171717 !important; }
+:root[data-theme="light"] .force-dark .text-white { color: #ffffff !important; }
+:root[data-theme="light"] .force-dark .text-gray-400 { color: #9ca3af !important; }
+:root[data-theme="light"] .force-dark .text-gray-500 { color: #6b7280 !important; }
+:root[data-theme="light"] .force-dark .border-white\/10 { border-color: rgba(255,255,255,0.1) !important; }
+:root[data-theme="light"] .force-dark .border-white\/20 { border-color: rgba(255,255,255,0.2) !important; }
+:root[data-theme="light"] .force-dark .placeholder-gray-500::placeholder { color: #6b7280 !important; }
+:root[data-theme="light"] .force-dark .bg-gradient-to-b,
+:root[data-theme="light"] .force-dark .bg-gradient-to-t,
+:root[data-theme="light"] .force-dark .bg-gradient-to-r,
+:root[data-theme="light"] .force-dark .bg-gradient-to-br {
+  background-image: revert !important;
+  background-color: revert !important;
 }
 
 /* Light text → dark foreground */
