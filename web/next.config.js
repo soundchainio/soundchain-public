@@ -59,7 +59,8 @@ module.exports = withPWA({
       // Settings
       { source: '/settings', destination: '/dex/settings' },
       { source: '/settings/:path*', destination: '/dex/settings/:path*' },
-      // Wallet — standalone page at /pages/wallet.tsx (Vercel-direct, no mega-router)
+      // Wallet — rewrite to mega-router (has full NFT collection, staking, sweep, transfers)
+      { source: '/wallet', destination: '/dex/wallet' },
       // Playlist
       { source: '/playlist/:id', destination: '/dex/playlist/:id' },
       // Post detail
