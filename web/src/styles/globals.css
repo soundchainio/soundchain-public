@@ -5,6 +5,46 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================
+   GLOBAL THEME TOKENS (Dark / Light / Auto)
+   Pre-hydration script in _document.tsx sets
+   [data-theme] on <html> before first paint.
+   Hook up new UI by reading var(--sc-*) instead
+   of hardcoding colors — legacy hardcoded dark
+   surfaces still render fine, we tokenize them
+   over time.
+   ============================================ */
+:root,
+:root[data-theme="dark"] {
+  --sc-bg: #101010;
+  --sc-bg-elev: #171717;
+  --sc-fg: #ffffff;
+  --sc-fg-muted: #9ca3af;
+  --sc-card: #18181b;
+  --sc-card-elev: #1f1f22;
+  --sc-border: rgba(255, 255, 255, 0.08);
+  --sc-input-bg: #1a1a1a;
+  --sc-input-fg: #ffffff;
+  --sc-input-placeholder: #6b7280;
+  --sc-scrollbar-thumb: #4d4d4d;
+  --sc-scrollbar-track: #292929;
+}
+
+:root[data-theme="light"] {
+  --sc-bg: #f7f7f8;
+  --sc-bg-elev: #ffffff;
+  --sc-fg: #0b0b0c;
+  --sc-fg-muted: #4b5563;
+  --sc-card: #ffffff;
+  --sc-card-elev: #f3f4f6;
+  --sc-border: rgba(0, 0, 0, 0.10);
+  --sc-input-bg: #ffffff;
+  --sc-input-fg: #0b0b0c;
+  --sc-input-placeholder: #9ca3af;
+  --sc-scrollbar-thumb: #c7c7cc;
+  --sc-scrollbar-track: #eceef1;
+}
+
 /* Agent feed animations */
 @keyframes fadeIn {
   from {
@@ -152,20 +192,21 @@ pre {
 
 html {
   height: 100%;
-  background-color: rgba(16, 16, 16);
+  background-color: var(--sc-bg);
   overflow: hidden;
   touch-action: manipulation;
 }
 
 body {
   height: 100%;
-  background-color: rgba(16, 16, 16);
+  background-color: var(--sc-bg);
+  color: var(--sc-fg);
 
-  --color-thumb: #4d4d4d;
-  --color-track: #292929;
+  --color-thumb: var(--sc-scrollbar-thumb);
+  --color-track: var(--sc-scrollbar-track);
 
   /* Official styles (Firefox) */
-  scrollbar-color: #4d4d4d #292929;
+  scrollbar-color: var(--sc-scrollbar-thumb) var(--sc-scrollbar-track);
   scrollbar-width: thin;
 
   overscroll-behavior-y: contain;

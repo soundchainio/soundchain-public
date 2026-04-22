@@ -28,7 +28,9 @@ import {
   PiggyBank, Coins, Headphones, Wallet, Zap, X, Users,
   ShieldCheck, Settings as SettingsIcon, AtSign, ChevronUp, ChevronDown,
   Check, Copy, AlertCircle, LogOut, User as UserIcon,
+  Moon, Sun, Monitor,
 } from 'lucide-react'
+import { useTheme, ThemeChoice } from 'lib/theme/ThemeContext'
 import { Logo } from 'icons/Logo'
 import { useMagicContext } from 'hooks/useMagicContext'
 import { useMe } from 'hooks/useMe'
@@ -113,6 +115,7 @@ export function DexNavBar() {
   const [accountSettingsSaving, setAccountSettingsSaving] = useState(false)
   const [accountSettingsSuccess, setAccountSettingsSuccess] = useState<string | null>(null)
   const [nostrPubkeyCopied, setNostrPubkeyCopied] = useState(false)
+  const { choice: themeChoice, setTheme } = useTheme()
 
   const [updateDisplayName] = useUpdateProfileDisplayNameMutation()
   const [updateHandle] = useUpdateHandleMutation()
@@ -794,6 +797,45 @@ export function DexNavBar() {
                           )}
                         </div>
                       )}
+                    </div>
+
+                    {/* Appearance — Dark / Light / Auto */}
+                    <div className="py-2 px-3 border-b border-cyan-500/20">
+                      <div className="flex items-center gap-2 mb-2">
+                        {themeChoice === 'light' ? (
+                          <Sun className="w-4 h-4 text-amber-400" />
+                        ) : themeChoice === 'auto' ? (
+                          <Monitor className="w-4 h-4 text-cyan-400" />
+                        ) : (
+                          <Moon className="w-4 h-4 text-cyan-400" />
+                        )}
+                        <span className="text-sm text-white">Appearance</span>
+                      </div>
+                      <div className="flex gap-1 bg-black/40 border border-cyan-500/20 rounded-lg p-1">
+                        {([
+                          { id: 'dark' as ThemeChoice, label: 'Dark', Icon: Moon },
+                          { id: 'light' as ThemeChoice, label: 'Light', Icon: Sun },
+                          { id: 'auto' as ThemeChoice, label: 'Auto', Icon: Monitor },
+                        ]).map(({ id, label, Icon }) => {
+                          const active = themeChoice === id
+                          return (
+                            <button
+                              key={id}
+                              onClick={() => setTheme(id)}
+                              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded text-[11px] font-semibold transition ${
+                                active
+                                  ? 'bg-cyan-500/30 text-cyan-200 border border-cyan-400/50'
+                                  : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
+                              }`}
+                              aria-pressed={active}
+                              aria-label={`${label} theme`}
+                            >
+                              <Icon className="w-3 h-3" />
+                              {label}
+                            </button>
+                          )
+                        })}
+                      </div>
                     </div>
 
                     {/* Account Settings accordion */}

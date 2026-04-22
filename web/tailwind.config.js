@@ -17,6 +17,9 @@ const measures = {
 
 module.exports = {
   content: ['./src/**/*.{ts,tsx}'],
+  // dark: variants key off the [data-theme="dark"] attribute set by _document.tsx
+  // and ThemeContext.tsx — so future dark:bg-* / light:bg-* classes respect the toggle.
+  darkMode: ['selector', '[data-theme="dark"]'],
   plugins: [require('@tailwindcss/forms')], // line-clamp is built-in since Tailwind v3.3
   theme: {
     extend: {

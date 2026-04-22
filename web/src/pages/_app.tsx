@@ -1,4 +1,5 @@
 import { AgentManagerProvider } from 'hooks/useAgentManager'
+import { ThemeProvider } from 'lib/theme/ThemeContext'
 import { ModalProvider } from "../contexts/ModalContext";
 import 'regenerator-runtime/runtime'
 import { CheckBodyScroll } from 'components/CheckBodyScroll'
@@ -326,12 +327,14 @@ function SoundchainApp({ Component, pageProps }: CustomAppProps) {
         />
       )}
       <AppErrorBoundary>
-        {Component.getLayout ? (
-          <SoundchainPageLayout Component={Component} pageProps={pageProps} />
-        ) : (
-          <SoundchainMainLayout Component={Component} pageProps={pageProps} />
-        )}
-        <FederatedSearchLauncher />
+        <ThemeProvider>
+          {Component.getLayout ? (
+            <SoundchainPageLayout Component={Component} pageProps={pageProps} />
+          ) : (
+            <SoundchainMainLayout Component={Component} pageProps={pageProps} />
+          )}
+          <FederatedSearchLauncher />
+        </ThemeProvider>
       </AppErrorBoundary>
     </>
   )
