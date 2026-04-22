@@ -96,6 +96,7 @@ export function DexNavBar() {
   const [openPanel, setOpenPanel] = useState<OpenPanel>('none')
   const [winWinTab, setWinWinTab] = useState<'catalog' | 'listener'>('catalog')
   const panelRef = useRef<HTMLDivElement | null>(null)
+  const popoverRef = useRef<HTMLDivElement | null>(null)
 
   const toggle = (panel: OpenPanel) => setOpenPanel(prev => (prev === panel ? 'none' : panel))
   const close = () => setOpenPanel('none')
@@ -244,7 +245,14 @@ export function DexNavBar() {
   useEffect(() => {
     if (openPanel === 'none') return
     const onDown = (e: MouseEvent) => {
-      if (panelRef.current && !panelRef.current.contains(e.target as Node)) close()
+      const target = e.target as Node
+      // Don't close if click is inside the pill bar OR inside any open popover
+      if (panelRef.current?.contains(target)) return
+      if (popoverRef.current?.contains(target)) return
+      // Also check by class — all popovers have z-[99]
+      const el = target as HTMLElement
+      if (el.closest?.('[data-popover]')) return
+      close()
     }
     document.addEventListener('mousedown', onDown)
     return () => document.removeEventListener('mousedown', onDown)
@@ -343,7 +351,7 @@ export function DexNavBar() {
               {openPanel === 'nearby' && (
                 <div
                   className={`${popoverBase} w-[calc(100vw-2rem)] sm:w-96 max-w-[24rem] max-h-[80vh] border-2 border-green-500/50 bg-neutral-900`}
-                  onClick={e => e.stopPropagation()}
+                  data-popover onClick={e => e.stopPropagation()}
                 >
                   <div className="flex items-center justify-between p-3 border-b border-green-500/30 bg-green-950">
                     <div className="flex items-center gap-2">
@@ -379,7 +387,7 @@ export function DexNavBar() {
               {openPanel === 'winwin' && (
                 <div
                   className={`${popoverBase} w-[calc(100vw-2rem)] sm:w-80 max-w-[20rem] max-h-[80vh] border-2 border-orange-500/50 bg-neutral-900`}
-                  onClick={e => e.stopPropagation()}
+                  data-popover onClick={e => e.stopPropagation()}
                 >
                   <div className="flex items-center justify-between p-3 border-b border-orange-500/30 bg-orange-950">
                     <div className="flex items-center gap-2">
@@ -569,7 +577,7 @@ export function DexNavBar() {
               {openPanel === 'vibes' && (
                 <div
                   className={`${popoverBase} w-[calc(100vw-2rem)] sm:w-72 max-w-[18rem] border-2 border-purple-500/50 bg-neutral-900`}
-                  onClick={e => e.stopPropagation()}
+                  data-popover onClick={e => e.stopPropagation()}
                 >
                   <div className="flex items-center justify-between p-3 border-b border-purple-500/30 bg-purple-950">
                     <div className="flex items-center gap-2">
@@ -665,7 +673,7 @@ export function DexNavBar() {
                 {openPanel === 'bell' && (
                   <div
                     className={`${popoverBase} w-[calc(100vw-2rem)] sm:w-96 max-w-[24rem] max-h-[70vh] border-2 border-cyan-500/50 bg-neutral-900`}
-                    onClick={e => e.stopPropagation()}
+                    data-popover onClick={e => e.stopPropagation()}
                   >
                     <div className="flex items-center justify-between p-3 border-b border-cyan-500/30">
                       <h3 className="text-sm font-bold flex items-center gap-2">
@@ -697,8 +705,9 @@ export function DexNavBar() {
 
                 {openPanel === 'avatar' && (
                   <div
+                    ref={popoverRef}
                     className={`${popoverBase} w-[calc(100vw-2rem)] sm:w-80 max-w-[22rem] max-h-[85vh] overflow-y-auto border-2 border-cyan-500/50 bg-neutral-900`}
-                    onClick={e => e.stopPropagation()}
+                    data-popover onClick={e => e.stopPropagation()}
                   >
                     {/* Header */}
                     <div className="flex items-center gap-3 p-3 border-b border-cyan-500/30 bg-cyan-950">
