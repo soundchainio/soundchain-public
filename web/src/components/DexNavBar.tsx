@@ -847,6 +847,17 @@ export function DexNavBar() {
                       </div>
                     </div>
 
+                    {/* Admin: Verify Users — only for furdA1, jeremy_soundchain, tito */}
+                    {me?.profile?.userHandle && ['furdA1', 'jeremy_soundchain', 'tito'].includes(me.profile.userHandle) && (
+                      <div className="py-1 border-b border-yellow-500/30">
+                        <Link href="/manage-requests" onClick={close} className="flex items-center gap-3 px-3 py-2 text-sm text-yellow-400 hover:bg-yellow-500/10">
+                          <ShieldCheck className="w-4 h-4 text-yellow-400" />
+                          <span className="flex-1">Admin: Verify Users</span>
+                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">ADMIN</span>
+                        </Link>
+                      </div>
+                    )}
+
                     {/* Account Settings accordion */}
                     <div className="py-1 border-b border-cyan-500/20">
                       <button

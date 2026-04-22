@@ -98,6 +98,16 @@
   background-color: rgba(0, 0, 0, 0.04) !important;
 }
 
+/* Hardcoded hex dark backgrounds used across pages */
+:root[data-theme="light"] .bg-\[\#030303\],
+:root[data-theme="light"] .bg-\[\#030308\],
+:root[data-theme="light"] .bg-\[\#0a0f1f\],
+:root[data-theme="light"] .bg-\[\#0a0a0a\],
+:root[data-theme="light"] .bg-\[\#050a14\],
+:root[data-theme="light"] .bg-\[\#101010\] {
+  background-color: var(--sc-bg) !important;
+}
+
 /* Light text → dark foreground */
 :root[data-theme="light"] .text-white,
 :root[data-theme="light"] .text-gray-100,
