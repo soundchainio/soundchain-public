@@ -59,9 +59,7 @@ module.exports = withPWA({
       // Settings
       { source: '/settings', destination: '/dex/settings' },
       { source: '/settings/:path*', destination: '/dex/settings/:path*' },
-      // Wallet
-      { source: '/wallet', destination: '/dex/wallet' },
-      { source: '/wallet/:path*', destination: '/dex/wallet/:path*' },
+      // Wallet — standalone page at /pages/wallet.tsx (Vercel-direct, no mega-router)
       // Playlist
       { source: '/playlist/:id', destination: '/dex/playlist/:id' },
       // Post detail

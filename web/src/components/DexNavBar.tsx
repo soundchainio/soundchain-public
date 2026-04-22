@@ -738,7 +738,7 @@ export function DexNavBar() {
                         <UserIcon className="w-4 h-4 text-cyan-400" />
                         <span className="flex-1">My Profile</span>
                       </Link>
-                      <Link href={`/users/${me.profile.userHandle}?tab=wallet`} className="flex items-center gap-3 px-3 py-2 text-sm text-white hover:bg-cyan-500/10">
+                      <Link href="/wallet" className="flex items-center gap-3 px-3 py-2 text-sm text-white hover:bg-cyan-500/10">
                         <Wallet className="w-4 h-4 text-cyan-400" />
                         <span className="flex-1">Wallet</span>
                       </Link>
