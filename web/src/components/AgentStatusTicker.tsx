@@ -2501,17 +2501,24 @@ export function AgentStatusTicker() {
     addLine(`⟡ SMITH streaming (${label})...`, 'system')
     jackStreamRef.current = ''
 
-    fetch('/api/agent/smith/session', {
+    // Route to managed agent endpoint if `jack managed` was used
+    const managedAgent = (window as any).__managedAgent
+    const endpoint = managedAgent ? '/api/agent/managed/session' : '/api/agent/smith/session'
+    const payload = managedAgent
+      ? { agent: managedAgent, messages: newHistory }
+      : {
+          messages: newHistory,
+          anthropicKey: anthropicKey || undefined,
+          openclawUrl: ocUrl || undefined,
+          openclawToken: ocToken || undefined,
+          provider,
+          mode: forgeMode ? 'FORGE' : 'CHAT',
+        }
+
+    fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        messages: newHistory,
-        anthropicKey: anthropicKey || undefined,
-        openclawUrl: ocUrl || undefined,
-        openclawToken: ocToken || undefined,
-        provider,
-        mode: forgeMode ? 'FORGE' : 'CHAT',
-      }),
+      body: JSON.stringify(payload),
       signal: abortCtrl.signal,
     })
       .then(response => {
@@ -2685,6 +2692,8 @@ export function AgentStatusTicker() {
         addLine('  keys         — keybook — manage saved API keys', 'info')
         addLine('  jack         — jack in to SMITH (streaming AI chat)', 'info')
         addLine('  jack forge   — jack in to SMITH FORGE (coding agent)', 'info')
+        addLine('  jack managed — managed agent (Anthropic cloud + custom tools)', 'info')
+        addLine('  jack managed furl — FURL as managed agent', 'info')
         addLine('  jack cli     — CLI bridge via SoundChain relay (Claude Code)', 'info')
         addLine('  tunnel <url> — override tunnel URL (default: relay.soundchain.io)', 'info')
         addLine('  exit         — disconnect from any jack mode', 'info')
@@ -2997,6 +3006,25 @@ export function AgentStatusTicker() {
           addLine(`  └────────────────────────────────────────┘`, 'system')
           furlSpeak(`Forge active. SMITH has coding tools. Give me a task.`)
         }
+      } else if (cmd.startsWith('jack managed') || cmd.startsWith('smith jack managed')) {
+        // Jack in to Managed Agent — Anthropic Managed Agents API
+        const parts = cmd.split(/\s+/)
+        const agentArg = parts[parts.length - 1]
+        const agentHandle = (agentArg !== 'managed' && agentArg !== 'jack') ? agentArg : 'smith'
+        setJackMode('JACKED_IN')
+        setForgeMode(false)
+        setJackHistory([])
+        jackStreamRef.current = ''
+        // Store managed agent handle for the session
+        ;(window as any).__managedAgent = agentHandle
+        addLine(`  ┌─ MANAGED AGENT ──────────────────────┐`, 'system')
+        addLine(`  │ connecting to @${agentHandle} (managed)`, 'success')
+        addLine(`  │ Anthropic Managed Agents API`, 'info')
+        addLine(`  │ agent has: bash, files, web, custom tools`, 'info')
+        addLine(`  │ type a message. type "exit" to disconnect`, 'info')
+        addLine(`  └────────────────────────────────────────┘`, 'system')
+        furlSpeak(`Managed agent ${agentHandle} connected. Talk to me.`)
+
       } else if (cmd === 'jack' || cmd === 'smith jack') {
         // Jack in to SMITH — streaming AI chat session (reads from keybook)
         const active = keybookGetActive()
@@ -3037,12 +3065,14 @@ export function AgentStatusTicker() {
         } else if (jackMode === 'JACKED_IN') {
           if (jackAbortRef.current) jackAbortRef.current.abort()
           const wasForge = forgeMode
+          const wasManaged = (window as any).__managedAgent
+          ;(window as any).__managedAgent = null
           setJackMode('DISCONNECTED')
           setForgeMode(false)
           setJackHistory([])
           jackStreamRef.current = ''
           addLine(`  ┌─ DISCONNECTED ─────────────────────────┐`, 'system')
-          addLine(`  │ ${wasForge ? 'SMITH FORGE' : 'SMITH'} session ended`, 'info')
+          addLine(`  │ ${wasManaged ? `@${wasManaged} managed agent` : wasForge ? 'SMITH FORGE' : 'SMITH'} session ended`, 'info')
           addLine(`  │ conversation history cleared`, 'info')
           addLine(`  │ back to local FURL mode`, 'info')
           addLine(`  └────────────────────────────────────────┘`, 'system')
