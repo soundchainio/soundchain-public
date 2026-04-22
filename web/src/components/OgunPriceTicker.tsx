@@ -1,200 +1,166 @@
 /**
- * OgunPriceTicker — ESPN-style scrolling ticker bar
- * Shows OGUN price, market cap, DappRadar rank, Top100Token + DappRadar links
- * Fetches live price from QuickSwap pool on Polygon
+ * OgunPriceTicker — Bloomberg-style scrolling market ticker
+ *
+ * Frank's vision: "realtime token prices, wallstreet stock prices,
+ * bigtech stocks, gold, silver, platinum, oil, cattle.. top ten crypto
+ * tokens on the market cap rankings real time. rival bloomberg?"
+ *
+ * Fetches from /api/ticker/market-data (aggregates CoinGecko + OGUN stats).
+ * Scrolls via CSS marquee animation. Green ↑ / Red ↓ per asset.
  */
 
 import { useState, useEffect } from 'react'
 import { TrendingUp, TrendingDown, ExternalLink, BarChart3, Globe } from 'lucide-react'
 
-const OGUN_ADDRESS = '0x45f1af89486aeec2da0b06340cd9cd3bd741a15c'
-const QUICKSWAP_PAIR = '0xfF0E141891D0E66b0D094215B44eF433F43066e5' // OGUN/POL LP
-const TOP100_URL = `https://top100token.com/polygon/${OGUN_ADDRESS}`
-const DAPPRADAR_URL = 'https://dappradar.com/dapp/soundchain'
-
-// Minimal ERC-20 + pair ABI for price fetch
-const PAIR_ABI = [
-  'function getReserves() external view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast)',
-]
-
-interface PriceData {
+interface Asset {
+  symbol: string
+  name: string
   price: number
   change24h: number
-  marketCap: number
-  liquidity: number
+  marketCap?: number
+  liquidity?: number
+}
+
+interface TickerData {
+  ogun: Asset & { liquidity: number }
+  crypto: Asset[]
+  commodities: Asset[]
+  meta: { chain: string; fee: string; contracts: number; dappradar: string; top100token: string }
 }
 
 export const OgunPriceTicker = () => {
-  const [priceData, setPriceData] = useState<PriceData | null>(null)
+  const [data, setData] = useState<TickerData | null>(null)
 
   useEffect(() => {
-    const fetchPrice = async () => {
-      try {
-        // Fetch from our own API to avoid CORS — or fallback to static
-        const res = await fetch('/api/agent/stats')
-        if (res.ok) {
-          const data = await res.json()
-          if (data.ogunPrice) {
-            setPriceData({
-              price: data.ogunPrice,
-              change24h: data.ogunChange24h || 0,
-              marketCap: data.ogunMarketCap || 62200,
-              liquidity: data.ogunLiquidity || 1080,
-            })
-            return
-          }
-        }
-      } catch {}
-
-      // Fallback — static data from Top100Token
-      setPriceData({
-        price: 0.000046221,
-        change24h: 0,
-        marketCap: 62200,
-        liquidity: 1080,
-      })
+    const fetchData = () => {
+      fetch('/api/ticker/market-data')
+        .then(r => r.json())
+        .then(setData)
+        .catch(() => {})
     }
-
-    fetchPrice()
-    const interval = setInterval(fetchPrice, 300000) // Refresh every 5 minutes (was 60s — Vercel invocation savings)
+    fetchData()
+    const interval = setInterval(fetchData, 60_000) // Refresh every 60s
     return () => clearInterval(interval)
   }, [])
 
-  const formatPrice = (p: number) => {
+  const fmt = (p: number) => {
+    if (p === 0) return '$0'
     if (p < 0.0001) {
-      // Subscript notation like Top100Token: $0.0₄6221
       const str = p.toFixed(10)
       const match = str.match(/^0\.(0+)(\d+)$/)
       if (match) {
         const zeros = match[1].length
         const digits = match[2].slice(0, 4)
-        return (
-          <span>$0.0<sub className="text-[8px]">{zeros}</sub>{digits}</span>
-        )
+        return <span>$0.0<sub className="text-[7px]">{zeros}</sub>{digits}</span>
       }
     }
     if (p < 0.01) return `$${p.toFixed(6)}`
     if (p < 1) return `$${p.toFixed(4)}`
-    return `$${p.toFixed(2)}`
+    if (p < 100) return `$${p.toFixed(2)}`
+    if (p < 10000) return `$${p.toLocaleString(undefined, { maximumFractionDigits: 1 })}`
+    return `$${(p / 1000).toFixed(1)}K`
   }
 
-  const isUp = (priceData?.change24h || 0) >= 0
+  const arrow = (change: number) => (
+    <span className={`flex items-center gap-0.5 ${change >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+      {change >= 0 ? <TrendingUp className="w-2.5 h-2.5" /> : <TrendingDown className="w-2.5 h-2.5" />}
+      {Math.abs(change).toFixed(1)}%
+    </span>
+  )
+
+  const renderAsset = (a: Asset, color: string = 'text-white') => (
+    <div key={a.symbol} className="flex items-center gap-1.5 flex-shrink-0">
+      <span className={`${color} font-bold`}>{a.symbol}</span>
+      <span className="text-white font-mono">{typeof a.price === 'number' ? fmt(a.price) : '...'}</span>
+      {arrow(a.change24h)}
+    </div>
+  )
+
+  // Build the full ticker content
+  const items: React.ReactNode[] = []
+
+  if (data) {
+    // OGUN first (our token)
+    items.push(renderAsset(data.ogun, 'text-amber-400'))
+
+    // Separator
+    items.push(<span key="s1" className="text-white/10 flex-shrink-0">│</span>)
+
+    // Top 10 crypto
+    const cryptoColors: Record<string, string> = {
+      BTC: 'text-orange-400', ETH: 'text-blue-400', SOL: 'text-purple-400',
+      BNB: 'text-yellow-400', XRP: 'text-gray-300', DOGE: 'text-yellow-300',
+      ADA: 'text-blue-300', AVAX: 'text-red-400', DOT: 'text-pink-400',
+      MATIC: 'text-purple-300', USDT: 'text-green-300', USDC: 'text-blue-200',
+    }
+    data.crypto.forEach(c => {
+      items.push(renderAsset(c, cryptoColors[c.symbol] || 'text-cyan-400'))
+    })
+
+    // Separator
+    items.push(<span key="s2" className="text-white/10 flex-shrink-0">│</span>)
+
+    // Commodities
+    data.commodities.forEach(c => {
+      const colors: Record<string, string> = { GOLD: 'text-yellow-400', SILVER: 'text-gray-300', OIL: 'text-orange-300' }
+      items.push(renderAsset(c, colors[c.symbol] || 'text-gray-400'))
+    })
+
+    // Separator
+    items.push(<span key="s3" className="text-white/10 flex-shrink-0">│</span>)
+
+    // Chain data + links
+    items.push(
+      <div key="chain" className="flex items-center gap-1.5 flex-shrink-0">
+        <span className="text-gray-500">Chain</span>
+        <span className="text-purple-400">{data.meta.chain}</span>
+      </div>
+    )
+    items.push(
+      <div key="fee" className="flex items-center gap-1.5 flex-shrink-0">
+        <span className="text-gray-500">Fee</span>
+        <span className="text-cyan-400">{data.meta.fee}</span>
+      </div>
+    )
+    items.push(
+      <div key="mcap" className="flex items-center gap-1.5 flex-shrink-0">
+        <span className="text-gray-500">OGUN MCap</span>
+        <span className="text-gray-300 font-mono">${((data.ogun.marketCap || 0) / 1000).toFixed(1)}K</span>
+      </div>
+    )
+    items.push(
+      <div key="liq" className="flex items-center gap-1.5 flex-shrink-0">
+        <span className="text-gray-500">Liq</span>
+        <span className="text-gray-300 font-mono">${data.ogun.liquidity?.toLocaleString()}</span>
+      </div>
+    )
+    items.push(
+      <div key="contracts" className="flex items-center gap-1.5 flex-shrink-0">
+        <span className="text-gray-500">Contracts</span>
+        <span className="text-green-400">{data.meta.contracts} deployed</span>
+      </div>
+    )
+    items.push(
+      <a key="dappradar" href={data.meta.dappradar} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-blue-400 hover:text-blue-300 transition-colors flex-shrink-0">
+        <BarChart3 className="w-2.5 h-2.5" /> DappRadar <ExternalLink className="w-2 h-2" />
+      </a>
+    )
+    items.push(
+      <a key="top100" href={data.meta.top100token} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-amber-400 hover:text-amber-300 transition-colors flex-shrink-0">
+        <Globe className="w-2.5 h-2.5" /> Top100Token <ExternalLink className="w-2 h-2" />
+      </a>
+    )
+  } else {
+    items.push(<span key="loading" className="text-gray-500 font-mono">Loading market data...</span>)
+  }
 
   return (
-    <div className="w-full bg-black/60 border-b border-white/5 overflow-hidden">
-      <div className="flex items-center gap-6 px-3 py-1 animate-marquee-slow whitespace-nowrap text-[11px]">
-        {/* OGUN Price */}
-        <div className="flex items-center gap-1.5">
-          <span className="text-amber-400 font-bold">OGUN</span>
-          <span className="text-white font-mono">
-            {priceData ? formatPrice(priceData.price) : '...'}
-          </span>
-          {priceData && (
-            <span className={`flex items-center gap-0.5 ${isUp ? 'text-green-400' : 'text-red-400'}`}>
-              {isUp ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-              {Math.abs(priceData.change24h).toFixed(1)}%
-            </span>
-          )}
-        </div>
-
-        {/* Market Cap */}
-        <div className="flex items-center gap-1.5">
-          <span className="text-gray-500">MCap</span>
-          <span className="text-gray-300 font-mono">
-            {priceData ? `$${(priceData.marketCap / 1000).toFixed(1)}K` : '...'}
-          </span>
-        </div>
-
-        {/* Liquidity */}
-        <div className="flex items-center gap-1.5">
-          <span className="text-gray-500">Liq</span>
-          <span className="text-gray-300 font-mono">
-            {priceData ? `$${priceData.liquidity.toLocaleString()}` : '...'}
-          </span>
-        </div>
-
-        {/* Chain */}
-        <div className="flex items-center gap-1.5">
-          <span className="text-gray-500">Chain</span>
-          <span className="text-purple-400">Polygon</span>
-        </div>
-
-        {/* Fee */}
-        <div className="flex items-center gap-1.5">
-          <span className="text-gray-500">Fee</span>
-          <span className="text-cyan-400">0.05%</span>
-        </div>
-
-        {/* Separator */}
-        <span className="text-white/10">|</span>
-
-        {/* DappRadar */}
-        <a
-          href={DAPPRADAR_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-1 text-blue-400 hover:text-blue-300 transition-colors"
-        >
-          <BarChart3 className="w-3 h-3" />
-          DappRadar
-          <ExternalLink className="w-2.5 h-2.5" />
-        </a>
-
-        {/* Top100Token */}
-        <a
-          href={TOP100_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-1 text-amber-400 hover:text-amber-300 transition-colors"
-        >
-          <Globe className="w-3 h-3" />
-          Top100Token
-          <ExternalLink className="w-2.5 h-2.5" />
-        </a>
-
-        {/* Duplicate for seamless scroll */}
-        <span className="text-white/10">|</span>
-
-        <div className="flex items-center gap-1.5">
-          <span className="text-amber-400 font-bold">OGUN</span>
-          <span className="text-white font-mono">
-            {priceData ? formatPrice(priceData.price) : '...'}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-1.5">
-          <span className="text-gray-500">MCap</span>
-          <span className="text-gray-300 font-mono">
-            {priceData ? `$${(priceData.marketCap / 1000).toFixed(1)}K` : '...'}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-1.5">
-          <span className="text-gray-500">Contracts</span>
-          <span className="text-green-400">7 deployed</span>
-        </div>
-
-        <a
-          href={DAPPRADAR_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-1 text-blue-400 hover:text-blue-300 transition-colors"
-        >
-          <BarChart3 className="w-3 h-3" />
-          DappRadar
-          <ExternalLink className="w-2.5 h-2.5" />
-        </a>
-
-        <a
-          href={TOP100_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-1 text-amber-400 hover:text-amber-300 transition-colors"
-        >
-          <Globe className="w-3 h-3" />
-          Top100Token
-          <ExternalLink className="w-2.5 h-2.5" />
-        </a>
+    <div className="w-full bg-black/80 border-b border-white/5 overflow-hidden">
+      <div className="flex items-center gap-5 px-3 py-1 whitespace-nowrap text-[10px] animate-marquee-slow">
+        {items}
+        {/* Duplicate for seamless infinite scroll */}
+        <span className="text-white/10 flex-shrink-0">│</span>
+        {items}
       </div>
     </div>
   )
