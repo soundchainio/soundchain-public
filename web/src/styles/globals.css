@@ -98,6 +98,19 @@
   background-color: rgba(0, 0, 0, 0.04) !important;
 }
 
+/* Login page ALWAYS dark — animated background needs dark theme regardless */
+:root[data-theme="light"] .force-dark,
+:root[data-theme="light"] .force-dark * {
+  --sc-bg: #101010 !important;
+  --sc-fg: #ffffff !important;
+  color: inherit;
+}
+:root[data-theme="light"] .force-dark .bg-black\/40 { background-color: rgba(0,0,0,0.4) !important; }
+:root[data-theme="light"] .force-dark .bg-black\/50 { background-color: rgba(0,0,0,0.5) !important; }
+:root[data-theme="light"] .force-dark .text-white { color: #ffffff !important; }
+:root[data-theme="light"] .force-dark .border-white\/10 { border-color: rgba(255,255,255,0.1) !important; }
+:root[data-theme="light"] .force-dark .placeholder-gray-500::placeholder { color: #6b7280 !important; }
+
 /* Hardcoded hex dark backgrounds used across pages */
 :root[data-theme="light"] .bg-\[\#030303\],
 :root[data-theme="light"] .bg-\[\#030308\],
