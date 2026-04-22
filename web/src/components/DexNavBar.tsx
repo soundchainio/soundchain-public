@@ -742,7 +742,7 @@ export function DexNavBar() {
                         <Wallet className="w-4 h-4 text-cyan-400" />
                         <span className="flex-1">Wallet</span>
                       </Link>
-                      <Link href="/messages" className="flex items-center gap-3 px-3 py-2 text-sm text-white hover:bg-cyan-500/10">
+                      <Link href="/pulse" className="flex items-center gap-3 px-3 py-2 text-sm text-white hover:bg-cyan-500/10">
                         <MessageCircle className="w-4 h-4 text-cyan-400" />
                         <span className="flex-1">Inbox</span>
                       </Link>
