@@ -138,6 +138,10 @@ export function CharacterDesigner({ open, onClose, initialName }: CharacterDesig
   const [activePanel, setActivePanel] = useState<'body' | 'face' | 'fit'>('body')
   const showFace = activePanel === 'face'
   const showFit = activePanel === 'fit'
+  // Ready Player Me iframe loads in 3rd-party context and frequently fails silently on
+  // mobile PWA / tunnel origins (black rectangle, no error event). Track whether it
+  // sends any signal within 6s; if not, surface a fallback CTA to OPEN SOURCE.
+  const [rpmStatus, setRpmStatus] = useState<'loading' | 'ready' | 'stalled'>('loading')
 
   // On open, pull the authoritative character from Mongo (if logged in).
   // Merges into local state + localStorage so the designer opens with the
@@ -156,9 +160,16 @@ export function CharacterDesigner({ open, onClose, initialName }: CharacterDesig
   }, [open, initialName])
 
   // ─── Ready Player Me message handler ─────────────────────
-  // Listens for avatar export from RPM iframe
+  // Listens for avatar export from RPM iframe + any frame.ready / subscribe signal
+  // so we can clear the "stalled" fallback if RPM is actually alive.
   useEffect(() => {
     if (!open || config.type !== 'human') return
+    // Reset status every time the user re-enters HUMAN mode
+    setRpmStatus('loading')
+    const stallTimer = setTimeout(() => {
+      setRpmStatus(prev => (prev === 'loading' ? 'stalled' : prev))
+    }, 6000)
+
     const handler = (event: MessageEvent) => {
       // Validate origin (Ready Player Me sends from readyplayer.me)
       if (typeof event.data !== 'string' && (!event.data || typeof event.data !== 'object')) return
@@ -166,6 +177,10 @@ export function CharacterDesigner({ open, onClose, initialName }: CharacterDesig
       // RPM sends JSON strings sometimes
       if (typeof data === 'string') {
         try { data = JSON.parse(data) } catch { return }
+      }
+      // Any RPM postMessage counts as "iframe is alive" — kill the stall timer
+      if (data?.source === 'readyplayerme' || data?.eventName?.startsWith?.('v1.')) {
+        setRpmStatus('ready')
       }
       // Avatar exported event
       if (data?.eventName === 'v1.avatar.exported' || data?.source === 'readyplayerme') {
@@ -178,7 +193,10 @@ export function CharacterDesigner({ open, onClose, initialName }: CharacterDesig
       }
     }
     window.addEventListener('message', handler)
-    return () => window.removeEventListener('message', handler)
+    return () => {
+      clearTimeout(stallTimer)
+      window.removeEventListener('message', handler)
+    }
   }, [open, config.type])
 
   // ─── Live 3D Preview (agent pill only) ───────────────────
@@ -423,14 +441,45 @@ export function CharacterDesigner({ open, onClose, initialName }: CharacterDesig
                     Click ✓ when done to save.
                   </p>
                 </div>
-                <iframe
-                  src="https://readyplayer.me/avatar?frameApi&clearCache"
-                  className="w-full"
-                  style={{ height: '500px', border: 'none', background: '#000' }}
-                  allow="camera *; microphone *; clipboard-write"
-                  title="Ready Player Me Avatar Editor"
-                  loading="lazy"
-                />
+                <div className="relative" style={{ height: '500px' }}>
+                  {/* Loading overlay — visible until RPM iframe posts its first message */}
+                  {rpmStatus === 'loading' && (
+                    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black pointer-events-none">
+                      <div className="w-8 h-8 border-2 border-purple-500/30 border-t-purple-400 rounded-full animate-spin mb-3" />
+                      <p className="text-[10px] font-mono text-purple-300">Loading Ready Player Me…</p>
+                      <p className="text-[9px] font-mono text-gray-600 mt-1">(first load can take a few seconds)</p>
+                    </div>
+                  )}
+                  {/* Stalled fallback — RPM didn't respond within 6s. Offer the OPEN SOURCE escape hatch. */}
+                  {rpmStatus === 'stalled' && (
+                    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black p-6 text-center">
+                      <p className="text-[11px] font-mono text-purple-300 mb-2">⚠ Ready Player Me didn't load</p>
+                      <p className="text-[10px] font-mono text-gray-500 mb-4 max-w-xs">
+                        Third-party iframes sometimes fail on mobile / PWA / tunnel contexts.
+                        Use our OPEN SOURCE avatars instead — CC0-licensed, works on every device.
+                      </p>
+                      <button
+                        onClick={() => update({ type: 'opensource', humanGlbUrl: undefined, humanAvatarPng: undefined })}
+                        className="px-4 py-2 rounded bg-cyan-500/20 border border-cyan-500/40 text-cyan-400 text-[10px] font-mono font-bold hover:bg-cyan-500/30 transition"
+                      >
+                        🎨 SWITCH TO OPEN SOURCE
+                      </button>
+                      <button
+                        onClick={() => setRpmStatus('loading')}
+                        className="mt-3 text-[9px] font-mono text-gray-500 hover:text-gray-300 underline"
+                      >
+                        retry Ready Player Me
+                      </button>
+                    </div>
+                  )}
+                  <iframe
+                    src="https://readyplayer.me/avatar?frameApi&clearCache"
+                    className="w-full h-full"
+                    style={{ border: 'none', background: '#000' }}
+                    allow="camera *; microphone *; clipboard-write"
+                    title="Ready Player Me Avatar Editor"
+                  />
+                </div>
               </div>
             ) : (
               <div className="p-4 space-y-3">
