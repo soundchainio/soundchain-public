@@ -45,8 +45,11 @@ interface MagicProviderProps {
 // Network config tells Magic's iframe to route signing to Polygon (chainId 137).
 // Without it, Magic defaults to Ethereum mainnet for signing popups.
 // NOTE: This works with @magic-ext/oauth (v1) but NOT with @magic-ext/oauth2 (v2).
-// oauth2 + network config caused SERVICE_ERROR from Magic Admin SDK.
-// All blockchain READS still use direct Polygon RPC (polygon-bor-rpc.publicnode.com).
+// Magic SDK: auth + signing ONLY. No custom rpcUrl.
+// Custom rpcUrl was blocked by Magic's iframe CSP → [-32603] Failed to fetch.
+// Fix per Magic support (Fin): remove rpcUrl, let Magic use their default Polygon RPC.
+// All blockchain READS use lib/directRpc.ts (polygon-bor-rpc.publicnode.com).
+// Magic ONLY needed for: login (OAuth) + transaction signing.
 const createMagic = (magicPublicKey: string): MagicInstance => {
   try {
     if (typeof window === 'undefined') return null;
@@ -54,7 +57,6 @@ const createMagic = (magicPublicKey: string): MagicInstance => {
     const magicInstance = new Magic(magicPublicKey, {
       extensions: [new OAuthExtension()],
       network: {
-        rpcUrl: 'https://polygon-bor-rpc.publicnode.com',
         chainId: 137,
       },
     });
