@@ -12,9 +12,10 @@
  * user clicks "I've saved my key" which sets a permanent flag.
  */
 import { useState, useEffect } from 'react'
-import { AlertTriangle, Key, Shield, X, ExternalLink } from 'lucide-react'
+import { AlertTriangle, Key, Shield, X, ExternalLink, ArrowRight } from 'lucide-react'
 import { useMe } from 'hooks/useMe'
 import { useMagicContext } from 'hooks/useMagicContext'
+import { WalletMigrateModal } from './WalletMigrateModal'
 
 const DISMISSED_KEY = 'soundchain_legacy_wallet_banner_dismissed'
 const SAVED_KEY = 'soundchain_legacy_wallet_key_saved'
@@ -24,6 +25,7 @@ export function LegacyWalletBanner() {
   const { magic } = useMagicContext()
   const [dismissed, setDismissed] = useState(true)
   const [revealing, setRevealing] = useState(false)
+  const [showMigrate, setShowMigrate] = useState(false)
 
   // Only show to OAuth wallet users who haven't permanently dismissed
   useEffect(() => {
@@ -65,9 +67,12 @@ export function LegacyWalletBanner() {
     }
   }
 
-  if (dismissed) return null
+  if (dismissed && !showMigrate) return null
 
   return (
+    <>
+    {showMigrate && <WalletMigrateModal isOpen={showMigrate} onClose={() => setShowMigrate(false)} />}
+    {dismissed ? null : (
     <div className="fixed bottom-20 left-4 right-4 sm:left-auto sm:right-4 sm:w-96 z-[100] animate-in slide-in-from-bottom-5">
       <div className="bg-amber-950 border-2 border-amber-500/50 rounded-xl shadow-2xl shadow-amber-500/20 overflow-hidden">
         {/* Header */}
@@ -105,7 +110,13 @@ export function LegacyWalletBanner() {
               className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-400 text-xs font-mono font-bold hover:bg-amber-500/30 transition disabled:opacity-50"
             >
               <Shield className="w-3.5 h-3.5" />
-              {revealing ? 'OPENING...' : 'REVEAL SECRET PHRASE'}
+              {revealing ? 'OPENING...' : 'REVEAL KEY'}
+            </button>
+            <button
+              onClick={() => setShowMigrate(true)}
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg bg-green-500/20 border border-green-500/40 text-green-400 text-xs font-mono font-bold hover:bg-green-500/30 transition"
+            >
+              <ArrowRight className="w-3.5 h-3.5" /> MIGRATE NOW
             </button>
           </div>
 
@@ -133,5 +144,7 @@ export function LegacyWalletBanner() {
         </div>
       </div>
     </div>
+    )}
+    </>
   )
 }
