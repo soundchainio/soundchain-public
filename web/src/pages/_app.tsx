@@ -37,6 +37,7 @@ const UnifiedWalletProvider = dynamic(() => import('contexts/UnifiedWalletContex
 const RadioProvider = dynamic(() => import('contexts/RadioContext').then(mod => mod.RadioProvider), { ssr: false })
 const PushEnableFloat = dynamic(() => import('components/PushEnableFloat').then(mod => mod.PushEnableFloat), { ssr: false })
 const FederatedSearchLauncher = dynamic(() => import('components/FederatedSearchLauncher'), { ssr: false })
+const LegacyWalletBanner = dynamic(() => import('components/LegacyWalletBanner').then(m => ({ default: m.LegacyWalletBanner })), { ssr: false })
 
 // Capacitor native app detection and safe area handling
 const CapacitorInit = dynamic(() => import('hooks/useCapacitor').then(mod => {
@@ -334,6 +335,7 @@ function SoundchainApp({ Component, pageProps }: CustomAppProps) {
             <SoundchainMainLayout Component={Component} pageProps={pageProps} />
           )}
           <FederatedSearchLauncher />
+          <LegacyWalletBanner />
         </ThemeProvider>
       </AppErrorBoundary>
     </>
