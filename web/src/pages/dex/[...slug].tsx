@@ -2133,32 +2133,41 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   }, [profileStatsModal, showTopFriendsPicker, viewingProfile?.id])
 
   // Auto-play profile song when profile loads (MySpace-style)
-  // Supports: featuredTrackId, featuredAudioUrl, or wallAudioPlaylist[0]
+  // Fetches fresh featured track data via Vercel-direct (bypasses stale Apollo cache)
   useEffect(() => {
     if (viewingProfileLoading) return
     if (!viewingProfile) return
-    const vp = viewingProfile as any
-    const featuredTrackId = vp?.featuredTrackId
-    const featuredAudioUrl = vp?.featuredAudioUrl
-    const wallTrack = vp?.wallAudioPlaylist?.[0]
-    if (!featuredTrackId && !featuredAudioUrl && !wallTrack) return
-    const nftTrack = featuredTrackId ? viewingProfileNFTs.find((t: any) => t.id === featuredTrackId) : null
-    const songUrl = nftTrack?.playbackUrl || featuredAudioUrl || wallTrack?.audioUrl
-    if (!songUrl) return
-    const timer = setTimeout(() => {
-      const song: Song = {
-        trackId: nftTrack?.id || `profile-song-${viewingProfile.id}`,
-        src: songUrl,
-        title: nftTrack?.title || vp?.featuredAudioTitle || wallTrack?.title || 'Profile Song',
-        artist: nftTrack?.artist || vp?.featuredAudioArtist || wallTrack?.artist || viewingProfile.displayName || '',
-        art: nftTrack?.artworkUrl || vp?.featuredAudioCoverUrl || wallTrack?.coverUrl || '',
-        isFavorite: false,
-      }
-      playlistState([song], 0)
-      // Try auto-play — fails silently on mobile (browser policy), user taps bottom bar
-      setTimeout(() => { try { play() } catch {} }, 300)
-    }, 1500)
-    return () => clearTimeout(timer)
+    const handle = viewingProfile.userHandle
+    if (!handle) return
+    // Fetch fresh profile data from Vercel-direct to get up-to-date featuredTrackId
+    const controller = new AbortController()
+    fetch(`/api/profile/${encodeURIComponent(handle)}`, { signal: controller.signal })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (!data?.profile) return
+        const vp = data.profile
+        const featuredTrackId = vp.featuredTrackId
+        const featuredAudioUrl = vp.featuredAudioUrl
+        const wallTrack = vp.wallAudioPlaylist?.[0]
+        if (!featuredTrackId && !featuredAudioUrl && !wallTrack) return
+        const nftTrack = featuredTrackId ? viewingProfileNFTs.find((t: any) => t.id === featuredTrackId) : null
+        const songUrl = nftTrack?.playbackUrl || featuredAudioUrl || wallTrack?.audioUrl
+        if (!songUrl) return
+        setTimeout(() => {
+          const song: Song = {
+            trackId: nftTrack?.id || `profile-song-${viewingProfile.id}`,
+            src: songUrl,
+            title: nftTrack?.title || vp.featuredAudioTitle || wallTrack?.title || 'Profile Song',
+            artist: nftTrack?.artist || vp.featuredAudioArtist || wallTrack?.artist || viewingProfile.displayName || '',
+            art: nftTrack?.artworkUrl || vp.featuredAudioCoverUrl || wallTrack?.coverUrl || '',
+            isFavorite: false,
+          }
+          playlistState([song], 0)
+          setTimeout(() => { try { play() } catch {} }, 300)
+        }, 800)
+      })
+      .catch(() => {})
+    return () => controller.abort()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewingProfile?.id, viewingProfileLoading])
 
