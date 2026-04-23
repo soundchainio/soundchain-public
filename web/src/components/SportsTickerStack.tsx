@@ -42,7 +42,7 @@ function LeagueTicker({ games, league }: { games: Game[]; league: keyof typeof L
   const items = games.map(g => {
     const isLive = g.state === 'in'
     const isFinal = g.state === 'post'
-    const showScorers = league === 'nba' && (isLive || isFinal)
+    const showScorers = (league === 'nba' || league === 'nhl') && (isLive || isFinal)
     const awayScorers = (g.away as any).topScorers || []
     const homeScorers = (g.home as any).topScorers || []
     return (
