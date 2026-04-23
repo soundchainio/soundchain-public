@@ -153,6 +153,18 @@
   background-color: var(--sc-bg) !important;
 }
 
+/* === SPORTS + MARKET TICKER VISIBILITY IN LIGHT MODE === */
+:root[data-theme="light"] .bg-red-950\/80,
+:root[data-theme="light"] .bg-blue-950\/80,
+:root[data-theme="light"] .bg-orange-950\/80 {
+  background-color: var(--sc-card) !important;
+}
+:root[data-theme="light"] .border-red-500\/20,
+:root[data-theme="light"] .border-blue-500\/20,
+:root[data-theme="light"] .border-orange-500\/20 {
+  border-color: var(--sc-border) !important;
+}
+
 /* === SEARCH + INPUT TEXT VISIBILITY IN LIGHT MODE === */
 :root[data-theme="light"] input[type="search"],
 :root[data-theme="light"] input[type="text"],
