@@ -46,10 +46,16 @@ async function fetchLeague(sport: string, league: string) {
       const homeLeaders = extractLeaders(home)
       const awayLeaders = extractLeaders(away)
 
+      // Series info (playoffs)
+      const series = comp?.series?.summary || ''
+      const seriesNote = comp?.notes?.[0]?.headline || ''
+
       return {
         id: e.id,
         name: e.shortName || e.name,
         league,
+        series,
+        seriesNote,
         status: comp?.status?.type?.shortDetail || comp?.status?.type?.description || 'Scheduled',
         state: comp?.status?.type?.state || 'pre', // pre, in, post
         home: {

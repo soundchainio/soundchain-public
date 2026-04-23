@@ -66,6 +66,9 @@ function LeagueTicker({ games, league }: { games: Game[]; league: keyof typeof L
         <span className={`text-[8px] ${isLive ? 'text-red-400 font-bold' : isFinal ? 'text-gray-500' : 'text-gray-600'}`}>
           {isLive ? `LIVE · ${g.status}` : isFinal ? 'FINAL' : g.status}
         </span>
+        {(g as any).series && (
+          <span className="text-[7px] text-purple-400 font-bold">{(g as any).series}</span>
+        )}
         <span className="text-white/10 mx-1">│</span>
       </span>
     )
