@@ -122,27 +122,21 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
     return () => { if (ytBlockTimer.current) clearTimeout(ytBlockTimer.current) }
   }, [isYouTube, startYtBlockCheck])
 
-  // IntersectionObserver for autoplay-on-scroll
+  // IntersectionObserver for autoplay-on-scroll.
+  // threshold [0, 0.1] + ratio > 0 catches partial visibility on mobile — StoriesBar + compose
+  // above the feed push the first 16:9 YT player below 50% on iPhone, so the old 0.5 threshold
+  // never fired. Per-clip unmute via inline speaker button only (no global auto-unmute — that
+  // caused every later embed to mount unmuted → browser blocks autoplay without a gesture on
+  // the player itself).
   useEffect(() => {
     const el = playerContainerRef.current
     if (!el) return
     const observer = new IntersectionObserver(
-      ([entry]) => setIsPlayerInView(entry.isIntersecting && entry.intersectionRatio >= 0.5),
-      { threshold: [0.5] }
+      ([entry]) => setIsPlayerInView(entry.isIntersecting && entry.intersectionRatio > 0),
+      { threshold: [0, 0.1, 0.25] }
     )
     observer.observe(el)
     return () => observer.disconnect()
-  }, [])
-
-  // Auto-unmute on first user gesture so later embeds play with sound.
-  useEffect(() => {
-    const handler = () => setIsPlayerMuted(false)
-    document.addEventListener('click', handler, { once: true })
-    document.addEventListener('touchstart', handler, { once: true })
-    return () => {
-      document.removeEventListener('click', handler)
-      document.removeEventListener('touchstart', handler)
-    }
   }, [])
 
   // Vercel direct comments — bypasses broken Apollo/GraphQL custom domain
@@ -458,7 +452,6 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
                       config={{
                         youtube: {
                           playerVars: { modestbranding: 1, rel: 0, playsinline: 1, mute: isPlayerMuted ? 1 : 0, autoplay: 1, origin: typeof window !== 'undefined' ? window.location.origin : '' },
-                          embedOptions: { host: 'https://www.youtube-nocookie.com' },
                         },
                         vimeo: { playerOptions: { responsive: true, playsinline: true } },
                         facebook: { appId: '' },
