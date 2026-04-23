@@ -103,7 +103,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const [profiles, tracks, myReactions, myBookmarks] = await Promise.all([
       db.collection('profiles')
         .find({ _id: { $in: authorOids } })
-        .project({ displayName: 1, profilePicture: 1, userHandle: 1, verified: 1, teamMember: 1, badges: 1 })
+        .project({ displayName: 1, profilePicture: 1, userHandle: 1, verified: 1, teamMember: 1, badges: 1, tracksCount: 1 })
         .toArray(),
       trackOids.length
         ? db.collection('tracks').find({ _id: { $in: trackOids } }).toArray()
@@ -169,6 +169,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           verified: author.verified || false,
           teamMember: author.teamMember || false,
           badges: author.badges || [],
+          tracksCount: author.tracksCount || 0,
         } : null,
         track: track ? {
           id: track._id.toString(),
