@@ -22,20 +22,33 @@ async function fetchLeague(sport: string, league: string) {
       const comp = e.competitions?.[0]
       const home = comp?.competitors?.find((c: any) => c.homeAway === 'home')
       const away = comp?.competitors?.find((c: any) => c.homeAway === 'away')
+      // Extract top scorers per team (ESPN provides leaders array)
+      const homeLeaders = home?.leaders?.find((l: any) => l.name === 'points')?.leaders?.slice(0, 3) || []
+      const awayLeaders = away?.leaders?.find((l: any) => l.name === 'points')?.leaders?.slice(0, 3) || []
+
       return {
         id: e.id,
         name: e.shortName || e.name,
+        league,
         status: comp?.status?.type?.shortDetail || comp?.status?.type?.description || 'Scheduled',
         state: comp?.status?.type?.state || 'pre', // pre, in, post
         home: {
           team: home?.team?.abbreviation || home?.team?.shortDisplayName || '?',
           score: home?.score || '0',
           logo: home?.team?.logo,
+          topScorers: homeLeaders.map((l: any) => ({
+            name: l.athlete?.shortName || l.athlete?.displayName || '?',
+            points: l.displayValue || l.value || '0',
+          })),
         },
         away: {
           team: away?.team?.abbreviation || away?.team?.shortDisplayName || '?',
           score: away?.score || '0',
           logo: away?.team?.logo,
+          topScorers: awayLeaders.map((l: any) => ({
+            name: l.athlete?.shortName || l.athlete?.displayName || '?',
+            points: l.displayValue || l.value || '0',
+          })),
         },
       }
     })

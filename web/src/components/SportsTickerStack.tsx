@@ -42,14 +42,27 @@ function LeagueTicker({ games, league }: { games: Game[]; league: keyof typeof L
   const items = games.map(g => {
     const isLive = g.state === 'in'
     const isFinal = g.state === 'post'
+    const showScorers = league === 'nba' && (isLive || isFinal)
+    const awayScorers = (g.away as any).topScorers || []
+    const homeScorers = (g.home as any).topScorers || []
     return (
       <span key={g.id} className="flex items-center gap-1.5 flex-shrink-0">
         {isLive && <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />}
         <span className="text-gray-400">{g.away.team}</span>
         <span className={`font-bold ${isLive ? 'text-white' : isFinal ? cfg.color : 'text-gray-500'}`}>{g.away.score}</span>
+        {showScorers && awayScorers.length > 0 && (
+          <span className="text-[8px] text-yellow-400/70">
+            ({awayScorers.map((s: any) => `${s.name} ${s.points}`).join(', ')})
+          </span>
+        )}
         <span className="text-gray-600">@</span>
         <span className="text-gray-400">{g.home.team}</span>
         <span className={`font-bold ${isLive ? 'text-white' : isFinal ? cfg.color : 'text-gray-500'}`}>{g.home.score}</span>
+        {showScorers && homeScorers.length > 0 && (
+          <span className="text-[8px] text-yellow-400/70">
+            ({homeScorers.map((s: any) => `${s.name} ${s.points}`).join(', ')})
+          </span>
+        )}
         <span className={`text-[8px] ${isLive ? 'text-red-400 font-bold' : isFinal ? 'text-gray-500' : 'text-gray-600'}`}>
           {isLive ? `LIVE · ${g.status}` : isFinal ? 'FINAL' : g.status}
         </span>
