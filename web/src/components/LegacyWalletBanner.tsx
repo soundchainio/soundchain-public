@@ -59,7 +59,7 @@ export function LegacyWalletBanner() {
     if (!magic) return
     setRevealing(true)
     try {
-      await (magic as any).user.revealPrivateKey()
+      await (magic as any).user.revealEVMPrivateKey()
     } catch (err: any) {
       console.error('Reveal private key failed:', err)
     } finally {

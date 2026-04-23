@@ -57,7 +57,7 @@ export function WalletMigrateModal({ isOpen, onClose }: WalletMigrateModalProps)
   const handleReveal = useCallback(async () => {
     if (!magic) { toast.error('Magic not loaded'); return }
     try {
-      await (magic as any).user.revealPrivateKey()
+      await (magic as any).user.revealEVMPrivateKey()
       setStep('paste')
     } catch (err: any) {
       toast.error('Failed to open key reveal: ' + (err?.message || 'unknown'))
