@@ -60,6 +60,7 @@ const AgentStatusTicker = dynamic(
   { ssr: false },
 )
 import { OgunPriceTicker } from 'components/OgunPriceTicker'
+import { SportsTickerStack } from 'components/SportsTickerStack'
 
 const PROFILE_STREAMING_REWARDS_QUERY = gql`
   query ProfileStreamingRewards($profileId: String!) {
@@ -1012,7 +1013,10 @@ export function DexNavBar() {
       )}
 
       {/* Scrolling data ticker — OGUN price, MCap, chain data, links */}
+      {/* Bloomberg market ticker */}
       <OgunPriceTicker />
+      {/* Live sports tickers — MLB ⚾ NHL 🏒 NBA 🏀 */}
+      <SportsTickerStack />
     </header>
   )
 }
