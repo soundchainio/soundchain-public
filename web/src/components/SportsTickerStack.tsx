@@ -59,18 +59,22 @@ function LeagueTicker({ games, league }: { games: Game[]; league: keyof typeof L
   })
 
   return (
-    <div className={`w-full ${cfg.bgColor} border-b ${cfg.borderColor} overflow-hidden`}>
-      <div
-        className="flex items-center gap-4 px-3 py-0.5 whitespace-nowrap text-[10px]"
-        style={{ animation: `marquee ${cfg.speed} linear infinite` }}
-      >
-        <span className={`${cfg.color} font-bold flex items-center gap-1 flex-shrink-0`}>
+    <div className={`w-full ${cfg.bgColor} border-b ${cfg.borderColor} flex items-center overflow-hidden`}>
+      {/* Static league badge — pinned left */}
+      <div className={`flex-shrink-0 flex items-center gap-1 px-2 py-0.5 ${cfg.bgColor} border-r ${cfg.borderColor} z-10`}>
+        <span className={`${cfg.color} font-bold text-[10px] flex items-center gap-1`}>
           {cfg.emoji} {cfg.label}
         </span>
-        <span className="text-white/10 flex-shrink-0">│</span>
-        {items}
-        {/* Duplicate for seamless scroll */}
-        {items}
+      </div>
+      {/* Scrolling scores */}
+      <div className="flex-1 overflow-hidden">
+        <div
+          className="flex items-center gap-4 px-2 py-0.5 whitespace-nowrap text-[10px]"
+          style={{ animation: `marquee ${cfg.speed} linear infinite` }}
+        >
+          {items}
+          {items}
+        </div>
       </div>
     </div>
   )
