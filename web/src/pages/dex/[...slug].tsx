@@ -1269,6 +1269,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
   // Sweep state
   const [showSweepPanel, setShowSweepPanel] = useState(false)
+  const [showReceiveModal, setShowReceiveModal] = useState(false)
   const [sweepSelectedIds, setSweepSelectedIds] = useState<Set<string>>(new Set())
   const [sweepRecipient, setSweepRecipient] = useState('')
   const [sweeping, setSweeping] = useState(false)
@@ -5142,12 +5143,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   Send
                 </button>
                 <button
-                  onClick={() => {
-                    if (userWallet) {
-                      navigator.clipboard.writeText(userWallet)
-                      alert(`Wallet address copied:\n${userWallet}`)
-                    }
-                  }}
+                  onClick={() => setShowReceiveModal(true)}
                   className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded text-sm text-white transition-all"
                 >
                   Receive
@@ -5165,6 +5161,67 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   Sweep
                 </button>
               </div>
+
+              {/* Receive Modal — QR code + address + network info */}
+              {showReceiveModal && (
+                <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setShowReceiveModal(false)}>
+                  <div className="w-full max-w-sm bg-neutral-900 border-2 border-cyan-500/50 rounded-xl shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-cyan-500/30 bg-cyan-950">
+                      <span className="text-sm font-mono font-bold text-cyan-400">RECEIVE</span>
+                      <button onClick={() => setShowReceiveModal(false)} className="p-1 hover:bg-white/10 rounded">
+                        <X className="w-4 h-4 text-gray-400" />
+                      </button>
+                    </div>
+                    <div className="p-6 space-y-4 text-center">
+                      {/* QR Code — using Google Charts API (free, no dependency) */}
+                      {userWallet && (
+                        <div className="mx-auto w-48 h-48 bg-white rounded-lg p-2">
+                          <img
+                            src={`https://chart.googleapis.com/chart?cht=qr&chs=200x200&chl=${userWallet}&choe=UTF-8`}
+                            alt="Wallet QR Code"
+                            className="w-full h-full"
+                          />
+                        </div>
+                      )}
+                      <div className="space-y-1">
+                        <div className="text-[9px] font-mono text-gray-500 uppercase">Your Wallet Address</div>
+                        <div className="text-xs font-mono text-cyan-400 break-all bg-black/40 rounded-lg p-3 border border-white/10">
+                          {userWallet}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => {
+                          if (userWallet) {
+                            const ta = document.createElement('textarea')
+                            ta.value = userWallet
+                            ta.style.position = 'fixed'
+                            ta.style.opacity = '0'
+                            document.body.appendChild(ta)
+                            ta.select()
+                            document.execCommand('copy')
+                            document.body.removeChild(ta)
+                            toast.success('Address copied!')
+                          }
+                        }}
+                        className="w-full py-2.5 rounded-lg bg-cyan-500/20 border border-cyan-500/40 text-cyan-400 text-xs font-mono font-bold hover:bg-cyan-500/30 transition"
+                      >
+                        COPY ADDRESS
+                      </button>
+                      <div className="flex items-center justify-center gap-4 text-[10px] font-mono text-gray-500">
+                        <span className="flex items-center gap-1">
+                          <span className="w-2 h-2 rounded-full bg-purple-400"></span> Polygon
+                        </span>
+                        <span>Chain ID: 137</span>
+                        <span>POL + OGUN + NFTs</span>
+                      </div>
+                      <div className="text-[9px] font-mono text-gray-600 border-t border-white/5 pt-2">
+                        Send POL, OGUN, or NFTs to this address on Polygon network.
+                        Scan the QR code from MetaMask or any wallet app.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Sweep Panel */}
               {showSweepPanel && (
