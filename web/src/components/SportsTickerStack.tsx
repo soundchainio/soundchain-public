@@ -66,10 +66,10 @@ function LeagueTicker({ games, league }: { games: Game[]; league: keyof typeof L
           {cfg.emoji} {cfg.label}
         </span>
       </div>
-      {/* Scrolling scores */}
+      {/* Scrolling scores — inline-flex + w-max so -50% = exactly one copy */}
       <div className="flex-1 overflow-hidden">
         <div
-          className="flex items-center gap-4 px-2 py-0.5 whitespace-nowrap text-[10px]"
+          className="inline-flex items-center gap-4 px-2 py-0.5 whitespace-nowrap text-[10px] w-max"
           style={{ animation: `marquee ${cfg.speed} linear infinite` }}
         >
           {items}

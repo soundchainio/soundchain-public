@@ -176,7 +176,7 @@ export const OgunPriceTicker = () => {
       </div>
       {/* Scrolling data */}
       <div className="flex-1 overflow-hidden">
-        <div className="flex items-center gap-5 px-2 py-1 whitespace-nowrap text-[10px] animate-marquee-slow">
+        <div className="inline-flex items-center gap-5 px-2 py-1 whitespace-nowrap text-[10px] w-max animate-marquee-slow">
           {items}
           <span className="text-white/10 flex-shrink-0">│</span>
           {items}
