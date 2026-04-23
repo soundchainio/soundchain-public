@@ -27,6 +27,7 @@ import { SocialMediaLink } from 'components/SocialMediaLink'
 import { NFTCard } from 'components/dex/NFTCard'
 import { ProfileHeader } from 'components/dex/ProfileHeader'
 import { TrackNFTCard } from 'components/dex/TrackNFTCard'
+import { UserSymbols } from 'components/UserSymbols'
 import { CoinbaseNFTCard } from 'components/dex/CoinbaseNFTCard'
 import { WalletNFTCollection, WalletNFTGrid } from 'components/dex/WalletNFTCollection'
 import { MultiWalletAggregator } from 'components/dex/MultiWalletAggregator'
@@ -5823,7 +5824,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                       <button
                         onClick={async () => {
                           try {
-                            await fetch('/api/profile/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ featuredTrackId: '', featuredAudioUrl: '', featuredAudioTitle: '', featuredAudioArtist: '', featuredAudioCoverUrl: '' }) })
+                            await fetch('/api/profile/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ fields: { featuredTrackId: '', featuredAudioUrl: '', featuredAudioTitle: '', featuredAudioArtist: '', featuredAudioCoverUrl: '' } }) })
                             toast.success('Profile song cleared')
                           } catch { toast.error('Could not clear profile song') }
                         }}
@@ -5844,7 +5845,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                           key={track.id}
                           onClick={async () => {
                             try {
-                              await fetch('/api/profile/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ featuredTrackId: track.id, featuredAudioUrl: '', featuredAudioTitle: '', featuredAudioArtist: '', featuredAudioCoverUrl: '' }) })
+                              await fetch('/api/profile/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ fields: { featuredTrackId: track.id, featuredAudioUrl: '', featuredAudioTitle: '', featuredAudioArtist: '', featuredAudioCoverUrl: '' } }) })
                               toast.success(`Profile song set to "${track.title}"`)
                               router.push('/settings')
                             } catch { toast.error('Could not set profile song') }
@@ -7120,6 +7121,11 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                             {!viewingProfile.teamMember && viewingProfile.verified && (
                               <VerifiedIcon className="flex-shrink-0 w-6 h-6" aria-label="Verified user" />
                             )}
+                            <UserSymbols
+                              handle={viewingProfile.userHandle}
+                              isNftOwner={(viewingProfile.tracksCount || 0) > 0}
+                              isCreator={(viewingProfile.tracksCount || 0) > 0}
+                            />
                           </div>
                           <p className="text-cyan-400 text-sm">@{viewingProfile.userHandle || 'user'}</p>
                         </div>
@@ -7450,7 +7456,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                                 <button
                                   onClick={async () => {
                                     try {
-                                      await fetch('/api/profile/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ featuredTrackId: '', featuredAudioUrl: '', featuredAudioTitle: '', featuredAudioArtist: '', featuredAudioCoverUrl: '' }) })
+                                      await fetch('/api/profile/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ fields: { featuredTrackId: '', featuredAudioUrl: '', featuredAudioTitle: '', featuredAudioArtist: '', featuredAudioCoverUrl: '' } }) })
                                       toast.success('Profile song cleared')
                                       setShowProfileSongPicker(false)
                                     } catch { toast.error('Could not clear profile song') }
@@ -7480,7 +7486,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                                   key={track.id}
                                   onClick={async () => {
                                     try {
-                                      const res = await fetch('/api/profile/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ featuredTrackId: track.id, featuredAudioUrl: '', featuredAudioTitle: '', featuredAudioArtist: '', featuredAudioCoverUrl: '' }) })
+                                      const res = await fetch('/api/profile/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ fields: { featuredTrackId: track.id, featuredAudioUrl: '', featuredAudioTitle: '', featuredAudioArtist: '', featuredAudioCoverUrl: '' } }) })
                                       if (!res.ok) throw new Error('Failed')
                                       toast.success(`Profile song set to "${track.title}"`)
                                       setShowProfileSongPicker(false)
@@ -8042,7 +8048,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                             <button
                               onClick={async () => {
                                 try {
-                                  await fetch('/api/profile/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ wallAudioPlaylist: [] }) })
+                                  await fetch('/api/profile/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ fields: { wallAudioPlaylist: [] } }) })
                                   toast.success('Playlist cleared')
                                 } catch { toast.error('Could not clear playlist') }
                               }}
@@ -8078,7 +8084,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                                       audioUrl: t.audioUrl, title: t.title, artist: t.artist, coverUrl: t.coverUrl, wallPostId: t.wallPostId,
                                     }))
                                     try {
-                                      await fetch('/api/profile/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ wallAudioPlaylist: updated }) })
+                                      await fetch('/api/profile/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ fields: { wallAudioPlaylist: updated } }) })
                                       toast.success('Removed from playlist')
                                     } catch { toast.error('Could not remove from playlist') }
                                   }}
@@ -8426,7 +8432,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                           highlightPostId={wallPostId}
                           onSetProfileSong={isViewingOwnProfile ? async (audio) => {
                             try {
-                              await fetch('/api/profile/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ featuredTrackId: '', featuredAudioUrl: audio.url, featuredAudioTitle: audio.title, featuredAudioArtist: audio.artist, featuredAudioCoverUrl: audio.coverUrl || '' }) })
+                              await fetch('/api/profile/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ fields: { featuredTrackId: '', featuredAudioUrl: audio.url, featuredAudioTitle: audio.title, featuredAudioArtist: audio.artist, featuredAudioCoverUrl: audio.coverUrl || '' } }) })
                               toast.success(`Profile song set to "${audio.title}"`)
                             } catch { toast.error('Could not set profile song') }
                           } : undefined}
@@ -8441,7 +8447,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                               return
                             }
                             try {
-                              await fetch('/api/profile/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ wallAudioPlaylist: [...current.map((t: any) => ({ audioUrl: t.audioUrl, title: t.title, artist: t.artist, coverUrl: t.coverUrl, wallPostId: t.wallPostId })), { audioUrl: audio.url, title: audio.title, artist: audio.artist, coverUrl: audio.coverUrl || '', wallPostId: audio.wallPostId }] }) })
+                              await fetch('/api/profile/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ fields: { wallAudioPlaylist: [...current.map((t: any) => ({ audioUrl: t.audioUrl, title: t.title, artist: t.artist, coverUrl: t.coverUrl, wallPostId: t.wallPostId })), { audioUrl: audio.url, title: audio.title, artist: audio.artist, coverUrl: audio.coverUrl || '', wallPostId: audio.wallPostId }] } }) })
                               toast.success(`Added "${audio.title}" to profile playlist`)
                             } catch { toast.error('Could not add to playlist') }
                           } : undefined}

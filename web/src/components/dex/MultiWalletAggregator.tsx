@@ -1045,7 +1045,7 @@ function NFTThumbnail({
   return (
     <div
       className={`relative flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden cursor-pointer transition-all duration-200 ${
-        isCurrentTrack ? 'ring-2 ring-cyan-400 scale-105' : 'hover:scale-105'
+        isCurrentTrack ? 'ring-2 ring-cyan-400 scale-105' : 'ring-1 ring-yellow-500/40 shadow-sm shadow-yellow-500/20 hover:ring-2 hover:ring-yellow-400/60 hover:scale-105'
       }`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
