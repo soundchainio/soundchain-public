@@ -70,6 +70,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       { symbol: 'MSFT', name: 'Microsoft', price: 428, change24h: 0.6 },
       { symbol: 'TSLA', name: 'Tesla', price: 245, change24h: -1.2 },
       { symbol: 'COST', name: 'Costco', price: 925, change24h: 0.7 },
+      { symbol: 'RAVE', name: 'Token Rave', price: 0.042, change24h: 5.2 },
     ]
 
     const result = {

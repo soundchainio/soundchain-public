@@ -116,7 +116,7 @@ export const OgunPriceTicker = () => {
         const colors: Record<string, string> = {
           NVDA: 'text-green-400', META: 'text-blue-400', AAPL: 'text-gray-200',
           GOOGL: 'text-red-400', IBM: 'text-blue-300', MSFT: 'text-cyan-300',
-          TSLA: 'text-red-300', COST: 'text-red-400',
+          TSLA: 'text-red-300', COST: 'text-red-400', RAVE: 'text-pink-400',
         }
         items.push(renderAsset(s, colors[s.symbol] || 'text-white'))
       })

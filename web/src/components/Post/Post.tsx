@@ -252,6 +252,8 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
                 verified={post.profile!.verified}
                 teamMember={post.profile!.teamMember}
                 badges={post.profile!.badges}
+                userHandle={post.profile!.userHandle}
+                tracksCount={post.profile!.tracksCount}
                 className="text-sm font-semibold"
               />
               {post.profile!.userHandle && (

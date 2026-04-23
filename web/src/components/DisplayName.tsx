@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { forwardRef } from 'react'
 import { limitTextToNumberOfCharacters } from 'utils/format'
 import { Crown, Medal, Award } from 'lucide-react'
+import { UserSymbols } from './UserSymbols'
 
 // POAP Badge for leaderboard positions
 const POAPBadge = ({ position }: { position: 1 | 2 | 3 }) => {
@@ -48,11 +49,13 @@ interface DisplayNameProps {
   maxNumberOfCharacters?: number
   badges?: Maybe<Badge[]>
   leaderboardPosition?: 1 | 2 | 3 | null  // POAP badge for top 3 in genre leaderboard
+  userHandle?: string   // for symbol detection
+  tracksCount?: number  // creator/owner symbol
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const DisplayName = forwardRef<any, DisplayNameProps>(
-  ({ name, verified, teamMember, className, maxNumberOfCharacters, badges, leaderboardPosition, ...props }, ref) => {
+  ({ name, verified, teamMember, className, maxNumberOfCharacters, badges, leaderboardPosition, userHandle, tracksCount, ...props }, ref) => {
     const badgeDimension = 20
     return (
       <div className={classNames('flex min-w-0 items-center gap-1', className)} ref={ref}>
@@ -64,6 +67,15 @@ export const DisplayName = forwardRef<any, DisplayNameProps>(
         ) : (
           verified && <Verified aria-label="Verified user" className="ml-0.5 flex-shrink-0" />
         )}
+        {/* On-chain achievement symbols — ✦ owner ◆ creator ⟐ airdrop */}
+        <UserSymbols
+          handle={userHandle}
+          verified={false} // already shown above
+          isNftOwner={(tracksCount || 0) > 0}
+          isCreator={(tracksCount || 0) > 0}
+          teamMember={false} // already shown above
+          compact
+        />
         {/* POAP Leaderboard Badge */}
         {leaderboardPosition && leaderboardPosition >= 1 && leaderboardPosition <= 3 && (
           <POAPBadge position={leaderboardPosition} />
