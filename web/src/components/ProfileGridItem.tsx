@@ -72,6 +72,8 @@ export const ProfileGridItem = ({ profile }: ProfileListItemProps) => {
                 verified={profile.verified}
                 teamMember={profile.teamMember}
                 badges={profile.badges}
+                userHandle={profile.userHandle}
+                tracksCount={(profile as any).tracksCount}
                 className="text-md lg:text-base"
                 maxNumberOfCharacters={10}
               />

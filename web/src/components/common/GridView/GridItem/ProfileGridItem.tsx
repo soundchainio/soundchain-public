@@ -71,6 +71,8 @@ export const ProfileGridItem = ({ profile }: ProfileListItemProps) => {
                 className="text-md lg:text-base"
                 maxNumberOfCharacters={50}
                 badges={profile.badges}
+                userHandle={profile.userHandle}
+                tracksCount={(profile as any).tracksCount}
               />
             </Link>
             <p className="text-sm font-semibold text-gray-80 lg:text-sm">{`@${limitTextToNumberOfCharacters(

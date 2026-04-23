@@ -36,6 +36,8 @@ export const ProfileListItem = ({ profile }: ProfileListItemProps) => {
                   verified={profile.verified}
                   teamMember={profile.teamMember}
                   badges={profile.badges}
+                  userHandle={profile.userHandle}
+                  tracksCount={(profile as any).tracksCount}
                   className="text-sm"
                 />
                 <p className="truncate text-xs font-semibold text-gray-80">{`@${profile.userHandle}`}</p>

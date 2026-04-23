@@ -116,6 +116,8 @@ export const SideMenuContent = ({}: SideMenuContentProps) => {
                     verified={me.profile.verified}
                     teamMember={me.profile.teamMember}
                     badges={me.profile.badges}
+                    userHandle={me.handle}
+                    tracksCount={me.profile.tracksCount}
                   />
                   <p className="text-sm text-gray-400 truncate">@{me.handle}</p>
                 </div>

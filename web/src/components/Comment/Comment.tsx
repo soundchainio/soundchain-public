@@ -113,6 +113,8 @@ export const Comment = ({ commentId, onReplyClick }: CommentProps) => {
                 verified={comment.profile!.verified}
                 teamMember={comment.profile!.teamMember}
                 badges={comment.profile!.badges}
+                userHandle={comment.profile!.userHandle}
+                tracksCount={(comment.profile as any)?.tracksCount}
                 className="text-xs"
               />
             </NextLink>

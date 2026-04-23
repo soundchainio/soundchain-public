@@ -50,6 +50,8 @@ interface TrackNFTCardProps {
   listView?: boolean
   onArtistClick?: (artistId: string) => void
   onTrackClick?: (trackId: string) => void
+  isOwned?: boolean      // gold glow — user owns this NFT on-chain
+  isCreatorOnly?: boolean // silver glow — user created but doesn't own
 }
 
 const TrackNFTCardComponent: React.FC<TrackNFTCardProps> = ({
@@ -60,7 +62,9 @@ const TrackNFTCardComponent: React.FC<TrackNFTCardProps> = ({
   onFavorite,
   listView = false,
   onArtistClick,
-  onTrackClick
+  onTrackClick,
+  isOwned,
+  isCreatorOnly
 }) => {
   const router = useRouter()
   const [isFlipped, setIsFlipped] = useState(false)
@@ -409,7 +413,7 @@ const TrackNFTCardComponent: React.FC<TrackNFTCardProps> = ({
       <div className={`nft-flip-card ${isFlipped ? 'flipped' : ''}`}>
         {/* Front Side - High-res polished card */}
         <div className="nft-flip-card-front">
-          <Card className={`retro-card transition-all duration-300 ease-out hover:scale-[1.03] hover:shadow-xl hover:shadow-cyan-500/20 h-full border border-gray-700/50 bg-gradient-to-b from-gray-900 to-gray-950 rounded-xl overflow-hidden backdrop-blur-sm ${isCurrentTrack ? 'ring-2 ring-cyan-400 shadow-lg shadow-cyan-500/30' : ''}`}
+          <Card className={`retro-card transition-all duration-300 ease-out hover:scale-[1.03] hover:shadow-xl hover:shadow-cyan-500/20 h-full border bg-gradient-to-b from-gray-900 to-gray-950 rounded-xl overflow-hidden backdrop-blur-sm ${isCurrentTrack ? 'ring-2 ring-cyan-400 shadow-lg shadow-cyan-500/30 border-gray-700/50' : isOwned ? 'ring-2 ring-yellow-400/80 shadow-lg shadow-yellow-500/40 border-yellow-500/30' : isCreatorOnly ? 'ring-2 ring-slate-400/70 shadow-lg shadow-slate-400/30 border-slate-400/20' : 'border-gray-700/50'}`}
             style={{ willChange: 'transform' }}>
             <div className="flip-hint"><RotateCcw className="w-2.5 h-2.5" /></div>
 

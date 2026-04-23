@@ -35,6 +35,7 @@ export const ProfileWithAvatar = (props: Props) => {
           verified={verified}
           teamMember={teamMember}
           badges={badges}
+          userHandle={userHandle}
         />
         <p className="text-xxs text-gray-CC">@{userHandle}</p>
       </NextLink>

@@ -31,6 +31,8 @@ export const ReactionItem = ({ reaction: { type, profile }, onClick }: FollowIte
           verified={profile.verified}
           teamMember={profile.teamMember}
           badges={profile.badges}
+          userHandle={profile.userHandle}
+          tracksCount={(profile as any).tracksCount}
         />
       </Link>
       <div className="flex items-center justify-center">

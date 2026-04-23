@@ -30,7 +30,7 @@ export const ChatItem = ({
         </div>
         <Avatar linkToProfile={false} className="flex w-[40px]" profile={{ profilePicture, userHandle }} pixels={40} />
         <div className="flex-1 truncate px-4">
-          <DisplayName name={displayName} verified={verified} teamMember={teamMember} badges={badges} />
+          <DisplayName name={displayName} verified={verified} teamMember={teamMember} badges={badges} userHandle={userHandle} />
           <div className="flex whitespace-nowrap text-sm text-gray-80">
             <div className="truncate">{/!\[!?emote:/.test(message) ? message.replace(/!\[!?emote:[^\]]*\]\([^)]*\)/g, '😎') : message}</div>&nbsp;<div className="text-gray-40">•</div>
             &nbsp;

@@ -171,6 +171,7 @@ export const Auction = (props: AuctionProps) => {
                     name={highestBidderData.getUserByWallet.profile.displayName || ''}
                     verified={highestBidderData.getUserByWallet.profile.verified}
                     teamMember={highestBidderData.getUserByWallet.profile.teamMember}
+                    userHandle={highestBidderData.getUserByWallet.profile.userHandle}
                   />
                 </Link>
                 <div className="flex items-center">

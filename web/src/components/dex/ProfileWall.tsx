@@ -200,7 +200,7 @@ const getMediaTypeFromMime = (mime: string): 'audio' | 'image' | 'video' => {
 }
 
 // iOS-style waveform audio player for wall posts
-function WallAudioPlayer({ src, coverArtUrl, title, artist, small }: { src: string; coverArtUrl?: string; title?: string; artist?: string; small?: boolean }) {
+function WallAudioPlayer({ src, coverArtUrl, title, artist, small, autoPlay }: { src: string; coverArtUrl?: string; title?: string; artist?: string; small?: boolean; autoPlay?: boolean }) {
   const barCount = small ? 20 : 32
   return (
     <div className={`flex items-center gap-3 ${small ? 'p-2' : 'p-3'} bg-gradient-to-r from-neutral-800 via-neutral-800/90 to-neutral-700 rounded-xl border border-white/10`}>
@@ -224,14 +224,14 @@ function WallAudioPlayer({ src, coverArtUrl, title, artist, small }: { src: stri
             return <div key={i} className="flex-1 rounded-full bg-cyan-400/60" style={{ height: `${h}px` }} />
           })}
         </div>
-        <audio controls src={src} className="w-full h-8 [&::-webkit-media-controls-panel]:bg-transparent" style={{ filter: 'invert(1) hue-rotate(180deg) brightness(0.9)', height: small ? '28px' : '32px' }} />
+        <audio controls src={src} autoPlay={autoPlay} className="w-full h-8 [&::-webkit-media-controls-panel]:bg-transparent" style={{ filter: 'invert(1) hue-rotate(180deg) brightness(0.9)', height: small ? '28px' : '32px' }} />
       </div>
     </div>
   )
 }
 
 // Render uploaded media for a wall post
-function WallPostMedia({ post, small }: { post: any; small?: boolean }) {
+function WallPostMedia({ post, small, autoPlayAudio }: { post: any; small?: boolean; autoPlayAudio?: boolean }) {
   if (!post.mediaUrl) return null
   const type = post.mediaType || 'image'
 
@@ -268,6 +268,7 @@ function WallPostMedia({ post, small }: { post: any; small?: boolean }) {
           title={audioTitle}
           artist={audioArtist}
           small={small}
+          autoPlay={autoPlayAudio}
         />
       </div>
     )
@@ -1184,7 +1185,9 @@ export function ProfileWall({ profileId, isOwnProfile: isOwnProfileProp, viewerP
           </div>
         ) : (
           <div className="space-y-2.5">
-            {sortedPosts.map((post: any) => (
+            {sortedPosts.map((post: any, postIndex: number) => {
+              const isFirstAudioPost = post.mediaType === 'audio' && post.mediaUrl && sortedPosts.findIndex((p: any) => p.mediaType === 'audio' && p.mediaUrl) === postIndex
+              return (
               <div key={post.id} id={`wall-post-${post.id}`} className={`p-3.5 rounded-2xl border transition-all duration-500 ${highlightedId === post.id ? 'border-cyan-400/60 bg-cyan-500/10 ring-2 ring-cyan-400/40' : post.pinned ? 'border-yellow-500/40 bg-yellow-500/5' : 'border-white/10 bg-white/[0.03]'}`}>
                 <div className="flex items-start gap-2.5">
                   <Avatar className="w-8 h-8 flex-shrink-0">
@@ -1238,7 +1241,7 @@ export function ProfileWall({ profileId, isOwnProfile: isOwnProfileProp, viewerP
                     ) : (
                       post.body && <div className="text-gray-300 text-sm mt-1 whitespace-pre-wrap break-words">{renderBody(post.body)}</div>
                     )}
-                    <WallPostMedia post={post} />
+                    <WallPostMedia post={post} autoPlayAudio={isFirstAudioPost} />
 
                     <div className="flex items-center gap-2 mt-2 flex-wrap">
                       <button
@@ -1570,7 +1573,7 @@ export function ProfileWall({ profileId, isOwnProfile: isOwnProfileProp, viewerP
                   </div>
                 </div>
               </div>
-            ))}
+            )})}
           </div>
         )}
 

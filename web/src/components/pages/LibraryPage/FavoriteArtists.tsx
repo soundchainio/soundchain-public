@@ -75,6 +75,8 @@ export const FavoriteArtists = (props: FavoriteArtistsProps) => {
                       name={followedArtist.displayName}
                       verified={followedArtist.verified}
                       badges={followedArtist.badges}
+                      userHandle={followedArtist.userHandle}
+                      tracksCount={(followedArtist as any).tracksCount}
                     />
                     <div className="flex flex-1 justify-end">
                       <RightArrow />

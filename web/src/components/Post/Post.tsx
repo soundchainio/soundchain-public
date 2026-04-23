@@ -755,6 +755,8 @@ const InlineComment = ({ comment, onReplyClick }: {
                 verified={comment.profile.verified}
                 teamMember={comment.profile.teamMember}
                 badges={comment.profile.badges}
+                userHandle={comment.profile.userHandle}
+                tracksCount={(comment.profile as any)?.tracksCount}
                 className="text-xs"
               />
             </Link>

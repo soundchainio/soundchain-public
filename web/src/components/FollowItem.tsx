@@ -17,6 +17,8 @@ export const FollowItem = ({ profile }: FollowItemProps) => {
         verified={profile.verified}
         teamMember={profile.teamMember}
         badges={profile.badges}
+        userHandle={profile.userHandle}
+        tracksCount={(profile as any).tracksCount}
       />
     </Link>
   )

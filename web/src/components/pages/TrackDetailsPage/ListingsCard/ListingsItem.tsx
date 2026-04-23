@@ -72,6 +72,7 @@ export const ListingItem = (props: ListingItemProps) => {
                     verified={profileData?.profile.verified}
                     teamMember={profileData?.profile.teamMember}
                     badges={profileData?.profile.badges}
+                    userHandle={profileData?.profile.userHandle}
                   />
                 </Link>
 

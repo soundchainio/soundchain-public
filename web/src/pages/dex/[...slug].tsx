@@ -50,7 +50,7 @@ import { DexNavBar } from 'components/DexNavBar'
 import { ScrollArea } from 'components/ui/scroll-area'
 import { Separator } from 'components/ui/separator'
 import { useAudioPlayerContext, Song } from 'hooks/useAudioPlayer'
-import { useMeQuery, useGroupedTracksQuery, useTracksQuery, useTracksLazyQuery, useListingItemsQuery, useExploreUsersQuery, useExploreTracksQuery, useExploreUsersSlimQuery, useExploreTracksSlimQuery, useExploreGenreCountsQuery, useFollowProfileMutation, useUnfollowProfileMutation, useTrackQuery, usePostQuery, useProfileQuery, useProfileByHandleQuery, useChatsQuery, useChatHistoryLazyQuery, useSendMessageMutation, useResetUnreadMessageCountMutation, useFavoriteTracksQuery, useNotificationsQuery, usePolygonscanQuery, useMaticUsdQuery, useToggleFavoriteMutation, useFollowersQuery, useFollowingQuery, useFollowersLazyQuery, useFollowingLazyQuery, useUpdateHandleMutation, useUpdateProfileDisplayNameMutation, useExploreUsersLazyQuery, SortTrackField, SortOrder, useCreateProfileVerificationRequestMutation, useProfileVerificationRequestQuery, ProfileVerificationStatusType } from 'lib/graphql'
+import { useMeQuery, useGroupedTracksQuery, useTracksQuery, useTracksLazyQuery, useListingItemsQuery, useExploreUsersQuery, useExploreTracksQuery, useExploreUsersSlimQuery, useExploreTracksSlimQuery, useExploreGenreCountsQuery, useFollowProfileMutation, useUnfollowProfileMutation, useTrackQuery, usePostQuery, useProfileQuery, useProfileByHandleQuery, useChatsQuery, useChatHistoryLazyQuery, useSendMessageMutation, useResetUnreadMessageCountMutation, useFavoriteTracksQuery, useNotificationsQuery, useMaticUsdQuery, useToggleFavoriteMutation, useFollowersQuery, useFollowingQuery, useFollowersLazyQuery, useFollowingLazyQuery, useUpdateHandleMutation, useUpdateProfileDisplayNameMutation, useExploreUsersLazyQuery, SortTrackField, SortOrder, useCreateProfileVerificationRequestMutation, useProfileVerificationRequestQuery, ProfileVerificationStatusType } from 'lib/graphql'
 import { SelectToApolloQuery, SortListingItem } from 'lib/apollo/sorting'
 import { StateProvider } from 'contexts'
 import { ModalProvider } from 'contexts/ModalContext'
@@ -1407,13 +1407,17 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
   // Use active unified wallet address (covers Magic, MetaMask, Web3Modal) with Magic fallback
   const effectiveWalletForActivity = activeAddress || walletAccount || ''
-  const { data: transactionData, loading: transactionsLoading } = usePolygonscanQuery({
-    variables: {
-      wallet: effectiveWalletForActivity,
-      page: { first: 10 },
-    },
-    skip: !effectiveWalletForActivity, // Fetch when ANY wallet is connected
-  })
+  const [transactionData, setTransactionData] = useState<any[]>([])
+  const [transactionsLoading, setTransactionsLoading] = useState(false)
+  useEffect(() => {
+    if (!effectiveWalletForActivity) return
+    setTransactionsLoading(true)
+    fetch(`/api/wallet/activity?address=${effectiveWalletForActivity}&limit=10`)
+      .then(r => r.json())
+      .then(data => setTransactionData(data.transactions || []))
+      .catch(() => setTransactionData([]))
+      .finally(() => setTransactionsLoading(false))
+  }, [effectiveWalletForActivity])
 
   // All known wallet addresses for direction detection
   const allMyAddresses = useMemo(() => {
@@ -5655,9 +5659,9 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                       </div>
                     ))}
                   </div>
-                ) : transactionData?.getTransactionHistory?.result?.length ? (
+                ) : transactionData?.length ? (
                   <div className="space-y-2 max-h-80 overflow-y-auto">
-                    {transactionData.getTransactionHistory.result.slice(0, 10).map((tx: any) => {
+                    {transactionData.slice(0, 10).map((tx: any) => {
                       const isIncoming = allMyAddresses.has(tx.to?.toLowerCase() || '')
                       const valueInMatic = tx.value ? (parseFloat(tx.value) / 1e18).toFixed(4) : '0'
                       const usdValue = maticUsdData?.maticUsd ? (parseFloat(valueInMatic) * parseFloat(maticUsdData.maticUsd)).toFixed(2) : '0.00'
