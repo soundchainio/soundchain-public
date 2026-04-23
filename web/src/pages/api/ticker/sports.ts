@@ -62,19 +62,13 @@ async function fetchLeague(sport: string, league: string) {
           team: home?.team?.abbreviation || home?.team?.shortDisplayName || '?',
           score: home?.score || '0',
           logo: home?.team?.logo,
-          topScorers: homeLeaders.map((l: any) => ({
-            name: l.athlete?.shortName || l.athlete?.displayName || '?',
-            points: l.displayValue || l.value || '0',
-          })),
+          topScorers: homeLeaders,
         },
         away: {
           team: away?.team?.abbreviation || away?.team?.shortDisplayName || '?',
           score: away?.score || '0',
           logo: away?.team?.logo,
-          topScorers: awayLeaders.map((l: any) => ({
-            name: l.athlete?.shortName || l.athlete?.displayName || '?',
-            points: l.displayValue || l.value || '0',
-          })),
+          topScorers: awayLeaders,
         },
       }
     })
