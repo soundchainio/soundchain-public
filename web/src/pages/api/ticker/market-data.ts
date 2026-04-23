@@ -52,16 +52,31 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Static commodity/stock data (placeholder — real API integration later)
+    // Commodities (static — Alpha Vantage integration later for live)
     const commodities = [
       { symbol: 'GOLD', name: 'Gold', price: 3420, change24h: 0.3 },
       { symbol: 'SILVER', name: 'Silver', price: 32.8, change24h: -0.2 },
       { symbol: 'OIL', name: 'Crude Oil', price: 63.4, change24h: 1.1 },
+      { symbol: 'PLATINUM', name: 'Platinum', price: 978, change24h: 0.5 },
+    ]
+
+    // Big Tech stocks (static — Yahoo Finance API integration later for live)
+    const stocks = [
+      { symbol: 'NVDA', name: 'NVIDIA', price: 892, change24h: 2.3 },
+      { symbol: 'META', name: 'Meta', price: 512, change24h: 1.1 },
+      { symbol: 'AAPL', name: 'Apple', price: 198, change24h: 0.4 },
+      { symbol: 'GOOGL', name: 'Alphabet', price: 168, change24h: 0.8 },
+      { symbol: 'IBM', name: 'IBM', price: 242, change24h: -0.3 },
+      { symbol: 'MSFT', name: 'Microsoft', price: 428, change24h: 0.6 },
+      { symbol: 'TSLA', name: 'Tesla', price: 245, change24h: -1.2 },
+      { symbol: 'COST', name: 'Costco', price: 925, change24h: 0.7 },
     ]
 
     const result = {
       ogun,
       crypto,
       commodities,
+      stocks,
       meta: {
         chain: 'Polygon',
         fee: '0.05%',

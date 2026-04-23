@@ -25,6 +25,7 @@ interface TickerData {
   ogun: Asset & { liquidity: number }
   crypto: Asset[]
   commodities: Asset[]
+  stocks: Asset[]
   meta: { chain: string; fee: string; contracts: number; dappradar: string; top100token: string }
 }
 
@@ -108,6 +109,19 @@ export const OgunPriceTicker = () => {
 
     // Separator
     items.push(<span key="s3" className="text-white/10 flex-shrink-0">│</span>)
+
+    // Big Tech stocks
+    if (data.stocks) {
+      data.stocks.forEach(s => {
+        const colors: Record<string, string> = {
+          NVDA: 'text-green-400', META: 'text-blue-400', AAPL: 'text-gray-200',
+          GOOGL: 'text-red-400', IBM: 'text-blue-300', MSFT: 'text-cyan-300',
+          TSLA: 'text-red-300', COST: 'text-red-400',
+        }
+        items.push(renderAsset(s, colors[s.symbol] || 'text-white'))
+      })
+      items.push(<span key="s4" className="text-white/10 flex-shrink-0">│</span>)
+    }
 
     // Chain data + links
     items.push(
