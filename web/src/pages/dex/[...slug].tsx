@@ -995,6 +995,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   const [showCreateTokenModal, setShowCreateTokenModal] = useState(false)
   const [showCreateBundleModal, setShowCreateBundleModal] = useState(false)
   const [listNFTModalTrack, setListNFTModalTrack] = useState<any>(null)
+  const [nftDetailTrack, setNftDetailTrack] = useState<any>(null)
 
   // Token and Bundle listing states (mock data for now - will be GraphQL later)
   const [tokenListings, setTokenListings] = useState<Array<{
@@ -5075,8 +5076,8 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                 onPlayTrack={(track, index) => handlePlayTrack(track, index, ownedTracks)}
                 onTrackClick={(trackId) => {
                   const t = ownedTracks?.find((n: any) => n.id === trackId)
-                  if (t) setListNFTModalTrack(t)
-                  else router.push(`/dex/track/${trackId}`)
+                  if (t) setNftDetailTrack(t)
+                  else router.push(`/track/${trackId}`)
                 }}
                 currentTrackId={currentSong?.trackId}
                 isPlaying={isPlaying}
@@ -9175,6 +9176,101 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
           setShowCreateBundleModal(false)
         }}
       />
+
+      {/* NFT Detail Modal — shows metadata + token ID for MetaMask import */}
+      {nftDetailTrack && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setNftDetailTrack(null)}>
+          <div className="w-full max-w-md bg-neutral-900 border-2 border-purple-500/50 rounded-xl shadow-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-4 py-3 border-b border-purple-500/30 bg-purple-950 sticky top-0 z-10">
+              <span className="text-sm font-mono font-bold text-purple-400">NFT DETAILS</span>
+              <button onClick={() => setNftDetailTrack(null)} className="p-1 hover:bg-white/10 rounded"><X className="w-4 h-4 text-gray-400" /></button>
+            </div>
+
+            {/* Artwork */}
+            {nftDetailTrack.artworkUrl && (
+              <div className="aspect-square bg-black">
+                <img src={nftDetailTrack.artworkUrl} alt="" className="w-full h-full object-cover" />
+              </div>
+            )}
+
+            <div className="p-4 space-y-3">
+              <h3 className="text-lg font-mono font-bold text-white">{nftDetailTrack.title || 'Untitled'}</h3>
+              <p className="text-sm font-mono text-gray-400">{nftDetailTrack.artist || 'Unknown artist'}</p>
+
+              {/* Metadata for MetaMask import */}
+              <div className="space-y-2 p-3 rounded bg-black/40 border border-white/10">
+                <div className="text-[9px] font-mono text-gray-500 uppercase border-b border-white/5 pb-1 mb-2">IMPORT TO METAMASK</div>
+
+                <div className="flex justify-between text-[10px] font-mono">
+                  <span className="text-gray-400">Token ID</span>
+                  <span className="text-cyan-400 font-bold">{nftDetailTrack.nftData?.tokenId || nftDetailTrack.tokenId || 'N/A'}</span>
+                </div>
+                <div className="flex justify-between text-[10px] font-mono">
+                  <span className="text-gray-400">Contract</span>
+                  <button
+                    onClick={() => {
+                      const addr = nftDetailTrack.nftData?.contract || '0xf01D323bdAc88ee39543CbBc568C6Fc76258FfE0'
+                      const ta = document.createElement('textarea'); ta.value = addr; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta)
+                      toast.success('Contract address copied!')
+                    }}
+                    className="text-cyan-400 hover:text-cyan-300 underline"
+                  >
+                    {(nftDetailTrack.nftData?.contract || '0xf01D323bdAc88ee39543CbBc568C6Fc76258FfE0').slice(0, 10)}...{(nftDetailTrack.nftData?.contract || '0xf01D323bdAc88ee39543CbBc568C6Fc76258FfE0').slice(-6)} 📋
+                  </button>
+                </div>
+                <div className="flex justify-between text-[10px] font-mono">
+                  <span className="text-gray-400">Standard</span>
+                  <span className="text-gray-300">ERC-721</span>
+                </div>
+                <div className="flex justify-between text-[10px] font-mono">
+                  <span className="text-gray-400">Network</span>
+                  <span className="text-purple-400">Polygon</span>
+                </div>
+                {nftDetailTrack.trackEdition && (
+                  <div className="flex justify-between text-[10px] font-mono">
+                    <span className="text-gray-400">Edition</span>
+                    <span className="text-yellow-400">1/{nftDetailTrack.trackEdition.editionSize || '?'}</span>
+                  </div>
+                )}
+                {nftDetailTrack.nftData?.ipfsCid && (
+                  <div className="flex justify-between text-[10px] font-mono">
+                    <span className="text-gray-400">IPFS</span>
+                    <a href={`https://soundchain.mypinata.cloud/ipfs/${nftDetailTrack.nftData.ipfsCid}`} target="_blank" rel="noreferrer" className="text-cyan-400 hover:text-cyan-300 underline text-[9px]">
+                      {nftDetailTrack.nftData.ipfsCid.slice(0, 12)}...
+                    </a>
+                  </div>
+                )}
+              </div>
+
+              {/* MetaMask import instructions */}
+              <div className="p-3 rounded bg-orange-500/10 border border-orange-500/20 text-[10px] font-mono text-orange-300 space-y-1">
+                <div className="font-bold">To import this NFT into MetaMask:</div>
+                <div>1. Open MetaMask → NFTs tab → Import NFTs</div>
+                <div>2. Contract: tap "Contract" above to copy</div>
+                <div>3. Token ID: <span className="text-white font-bold">{nftDetailTrack.nftData?.tokenId || nftDetailTrack.tokenId || 'N/A'}</span></div>
+                <div>4. Network: Polygon</div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center gap-2">
+                <a
+                  href={`https://polygonscan.com/token/${nftDetailTrack.nftData?.contract || '0xf01D323bdAc88ee39543CbBc568C6Fc76258FfE0'}?a=${nftDetailTrack.nftData?.tokenId || ''}`}
+                  target="_blank" rel="noreferrer"
+                  className="flex-1 py-2 rounded text-center text-[10px] font-mono text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/10"
+                >
+                  View on Polygonscan
+                </a>
+                <button
+                  onClick={() => { setNftDetailTrack(null); setListNFTModalTrack(nftDetailTrack) }}
+                  className="flex-1 py-2 rounded text-center text-[10px] font-mono text-yellow-400 border border-yellow-500/30 hover:bg-yellow-500/10"
+                >
+                  List for Sale
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* List NFT Modal - inline listing from wallet view */}
       <ListNFTModal
