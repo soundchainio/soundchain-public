@@ -21,11 +21,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     // Fetch top 10 crypto from CoinGecko (free, no API key, 30 req/min)
-    const [cryptoRes, ogunRes] = await Promise.allSettled([
+    const [cryptoRes, ogunRes, raveRes] = await Promise.allSettled([
       fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=10&page=1&sparkline=false&price_change_percentage=24h', {
         headers: { 'Accept': 'application/json' },
       }).then(r => r.json()),
       fetch(`${req.headers.origin || 'https://soundchain.io'}/api/agent/stats`).then(r => r.json()),
+      // RaveDAO (RAVE) — live price from CoinGecko
+      fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=ravedao&sparkline=false&price_change_percentage=24h', {
+        headers: { 'Accept': 'application/json' },
+      }).then(r => r.json()),
     ])
 
     const cryptoData = cryptoRes.status === 'fulfilled' ? cryptoRes.value : []
@@ -70,14 +74,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       { symbol: 'MSFT', name: 'Microsoft', price: 428, change24h: 0.6 },
       { symbol: 'TSLA', name: 'Tesla', price: 245, change24h: -1.2 },
       { symbol: 'COST', name: 'Costco', price: 925, change24h: 0.7 },
-      { symbol: 'RAVE', name: 'Token Rave', price: 0.042, change24h: 5.2 },
     ]
+
+    // RaveDAO (RAVE) — live from CoinGecko or fallback
+    const raveData = raveRes.status === 'fulfilled' && Array.isArray(raveRes.value) && raveRes.value[0]
+      ? { symbol: 'RAVE', name: 'RaveDAO', price: raveRes.value[0].current_price, change24h: raveRes.value[0].price_change_percentage_24h || 0 }
+      : { symbol: 'RAVE', name: 'RaveDAO', price: 1.1297, change24h: 0 }
 
     const result = {
       ogun,
       crypto,
       commodities,
-      stocks,
+      stocks: [...stocks, raveData],
       meta: {
         chain: 'Polygon',
         fee: '0.05%',
