@@ -153,6 +153,16 @@
   background-color: var(--sc-bg) !important;
 }
 
+/* === LOGO + NAV TEXT VISIBILITY IN LIGHT MODE === */
+:root[data-theme="light"] .bg-gray-900\/95 {
+  background-color: rgba(255, 255, 255, 0.97) !important;
+}
+:root[data-theme="light"] .text-transparent {
+  -webkit-text-fill-color: var(--sc-fg) !important;
+  color: var(--sc-fg) !important;
+  background-image: none !important;
+}
+
 /* === SPORTS + MARKET TICKER VISIBILITY IN LIGHT MODE === */
 :root[data-theme="light"] .bg-red-950\/80,
 :root[data-theme="light"] .bg-blue-950\/80,

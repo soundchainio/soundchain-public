@@ -96,6 +96,7 @@ export function DexNavBar() {
 
   // Single source of truth — only one panel can be open at a time.
   const [openPanel, setOpenPanel] = useState<OpenPanel>('none')
+  const [tickerCollapsed, setTickerCollapsed] = useState(false)
   const [winWinTab, setWinWinTab] = useState<'catalog' | 'listener'>('catalog')
   const panelRef = useRef<HTMLDivElement | null>(null)
   const popoverRef = useRef<HTMLDivElement | null>(null)
@@ -1012,11 +1013,23 @@ export function DexNavBar() {
         </div>
       )}
 
-      {/* Scrolling data ticker — OGUN price, MCap, chain data, links */}
-      {/* Bloomberg market ticker */}
-      <OgunPriceTicker />
-      {/* Live sports tickers — MLB ⚾ NHL 🏒 NBA 🏀 */}
-      <SportsTickerStack />
+      {/* Ticker stack: Bloomberg + Sports — collapsible (FURL never touched) */}
+      <div className="relative">
+        {!tickerCollapsed && (
+          <>
+            <OgunPriceTicker />
+            <SportsTickerStack />
+          </>
+        )}
+        {/* Chevron minimizer — toggle ticker stack visibility */}
+        <button
+          onClick={() => setTickerCollapsed(c => !c)}
+          className="absolute -bottom-3 left-1/2 -translate-x-1/2 z-20 w-6 h-6 flex items-center justify-center rounded-full bg-neutral-800 border border-white/10 hover:bg-neutral-700 transition shadow-lg"
+          title={tickerCollapsed ? 'Show tickers' : 'Hide tickers'}
+        >
+          <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform ${tickerCollapsed ? 'rotate-180' : ''}`} />
+        </button>
+      </div>
     </header>
   )
 }

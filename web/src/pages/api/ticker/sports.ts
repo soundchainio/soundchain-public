@@ -23,8 +23,28 @@ async function fetchLeague(sport: string, league: string) {
       const home = comp?.competitors?.find((c: any) => c.homeAway === 'home')
       const away = comp?.competitors?.find((c: any) => c.homeAway === 'away')
       // Extract top scorers per team (ESPN provides leaders array)
-      const homeLeaders = home?.leaders?.find((l: any) => l.name === 'points')?.leaders?.slice(0, 3) || []
-      const awayLeaders = away?.leaders?.find((l: any) => l.name === 'points')?.leaders?.slice(0, 3) || []
+      // Combine points + rebounds + assists leaders (ESPN returns 1 per category)
+      // This gives us up to 3 unique players per team with their key stat
+      const extractLeaders = (team: any) => {
+        const seen = new Set<string>()
+        const leaders: any[] = []
+        for (const cat of ['points', 'rebounds', 'assists']) {
+          const catLeaders = team?.leaders?.find((l: any) => l.name === cat)?.leaders || []
+          for (const p of catLeaders) {
+            const name = p.athlete?.shortName || p.athlete?.displayName
+            if (name && !seen.has(name)) {
+              seen.add(name)
+              const statLabel = cat === 'points' ? 'pts' : cat === 'rebounds' ? 'reb' : 'ast'
+              leaders.push({ name, points: `${p.displayValue || p.value} ${statLabel}` })
+            }
+            if (leaders.length >= 3) break
+          }
+          if (leaders.length >= 3) break
+        }
+        return leaders
+      }
+      const homeLeaders = extractLeaders(home)
+      const awayLeaders = extractLeaders(away)
 
       return {
         id: e.id,
