@@ -2146,20 +2146,17 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     const songUrl = nftTrack?.playbackUrl || featuredAudioUrl || wallTrack?.audioUrl
     if (!songUrl) return
     const timer = setTimeout(() => {
-      if (nftTrack) {
-        handlePlayTrack(nftTrack, 0, [nftTrack])
-      } else {
-        playlistState([{
-          trackId: `profile-song-${viewingProfile.id}`,
-          src: songUrl,
-          title: vp?.featuredAudioTitle || wallTrack?.title || 'Profile Song',
-          artist: vp?.featuredAudioArtist || wallTrack?.artist || viewingProfile.displayName || '',
-          art: vp?.featuredAudioCoverUrl || wallTrack?.coverUrl || '',
-          isFavorite: false,
-        }], 0)
-        // Auto-play after loading playlist — small delay for audio element to mount
-        setTimeout(() => { try { play() } catch {} }, 300)
+      const song: Song = {
+        trackId: nftTrack?.id || `profile-song-${viewingProfile.id}`,
+        src: songUrl,
+        title: nftTrack?.title || vp?.featuredAudioTitle || wallTrack?.title || 'Profile Song',
+        artist: nftTrack?.artist || vp?.featuredAudioArtist || wallTrack?.artist || viewingProfile.displayName || '',
+        art: nftTrack?.artworkUrl || vp?.featuredAudioCoverUrl || wallTrack?.coverUrl || '',
+        isFavorite: false,
       }
+      playlistState([song], 0)
+      // Try auto-play — fails silently on mobile (browser policy), user taps bottom bar
+      setTimeout(() => { try { play() } catch {} }, 300)
     }, 1500)
     return () => clearTimeout(timer)
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -7199,6 +7196,8 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                                   art: songArt || '',
                                   isFavorite: false,
                                 }], 0)
+                                // User gesture satisfies browser autoplay policy
+                                setTimeout(() => { try { play() } catch {} }, 200)
                               }
                             }}
                             className="mt-3 flex items-center gap-3 w-full max-w-sm p-2 rounded-lg bg-gradient-to-r from-amber-500/10 to-purple-500/10 border border-amber-500/30 hover:border-amber-400/60 transition-all group"
