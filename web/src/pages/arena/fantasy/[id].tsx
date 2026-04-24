@@ -13,6 +13,7 @@ import { ArrowLeft, Trophy, Users, Coins, Loader2, CheckCircle2, Shield } from '
 import { toast } from 'react-toastify'
 import { FantasyLeague, Matchup } from 'lib/arena/fantasy/types'
 import { teamColorHex, positionPillClass } from 'lib/arena/fantasy/teamColors'
+import { FantasyLiveTicker } from 'components/FantasyLiveTicker'
 
 type Tab = 'draft' | 'roster' | 'matchups' | 'standings'
 
@@ -122,6 +123,7 @@ export default function FantasyLeagueDetailPage() {
   return (
     <div className="min-h-screen bg-black text-white">
       <DexNavBar />
+      {league.status === 'live' && id && <FantasyLiveTicker leagueId={id} />}
       <div className="max-w-5xl mx-auto px-4 py-6">
         <Link href="/arena/fantasy" className="inline-flex items-center gap-1 text-gray-400 hover:text-white text-sm mb-4">
           <ArrowLeft className="w-4 h-4" /> All Leagues
