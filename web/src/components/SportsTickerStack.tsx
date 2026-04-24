@@ -29,6 +29,7 @@ interface DraftPick {
   pickNumber: number
   round: number
   team: string
+  teamLogo?: string
   player: string
   position: string
   college: string
@@ -76,6 +77,15 @@ function LeagueTicker({
           {isOnClock && <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />}
           <span className={`font-bold ${cfg.color}`}>#{item.pickNumber}</span>
           <span className="text-[8px] text-gray-500">R{item.round}</span>
+          {item.teamLogo && item.team !== '?' && (
+            <img
+              src={item.teamLogo}
+              alt=""
+              className="w-4 h-4 object-contain"
+              loading="lazy"
+              onError={(e) => { (e.currentTarget.style.display = 'none') }}
+            />
+          )}
           <span className="text-gray-400">{item.team}</span>
           <span className="text-gray-600">·</span>
           <span className="font-bold text-white">{item.player}</span>

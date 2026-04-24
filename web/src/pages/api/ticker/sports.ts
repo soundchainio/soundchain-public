@@ -97,7 +97,12 @@ async function fetchNFLDraft() {
       .map((p: any, i: number) => {
         const overall = p.overall || p.pick || p.selection || i + 1
         const round = p.round || p.roundNumber || Math.ceil(overall / 32)
-        const team = p.team?.abbreviation || p.team?.displayName || p.team?.name || '?'
+        const abbr = p.team?.abbreviation as string | undefined
+        const team = abbr || p.team?.displayName || p.team?.name || '?'
+        const teamLogo =
+          p.team?.logo ||
+          p.team?.logos?.[0]?.href ||
+          (abbr ? `https://a.espncdn.com/i/teamlogos/nfl/500/${abbr.toLowerCase()}.png` : undefined)
         const player = p.athlete?.displayName || p.athlete?.fullName || p.player?.displayName || p.player?.name || 'TBD'
         const position = p.athlete?.position?.abbreviation || p.position?.abbreviation || p.position || ''
         const college = p.athlete?.college?.name || p.athlete?.school?.name || p.college?.name || p.college || ''
@@ -108,6 +113,7 @@ async function fetchNFLDraft() {
           pickNumber: overall,
           round,
           team,
+          teamLogo,
           player,
           position,
           college,
