@@ -26,6 +26,10 @@
     {
       "path": "/api/morning-report?send=true",
       "schedule": "0 14 * * *"
+    },
+    {
+      "path": "/api/cron/fantasy-scoring",
+      "schedule": "*/30 * * * *"
     }
   ]
 }
