@@ -30,6 +30,10 @@
     {
       "path": "/api/cron/fantasy-scoring",
       "schedule": "*/30 * * * *"
+    },
+    {
+      "path": "/api/cron/settle-picks",
+      "schedule": "*/10 * * * *"
     }
   ]
 }
