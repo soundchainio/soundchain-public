@@ -47,7 +47,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   // ─── TAKE (match the wager) ─────────────────────────────
   if (action === 'take') {
     if (pick.status !== 'open') return res.status(400).json({ error: 'pick is not open' })
-    if (pick.creatorHandle === myHandle) return res.status(400).json({ error: 'cannot take your own pick' })
+    if (pick.creatorHandle === myHandle || pick.creatorProfileId === auth.profileId.toString()) {
+      return res.status(400).json({ error: 'cannot take your own pick — use a different account (incognito or second device)' })
+    }
 
     // Check game hasn't started
     if (new Date(pick.expiresAt) < new Date()) {
