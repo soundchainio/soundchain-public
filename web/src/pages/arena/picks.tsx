@@ -50,7 +50,7 @@ function formatTime(iso: string) {
 }
 
 // ─── Matchup Card ──────────────────────────────────────────────
-function MatchupCard({ pick, me, onTake }: { pick: Pick; me: any; onTake: (id: string) => void }) {
+function MatchupCard({ pick, me, onTake, onCancel }: { pick: Pick; me: any; onTake: (id: string) => void; onCancel: (id: string) => void }) {
   const myHandle = me?.profile?.userHandle || me?.handle || ''
   const isCreator = pick.creatorHandle === myHandle
   const isTaker = pick.takerHandle === myHandle
@@ -89,7 +89,7 @@ function MatchupCard({ pick, me, onTake }: { pick: Pick; me: any; onTake: (id: s
         <div className="flex items-center justify-between gap-3">
           {/* Creator side */}
           <div className="flex-1 text-center">
-            <div className="relative inline-block mb-2">
+            <div className="relative inline-block mb-1">
               {creatorLogo ? (
                 <img src={creatorLogo} alt={creatorTeam} className="w-14 h-14 lg:w-20 lg:h-20 object-contain mx-auto" />
               ) : (
@@ -102,7 +102,7 @@ function MatchupCard({ pick, me, onTake }: { pick: Pick; me: any; onTake: (id: s
               )}
             </div>
             <p className="text-sm lg:text-base font-black text-white">{creatorTeam}</p>
-            <p className="text-[10px] lg:text-xs text-cyan-400 truncate">@{pick.creatorHandle}</p>
+            <p className="text-[10px] lg:text-xs text-cyan-400 font-bold truncate">@{pick.creatorHandle}</p>
             {isSettled && pick.creatorPick === 'home' && <p className="text-lg font-black text-white mt-1">{pick.finalHomeScore}</p>}
             {isSettled && pick.creatorPick === 'away' && <p className="text-lg font-black text-white mt-1">{pick.finalAwayScore}</p>}
           </div>
@@ -152,6 +152,31 @@ function MatchupCard({ pick, me, onTake }: { pick: Pick; me: any; onTake: (id: s
                   >
                     TAKE {pick.creatorPick === 'home' ? pick.awayTeam : pick.homeTeam}
                   </button>
+                )}
+                {/* Creator controls — share + cancel */}
+                {isCreator && isOpen && (
+                  <div className="flex items-center gap-2 mt-2">
+                    <button
+                      onClick={async () => {
+                        const url = `${window.location.origin}/arena/picks?take=${pick.id}`
+                        if (navigator.share) {
+                          try { await navigator.share({ title: `${creatorTeam} vs ${pick.creatorPick === 'home' ? pick.awayTeam : pick.homeTeam} — ${pick.entryFee} ${pick.entryToken}`, url }) } catch {}
+                        } else {
+                          await navigator.clipboard.writeText(url)
+                          toast.success('Pick link copied — send to your opponent!')
+                        }
+                      }}
+                      className="px-3 py-1 text-[10px] font-bold text-gray-400 hover:text-cyan-400 border border-gray-700 hover:border-cyan-500/50 rounded-full transition-all"
+                    >
+                      📤 SHARE
+                    </button>
+                    <button
+                      onClick={() => { if (confirm('Cancel this pick?')) onCancel(pick.id) }}
+                      className="px-3 py-1 text-[10px] font-bold text-gray-500 hover:text-red-400 border border-gray-700 hover:border-red-500/50 rounded-full transition-all"
+                    >
+                      ✕ CANCEL
+                    </button>
+                  </div>
                 )}
               </div>
             )}
@@ -322,12 +347,18 @@ function CreatePickModal({ game, side, onClose, onCreated }: { game: Game; side:
 // ─── Main Page ─────────────────────────────────────────────────
 export default function ArenaPicksPage() {
   const me = useMe()
+  const router = useRouter()
   const [tab, setTab] = useState('all')
   const [view, setView] = useState<'games' | 'picks' | 'my'>('games')
   const [games, setGames] = useState<Game[]>([])
   const [picks, setPicks] = useState<Pick[]>([])
   const [loading, setLoading] = useState(true)
   const [pickModal, setPickModal] = useState<{ game: Game; side: 'home' | 'away' } | null>(null)
+
+  // Deep link: ?take=pickId — auto-switch to Open Picks view
+  useEffect(() => {
+    if (router.query.take) setView('picks')
+  }, [router.query.take])
 
   const loadGames = useCallback(async () => {
     try {
@@ -371,6 +402,20 @@ export default function ArenaPicksPage() {
       const d = await r.json()
       if (!r.ok) { toast.error(d.error || 'Failed'); return }
       toast.success('Pick matched! Game on!')
+      loadPicks()
+    } catch (e: any) { toast.error(e.message) }
+  }
+
+  const handleCancel = async (pickId: string) => {
+    try {
+      const r = await fetch(`/api/arena/picks/${pickId}`, {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'cancel' }),
+      })
+      const d = await r.json()
+      if (!r.ok) { toast.error(d.error || 'Failed'); return }
+      toast.success('Pick cancelled')
       loadPicks()
     } catch (e: any) { toast.error(e.message) }
   }
@@ -451,7 +496,7 @@ export default function ArenaPicksPage() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {picks.map(p => (
-                  <MatchupCard key={p.id} pick={p} me={me} onTake={handleTake} />
+                  <MatchupCard key={p.id} pick={p} me={me} onTake={handleTake} onCancel={handleCancel} />
                 ))}
               </div>
             )}
