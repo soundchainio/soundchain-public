@@ -6,7 +6,10 @@
  */
 
 export type LeagueStatus = 'open' | 'drafting' | 'live' | 'complete' | 'cancelled'
-export type EntryToken = 'OGUN' | 'POL' | 'USDC' | 'XRP'
+import { SUPPORTED_TOKENS, TOKEN_INFO, Token } from 'constants/tokens'
+
+// All 24 supported tokens available for fantasy league entry fees
+export type EntryToken = Token
 export type RosterSlot = 'QB' | 'RB' | 'WR' | 'TE' | 'FLEX' | 'K' | 'DEF' | 'BENCH'
 
 export interface FantasyTeam {
@@ -116,11 +119,43 @@ export const DEFAULT_ROSTER_TEMPLATE: RosterSlot[] = [
 /** Default prize split: 60% / 25% / 10% / 5% platform = 10000 bps total. */
 export const DEFAULT_PRIZE_SPLIT = { first: 6000, second: 2500, third: 1000, platform: 500 }
 
-/** Allowed token config — address(0) means native POL. */
-export const TOKEN_CONFIG: Record<EntryToken, { address: string; decimals: number; label: string }> = {
-  OGUN: { address: '0x45f1af89486aeec2da0b06340cd9cd3bd741a15c', decimals: 18, label: 'OGUN' },
-  POL:  { address: '0x0000000000000000000000000000000000000000', decimals: 18, label: 'POL' },
-  USDC: { address: '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359', decimals: 6, label: 'USDC' },
-  // WXRP reserved — wrap on Polygon when liquid. Placeholder address for now.
-  XRP:  { address: '0x0000000000000000000000000000000000000000', decimals: 18, label: 'XRP (coming)' },
+/**
+ * All 24 tokens available for fantasy league wagers.
+ * Phase 1: OGUN, POL, USDC work now (Polygon native/ERC-20).
+ * Phase 2: remaining tokens via ZetaChain omnichain escrow.
+ * TOKEN_INFO from constants/tokens.ts is the single source of truth.
+ */
+export const TOKEN_CONFIG: Record<string, { address: string; decimals: number; label: string }> = {
+  // Live now (Polygon)
+  OGUN:    { address: '0x45f1af89486aeec2da0b06340cd9cd3bd741a15c', decimals: 18, label: 'OGUN' },
+  MATIC:   { address: '0x0000000000000000000000000000000000000000', decimals: 18, label: 'POL' },
+  USDC:    { address: '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359', decimals: 6,  label: 'USDC' },
+  USDT:    { address: '0xc2132D05D31c914a87C6611C10748AEb04B58e8F', decimals: 6,  label: 'USDT' },
+  ETH:     { address: '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619', decimals: 18, label: 'WETH' },
+  LINK:    { address: '0x53E0bca35eC356BD5ddDFebbD1Fc0fD03FaBad39', decimals: 18, label: 'LINK' },
+  AVAX:    { address: '0x2C89bbc92BD86F8075d1DEcc58C7F4E0107f286b', decimals: 18, label: 'AVAX' },
+  // ZetaChain omnichain (Phase 2 — addresses populated on deployment)
+  BTC:     { address: '0x0000000000000000000000000000000000000000', decimals: 8,  label: 'BTC' },
+  SOL:     { address: '0x0000000000000000000000000000000000000000', decimals: 9,  label: 'SOL' },
+  BNB:     { address: '0x0000000000000000000000000000000000000000', decimals: 18, label: 'BNB' },
+  DOGE:    { address: '0x0000000000000000000000000000000000000000', decimals: 8,  label: 'DOGE' },
+  XRP:     { address: '0x0000000000000000000000000000000000000000', decimals: 6,  label: 'XRP' },
+  SHIB:    { address: '0x0000000000000000000000000000000000000000', decimals: 18, label: 'SHIB' },
+  PEPE:    { address: '0x0000000000000000000000000000000000000000', decimals: 18, label: 'PEPE' },
+  BONK:    { address: '0x0000000000000000000000000000000000000000', decimals: 5,  label: 'BONK' },
+  SUI:     { address: '0x0000000000000000000000000000000000000000', decimals: 9,  label: 'SUI' },
+  HBAR:    { address: '0x0000000000000000000000000000000000000000', decimals: 8,  label: 'HBAR' },
+  LTC:     { address: '0x0000000000000000000000000000000000000000', decimals: 8,  label: 'LTC' },
+  ZETA:    { address: '0x0000000000000000000000000000000000000000', decimals: 18, label: 'ZETA' },
+  PENGU:   { address: '0x0000000000000000000000000000000000000000', decimals: 18, label: 'PENGU' },
+  MEATEOR: { address: '0x0000000000000000000000000000000000000000', decimals: 18, label: 'MEATEOR' },
+  BASE:    { address: '0x0000000000000000000000000000000000000000', decimals: 18, label: 'BASE' },
+  XTZ:     { address: '0x0000000000000000000000000000000000000000', decimals: 6,  label: 'XTZ' },
+  YZY:     { address: '0x0000000000000000000000000000000000000000', decimals: 18, label: 'YZY' },
 }
+
+/** Tokens that are live and functional for wagers right now. */
+export const LIVE_TOKENS = ['OGUN', 'MATIC', 'USDC', 'USDT', 'ETH', 'LINK', 'AVAX'] as const
+
+/** Check if a token is live for wagers (has real contract address). */
+export const isTokenLive = (token: string) => (LIVE_TOKENS as readonly string[]).includes(token)

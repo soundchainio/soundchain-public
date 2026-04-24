@@ -10,7 +10,8 @@ import { useMe } from 'hooks/useMe'
 // DexNavBar inherited from Layout.tsx — no inline mount needed
 import { ArrowLeft, Trophy, Plus, Users, Coins, Loader2, X } from 'lucide-react'
 import { toast } from 'react-toastify'
-import { FantasyLeague, EntryToken, TOKEN_CONFIG } from 'lib/arena/fantasy/types'
+import { FantasyLeague, EntryToken, TOKEN_CONFIG, isTokenLive } from 'lib/arena/fantasy/types'
+import { TOKEN_INFO, SUPPORTED_TOKENS } from 'constants/tokens'
 
 export default function FantasyHubPage() {
   const router = useRouter()
@@ -176,9 +177,15 @@ function CreateLeagueModal({ onClose, onCreated }: { onClose: () => void; onCrea
               onChange={e => setEntryToken(e.target.value as EntryToken)}
               className="w-full mt-1 bg-gray-1A border border-gray-800 rounded px-3 py-2 text-sm"
             >
-              <option value="OGUN" className="bg-gray-900">OGUN</option>
-              <option value="POL" className="bg-gray-900">POL</option>
-              <option value="XRP" disabled className="bg-gray-900">XRP (coming)</option>
+              {Object.keys(TOKEN_CONFIG).map(token => {
+                const live = isTokenLive(token)
+                const info = TOKEN_INFO[token as keyof typeof TOKEN_INFO]
+                return (
+                  <option key={token} value={token} disabled={!live} className="bg-gray-900">
+                    {info?.icon || ''} {TOKEN_CONFIG[token]?.label || token}{!live ? ' (coming)' : ''}
+                  </option>
+                )
+              })}
             </select>
           </label>
           <label className="block">
