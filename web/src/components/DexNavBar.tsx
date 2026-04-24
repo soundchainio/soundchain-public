@@ -281,7 +281,7 @@ export function DexNavBar() {
   const listenerDailyLimit = listenerData?.myListenerRewards?.dailyLimit || 50
 
   // Shared popover wrapper classes — fixed-centered on mobile, absolute-right on desktop.
-  const popoverBase = 'fixed sm:absolute left-1/2 sm:left-auto sm:right-0 top-14 sm:top-12 -translate-x-1/2 sm:translate-x-0 z-[9999] shadow-2xl overflow-hidden rounded-lg'
+  const popoverBase = 'fixed left-1/2 sm:left-auto sm:right-4 top-14 sm:top-12 -translate-x-1/2 sm:translate-x-0 z-[9999] shadow-2xl overflow-hidden rounded-lg'
 
   return (
     <header className="sticky top-0 z-50" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
