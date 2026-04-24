@@ -9,13 +9,13 @@ import { useRouter } from 'next/router'
 import Link from 'next/link'
 import { useMe } from 'hooks/useMe'
 import { DexNavBar } from 'components/DexNavBar'
-import { ArrowLeft, Trophy, Users, Coins, Loader2, CheckCircle2, Shield } from 'lucide-react'
+import { ArrowLeft, Trophy, Users, Coins, Loader2, CheckCircle2, Shield, Crown, Medal, Award } from 'lucide-react'
 import { toast } from 'react-toastify'
-import { FantasyLeague, Matchup } from 'lib/arena/fantasy/types'
+import { FantasyLeague, Matchup, PlayoffRound, PlayoffMatchup } from 'lib/arena/fantasy/types'
 import { teamColorHex, positionPillClass } from 'lib/arena/fantasy/teamColors'
 import { FantasyLiveTicker } from 'components/FantasyLiveTicker'
 
-type Tab = 'draft' | 'roster' | 'matchups' | 'standings'
+type Tab = 'draft' | 'roster' | 'matchups' | 'standings' | 'bracket'
 
 interface DetailResponse {
   league: FantasyLeague
@@ -166,6 +166,12 @@ export default function FantasyLeagueDetailPage() {
                 Force Live (skip remaining picks)
               </button>
             )}
+            {league.status === 'live' && !league.playoffBracket && (
+              <button onClick={() => act('start-playoffs')} disabled={working}
+                className="px-3 py-1.5 bg-orange-600 hover:bg-orange-500 rounded text-xs font-bold">
+                Start Playoffs (Top 4)
+              </button>
+            )}
             {league.status === 'live' && (
               <button onClick={() => {
                 const first = prompt('Winner (handle):')
@@ -186,13 +192,18 @@ export default function FantasyLeagueDetailPage() {
           </div>
         )}
 
+        {/* Trophy card — shown when league is complete */}
+        {league.status === 'complete' && league.winners && (
+          <TrophyCard league={league} />
+        )}
+
         {/* Tabs */}
-        <div className="flex gap-1 border-b border-gray-800 mb-4">
-          {(['draft', 'roster', 'matchups', 'standings'] as Tab[]).map(t => (
+        <div className="flex gap-1 border-b border-gray-800 mb-4 overflow-x-auto">
+          {(['draft', 'roster', 'matchups', 'standings', ...(league.playoffBracket ? ['bracket' as Tab] : [])] as Tab[]).map(t => (
             <button
               key={t}
               onClick={() => setTab(t)}
-              className={`px-3 py-2 text-xs font-bold uppercase ${tab === t ? 'text-white border-b-2 border-cyan-400' : 'text-gray-500 hover:text-gray-300'}`}
+              className={`px-3 py-2 text-xs font-bold uppercase whitespace-nowrap ${tab === t ? 'text-white border-b-2 border-cyan-400' : 'text-gray-500 hover:text-gray-300'}`}
             >
               {t}
             </button>
@@ -314,6 +325,11 @@ export default function FantasyLeagueDetailPage() {
           />
         )}
 
+        {/* Bracket Tab */}
+        {tab === 'bracket' && league.playoffBracket && (
+          <PlayoffBracketView bracket={league.playoffBracket} teams={league.teams} />
+        )}
+
         {/* Standings Tab */}
         {tab === 'standings' && (
           <div className="bg-gray-900 border border-gray-800 rounded overflow-hidden">
@@ -357,6 +373,114 @@ interface MatchupsListProps {
   myHandle?: string
   currentWeek?: number
   weekPlayerScores?: FantasyLeague['weekPlayerScores']
+}
+
+function TrophyCard({ league }: { league: FantasyLeague }) {
+  const winners = league.winners
+  if (!winners?.first) return null
+  const teamByHandle = new Map(league.teams.map(t => [t.ownerHandle, t]))
+  const entries: Array<{ place: 1 | 2 | 3; handle: string; icon: any; color: string; bg: string }> = []
+  if (winners.first)  entries.push({ place: 1, handle: winners.first,  icon: Crown, color: 'text-yellow-400',  bg: 'from-yellow-500/30 to-amber-900/20' })
+  if (winners.second) entries.push({ place: 2, handle: winners.second, icon: Medal, color: 'text-gray-300',    bg: 'from-gray-400/30 to-gray-800/20' })
+  if (winners.third)  entries.push({ place: 3, handle: winners.third,  icon: Award, color: 'text-orange-400',  bg: 'from-orange-500/30 to-orange-900/20' })
+
+  return (
+    <div className="mb-6 rounded-xl p-5 bg-gradient-to-br from-yellow-500/10 via-black to-amber-900/10 border-2 border-yellow-500/40 relative overflow-hidden">
+      <div className="flex items-center gap-2 text-yellow-400 font-black text-xs uppercase tracking-widest mb-3">
+        <Crown className="w-4 h-4" /> Season Complete · Champions
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        {entries.map(e => {
+          const team = teamByHandle.get(e.handle)
+          return (
+            <div key={e.place} className={`rounded-lg p-3 bg-gradient-to-br ${e.bg} border border-white/10`}>
+              <div className={`flex items-center gap-2 text-xs font-bold ${e.color} mb-1`}>
+                <e.icon className="w-4 h-4" />
+                {e.place === 1 ? '1st' : e.place === 2 ? '2nd' : '3rd'}
+              </div>
+              <div className="font-black text-base truncate">{team?.teamName || `@${e.handle}`}</div>
+              <div className="text-[10px] text-gray-400">@{e.handle}</div>
+              <div className="text-[10px] text-gray-500 mt-1">
+                {team?.wins ?? 0}-{team?.losses ?? 0} · {(team?.totalPoints ?? 0).toFixed(1)} pts
+              </div>
+            </div>
+          )
+        })}
+      </div>
+      {league.payoutTxHash && (
+        <div className="mt-3 text-[10px] text-gray-500 font-mono truncate">
+          Payout tx: <span className="text-cyan-400">{league.payoutTxHash}</span>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function PlayoffBracketView({ bracket, teams }: { bracket: PlayoffRound[]; teams: FantasyLeague['teams'] }) {
+  const teamByHandle = new Map(teams.map(t => [t.ownerHandle, t]))
+  const handleHex = (h?: string) => {
+    if (!h) return '555555'
+    const t = teamByHandle.get(h)
+    const firstTeam = t?.roster.find(r => !!r.teamAbbr)?.teamAbbr
+    return firstTeam ? teamColorHex(firstTeam) : '22d3ee'
+  }
+
+  return (
+    <div className="space-y-6">
+      {bracket.map(round => (
+        <div key={round.week}>
+          <div className="text-[10px] uppercase font-bold text-orange-400 mb-2 flex items-center gap-2">
+            <Crown className="w-3 h-3" />
+            Week {round.week} · {round.matchups[0]?.round === 'semifinal' ? 'Semifinals' : 'Finals'}
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {round.matchups.map(m => {
+              const homeHex = handleHex(m.home)
+              const awayHex = handleHex(m.away)
+              const played = typeof m.homeScore === 'number' && typeof m.awayScore === 'number'
+              const isConsolation = m.bracket === 'consolation'
+              return (
+                <div
+                  key={m.id}
+                  className="relative rounded-lg p-3 text-sm overflow-hidden"
+                  style={{
+                    background: `linear-gradient(90deg, #${awayHex}22 0%, #0a0a0a 50%, #${homeHex}22 100%)`,
+                    border: `1px solid ${isConsolation ? '#a78bfa33' : '#f59e0b66'}`,
+                  }}
+                >
+                  <div className="text-[9px] uppercase font-bold mb-1.5 tracking-widest" style={{ color: isConsolation ? '#a78bfa' : '#f59e0b' }}>
+                    {isConsolation ? 'Consolation (3rd Place)' : m.round === 'final' ? '🏆 Championship' : `Seed ${m.homeSeed} vs ${m.awaySeed}`}
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className={`flex-1 ${m.winner && m.winner !== m.away ? 'opacity-50' : ''}`}>
+                      <div className="text-[10px] text-gray-500">#{m.awaySeed ?? '?'}</div>
+                      <div className="font-bold truncate" style={{ color: `#${awayHex}` }}>
+                        {m.away ? (teamByHandle.get(m.away)?.teamName || `@${m.away}`) : <span className="text-gray-600">TBD</span>}
+                      </div>
+                      {played && <div className="text-2xl font-black tabular-nums">{m.awayScore?.toFixed(1)}</div>}
+                    </div>
+                    <div className="px-2 text-[10px] font-bold text-gray-600">{played ? '' : 'VS'}</div>
+                    <div className={`flex-1 text-right ${m.winner && m.winner !== m.home ? 'opacity-50' : ''}`}>
+                      <div className="text-[10px] text-gray-500">#{m.homeSeed ?? '?'}</div>
+                      <div className="font-bold truncate" style={{ color: `#${homeHex}` }}>
+                        {m.home ? (teamByHandle.get(m.home)?.teamName || `@${m.home}`) : <span className="text-gray-600">TBD</span>}
+                      </div>
+                      {played && <div className="text-2xl font-black tabular-nums">{m.homeScore?.toFixed(1)}</div>}
+                    </div>
+                  </div>
+                  {m.winner && !isConsolation && m.round === 'final' && (
+                    <div className="absolute top-2 right-2 text-yellow-400">
+                      <Crown className="w-4 h-4" />
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
 }
 
 function MatchupsList({ schedule, teams, myHandle, currentWeek, weekPlayerScores }: MatchupsListProps) {

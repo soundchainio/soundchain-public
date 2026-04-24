@@ -18,7 +18,7 @@ import {
   FantasyTeam,
   DEFAULT_ROSTER_TEMPLATE,
 } from 'lib/arena/fantasy/types'
-import { generateRoundRobin } from 'lib/arena/fantasy/schedule'
+import { generateRoundRobin, generatePlayoffBracket } from 'lib/arena/fantasy/schedule'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' })
@@ -170,6 +170,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     )
     return res.status(200).json({ ok: true, pick: entry, nextIndex: newIndex, draftComplete: newStatus === 'live' })
+  }
+
+  // ─── START PLAYOFFS (commissioner, after regular season) ─
+  if (action === 'start-playoffs') {
+    if (!isCommissioner) return res.status(403).json({ error: 'commissioner only' })
+    if (league.status !== 'live') return res.status(400).json({ error: 'league not live' })
+    if (league.teams.length < 4) return res.status(400).json({ error: 'need 4+ teams for playoffs' })
+    const bracket = generatePlayoffBracket(league.teams)
+    if (bracket.length === 0) return res.status(400).json({ error: 'unable to seed bracket' })
+    await leagues.updateOne(
+      { _id: new ObjectId(id) as any },
+      { $set: { playoffBracket: bracket, updatedAt: new Date().toISOString() } as any }
+    )
+    return res.status(200).json({ ok: true, playoffBracket: bracket })
   }
 
   // ─── LOCK (force end draft early — commissioner only) ────

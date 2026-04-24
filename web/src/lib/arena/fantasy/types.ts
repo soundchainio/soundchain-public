@@ -43,6 +43,29 @@ export interface Matchup {
   winner?: string            // ownerHandle | 'tie' | undefined (not played)
 }
 
+/** Playoff bracket types (top-4 single-elim, two rounds — semis + finals). */
+export interface PlayoffMatchup {
+  id: string                 // 'semi-1' | 'semi-2' | 'final' | 'consolation'
+  week: number               // 15 or 16 by default
+  bracket: 'winners' | 'consolation'
+  round: 'semifinal' | 'final'
+  homeSeed?: number          // 1..4 — only set for semifinals
+  awaySeed?: number
+  home?: string              // ownerHandle — filled once feeder round has a winner
+  away?: string
+  homeScore?: number
+  awayScore?: number
+  winner?: string
+  /** For non-semifinal matchups, these identify the feeder matchup IDs. */
+  feedsFromHome?: string     // 'semi-1'
+  feedsFromAway?: string     // 'semi-2'
+}
+
+export interface PlayoffRound {
+  week: number
+  matchups: PlayoffMatchup[]
+}
+
 export interface FantasyLeague {
   _id?: string
   leagueName: string
@@ -73,6 +96,13 @@ export interface FantasyLeague {
   weekPlayerScores?: Record<string, Record<string, number>>
   lastScoringSyncAt?: string
   lastScoringSyncWeek?: number
+  /** Top-4 playoff bracket — set once commissioner triggers `start-playoffs`
+   *  after the regular season ends. Progresses as scoring sync fills winners. */
+  playoffBracket?: PlayoffRound[]
+  /** Final standings snapshot after settle() — for season summary + NFT metadata. */
+  winners?: { first?: string; second?: string; third?: string }
+  payoutTxHash?: string
+  completedAt?: string
   createdAt: string
   updatedAt: string
 }
