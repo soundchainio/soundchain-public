@@ -8,7 +8,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
 import { useMe } from 'hooks/useMe'
-import { DexNavBar } from 'components/DexNavBar'
+// DexNavBar inherited from Layout.tsx — no inline mount needed
 import { ArrowLeft, Trophy, Users, Coins, Loader2, CheckCircle2, Shield, Crown, Medal, Award } from 'lucide-react'
 import { toast } from 'react-toastify'
 import { FantasyLeague, Matchup, PlayoffRound, PlayoffMatchup } from 'lib/arena/fantasy/types'
@@ -114,7 +114,6 @@ export default function FantasyLeagueDetailPage() {
   if (loading || !league) {
     return (
       <div className="min-h-screen bg-black text-white">
-        <DexNavBar />
         <div className="flex justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-cyan-400" /></div>
       </div>
     )
@@ -122,7 +121,6 @@ export default function FantasyLeagueDetailPage() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <DexNavBar />
       {league.status === 'live' && id && <FantasyLiveTicker leagueId={id} />}
       <div className="max-w-5xl mx-auto px-4 py-6">
         <Link href="/arena/fantasy" className="inline-flex items-center gap-1 text-gray-400 hover:text-white text-sm mb-4">

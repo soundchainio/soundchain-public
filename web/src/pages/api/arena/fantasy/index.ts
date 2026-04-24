@@ -51,10 +51,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!Number.isFinite(fee) || fee <= 0) return res.status(400).json({ error: 'entryFee > 0 required' })
 
     const split = prizeSplit && typeof prizeSplit === 'object'
-      ? { ...DEFAULT_PRIZE_SPLIT, ...prizeSplit, platform: 5 }
+      ? { ...DEFAULT_PRIZE_SPLIT, ...prizeSplit, platform: 500 }
       : DEFAULT_PRIZE_SPLIT
     if (split.first + split.second + split.third + split.platform !== 10000) {
-      return res.status(400).json({ error: 'prizeSplit bps must sum to 10000 (including 5 bps platform)' })
+      return res.status(400).json({ error: 'prizeSplit bps must sum to 10000 (including 500 bps platform)' })
     }
 
     const profiles = db.collection('profiles')

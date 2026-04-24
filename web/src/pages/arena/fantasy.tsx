@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useMe } from 'hooks/useMe'
-import { DexNavBar } from 'components/DexNavBar'
+// DexNavBar inherited from Layout.tsx — no inline mount needed
 import { ArrowLeft, Trophy, Plus, Users, Coins, Loader2, X } from 'lucide-react'
 import { toast } from 'react-toastify'
 import { FantasyLeague, EntryToken, TOKEN_CONFIG } from 'lib/arena/fantasy/types'
@@ -39,7 +39,6 @@ export default function FantasyHubPage() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <DexNavBar />
       <div className="max-w-5xl mx-auto px-4 py-6">
         <div className="flex items-center justify-between mb-6">
           <button onClick={() => router.back()} className="flex items-center gap-1 text-gray-400 hover:text-white text-sm">

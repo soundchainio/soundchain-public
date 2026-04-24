@@ -113,8 +113,8 @@ export const DEFAULT_ROSTER_TEMPLATE: RosterSlot[] = [
   'BENCH', 'BENCH', 'BENCH', 'BENCH', 'BENCH', 'BENCH',
 ]
 
-/** Default prize split: 60% / 25% / 10% / 5% platform. */
-export const DEFAULT_PRIZE_SPLIT = { first: 6000, second: 2500, third: 1000, platform: 5 }
+/** Default prize split: 60% / 25% / 10% / 5% platform = 10000 bps total. */
+export const DEFAULT_PRIZE_SPLIT = { first: 6000, second: 2500, third: 1000, platform: 500 }
 
 /** Allowed token config — address(0) means native POL. */
 export const TOKEN_CONFIG: Record<EntryToken, { address: string; decimals: number; label: string }> = {
