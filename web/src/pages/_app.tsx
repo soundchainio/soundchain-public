@@ -48,17 +48,10 @@ const CapacitorInit = dynamic(() => import('hooks/useCapacitor').then(mod => {
   return CapacitorInitComponent;
 }), { ssr: false })
 
-// Lazy-load Apollo — shaves ~150KB from initial JS bundle.
-// Vercel-direct endpoints (/api/me, /api/tracks/list, etc.) handle the fast path.
-// Apollo loads after first paint as a fallback for queries not yet migrated.
-function LazyApolloProvider({ pageProps, children }: { pageProps: any; children: React.ReactNode }) {
-  const [ApolloMod, setApolloMod] = React.useState<any>(null)
-  React.useEffect(() => {
-    import('lib/apollo').then(mod => setApolloMod(() => mod.ApolloProvider))
-  }, [])
-  if (!ApolloMod) return <>{children}</> // Render children immediately — Apollo loads in background
-  return <ApolloMod pageProps={pageProps}>{children}</ApolloMod>
-}
+// Apollo stays as a direct import for stable React tree (no remount flicker).
+// The speed win comes from Vercel-direct endpoints (/api/me, /api/tracks/list, etc.)
+// which serve data before Lambda cold-starts. Apollo is the fallback, not the fast path.
+import { ApolloProvider as LazyApolloProvider } from 'lib/apollo'
 
 // PWA-safe error boundary — catches crashes, shows error on screen (no console needed),
 // and provides "Clear Cache & Reload" to escape stale service worker death spiral.
