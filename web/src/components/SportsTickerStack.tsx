@@ -48,7 +48,7 @@ const LEAGUE_CONFIG = {
   nhl: { label: 'NHL', emoji: '🏒', color: 'text-blue-400', bgColor: 'bg-blue-950/80', borderColor: 'border-blue-500/20', speed: '20s' },
   nba: { label: 'NBA', emoji: '🏀', color: 'text-orange-400', bgColor: 'bg-orange-950/80', borderColor: 'border-orange-500/20', speed: '22s' },
   nfl: { label: 'NFL', emoji: '🏈', color: 'text-green-400', bgColor: 'bg-green-950/80', borderColor: 'border-green-500/20', speed: '28s' },
-  nflDraft: { label: 'NFL', emoji: '🏈', color: 'text-green-400', bgColor: 'bg-green-950/80', borderColor: 'border-green-500/20', speed: '60s' },
+  nflDraft: { label: 'NFL', emoji: '🏈', color: 'text-green-400', bgColor: 'bg-green-950/80', borderColor: 'border-green-500/20', speed: '120s' },
 }
 
 function isDraftPick(item: Game | DraftPick): item is DraftPick {
