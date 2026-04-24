@@ -12,7 +12,6 @@ import { TrackProvider } from 'hooks/useTrack'
 import { HideBottomNavBarProvider } from 'hooks/useHideBottomNavBar'
 import { LayoutContextProvider } from 'hooks/useLayoutContext'
 import { HeartbeatProvider } from 'hooks/useHeartbeat'
-import { ApolloProvider } from 'lib/apollo'
 import type { AppProps } from 'next/app'
 import dynamic from 'next/dynamic'
 import Head from 'next/head'
@@ -48,6 +47,18 @@ const CapacitorInit = dynamic(() => import('hooks/useCapacitor').then(mod => {
   };
   return CapacitorInitComponent;
 }), { ssr: false })
+
+// Lazy-load Apollo — shaves ~150KB from initial JS bundle.
+// Vercel-direct endpoints (/api/me, /api/tracks/list, etc.) handle the fast path.
+// Apollo loads after first paint as a fallback for queries not yet migrated.
+function LazyApolloProvider({ pageProps, children }: { pageProps: any; children: React.ReactNode }) {
+  const [ApolloMod, setApolloMod] = React.useState<any>(null)
+  React.useEffect(() => {
+    import('lib/apollo').then(mod => setApolloMod(() => mod.ApolloProvider))
+  }, [])
+  if (!ApolloMod) return <>{children}</> // Render children immediately — Apollo loads in background
+  return <ApolloMod pageProps={pageProps}>{children}</ApolloMod>
+}
 
 // PWA-safe error boundary — catches crashes, shows error on screen (no console needed),
 // and provides "Clear Cache & Reload" to escape stale service worker death spiral.
@@ -148,7 +159,7 @@ interface CustomAppProps extends Pick<AppProps, 'Component' | 'pageProps'> {
 function SoundchainMainLayout({ Component, pageProps }: CustomAppProps) {
   return (
     <AgentManagerProvider>
-    <ApolloProvider pageProps={pageProps}>
+    <LazyApolloProvider pageProps={pageProps}>
       <MagicProvider>
         {/* Web3Modal AFTER MagicProvider to avoid iframe race condition */}
         <Web3ModalProvider>
@@ -181,7 +192,7 @@ function SoundchainMainLayout({ Component, pageProps }: CustomAppProps) {
           </ModalProvider>
         </Web3ModalProvider>
       </MagicProvider>
-    </ApolloProvider>
+    </LazyApolloProvider>
     </AgentManagerProvider>
   )
 }
@@ -193,7 +204,7 @@ function SoundchainPageLayout({ Component, pageProps }: CustomAppProps) {
   // not just a subset. Missing providers = useMe crash, Post crash, etc.
   return (
     <AgentManagerProvider>
-    <ApolloProvider pageProps={pageProps}>
+    <LazyApolloProvider pageProps={pageProps}>
       <MagicProvider>
         <Web3ModalProvider>
           <ModalProvider>
@@ -234,7 +245,7 @@ function SoundchainPageLayout({ Component, pageProps }: CustomAppProps) {
           </ModalProvider>
         </Web3ModalProvider>
       </MagicProvider>
-    </ApolloProvider>
+    </LazyApolloProvider>
     </AgentManagerProvider>
   )
 }
