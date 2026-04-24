@@ -106,8 +106,33 @@ export interface FantasyLeague {
   winners?: { first?: string; second?: string; third?: string }
   payoutTxHash?: string
   completedAt?: string
+  tradeDeadlineWeek: number   // default 12 — no trades after this week
+  trades?: Trade[]            // trade history for the league
   createdAt: string
   updatedAt: string
+}
+
+// --- Trade System ---
+
+export type TradeStatus = 'proposed' | 'accepted' | 'vetoed' | 'rejected' | 'expired'
+
+export interface TradeSide {
+  ownerHandle: string
+  players: { playerId: string; fullName: string; position: string; teamAbbr: string }[]
+}
+
+export interface Trade {
+  id: string
+  leagueId: string
+  proposer: TradeSide
+  recipient: TradeSide
+  status: TradeStatus
+  proposedAt: string
+  respondedAt?: string
+  vetoedBy?: string           // commissioner handle
+  vetoReason?: string
+  vetoDeadline: string        // 24hrs after acceptance — commissioner can veto until this
+  expiresAt: string           // 48hrs after proposal — auto-expires if not accepted
 }
 
 /** Standard NFL roster: 9 starters + 6 bench = 15 rounds. */

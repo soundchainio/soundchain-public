@@ -78,6 +78,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       draftOrder: [],
       currentPickIndex: 0,
       draftRounds: DEFAULT_ROSTER_TEMPLATE.length,
+      tradeDeadlineWeek: 12,
+      trades: [],
       createdAt: now,
       updatedAt: now,
     }
