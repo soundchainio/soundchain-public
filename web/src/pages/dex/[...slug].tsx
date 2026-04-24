@@ -2150,16 +2150,16 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
         const featuredAudioUrl = vp.featuredAudioUrl
         const wallTrack = vp.wallAudioPlaylist?.[0]
         if (!featuredTrackId && !featuredAudioUrl && !wallTrack) return
-        const nftTrack = featuredTrackId ? viewingProfileNFTs.find((t: any) => t.id === featuredTrackId) : null
-        const songUrl = nftTrack?.playbackUrl || featuredAudioUrl || wallTrack?.audioUrl
+        // featuredAudioUrl is now always saved alongside featuredTrackId (NFT tracks too)
+        const songUrl = featuredAudioUrl || wallTrack?.audioUrl
         if (!songUrl) return
         setTimeout(() => {
           const song: Song = {
-            trackId: nftTrack?.id || `profile-song-${viewingProfile.id}`,
+            trackId: featuredTrackId || `profile-song-${viewingProfile.id}`,
             src: songUrl,
-            title: nftTrack?.title || vp.featuredAudioTitle || wallTrack?.title || 'Profile Song',
-            artist: nftTrack?.artist || vp.featuredAudioArtist || wallTrack?.artist || viewingProfile.displayName || '',
-            art: nftTrack?.artworkUrl || vp.featuredAudioCoverUrl || wallTrack?.coverUrl || '',
+            title: vp.featuredAudioTitle || wallTrack?.title || 'Profile Song',
+            artist: vp.featuredAudioArtist || wallTrack?.artist || viewingProfile.displayName || '',
+            art: vp.featuredAudioCoverUrl || wallTrack?.coverUrl || '',
             isFavorite: false,
           }
           playlistState([song], 0)
@@ -5851,7 +5851,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                           key={track.id}
                           onClick={async () => {
                             try {
-                              await fetch('/api/profile/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ fields: { featuredTrackId: track.id, featuredAudioUrl: '', featuredAudioTitle: '', featuredAudioArtist: '', featuredAudioCoverUrl: '' } }) })
+                              await fetch('/api/profile/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ fields: { featuredTrackId: track.id, featuredAudioUrl: track.playbackUrl || track.audioUrl || '', featuredAudioTitle: track.title || '', featuredAudioArtist: track.artist || '', featuredAudioCoverUrl: track.artworkUrl || '' } }) })
                               toast.success(`Profile song set to "${track.title}"`)
                               router.push('/settings')
                             } catch { toast.error('Could not set profile song') }
@@ -7194,20 +7194,16 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         return (
                           <button
                             onClick={() => {
-                              if (nftTrack) {
-                                handlePlayTrack(nftTrack, 0, [nftTrack])
-                              } else {
-                                playlistState([{
-                                  trackId: `profile-song-${viewingProfile.id}`,
-                                  src: songUrl,
-                                  title: songTitle,
-                                  artist: songArtist || '',
-                                  art: songArt || '',
-                                  isFavorite: false,
-                                }], 0)
-                                // User gesture satisfies browser autoplay policy
-                                setTimeout(() => { try { play() } catch {} }, 200)
-                              }
+                              playlistState([{
+                                trackId: featuredTrackId || `profile-song-${viewingProfile.id}`,
+                                src: songUrl,
+                                title: songTitle,
+                                artist: songArtist || '',
+                                art: songArt || '',
+                                isFavorite: false,
+                              }], 0)
+                              // User gesture satisfies browser autoplay policy
+                              setTimeout(() => { try { play() } catch {} }, 200)
                             }}
                             className="mt-3 flex items-center gap-3 w-full max-w-sm p-2 rounded-lg bg-gradient-to-r from-amber-500/10 to-purple-500/10 border border-amber-500/30 hover:border-amber-400/60 transition-all group"
                           >
@@ -7494,7 +7490,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                                   key={track.id}
                                   onClick={async () => {
                                     try {
-                                      const res = await fetch('/api/profile/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ fields: { featuredTrackId: track.id, featuredAudioUrl: '', featuredAudioTitle: '', featuredAudioArtist: '', featuredAudioCoverUrl: '' } }) })
+                                      const res = await fetch('/api/profile/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ fields: { featuredTrackId: track.id, featuredAudioUrl: track.playbackUrl || track.audioUrl || '', featuredAudioTitle: track.title || '', featuredAudioArtist: track.artist || '', featuredAudioCoverUrl: track.artworkUrl || '' } }) })
                                       if (!res.ok) throw new Error('Failed')
                                       toast.success(`Profile song set to "${track.title}"`)
                                       setShowProfileSongPicker(false)
