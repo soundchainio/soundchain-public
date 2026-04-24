@@ -14,9 +14,79 @@ Then say: **"Scoped CLAUDE.md, sarg.md, MEMORY.md, bug-report.md. Synced on [bri
 
 ---
 
-**Last Updated:** April 22, 2026
+**Last Updated:** April 23, 2026 (late-late)
 **Project Start:** July 14, 2021
 **Total Commits:** 10,000+ (across all branches)
+
+---
+
+## 🏈 SESSION: Apr 23, 2026 (late-late, Sarg home) — FANTASY TOP-LEVEL BUILD (P1-P6 ALL ON MAIN)
+
+### Context
+Frank said "go big or go home my G" on the fantasy feature. Shipped 6 tight commits end-to-end — ESPN draft to championship bracket — all on main, each typecheck clean, each live on Vercel. Frank was multi-building with Fleet Commander in the War Room in parallel.
+
+### Commits (all on main)
+
+| # | Commit | Ships |
+|---|---|---|
+| P1 | `5a74166` | NFL DSTs in ESPN draft pool (unblocks DEF slot in `DEFAULT_ROSTER_TEMPLATE`) |
+| P2 | `cf2ed1b` | Live scoring engine + `*/30 * * * *` Vercel cron + offseason-safe no-op |
+| P3 | `af435a3` | Player headshots, 32-team brand colors, position pills (draft + roster + matchups) |
+| P4 | `40a36e3` | In-league live ticker under DexNavBar, top-30 scoring plays, 30s polling, 60s server cache |
+| P5 | `389cdec` | My Week hero card, per-starter breakdown, current-week pinned with `THIS WEEK` badge |
+| P6 | `008a1e2` | Top-4 playoff bracket (Wk15 semis + Wk16 final/consolation), 🏆 TrophyCard at settle |
+
+### Files created / modified (full list)
+
+**New files:**
+- `web/src/lib/arena/fantasy/scoringSync.ts` — `syncLeagueScores(leagueId, week?)` + `syncAllLiveLeagues()`. Batches 10 players/fetch, starter-only scoring, applies W/L from schedule, persists per-player per-week scores.
+- `web/src/lib/arena/fantasy/teamColors.ts` — 32 NFL hex palette + position → Tailwind pill class map. Helpers: `teamColorHex()`, `positionPillClass()`.
+- `web/src/pages/api/cron/fantasy-scoring.ts` — `CRON_SECRET` bearer-auth cron endpoint, hits `syncAllLiveLeagues()`, returns summary.
+- `web/src/pages/api/arena/fantasy/[id]/live-feed.ts` — top 30 scoring events per league for current NFL week, 60s in-memory cache per league, skips DSTs.
+- `web/src/components/FantasyLiveTicker.tsx` — marquee under DexNavBar, 30s polling, hover-pauses, `animate-fantasy-marquee 90s linear`, auto-hides when `items.length === 0`.
+
+**Modified:**
+- `web/src/lib/arena/fantasy/espn.ts` — `+fetchNFLDefenses()`, `+fetchNFLTeams()`, `+fetchCurrentNFLWeek()`, `+fetchAthleteGamelog()` + `STAT_LABEL_MAP`.
+- `web/src/lib/arena/fantasy/schedule.ts` — `+seedTeams()` (W-L then totalPoints), `+generatePlayoffBracket()` top-4 single-elim + consolation, `+advancePlayoffBracket()` fills feeders from semi winners/losers.
+- `web/src/lib/arena/fantasy/types.ts` — `+PlayoffMatchup`, `+PlayoffRound`, `+league.playoffBracket`, `+league.weekPlayerScores{week}{playerId}=pts`, `+lastScoringSyncAt/Week`, `+winners/payoutTxHash/completedAt`.
+- `web/src/pages/api/arena/fantasy/[id]/action.ts` — `+start-playoffs` commissioner action (builds bracket from current standings via `generatePlayoffBracket()`).
+- `web/src/pages/arena/fantasy/[id].tsx` — graphics pass everywhere; `+MyWeekHero`, `+StarterBreakdown`, `+TrophyCard`, `+PlayoffBracketView`; Bracket tab conditional on `league.playoffBracket`; commissioner gets "Start Playoffs (Top 4)" button between "Force Live" and "Settle".
+- `web/vercel.json` — `+{"path":"/api/cron/fantasy-scoring","schedule":"*/30 * * * *"}`.
+
+### Non-obvious invariants (future-session gotchas)
+
+1. **DST scoring is stubbed.** `dst-{teamId}` playerIds don't hit any gamelog and score 0. Real team-defense scoring needs the weekly game boxscore endpoint. Intentional MVP gap.
+2. **`CRON_SECRET` is OPTIONAL in dev, REQUIRED in prod.** `/api/cron/fantasy-scoring` accepts unauthenticated calls if env unset. Accepts `Authorization: Bearer <secret>` OR `?secret=<secret>` query param.
+3. **Scoring sync is starter-only.** `team.roster.filter(r => r.slot !== 'BENCH')` → sum. Bench players don't contribute to weekly team score. Dynasty/daily-swaps would change this.
+4. **Scoring sync is idempotent.** Safe to re-run any time — latest stats overwrite. `weekPlayerScores` merges per week (not replaced across weeks).
+5. **ESPN gamelog uses a DIFFERENT subdomain.** `site.web.api.espn.com` (note the `.web.`) for gamelogs, vs `site.api.espn.com` for scoreboard/teams/athletes.
+6. **ES5 target blocks Map-iterator spread.** Must use `Array.from(map.values())` not `[...map.values()]`. Caught during P2.
+7. **Live-feed cache is in-memory Map, serverless-scoped.** Each Vercel function instance has its own. Fine for per-user polling; move to Upstash Redis if game-day traffic balloons.
+8. **Playoff bracket is top-4 only.** League needs ≥4 teams. Top-6 w/ byes is future work.
+9. **`advancePlayoffBracket()` is NOT auto-called by scoring sync yet.** Function exists in `schedule.ts`; future hook in `scoringSync.applyMatchupResults()` to auto-fill finals/consolation once semifinal scores post. ~15-line follow-up.
+10. **FantasyLiveTicker mounts ONLY on `league.status === 'live'`.** No ticker during draft/open/complete leagues. Correct.
+11. **`MyWeekHero` uses `league.lastScoringSyncWeek` as "current week"** (not a derived-from-date week). No cron run = no hero card. Matches reality.
+12. **No Apollo / Lambda dependencies.** Everything is Vercel-direct MongoDB + ESPN public APIs. Survives `api.soundchain.io` outages.
+
+### Prod checklist
+
+1. `vercel env add CRON_SECRET production` — paste any 32-char random string
+2. Hard refresh `/arena/fantasy/[id]` on any existing league
+3. Draft day: DEF slot draft pool now shows 32 NFL teams (was empty)
+4. Season Sunday: live ticker lights green/LIVE, My Week card populates, matchup cards show scores + starter breakdown
+5. End of regular season: commissioner clicks "Start Playoffs (Top 4)" → bracket renders in new Bracket tab
+6. After bracket final → commissioner calls "Settle" → TrophyCard replaces everything above tabs
+
+### Deferred follow-ups (flagged for future sessions)
+
+- **FantasyRosterNFT contract** — at `lock()` mint roster NFT snapshot; at settle, gold-border metadata update for 1st/2nd/3rd. `TrophyCard.winners` already has the inputs. Frank asked about this earlier in thread; deferred pending real NFL season.
+- **DST weekly scoring** — pull week's NFL scoreboard → boxscore per game → team defensive stats → `computeFantasyPoints({defTDs, defSacks, defInts, defFumbleRecoveries, defSafeties, defPointsAllowed})`. ~60 lines in `scoringSync.ts`.
+- **Auto-advance playoff bracket** after semifinal scoring posts. Hook into `scoringSync.applyMatchupResults()`: if week ≥ playoff startWeek and bracket exists, call `advancePlayoffBracket()` + persist.
+- **Live Matchup projections.** ESPN has projection endpoints; show "Mahomes projected 22.4 pts" alongside actual on My Week hero.
+- **Full season summary card** post-settle: highest single-week score, biggest blowout, consolation winner.
+
+### Multi-building context
+Shipped from Sarg (iPhone, home) while Frank was running Fleet Commander in the War Room in parallel. Fantasy code is self-contained — no shared UI state, no `Layout.tsx`/Provider/`DexNavBar` touches. Safe to parallel-build with other War Room features without merge conflicts.
 
 ---
 
