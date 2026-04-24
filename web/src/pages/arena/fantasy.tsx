@@ -32,6 +32,11 @@ export default function FantasyHubPage() {
 
   useEffect(() => { loadLeagues() }, [])
 
+  // Auto-open create modal when landed via /arena/fantasy?new=1
+  useEffect(() => {
+    if (router.query.new === '1' && me?.profile) setShowCreate(true)
+  }, [router.query.new, me?.profile])
+
   return (
     <div className="min-h-screen bg-black text-white">
       <DexNavBar />
