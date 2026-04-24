@@ -18,7 +18,7 @@
 import { ReactElement, useEffect, useState, useCallback } from 'react'
 import { useMe } from 'hooks/useMe'
 import { useRouter } from 'next/router'
-import { DexNavBar } from 'components/DexNavBar'
+// DexNavBar inherited from Layout.tsx
 import { ArrowLeft, Gamepad2, Trophy, Users, Eye, Coins, Zap, Lock, Radio, ExternalLink, Swords, Plus, Send, X, Loader2 } from 'lucide-react'
 import { toast } from 'react-toastify'
 
@@ -150,8 +150,6 @@ export default function ArenaPage() {
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
-      <DexNavBar />
-
       {/* Lower nav pills */}
       <div className="border-b border-red-500/10 bg-black/40 backdrop-blur-md">
         <div className="flex items-center gap-1.5 px-3 pt-2 pb-2">
@@ -207,6 +205,50 @@ export default function ArenaPage() {
       </div>
 
       <div className="max-w-[1400px] mx-auto px-4 py-4 space-y-4">
+        {/* ─── ARENA HUB NAV ──────────────────────────────────── */}
+        <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1">
+          {[
+            { label: 'Challenges', emoji: '⚔️', href: '#challenges', active: true },
+            { label: 'Game Picks', emoji: '🏆', href: '/arena/picks', active: false },
+            { label: 'Fantasy Leagues', emoji: '🏈', href: '/arena/fantasy', active: false },
+          ].map(item => (
+            <button
+              key={item.label}
+              onClick={() => item.href.startsWith('/') ? router.push(item.href) : document.getElementById('challenges')?.scrollIntoView({ behavior: 'smooth' })}
+              className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold transition-all ${
+                item.active ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white border border-transparent'
+              }`}
+            >
+              <span>{item.emoji}</span> {item.label}
+            </button>
+          ))}
+        </div>
+
+        {/* ─── GAME PICKS CARD ────────────────────────────────── */}
+        <div
+          className="relative rounded-xl overflow-hidden border border-cyan-500/30 bg-gradient-to-br from-cyan-950/50 via-black to-purple-950/40 p-4 sm:p-5 cursor-pointer hover:border-cyan-400/50 transition-all"
+          onClick={() => router.push('/arena/picks')}
+        >
+          <div className="absolute inset-0 opacity-10 pointer-events-none" style={{
+            background: 'radial-gradient(ellipse at top left, rgba(6,182,212,0.4), transparent 60%)',
+          }} />
+          <div className="relative flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+            <div className="p-3 rounded-lg bg-cyan-500/15 border border-cyan-500/30 self-start">
+              <Zap className="w-6 h-6 text-cyan-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-base sm:text-lg font-black text-white">GAME PICKS</h2>
+                <span className="text-[9px] font-mono px-2 py-0.5 bg-cyan-500/20 text-cyan-400 rounded-full border border-cyan-500/30">LIVE</span>
+              </div>
+              <p className="text-xs text-gray-400 mt-1">Pick winners of tonight&apos;s NBA, NHL, MLB &amp; NFL games. Wager crypto. Settle on-chain.</p>
+            </div>
+            <button className="self-start sm:self-center px-4 py-2 bg-gradient-to-r from-cyan-500 to-purple-500 text-white text-xs font-black rounded-full hover:scale-105 active:scale-95 transition-all shadow-lg shadow-cyan-500/20">
+              PICK &apos;EM
+            </button>
+          </div>
+        </div>
+
         {/* ─── FANTASY LEAGUES (top-level entry) ──────────────── */}
         <div
           className="relative rounded-xl overflow-hidden border border-green-500/30 bg-gradient-to-br from-green-950/50 via-black to-emerald-950/40 p-4 sm:p-5"
@@ -261,7 +303,7 @@ export default function ArenaPage() {
         </div>
 
         {/* ─── CHALLENGE SYSTEM ─────────────────────────────── */}
-        <div className="space-y-3">
+        <div id="challenges" className="space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="text-xs font-mono font-bold text-orange-400 tracking-wider flex items-center gap-2">
               <Swords className="w-3 h-3" /> CHALLENGES
@@ -542,12 +584,20 @@ export default function ArenaPage() {
                   <span>OGUN Stakes (optional)</span>
                   {newChallenge.stakes > 0 && <span className="text-yellow-400">Winner takes {newChallenge.stakes} OGUN · 0.05% fee</span>}
                 </label>
-                <div className="flex items-center gap-2">
-                  {[0, 5, 10, 25, 50, 100].map(s => (
+                <div className="flex items-center gap-2 flex-wrap">
+                  {[0, 5, 10, 25, 50, 100, 250, 500, 1000].map(s => (
                     <button key={s} onClick={() => setNewChallenge(c => ({ ...c, stakes: s }))}
                       className={`px-2 py-1 rounded text-[9px] font-mono transition ${newChallenge.stakes === s ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' : 'bg-white/[0.02] text-gray-500 border border-white/5 hover:text-white'}`}
-                    >{s === 0 ? 'Free' : `${s}`}</button>
+                    >{s === 0 ? 'Free' : s >= 1000 ? `${s/1000}K` : `${s}`}</button>
                   ))}
+                  <input
+                    type="number"
+                    placeholder="Custom"
+                    value={newChallenge.stakes > 0 && ![0,5,10,25,50,100,250,500,1000].includes(newChallenge.stakes) ? newChallenge.stakes : ''}
+                    onChange={e => setNewChallenge(c => ({ ...c, stakes: Number(e.target.value) || 0 }))}
+                    className="w-16 px-2 py-1 rounded text-[9px] font-mono bg-black/60 border border-white/10 text-white outline-none focus:border-yellow-500/50"
+                    min={0}
+                  />
                 </div>
               </div>
               {/* Message */}
