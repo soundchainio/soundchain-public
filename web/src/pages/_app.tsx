@@ -48,6 +48,10 @@ const CapacitorInit = dynamic(() => import('hooks/useCapacitor').then(mod => {
   return CapacitorInitComponent;
 }), { ssr: false })
 
+// TV-mode detection — writes data-tv="true" on <html> for Fire TV / smart TV /
+// console browsers so CSS can bump font + logos + focus rings for 10-foot view.
+const TvModeInit = dynamic(() => import('hooks/useTvMode').then(mod => mod.TvModeInit), { ssr: false })
+
 // Apollo stays as a direct import for stable React tree (no remount flicker).
 // The speed win comes from Vercel-direct endpoints (/api/me, /api/tracks/list, etc.)
 // which serve data before Lambda cold-starts. Apollo is the fallback, not the fast path.
@@ -168,6 +172,7 @@ function SoundchainMainLayout({ Component, pageProps }: CustomAppProps) {
                         <LayoutContextProvider>
                           <CheckBodyScroll />
                           <CapacitorInit />
+                          <TvModeInit />
                           <HeartbeatProvider />
                           <PushEnableFloat />
                           <Layout>
@@ -210,6 +215,7 @@ function SoundchainPageLayout({ Component, pageProps }: CustomAppProps) {
                     <TrackProvider>
                       <HideBottomNavBarProvider>
                         <LayoutContextProvider>
+                          <TvModeInit />
                           <HeartbeatProvider />
                           {Component.getLayout(<Component {...pageProps} />)}
                           {/* Standalone pages bypass Layout.tsx (which owns the

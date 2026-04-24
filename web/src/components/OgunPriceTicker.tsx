@@ -169,7 +169,7 @@ export const OgunPriceTicker = () => {
   }
 
   return (
-    <div className="w-full bg-black/80 border-b border-white/5 flex items-center overflow-hidden">
+    <div className="sc-ticker w-full bg-black/80 border-b border-white/5 flex items-center overflow-hidden">
       {/* Static OGUN badge — pinned left */}
       <div className="flex-shrink-0 flex items-center gap-1 px-2 py-1 bg-black/80 border-r border-white/10 z-10">
         <span className="text-amber-400 font-bold text-[10px]">📊 MARKETS</span>

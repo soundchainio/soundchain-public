@@ -139,7 +139,7 @@ function LeagueTicker({
   })
 
   return (
-    <div className={`w-full ${cfg.bgColor} border-b ${cfg.borderColor} flex items-center overflow-hidden`}>
+    <div className={`sc-ticker w-full ${cfg.bgColor} border-b ${cfg.borderColor} flex items-center overflow-hidden`}>
       {/* Static league badge — pinned left */}
       <div className={`flex-shrink-0 flex items-center gap-1 px-2 py-0.5 ${cfg.bgColor} border-r ${cfg.borderColor} z-10`}>
         <span className={`${cfg.color} font-bold text-[10px] flex items-center gap-1`}>

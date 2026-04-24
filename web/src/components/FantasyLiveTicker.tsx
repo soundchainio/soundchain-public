@@ -61,7 +61,7 @@ export function FantasyLiveTicker({ leagueId, pollIntervalMs = 30_000 }: Fantasy
   if (!items.length) return null
 
   return (
-    <div className="relative w-full overflow-hidden bg-gradient-to-r from-green-950/80 via-black to-green-950/80 border-y border-green-500/20 py-1.5">
+    <div className="sc-ticker relative w-full overflow-hidden bg-gradient-to-r from-green-950/80 via-black to-green-950/80 border-y border-green-500/20 py-1.5">
       <div className="absolute left-0 top-0 bottom-0 z-10 flex items-center gap-1 px-3 bg-green-950/95 border-r border-green-500/30">
         <Activity className="w-3 h-3 text-green-400 animate-pulse" />
         <span className="text-[10px] font-black text-green-300 tracking-widest">LIVE · WK {data?.nflWeek}</span>
