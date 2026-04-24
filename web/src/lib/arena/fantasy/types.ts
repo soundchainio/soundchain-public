@@ -6,7 +6,7 @@
  */
 
 export type LeagueStatus = 'open' | 'drafting' | 'live' | 'complete' | 'cancelled'
-export type EntryToken = 'OGUN' | 'POL' | 'XRP'
+export type EntryToken = 'OGUN' | 'POL' | 'USDC' | 'XRP'
 export type RosterSlot = 'QB' | 'RB' | 'WR' | 'TE' | 'FLEX' | 'K' | 'DEF' | 'BENCH'
 
 export interface FantasyTeam {
@@ -120,6 +120,7 @@ export const DEFAULT_PRIZE_SPLIT = { first: 6000, second: 2500, third: 1000, pla
 export const TOKEN_CONFIG: Record<EntryToken, { address: string; decimals: number; label: string }> = {
   OGUN: { address: '0x45f1af89486aeec2da0b06340cd9cd3bd741a15c', decimals: 18, label: 'OGUN' },
   POL:  { address: '0x0000000000000000000000000000000000000000', decimals: 18, label: 'POL' },
+  USDC: { address: '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359', decimals: 6, label: 'USDC' },
   // WXRP reserved — wrap on Polygon when liquid. Placeholder address for now.
   XRP:  { address: '0x0000000000000000000000000000000000000000', decimals: 18, label: 'XRP (coming)' },
 }
