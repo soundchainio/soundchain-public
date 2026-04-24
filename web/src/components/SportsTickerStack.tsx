@@ -5,7 +5,7 @@
  *   MLB: 30s (steady, relaxed — baseball pace)
  *   NHL: 20s (fast, intense — hockey pace)
  *   NBA: 22s (quick, dynamic — basketball pace)
- *   NFL: 28s (methodical — football pace; draft picks during draft week)
+ *   NFL: 60s draft week / 28s in-season — draft picks have more text per item, need longer read time
  *
  * Stacks below Bloomberg ticker in DexNavBar.
  * Full stack: FURL → Bloomberg → MLB → NHL → NBA → NFL
@@ -48,6 +48,7 @@ const LEAGUE_CONFIG = {
   nhl: { label: 'NHL', emoji: '🏒', color: 'text-blue-400', bgColor: 'bg-blue-950/80', borderColor: 'border-blue-500/20', speed: '20s' },
   nba: { label: 'NBA', emoji: '🏀', color: 'text-orange-400', bgColor: 'bg-orange-950/80', borderColor: 'border-orange-500/20', speed: '22s' },
   nfl: { label: 'NFL', emoji: '🏈', color: 'text-green-400', bgColor: 'bg-green-950/80', borderColor: 'border-green-500/20', speed: '28s' },
+  nflDraft: { label: 'NFL', emoji: '🏈', color: 'text-green-400', bgColor: 'bg-green-950/80', borderColor: 'border-green-500/20', speed: '60s' },
 }
 
 function isDraftPick(item: Game | DraftPick): item is DraftPick {
@@ -182,7 +183,7 @@ export function SportsTickerStack() {
       {hasNFL && (
         <LeagueTicker
           items={data.nfl}
-          league="nfl"
+          league={data.nflMode === 'draft' ? 'nflDraft' : 'nfl'}
           badgeLabel={data.nflMode === 'draft' ? 'NFL DRAFT' : 'NFL'}
         />
       )}
