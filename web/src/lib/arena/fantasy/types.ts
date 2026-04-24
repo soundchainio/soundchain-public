@@ -66,6 +66,13 @@ export interface FantasyLeague {
   draftRounds: number        // e.g. 15 (QB+RB+RB+WR+WR+TE+FLEX+K+DEF + 6 bench)
   escrowLeagueId?: number    // on-chain leagueId once contract is deployed + called
   escrowContractAddress?: string
+  /** Per-player per-week fantasy points. `weekPlayerScores[week][playerId] = pts`.
+   *  Populated by the scoring sync cron; used by matchup cards to show
+   *  which starters contributed to the weekly total. Optional — legacy leagues
+   *  won't have it until the next sync. */
+  weekPlayerScores?: Record<string, Record<string, number>>
+  lastScoringSyncAt?: string
+  lastScoringSyncWeek?: number
   createdAt: string
   updatedAt: string
 }

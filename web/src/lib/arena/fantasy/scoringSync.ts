@@ -142,12 +142,20 @@ export async function syncLeagueScores(
     week
   )
 
+  // Merge this week's per-player scores into league.weekPlayerScores[week]
+  const existingWeekPlayerScores = (league as any).weekPlayerScores || {}
+  const mergedWeekPlayerScores = {
+    ...existingWeekPlayerScores,
+    [week]: weekPoints,
+  }
+
   await leagues.updateOne(
     { _id: new ObjectId(leagueId) as any },
     {
       $set: {
         teams: teamsWithRecords,
         schedule: nextSchedule,
+        weekPlayerScores: mergedWeekPlayerScores,
         lastScoringSyncAt: new Date().toISOString(),
         lastScoringSyncWeek: week,
         updatedAt: new Date().toISOString(),

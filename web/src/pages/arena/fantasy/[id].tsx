@@ -304,7 +304,15 @@ export default function FantasyLeagueDetailPage() {
         )}
 
         {/* Matchups Tab */}
-        {tab === 'matchups' && <MatchupsList schedule={league.schedule || []} teams={league.teams} />}
+        {tab === 'matchups' && (
+          <MatchupsList
+            schedule={league.schedule || []}
+            teams={league.teams}
+            myHandle={myTeam?.ownerHandle}
+            currentWeek={league.lastScoringSyncWeek}
+            weekPlayerScores={league.weekPlayerScores}
+          />
+        )}
 
         {/* Standings Tab */}
         {tab === 'standings' && (
@@ -343,13 +351,24 @@ export default function FantasyLeagueDetailPage() {
   )
 }
 
-function MatchupsList({ schedule, teams }: { schedule: Matchup[]; teams: FantasyLeague['teams'] }) {
+interface MatchupsListProps {
+  schedule: Matchup[]
+  teams: FantasyLeague['teams']
+  myHandle?: string
+  currentWeek?: number
+  weekPlayerScores?: FantasyLeague['weekPlayerScores']
+}
+
+function MatchupsList({ schedule, teams, myHandle, currentWeek, weekPlayerScores }: MatchupsListProps) {
+  const [expanded, setExpanded] = useState<string | null>(null)
+
   if (!schedule.length) return <div className="text-sm text-gray-500">Schedule generated once draft starts.</div>
 
-  // Build a handle → dominant team color lookup (first rostered player's team color)
-  // Falls back to cyan/purple brand gradient for teams with no picks yet.
+  // handle → team record lookup (includes roster for per-starter breakdowns)
+  const teamByHandle: Record<string, FantasyLeague['teams'][number]> = {}
   const handleHex: Record<string, string> = {}
   for (const t of teams) {
+    teamByHandle[t.ownerHandle] = t
     const firstTeam = t.roster.find(r => !!r.teamAbbr)?.teamAbbr
     handleHex[t.ownerHandle] = firstTeam ? teamColorHex(firstTeam) : '22d3ee'
   }
@@ -359,46 +378,199 @@ function MatchupsList({ schedule, teams }: { schedule: Matchup[]; teams: Fantasy
   }, {})
   const weeks = Object.keys(byWeek).map(Number).sort((a, b) => a - b)
 
+  // Promote the current week to the top, everything else in natural order
+  if (currentWeek && weeks.includes(currentWeek)) {
+    const idx = weeks.indexOf(currentWeek)
+    weeks.splice(idx, 1)
+    weeks.unshift(currentWeek)
+  }
+
+  // My this-week matchup for the hero card
+  const myMatchup = currentWeek && myHandle
+    ? (byWeek[currentWeek] || []).find(m => m.home === myHandle || m.away === myHandle)
+    : undefined
+
   return (
     <div className="space-y-4">
-      {weeks.map(w => (
-        <div key={w}>
-          <div className="text-[10px] uppercase font-bold text-gray-500 mb-1.5">Week {w}</div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            {byWeek[w].map((m, i) => {
-              const homeHex = handleHex[m.home] || '22d3ee'
-              const awayHex = handleHex[m.away] || 'a78bfa'
-              const played = typeof m.homeScore === 'number' && typeof m.awayScore === 'number'
-              const homeWon = played && m.homeScore! > m.awayScore!
-              const awayWon = played && m.awayScore! > m.homeScore!
-              return (
-                <div
-                  key={i}
-                  className="relative rounded-lg p-3 text-sm overflow-hidden"
-                  style={{
-                    background: `linear-gradient(90deg, #${awayHex}22 0%, #0a0a0a 50%, #${homeHex}22 100%)`,
-                    border: `1px solid #${awayHex}33`,
-                  }}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className={`flex-1 ${awayWon ? 'opacity-100' : played ? 'opacity-50' : ''}`}>
-                      <div className="font-bold truncate" style={{ color: `#${awayHex}` }}>@{m.away}</div>
-                      {played && <div className="text-2xl font-black tabular-nums">{m.awayScore?.toFixed(1)}</div>}
-                    </div>
-                    <div className="px-2 text-[10px] font-bold text-gray-600">
-                      {played ? (m.winner === 'tie' ? 'TIE' : '') : 'VS'}
-                    </div>
-                    <div className={`flex-1 text-right ${homeWon ? 'opacity-100' : played ? 'opacity-50' : ''}`}>
-                      <div className="font-bold truncate" style={{ color: `#${homeHex}` }}>@{m.home}</div>
-                      {played && <div className="text-2xl font-black tabular-nums">{m.homeScore?.toFixed(1)}</div>}
-                    </div>
+      {myMatchup && (
+        <MyWeekHero
+          matchup={myMatchup}
+          teams={teamByHandle}
+          handleHex={handleHex}
+          week={currentWeek!}
+          myHandle={myHandle!}
+          weekPlayerScores={weekPlayerScores}
+        />
+      )}
+      {weeks.map(w => {
+        const isCurrent = w === currentWeek
+        return (
+          <div key={w}>
+            <div className="text-[10px] uppercase font-bold mb-1.5 flex items-center gap-2">
+              <span className={isCurrent ? 'text-green-400' : 'text-gray-500'}>Week {w}</span>
+              {isCurrent && <span className="px-1.5 py-0.5 rounded bg-green-500/20 text-green-300 ring-1 ring-green-500/40 text-[9px]">THIS WEEK</span>}
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              {byWeek[w].map((m, i) => {
+                const homeHex = handleHex[m.home] || '22d3ee'
+                const awayHex = handleHex[m.away] || 'a78bfa'
+                const played = typeof m.homeScore === 'number' && typeof m.awayScore === 'number'
+                const homeWon = played && m.homeScore! > m.awayScore!
+                const awayWon = played && m.awayScore! > m.homeScore!
+                const amIn = myHandle && (m.home === myHandle || m.away === myHandle)
+                const key = `${w}-${i}`
+                const isOpen = expanded === key
+                return (
+                  <div key={key}>
+                    <button
+                      onClick={() => setExpanded(isOpen ? null : key)}
+                      className={`w-full relative rounded-lg p-3 text-sm overflow-hidden text-left ${amIn ? 'ring-2 ring-cyan-400/60' : ''}`}
+                      style={{
+                        background: `linear-gradient(90deg, #${awayHex}22 0%, #0a0a0a 50%, #${homeHex}22 100%)`,
+                        border: `1px solid #${awayHex}33`,
+                      }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className={`flex-1 ${awayWon ? 'opacity-100' : played ? 'opacity-50' : ''}`}>
+                          <div className="font-bold truncate" style={{ color: `#${awayHex}` }}>@{m.away}</div>
+                          {played && <div className="text-2xl font-black tabular-nums">{m.awayScore?.toFixed(1)}</div>}
+                        </div>
+                        <div className="px-2 text-[10px] font-bold text-gray-600">
+                          {played ? (m.winner === 'tie' ? 'TIE' : '') : 'VS'}
+                        </div>
+                        <div className={`flex-1 text-right ${homeWon ? 'opacity-100' : played ? 'opacity-50' : ''}`}>
+                          <div className="font-bold truncate" style={{ color: `#${homeHex}` }}>@{m.home}</div>
+                          {played && <div className="text-2xl font-black tabular-nums">{m.homeScore?.toFixed(1)}</div>}
+                        </div>
+                      </div>
+                    </button>
+                    {isOpen && (
+                      <StarterBreakdown
+                        home={teamByHandle[m.home]}
+                        away={teamByHandle[m.away]}
+                        week={w}
+                        weekPlayerScores={weekPlayerScores}
+                      />
+                    )}
                   </div>
-                </div>
-              )
-            })}
+                )
+              })}
+            </div>
           </div>
+        )
+      })}
+    </div>
+  )
+}
+
+interface MyWeekHeroProps {
+  matchup: Matchup
+  teams: Record<string, FantasyLeague['teams'][number]>
+  handleHex: Record<string, string>
+  week: number
+  myHandle: string
+  weekPlayerScores?: FantasyLeague['weekPlayerScores']
+}
+
+function MyWeekHero({ matchup, teams, handleHex, week, myHandle, weekPlayerScores }: MyWeekHeroProps) {
+  const isHome = matchup.home === myHandle
+  const myKey = isHome ? 'home' : 'away'
+  const oppKey = isHome ? 'away' : 'home'
+  const myScore = isHome ? matchup.homeScore : matchup.awayScore
+  const oppScore = isHome ? matchup.awayScore : matchup.homeScore
+  const oppHandle = matchup[oppKey]
+  const myHex = handleHex[myHandle] || '22d3ee'
+  const oppHex = handleHex[oppHandle] || 'a78bfa'
+  const played = typeof myScore === 'number' && typeof oppScore === 'number'
+  const winning = played && myScore! > oppScore!
+
+  return (
+    <div
+      className="relative rounded-xl p-4 overflow-hidden"
+      style={{
+        background: `linear-gradient(135deg, #${myHex}33 0%, #0a0a0a 50%, #${oppHex}33 100%)`,
+        border: `2px solid #${myHex}66`,
+      }}
+    >
+      <div className="text-[10px] uppercase tracking-widest text-green-400 font-bold mb-2 flex items-center gap-2">
+        <Trophy className="w-3 h-3" /> My Week {week}
+      </div>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <div className="text-[10px] text-gray-500 uppercase">You</div>
+          <div className="font-black text-lg truncate" style={{ color: `#${myHex}` }}>{teams[myHandle]?.teamName || `@${myHandle}`}</div>
+          {played && <div className={`text-4xl font-black tabular-nums ${winning ? 'text-green-400' : ''}`}>{myScore?.toFixed(1)}</div>}
         </div>
-      ))}
+        <div className="text-xs font-bold text-gray-500">
+          {played ? (myScore! > oppScore! ? '✓' : myScore! < oppScore! ? '✗' : 'TIE') : 'VS'}
+        </div>
+        <div className="flex-1 min-w-0 text-right">
+          <div className="text-[10px] text-gray-500 uppercase">Opponent</div>
+          <div className="font-black text-lg truncate" style={{ color: `#${oppHex}` }}>{teams[oppHandle]?.teamName || `@${oppHandle}`}</div>
+          {played && <div className={`text-4xl font-black tabular-nums ${!winning && played && myScore !== oppScore ? 'text-red-400' : ''}`}>{oppScore?.toFixed(1)}</div>}
+        </div>
+      </div>
+      {weekPlayerScores && weekPlayerScores[week] && (
+        <StarterBreakdown
+          home={teams[matchup.home]}
+          away={teams[matchup.away]}
+          week={week}
+          weekPlayerScores={weekPlayerScores}
+          compact
+        />
+      )}
+    </div>
+  )
+}
+
+interface StarterBreakdownProps {
+  home?: FantasyLeague['teams'][number]
+  away?: FantasyLeague['teams'][number]
+  week: number
+  weekPlayerScores?: FantasyLeague['weekPlayerScores']
+  compact?: boolean
+}
+
+function StarterBreakdown({ home, away, week, weekPlayerScores, compact }: StarterBreakdownProps) {
+  if (!home || !away) return null
+  const weekMap = weekPlayerScores?.[week] || {}
+  const homeStarters = home.roster.filter(r => r.slot !== 'BENCH')
+  const awayStarters = away.roster.filter(r => r.slot !== 'BENCH')
+  const rowCount = Math.max(homeStarters.length, awayStarters.length)
+
+  return (
+    <div className={`${compact ? 'mt-3' : 'mt-2 bg-gray-950/80 rounded-b-lg'} p-2 text-[10px] border-t border-gray-800`}>
+      <div className="grid grid-cols-[1fr_auto_1fr] gap-2">
+        {Array.from({ length: rowCount }).map((_, idx) => {
+          const a = awayStarters[idx]
+          const h = homeStarters[idx]
+          const aPts = a ? (weekMap[a.playerId] ?? null) : null
+          const hPts = h ? (weekMap[h.playerId] ?? null) : null
+          return (
+            <div key={idx} className="contents">
+              <div className="truncate text-left">
+                {a ? (
+                  <>
+                    <span className={`inline-block px-1 rounded ring-1 ${positionPillClass(a.slot)} text-[8px] font-bold mr-1`}>{a.slot}</span>
+                    <span className="text-gray-300">{a.fullName.split(' ').slice(-1)[0]}</span>
+                    {aPts !== null && <span className="ml-1 text-green-400 font-bold tabular-nums">{aPts.toFixed(1)}</span>}
+                  </>
+                ) : <span className="text-gray-700">—</span>}
+              </div>
+              <div className="text-gray-700 text-center">·</div>
+              <div className="truncate text-right">
+                {h ? (
+                  <>
+                    {hPts !== null && <span className="mr-1 text-green-400 font-bold tabular-nums">{hPts.toFixed(1)}</span>}
+                    <span className="text-gray-300">{h.fullName.split(' ').slice(-1)[0]}</span>
+                    <span className={`inline-block px-1 rounded ring-1 ${positionPillClass(h.slot)} text-[8px] font-bold ml-1`}>{h.slot}</span>
+                  </>
+                ) : <span className="text-gray-700">—</span>}
+              </div>
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }
