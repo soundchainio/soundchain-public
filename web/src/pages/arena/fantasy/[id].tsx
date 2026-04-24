@@ -12,6 +12,7 @@ import { DexNavBar } from 'components/DexNavBar'
 import { ArrowLeft, Trophy, Users, Coins, Loader2, CheckCircle2, Shield } from 'lucide-react'
 import { toast } from 'react-toastify'
 import { FantasyLeague, Matchup } from 'lib/arena/fantasy/types'
+import { teamColorHex, positionPillClass } from 'lib/arena/fantasy/teamColors'
 
 type Tab = 'draft' | 'roster' | 'matchups' | 'standings'
 
@@ -212,20 +213,40 @@ export default function FantasyLeagueDetailPage() {
                   <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-cyan-400" /></div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-[500px] overflow-y-auto">
-                    {availablePlayers.map(p => (
-                      <button
-                        key={p.id}
-                        onClick={() => act('pick', { playerId: p.id, fullName: p.fullName, position: p.position, teamAbbr: p.teamAbbr })}
-                        disabled={working || onClockHandle !== me?.profile?.userHandle}
-                        className="flex items-center gap-3 p-2 bg-gray-900 hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed rounded text-left"
-                      >
-                        <div className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-[10px] font-bold">{p.position}</div>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-sm font-bold truncate">{p.fullName}</div>
-                          <div className="text-[10px] text-gray-500">{p.teamAbbr}</div>
-                        </div>
-                      </button>
-                    ))}
+                    {availablePlayers.map(p => {
+                      const hex = teamColorHex(p.teamAbbr)
+                      return (
+                        <button
+                          key={p.id}
+                          onClick={() => act('pick', { playerId: p.id, fullName: p.fullName, position: p.position, teamAbbr: p.teamAbbr })}
+                          disabled={working || onClockHandle !== me?.profile?.userHandle}
+                          className="group flex items-center gap-3 p-2 pl-0 bg-gray-900 hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed rounded text-left overflow-hidden relative"
+                          style={{ borderLeft: `3px solid #${hex}` }}
+                        >
+                          {p.headshot ? (
+                            <img
+                              src={p.headshot}
+                              alt=""
+                              loading="lazy"
+                              className="w-10 h-10 rounded-full object-cover bg-gray-800 ml-2 ring-2"
+                              style={{ boxShadow: `0 0 0 2px #${hex}` }}
+                              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-[10px] font-bold ml-2">{p.position}</div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-bold truncate">{p.fullName}</div>
+                            <div className="text-[10px] flex items-center gap-1.5 mt-0.5">
+                              <span className={`px-1.5 py-0.5 rounded ring-1 ${positionPillClass(p.position)} text-[9px] font-bold`}>
+                                {p.position}
+                              </span>
+                              <span className="text-gray-500">{p.teamAbbr}</span>
+                            </div>
+                          </div>
+                        </button>
+                      )
+                    })}
                   </div>
                 )}
               </>
@@ -253,14 +274,26 @@ export default function FantasyLeagueDetailPage() {
                 {t.roster.length === 0 ? (
                   <div className="text-[11px] text-gray-600 italic">No picks yet</div>
                 ) : (
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-1 text-[11px]">
-                    {t.roster.map((r, i) => (
-                      <div key={r.playerId} className="bg-black/40 rounded px-2 py-1">
-                        <span className="text-cyan-400 font-bold w-6 inline-block">{r.slot}</span>
-                        <span className="text-gray-400">{r.fullName}</span>
-                        <span className="text-gray-600 ml-1">{r.teamAbbr}</span>
-                      </div>
-                    ))}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5 text-[11px]">
+                    {t.roster.map((r, i) => {
+                      const hex = teamColorHex(r.teamAbbr)
+                      return (
+                        <div
+                          key={r.playerId}
+                          className="flex items-center gap-2 bg-black/40 rounded px-2 py-1.5"
+                          style={{ borderLeft: `2px solid #${hex}` }}
+                        >
+                          <span className={`px-1.5 py-0.5 rounded ring-1 ${positionPillClass(r.slot)} text-[9px] font-bold w-12 text-center`}>
+                            {r.slot}
+                          </span>
+                          <span className="text-gray-200 font-semibold truncate flex-1">{r.fullName}</span>
+                          <span className={`px-1.5 py-0.5 rounded ring-1 ${positionPillClass(r.position)} text-[9px] font-bold`}>
+                            {r.position}
+                          </span>
+                          <span className="text-gray-500 text-[10px] font-mono">{r.teamAbbr}</span>
+                        </div>
+                      )
+                    })}
                   </div>
                 )}
               </div>
@@ -269,7 +302,7 @@ export default function FantasyLeagueDetailPage() {
         )}
 
         {/* Matchups Tab */}
-        {tab === 'matchups' && <MatchupsList schedule={league.schedule || []} />}
+        {tab === 'matchups' && <MatchupsList schedule={league.schedule || []} teams={league.teams} />}
 
         {/* Standings Tab */}
         {tab === 'standings' && (
@@ -308,27 +341,59 @@ export default function FantasyLeagueDetailPage() {
   )
 }
 
-function MatchupsList({ schedule }: { schedule: Matchup[] }) {
+function MatchupsList({ schedule, teams }: { schedule: Matchup[]; teams: FantasyLeague['teams'] }) {
   if (!schedule.length) return <div className="text-sm text-gray-500">Schedule generated once draft starts.</div>
+
+  // Build a handle → dominant team color lookup (first rostered player's team color)
+  // Falls back to cyan/purple brand gradient for teams with no picks yet.
+  const handleHex: Record<string, string> = {}
+  for (const t of teams) {
+    const firstTeam = t.roster.find(r => !!r.teamAbbr)?.teamAbbr
+    handleHex[t.ownerHandle] = firstTeam ? teamColorHex(firstTeam) : '22d3ee'
+  }
+
   const byWeek = schedule.reduce<Record<number, Matchup[]>>((acc, m) => {
     (acc[m.week] = acc[m.week] || []).push(m); return acc
   }, {})
   const weeks = Object.keys(byWeek).map(Number).sort((a, b) => a - b)
+
   return (
     <div className="space-y-4">
       {weeks.map(w => (
         <div key={w}>
-          <div className="text-[10px] uppercase font-bold text-gray-500 mb-1">Week {w}</div>
+          <div className="text-[10px] uppercase font-bold text-gray-500 mb-1.5">Week {w}</div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            {byWeek[w].map((m, i) => (
-              <div key={i} className="bg-gray-900 border border-gray-800 rounded px-3 py-2 text-sm flex items-center justify-between">
-                <span>@{m.away}</span>
-                <span className="text-gray-500 text-xs">
-                  {typeof m.awayScore === 'number' ? `${m.awayScore} - ${m.homeScore}` : 'vs'}
-                </span>
-                <span>@{m.home}</span>
-              </div>
-            ))}
+            {byWeek[w].map((m, i) => {
+              const homeHex = handleHex[m.home] || '22d3ee'
+              const awayHex = handleHex[m.away] || 'a78bfa'
+              const played = typeof m.homeScore === 'number' && typeof m.awayScore === 'number'
+              const homeWon = played && m.homeScore! > m.awayScore!
+              const awayWon = played && m.awayScore! > m.homeScore!
+              return (
+                <div
+                  key={i}
+                  className="relative rounded-lg p-3 text-sm overflow-hidden"
+                  style={{
+                    background: `linear-gradient(90deg, #${awayHex}22 0%, #0a0a0a 50%, #${homeHex}22 100%)`,
+                    border: `1px solid #${awayHex}33`,
+                  }}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className={`flex-1 ${awayWon ? 'opacity-100' : played ? 'opacity-50' : ''}`}>
+                      <div className="font-bold truncate" style={{ color: `#${awayHex}` }}>@{m.away}</div>
+                      {played && <div className="text-2xl font-black tabular-nums">{m.awayScore?.toFixed(1)}</div>}
+                    </div>
+                    <div className="px-2 text-[10px] font-bold text-gray-600">
+                      {played ? (m.winner === 'tie' ? 'TIE' : '') : 'VS'}
+                    </div>
+                    <div className={`flex-1 text-right ${homeWon ? 'opacity-100' : played ? 'opacity-50' : ''}`}>
+                      <div className="font-bold truncate" style={{ color: `#${homeHex}` }}>@{m.home}</div>
+                      {played && <div className="text-2xl font-black tabular-nums">{m.homeScore?.toFixed(1)}</div>}
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
           </div>
         </div>
       ))}
