@@ -358,7 +358,7 @@ export default function FantasyLeagueDetailPage() {
         )}
 
         <div className="mt-8 text-[10px] text-gray-600 flex items-center gap-1">
-          <Shield className="w-3 h-3" /> Escrow via <code className="text-cyan-500">FantasyLeagueEscrow.sol</code> (contract ready, deployment pending). Interim escrow via arena backend wallet.
+          <Shield className="w-3 h-3" /> On-chain escrow: <a href="https://polygonscan.com/address/0x9cCB15833767B956cF55aa805D74c62d08F8acEd" target="_blank" rel="noreferrer" className="text-cyan-500 hover:text-cyan-400 underline">FantasyLeagueEscrow</a> on Polygon. Treasury: <code className="text-cyan-500/60">0x519bed...703b</code>
         </div>
       </div>
     </div>
