@@ -52,11 +52,45 @@ export async function fetchNFLPlayersByPosition(position: string, limit = 200): 
 }
 
 /**
- * Aggregate players across major fantasy positions in a single call.
- * Used by the draft board — all relevant players for drafting.
+ * Fetch NFL team defenses (DSTs) for fantasy draft.
+ * ESPN exposes teams at /sports/football/nfl/teams — shape each as an EspnPlayer
+ * with position='DST' so the draft board treats them uniformly.
+ */
+export async function fetchNFLDefenses(): Promise<EspnPlayer[]> {
+  try {
+    const url = `${ESPN_SITE}/site/v2/sports/football/nfl/teams?limit=32`
+    const res = await fetch(url, { headers: { Accept: 'application/json' } })
+    if (!res.ok) return []
+    const data = await res.json()
+    const teams: any[] = data?.sports?.[0]?.leagues?.[0]?.teams || []
+    return teams
+      .map(wrapper => wrapper?.team)
+      .filter(t => t && t.id)
+      .map(t => ({
+        id: `dst-${t.id}`,
+        fullName: `${t.displayName || t.name} D/ST`,
+        displayName: `${t.abbreviation || t.name} D/ST`,
+        position: 'DST',
+        teamAbbr: t.abbreviation || '',
+        teamId: String(t.id),
+        jersey: undefined,
+        headshot: t.logos?.[0]?.href,
+        active: true,
+      }))
+  } catch {
+    return []
+  }
+}
+
+/**
+ * Aggregate players across major fantasy positions + team defenses in a single call.
+ * Used by the draft board — all relevant picks for drafting including DST slot.
  */
 export async function fetchFantasyRelevantPlayers(): Promise<EspnPlayer[]> {
   const positions = ['QB', 'RB', 'WR', 'TE', 'K']
-  const results = await Promise.all(positions.map(p => fetchNFLPlayersByPosition(p, 100)))
-  return results.flat()
+  const [players, defenses] = await Promise.all([
+    Promise.all(positions.map(p => fetchNFLPlayersByPosition(p, 100))).then(r => r.flat()),
+    fetchNFLDefenses(),
+  ])
+  return [...players, ...defenses]
 }
