@@ -15,6 +15,9 @@ import clientPromise from 'lib/mongodb'
 import { ObjectId } from 'mongodb'
 import { authFromRequest } from 'lib/api/authJwt'
 import { GamePick, PickSport, SPORT_CONFIG } from 'lib/arena/picks/types'
+import { TOKEN_CONFIG, isTokenLive } from 'lib/arena/fantasy/types'
+
+const OGUN_BONUS_BPS = 1000  // 10% OGUN bonus to winner when wager is in OGUN — paid from rewards pool on settle
 
 const ESPN_BASE = 'https://site.api.espn.com/apis/site/v2/sports'
 
@@ -63,6 +66,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (!espnGameId) return res.status(400).json({ error: 'espnGameId required' })
   if (!pick || !['home', 'away'].includes(pick)) return res.status(400).json({ error: 'pick must be home or away' })
   if (!entryToken) return res.status(400).json({ error: 'entryToken required' })
+  if (!isTokenLive(entryToken)) {
+    return res.status(400).json({
+      error: `${entryToken} not yet supported — pick from live tokens (OGUN, POL, USDC, USDT, WETH, LINK, AVAX). Cross-chain tokens unlock when SoundchainPicksEscrow deploys to ZetaChain.`,
+    })
+  }
+  if (!TOKEN_CONFIG[entryToken]) return res.status(400).json({ error: `unknown token ${entryToken}` })
   const fee = Number(entryFee)
   if (!Number.isFinite(fee) || fee <= 0) return res.status(400).json({ error: 'entryFee > 0 required' })
 
@@ -106,6 +115,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       entryFee: fee,
       pot: 0, // pot fills when taker joins
       platformFeeBps: 500, // 5%
+      ogunBonusBps: entryToken === 'OGUN' ? OGUN_BONUS_BPS : 0,  // +10% to winner from OGUN rewards pool when wager is OGUN
       status: 'open',
       createdAt: now.toISOString(),
       expiresAt: gameTime, // expires at game start if not matched

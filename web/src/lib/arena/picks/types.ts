@@ -39,10 +39,16 @@ export interface GamePick {
   winnerHandle?: string
   payoutTxHash?: string
   platformFeeBps: number         // 500 = 5%
+  ogunBonusBps?: number          // 1000 = 10% bonus to winner when entryToken === 'OGUN', paid from rewards pool on settle
   // Escrow
   creatorDepositTxHash?: string
   takerDepositTxHash?: string
   escrowContractAddress?: string
+  // Take action — wallet sig + on-chain platform fee proof (Polygon)
+  takerWalletAddress?: string
+  takerTxHash?: string
+  takerFeePaidWei?: string
+  takerSignedAt?: string
   // Meta
   status: PickStatus
   createdAt: string

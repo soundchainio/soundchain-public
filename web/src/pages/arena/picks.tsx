@@ -9,7 +9,14 @@ import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/router'
 import { useMe } from 'hooks/useMe'
 import { toast } from 'react-toastify'
-import { Loader2, Trophy, Zap, TrendingUp, Clock, Check, X, ChevronDown, Wallet } from 'lucide-react'
+import { Loader2, Trophy, Zap, TrendingUp, Clock, Check, X, ChevronDown, Wallet, Sparkles } from 'lucide-react'
+import { TOKEN_CONFIG, LIVE_TOKENS, isTokenLive } from 'lib/arena/fantasy/types'
+import { TOKEN_INFO } from 'constants/tokens'
+
+const OGUN_BONUS_BPS = 1000  // 10% OGUN bonus when wager token is OGUN — paid from rewards pool on settle
+// Only show tokens that have a real on-chain destination today. Cross-chain tokens (BTC/SOL/etc.)
+// flip on automatically when SoundchainPicksEscrow deploys to ZetaChain mainnet and isTokenLive() expands.
+const ENABLED_TOKENS: string[] = ['OGUN', ...LIVE_TOKENS.filter(t => t !== 'OGUN')]
 
 interface Game {
   sport: string; sportLabel: string; sportEmoji: string
@@ -315,11 +322,15 @@ function CreatePickModal({ game, side, onClose, onCreated }: { game: Game; side:
             <label className="block">
               <span className="text-xs text-gray-400">Wager Token</span>
               <select value={token} onChange={e => setToken(e.target.value)} className="w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white">
-                <option value="OGUN">OGUN</option>
-                <option value="MATIC">POL</option>
-                <option value="USDC">USDC</option>
-                <option value="USDT">USDT</option>
-                <option value="ETH">WETH</option>
+                {ENABLED_TOKENS.map(t => {
+                  const info = TOKEN_INFO[t as keyof typeof TOKEN_INFO]
+                  const label = TOKEN_CONFIG[t]?.label || t
+                  return (
+                    <option key={t} value={t} className="bg-gray-900">
+                      {info?.icon || ''} {label}{t === 'OGUN' ? ' ✨' : ''}
+                    </option>
+                  )
+                })}
               </select>
             </label>
             <label className="block">
@@ -337,8 +348,19 @@ function CreatePickModal({ game, side, onClose, onCreated }: { game: Game; side:
             ))}
           </div>
 
-          <div className="text-[10px] text-gray-500 text-center mb-4">
-            Winner takes {Math.floor(amount * 2 * 0.95)} {token} · 5% platform fee · Escrow on Polygon
+          {token === 'OGUN' && (
+            <div className="flex items-center gap-2 mb-3 p-2 rounded-lg bg-gradient-to-r from-amber-500/10 to-yellow-500/10 border border-amber-500/30">
+              <Sparkles className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+              <p className="text-[10px] lg:text-xs text-amber-300 font-bold leading-tight">
+                +{OGUN_BONUS_BPS / 100}% OGUN bonus to winner — paid from rewards pool on settle
+              </p>
+            </div>
+          )}
+
+          <div className="text-[10px] text-gray-500 text-center mb-4 leading-relaxed">
+            Winner takes {Math.floor(amount * 2 * 0.95)} {token} · 5% platform fee
+            <br/>
+            <span className="text-gray-600">Entry routes via ZetaChain · Polygon = default gas (0.05%)</span>
           </div>
 
           <button onClick={submit} disabled={submitting || amount <= 0} className="w-full py-3 text-sm font-black bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-400 hover:to-purple-400 text-white rounded-xl transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 shadow-lg shadow-cyan-500/20">
