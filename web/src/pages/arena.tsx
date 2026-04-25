@@ -635,4 +635,4 @@ export default function ArenaPage() {
   )
 }
 
-;(ArenaPage as any).getLayout = (page: ReactElement) => page
+// Removed getLayout — arena now uses standard Layout (DexNavBar inherited, no duplicate header)
