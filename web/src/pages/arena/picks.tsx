@@ -29,6 +29,7 @@ interface Pick {
   homeLogo: string; awayLogo: string
   creatorHandle: string; creatorPick: 'home' | 'away'
   takerHandle?: string; takerPick?: 'home' | 'away'
+  takerWalletAddress?: string
   entryToken: string; entryFee: number; pot: number
   status: string; winner?: string; winnerHandle?: string
   finalHomeScore?: number; finalAwayScore?: number
@@ -136,6 +137,11 @@ function MatchupCard({ pick, me, onTake, onCancel }: { pick: Pick; me: any; onTa
                 </div>
                 <p className="text-sm lg:text-base font-black text-white">{takerTeam}</p>
                 <p className="text-[10px] lg:text-xs text-purple-400 truncate">@{pick.takerHandle}</p>
+                {pick.takerWalletAddress && (
+                  <p className="text-[8px] lg:text-[10px] text-emerald-400/80 truncate font-mono" title={`Signed by ${pick.takerWalletAddress}`}>
+                    ✓ {pick.takerWalletAddress.slice(0, 6)}…{pick.takerWalletAddress.slice(-4)}
+                  </p>
+                )}
                 {isSettled && pick.takerPick === 'home' && <p className="text-lg font-black text-white mt-1">{pick.finalHomeScore}</p>}
                 {isSettled && pick.takerPick === 'away' && <p className="text-lg font-black text-white mt-1">{pick.finalAwayScore}</p>}
               </>
@@ -393,15 +399,89 @@ export default function ArenaPicksPage() {
   }, [loadGames, loadPicks])
 
   const handleTake = async (pickId: string) => {
+    const pick = picks.find(p => p.id === pickId)
+    if (!pick) { toast.error('Pick not found'); return }
+
+    const ethereum = (typeof window !== 'undefined' ? (window as any).ethereum : null)
+    if (!ethereum) {
+      toast.error('Wallet required — open this page in MetaMask, Coinbase Wallet, Trust, or Rainbow to take this pick', { autoClose: 10000 })
+      return
+    }
+
+    const TREASURY = '0x519bed3fe32272fa8f1aecaf86dbfbd674ee703b'
+    const POLYGON_HEX = '0x89'
+
+    const isNativeWager = pick.entryToken === 'MATIC' || pick.entryToken === 'POL'
+    const feePol = isNativeWager ? Math.max(pick.entryFee * 0.0005, 0.001) : 0.001
+    const feeWeiHex = '0x' + BigInt(Math.round(feePol * 1e18)).toString(16)
+    const takerTeam = pick.creatorPick === 'home' ? pick.awayTeam : pick.homeTeam
+
+    let address: string
+    try {
+      const accounts = (await ethereum.request({ method: 'eth_requestAccounts' })) as string[]
+      if (!accounts?.[0]) throw new Error('No wallet account available')
+      address = accounts[0]
+    } catch (e: any) {
+      toast.error(e?.message || 'Wallet connection cancelled')
+      return
+    }
+
+    try {
+      const chainId = (await ethereum.request({ method: 'eth_chainId' })) as string
+      if (chainId !== POLYGON_HEX) {
+        try {
+          await ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: POLYGON_HEX }] })
+        } catch (switchErr: any) {
+          if (switchErr?.code === 4902) {
+            await ethereum.request({
+              method: 'wallet_addEthereumChain',
+              params: [{
+                chainId: POLYGON_HEX,
+                chainName: 'Polygon',
+                nativeCurrency: { name: 'POL', symbol: 'POL', decimals: 18 },
+                rpcUrls: ['https://polygon-rpc.com'],
+                blockExplorerUrls: ['https://polygonscan.com'],
+              }],
+            })
+          } else {
+            toast.error('Switch to Polygon network in your wallet to continue')
+            return
+          }
+        }
+      }
+    } catch (e: any) {
+      toast.error(e?.message || 'Could not verify Polygon network')
+      return
+    }
+
+    const sigToast = toast.loading(`Confirm in wallet — taking ${takerTeam} · ${feePol.toFixed(4)} POL platform fee`)
+    let txHash: string
+    try {
+      txHash = (await ethereum.request({
+        method: 'eth_sendTransaction',
+        params: [{ from: address, to: TREASURY, value: feeWeiHex }],
+      })) as string
+    } catch (e: any) {
+      toast.dismiss(sigToast)
+      const cancelled = e?.code === 4001 || /reject|denied|cancel/i.test(e?.message || '')
+      toast.error(cancelled ? 'Take cancelled in wallet' : (e?.message || 'Transaction failed'))
+      return
+    }
+    toast.dismiss(sigToast)
+
     try {
       const r = await fetch(`/api/arena/picks/${pickId}`, {
         method: 'POST', credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'take' }),
+        body: JSON.stringify({ action: 'take', txHash, walletAddress: address }),
       })
       const d = await r.json()
-      if (!r.ok) { toast.error(d.error || 'Failed'); return }
-      toast.success('Pick matched! Game on!')
+      if (!r.ok) {
+        const dbg = d.debug ? ` [server sees you as @${d.debug.yourHandle} · ${String(d.debug.yourProfileId).slice(-6)} | creator @${d.debug.creatorHandle} · ${String(d.debug.creatorProfileId).slice(-6)}]` : ''
+        toast.error(`${d.error || 'Failed'}${dbg}`, { autoClose: 12000 })
+        return
+      }
+      toast.success(`Pick matched · ${address.slice(0, 6)}…${address.slice(-4)} · tx ${txHash.slice(0, 10)}…`, { autoClose: 8000 })
       loadPicks()
     } catch (e: any) { toast.error(e.message) }
   }

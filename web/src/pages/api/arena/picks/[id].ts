@@ -12,6 +12,11 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import clientPromise from 'lib/mongodb'
 import { ObjectId } from 'mongodb'
 import { authFromRequest } from 'lib/api/authJwt'
+import { ethers } from 'ethers'
+
+const POLYGON_RPC = 'https://polygon-bor-rpc.publicnode.com'
+const TREASURY = '0x519bed3fe32272fa8f1aecaf86dbfbd674ee703b'
+const MIN_FEE_WEI = ethers.BigNumber.from('500000000000000') // 0.0005 POL — floor below frontend's 0.001 min, allows for rounding
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const pickId = req.query.id as string
@@ -60,6 +65,38 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ error: 'game has started — pick expired' })
     }
 
+    // Wallet + on-chain platform fee verification — applies to every take
+    const { txHash, walletAddress } = req.body || {}
+    if (!txHash || !walletAddress) {
+      return res.status(400).json({ error: 'wallet required — sign the platform fee transaction in your wallet to take this pick' })
+    }
+    if (!/^0x[0-9a-fA-F]{64}$/.test(txHash)) return res.status(400).json({ error: 'invalid txHash format' })
+    if (!/^0x[0-9a-fA-F]{40}$/.test(walletAddress)) return res.status(400).json({ error: 'invalid wallet address' })
+
+    let onchainTx
+    try {
+      const provider = new ethers.providers.JsonRpcProvider(POLYGON_RPC)
+      onchainTx = await provider.getTransaction(txHash)
+    } catch {
+      return res.status(502).json({ error: 'failed to reach Polygon — please retry' })
+    }
+    if (!onchainTx) return res.status(400).json({ error: 'transaction not found on Polygon yet — wait a few seconds and retry' })
+    if ((onchainTx.from || '').toLowerCase() !== walletAddress.toLowerCase()) {
+      return res.status(400).json({ error: 'transaction sender does not match the wallet you signed with' })
+    }
+    if ((onchainTx.to || '').toLowerCase() !== TREASURY.toLowerCase()) {
+      return res.status(400).json({ error: 'platform fee must be sent to SoundChain treasury' })
+    }
+    if (onchainTx.value.lt(MIN_FEE_WEI)) {
+      return res.status(400).json({ error: 'platform fee below 0.0005 POL minimum' })
+    }
+    if (onchainTx.chainId !== 137) {
+      return res.status(400).json({ error: 'platform fee must be on Polygon mainnet' })
+    }
+
+    const dup = await picks.findOne({ takerTxHash: txHash })
+    if (dup) return res.status(400).json({ error: 'this transaction has already been used to take a pick' })
+
     const takerPick = pick.creatorPick === 'home' ? 'away' : 'home'
     const now = new Date().toISOString()
 
@@ -68,13 +105,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         takerHandle: myHandle,
         takerProfileId: auth.profileId.toString(),
         takerPick,
+        takerWalletAddress: walletAddress.toLowerCase(),
+        takerTxHash: txHash,
+        takerFeePaidWei: onchainTx.value.toString(),
         pot: pick.entryFee * 2,
         status: 'matched',
         matchedAt: now,
       },
     })
 
-    return res.status(200).json({ ok: true, status: 'matched', yourPick: takerPick })
+    return res.status(200).json({ ok: true, status: 'matched', yourPick: takerPick, txHash, fee: ethers.utils.formatEther(onchainTx.value) + ' POL' })
   }
 
   // ─── CANCEL (creator only, before matched) ──────────────
