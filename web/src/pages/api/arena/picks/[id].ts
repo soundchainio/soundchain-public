@@ -48,7 +48,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (action === 'take') {
     if (pick.status !== 'open') return res.status(400).json({ error: 'pick is not open' })
     if (pick.creatorHandle === myHandle || pick.creatorProfileId === auth.profileId.toString()) {
-      return res.status(400).json({ error: 'cannot take your own pick — use a different account (incognito or second device)' })
+      return res.status(400).json({
+        error: 'cannot take your own pick — use a different account (incognito or second device)',
+        debug: { creatorHandle: pick.creatorHandle, yourHandle: myHandle, creatorProfileId: pick.creatorProfileId, yourProfileId: auth.profileId.toString() },
+      })
     }
 
     // Check game hasn't started
