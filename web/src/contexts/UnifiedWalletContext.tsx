@@ -54,6 +54,9 @@ export interface UnifiedWalletState {
   connectedExternalWallets: ExternalWalletInfo[]
   registerExternalWallet: (wallet: ExternalWalletInfo) => void
   removeExternalWallet: (walletType: string) => void
+  // EIP-1193 provider from Web3Modal (WalletConnect/MetaMask Mobile/etc.)
+  // Needed for arena wagers when window.ethereum is absent (Safari + WC mobile flow)
+  web3ModalProvider: any
 }
 
 const defaultState: UnifiedWalletState = {
@@ -80,6 +83,7 @@ const defaultState: UnifiedWalletState = {
   connectedExternalWallets: [],
   registerExternalWallet: () => {},
   removeExternalWallet: () => {},
+  web3ModalProvider: null,
 }
 
 const UnifiedWalletContext = createContext<UnifiedWalletState>(defaultState)
@@ -134,6 +138,7 @@ function UnifiedWalletInner({
     useWeb3Modal: any
     useWeb3ModalAccount: any
     useDisconnect: any
+    useWeb3ModalProvider: any
   }
 }) {
   const [activeWalletType, setActiveWalletType] = useState<WalletType>(null)
@@ -183,6 +188,7 @@ function UnifiedWalletInner({
   const { open } = web3ModalHooks.useWeb3Modal()
   const { address: web3ModalAddress, isConnected: isWeb3ModalConnected, chainId: web3ModalChainId } = web3ModalHooks.useWeb3ModalAccount()
   const { disconnect: disconnectWeb3Modal } = web3ModalHooks.useDisconnect()
+  const { walletProvider: web3ModalProvider } = web3ModalHooks.useWeb3ModalProvider()
 
   // Magic wallet (OAuth) hooks
   const {
@@ -512,6 +518,7 @@ function UnifiedWalletInner({
     connectedExternalWallets,
     registerExternalWallet,
     removeExternalWallet,
+    web3ModalProvider,
   }
 
   return (
@@ -555,6 +562,7 @@ function UnifiedWalletFallback({ children }: { children: ReactNode }) {
     connectedExternalWallets: [],
     registerExternalWallet: () => {},
     removeExternalWallet: () => {},
+    web3ModalProvider: null,
   }
 
   return (
@@ -576,6 +584,7 @@ export function UnifiedWalletProvider({ children }: { children: ReactNode }) {
           useWeb3Modal: module.useWeb3Modal,
           useWeb3ModalAccount: module.useWeb3ModalAccount,
           useDisconnect: module.useDisconnect,
+          useWeb3ModalProvider: module.useWeb3ModalProvider,
         })
       }).catch((e) => {
         console.error('Failed to load Web3Modal hooks:', e)

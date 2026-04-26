@@ -12,6 +12,7 @@ import { toast } from 'react-toastify'
 import { Loader2, Trophy, Zap, TrendingUp, Clock, Check, X, ChevronDown, Wallet, Sparkles } from 'lucide-react'
 import { TOKEN_CONFIG, LIVE_TOKENS, isTokenLive } from 'lib/arena/fantasy/types'
 import { TOKEN_INFO } from 'constants/tokens'
+import { useUnifiedWallet } from 'contexts/UnifiedWalletContext'
 
 const OGUN_BONUS_BPS = 1000  // 10% OGUN bonus when wager token is OGUN — paid from rewards pool on settle
 // Only show tokens that have a real on-chain destination today. Cross-chain tokens (BTC/SOL/etc.)
@@ -376,6 +377,8 @@ function CreatePickModal({ game, side, onClose, onCreated }: { game: Game; side:
 export default function ArenaPicksPage() {
   const me = useMe()
   const router = useRouter()
+  // Arena = L2 = WalletConnect-first per Frank's directive (kill Magic OAuth RPC for wagers)
+  const { connectWeb3Modal, activeWalletType, web3ModalProvider } = useUnifiedWallet()
   const [tab, setTab] = useState('all')
   const [view, setView] = useState<'games' | 'picks' | 'my'>('games')
   const [games, setGames] = useState<Game[]>([])
@@ -424,9 +427,19 @@ export default function ArenaPicksPage() {
     const pick = picks.find(p => p.id === pickId)
     if (!pick) { toast.error('Pick not found'); return }
 
-    const ethereum = (typeof window !== 'undefined' ? (window as any).ethereum : null)
-    if (!ethereum) {
-      toast.error('Wallet required — open this page in MetaMask, Coinbase Wallet, Trust, or Rainbow to take this pick', { autoClose: 10000 })
+    // WalletConnect-first per Frank's directive — Magic OAuth RPC is broken for wagers (-32603).
+    // Resolve EIP-1193 provider in this order:
+    //   1. Web3Modal (MetaMask Mobile / Rainbow / Trust / Coinbase via WC v2 deeplink)
+    //   2. Injected window.ethereum (desktop MetaMask, Coinbase extension, in-app browsers)
+    //   3. Neither → open Web3Modal so user can connect, then retry
+    const injected = (typeof window !== 'undefined' ? (window as any).ethereum : null)
+    const provider: any = (activeWalletType === 'web3modal' && web3ModalProvider)
+      ? web3ModalProvider
+      : injected
+
+    if (!provider) {
+      toast.info('Connect a wallet to take this pick — pick MetaMask, Rainbow, Trust, or Coinbase, then tap Take again', { autoClose: 9000 })
+      try { await connectWeb3Modal() } catch {}
       return
     }
 
@@ -440,7 +453,7 @@ export default function ArenaPicksPage() {
 
     let address: string
     try {
-      const accounts = (await ethereum.request({ method: 'eth_requestAccounts' })) as string[]
+      const accounts = (await provider.request({ method: 'eth_requestAccounts' })) as string[]
       if (!accounts?.[0]) throw new Error('No wallet account available')
       address = accounts[0]
     } catch (e: any) {
@@ -449,13 +462,13 @@ export default function ArenaPicksPage() {
     }
 
     try {
-      const chainId = (await ethereum.request({ method: 'eth_chainId' })) as string
+      const chainId = (await provider.request({ method: 'eth_chainId' })) as string
       if (chainId !== POLYGON_HEX) {
         try {
-          await ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: POLYGON_HEX }] })
+          await provider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: POLYGON_HEX }] })
         } catch (switchErr: any) {
           if (switchErr?.code === 4902) {
-            await ethereum.request({
+            await provider.request({
               method: 'wallet_addEthereumChain',
               params: [{
                 chainId: POLYGON_HEX,
@@ -479,7 +492,7 @@ export default function ArenaPicksPage() {
     const sigToast = toast.loading(`Confirm in wallet — taking ${takerTeam} · ${feePol.toFixed(4)} POL platform fee`)
     let txHash: string
     try {
-      txHash = (await ethereum.request({
+      txHash = (await provider.request({
         method: 'eth_sendTransaction',
         params: [{ from: address, to: TREASURY, value: feeWeiHex }],
       })) as string
