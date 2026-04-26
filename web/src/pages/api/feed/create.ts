@@ -33,10 +33,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(401).json({ error: 'Invalid or expired token' })
   }
 
-  const { body, mediaLink, uploadedMediaUrl, uploadedMediaType, uploadedMediaThumbnail } = req.body || {}
+  const { body, mediaLink, uploadedMediaUrl, uploadedMediaType, uploadedMediaThumbnail, repostId } = req.body || {}
 
-  if (!body?.trim() && !mediaLink && !uploadedMediaUrl) {
-    return res.status(400).json({ error: 'Post must have text, mediaLink, or uploadedMedia' })
+  if (!body?.trim() && !mediaLink && !uploadedMediaUrl && !repostId) {
+    return res.status(400).json({ error: 'Post must have text, mediaLink, uploadedMedia, or repostId' })
+  }
+
+  let repostOid: ObjectId | null = null
+  if (repostId) {
+    try { repostOid = new ObjectId(repostId) } catch { return res.status(400).json({ error: 'Invalid repostId' }) }
   }
 
   try {
@@ -60,15 +65,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       uploadedMediaType: uploadedMediaType || null,
       isEphemeral,
       mediaExpiresAt,
+      repostId: repostOid,
       commentCount: 0,
       repostCount: 0,
       totalReactions: 0,
+      totalTippedOgun: 0,
+      tipCount: 0,
       deleted: false,
       createdAt: now,
       updatedAt: now,
     }
 
     const { insertedId } = await db.collection('posts').insertOne(postDoc)
+
+    // Increment repostCount on the original post (fire-and-forget)
+    if (repostOid) {
+      db.collection('posts').updateOne(
+        { _id: repostOid },
+        { $inc: { repostCount: 1 } }
+      ).catch(() => {})
+    }
 
     // Fan out feed items: self + all followers
     const followers = await db.collection('follows')
@@ -122,6 +138,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         mediaThumbnail: postDoc.mediaThumbnail,
         uploadedMediaUrl: postDoc.uploadedMediaUrl,
         uploadedMediaType: postDoc.uploadedMediaType,
+        repostId: repostOid ? repostOid.toString() : null,
         createdAt: postDoc.createdAt,
         isEphemeral: postDoc.isEphemeral,
       },

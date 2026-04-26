@@ -664,6 +664,8 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
           myReaction={post.myReaction}
           isBookmarked={post.isBookmarked}
           hasTrack={!!post.track}
+          tipCount={(post as any).tipCount ?? 0}
+          totalTippedOgun={(post as any).totalTippedOgun ?? 0}
           postData={{
             id: post.id,
             body: post.body,
@@ -675,6 +677,8 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
             totalReactions: post.totalReactions,
             commentCount: post.commentCount,
             repostCount: post.repostCount,
+            tipCount: (post as any).tipCount ?? 0,
+            totalTippedOgun: (post as any).totalTippedOgun ?? 0,
             profile: post.profile ? {
               id: post.profile.id,
               displayName: post.profile.displayName,

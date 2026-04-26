@@ -12,10 +12,11 @@ import { useRouter } from 'next/router'
 import { toast } from 'react-toastify'
 
 import { ChatBubbleLeftIcon, ArrowPathIcon, ShareIcon, HandThumbUpIcon, ArrowDownTrayIcon, TrashIcon } from '@heroicons/react/24/outline'
-import { Bookmark, Archive, Info, Film } from 'lucide-react'
+import { Bookmark, Archive, Info, Film, Coins } from 'lucide-react'
 import { createPortal } from 'react-dom'
 import { CreateStoryModal } from 'components/dex/CreateStoryModal'
 import { SharePostModal } from 'components/modals/SharePostModal'
+import { TipPostModal } from 'components/modals/TipPostModal'
 
 // Detect if device supports hover (desktop)
 const checkIsDesktop = () => {
@@ -30,6 +31,8 @@ interface PostActionsProps {
   // Count badges for icons
   commentCount?: number
   repostCount?: number
+  tipCount?: number
+  totalTippedOgun?: number
   // Download/Archive feature props
   hasTrack?: boolean  // If true, hide download (NFT protection)
   isEphemeral?: boolean
@@ -58,7 +61,7 @@ interface PostActionsProps {
 // Icon-only action button styles - Modern spacing
 const commonClasses = 'text-gray-400 flex items-center justify-center'
 
-export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmarked, commentCount = 0, repostCount = 0, hasTrack, isEphemeral, isOwner, onCommentClick, postData }: PostActionsProps) => {
+export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmarked, commentCount = 0, repostCount = 0, tipCount = 0, totalTippedOgun = 0, hasTrack, isEphemeral, isOwner, onCommentClick, postData }: PostActionsProps) => {
   const [reactionSelectorOpened, setReactionSelectorOpened] = useState(false)
   const { dispatchSetRepostId, dispatchShowPostModal, dispatchShowCommentModal } = useModalDispatch()
   const [postLink, setPostLink] = useState('')
@@ -70,6 +73,9 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
   const [isDesktop, setIsDesktop] = useState(false)
   const [showShareToStory, setShowShareToStory] = useState(false)
   const [showShareModal, setShowShareModal] = useState(false)
+  const [showTipModal, setShowTipModal] = useState(false)
+  const [localTipCount, setLocalTipCount] = useState(tipCount)
+  const [localTippedOgun, setLocalTippedOgun] = useState(totalTippedOgun)
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null)
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const likeButtonRef = useRef<HTMLDivElement>(null)
@@ -384,6 +390,24 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
           <ShareIcon className="h-4 w-4" />
         </button>
       </div>
+      {/* Tip OGUN - for logged-in users, not on own posts */}
+      {me && !isOwner && postData?.profile?.id && (
+        <div className={commonClasses}>
+          <button
+            className="flex items-center gap-1.5 px-1.5 sm:px-3 py-1.5 sm:py-2 font-medium hover:text-yellow-300 hover:bg-yellow-500/10 transition-all rounded-xl"
+            onClick={() => {
+              if (!me) return router.push('/login')
+              setShowTipModal(true)
+            }}
+            title="Tip OGUN"
+          >
+            <Coins className="h-4 w-4" />
+            {localTippedOgun > 0 && (
+              <span className="text-xs">{localTippedOgun >= 1000 ? `${(localTippedOgun / 1000).toFixed(1)}k` : localTippedOgun}</span>
+            )}
+          </button>
+        </div>
+      )}
       {/* Share to Story - for posts with any media (uploaded or embedded), logged-in users */}
       {me && (postData?.uploadedMediaUrl || postData?.mediaThumbnail || postData?.mediaLink) && (
         <div className={commonClasses}>
@@ -517,6 +541,21 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
           })()}
         />,
         portalContainer
+      )}
+
+      {/* Tip Post Modal */}
+      {showTipModal && postData?.profile?.id && (
+        <TipPostModal
+          isOpen={showTipModal}
+          onClose={() => setShowTipModal(false)}
+          postId={postId}
+          recipientProfileId={postData.profile.id}
+          recipientName={postData.profile.displayName || postData.profile.userHandle}
+          onTipped={(amt) => {
+            setLocalTipCount(c => c + 1)
+            setLocalTippedOgun(t => t + amt)
+          }}
+        />
       )}
 
       {/* Share Post Modal (DM share) */}

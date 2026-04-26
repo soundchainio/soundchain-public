@@ -10,7 +10,7 @@ import Picker from '@emoji-mart/react'
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { getNormalizedLink, IdentifySource, hasLink } from 'utils/NormalizeEmbedLinks'
 import { MediaProvider } from 'types/MediaProvider'
-import { Smile, Sparkles, Link2, Send, X, Film, Video, Bookmark, ArrowDownToLine, Share2, Trash2, Repeat2 } from 'lucide-react'
+import { Smile, Sparkles, Link2, Send, X, Film, Video, Bookmark, ArrowDownToLine, Share2, Trash2, Repeat2, Coins } from 'lucide-react'
 import { HandThumbUpIcon } from '@heroicons/react/24/outline'
 import { ReactionSelector } from 'components/ReactionSelector'
 import { ReactionEmoji } from 'icons/ReactionEmoji'
@@ -18,6 +18,7 @@ import { createPostArchive, downloadArchive, generateArchiveFilename, isMobileDe
 import { toast } from 'react-toastify'
 import { CreateStoryModal } from './dex/CreateStoryModal'
 import { SharePostModal } from './modals/SharePostModal'
+import { TipPostModal } from './modals/TipPostModal'
 import { createPortal } from 'react-dom'
 import { MentionAutocomplete } from './MentionAutocomplete'
 
@@ -41,6 +42,8 @@ export interface NewCommentFormProps {
   myReaction?: ReactionType | null
   isBookmarked?: boolean
   hasTrack?: boolean
+  tipCount?: number
+  totalTippedOgun?: number
   postData?: {
     id: string
     body: string | null
@@ -52,6 +55,8 @@ export interface NewCommentFormProps {
     totalReactions?: number
     commentCount?: number
     repostCount?: number
+    tipCount?: number
+    totalTippedOgun?: number
     profile?: {
       id: string
       displayName: string
@@ -60,7 +65,7 @@ export interface NewCommentFormProps {
   }
 }
 
-export const NewCommentForm = ({ postId, onSuccess, compact, inputRef, replyToCommentId, replyToName, onCancelReply, myReaction, isBookmarked: initialIsBookmarked, hasTrack, postData }: NewCommentFormProps) => {
+export const NewCommentForm = ({ postId, onSuccess, compact, inputRef, replyToCommentId, replyToName, onCancelReply, myReaction, isBookmarked: initialIsBookmarked, hasTrack, tipCount, totalTippedOgun, postData }: NewCommentFormProps) => {
   const me = useMe()
   const router = useRouter()
   const [body, setBody] = useState('')
@@ -100,6 +105,11 @@ export const NewCommentForm = ({ postId, onSuccess, compact, inputRef, replyToCo
   const [showEmbedInput, setShowEmbedInput] = useState(false)
   const [showStoryModal, setShowStoryModal] = useState(false)
   const [showShareModal, setShowShareModal] = useState(false)
+  const [showTipModal, setShowTipModal] = useState(false)
+  const initialTippedOgun = totalTippedOgun ?? postData?.totalTippedOgun ?? 0
+  const initialTipCount = tipCount ?? postData?.tipCount ?? 0
+  const [localTippedOgun, setLocalTippedOgun] = useState(initialTippedOgun)
+  const [, setLocalTipCount] = useState(initialTipCount)
   const [guestWallet, setGuestWallet] = useState<string | null>(null)
   const portalContainerRef = useRef<HTMLElement | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -532,6 +542,21 @@ export const NewCommentForm = ({ postId, onSuccess, compact, inputRef, replyToCo
                 <span className="text-[10px] font-medium hidden sm:inline">{reposted ? 'Reposted' : 'Repost'}</span>
               </button>
 
+              {/* Tip OGUN — only for logged-in non-owner viewers */}
+              {me && !isPostOwner && postData?.profile?.id && (
+                <button
+                  type="button"
+                  onClick={() => setShowTipModal(true)}
+                  className="p-1.5 rounded-lg transition-all flex items-center gap-1 bg-neutral-800 text-neutral-400 hover:bg-yellow-500/20 hover:text-yellow-300"
+                  title="Tip OGUN"
+                >
+                  <Coins className="w-4 h-4" />
+                  <span className="text-[10px] font-medium hidden sm:inline">
+                    {localTippedOgun > 0 ? (localTippedOgun >= 1000 ? `${(localTippedOgun / 1000).toFixed(1)}k` : localTippedOgun) : 'Tip'}
+                  </span>
+                </button>
+              )}
+
               {/* Separator */}
               {(myReaction !== undefined) && (
                 <div className="w-px h-5 bg-neutral-700 mx-0.5" />
@@ -790,6 +815,21 @@ export const NewCommentForm = ({ postId, onSuccess, compact, inputRef, replyToCo
         onShareToStory={me && postData && (postData.uploadedMediaUrl || postData.mediaThumbnail || postData.mediaLink) ? () => { setShowShareModal(false); setShowStoryModal(true) } : undefined}
       />,
       portalContainerRef.current
+    )}
+
+    {/* Tip Post Modal */}
+    {showTipModal && postData?.profile?.id && (
+      <TipPostModal
+        isOpen={showTipModal}
+        onClose={() => setShowTipModal(false)}
+        postId={postId}
+        recipientProfileId={postData.profile.id}
+        recipientName={postData.profile.displayName || postData.profile.userHandle}
+        onTipped={(amt) => {
+          setLocalTippedOgun(t => t + amt)
+          setLocalTipCount(c => c + 1)
+        }}
+      />
     )}
     </>
   )

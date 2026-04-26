@@ -149,6 +149,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         updatedAt: post.updatedAt || post.createdAt,
         commentCount: post.commentCount || 0,
         repostCount: post.repostCount || 0,
+        totalTippedOgun: post.totalTippedOgun || 0,
+        tipCount: post.tipCount || 0,
         totalReactions: post.totalReactions || tally.reduce((sum, t) => sum + (t.count as number), 0),
         topReactions,
         reactionTally: tally,
