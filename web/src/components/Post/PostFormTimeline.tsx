@@ -90,7 +90,13 @@ export const PostFormTimeline = ({ onPosted }: { onPosted?: () => void } = {}) =
 
       const newPostParams: CreatePostInput = { body: postBody }
 
-      if (link && link.value) newPostParams.mediaLink = link.value
+      if (link && link.value) {
+        // Normalize on submit too — users who skip the inner "Save" button
+        // would otherwise ship the raw URL (e.g. open.spotify.com/playlist/X)
+        // which the renderer can't embed and falls back to an external-link card.
+        const normalized = await getNormalizedLink(link.value).catch(() => undefined)
+        newPostParams.mediaLink = normalized || link.value
+      }
 
       // Add ephemeral media if uploaded
       if (uploadedMediaUrl && uploadedMediaType) {

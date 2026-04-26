@@ -534,15 +534,16 @@ export const hasLazyLoadWithThumbnailSupport = (mediaUrl: string) => {
   )
 }
 
-// Media providers that ReactPlayer can play (includes audio platforms)
+// Video providers that render through ReactPlayer.
+// Audio embeds (Spotify/SoundCloud) intentionally skip ReactPlayer — their native
+// iframes work in mobile webviews where ReactPlayer's audio adapters fail and
+// trigger a YouTube-shaped error fallback. They render via the iframe branch in Post.tsx.
 export const canPlayWithReactPlayer = (mediaUrl: string) => {
   const source = IdentifySource(mediaUrl).type
   return (
     source === MediaProvider.YOUTUBE ||
     source === MediaProvider.VIMEO ||
     source === MediaProvider.FACEBOOK ||
-    source === MediaProvider.SOUNDCLOUD ||
-    source === MediaProvider.SPOTIFY ||
     source === MediaProvider.TWITCH
   )
 }

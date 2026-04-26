@@ -412,6 +412,8 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
             // Playlists need iframe to show tracklist - ReactPlayer doesn't support playlists
             const isPlaylist = mediaUrl.includes('listType=playlist') || mediaUrl.includes('videoseries') || mediaUrl.includes('list=')
             const useReactPlayer = !isPlaylist && canPlayWithReactPlayer(post.mediaLink)
+            const playerSource = useReactPlayer ? IdentifySource(post.mediaLink).type : undefined
+            const isYouTubeSource = playerSource === MediaProvider.YOUTUBE
 
             return useReactPlayer ? (
               // YouTube videos, Vimeo, Facebook - use ReactPlayer with 16:9 aspect ratio
@@ -441,12 +443,17 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
                       onReady={() => { ytPlayerReady.current = true }}
                       onError={() => {
                         setYtBlocked(true)
-                        const vm = post.mediaLink?.match(/(?:embed\/|watch\?v=|youtu\.be\/|youtube-nocookie\.com\/embed\/)([a-zA-Z0-9_-]{11})/)
-                        if (vm?.[1]) {
-                          fetch(`/api/youtube/stream?v=${vm[1]}`)
-                            .then(r => r.json())
-                            .then(data => { if (data.videoUrl) setPipedStreamUrl(data.videoUrl) })
-                            .catch(() => {})
+                        // Piped-stream fallback only makes sense for YouTube failures.
+                        // Vimeo/Facebook/Twitch errors fall through to the platform-aware
+                        // "Open on <platform>" card below.
+                        if (isYouTubeSource) {
+                          const vm = post.mediaLink?.match(/(?:embed\/|watch\?v=|youtu\.be\/|youtube-nocookie\.com\/embed\/)([a-zA-Z0-9_-]{11})/)
+                          if (vm?.[1]) {
+                            fetch(`/api/youtube/stream?v=${vm[1]}`)
+                              .then(r => r.json())
+                              .then(data => { if (data.videoUrl) setPipedStreamUrl(data.videoUrl) })
+                              .catch(() => {})
+                          }
                         }
                       }}
                       config={{
@@ -479,23 +486,37 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
                         playsInline
                         src={pipedStreamUrl}
                       />
-                    ) : (
-                      <a
-                        href={post.mediaLink?.replace('youtube-nocookie.com/embed/', 'youtube.com/watch?v=').replace(/[?&]autoplay=1/, '')}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="relative w-full h-full flex items-center justify-center cursor-pointer hover:bg-neutral-800 transition-colors"
-                      >
-                        {getYouTubeThumbnail(post.mediaLink) && (
-                          <img src={getYouTubeThumbnail(post.mediaLink)!} alt="" className="absolute inset-0 w-full h-full object-cover opacity-40" />
-                        )}
-                        <div className="relative z-10 flex flex-col items-center gap-2">
-                          <ExternalLink className="w-8 h-8 text-cyan-400" />
-                          <span className="text-white font-medium text-sm">Watch on YouTube</span>
-                          <span className="text-white/50 text-xs">Age-restricted — tap to open</span>
-                        </div>
-                      </a>
-                    )}
+                    ) : (() => {
+                      const platformLabel: Record<string, string> = {
+                        [MediaProvider.YOUTUBE]: 'YouTube',
+                        [MediaProvider.VIMEO]: 'Vimeo',
+                        [MediaProvider.FACEBOOK]: 'Facebook',
+                        [MediaProvider.TWITCH]: 'Twitch',
+                      }
+                      const label = (playerSource && platformLabel[playerSource]) || 'source'
+                      const externalHref = isYouTubeSource
+                        ? post.mediaLink?.replace('youtube-nocookie.com/embed/', 'youtube.com/watch?v=').replace(/[?&]autoplay=1/, '')
+                        : post.mediaLink
+                      const subtext = isYouTubeSource ? 'Age-restricted — tap to open' : 'Embed unavailable — tap to open'
+                      const ytThumb = isYouTubeSource ? getYouTubeThumbnail(post.mediaLink) : null
+                      return (
+                        <a
+                          href={externalHref}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="relative w-full h-full flex items-center justify-center cursor-pointer hover:bg-neutral-800 transition-colors"
+                        >
+                          {ytThumb && (
+                            <img src={ytThumb} alt="" className="absolute inset-0 w-full h-full object-cover opacity-40" />
+                          )}
+                          <div className="relative z-10 flex flex-col items-center gap-2">
+                            <ExternalLink className="w-8 h-8 text-cyan-400" />
+                            <span className="text-white font-medium text-sm">Open on {label}</span>
+                            <span className="text-white/50 text-xs">{subtext}</span>
+                          </div>
+                        </a>
+                      )
+                    })()}
                   </div>
                 )}
               </div>
