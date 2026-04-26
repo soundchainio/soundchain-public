@@ -26,10 +26,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const db = client.db('soundchain')
     const picks = db.collection('gamepicks')
 
+    // Expire any open picks past their game time — runs first so unmatched picks don't sit
+    // open forever when there are no matched picks to settle.
+    const expiredOpen = await picks.updateMany(
+      { status: 'open', expiresAt: { $lt: new Date().toISOString() } },
+      { $set: { status: 'expired' } }
+    )
+
     // Get all matched (active) picks
     const matchedPicks = await picks.find({ status: 'matched' }).toArray()
     if (matchedPicks.length === 0) {
-      return res.status(200).json({ settled: 0, expired: 0, message: 'no active picks' })
+      return res.status(200).json({
+        settled: 0,
+        expired: expiredOpen.modifiedCount,
+        message: expiredOpen.modifiedCount > 0 ? 'expired stale open picks' : 'no active picks',
+      })
     }
 
     // Group by sport to minimize ESPN calls
@@ -54,7 +65,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     let settled = 0
-    let expired = 0
+    let expired = expiredOpen.modifiedCount
 
     for (const pick of matchedPicks) {
       const events = scoreboards[pick.sport] || []
@@ -106,13 +117,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       settled++
     }
-
-    // Also expire any open picks past their game time
-    const expiredOpen = await picks.updateMany(
-      { status: 'open', expiresAt: { $lt: new Date().toISOString() } },
-      { $set: { status: 'expired' } }
-    )
-    expired += expiredOpen.modifiedCount
 
     return res.status(200).json({
       settled,
