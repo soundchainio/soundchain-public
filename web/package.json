@@ -17,6 +17,7 @@
     "vercel-build": "next build",
     "e2e": "cypress run",
     "typecheck": "tsc --noEmit",
+    "generate:skills": "ts-node --project scripts/tsconfig.json scripts/generate-skill-md.ts",
     "cap:sync": "npx cap sync",
     "cap:build": "next build && next export && npx cap sync",
     "cap:ios": "npx cap open ios",
