@@ -2,21 +2,25 @@
  * Arena Game Pick Actions
  *
  * GET  /api/arena/picks/[id] — get pick detail
- * POST /api/arena/picks/[id] — take (match), cancel
+ * POST /api/arena/picks/[id] — deposit (creator finalize), take (taker join + server lock), cancel, edit
  *
  * Actions:
- *   take   — take the other side of the wager
- *   cancel — creator cancels before matched
+ *   deposit — creator submits the join() txHash after server-created league. Flips pending_deposit → open.
+ *   take    — taker submits the join() txHash. Server then signs lock() and flips open → matched.
+ *   cancel  — creator cancels before matched. If creator already deposited, server signs cancel() to refund on-chain.
+ *   edit    — creator edits wager amount (only allowed pre-deposit, i.e. status='pending_deposit'). On-chain entryFee is immutable post-create.
  */
 import type { NextApiRequest, NextApiResponse } from 'next'
 import clientPromise from 'lib/mongodb'
 import { ObjectId } from 'mongodb'
 import { authFromRequest } from 'lib/api/authJwt'
 import { ethers } from 'ethers'
-
-const POLYGON_RPC = 'https://polygon-bor-rpc.publicnode.com'
-const TREASURY = '0x519bed3fe32272fa8f1aecaf86dbfbd674ee703b'
-const MIN_FEE_WEI = ethers.BigNumber.from('500000000000000') // 0.0005 POL — floor below frontend's 0.001 min, allows for rounding
+import {
+  escrowHasJoined,
+  escrowGetLeague,
+  escrowLockPick,
+  escrowCancelPick,
+} from 'lib/arena/picks/escrowServer'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const pickId = req.query.id as string
@@ -49,7 +53,38 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const { action } = req.body || {}
 
-  // ─── TAKE (match the wager) ─────────────────────────────
+  // ─── DEPOSIT (creator finalizes their on-chain join) ─────────────────────
+  if (action === 'deposit') {
+    if (pick.creatorHandle !== myHandle && pick.creatorProfileId !== auth.profileId.toString()) {
+      return res.status(403).json({ error: 'only creator can finalize their own deposit' })
+    }
+    if (pick.status !== 'pending_deposit') return res.status(400).json({ error: 'pick is not awaiting creator deposit' })
+    if (!pick.escrowLeagueId) return res.status(500).json({ error: 'pick has no escrow leagueId — internal error' })
+
+    const { txHash, walletAddress } = req.body || {}
+    if (!txHash || !walletAddress) return res.status(400).json({ error: 'txHash and walletAddress required' })
+    if (!/^0x[0-9a-fA-F]{64}$/.test(txHash)) return res.status(400).json({ error: 'invalid txHash format' })
+    if (!/^0x[0-9a-fA-F]{40}$/.test(walletAddress)) return res.status(400).json({ error: 'invalid wallet address' })
+
+    // Verify the wallet is now a member of the league on-chain
+    try {
+      const joined = await escrowHasJoined(pick.escrowLeagueId, walletAddress)
+      if (!joined) return res.status(400).json({ error: 'on-chain escrow does not show your wallet as joined yet — wait a few seconds for confirmation and retry' })
+    } catch (err: any) {
+      return res.status(502).json({ error: `could not verify on-chain join: ${err?.message || 'rpc failed'}` })
+    }
+
+    await picks.updateOne({ _id: pick._id }, {
+      $set: {
+        status: 'open',
+        creatorWalletAddress: walletAddress.toLowerCase(),
+        creatorDepositTxHash: txHash,
+      },
+    })
+    return res.status(200).json({ ok: true, status: 'open', txHash })
+  }
+
+  // ─── TAKE (taker submits their on-chain join → server locks) ─────────────
   if (action === 'take') {
     if (pick.status !== 'open') return res.status(400).json({ error: 'pick is not open' })
     if (pick.creatorHandle === myHandle || pick.creatorProfileId === auth.profileId.toString()) {
@@ -58,43 +93,40 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         debug: { creatorHandle: pick.creatorHandle, yourHandle: myHandle, creatorProfileId: pick.creatorProfileId, yourProfileId: auth.profileId.toString() },
       })
     }
-
-    // Check game hasn't started
     if (new Date(pick.expiresAt) < new Date()) {
       await picks.updateOne({ _id: pick._id }, { $set: { status: 'expired' } })
       return res.status(400).json({ error: 'game has started — pick expired' })
     }
+    if (!pick.escrowLeagueId) return res.status(500).json({ error: 'pick has no escrow leagueId — internal error' })
 
-    // Wallet + on-chain platform fee verification — applies to every take
     const { txHash, walletAddress } = req.body || {}
-    if (!txHash || !walletAddress) {
-      return res.status(400).json({ error: 'wallet required — sign the platform fee transaction in your wallet to take this pick' })
-    }
+    if (!txHash || !walletAddress) return res.status(400).json({ error: 'wallet required — sign the on-chain stake transaction in your wallet to take this pick' })
     if (!/^0x[0-9a-fA-F]{64}$/.test(txHash)) return res.status(400).json({ error: 'invalid txHash format' })
     if (!/^0x[0-9a-fA-F]{40}$/.test(walletAddress)) return res.status(400).json({ error: 'invalid wallet address' })
+    if (walletAddress.toLowerCase() === (pick.creatorWalletAddress || '').toLowerCase()) {
+      return res.status(400).json({ error: 'taker wallet must differ from creator wallet' })
+    }
 
-    let onchainTx
+    // Verify taker is now a member on-chain
     try {
-      const provider = new ethers.providers.JsonRpcProvider(POLYGON_RPC)
-      onchainTx = await provider.getTransaction(txHash)
-    } catch {
-      return res.status(502).json({ error: 'failed to reach Polygon — please retry' })
-    }
-    if (!onchainTx) return res.status(400).json({ error: 'transaction not found on Polygon yet — wait a few seconds and retry' })
-    if ((onchainTx.from || '').toLowerCase() !== walletAddress.toLowerCase()) {
-      return res.status(400).json({ error: 'transaction sender does not match the wallet you signed with' })
-    }
-    if ((onchainTx.to || '').toLowerCase() !== TREASURY.toLowerCase()) {
-      return res.status(400).json({ error: 'platform fee must be sent to SoundChain treasury' })
-    }
-    if (onchainTx.value.lt(MIN_FEE_WEI)) {
-      return res.status(400).json({ error: 'platform fee below 0.0005 POL minimum' })
-    }
-    if (onchainTx.chainId !== 137) {
-      return res.status(400).json({ error: 'platform fee must be on Polygon mainnet' })
+      const joined = await escrowHasJoined(pick.escrowLeagueId, walletAddress)
+      if (!joined) return res.status(400).json({ error: 'on-chain escrow does not show your wallet as joined yet — wait a few seconds for confirmation and retry' })
+    } catch (err: any) {
+      return res.status(502).json({ error: `could not verify on-chain join: ${err?.message || 'rpc failed'}` })
     }
 
-    const dup = await picks.findOne({ takerTxHash: txHash })
+    // Verify the league now has both members and is still Open before we lock
+    let lockTxHash: string
+    try {
+      const league = await escrowGetLeague(pick.escrowLeagueId)
+      if (league.status !== 0) return res.status(400).json({ error: 'on-chain league is not open — may already be locked or settled' })
+      if (league.joinedTeams < 2) return res.status(400).json({ error: 'on-chain league only has one member — wait for taker join confirmation' })
+      lockTxHash = await escrowLockPick(pick.escrowLeagueId)
+    } catch (err: any) {
+      return res.status(502).json({ error: `failed to lock on-chain league: ${err?.message || 'unknown'}` })
+    }
+
+    const dup = await picks.findOne({ takerDepositTxHash: txHash })
     if (dup) return res.status(400).json({ error: 'this transaction has already been used to take a pick' })
 
     const takerPick = pick.creatorPick === 'home' ? 'away' : 'home'
@@ -107,31 +139,46 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         takerAvatarUrl: me.profilePicture || null,
         takerPick,
         takerWalletAddress: walletAddress.toLowerCase(),
-        takerTxHash: txHash,
-        takerFeePaidWei: onchainTx.value.toString(),
+        takerDepositTxHash: txHash,
+        takerSignedAt: now,
         pot: pick.entryFee * 2,
         status: 'matched',
         matchedAt: now,
+        escrowLockTxHash: lockTxHash,
       },
     })
 
-    return res.status(200).json({ ok: true, status: 'matched', yourPick: takerPick, txHash, fee: ethers.utils.formatEther(onchainTx.value) + ' POL' })
+    return res.status(200).json({ ok: true, status: 'matched', yourPick: takerPick, takerDepositTxHash: txHash, escrowLockTxHash: lockTxHash })
   }
 
   // ─── CANCEL (creator only, before matched) ──────────────
   if (action === 'cancel') {
     if (pick.creatorHandle !== myHandle) return res.status(403).json({ error: 'only creator can cancel' })
-    if (pick.status !== 'open') return res.status(400).json({ error: 'can only cancel open picks' })
+    if (pick.status !== 'pending_deposit' && pick.status !== 'open') {
+      return res.status(400).json({ error: 'can only cancel pending or open picks' })
+    }
 
-    await picks.updateOne({ _id: pick._id }, { $set: { status: 'cancelled' } })
-    return res.status(200).json({ ok: true, status: 'cancelled' })
+    const update: any = { status: 'cancelled' }
+    // If creator already deposited (status='open'), refund on-chain via escrow.cancel
+    if (pick.status === 'open' && pick.escrowLeagueId) {
+      try {
+        const cancelTxHash = await escrowCancelPick(pick.escrowLeagueId)
+        update.escrowCancelTxHash = cancelTxHash
+      } catch (err: any) {
+        return res.status(502).json({ error: `on-chain refund failed: ${err?.message || 'unknown'} — pick remains open, retry shortly.` })
+      }
+    }
+
+    await picks.updateOne({ _id: pick._id }, { $set: update })
+    return res.status(200).json({ ok: true, status: 'cancelled', refundTxHash: update.escrowCancelTxHash })
   }
 
-  // ─── EDIT (creator only, before matched — wager only, team is locked) ────────
+  // ─── EDIT (creator only, pre-deposit — wager amount/token only) ────────
   if (action === 'edit') {
     if (pick.creatorHandle !== myHandle) return res.status(403).json({ error: 'only creator can edit' })
-    if (pick.status !== 'open') return res.status(400).json({ error: 'can only edit open picks' })
-    if (pick.takerHandle) return res.status(400).json({ error: 'pick already taken — cannot edit' })
+    if (pick.status !== 'pending_deposit') {
+      return res.status(400).json({ error: 'on-chain entry fee is immutable post-deposit. Cancel the pick (refunds your stake) and create a new one.' })
+    }
 
     const { entryToken, entryFee } = req.body || {}
     const update: any = {}
@@ -140,6 +187,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const { TOKEN_CONFIG, isTokenLive } = await import('lib/arena/fantasy/types')
       if (!isTokenLive(entryToken)) return res.status(400).json({ error: `${entryToken} not yet supported` })
       if (!TOKEN_CONFIG[entryToken]) return res.status(400).json({ error: `unknown token ${entryToken}` })
+      if (entryToken !== 'POL' && entryToken !== 'MATIC') {
+        return res.status(400).json({ error: 'On-chain picks v1 supports POL only — ERC-20 wagers ship next.' })
+      }
       update.entryToken = entryToken
       update.ogunBonusBps = entryToken === 'OGUN' ? 1000 : 0
     }
@@ -151,9 +201,32 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (Object.keys(update).length === 0) return res.status(400).json({ error: 'no fields to edit (entryToken or entryFee)' })
 
+    // Editing pre-deposit means we have an unused on-chain league with the OLD entryFee.
+    // Cancel the stale on-chain league (no members → no refunds emitted) so it doesn't dangle in Open status.
+    if (pick.escrowLeagueId) {
+      try {
+        const cancelTxHash = await escrowCancelPick(pick.escrowLeagueId)
+        update.escrowCancelTxHash = cancelTxHash
+      } catch {
+        // Non-fatal — old league sits Open with no members forever, harmless. Surface soft warning.
+      }
+    }
+
+    // Spin up a new on-chain league with the updated wager.
+    const { escrowCreatePick } = await import('lib/arena/picks/escrowServer')
+    const newFee = update.entryFee ?? pick.entryFee
+    const newWei = ethers.utils.parseEther(String(newFee))
+    try {
+      const result = await escrowCreatePick(newWei)
+      update.escrowLeagueId = result.leagueId
+      update.escrowCreateTxHash = result.txHash
+    } catch (err: any) {
+      return res.status(502).json({ error: `could not re-create on-chain league: ${err?.message || 'unknown'}` })
+    }
+
     await picks.updateOne({ _id: pick._id }, { $set: update })
     return res.status(200).json({ ok: true, updated: update })
   }
 
-  return res.status(400).json({ error: 'action must be take, cancel, or edit' })
+  return res.status(400).json({ error: 'action must be deposit, take, cancel, or edit' })
 }

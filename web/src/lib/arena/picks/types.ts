@@ -6,7 +6,7 @@
  */
 
 export type PickSport = 'nba' | 'nhl' | 'mlb' | 'nfl'
-export type PickStatus = 'open' | 'matched' | 'settled' | 'cancelled' | 'expired'
+export type PickStatus = 'pending_deposit' | 'open' | 'matched' | 'settled' | 'cancelled' | 'expired'
 
 export interface GamePick {
   _id?: string
@@ -39,17 +39,22 @@ export interface GamePick {
   // Settlement
   winner?: 'home' | 'away'
   winnerHandle?: string
-  payoutTxHash?: string
-  platformFeeBps: number         // 500 = 5%
+  winnerWalletAddress?: string
+  payoutTxHash?: string          // settle() tx hash on Polygon
+  platformFeeBps: number         // 5 = 0.05% (matches contract default)
   ogunBonusBps?: number          // 1000 = 10% bonus to winner when entryToken === 'OGUN', paid from rewards pool on settle
-  // Escrow
-  creatorDepositTxHash?: string
-  takerDepositTxHash?: string
+  // On-chain escrow — FantasyLeagueEscrow contract
   escrowContractAddress?: string
-  // Take action — wallet sig + on-chain platform fee proof (Polygon)
+  escrowLeagueId?: string        // contract-issued leagueId from LeagueCreated event
+  escrowCreateTxHash?: string    // server's createLeague tx
+  escrowLockTxHash?: string      // server's lock tx (after both joined)
+  escrowCancelTxHash?: string    // server's cancel tx (refunds creator if unmatched)
+  // Creator deposit — frontend join() tx
+  creatorWalletAddress?: string
+  creatorDepositTxHash?: string
+  // Taker deposit — frontend join() tx
   takerWalletAddress?: string
-  takerTxHash?: string
-  takerFeePaidWei?: string
+  takerDepositTxHash?: string
   takerSignedAt?: string
   // Meta
   status: PickStatus

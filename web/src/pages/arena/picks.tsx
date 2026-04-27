@@ -9,15 +9,68 @@ import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/router'
 import { useMe } from 'hooks/useMe'
 import { toast } from 'react-toastify'
+import { ethers } from 'ethers'
 import { Loader2, Trophy, Zap, TrendingUp, Clock, Check, X, ChevronDown, Wallet, Sparkles, Pencil, Trash2 } from 'lucide-react'
 import { TOKEN_CONFIG, LIVE_TOKENS, isTokenLive } from 'lib/arena/fantasy/types'
 import { TOKEN_INFO } from 'constants/tokens'
 import { useUnifiedWallet } from 'contexts/UnifiedWalletContext'
+import { PICKS_ESCROW_ADDRESS, POLYGON_CHAIN_HEX, FANTASY_LEAGUE_ESCROW_ABI } from 'lib/arena/picks/contract'
 
-const OGUN_BONUS_BPS = 1000  // 10% OGUN bonus when wager token is OGUN — paid from rewards pool on settle
-// Only show tokens that have a real on-chain destination today. Cross-chain tokens (BTC/SOL/etc.)
-// flip on automatically when SoundchainPicksEscrow deploys to ZetaChain mainnet and isTokenLive() expands.
-const ENABLED_TOKENS: string[] = ['OGUN', ...LIVE_TOKENS.filter(t => t !== 'OGUN')]
+const OGUN_BONUS_BPS = 1000  // 10% OGUN bonus when wager token is OGUN — paid from rewards pool on settle (deferred until ERC-20 approve+join lands)
+// v1: native POL only on the on-chain escrow path. ERC-20 (OGUN, USDC, etc.) ships next once approve()+join() flow is wired.
+const ENABLED_TOKENS: string[] = ['POL']
+
+// Resolve EIP-1193 provider with WalletConnect-first preference (per Bug #69 fix).
+// Returns provider and the user's address, throws with a user-friendly message on failure.
+async function resolveWalletProvider(opts: {
+  web3ModalProvider: any
+  activeWalletType: string | null
+  connectWeb3Modal: () => void | Promise<void>
+}): Promise<{ provider: any; address: string }> {
+  const injected = (typeof window !== 'undefined' ? (window as any).ethereum : null)
+  const provider: any = (opts.activeWalletType === 'web3modal' && opts.web3ModalProvider)
+    ? opts.web3ModalProvider
+    : injected
+  if (!provider) {
+    try { await opts.connectWeb3Modal() } catch {}
+    throw new Error('Connect a wallet to continue — pick MetaMask, Rainbow, Trust, or Coinbase, then retry')
+  }
+  const accounts = (await provider.request({ method: 'eth_requestAccounts' })) as string[]
+  if (!accounts?.[0]) throw new Error('No wallet account available')
+  return { provider, address: accounts[0] }
+}
+
+async function ensurePolygon(provider: any): Promise<void> {
+  const chainId = (await provider.request({ method: 'eth_chainId' })) as string
+  if (chainId === POLYGON_CHAIN_HEX) return
+  try {
+    await provider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: POLYGON_CHAIN_HEX }] })
+  } catch (switchErr: any) {
+    if (switchErr?.code === 4902) {
+      await provider.request({
+        method: 'wallet_addEthereumChain',
+        params: [{
+          chainId: POLYGON_CHAIN_HEX,
+          chainName: 'Polygon',
+          nativeCurrency: { name: 'POL', symbol: 'POL', decimals: 18 },
+          rpcUrls: ['https://polygon-rpc.com'],
+          blockExplorerUrls: ['https://polygonscan.com'],
+        }],
+      })
+    } else {
+      throw new Error('Switch to Polygon network in your wallet to continue')
+    }
+  }
+}
+
+// Sign escrow.join(leagueId) with the given EIP-1193 provider. Returns txHash after broadcast (does not wait for confirmation).
+async function signEscrowJoin(provider: any, leagueId: string, entryFeeWei: string): Promise<string> {
+  const web3Provider = new ethers.providers.Web3Provider(provider)
+  const signer = web3Provider.getSigner()
+  const escrow = new ethers.Contract(PICKS_ESCROW_ADDRESS, FANTASY_LEAGUE_ESCROW_ABI, signer)
+  const tx = await escrow.join(leagueId, { value: ethers.BigNumber.from(entryFeeWei) })
+  return tx.hash
+}
 
 interface Game {
   sport: string; sportLabel: string; sportEmoji: string
@@ -37,13 +90,22 @@ interface Pick {
   homeLogo: string; awayLogo: string
   creatorHandle: string; creatorPick: 'home' | 'away'
   creatorAvatarUrl?: string | null
+  creatorWalletAddress?: string
+  creatorDepositTxHash?: string
   takerHandle?: string; takerPick?: 'home' | 'away'
   takerAvatarUrl?: string | null
   takerWalletAddress?: string
+  takerDepositTxHash?: string
   entryToken: string; entryFee: number; pot: number
   status: string; winner?: string; winnerHandle?: string
   finalHomeScore?: number; finalAwayScore?: number
   gameTime: string; gameStatus: string
+  // On-chain escrow refs
+  escrowContractAddress?: string
+  escrowLeagueId?: string
+  escrowCreateTxHash?: string
+  escrowLockTxHash?: string
+  payoutTxHash?: string
 }
 
 const SPORT_TABS = [
@@ -68,6 +130,7 @@ function MatchupCard({ pick, me, onTake, onCancel, onEdit }: { pick: Pick; me: a
   const isSettled = pick.status === 'settled'
   const isMatched = pick.status === 'matched'
   const isOpen = pick.status === 'open'
+  const isPendingDeposit = pick.status === 'pending_deposit'
   const iWon = isSettled && pick.winnerHandle === myHandle
 
   const creatorTeam = pick.creatorPick === 'home' ? pick.homeTeam : pick.awayTeam
@@ -87,22 +150,24 @@ function MatchupCard({ pick, me, onTake, onCancel, onEdit }: { pick: Pick; me: a
           {pick.sport.toUpperCase()} · {formatTime(pick.gameTime)}
         </span>
         <div className="flex items-center gap-2">
-          {/* Creator chevrons — edit + delete, always visible on own open picks */}
-          {isCreator && isOpen && !pick.takerHandle && (
+          {/* Creator chevrons — edit only pre-deposit (entry fee is on-chain immutable post-deposit). Cancel always (refunds via escrow.cancel when funds are staked). */}
+          {isCreator && !pick.takerHandle && (isOpen || isPendingDeposit) && (
             <>
+              {isPendingDeposit && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); onEdit(pick) }}
+                  className="p-1 rounded-full text-gray-400 hover:text-cyan-400 hover:bg-cyan-500/10 border border-gray-700 hover:border-cyan-500/50 transition-all"
+                  title="Edit wager (pre-deposit only)"
+                  aria-label="Edit pick"
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                </button>
+              )}
               <button
-                onClick={(e) => { e.stopPropagation(); onEdit(pick) }}
-                className="p-1 rounded-full text-gray-400 hover:text-cyan-400 hover:bg-cyan-500/10 border border-gray-700 hover:border-cyan-500/50 transition-all"
-                title="Edit wager"
-                aria-label="Edit pick"
-              >
-                <Pencil className="w-3.5 h-3.5" />
-              </button>
-              <button
-                onClick={(e) => { e.stopPropagation(); if (confirm('Delete this pick?')) onCancel(pick.id) }}
+                onClick={(e) => { e.stopPropagation(); if (confirm(isOpen ? 'Cancel this pick? Your stake will be refunded on-chain.' : 'Delete this pending pick?')) onCancel(pick.id) }}
                 className="p-1 rounded-full text-gray-400 hover:text-red-400 hover:bg-red-500/10 border border-gray-700 hover:border-red-500/50 transition-all"
-                title="Delete pick"
-                aria-label="Delete pick"
+                title={isOpen ? 'Cancel + refund stake' : 'Delete pick'}
+                aria-label="Cancel pick"
               >
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
@@ -111,9 +176,10 @@ function MatchupCard({ pick, me, onTake, onCancel, onEdit }: { pick: Pick; me: a
           <span className={`text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider ${
             isSettled ? 'bg-gray-700 text-gray-300' :
             isMatched ? 'bg-amber-500/20 text-amber-400 animate-pulse' :
+            isPendingDeposit ? 'bg-purple-500/20 text-purple-300' :
             'bg-cyan-500/20 text-cyan-400'
           }`}>
-            {isSettled ? 'FINAL' : isMatched ? 'LOCKED IN' : 'OPEN'}
+            {isSettled ? 'FINAL' : isMatched ? 'LOCKED IN' : isPendingDeposit ? 'AWAITING STAKE' : 'OPEN'}
           </span>
         </div>
       </div>
@@ -243,7 +309,7 @@ function MatchupCard({ pick, me, onTake, onCancel, onEdit }: { pick: Pick; me: a
           <div className="mt-3 text-center py-2 rounded-lg bg-gradient-to-r from-yellow-500/10 to-amber-500/10 border border-yellow-500/30">
             <p className="text-xs font-black text-yellow-400">
               <Trophy className="w-3 h-3 inline mr-1" />
-              @{pick.winnerHandle} wins {Math.floor(pick.pot * 0.95)} {pick.entryToken}
+              @{pick.winnerHandle} wins {(pick.pot * 0.9995).toFixed(4)} {pick.entryToken}
             </p>
           </div>
         )}
@@ -315,9 +381,11 @@ function GameCard({ game, onPick }: { game: Game; onPick: (game: Game, side: 'ho
 
 // ─── Create Pick Modal ─────────────────────────────────────────
 function CreatePickModal({ game, side, onClose, onCreated }: { game: Game; side: 'home' | 'away'; onClose: () => void; onCreated: () => void }) {
-  const [token, setToken] = useState('OGUN')
-  const [amount, setAmount] = useState(100)
+  const [token, setToken] = useState('POL')
+  const [amount, setAmount] = useState(1)
   const [submitting, setSubmitting] = useState(false)
+  const [step, setStep] = useState<'idle' | 'creating' | 'awaiting_signature' | 'finalizing'>('idle')
+  const { connectWeb3Modal, activeWalletType, web3ModalProvider } = useUnifiedWallet()
 
   const team = side === 'home' ? game.homeTeam : game.awayTeam
   const teamFull = side === 'home' ? game.homeTeamFull : game.awayTeamFull
@@ -326,7 +394,10 @@ function CreatePickModal({ game, side, onClose, onCreated }: { game: Game; side:
 
   const submit = async () => {
     setSubmitting(true)
+    let createdPickId: string | null = null
     try {
+      // Step 1: server creates on-chain league + MongoDB doc with status=pending_deposit
+      setStep('creating')
       const r = await fetch('/api/arena/picks', {
         method: 'POST', credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
@@ -334,11 +405,46 @@ function CreatePickModal({ game, side, onClose, onCreated }: { game: Game; side:
       })
       const d = await r.json()
       if (!r.ok) { toast.error(d.error || 'Failed'); return }
-      toast.success(`Pick created: ${team} to win!`)
+      const pickId: string = d.pick.id
+      createdPickId = pickId
+      const { leagueId, entryFeeWei } = d.requiresDeposit || {}
+      if (!leagueId || !entryFeeWei) { toast.error('Server response missing on-chain params'); return }
+
+      // Step 2: creator signs escrow.join(leagueId) with their own wallet
+      setStep('awaiting_signature')
+      const { provider, address } = await resolveWalletProvider({ web3ModalProvider, activeWalletType, connectWeb3Modal })
+      await ensurePolygon(provider)
+      const sigToast = toast.loading(`Confirm in wallet — depositing ${amount} ${token} stake to escrow`)
+      let txHash: string
+      try {
+        txHash = await signEscrowJoin(provider, leagueId, entryFeeWei)
+      } catch (e: any) {
+        toast.dismiss(sigToast)
+        const cancelled = e?.code === 4001 || /reject|denied|cancel/i.test(e?.message || '')
+        toast.error(cancelled ? 'Stake deposit cancelled in wallet — pick will auto-clean in 30 min' : (e?.message || 'Stake deposit failed'))
+        return
+      }
+      toast.dismiss(sigToast)
+
+      // Step 3: tell server to verify on-chain join + flip status to 'open'.
+      // Brief delay to give the chain a moment to confirm the tx so escrowHasJoined returns true.
+      setStep('finalizing')
+      await new Promise(r => setTimeout(r, 4000))
+      const finalize = await fetch(`/api/arena/picks/${pickId}`, {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'deposit', txHash, walletAddress: address }),
+      })
+      const fd = await finalize.json()
+      if (!finalize.ok) {
+        toast.error(`On-chain stake confirmed but server couldn't verify yet: ${fd.error}. Refresh in a few seconds — your pick will appear once verified.`, { autoClose: 14000 })
+        return
+      }
+      toast.success(`Pick LIVE on-chain · ${team} to win · tx ${txHash.slice(0, 10)}…`, { autoClose: 8000 })
       onCreated()
       onClose()
     } catch (e: any) { toast.error(e.message) }
-    finally { setSubmitting(false) }
+    finally { setSubmitting(false); setStep('idle') }
   }
 
   return (
@@ -400,13 +506,18 @@ function CreatePickModal({ game, side, onClose, onCreated }: { game: Game; side:
           )}
 
           <div className="text-[10px] text-gray-500 text-center mb-4 leading-relaxed">
-            Winner takes {Math.floor(amount * 2 * 0.95)} {token} · 5% platform fee
+            Winner takes {(amount * 2 * 0.9995).toFixed(4)} {token} · 0.05% platform fee
             <br/>
-            <span className="text-gray-600">Entry routes via ZetaChain · Polygon = default gas (0.05%)</span>
+            <span className="text-gray-600">On-chain escrow on Polygon · stake locked in FantasyLeagueEscrow</span>
           </div>
 
           <button onClick={submit} disabled={submitting || amount <= 0} className="w-full py-3 text-sm font-black bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-400 hover:to-purple-400 text-white rounded-xl transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 shadow-lg shadow-cyan-500/20">
-            {submitting ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : `PLACE PICK — ${amount} ${token}`}
+            {submitting ? (
+              <span className="flex items-center justify-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                {step === 'creating' ? 'Creating on-chain league…' : step === 'awaiting_signature' ? 'Confirm in wallet…' : step === 'finalizing' ? 'Verifying on-chain…' : 'Working…'}
+              </span>
+            ) : `PLACE PICK — ${amount} ${token}`}
           </button>
         </div>
       </div>
@@ -546,84 +657,43 @@ export default function ArenaPicksPage() {
   const handleTake = async (pickId: string) => {
     const pick = picks.find(p => p.id === pickId)
     if (!pick) { toast.error('Pick not found'); return }
+    if (!pick.escrowLeagueId) { toast.error('This pick is missing on-chain data — refresh and retry'); return }
 
-    // WalletConnect-first per Frank's directive — Magic OAuth RPC is broken for wagers (-32603).
-    // Resolve EIP-1193 provider in this order:
-    //   1. Web3Modal (MetaMask Mobile / Rainbow / Trust / Coinbase via WC v2 deeplink)
-    //   2. Injected window.ethereum (desktop MetaMask, Coinbase extension, in-app browsers)
-    //   3. Neither → open Web3Modal so user can connect, then retry
-    const injected = (typeof window !== 'undefined' ? (window as any).ethereum : null)
-    const provider: any = (activeWalletType === 'web3modal' && web3ModalProvider)
-      ? web3ModalProvider
-      : injected
-
-    if (!provider) {
-      toast.info('Connect a wallet to take this pick — pick MetaMask, Rainbow, Trust, or Coinbase, then tap Take again', { autoClose: 9000 })
-      try { await connectWeb3Modal() } catch {}
-      return
-    }
-
-    const TREASURY = '0x519bed3fe32272fa8f1aecaf86dbfbd674ee703b'
-    const POLYGON_HEX = '0x89'
-
-    const isNativeWager = pick.entryToken === 'MATIC' || pick.entryToken === 'POL'
-    const feePol = isNativeWager ? Math.max(pick.entryFee * 0.0005, 0.001) : 0.001
-    const feeWeiHex = '0x' + BigInt(Math.round(feePol * 1e18)).toString(16)
     const takerTeam = pick.creatorPick === 'home' ? pick.awayTeam : pick.homeTeam
 
-    let address: string
+    // Step 1: resolve provider, switch to Polygon
+    let provider: any, address: string
     try {
-      const accounts = (await provider.request({ method: 'eth_requestAccounts' })) as string[]
-      if (!accounts?.[0]) throw new Error('No wallet account available')
-      address = accounts[0]
+      const r = await resolveWalletProvider({ web3ModalProvider, activeWalletType, connectWeb3Modal })
+      provider = r.provider
+      address = r.address
     } catch (e: any) {
-      toast.error(e?.message || 'Wallet connection cancelled')
+      toast.info(e?.message || 'Wallet connection required', { autoClose: 9000 })
+      return
+    }
+    try { await ensurePolygon(provider) } catch (e: any) {
+      toast.error(e?.message || 'Could not switch to Polygon')
       return
     }
 
-    try {
-      const chainId = (await provider.request({ method: 'eth_chainId' })) as string
-      if (chainId !== POLYGON_HEX) {
-        try {
-          await provider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: POLYGON_HEX }] })
-        } catch (switchErr: any) {
-          if (switchErr?.code === 4902) {
-            await provider.request({
-              method: 'wallet_addEthereumChain',
-              params: [{
-                chainId: POLYGON_HEX,
-                chainName: 'Polygon',
-                nativeCurrency: { name: 'POL', symbol: 'POL', decimals: 18 },
-                rpcUrls: ['https://polygon-rpc.com'],
-                blockExplorerUrls: ['https://polygonscan.com'],
-              }],
-            })
-          } else {
-            toast.error('Switch to Polygon network in your wallet to continue')
-            return
-          }
-        }
-      }
-    } catch (e: any) {
-      toast.error(e?.message || 'Could not verify Polygon network')
-      return
-    }
-
-    const sigToast = toast.loading(`Confirm in wallet — taking ${takerTeam} · ${feePol.toFixed(4)} POL platform fee`)
+    // Step 2: sign escrow.join(leagueId) with full entryFee staked
+    const entryFeeWei = ethers.utils.parseEther(String(pick.entryFee)).toString()
+    const sigToast = toast.loading(`Confirm in wallet — staking ${pick.entryFee} ${pick.entryToken} on ${takerTeam}`)
     let txHash: string
     try {
-      txHash = (await provider.request({
-        method: 'eth_sendTransaction',
-        params: [{ from: address, to: TREASURY, value: feeWeiHex }],
-      })) as string
+      txHash = await signEscrowJoin(provider, pick.escrowLeagueId, entryFeeWei)
     } catch (e: any) {
       toast.dismiss(sigToast)
       const cancelled = e?.code === 4001 || /reject|denied|cancel/i.test(e?.message || '')
-      toast.error(cancelled ? 'Take cancelled in wallet' : (e?.message || 'Transaction failed'))
+      toast.error(cancelled ? 'Take cancelled in wallet' : (e?.reason || e?.message || 'Transaction failed'))
       return
     }
     toast.dismiss(sigToast)
 
+    // Step 3: server verifies on-chain join, signs lock(), flips MongoDB to 'matched'.
+    // Brief delay so the chain has a moment to confirm.
+    const verifyToast = toast.loading('Stake confirmed — locking on-chain match…')
+    await new Promise(r => setTimeout(r, 4000))
     try {
       const r = await fetch(`/api/arena/picks/${pickId}`, {
         method: 'POST', credentials: 'include',
@@ -631,14 +701,18 @@ export default function ArenaPicksPage() {
         body: JSON.stringify({ action: 'take', txHash, walletAddress: address }),
       })
       const d = await r.json()
+      toast.dismiss(verifyToast)
       if (!r.ok) {
         const dbg = d.debug ? ` [server sees you as @${d.debug.yourHandle} · ${String(d.debug.yourProfileId).slice(-6)} | creator @${d.debug.creatorHandle} · ${String(d.debug.creatorProfileId).slice(-6)}]` : ''
-        toast.error(`${d.error || 'Failed'}${dbg}`, { autoClose: 12000 })
+        toast.error(`${d.error || 'Failed'}${dbg}`, { autoClose: 14000 })
         return
       }
-      toast.success(`Pick matched · ${address.slice(0, 6)}…${address.slice(-4)} · tx ${txHash.slice(0, 10)}…`, { autoClose: 8000 })
+      toast.success(`MATCHED on-chain · ${takerTeam} · stake ${pick.entryFee} ${pick.entryToken} · tx ${txHash.slice(0, 10)}…`, { autoClose: 10000 })
       loadPicks()
-    } catch (e: any) { toast.error(e.message) }
+    } catch (e: any) {
+      toast.dismiss(verifyToast)
+      toast.error(e.message)
+    }
   }
 
   const handleCancel = async (pickId: string) => {

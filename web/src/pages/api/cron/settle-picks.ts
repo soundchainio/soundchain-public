@@ -1,17 +1,21 @@
 /**
  * Cron: Auto-settle game picks based on ESPN final scores
  *
- * Runs every 10 minutes. Checks all 'matched' picks, fetches ESPN
- * scoreboard for each sport, and settles any games that are 'post' (final).
+ * Runs every 10 minutes. Three sweeps in priority order:
+ *   1. Refund expired open picks (creator deposited, no taker showed) → escrow.cancel + status=expired
+ *   2. Reap stale pending_deposit picks (creator never finalized) > 30 min old → escrow.cancel + status=cancelled
+ *   3. Settle matched picks where ESPN reports a final score → escrow.settle(winner) + status=settled
  *
  * vercel.json cron: every 10 minutes
  */
 import type { NextApiRequest, NextApiResponse } from 'next'
 import clientPromise from 'lib/mongodb'
 import { SPORT_CONFIG, PickSport } from 'lib/arena/picks/types'
+import { escrowSettlePick, escrowCancelPick } from 'lib/arena/picks/escrowServer'
 
 const ESPN_BASE = 'https://site.api.espn.com/apis/site/v2/sports'
 const CRON_SECRET = process.env.CRON_SECRET || ''
+const PENDING_DEPOSIT_TIMEOUT_MS = 30 * 60 * 1000 // 30 min
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // Auth — cron secret or skip in dev
@@ -26,20 +30,60 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const db = client.db('soundchain')
     const picks = db.collection('gamepicks')
 
-    // Expire any open picks past their game time — runs first so unmatched picks don't sit
-    // open forever when there are no matched picks to settle.
-    const expiredOpen = await picks.updateMany(
-      { status: 'open', expiresAt: { $lt: new Date().toISOString() } },
-      { $set: { status: 'expired' } }
-    )
+    let refundedExpired = 0
+    let reapedPending = 0
+    let settled = 0
+    const errors: string[] = []
 
-    // Get all matched (active) picks
+    // ─── Sweep 1: Expire & refund open picks past game time ───────────────
+    const expiredOpenPicks = await picks.find({
+      status: 'open',
+      expiresAt: { $lt: new Date().toISOString() },
+    }).toArray()
+    for (const p of expiredOpenPicks) {
+      if (!p.escrowLeagueId) {
+        // Legacy pre-on-chain pick — just mark expired
+        await picks.updateOne({ _id: p._id }, { $set: { status: 'expired' } })
+        refundedExpired++
+        continue
+      }
+      try {
+        const cancelTxHash = await escrowCancelPick(p.escrowLeagueId)
+        await picks.updateOne({ _id: p._id }, { $set: { status: 'expired', escrowCancelTxHash: cancelTxHash } })
+        refundedExpired++
+      } catch (err: any) {
+        errors.push(`refund expired ${p._id}: ${err?.message || 'unknown'}`)
+      }
+    }
+
+    // ─── Sweep 2: Reap pending_deposit picks the creator abandoned ────────
+    const cutoff = new Date(Date.now() - PENDING_DEPOSIT_TIMEOUT_MS).toISOString()
+    const stalePending = await picks.find({
+      status: 'pending_deposit',
+      createdAt: { $lt: cutoff },
+    }).toArray()
+    for (const p of stalePending) {
+      try {
+        if (p.escrowLeagueId) {
+          // No members joined — cancel is a no-op refund-wise but flips on-chain status
+          try { await escrowCancelPick(p.escrowLeagueId) } catch {}
+        }
+        await picks.updateOne({ _id: p._id }, { $set: { status: 'cancelled' } })
+        reapedPending++
+      } catch (err: any) {
+        errors.push(`reap pending ${p._id}: ${err?.message || 'unknown'}`)
+      }
+    }
+
+    // ─── Sweep 3: Settle matched picks where ESPN says final ──────────────
     const matchedPicks = await picks.find({ status: 'matched' }).toArray()
     if (matchedPicks.length === 0) {
       return res.status(200).json({
+        refundedExpired,
+        reapedPending,
         settled: 0,
-        expired: expiredOpen.modifiedCount,
-        message: expiredOpen.modifiedCount > 0 ? 'expired stale open picks' : 'no active picks',
+        errors,
+        message: 'no matched picks awaiting settle',
       })
     }
 
@@ -50,7 +94,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       bySport[p.sport].push(p)
     }
 
-    // Fetch scoreboards for each sport with active picks
     const scoreboards: Record<string, any[]> = {}
     for (const sport of Object.keys(bySport)) {
       const cfg = SPORT_CONFIG[sport as PickSport]
@@ -64,20 +107,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     }
 
-    let settled = 0
-    let expired = expiredOpen.modifiedCount
-
     for (const pick of matchedPicks) {
       const events = scoreboards[pick.sport] || []
       const event = events.find((e: any) => e.id === pick.espnGameId)
 
       if (!event) {
         // Game not on today's scoreboard — may have ended yesterday
-        // Check if game time is past + no result → mark for manual review
         if (new Date(pick.gameTime) < new Date(Date.now() - 24 * 60 * 60 * 1000)) {
-          // Game was 24+ hrs ago and not on scoreboard — expire it
-          await picks.updateOne({ _id: pick._id }, { $set: { status: 'expired' } })
-          expired++
+          // Game was 24+ hrs ago and not on scoreboard — stuck. Manual review needed.
+          errors.push(`pick ${pick._id} game ${pick.espnGameId} not on scoreboard 24+ hrs after gameTime — manual review`)
         }
         continue
       }
@@ -86,23 +124,34 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const state = comp?.status?.type?.state
       if (state !== 'post') continue // Game not final yet
 
-      // Game is FINAL — determine winner
       const home = comp?.competitors?.find((c: any) => c.homeAway === 'home')
       const away = comp?.competitors?.find((c: any) => c.homeAway === 'away')
       const homeScore = parseInt(home?.score || '0')
       const awayScore = parseInt(away?.score || '0')
 
-      if (homeScore === awayScore) continue // Tie — wait for OT (shouldn't happen in NBA/NFL, rare in NHL/MLB)
+      if (homeScore === awayScore) continue // Tie — wait for OT
 
       const winner = homeScore > awayScore ? 'home' : 'away'
       const winnerHandle = pick.creatorPick === winner ? pick.creatorHandle : pick.takerHandle
+      const winnerWalletAddress = pick.creatorPick === winner ? pick.creatorWalletAddress : pick.takerWalletAddress
 
-      // Calculate payouts
-      const pot = pick.pot || pick.entryFee * 2
-      const platformFee = Math.floor((pot * pick.platformFeeBps) / 10000)
-      const winnerPayout = pot - platformFee
+      if (!winnerWalletAddress) {
+        errors.push(`pick ${pick._id} missing winner wallet address — cannot settle on-chain`)
+        continue
+      }
+      if (!pick.escrowLeagueId) {
+        errors.push(`pick ${pick._id} missing escrowLeagueId — cannot settle on-chain`)
+        continue
+      }
 
-      const now = new Date().toISOString()
+      let payoutTxHash: string
+      try {
+        payoutTxHash = await escrowSettlePick(pick.escrowLeagueId, winnerWalletAddress)
+      } catch (err: any) {
+        errors.push(`settle ${pick._id} (league ${pick.escrowLeagueId}): ${err?.message || 'unknown'}`)
+        continue
+      }
+
       await picks.updateOne({ _id: pick._id }, {
         $set: {
           gameStatus: 'post',
@@ -110,19 +159,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           finalAwayScore: awayScore,
           winner,
           winnerHandle,
+          winnerWalletAddress,
+          payoutTxHash,
           status: 'settled',
-          settledAt: now,
+          settledAt: new Date().toISOString(),
         },
       })
-
       settled++
     }
 
     return res.status(200).json({
+      refundedExpired,
+      reapedPending,
       settled,
-      expired,
       checked: matchedPicks.length,
       sports: Object.keys(bySport),
+      errors,
     })
   } catch (err: any) {
     return res.status(500).json({ error: err.message })
