@@ -13,14 +13,29 @@ const withPWA = require('next-pwa')({
   // Only static assets (images, fonts) get cached. No more "clear cache" needed.
   runtimeCaching: [
     {
-      // ALL page navigations — NEVER serve from cache
+      // Page navigations — NetworkFirst with 5s timeout + short cache fallback.
+      // Was 'NetworkOnly' which returned no fallback when network blipped (e.g. post-Mac-wake DNS hiccup),
+      // producing a chrome-error://chromewebdata/ page that killed Google OAuth popups.
+      // NetworkFirst still serves fresh content when network is healthy; falls back to last
+      // successful cache only when the network actually fails. Cache TTL kept tight (1 hr) so
+      // post-deploy freshness is still nearly immediate.
       urlPattern: /^https:\/\/soundchain\.(io|fm)\/.*/,
-      handler: 'NetworkOnly',
+      handler: 'NetworkFirst',
+      options: {
+        cacheName: 'page-navigations',
+        networkTimeoutSeconds: 5,
+        expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 },
+      },
     },
     {
-      // Next.js data fetches — NEVER serve stale
+      // Next.js data fetches — NetworkFirst with same fallback behavior
       urlPattern: /\/_next\/data\/.+\/.+\.json$/,
-      handler: 'NetworkOnly',
+      handler: 'NetworkFirst',
+      options: {
+        cacheName: 'next-data',
+        networkTimeoutSeconds: 5,
+        expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 },
+      },
     },
     {
       // Static assets (JS/CSS bundles) — cache with revalidation
