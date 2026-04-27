@@ -27,9 +27,11 @@ export interface GamePick {
   // Wager
   creatorHandle: string
   creatorProfileId: string
+  creatorAvatarUrl?: string | null  // denormalized profilePicture at create time, hydrated from profile lookup for legacy docs
   creatorPick: 'home' | 'away'   // which team creator picked
   takerHandle?: string
   takerProfileId?: string
+  takerAvatarUrl?: string | null
   takerPick?: 'home' | 'away'   // opposite of creator
   entryToken: string             // OGUN, POL, USDC, etc.
   entryFee: number               // each side pays this

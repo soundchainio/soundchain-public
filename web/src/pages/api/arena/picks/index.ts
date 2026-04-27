@@ -45,8 +45,30 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const results = await picks.find(filter).sort({ createdAt: -1 }).limit(limit).toArray()
+
+    // Hydrate avatars — denormalized field on the doc, falls back to profile lookup so existing picks (no denorm) still get an avatar
+    const handlesNeedingHydration = new Set<string>()
+    for (const p of results) {
+      if (p.creatorHandle && !p.creatorAvatarUrl) handlesNeedingHydration.add(p.creatorHandle)
+      if (p.takerHandle && !p.takerAvatarUrl) handlesNeedingHydration.add(p.takerHandle)
+    }
+    const avatarMap = new Map<string, string | null>()
+    if (handlesNeedingHydration.size > 0) {
+      const profs = await db.collection('profiles')
+        .find({ userHandle: { $in: Array.from(handlesNeedingHydration) } })
+        .project({ userHandle: 1, profilePicture: 1 })
+        .toArray()
+      for (const pr of profs) avatarMap.set(pr.userHandle, pr.profilePicture || null)
+    }
+
     return res.status(200).json({
-      picks: results.map(p => ({ ...p, id: p._id.toString(), _id: undefined })),
+      picks: results.map(p => ({
+        ...p,
+        id: p._id.toString(),
+        _id: undefined,
+        creatorAvatarUrl: p.creatorAvatarUrl || (p.creatorHandle ? avatarMap.get(p.creatorHandle) : null) || null,
+        takerAvatarUrl: p.takerAvatarUrl || (p.takerHandle ? avatarMap.get(p.takerHandle) : null) || null,
+      })),
     })
   }
 
@@ -110,6 +132,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       gameStatus: 'pre',
       creatorHandle: myHandle,
       creatorProfileId: auth.profileId.toString(),
+      creatorAvatarUrl: me.profilePicture || null,
       creatorPick: pick,
       entryToken,
       entryFee: fee,

@@ -82,13 +82,54 @@ async function initializeWeb3Modal() {
       themeVariables: {
         '--w3m-accent': '#8B5CF6',
         '--w3m-border-radius-master': '8px',
-        '--w3m-z-index': '9999',
+        '--w3m-z-index': 9999,
       },
       featuredWalletIds: [
+        '1ae92b26df02f0abca6304df07debccd18262fdf5fe82daa81593582dac9a369', // Rainbow (Bug #69 testing path → first for Magic OAuth users)
         'c57ca95b47569778a828d19178114f4db188b89b763c899ba0be274e97267d96', // MetaMask
-        '1ae92b26df02f0abca6304df07debccd18262fdf5fe82daa81593582dac9a369', // Rainbow
         '4622a2b2d6af1c9844944291e5e7351a6aa24cd7b23099efac1b2fd875da31a0', // Trust Wallet
         'fd20dc426fb37566d803205b19bbc1d4096b248ac04548e3cfb6b3a38bd033aa', // Coinbase Wallet
+      ],
+      // Bug #70 fallback: hardcoded deeplinks + names so pills are FUNCTIONAL even if the WalletConnect explorer API
+      // (api.web3modal.org/v3/wallets) 401s on Sarg/Safari. Without this, blank pills with no tap targets.
+      // image_url uses each wallet's official CDN — stable cross-domain assets independent of the explorer registry.
+      customWallets: [
+        {
+          id: 'rainbow-mobile',
+          name: 'Rainbow',
+          homepage: 'https://rainbow.me',
+          image_url: 'https://rainbow.me/favicons/apple-touch-icon.png',
+          mobile_link: 'https://rnbwapp.com',
+          app_store: 'https://apps.apple.com/app/rainbow-ethereum-wallet/id1457119021',
+          play_store: 'https://play.google.com/store/apps/details?id=me.rainbow',
+        },
+        {
+          id: 'metamask-mobile',
+          name: 'MetaMask',
+          homepage: 'https://metamask.io',
+          image_url: 'https://metamask.io/images/metamask-logo.png',
+          mobile_link: 'https://metamask.app.link',
+          app_store: 'https://apps.apple.com/app/metamask/id1438144202',
+          play_store: 'https://play.google.com/store/apps/details?id=io.metamask',
+        },
+        {
+          id: 'trust-mobile',
+          name: 'Trust Wallet',
+          homepage: 'https://trustwallet.com',
+          image_url: 'https://trustwallet.com/assets/images/favicon.png',
+          mobile_link: 'https://link.trustwallet.com',
+          app_store: 'https://apps.apple.com/app/trust-crypto-bitcoin-wallet/id1288339409',
+          play_store: 'https://play.google.com/store/apps/details?id=com.wallet.crypto.trustapp',
+        },
+        {
+          id: 'coinbase-mobile',
+          name: 'Coinbase Wallet',
+          homepage: 'https://www.coinbase.com/wallet',
+          image_url: 'https://avatars.githubusercontent.com/u/18060234?s=200&v=4',
+          mobile_link: 'https://go.cb-w.com',
+          app_store: 'https://apps.apple.com/app/coinbase-wallet-store-crypto/id1278383455',
+          play_store: 'https://play.google.com/store/apps/details?id=org.toshi',
+        },
       ],
     })
     isInitialized = true

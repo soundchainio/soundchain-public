@@ -104,6 +104,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       $set: {
         takerHandle: myHandle,
         takerProfileId: auth.profileId.toString(),
+        takerAvatarUrl: me.profilePicture || null,
         takerPick,
         takerWalletAddress: walletAddress.toLowerCase(),
         takerTxHash: txHash,
@@ -126,5 +127,33 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(200).json({ ok: true, status: 'cancelled' })
   }
 
-  return res.status(400).json({ error: 'action must be take or cancel' })
+  // ─── EDIT (creator only, before matched — wager only, team is locked) ────────
+  if (action === 'edit') {
+    if (pick.creatorHandle !== myHandle) return res.status(403).json({ error: 'only creator can edit' })
+    if (pick.status !== 'open') return res.status(400).json({ error: 'can only edit open picks' })
+    if (pick.takerHandle) return res.status(400).json({ error: 'pick already taken — cannot edit' })
+
+    const { entryToken, entryFee } = req.body || {}
+    const update: any = {}
+
+    if (entryToken !== undefined) {
+      const { TOKEN_CONFIG, isTokenLive } = await import('lib/arena/fantasy/types')
+      if (!isTokenLive(entryToken)) return res.status(400).json({ error: `${entryToken} not yet supported` })
+      if (!TOKEN_CONFIG[entryToken]) return res.status(400).json({ error: `unknown token ${entryToken}` })
+      update.entryToken = entryToken
+      update.ogunBonusBps = entryToken === 'OGUN' ? 1000 : 0
+    }
+    if (entryFee !== undefined) {
+      const fee = Number(entryFee)
+      if (!Number.isFinite(fee) || fee <= 0) return res.status(400).json({ error: 'entryFee > 0 required' })
+      update.entryFee = fee
+    }
+
+    if (Object.keys(update).length === 0) return res.status(400).json({ error: 'no fields to edit (entryToken or entryFee)' })
+
+    await picks.updateOne({ _id: pick._id }, { $set: update })
+    return res.status(200).json({ ok: true, updated: update })
+  }
+
+  return res.status(400).json({ error: 'action must be take, cancel, or edit' })
 }

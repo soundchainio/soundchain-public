@@ -9,7 +9,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/router'
 import { useMe } from 'hooks/useMe'
 import { toast } from 'react-toastify'
-import { Loader2, Trophy, Zap, TrendingUp, Clock, Check, X, ChevronDown, Wallet, Sparkles } from 'lucide-react'
+import { Loader2, Trophy, Zap, TrendingUp, Clock, Check, X, ChevronDown, Wallet, Sparkles, Pencil, Trash2 } from 'lucide-react'
 import { TOKEN_CONFIG, LIVE_TOKENS, isTokenLive } from 'lib/arena/fantasy/types'
 import { TOKEN_INFO } from 'constants/tokens'
 import { useUnifiedWallet } from 'contexts/UnifiedWalletContext'
@@ -36,7 +36,9 @@ interface Pick {
   homeTeamFull: string; awayTeamFull: string
   homeLogo: string; awayLogo: string
   creatorHandle: string; creatorPick: 'home' | 'away'
+  creatorAvatarUrl?: string | null
   takerHandle?: string; takerPick?: 'home' | 'away'
+  takerAvatarUrl?: string | null
   takerWalletAddress?: string
   entryToken: string; entryFee: number; pot: number
   status: string; winner?: string; winnerHandle?: string
@@ -59,7 +61,7 @@ function formatTime(iso: string) {
 }
 
 // ─── Matchup Card ──────────────────────────────────────────────
-function MatchupCard({ pick, me, onTake, onCancel }: { pick: Pick; me: any; onTake: (id: string) => void; onCancel: (id: string) => void }) {
+function MatchupCard({ pick, me, onTake, onCancel, onEdit }: { pick: Pick; me: any; onTake: (id: string) => void; onCancel: (id: string) => void; onEdit: (pick: Pick) => void }) {
   const myHandle = me?.profile?.userHandle || me?.handle || ''
   const isCreator = pick.creatorHandle === myHandle
   const isTaker = pick.takerHandle === myHandle
@@ -79,18 +81,41 @@ function MatchupCard({ pick, me, onTake, onCancel }: { pick: Pick; me: any; onTa
       isMatched ? 'border-amber-500/40 shadow-lg shadow-amber-500/10' :
       'border-cyan-500/30 shadow-lg shadow-cyan-500/10'
     }`}>
-      {/* Header — sport + game info */}
+      {/* Header — sport + game info + creator controls */}
       <div className="flex items-center justify-between px-4 py-2 bg-gradient-to-r from-gray-900 to-gray-800 border-b border-white/5">
         <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
           {pick.sport.toUpperCase()} · {formatTime(pick.gameTime)}
         </span>
-        <span className={`text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider ${
-          isSettled ? 'bg-gray-700 text-gray-300' :
-          isMatched ? 'bg-amber-500/20 text-amber-400 animate-pulse' :
-          'bg-cyan-500/20 text-cyan-400'
-        }`}>
-          {isSettled ? 'FINAL' : isMatched ? 'LOCKED IN' : 'OPEN'}
-        </span>
+        <div className="flex items-center gap-2">
+          {/* Creator chevrons — edit + delete, always visible on own open picks */}
+          {isCreator && isOpen && !pick.takerHandle && (
+            <>
+              <button
+                onClick={(e) => { e.stopPropagation(); onEdit(pick) }}
+                className="p-1 rounded-full text-gray-400 hover:text-cyan-400 hover:bg-cyan-500/10 border border-gray-700 hover:border-cyan-500/50 transition-all"
+                title="Edit wager"
+                aria-label="Edit pick"
+              >
+                <Pencil className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); if (confirm('Delete this pick?')) onCancel(pick.id) }}
+                className="p-1 rounded-full text-gray-400 hover:text-red-400 hover:bg-red-500/10 border border-gray-700 hover:border-red-500/50 transition-all"
+                title="Delete pick"
+                aria-label="Delete pick"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            </>
+          )}
+          <span className={`text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider ${
+            isSettled ? 'bg-gray-700 text-gray-300' :
+            isMatched ? 'bg-amber-500/20 text-amber-400 animate-pulse' :
+            'bg-cyan-500/20 text-cyan-400'
+          }`}>
+            {isSettled ? 'FINAL' : isMatched ? 'LOCKED IN' : 'OPEN'}
+          </span>
+        </div>
       </div>
 
       {/* VS Card — avatar vs avatar */}
@@ -103,6 +128,14 @@ function MatchupCard({ pick, me, onTake, onCancel }: { pick: Pick; me: any; onTa
                 <img src={creatorLogo} alt={creatorTeam} className="w-14 h-14 lg:w-20 lg:h-20 object-contain mx-auto" />
               ) : (
                 <div className="w-14 h-14 lg:w-20 lg:h-20 rounded-full bg-cyan-500/20 flex items-center justify-center mx-auto text-2xl font-black text-cyan-400">{creatorTeam.charAt(0)}</div>
+              )}
+              {/* Creator user avatar — small overlay bottom-left of team logo */}
+              {pick.creatorAvatarUrl ? (
+                <img src={pick.creatorAvatarUrl} alt={`@${pick.creatorHandle}`} className="absolute -bottom-1 -left-1 w-6 h-6 lg:w-8 lg:h-8 rounded-full border-2 border-gray-900 object-cover bg-gray-800" onError={e => (e.target as HTMLImageElement).style.display = 'none'} />
+              ) : (
+                <div className="absolute -bottom-1 -left-1 w-6 h-6 lg:w-8 lg:h-8 rounded-full border-2 border-gray-900 bg-cyan-500/30 flex items-center justify-center text-[10px] font-black text-cyan-300">
+                  {pick.creatorHandle.charAt(0).toUpperCase()}
+                </div>
               )}
               {isSettled && pick.winner === pick.creatorPick && (
                 <div className="absolute -top-1 -right-1 w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center">
@@ -136,6 +169,14 @@ function MatchupCard({ pick, me, onTake, onCancel }: { pick: Pick; me: any; onTa
                     <img src={takerLogo} alt={takerTeam} className="w-14 h-14 lg:w-20 lg:h-20 object-contain mx-auto" />
                   ) : (
                     <div className="w-14 h-14 lg:w-20 lg:h-20 rounded-full bg-purple-500/20 flex items-center justify-center mx-auto text-2xl font-black text-purple-400">{takerTeam?.charAt(0) || '?'}</div>
+                  )}
+                  {/* Taker user avatar — small overlay bottom-right */}
+                  {pick.takerAvatarUrl ? (
+                    <img src={pick.takerAvatarUrl} alt={`@${pick.takerHandle}`} className="absolute -bottom-1 -right-1 w-6 h-6 lg:w-8 lg:h-8 rounded-full border-2 border-gray-900 object-cover bg-gray-800" onError={e => (e.target as HTMLImageElement).style.display = 'none'} />
+                  ) : (
+                    <div className="absolute -bottom-1 -right-1 w-6 h-6 lg:w-8 lg:h-8 rounded-full border-2 border-gray-900 bg-purple-500/30 flex items-center justify-center text-[10px] font-black text-purple-300">
+                      {(pick.takerHandle || '?').charAt(0).toUpperCase()}
+                    </div>
                   )}
                   {isSettled && pick.winner === pick.takerPick && (
                     <div className="absolute -top-1 -right-1 w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center">
@@ -373,6 +414,84 @@ function CreatePickModal({ game, side, onClose, onCreated }: { game: Game; side:
   )
 }
 
+// ─── Edit Pick Modal — creator-only, wager amount + token (team is locked) ─────
+function EditPickModal({ pick, onClose, onSaved }: { pick: Pick; onClose: () => void; onSaved: () => void }) {
+  const [token, setToken] = useState(pick.entryToken)
+  const [amount, setAmount] = useState(pick.entryFee)
+  const [submitting, setSubmitting] = useState(false)
+
+  const submit = async () => {
+    setSubmitting(true)
+    try {
+      const r = await fetch(`/api/arena/picks/${pick.id}`, {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'edit', entryToken: token, entryFee: amount }),
+      })
+      const d = await r.json()
+      if (!r.ok) { toast.error(d.error || 'Failed'); return }
+      toast.success('Pick updated')
+      onSaved()
+      onClose()
+    } catch (e: any) { toast.error(e.message) }
+    finally { setSubmitting(false) }
+  }
+
+  const creatorTeam = pick.creatorPick === 'home' ? pick.homeTeam : pick.awayTeam
+  const opponent = pick.creatorPick === 'home' ? pick.awayTeam : pick.homeTeam
+
+  return (
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4" onClick={onClose}>
+      <div className="w-full max-w-sm bg-gray-900 border border-cyan-500/30 rounded-2xl shadow-2xl shadow-cyan-500/10 overflow-hidden" onClick={e => e.stopPropagation()}>
+        <div className="p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-black text-white">Edit Wager</h2>
+            <button onClick={onClose} className="text-gray-500 hover:text-white"><X className="w-5 h-5" /></button>
+          </div>
+
+          <div className="p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/20 mb-4">
+            <p className="text-sm font-black text-white">{creatorTeam} to WIN</p>
+            <p className="text-xs text-gray-400">vs {opponent} · team is locked, edit wager only</p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <label className="block">
+              <span className="text-xs text-gray-400">Wager Token</span>
+              <select value={token} onChange={e => setToken(e.target.value)} className="w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white">
+                {ENABLED_TOKENS.map(t => {
+                  const info = TOKEN_INFO[t as keyof typeof TOKEN_INFO]
+                  const label = TOKEN_CONFIG[t]?.label || t
+                  return (
+                    <option key={t} value={t} className="bg-gray-900">
+                      {info?.icon || ''} {label}{t === 'OGUN' ? ' ✨' : ''}
+                    </option>
+                  )
+                })}
+              </select>
+            </label>
+            <label className="block">
+              <span className="text-xs text-gray-400">Wager Amount</span>
+              <input type="number" value={amount} onChange={e => setAmount(Number(e.target.value))} className="w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white" min={1} />
+            </label>
+          </div>
+
+          <div className="flex gap-2 mb-4">
+            {[10, 50, 100, 500].map(a => (
+              <button key={a} onClick={() => setAmount(a)} className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${amount === a ? 'bg-cyan-500 text-black' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>
+                {a}
+              </button>
+            ))}
+          </div>
+
+          <button onClick={submit} disabled={submitting || amount <= 0} className="w-full py-3 text-sm font-black bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-400 hover:to-purple-400 text-white rounded-xl transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 shadow-lg shadow-cyan-500/20">
+            {submitting ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : `SAVE — ${amount} ${token}`}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Main Page ─────────────────────────────────────────────────
 export default function ArenaPicksPage() {
   const me = useMe()
@@ -385,6 +504,7 @@ export default function ArenaPicksPage() {
   const [picks, setPicks] = useState<Pick[]>([])
   const [loading, setLoading] = useState(true)
   const [pickModal, setPickModal] = useState<{ game: Game; side: 'home' | 'away' } | null>(null)
+  const [editModal, setEditModal] = useState<Pick | null>(null)
 
   // Deep link: ?take=pickId — auto-switch to Open Picks view
   useEffect(() => {
@@ -611,7 +731,7 @@ export default function ArenaPicksPage() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {picks.map(p => (
-                  <MatchupCard key={p.id} pick={p} me={me} onTake={handleTake} onCancel={handleCancel} />
+                  <MatchupCard key={p.id} pick={p} me={me} onTake={handleTake} onCancel={handleCancel} onEdit={(pk) => setEditModal(pk)} />
                 ))}
               </div>
             )}
@@ -626,6 +746,15 @@ export default function ArenaPicksPage() {
           side={pickModal.side}
           onClose={() => setPickModal(null)}
           onCreated={() => { loadPicks(); loadGames() }}
+        />
+      )}
+
+      {/* Edit Pick Modal */}
+      {editModal && (
+        <EditPickModal
+          pick={editModal}
+          onClose={() => setEditModal(null)}
+          onSaved={() => loadPicks()}
         />
       )}
     </div>
