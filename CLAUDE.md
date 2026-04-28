@@ -25,7 +25,7 @@ Then say: **"Scoped CLAUDE.md, sarg.md, MEMORY.md, bug-report.md. Synced on [bri
 ### Frank's pushback
 *"why are you making these ui ux mistakes. i tell you about legacy pills and we remove them and then they come back!!! why do we keep staying in that loop bro?!!!! stop that"*
 
-He's right. Bug #73 had been "closed" multiple times and kept reopening because each fix was per-page, not structural. `755128f` (earlier today) shipped per-page `useHideBottomNavBar` effects on the four arena pages — the same pattern that caused the loop in the first place. Adding any new arena subroute would have brought pills back AGAIN.
+He's right. Bug #73 reopened twice not because new authors added arena routes — there are no other authors. Frank made that explicit: *"why is there new authors? its only you and me bro (soundchain)"*. Claude added each arena subroute (`/arena/picks`, `/arena/fantasy`, `/arena/fantasy/[id]`) and forgot the per-page hide hook every time. `755128f` (earlier today) shipped MORE per-page hooks on those four pages — the same pattern that caused the loop in the first place. Adding the next arena subroute would have brought pills back AGAIN, and Claude would have shipped patch #4.
 
 ### Loop-ending fix
 
@@ -39,7 +39,7 @@ const isPillFreeRoute = (path: string) =>
 
 Pills render only when `!routeForcesHidden && !state?.modal.anyModalOpened && !hideBottomNavBar && me`.
 
-**Per-page hooks removed** from `arena.tsx`, `arena/picks.tsx`, `arena/fantasy.tsx`, `arena/fantasy/[id].tsx`. They were noise, not signal, and the source of regression every time someone forgot to call them. `useHideBottomNavBar.setHideBottomNavBarState` is now reserved for *transient* hides (modal open, fullscreen mode) — never for "this whole route should be pill-free."
+**Per-page hooks removed** from `arena.tsx`, `arena/picks.tsx`, `arena/fantasy.tsx`, `arena/fantasy/[id].tsx`. They were noise, not signal, and the source of regression every time Claude forgot to call them on a new subroute. `useHideBottomNavBar.setHideBottomNavBarState` is now reserved for *transient* hides (modal open, fullscreen mode) — never for "this whole route should be pill-free."
 
 **Adding a new pill-free route family henceforth = one line in `PILL_FREE_ROUTES`.** Zero per-page code. Pattern saved as `feedback_route_gate_chrome_not_per_page.md`.
 
@@ -63,7 +63,7 @@ Frank's complaint was about the *loop*, not the pills. The loop ends here.
 ### Lessons
 
 1. **A loop is the bug.** When a regression keeps recurring on different surfaces, the surface isn't the cause — the *opt-in mechanism* is. Move the decision to where it can't be forgotten.
-2. **Page-author opt-in for global chrome is an infinite regression machine.** Wrapper-level route allow/deny lists are the only sustainable pattern.
+2. **Per-page opt-in for global chrome is an infinite regression machine — for Claude.** The "team" is Frank + Claude. Claude is the one who keeps forgetting the hook on new routes. Wrapper-level route allow/deny lists move the decision to where Claude can't forget.
 3. **When two parallel hooks exist for the same concept, one is dead code.** Document or delete. Don't let new code add a third caller.
 4. **Frank's framing matters.** "Why do we keep staying in that loop bro?" was the right question. The answer wasn't "let me patch it again" — it was "let me end the loop."
 

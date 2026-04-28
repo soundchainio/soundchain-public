@@ -5,11 +5,11 @@ import { useRouter } from 'next/router'
 import React, { useContext } from 'react'
 import { BottomNavBar } from './BottomNavBar'
 
-// Route-prefixes where the legacy bottom pills must NEVER render. Adding a new
-// surface here (e.g. '/arena/foo') is the one-line way to keep pills off — page
-// authors don't need to remember to call useHideBottomNavBar. New nodeverse
-// surfaces (gallery3d/explore3d/land/nodes) already use their own chrome and
-// don't want the legacy pills either.
+// Route-prefixes where the legacy bottom pills must NEVER render. The pill-hide
+// decision lives here (single source) instead of being repeated as a useEffect
+// on every new arena/nodeverse subroute. Bug #73 reopened twice because the
+// per-page hook was easy to forget when adding /arena/picks, /arena/fantasy,
+// /arena/fantasy/[id]. Adding a new pill-free route family = one line below.
 const PILL_FREE_ROUTES = ['/arena', '/gallery3d', '/explore3d', '/land', '/nodes', '/radio'] as const
 
 const isPillFreeRoute = (path: string) => PILL_FREE_ROUTES.some(p => path === p || path.startsWith(`${p}/`) || path.startsWith(`${p}?`))
