@@ -2,7 +2,7 @@
 
 ## ⚠️ SESSION START PROTOCOL (MANDATORY — READ BEFORE ANY CODE)
 
-Before writing ANY code, read these 4 files and CONFIRM to Frank:
+Before writing ANY code, read these 4 files and CONFIRM to User:
 1. **This file (CLAUDE.md)** — architecture, contracts, protected files
 2. **sarg.md** — `cat ~/.claude/projects/-Users-soundchain/memory/sarg.md | head -80`
 3. **MEMORY.md** — `cat ~/.claude/projects/-Users-soundchain/memory/MEMORY.md | head -60`
@@ -10,7 +10,7 @@ Before writing ANY code, read these 4 files and CONFIRM to Frank:
 
 Then say: **"Scoped CLAUDE.md, sarg.md, MEMORY.md, bug-report.md. Synced on [brief summary]. Ready to work."**
 
-**DO NOT START CODING UNTIL CONFIRMED.** Frank's direct order. See `feedback_session_start_protocol.md`.
+**DO NOT START CODING UNTIL CONFIRMED.** User's direct order. See `feedback_session_start_protocol.md`.
 
 ---
 
@@ -24,18 +24,18 @@ Then say: **"Scoped CLAUDE.md, sarg.md, MEMORY.md, bug-report.md. Synced on [bri
 
 ### What happened
 
-Frank funded the picks-escrow commissioner wallet `0x627aD3d257DedD2b57f00632C6E04b37B60Daff9` with 6 POL on Polygon mainnet (TX nonce #426 from `0x33F4d...FE6CE`). Verified via `GET /api/arena/picks/commissioner-address`:
+User funded the picks-escrow commissioner wallet `0x627aD3d257DedD2b57f00632C6E04b37B60Daff9` with 6 POL on Polygon mainnet (TX nonce #426 from `0x33F4d...FE6CE`). Verified via `GET /api/arena/picks/commissioner-address`:
 
 ```json
 { "address":"0x627aD3d257DedD2b57f00632C6E04b37B60Daff9", "balancePol":"6.0",
   "fundingHint":"Currently has 6.0 POL — funded and ready." }
 ```
 
-**On-chain Arena Picks escrow is unblocked end-to-end.** Bug #72 / Bug #75 close pending Frank's create-pick verify. Each createLeague TX is ~120k gas (~$0.01 at current Polygon prices); 6 POL covers ~600 picks before refilling.
+**On-chain Arena Picks escrow is unblocked end-to-end.** Bug #72 / Bug #75 close pending User's create-pick verify. Each createLeague TX is ~120k gas (~$0.01 at current Polygon prices); 6 POL covers ~600 picks before refilling.
 
 ### Bug #76 — Connect Wallet pill missing on /wallet (SHIPPED `6260c09`)
 
-Frank flagged that he had to import his Magic OAuth wallet into MetaMask externally to send the 6 POL — *"i need it back cause i wanted to send from wallet page on soundchain. id rather be able to connect on the wallet page itself."*
+User flagged that he had to import his Magic OAuth wallet into MetaMask externally to send the 6 POL — *"i need it back cause i wanted to send from wallet page on soundchain. id rather be able to connect on the wallet page itself."*
 
 **Root cause:** `WalletConnectModal` (MetaMask + WalletConnect + Coinbase + 300 wallets via WC scan) lives in `dex/[...slug].tsx:297` and renders at line 8476, but its only `setShowWalletModal(true)` trigger was wired to the post-as-guest flow at line 1443. `/wallet` had no Connect button anywhere — `MultiWalletAggregator` only listed already-connected wallets with Disconnect controls. New users had no path to attach an external wallet from the wallet page.
 
@@ -44,7 +44,7 @@ Frank flagged that he had to import his Magic OAuth wallet into MetaMask externa
 ### Follow-ups
 
 - **`MultiWalletAggregator.openWeb3Modal` is a dead prop** (passed at line 5097 of slug, never destructured by the component). Wire it to a "Connect Web3Modal" CTA inside the aggregator OR remove the prop. Low priority; the new pill covers the same UX.
-- **Frank verify path:** Hard refresh `/wallet` → tap Connect Wallet → modal pops → connect MetaMask/Rainbow/Trust → wallet appears in aggregator below → send POL directly without external imports next time. Then visit any user's `/shop` tab → same Connect Wallet pill renders under the storefront banner.
+- **User verify path:** Hard refresh `/wallet` → tap Connect Wallet → modal pops → connect MetaMask/Rainbow/Trust → wallet appears in aggregator below → send POL directly without external imports next time. Then visit any user's `/shop` tab → same Connect Wallet pill renders under the storefront banner.
 
 ### Follow-up shipped: Connect Wallet pill mirrored to /shop (`dffb150`)
 
@@ -82,10 +82,10 @@ See `bug-report.md#Bug-76` and `sarg.md` for full notes.
 
 ---
 
-## 🚪 Apr 27, 2026 (Frank heading to work) — Login OAuth hang on post-Mac-wake + commissioner-address endpoint (SHIPPED `781a045`)
+## 🚪 Apr 27, 2026 (User heading to work) — Login OAuth hang on post-Mac-wake + commissioner-address endpoint (SHIPPED `781a045`)
 
 ### Context
-Frank said "go big or go home my G" on the fantasy feature. Shipped 6 tight commits end-to-end — ESPN draft to championship bracket — all on main, each typecheck clean, each live on Vercel. Frank was multi-building with Fleet Commander in the War Room in parallel.
+User said "go big or go home my G" on the fantasy feature. Shipped 6 tight commits end-to-end — ESPN draft to championship bracket — all on main, each typecheck clean, each live on Vercel. User was multi-building with Fleet Commander in the War Room in parallel.
 
 ### Commits (all on main)
 
@@ -141,21 +141,21 @@ Frank said "go big or go home my G" on the fantasy feature. Shipped 6 tight comm
 
 ### Deferred follow-ups (flagged for future sessions)
 
-- **FantasyRosterNFT contract** — at `lock()` mint roster NFT snapshot; at settle, gold-border metadata update for 1st/2nd/3rd. `TrophyCard.winners` already has the inputs. Frank asked about this earlier in thread; deferred pending real NFL season.
+- **FantasyRosterNFT contract** — at `lock()` mint roster NFT snapshot; at settle, gold-border metadata update for 1st/2nd/3rd. `TrophyCard.winners` already has the inputs. User asked about this earlier in thread; deferred pending real NFL season.
 - **DST weekly scoring** — pull week's NFL scoreboard → boxscore per game → team defensive stats → `computeFantasyPoints({defTDs, defSacks, defInts, defFumbleRecoveries, defSafeties, defPointsAllowed})`. ~60 lines in `scoringSync.ts`.
 - **Auto-advance playoff bracket** after semifinal scoring posts. Hook into `scoringSync.applyMatchupResults()`: if week ≥ playoff startWeek and bracket exists, call `advancePlayoffBracket()` + persist.
 - **Live Matchup projections.** ESPN has projection endpoints; show "Mahomes projected 22.4 pts" alongside actual on My Week hero.
 - **Full season summary card** post-settle: highest single-week score, biggest blowout, consolation winner.
 
 ### Multi-building context
-Shipped from Sarg (iPhone, home) while Frank was running Fleet Commander in the War Room in parallel. Fantasy code is self-contained — no shared UI state, no `Layout.tsx`/Provider/`DexNavBar` touches. Safe to parallel-build with other War Room features without merge conflicts.
+Shipped from Sarg (iPhone, home) while User was running Fleet Commander in the War Room in parallel. Fantasy code is self-contained — no shared UI state, no `Layout.tsx`/Provider/`DexNavBar` touches. Safe to parallel-build with other War Room features without merge conflicts.
 
 ---
 
 ## 💰 SESSION: Apr 21, 2026 (Sarg) — GALLERY3D FRAME AUDIO EARNS OGUN REWARDS
 
 ### Context
-After `ee67751` (Apr 20) ported the Gallery3D frame-detail modal's audio from bare `new Audio()` to the canonical `<AudioPlayer>` component, playback worked in-card (per Frank's constraint: audio plays IN the frame, not the bottom sticky bar). But streaming a frame track past 30s never fired the `OgunRewardToast` — no OGUN. Frank flagged this today after confirming the SHARE-via-text flow worked.
+After `ee67751` (Apr 20) ported the Gallery3D frame-detail modal's audio from bare `new Audio()` to the canonical `<AudioPlayer>` component, playback worked in-card (per User's constraint: audio plays IN the frame, not the bottom sticky bar). But streaming a frame track past 30s never fired the `OgunRewardToast` — no OGUN. User flagged this today after confirming the SHARE-via-text flow worked.
 
 ### Root Cause
 `useLogStream` only lived inside `AudioEngine.tsx:63–84` (the global bottom player). Any inline `<AudioPlayer>` mount (Gallery3D frame, future inline players) renders its own local `<audio>` element isolated from the global pipeline → AudioEngine never saw the playback → no 30s log, no toast.
@@ -205,7 +205,7 @@ If the global `AudioEngine` is already playing the same `trackId`, inline `Audio
 ## 🌃 SESSION: Apr 19, 2026 Night (Sarg) — THREE-IN-ONE (xterm mini + gallery audio + land drill-down)
 
 ### Context
-Last work of the night. Frank asked for three things in one shot, said "proceed using glow steps til this is all completed for tonight build commit push to main at ease":
+Last work of the night. User asked for three things in one shot, said "proceed using glow steps til this is all completed for tonight build commit push to main at ease":
 1. Xterm terminal needs a third size — "mini rectangular frame" — small enough to navigate SC behind it while keeping default + fullscreen modes intact.
 2. Gallery3D asset-in-frame needs to actually play audio file types (SCID audio / NFT audio / audio-post), not just render cover art.
 3. Land Atlas: only lets users buy whole continents. Needs god's-eye drill-down (World → Country → City → Parcel) from open-source earth maps.
@@ -236,7 +236,7 @@ Last work of the night. Frank asked for three things in one shot, said "proceed 
 4. **Denormalize over live-lookup when the asset rarely changes.** Frame bindings persist once; storing `boundAssetAudioUrl` alongside `boundAssetImageUrl` means the 3D scene's click handler is a pure DOM op (no fetch, no await) — matters on mobile where every network hop is a tap latency hit.
 5. **TypeScript baseline errors are noise, not signal.** `yarn typecheck` reported ~15 errors in pre-existing web3 type files + sentry + transferOgun + errorHelpers — none in the files I touched. Flagged in CLAUDE.md under "Non-Blocking Errors." Don't let the baseline hide new regressions; filter by file path before judging.
 
-### Caveats surfaced to Frank
+### Caveats surfaced to User
 - MINI pill shows on all breakpoints; only the fullscreen toggle is mobile-only.
 - 140-city dataset is curated — add entries to `worldCities.ts` as users ask for coverage (format: `{ name, countryIso, countryId, lat, lng, population }`).
 - Raw `new Audio()` for frame playback dies on route change. Intentional for tonight, tracked as follow-up.
@@ -246,7 +246,7 @@ Last work of the night. Frank asked for three things in one shot, said "proceed 
 ## 🎯 SESSION: Apr 19, 2026 Late Evening (Sarg) — YT AUTOPLAY ROUND 2 + 5-PAGE NAV SCOPE
 
 ### Context
-After tonight's earlier ship (`8929e55` + `8816504`), Frank tested live and reported:
+After tonight's earlier ship (`8929e55` + `8816504`), User tested live and reported:
 1. YouTube embeds on Coachella posts in the Nodes feed STILL not autoplaying (despite Bug #52 fix).
 2. Top header nav on `/nodes`, `/explore3d`, `/gallery3d`, `/arena`, `/land` "not quite right like global."
 
@@ -258,7 +258,7 @@ After tonight's earlier ship (`8929e55` + `8816504`), Frank tested live and repo
 
 ### Wrong-direction attempt on the 5 standalone pages (REVERTED, no commit)
 
-First read of "not quite right like global" was interpreted as "doesn't match Layout.tsx." Layout mounts `<MiniRadioBar /> + <DexNavBar />`; the 5 pages only mount `<DexNavBar />`. So I added `<MiniRadioBar />` (dynamic, ssr:false) above the nav on all 5. Frank clarified: **profile nav (the inline mega-router nav at `dex/[...slug].tsx:3180–4281`) is the canonical reference, NOT Layout.** Reverted all 5 edits — files back to baseline. **No commit.** See Bug #56 in bug-report.md.
+First read of "not quite right like global" was interpreted as "doesn't match Layout.tsx." Layout mounts `<MiniRadioBar /> + <DexNavBar />`; the 5 pages only mount `<DexNavBar />`. So I added `<MiniRadioBar />` (dynamic, ssr:false) above the nav on all 5. User clarified: **profile nav (the inline mega-router nav at `dex/[...slug].tsx:3180–4281`) is the canonical reference, NOT Layout.** Reverted all 5 edits — files back to baseline. **No commit.** See Bug #56 in bug-report.md.
 
 ### Why the real fix is deferred
 The mega-router inline nav is **~1,101 lines** of state-coupled UI:
@@ -269,14 +269,14 @@ The mega-router inline nav is **~1,101 lines** of state-coupled UI:
 - Full search bar, Pulse, Notifications, Avatar
 - Modal dispatchers (`showWinWinStatsModal`, `showVibesModal`, `showNearbyModal`, `winWinRewardsTab`)
 
-Per the Apr 19 lesson already logged in this file: "Porting all of that into a shared component is a much bigger refactor." The cheap win at the time was route-linking the pills inside `DexNavBar`. Frank now wants the rich modal UX — that's the bigger refactor. Asked him to specify scope (full port vs subset) before touching it.
+Per the Apr 19 lesson already logged in this file: "Porting all of that into a shared component is a much bigger refactor." The cheap win at the time was route-linking the pills inside `DexNavBar`. User now wants the rich modal UX — that's the bigger refactor. Asked him to specify scope (full port vs subset) before touching it.
 
 ### Nav surface matrix (current state, no change since `8816504`)
 | Page | Nav | Status |
 |------|-----|--------|
 | `/`, `/explore`, `/library`, ~37 others | `DexNavBar` via Layout.tsx | ✅ Correct |
-| `/dex/*` (mega-router, including profile) | Inline nav at `[...slug].tsx:3180–4281` (rich modals) | ✅ Correct (Frank's canonical) |
-| `/nodes`, `/explore3d`, `/gallery3d`, `/arena`, `/land` | `DexNavBar` (lighter, route-link pills) | ⏸ Wrong vs profile — port pending Frank's scope call |
+| `/dex/*` (mega-router, including profile) | Inline nav at `[...slug].tsx:3180–4281` (rich modals) | ✅ Correct (User's canonical) |
+| `/nodes`, `/explore3d`, `/gallery3d`, `/arena`, `/land` | `DexNavBar` (lighter, route-link pills) | ⏸ Wrong vs profile — port pending User's scope call |
 | `/radio` | `DexNavBar` via `getLayout` | ✅ Correct (Layout-style) |
 
 ### Lessons (for future sessions)
@@ -291,7 +291,7 @@ Per the Apr 19 lesson already logged in this file: "Porting all of that into a s
 ## 🎯 SESSION: Apr 19, 2026 Evening (Sarg) — GLOBAL NAV UNIFICATION + REELS AUDIO + YT AUTOPLAY
 
 ### Context
-After today's 17-commit blitz (`d88bff4` Nodes entry points → `c2b1d30` revert of DexNavBar pills → `f912a11` KILL /dex/) the app was a patchwork: profile page top nav was missing, radio page had its own nav, reels played silently, YouTube embeds had stopped autoplaying. Frank was frustrated — earlier attempts at unification kept getting partially reverted.
+After today's 17-commit blitz (`d88bff4` Nodes entry points → `c2b1d30` revert of DexNavBar pills → `f912a11` KILL /dex/) the app was a patchwork: profile page top nav was missing, radio page had its own nav, reels played silently, YouTube embeds had stopped autoplaying. User was frustrated — earlier attempts at unification kept getting partially reverted.
 
 ### Two commits landed
 
@@ -305,7 +305,7 @@ After today's 17-commit blitz (`d88bff4` Nodes entry points → `c2b1d30` revert
 
 | File | Change |
 |------|--------|
-| `web/src/pages/dex/[...slug].tsx:8034` | Removed `overflow-y-auto min-h-screen` + `WebkitOverflowScrolling: 'touch'` from profile view wrapper. Inner scroll container was carrying the sticky `<nav z-50>` out of view on mobile Safari (iOS inertial scroll quirk). Nav markup was always correct — the scroll context was the bug. **This is the "missing profile page top nav" Frank had been asking about all day.** |
+| `web/src/pages/dex/[...slug].tsx:8034` | Removed `overflow-y-auto min-h-screen` + `WebkitOverflowScrolling: 'touch'` from profile view wrapper. Inner scroll container was carrying the sticky `<nav z-50>` out of view on mobile Safari (iOS inertial scroll quirk). Nav markup was always correct — the scroll context was the bug. **This is the "missing profile page top nav" User had been asking about all day.** |
 | `web/src/components/DexNavBar.tsx` | Re-applied the reverted `7577604` (Bitchat → `/nearby`, PiggyBank → `/stake`, Vibes → `/dex/users`, Avatar → `/profiles/{handle}`) + added Moltbook 🦞 → `/backend` so DexNavBar matches both the mega-router inline nav AND TopNavBar's right-action strip. Route-links only — zero modal state ported, so no risk of re-introducing the ticker double-render that `43bd346/93a16b0` killed. |
 | `web/src/pages/radio.tsx` | Imported `DexNavBar` and mounted it inside the existing `ModalProvider` in `getLayout`. Radio previously used `getLayout` to skip the default `<Layout>`, so it never inherited DexNavBar. Radio's inline player toolbar at line 640 stays as a secondary bar underneath. |
 | `web/src/pages/api/feed/stories.ts` | Added derived nested `attachedTrack: { id, title, artist, coverUrl, audioUrl }` to the story response, sourced from the flat `attachedTrackIpfsUrl` etc. fields. `StoryViewer.tsx:172` reads `currentStory.attachedTrack.audioUrl` to gate `hasTrackAudio` — the Apr 17 Vercel-direct port (`231bb33`) returned only flat fields, so `hasTrackAudio` was always false and reels played silently. |
@@ -942,7 +942,7 @@ grep -r "moltbook_sk" ~/
 ```json
 {
   "name": "SoundChainRadio",
-  "api_key": "[REDACTED — see ~/.config/moltbook/credentials.json; PENDING ROTATION — Frank deferred Apr 28; values exposed in public repo since Jan 30 → assume compromised, rotate when bandwidth allows]",
+  "api_key": "[REDACTED — see ~/.config/moltbook/credentials.json; PENDING ROTATION — User deferred Apr 28; values exposed in public repo since Jan 30 → assume compromised, rotate when bandwidth allows]",
   "claim_url": "https://moltbook.com/claim/moltbook_claim_MB4bNEU-tV7w4fAaRgK_Fp6zgCdUMRrw",
   "verification_code": "seabed-HU5A",
   "status": "pending_claim"
@@ -1290,9 +1290,9 @@ web/src/pages/dex/agent-feed.tsx       # Cyberpunk blog viewer
 ### Moltbook Integration - LIVE!
 
 **3 Agents Claimed:**
-- @SoundChain (web3 submolt) - `[REDACTED — PENDING ROTATION (Frank deferred Apr 28)]`
-- @OGUN (crypto submolt) - `[REDACTED — PENDING ROTATION (Frank deferred Apr 28)]`
-- @SoundChainIO (ai submolt) - `[REDACTED — PENDING ROTATION (Frank deferred Apr 28)]`
+- @SoundChain (web3 submolt) - `[REDACTED — PENDING ROTATION (User deferred Apr 28)]`
+- @OGUN (crypto submolt) - `[REDACTED — PENDING ROTATION (User deferred Apr 28)]`
+- @SoundChainIO (ai submolt) - `[REDACTED — PENDING ROTATION (User deferred Apr 28)]`
 - @SoundChainProtocol - unclaimed (save for later)
 
 **Posts Published to 1.7M Agents:**
@@ -2017,7 +2017,7 @@ const redirectUri = `${window.location.origin}/login`;
 
 **API Keys (Local Reference):**
 - Magic Public Key: `pk_live_858EC1BFF763F101`
-- Magic Secret Key: `[REDACTED — see Vercel env / .env.local; PENDING ROTATION — Frank deferred Apr 28; values exposed in public repo since Jan 30 → assume compromised, rotate when bandwidth allows]`
+- Magic Secret Key: `[REDACTED — see Vercel env / .env.local; PENDING ROTATION — User deferred Apr 28; values exposed in public repo since Jan 30 → assume compromised, rotate when bandwidth allows]`
 
 ---
 
