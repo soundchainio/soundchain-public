@@ -8,6 +8,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
 import { useMe } from 'hooks/useMe'
+import { useHideBottomNavBar } from 'hooks/useHideBottomNavBar'
 // DexNavBar inherited from Layout.tsx — no inline mount needed
 import { ArrowLeft, Trophy, Users, Coins, Loader2, CheckCircle2, Shield, Crown, Medal, Award } from 'lucide-react'
 import { toast } from 'react-toastify'
@@ -38,6 +39,12 @@ export default function FantasyLeagueDetailPage() {
   const [data, setData] = useState<DetailResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<Tab>('draft')
+  const { setHideBottomNavBarState } = useHideBottomNavBar()
+
+  useEffect(() => {
+    setHideBottomNavBarState(true)
+    return () => setHideBottomNavBarState(false)
+  }, [setHideBottomNavBarState])
   const [players, setPlayers] = useState<EspnPlayer[]>([])
   const [playersLoading, setPlayersLoading] = useState(false)
   const [working, setWorking] = useState(false)

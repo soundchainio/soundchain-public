@@ -29,34 +29,64 @@ export { NATIVE_TOKEN }
 
 const COMMISSIONER_PATH = "m/44'/60'/9'/0/0"
 
-let cachedSigner: ethers.Wallet | null = null
-let cachedProvider: ethers.providers.JsonRpcProvider | null = null
+// Errors that indicate the RPC itself is broken (vs a real contract revert).
+// On these, rotate to the next RPC in POLYGON_RPC_URLS instead of failing the request.
+function isRpcTransportError(err: any): boolean {
+  const code = err?.code
+  if (code === 'SERVER_ERROR' || code === 'TIMEOUT' || code === 'NETWORK_ERROR') return true
+  // ethers v5 throws `processing response error` when the upstream returns malformed JSON or HTML
+  const msg = (err?.message || '').toLowerCase()
+  return msg.includes('processing response error') || msg.includes('failed to fetch') || msg.includes('socket hang up') || msg.includes('econnreset')
+}
 
-function getProvider(): ethers.providers.JsonRpcProvider {
-  if (cachedProvider) return cachedProvider
-  cachedProvider = new ethers.providers.JsonRpcProvider(POLYGON_RPC_URLS[0])
-  return cachedProvider
+let cachedRpcIndex = 0  // sticky to last known-good RPC across requests; rotated on transport error
+
+function buildSigner(rpcUrl: string): ethers.Wallet {
+  const seed = process.env.HUMAN_WALLET_SEED
+  if (!seed) throw new Error('HUMAN_WALLET_SEED not configured — picks escrow disabled')
+  const provider = new ethers.providers.JsonRpcProvider(rpcUrl)
+  return ethers.Wallet.fromMnemonic(seed, COMMISSIONER_PATH).connect(provider)
 }
 
 export function getCommissionerSigner(): ethers.Wallet {
-  if (cachedSigner) return cachedSigner
-  const seed = process.env.HUMAN_WALLET_SEED
-  if (!seed) throw new Error('HUMAN_WALLET_SEED not configured — picks escrow disabled')
-  const wallet = ethers.Wallet.fromMnemonic(seed, COMMISSIONER_PATH).connect(getProvider())
-  cachedSigner = wallet
-  return wallet
+  return buildSigner(POLYGON_RPC_URLS[cachedRpcIndex])
 }
 
 export function getCommissionerAddress(): string {
   return getCommissionerSigner().address
 }
 
-function getEscrow(): ethers.Contract {
-  return new ethers.Contract(PICKS_ESCROW_ADDRESS, FANTASY_LEAGUE_ESCROW_ABI, getCommissionerSigner())
+function getEscrow(signer: ethers.Wallet): ethers.Contract {
+  return new ethers.Contract(PICKS_ESCROW_ADDRESS, FANTASY_LEAGUE_ESCROW_ABI, signer)
 }
 
 export function getEscrowReadOnly(): ethers.Contract {
-  return new ethers.Contract(PICKS_ESCROW_ADDRESS, FANTASY_LEAGUE_ESCROW_ABI, getProvider())
+  const provider = new ethers.providers.JsonRpcProvider(POLYGON_RPC_URLS[cachedRpcIndex])
+  return new ethers.Contract(PICKS_ESCROW_ADDRESS, FANTASY_LEAGUE_ESCROW_ABI, provider)
+}
+
+/**
+ * Run an escrow write operation with automatic RPC failover. If the RPC at the current
+ * cached index returns a transport-level error (timeout, malformed response, socket hangup),
+ * rotate to the next RPC and retry. Real contract reverts are surfaced immediately —
+ * we only retry transport errors so a true revert isn't masked by repeated attempts.
+ */
+async function withRpcFailover<T>(op: (escrow: ethers.Contract) => Promise<T>): Promise<T> {
+  let lastErr: any = null
+  for (let attempt = 0; attempt < POLYGON_RPC_URLS.length; attempt++) {
+    const rpcIndex = (cachedRpcIndex + attempt) % POLYGON_RPC_URLS.length
+    const signer = buildSigner(POLYGON_RPC_URLS[rpcIndex])
+    try {
+      const result = await op(getEscrow(signer))
+      cachedRpcIndex = rpcIndex  // remember the working one
+      return result
+    } catch (err: any) {
+      lastErr = err
+      if (!isRpcTransportError(err)) throw err  // real revert — bubble up immediately
+      // else: try next RPC
+    }
+  }
+  throw lastErr
 }
 
 /**
@@ -69,20 +99,21 @@ export async function escrowCreatePick(
   tokenAddress: string,
   entryFeeWei: ethers.BigNumber,
 ): Promise<{ leagueId: string; txHash: string }> {
-  const escrow = getEscrow()
-  const tx: ethers.ContractTransaction = await escrow.createLeague(
-    tokenAddress,
-    entryFeeWei,
-    2, // maxTeams — pick is always 1v1
-    PICK_FIRST_BPS,
-    PICK_SECOND_BPS,
-    PICK_THIRD_BPS,
-  )
-  const receipt = await tx.wait()
-  const event = receipt.events?.find(e => e.event === 'LeagueCreated')
-  if (!event || !event.args) throw new Error('LeagueCreated event not found in receipt')
-  const leagueId = (event.args.leagueId as ethers.BigNumber).toString()
-  return { leagueId, txHash: tx.hash }
+  return withRpcFailover(async escrow => {
+    const tx: ethers.ContractTransaction = await escrow.createLeague(
+      tokenAddress,
+      entryFeeWei,
+      2, // maxTeams — pick is always 1v1
+      PICK_FIRST_BPS,
+      PICK_SECOND_BPS,
+      PICK_THIRD_BPS,
+    )
+    const receipt = await tx.wait()
+    const event = receipt.events?.find(e => e.event === 'LeagueCreated')
+    if (!event || !event.args) throw new Error('LeagueCreated event not found in receipt')
+    const leagueId = (event.args.leagueId as ethers.BigNumber).toString()
+    return { leagueId, txHash: tx.hash }
+  })
 }
 
 /**
@@ -90,10 +121,11 @@ export async function escrowCreatePick(
  * Required before settle can be called.
  */
 export async function escrowLockPick(leagueId: string): Promise<string> {
-  const escrow = getEscrow()
-  const tx: ethers.ContractTransaction = await escrow.lock(leagueId)
-  await tx.wait()
-  return tx.hash
+  return withRpcFailover(async escrow => {
+    const tx: ethers.ContractTransaction = await escrow.lock(leagueId)
+    await tx.wait()
+    return tx.hash
+  })
 }
 
 /**
@@ -101,15 +133,16 @@ export async function escrowLockPick(leagueId: string): Promise<string> {
  * Called from the cron after ESPN reports a final score.
  */
 export async function escrowSettlePick(leagueId: string, winnerAddress: string): Promise<string> {
-  const escrow = getEscrow()
-  const tx: ethers.ContractTransaction = await escrow.settle(
-    leagueId,
-    winnerAddress,
-    ethers.constants.AddressZero, // no second place
-    ethers.constants.AddressZero, // no third place
-  )
-  await tx.wait()
-  return tx.hash
+  return withRpcFailover(async escrow => {
+    const tx: ethers.ContractTransaction = await escrow.settle(
+      leagueId,
+      winnerAddress,
+      ethers.constants.AddressZero, // no second place
+      ethers.constants.AddressZero, // no third place
+    )
+    await tx.wait()
+    return tx.hash
+  })
 }
 
 /**
@@ -117,10 +150,11 @@ export async function escrowSettlePick(leagueId: string, winnerAddress: string):
  * Called when an open pick expires (game starts) without a taker.
  */
 export async function escrowCancelPick(leagueId: string): Promise<string> {
-  const escrow = getEscrow()
-  const tx: ethers.ContractTransaction = await escrow.cancel(leagueId)
-  await tx.wait()
-  return tx.hash
+  return withRpcFailover(async escrow => {
+    const tx: ethers.ContractTransaction = await escrow.cancel(leagueId)
+    await tx.wait()
+    return tx.hash
+  })
 }
 
 /**

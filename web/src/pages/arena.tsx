@@ -18,7 +18,7 @@
 import { ReactElement, useEffect, useState, useCallback } from 'react'
 import { useMe } from 'hooks/useMe'
 import { useRouter } from 'next/router'
-import { useLayoutContext } from 'hooks/useLayoutContext'
+import { useHideBottomNavBar } from 'hooks/useHideBottomNavBar'
 // DexNavBar inherited from Layout.tsx
 import { ArrowLeft, Gamepad2, Trophy, Users, Eye, Coins, Zap, Lock, Radio, ExternalLink, Swords, Plus, Send, X, Loader2 } from 'lucide-react'
 import { toast } from 'react-toastify'
@@ -74,11 +74,11 @@ const SUPPORTED_PLATFORMS = [
 export default function ArenaPage() {
   const me = useMe()
   const router = useRouter()
-  const { setHideBottomNavBar } = useLayoutContext()
+  const { setHideBottomNavBarState } = useHideBottomNavBar()
   useEffect(() => {
-    setHideBottomNavBar(true)
-    return () => setHideBottomNavBar(false)
-  }, [setHideBottomNavBar])
+    setHideBottomNavBarState(true)
+    return () => setHideBottomNavBarState(false)
+  }, [setHideBottomNavBarState])
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null)
   const [paidPPV, setPaidPPV] = useState<Set<string>>(new Set())
   const [challenges, setChallenges] = useState<Challenge[]>([])

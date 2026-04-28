@@ -161,8 +161,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     escrowCreateTxHash = result.txHash
   } catch (err: any) {
     const msg = err?.reason || err?.message || 'unknown'
+    const isTransport = err?.code === 'SERVER_ERROR' || err?.code === 'TIMEOUT' || err?.code === 'NETWORK_ERROR' || /processing response error|failed to fetch|socket hang up/i.test(msg)
     return res.status(502).json({
-      error: `Could not create on-chain escrow league: ${msg}. Ensure commissioner wallet is funded with POL for gas.`,
+      error: isTransport
+        ? `Polygon RPCs are flaky right now (${msg}). Please retry in a moment.`
+        : `Could not create on-chain escrow league: ${msg}.`,
     })
   }
 
