@@ -20,6 +20,64 @@ Then say: **"Scoped CLAUDE.md, sarg.md, MEMORY.md, bug-report.md. Synced on [bri
 
 ---
 
+## 🛠️ SESSION: Apr 28, 2026 (Sarg, later3) — Arena pills off + RPC failover for picks createLeague (SHIPPED `755128f`)
+
+### Context
+
+Frank tapped a pre-game card on `/arena/picks` (first real attempt after `01c4902` ERC-20 lift) and hit two issues at once:
+
+1. *"Could not create on-chain escrow league: processing response error. Ensure commissioner wallet is funded with POL for gas."* — wallet has 6 POL.
+2. *"and those legacy sticky footor pills sre back on arena!!!! remive them assp"*
+
+### Fix #1 — RPC transport failover
+
+`web/src/lib/arena/picks/escrowServer.ts` cached a single provider built from `POLYGON_RPC_URLS[0]` (`polygon-bor-rpc.publicnode.com`). When that RPC throttled, ethers v5 threw `code=SERVER_ERROR` with `processing response error` and the API caught it as if it were a funding problem. Two RPC fallbacks (`polygon-rpc.com`, `polygon.llamarpc.com`) were declared but never reached.
+
+**Replaced with `withRpcFailover(op)`** that:
+- Builds a fresh signer per RPC URL on demand (no module-level cache)
+- Rotates through `POLYGON_RPC_URLS` only on transport-class errors (`SERVER_ERROR`, `TIMEOUT`, `NETWORK_ERROR`, or message matching `processing response error|failed to fetch|socket hang up|econnreset`)
+- Bubbles real contract reverts immediately so we don't mask actual bugs
+- Tracks `cachedRpcIndex` (sticky across requests) so the next call prefers whichever RPC just worked
+
+Wraps `escrowCreatePick` / `escrowLockPick` / `escrowSettlePick` / `escrowCancelPick`.
+
+`pages/api/arena/picks/index.ts` toast updated: transport errors emit *"Polygon RPCs are flaky right now (...). Please retry in a moment."*; real reverts get the precise reason. No more bogus "fund commissioner" hint.
+
+### Fix #2 — Bug #73 actually closed
+
+`web/src/pages/arena.tsx` called `useLayoutContext().setHideBottomNavBar(true)` — but `BottomNavBarWrapper` reads from a different hook: `useHideBottomNavBar()` (`hooks/useHideBottomNavBar.tsx`), which has its own `setHideBottomNavBarState`. Two parallel context providers, two separate states; the setter on `LayoutContext` never reached the reader. The earlier "Bug #73 fix" was on the wrong knob.
+
+Switched all four arena surfaces to the canonical hook:
+- `web/src/pages/arena.tsx`
+- `web/src/pages/arena/picks.tsx` (was missing pill-hide entirely)
+- `web/src/pages/arena/fantasy.tsx` (was missing pill-hide entirely)
+- `web/src/pages/arena/fantasy/[id].tsx` (was missing pill-hide entirely)
+
+### Non-obvious invariants (future-session gotchas)
+
+1. **`useLayoutContext` and `useHideBottomNavBar` are TWO different providers.** `useLayoutContext.setHideBottomNavBar` is a dead wire vs `BottomNavBarWrapper`. Always use `useHideBottomNavBar.setHideBottomNavBarState` to gate the bottom pills. Consolidation flagged but deferred.
+2. **`escrowServer.ts` no longer caches a signer.** Build is per-call (cheap) so the failover loop can swap RPCs cleanly. `getCommissionerAddress()` still works — it just builds a transient signer to read `.address`.
+3. **`withRpcFailover` rotates ONLY on transport-class errors.** A real revert (e.g. league entry-fee mismatch, bad token address) will throw on the first RPC and not retry. This is intentional — retrying a real revert across multiple RPCs would mask the actual bug AND burn extra gas if the tx ever hit the chain.
+4. **Sticky `cachedRpcIndex`.** Once a RPC succeeds, future requests start there. If it later breaks, the loop rotates and the new working one becomes sticky. Self-healing.
+5. **Toast categorization based on `err.code` + regex.** Don't trust ethers messages alone; always check `err.code` first and fall back to regex on the message text.
+
+### Test path
+
+1. Hard-refresh `/arena`, `/arena/picks`, `/arena/fantasy`, `/arena/fantasy/[id]` — no bottom pills anywhere.
+2. Tap pre-game card → CreatePickModal → POL/OGUN/USDC → place pick → either succeeds first try, or shows "RPCs flaky, retry" and succeeds on retry (different RPC).
+3. AWAITING STAKE → OPEN.
+
+### Lessons
+
+1. **Two parallel hooks for the same concept is a bug-magnet.** New API was added without migrating the consumer. Always migrate readers + writers together, or wire the new setter to call the old one.
+2. **Single-RPC dependencies on Polygon are time bombs.** Throttling, malformed JSON, dropped sockets are routine. Failover loops are cheap insurance.
+3. **Error messages are part of the bug.** Misleading copy ("fund the wallet") sends the user on a wild goose chase. Always categorize errors before writing toast text.
+4. **A "fix" without a real-device verify is a placebo.** Bug #73 was supposedly closed before but was on the wrong context. Manual route screenshots after any nav/layout change.
+
+See `bug-report.md#Bug-79` and `sarg.md` for full notes.
+
+---
+
 ## 🎰 SESSION: Apr 28, 2026 (Sarg, later2) — Arena Picks ERC-20 wagers (OGUN + USDC + USDT + WETH + LINK + AVAX + POL)
 
 ### Context
