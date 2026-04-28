@@ -5143,7 +5143,13 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
               </div>
 
               {/* Slim Action Buttons */}
-              <div className="bg-black/60 backdrop-blur-sm rounded-lg border border-gray-800 p-3 flex items-center gap-2 mb-6">
+              <div className="bg-black/60 backdrop-blur-sm rounded-lg border border-gray-800 p-3 flex items-center gap-2 mb-6 flex-wrap">
+                <button
+                  onClick={() => setShowWalletModal(true)}
+                  className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 rounded text-sm font-semibold text-white transition-all shadow-[0_0_12px_rgba(6,182,212,0.4)] hover:shadow-[0_0_18px_rgba(6,182,212,0.6)]"
+                >
+                  Connect Wallet
+                </button>
                 <button
                   onClick={() => document.getElementById('buy-crypto-section')?.scrollIntoView({ behavior: 'smooth' })}
                   className="px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 rounded text-sm font-medium text-white transition-all"
