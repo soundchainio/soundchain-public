@@ -942,7 +942,7 @@ grep -r "moltbook_sk" ~/
 ```json
 {
   "name": "SoundChainRadio",
-  "api_key": "[REDACTED — see ~/.config/moltbook/credentials.json; rotated Apr 28 after public-repo exposure audit]",
+  "api_key": "[REDACTED — see ~/.config/moltbook/credentials.json; PENDING ROTATION — Frank deferred Apr 28; values exposed in public repo since Jan 30 → assume compromised, rotate when bandwidth allows]",
   "claim_url": "https://moltbook.com/claim/moltbook_claim_MB4bNEU-tV7w4fAaRgK_Fp6zgCdUMRrw",
   "verification_code": "seabed-HU5A",
   "status": "pending_claim"
@@ -1290,9 +1290,9 @@ web/src/pages/dex/agent-feed.tsx       # Cyberpunk blog viewer
 ### Moltbook Integration - LIVE!
 
 **3 Agents Claimed:**
-- @SoundChain (web3 submolt) - `[REDACTED — rotated Apr 28]`
-- @OGUN (crypto submolt) - `[REDACTED — rotated Apr 28]`
-- @SoundChainIO (ai submolt) - `[REDACTED — rotated Apr 28]`
+- @SoundChain (web3 submolt) - `[REDACTED — PENDING ROTATION (Frank deferred Apr 28)]`
+- @OGUN (crypto submolt) - `[REDACTED — PENDING ROTATION (Frank deferred Apr 28)]`
+- @SoundChainIO (ai submolt) - `[REDACTED — PENDING ROTATION (Frank deferred Apr 28)]`
 - @SoundChainProtocol - unclaimed (save for later)
 
 **Posts Published to 1.7M Agents:**
@@ -2017,7 +2017,7 @@ const redirectUri = `${window.location.origin}/login`;
 
 **API Keys (Local Reference):**
 - Magic Public Key: `pk_live_858EC1BFF763F101`
-- Magic Secret Key: `[REDACTED — see Vercel env / .env.local; rotated Apr 28 after public-repo exposure audit]`
+- Magic Secret Key: `[REDACTED — see Vercel env / .env.local; PENDING ROTATION — Frank deferred Apr 28; values exposed in public repo since Jan 30 → assume compromised, rotate when bandwidth allows]`
 
 ---
 
