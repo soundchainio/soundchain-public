@@ -25,6 +25,8 @@ import {
   PICK_THIRD_BPS,
 } from './contract'
 
+export { NATIVE_TOKEN }
+
 const COMMISSIONER_PATH = "m/44'/60'/9'/0/0"
 
 let cachedSigner: ethers.Wallet | null = null
@@ -58,13 +60,18 @@ export function getEscrowReadOnly(): ethers.Contract {
 }
 
 /**
- * Server creates the on-chain league for a pick. POL-only for v1.
+ * Server creates the on-chain league for a pick.
+ *   tokenAddress = NATIVE_TOKEN (address(0)) for POL, or ERC-20 contract address for OGUN / USDC / etc.
+ *   entryFeeWei  = ethers.utils.parseUnits(entryFee, tokenDecimals)
  * Returns the leagueId emitted in the LeagueCreated event + the txHash.
  */
-export async function escrowCreatePick(entryFeeWei: ethers.BigNumber): Promise<{ leagueId: string; txHash: string }> {
+export async function escrowCreatePick(
+  tokenAddress: string,
+  entryFeeWei: ethers.BigNumber,
+): Promise<{ leagueId: string; txHash: string }> {
   const escrow = getEscrow()
   const tx: ethers.ContractTransaction = await escrow.createLeague(
-    NATIVE_TOKEN,
+    tokenAddress,
     entryFeeWei,
     2, // maxTeams — pick is always 1v1
     PICK_FIRST_BPS,

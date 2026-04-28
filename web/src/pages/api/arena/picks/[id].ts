@@ -182,14 +182,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const { entryToken, entryFee } = req.body || {}
     const update: any = {}
+    const NATIVE_TOKEN_SYMBOLS = new Set(['POL', 'MATIC'])
 
     if (entryToken !== undefined) {
       const { TOKEN_CONFIG, isTokenLive } = await import('lib/arena/fantasy/types')
       if (!isTokenLive(entryToken)) return res.status(400).json({ error: `${entryToken} not yet supported` })
       if (!TOKEN_CONFIG[entryToken]) return res.status(400).json({ error: `unknown token ${entryToken}` })
-      if (entryToken !== 'POL' && entryToken !== 'MATIC') {
-        return res.status(400).json({ error: 'On-chain picks v1 supports POL only — ERC-20 wagers ship next.' })
-      }
       update.entryToken = entryToken
       update.ogunBonusBps = entryToken === 'OGUN' ? 1000 : 0
     }
@@ -212,12 +210,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     }
 
-    // Spin up a new on-chain league with the updated wager.
+    // Spin up a new on-chain league with the updated wager (token + fee aware).
     const { escrowCreatePick } = await import('lib/arena/picks/escrowServer')
-    const newFee = update.entryFee ?? pick.entryFee
-    const newWei = ethers.utils.parseEther(String(newFee))
+    const { TOKEN_CONFIG } = await import('lib/arena/fantasy/types')
+    const { NATIVE_TOKEN, isNativeToken } = await import('lib/arena/picks/contract')
+    const newToken: string = update.entryToken ?? pick.entryToken
+    const newFee: number = update.entryFee ?? pick.entryFee
+    const newTokenInfo = TOKEN_CONFIG[newToken]
+    if (!newTokenInfo) return res.status(400).json({ error: `unknown token ${newToken}` })
+    const newTokenAddress = NATIVE_TOKEN_SYMBOLS.has(newToken) ? NATIVE_TOKEN : newTokenInfo.address
+    if (!isNativeToken(newTokenAddress) && !/^0x[0-9a-fA-F]{40}$/.test(newTokenAddress)) {
+      return res.status(400).json({ error: `${newToken} has no Polygon address configured` })
+    }
+    let newWei: ethers.BigNumber
     try {
-      const result = await escrowCreatePick(newWei)
+      newWei = ethers.utils.parseUnits(String(newFee), newTokenInfo.decimals)
+    } catch (err: any) {
+      return res.status(400).json({ error: `invalid entryFee for ${newToken}: ${err?.message || 'parse failed'}` })
+    }
+    try {
+      const result = await escrowCreatePick(newTokenAddress, newWei)
       update.escrowLeagueId = result.leagueId
       update.escrowCreateTxHash = result.txHash
     } catch (err: any) {

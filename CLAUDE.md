@@ -20,6 +20,103 @@ Then say: **"Scoped CLAUDE.md, sarg.md, MEMORY.md, bug-report.md. Synced on [bri
 
 ---
 
+## 🎰 SESSION: Apr 28, 2026 (Sarg, later2) — Arena Picks ERC-20 wagers (OGUN + USDC + USDT + WETH + LINK + AVAX + POL)
+
+### Context
+
+User confirmed MetaMask connect on `/wallet` works end-to-end (Bug #77 fix landed). First on-chain pick attempt today: take flow only offered POL as a stake option. *"what happened to apl the 24 tokens list we had that we support? pla brong that back i wanted to place a bet using Ogun and i want to test the ogun rewarfs for usinb ohun on the open picks"*
+
+Original Apr 27 on-chain rebuild (`3e84fbf`) explicitly shipped POL-only as v1 with this comment in `contract.ts`: *"v1 ships POL-only. ERC-20 (OGUN, USDC) requires an approve()+join() bundled UX which is deferred until basic flow is verified on mainnet."* Mainnet now verified (commissioner funded with 6 POL, MM connect works). Time to ship the deferred ERC-20 path.
+
+### What shipped — Arena Picks ERC-20 lift
+
+The contract (`FantasyLeagueEscrow` at `0x9cCB15833767B956cF55aa805D74c62d08F8acEd`) has always supported ERC-20 wagers — `createLeague(token, ...)` takes a token address and `join(leagueId)` is `payable` for native or pulls via `transferFrom` for ERC-20. The lift was wiring the rest of the stack to use that capability.
+
+| File | Change |
+|---|---|
+| `web/src/lib/arena/picks/contract.ts` | Added `isNativeToken(addr)` helper (treats `address(0)` as native POL) and `ERC20_MIN_ABI` (allowance + approve + decimals + balanceOf) for the join() pre-flight. Updated header comment to document the ERC-20 dual-path. |
+| `web/src/lib/arena/picks/escrowServer.ts` | `escrowCreatePick(entryFeeWei)` → `escrowCreatePick(tokenAddress, entryFeeWei)`. Token address is now passed through to `createLeague(tokenAddress, ...)` instead of always-`NATIVE_TOKEN`. Re-exported `NATIVE_TOKEN` for downstream API routes. |
+| `web/src/pages/api/arena/picks/index.ts` | Dropped the `NATIVE_WAGER_TOKENS = {POL, MATIC}` 400-gate. Resolves token symbol → `{ address, decimals }` via `TOKEN_CONFIG`, validates address is either native sentinel or a 0x40-hex Polygon address, computes `entryFeeWei = ethers.utils.parseUnits(fee, decimals)` (was `parseEther` — broke USDC/USDT 6-dec). Pass `tokenAddress` to `escrowCreatePick`. Response `requiresDeposit` now includes `{ tokenAddress, tokenDecimals, isNative }` so client doesn't double-resolve. |
+| `web/src/pages/api/arena/picks/[id].ts` | Edit action: removed POL-only gate. Resolves new token's address + decimals from `TOKEN_CONFIG`, uses `parseUnits` (decimals-aware), passes new token address to `escrowCreatePick` when re-creating the on-chain league. |
+| `web/src/pages/arena/picks.tsx` | `ENABLED_TOKENS = ['MATIC', 'OGUN', 'USDC', 'USDT', 'ETH', 'LINK', 'AVAX']` (was `['POL']`). Added `resolveTokenForSign(symbol)` helper. `signEscrowJoin(provider, leagueId, entryFeeWei, tokenAddress)` is now dual-path: native does single-tx `join({value})`; ERC-20 does an allowance check, signs `erc20.approve(escrow, fee)` only if needed, waits one confirmation, then signs `escrow.join(leagueId)` with no value. Take + Create flows both pass `tokenAddress` and use `parseUnits(fee, tokenDecimals)` instead of `parseEther`. Wallet toast updated to "approving + depositing… (2 signatures)" for ERC-20. |
+
+### Non-obvious invariants (future-session gotchas)
+
+1. **`ENABLED_TOKENS[0]` is `'MATIC'` not `'POL'`.** `TOKEN_CONFIG['MATIC'].label === 'POL'` so the dropdown still reads "POL" to the user, but the symbol that ships in the API request is `'MATIC'` because that's what's in `LIVE_TOKENS`. Pre-fix code tried to send `'POL'` and `isTokenLive('POL')` returned false → 400 from the server. The pre-fix POL path was actually broken on the server; only the UI gate kept users from seeing it.
+2. **`parseUnits(fee, decimals)` not `parseEther`.** USDC and USDT are 6-decimal tokens; `parseEther('100')` would have created a `1e20` USDC league = a billion USDC stake, which fails immediately on insufficient balance but *would* succeed at `createLeague` and dangle Open forever consuming gas. Always thread token decimals through the wei conversion, both client-side and server-side.
+3. **Allowance check before approve.** `erc20.allowance(owner, escrow)` is a free read; if existing allowance ≥ fee, we skip the `approve` TX entirely. Returning users wagering in the same token twice only sign once (the join). First-time users sign twice. We approve the *exact* fee — not infinite — because picks are short-lived (game-time bound) and a stale max-allowance grant is a phishing surface for the connected wallet vs an unknown future contract upgrade.
+4. **`approveTx.wait()` before calling `join`.** Mainnet RPC propagation is fast but not instant; if you call `join()` before the approval is mined, the contract's `transferFrom` reverts with "ERC20: insufficient allowance" and the user pays gas for nothing. The wait is one block (~2s on Polygon).
+5. **The contract's `defaultPlatformBps = 5` is shared global state** for fantasy + picks (logged Apr 27 in this file). ERC-20 wagers don't change that — winner still gets 99.95%, treasury gets 0.05% of the pot in whatever token the league holds.
+6. **Cron settle path is token-agnostic.** `escrow.settle(leagueId, winner, ...)` reads the league's stored token address and pays winner + treasury in the right asset automatically. No cron changes needed for ERC-20 to work end-to-end through to settlement.
+7. **OGUN bonus payout is still deferred.** `ogunBonusBps: 1000` (10%) is stored on the doc when `entryToken === 'OGUN'` but no code pays it. The bonus is meant to come from a rewards pool, not the escrow. To ship: extend `cron/settle-picks.ts` to transfer `pot * ogunBonusBps / 10000` OGUN from commissioner wallet to winner address after `escrowSettlePick` succeeds, persist `ogunBonusTxHash`. Requires User to send ~50–100 OGUN to commissioner `0x627aD3d257DedD2b57f00632C6E04b37B60Daff9` first. Documented as the immediate follow-up.
+8. **`web/.env` token addresses are not consulted.** Token addresses live in `lib/arena/fantasy/types.ts → TOKEN_CONFIG` exclusively. If you ever rotate a token contract (e.g. USDC bridged → native), update `TOKEN_CONFIG` only — the picks code reads from there.
+
+### How to test on mainnet
+
+1. Hard-refresh `/arena/picks` after Vercel deploys.
+2. Tap a pre-game card → CreatePickModal renders all 7 tokens (POL, OGUN, USDC, USDT, ETH/WETH, LINK, AVAX).
+3. Pick OGUN, set wager amount, place pick → server creates league with OGUN as token, returns `tokenAddress: 0x45f1af89...`, `isNative: false`.
+4. Wallet pops 2 sigs: (a) `OGUN.approve(escrow, amount)` (b) `escrow.join(leagueId)`.
+5. Status flips to AWAITING STAKE during step 1, then OPEN once finalized.
+6. Second account takes the pick → same 2-sig flow → MATCHED.
+7. After ESPN final, cron settles → winner receives 99.95% of OGUN pot directly from escrow contract on Polygon. Verify on Polygonscan via the `payoutTxHash` field.
+8. Bonus 10% OGUN payout will land in a follow-up commit once commissioner has OGUN balance.
+
+### Lessons
+
+1. **"Deferred until X" comments age into bugs.** The Apr 27 v1 comment was honest about the limitation but the UI gate (`ENABLED_TOKENS = ['POL']`) shipped without a TODO marker pointing to the deferral. Result: the flow looked complete and any audit would skip it. When deferring an obvious feature, leave the gate AND a `TODO(picks-erc20)` so the next pass picks it up immediately.
+2. **`parseEther` is a footgun in any token-aware codepath.** It's always 18 decimals. The moment a wager system supports more than ETH-derivative tokens, every `parseEther` becomes a latent overflow. `parseUnits(amount, decimals)` should be the default; reach for `parseEther` only when you know the token is ETH/WETH/POL/MATIC.
+3. **Allowance checks are free; always pre-flight.** Saves the user one TX on repeat bets in the same token. The cost is one RPC read which the wallet client caches.
+4. **Document the dual-sig UX.** ERC-20 token wagers fire two wallet popups (approve, then join). Without a "2 signatures" hint in the loading toast, users abandon between popups thinking the first one failed. Same lesson logged earlier in marketplace flow; re-applied here.
+
+See `bug-report.md#Bug-78` and `sarg.md` for full notes.
+
+---
+
+## 🌐 SESSION: Apr 28, 2026 (Sarg, later) — DexNavBar Connect Wallet pill (SHIPPED `abf2c00`) + /wallet spinner hypothesis (Bug #77)
+
+### Context
+
+After today's `23b1b20` canonical Web3Modal upgrade on /wallet + /shop, Frank tested mobile and reported two issues:
+
+1. **`/wallet` MM + CBW pills spin forever** — wallet app opens but stays on its loading screen, never asks for signature.
+2. **DexNavBar (top sticky nav) was missing a Connect Wallet pill for public visitors.** Frank: *"top tab sticky nav bar is supposed to have wallet connect pill there too to allow users to connect if their visiting publicly and dont want to create accounts on sc put that back"*
+
+### Fix #1 — DexNavBar canonical pill (SHIPPED `abf2c00`)
+
+DexNavBar's CONNECT button at `web/src/components/DexNavBar.tsx:344` was wired to `useMagicContext().connectWallet?.()` — Magic OAuth-only. Wrong door for public visitors who don't want an SC account. /wallet (`6260c09`) and /shop (`dffb150`) shipped earlier today targeted only those two surfaces; the global nav was overlooked.
+
+| File | Change |
+|---|---|
+| `web/src/components/DexNavBar.tsx` | +11 / -4. Imported `useUnifiedWallet` from `contexts/UnifiedWalletContext`. Destructured `activeAddress`, `ogunBalance: unifiedOgunBalance`, `connectWeb3Modal`, `isWeb3ModalReady` (renamed Magic destructures to `magicAccount` / `magicOgunBalance`). Canonical reads: `account = activeAddress || magicAccount` so external wallets light up the connected pill same as Magic. onClick: `isWeb3ModalReady ? connectWeb3Modal() : connectWallet?.()` — Web3Modal first per Bug #69 pattern, Magic OAuth fallback if dynamic import unresolved. Cyan→purple gradient + `CONNECT WALLET` text matches /wallet + /shop pills. |
+
+Same canonical pattern as `useUnifiedWallet().connectWeb3Modal()` per the Bug #76 follow-up (`23b1b20`). External wallets propagate into UnifiedWalletContext → light up MultiWalletAggregator + sign via canonical path. customWallets fallback active (Rainbow/MetaMask/Trust/Coinbase in-bundle).
+
+### Hypothesis #2 — /wallet MM/CBW spinning wheel (OPEN, awaiting Frank's Vercel verify)
+
+When Frank tapped MetaMask or Coinbase Wallet from the /wallet pill, the wallet app opened (deeplink works) but stayed on its loading state forever, never advancing to a signature request. Both wallets, mobile Safari.
+
+**Root-cause hypothesis:** prod Vercel `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` env var likely still holds the dead `8e33134dfeea545054faa3493a504b8d` from the pre-Bug-#29 era. Reown's `api.web3modal.org` returns 403 for that ID after their cloud.reown.com migration. Two values are floating in the repo right now:
+
+- `web/.env.local`: `53a9f7ff48d78a81624b5333d52b9123` ✅ working (also Web3ModalContext hardcoded fallback)
+- `web/.env`: `8e33134dfeea545054faa3493a504b8d` ❌ dead per Bug #29
+
+`createWeb3Modal({ projectId, ... })` in `Web3ModalContext.tsx` reads `process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || '53a9f7ff...'`. If Vercel prod has the dead value, it overrides the fallback at build time. Symptom matches: customWallets `mobile_link` deeplinks fire correctly (wallet opens), but the wallet's WC relay subscription using projectId for auth gets rejected at the relay → wallet stays on connect-loading screen → dapp never receives session approval.
+
+**Frank to verify:** Vercel → soundchain-site project → Environment Variables → `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID`. Should be `53a9f7ff48d78a81624b5333d52b9123`. If it's the `8e331...` one, update + redeploy + hard-refresh on mobile Safari (DevTools → Application → Service Workers → Unregister per Bug #75 if still hung).
+
+If Vercel already has the working ID and the spinner persists: customWallets `mobile_link` format may need a `desktop_link` companion + wc-uri-append-pattern audit, or the legacy `@web3modal/ethers5@5.1.11` we reverted to in Bug #29 finally lost api.web3modal.com support — escalating the proper migration to `@reown/appkit` + fresh cloud.reown.com projectId.
+
+### Lessons
+
+1. **A canonical pattern is incomplete until it's everywhere a non-authed visitor lands.** /wallet + /shop pills shipped today, but DexNavBar — the actual global nav — was overlooked until Frank tested. After landing a primary affordance on focused flows, immediately audit the global nav surfaces and any public-visitor entry points before considering the pattern shipped.
+2. **Spinning-wheel symptoms in WalletConnect flows almost always = projectId / relay auth issue, not deeplink format.** If the wallet app opens at all, the deeplink works. If the spinner never advances, it's the relay subscription. Always check projectId before tweaking customWallets metadata.
+3. **`process.env.X || 'fallback'` is a build-time read.** A code-level fallback only protects against unset env vars, not env vars set to wrong values. Stale Vercel values silently override good defaults.
+
+See `bug-report.md#Bug-77` and `sarg.md` for full notes.
+
+---
+
 ## 🪪 SESSION: Apr 28, 2026 (Sarg) — Picks commissioner FUNDED + Connect Wallet pill restored on /wallet (SHIPPED `6260c09`)
 
 ### What happened

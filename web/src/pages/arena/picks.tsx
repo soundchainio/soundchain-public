@@ -14,11 +14,29 @@ import { Loader2, Trophy, Zap, TrendingUp, Clock, Check, X, ChevronDown, Wallet,
 import { TOKEN_CONFIG, LIVE_TOKENS, isTokenLive } from 'lib/arena/fantasy/types'
 import { TOKEN_INFO } from 'constants/tokens'
 import { useUnifiedWallet } from 'contexts/UnifiedWalletContext'
-import { PICKS_ESCROW_ADDRESS, POLYGON_CHAIN_HEX, FANTASY_LEAGUE_ESCROW_ABI } from 'lib/arena/picks/contract'
+import {
+  PICKS_ESCROW_ADDRESS,
+  POLYGON_CHAIN_HEX,
+  FANTASY_LEAGUE_ESCROW_ABI,
+  NATIVE_TOKEN,
+  isNativeToken,
+  ERC20_MIN_ABI,
+} from 'lib/arena/picks/contract'
 
-const OGUN_BONUS_BPS = 1000  // 10% OGUN bonus when wager token is OGUN — paid from rewards pool on settle (deferred until ERC-20 approve+join lands)
-// v1: native POL only on the on-chain escrow path. ERC-20 (OGUN, USDC, etc.) ships next once approve()+join() flow is wired.
-const ENABLED_TOKENS: string[] = ['POL']
+const OGUN_BONUS_BPS = 1000  // 10% OGUN bonus when wager token is OGUN — paid from rewards pool on settle (commissioner OGUN balance funds it)
+// Symbols treated as native POL on the escrow contract.
+const NATIVE_TOKEN_SYMBOLS = new Set(['POL', 'MATIC'])
+// All Polygon-live wager tokens. POL renders first; LIVE_TOKENS = OGUN, MATIC, USDC, USDT, ETH, LINK, AVAX.
+// MATIC is shown as POL via TOKEN_CONFIG[MATIC].label.
+const ENABLED_TOKENS: string[] = ['MATIC', 'OGUN', 'USDC', 'USDT', 'ETH', 'LINK', 'AVAX']
+
+// Resolve token symbol → { address, decimals } for client-side signing. address(0) = native POL.
+function resolveTokenForSign(symbol: string): { address: string; decimals: number; isNative: boolean } {
+  const info = TOKEN_CONFIG[symbol]
+  if (!info) throw new Error(`Unknown wager token ${symbol}`)
+  const address = NATIVE_TOKEN_SYMBOLS.has(symbol) ? NATIVE_TOKEN : info.address
+  return { address, decimals: info.decimals, isNative: isNativeToken(address) }
+}
 
 // Resolve EIP-1193 provider with WalletConnect-first preference (per Bug #69 fix).
 // Returns provider and the user's address, throws with a user-friendly message on failure.
@@ -63,12 +81,35 @@ async function ensurePolygon(provider: any): Promise<void> {
   }
 }
 
-// Sign escrow.join(leagueId) with the given EIP-1193 provider. Returns txHash after broadcast (does not wait for confirmation).
-async function signEscrowJoin(provider: any, leagueId: string, entryFeeWei: string): Promise<string> {
+// Sign escrow.join(leagueId) with the given EIP-1193 provider. Returns the join txHash.
+// Native (POL): single TX — escrow.join(leagueId) {value: entryFeeWei}.
+// ERC-20 (OGUN, USDC, ...): pre-flight allowance check + erc20.approve() if needed, then escrow.join(leagueId).
+async function signEscrowJoin(
+  provider: any,
+  leagueId: string,
+  entryFeeWei: string,
+  tokenAddress: string,
+): Promise<string> {
   const web3Provider = new ethers.providers.Web3Provider(provider)
   const signer = web3Provider.getSigner()
   const escrow = new ethers.Contract(PICKS_ESCROW_ADDRESS, FANTASY_LEAGUE_ESCROW_ABI, signer)
-  const tx = await escrow.join(leagueId, { value: ethers.BigNumber.from(entryFeeWei) })
+  const fee = ethers.BigNumber.from(entryFeeWei)
+
+  if (isNativeToken(tokenAddress)) {
+    const tx = await escrow.join(leagueId, { value: fee })
+    return tx.hash
+  }
+
+  // ERC-20 path: skip approve if existing allowance already covers the fee.
+  const owner = await signer.getAddress()
+  const erc20 = new ethers.Contract(tokenAddress, ERC20_MIN_ABI as any, signer)
+  let allowance: ethers.BigNumber = ethers.BigNumber.from(0)
+  try { allowance = await erc20.allowance(owner, PICKS_ESCROW_ADDRESS) } catch {}
+  if (allowance.lt(fee)) {
+    const approveTx = await erc20.approve(PICKS_ESCROW_ADDRESS, fee)
+    await approveTx.wait()
+  }
+  const tx = await escrow.join(leagueId)
   return tx.hash
 }
 
@@ -381,7 +422,7 @@ function GameCard({ game, onPick }: { game: Game; onPick: (game: Game, side: 'ho
 
 // ─── Create Pick Modal ─────────────────────────────────────────
 function CreatePickModal({ game, side, onClose, onCreated }: { game: Game; side: 'home' | 'away'; onClose: () => void; onCreated: () => void }) {
-  const [token, setToken] = useState('POL')
+  const [token, setToken] = useState<string>(ENABLED_TOKENS[0])
   const [amount, setAmount] = useState(1)
   const [submitting, setSubmitting] = useState(false)
   const [step, setStep] = useState<'idle' | 'creating' | 'awaiting_signature' | 'finalizing'>('idle')
@@ -407,17 +448,22 @@ function CreatePickModal({ game, side, onClose, onCreated }: { game: Game; side:
       if (!r.ok) { toast.error(d.error || 'Failed'); return }
       const pickId: string = d.pick.id
       createdPickId = pickId
-      const { leagueId, entryFeeWei } = d.requiresDeposit || {}
+      const { leagueId, entryFeeWei, tokenAddress: respTokenAddress } = d.requiresDeposit || {}
       if (!leagueId || !entryFeeWei) { toast.error('Server response missing on-chain params'); return }
+      // tokenAddress falls back to local resolver for older server responses
+      const tokenAddress = respTokenAddress || resolveTokenForSign(token).address
 
       // Step 2: creator signs escrow.join(leagueId) with their own wallet
       setStep('awaiting_signature')
       const { provider, address } = await resolveWalletProvider({ web3ModalProvider, activeWalletType, connectWeb3Modal })
       await ensurePolygon(provider)
-      const sigToast = toast.loading(`Confirm in wallet — depositing ${amount} ${token} stake to escrow`)
+      const stakeMsg = isNativeToken(tokenAddress)
+        ? `Confirm in wallet — depositing ${amount} ${token} stake to escrow`
+        : `Confirm in wallet — approving + depositing ${amount} ${token} stake to escrow (2 signatures)`
+      const sigToast = toast.loading(stakeMsg)
       let txHash: string
       try {
-        txHash = await signEscrowJoin(provider, leagueId, entryFeeWei)
+        txHash = await signEscrowJoin(provider, leagueId, entryFeeWei, tokenAddress)
       } catch (e: any) {
         toast.dismiss(sigToast)
         const cancelled = e?.code === 4001 || /reject|denied|cancel/i.test(e?.message || '')
@@ -676,12 +722,22 @@ export default function ArenaPicksPage() {
       return
     }
 
-    // Step 2: sign escrow.join(leagueId) with full entryFee staked
-    const entryFeeWei = ethers.utils.parseEther(String(pick.entryFee)).toString()
-    const sigToast = toast.loading(`Confirm in wallet — staking ${pick.entryFee} ${pick.entryToken} on ${takerTeam}`)
+    // Step 2: sign escrow.join(leagueId) with full entryFee staked (native or ERC-20 dual path)
+    let tokenInfo: { address: string; decimals: number; isNative: boolean }
+    try {
+      tokenInfo = resolveTokenForSign(pick.entryToken)
+    } catch (e: any) {
+      toast.error(e?.message || `Unknown wager token ${pick.entryToken}`)
+      return
+    }
+    const entryFeeWei = ethers.utils.parseUnits(String(pick.entryFee), tokenInfo.decimals).toString()
+    const stakeMsg = tokenInfo.isNative
+      ? `Confirm in wallet — staking ${pick.entryFee} ${pick.entryToken} on ${takerTeam}`
+      : `Confirm in wallet — approving + staking ${pick.entryFee} ${pick.entryToken} on ${takerTeam} (2 signatures)`
+    const sigToast = toast.loading(stakeMsg)
     let txHash: string
     try {
-      txHash = await signEscrowJoin(provider, pick.escrowLeagueId, entryFeeWei)
+      txHash = await signEscrowJoin(provider, pick.escrowLeagueId, entryFeeWei, tokenInfo.address)
     } catch (e: any) {
       toast.dismiss(sigToast)
       const cancelled = e?.code === 4001 || /reject|denied|cancel/i.test(e?.message || '')

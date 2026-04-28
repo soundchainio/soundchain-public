@@ -6,14 +6,16 @@
  * league: maxTeams=2, firstBps=9995, secondBps=0, thirdBps=0, platformBps=5.
  *
  * Lifecycle:
- *   1. Server (commissioner) calls createLeague(...) → emits LeagueCreated → server reads leagueId from receipt
- *   2. Creator calls join(leagueId) {value: entryFee}
- *   3. Taker calls join(leagueId) {value: entryFee}
+ *   1. Server (commissioner) calls createLeague(token, ...) → emits LeagueCreated → server reads leagueId from receipt
+ *   2. Creator calls join(leagueId):
+ *        - Native: join(leagueId) {value: entryFee}
+ *        - ERC-20: erc20.approve(escrow, entryFee) then join(leagueId) (no value)
+ *   3. Taker calls join(leagueId) — same dual path
  *   4. Server calls lock(leagueId)
  *   5. After ESPN final, server calls settle(leagueId, winnerAddress, address(0), address(0))
  *
- * v1 ships POL-only. ERC-20 (OGUN, USDC) requires an approve()+join() bundled UX
- * which is deferred until basic flow is verified on mainnet.
+ * Supported wager tokens (Polygon): POL (native), OGUN, USDC, USDT, WETH, LINK, AVAX.
+ * Cross-chain tokens unlock when SoundchainPicksEscrow deploys to ZetaChain.
  */
 import EscrowAbi from 'contract/FantasyLeagueEscrow.sol/FantasyLeagueEscrow.json'
 
@@ -31,6 +33,17 @@ export const POLYGON_RPC_URLS = [
 
 // Native token sentinel — FantasyLeagueEscrow treats address(0) as native POL.
 export const NATIVE_TOKEN = '0x0000000000000000000000000000000000000000'
+
+export const isNativeToken = (addr: string): boolean =>
+  !addr || addr === NATIVE_TOKEN || addr.toLowerCase() === NATIVE_TOKEN.toLowerCase()
+
+// Minimal ERC-20 ABI fragment — only allowance + approve for the join() pre-flight.
+export const ERC20_MIN_ABI = [
+  'function allowance(address owner, address spender) view returns (uint256)',
+  'function approve(address spender, uint256 amount) returns (bool)',
+  'function decimals() view returns (uint8)',
+  'function balanceOf(address owner) view returns (uint256)',
+] as const
 
 // Pick payout split — must sum with defaultPlatformBps (5) to 10000.
 export const PICK_FIRST_BPS = 9995

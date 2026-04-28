@@ -6,12 +6,15 @@
  *
  * Create flow:
  *   1. Validate pick + game data
- *   2. Server (commissioner key) signs createLeague(NATIVE_TOKEN, entryFeeWei, 2, 9995, 0, 0)
+ *   2. Server (commissioner key) signs createLeague(tokenAddress, entryFeeWei, 2, 9995, 0, 0)
+ *      — tokenAddress is address(0) for native POL, or the ERC-20 contract for OGUN / USDC / etc.
  *   3. Insert MongoDB doc with status='pending_deposit', escrowLeagueId, escrowCreateTxHash
- *   4. Frontend receives leagueId + entryFeeWei → signs escrow.join(leagueId) with creator wallet
+ *   4. Frontend receives leagueId + entryFeeWei + tokenAddress → signs:
+ *        - Native: escrow.join(leagueId) {value: entryFeeWei}
+ *        - ERC-20: erc20.approve(escrow, entryFeeWei) then escrow.join(leagueId)
  *   5. Frontend posts back via /api/arena/picks/[id] action='deposit' to flip status='open'
  *
- * v1 supports POL-only wagers. ERC-20 (OGUN, USDC) will land once approve()+join() UX is wired.
+ * Live wager tokens on Polygon: POL (native), OGUN, USDC, USDT, WETH, LINK, AVAX.
  */
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { ethers } from 'ethers'
@@ -20,14 +23,14 @@ import { authFromRequest } from 'lib/api/authJwt'
 import { GamePick, PickSport, SPORT_CONFIG } from 'lib/arena/picks/types'
 import { TOKEN_CONFIG, isTokenLive } from 'lib/arena/fantasy/types'
 import { escrowCreatePick } from 'lib/arena/picks/escrowServer'
-import { PICKS_ESCROW_ADDRESS, PICK_PLATFORM_BPS } from 'lib/arena/picks/contract'
+import { PICKS_ESCROW_ADDRESS, PICK_PLATFORM_BPS, NATIVE_TOKEN, isNativeToken } from 'lib/arena/picks/contract'
 
-const OGUN_BONUS_BPS = 1000  // 10% OGUN bonus to winner when wager is in OGUN — paid from rewards pool on settle (deferred until ERC-20 path lands)
+const OGUN_BONUS_BPS = 1000  // 10% OGUN bonus to winner when wager is in OGUN — paid from rewards pool on settle (commissioner OGUN balance funds it)
 
 const ESPN_BASE = 'https://site.api.espn.com/apis/site/v2/sports'
 
-// v1: native POL only. Adding ERC-20 requires approve()+join() bundling on the client.
-const NATIVE_WAGER_TOKENS = new Set(['POL', 'MATIC'])
+// Symbols that map to native POL on the escrow (address(0)). Anything else is treated as ERC-20.
+const NATIVE_TOKEN_SYMBOLS = new Set(['POL', 'MATIC'])
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const client = await clientPromise
@@ -106,9 +109,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       error: `${entryToken} not yet supported — pick from live tokens (OGUN, POL, USDC, USDT, WETH, LINK, AVAX). Cross-chain tokens unlock when SoundchainPicksEscrow deploys to ZetaChain.`,
     })
   }
-  if (!TOKEN_CONFIG[entryToken]) return res.status(400).json({ error: `unknown token ${entryToken}` })
-  if (!NATIVE_WAGER_TOKENS.has(entryToken)) {
-    return res.status(400).json({ error: 'On-chain picks v1 supports POL wagers only — ERC-20 (OGUN, USDC, etc.) ships next once approve()+join() flow is wired.' })
+  const tokenInfo = TOKEN_CONFIG[entryToken]
+  if (!tokenInfo) return res.status(400).json({ error: `unknown token ${entryToken}` })
+  const tokenAddress = NATIVE_TOKEN_SYMBOLS.has(entryToken) ? NATIVE_TOKEN : tokenInfo.address
+  if (!isNativeToken(tokenAddress) && !/^0x[0-9a-fA-F]{40}$/.test(tokenAddress)) {
+    return res.status(400).json({ error: `${entryToken} has no Polygon address configured` })
   }
   const fee = Number(entryFee)
   if (!Number.isFinite(fee) || fee <= 0) return res.status(400).json({ error: 'entryFee > 0 required' })
@@ -141,12 +146,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (existing) return res.status(400).json({ error: 'you already have a pick on this game' })
 
   // Server signs createLeague on FantasyLeagueEscrow with commissioner key.
-  // entryFee is in whole POL units (e.g. 100); convert to wei for the contract.
-  const entryFeeWei = ethers.utils.parseEther(String(fee))
+  // entryFee is in whole-token units (e.g. 100 = 100 OGUN); convert to base units using token decimals.
+  let entryFeeWei: ethers.BigNumber
+  try {
+    entryFeeWei = ethers.utils.parseUnits(String(fee), tokenInfo.decimals)
+  } catch (err: any) {
+    return res.status(400).json({ error: `invalid entryFee for ${entryToken}: ${err?.message || 'parse failed'}` })
+  }
   let leagueId: string
   let escrowCreateTxHash: string
   try {
-    const result = await escrowCreatePick(entryFeeWei)
+    const result = await escrowCreatePick(tokenAddress, entryFeeWei)
     leagueId = result.leagueId
     escrowCreateTxHash = result.txHash
   } catch (err: any) {
@@ -194,6 +204,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       escrowAddress: PICKS_ESCROW_ADDRESS,
       leagueId,
       entryFeeWei: entryFeeWei.toString(),
+      tokenAddress,
+      tokenDecimals: tokenInfo.decimals,
+      isNative: isNativeToken(tokenAddress),
       chainId: 137,
     },
   })
