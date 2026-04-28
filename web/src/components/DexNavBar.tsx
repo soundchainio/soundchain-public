@@ -34,6 +34,7 @@ import { useTheme, ThemeChoice } from 'lib/theme/ThemeContext'
 import { Logo } from 'icons/Logo'
 import { useMagicContext } from 'hooks/useMagicContext'
 import { useMe } from 'hooks/useMe'
+import { useUnifiedWallet } from 'contexts/UnifiedWalletContext'
 import { useModalDispatch } from 'contexts/ModalContext'
 import {
   ProfileVerificationStatusType,
@@ -90,7 +91,12 @@ type OpenPanel = 'none' | 'nearby' | 'winwin' | 'vibes' | 'bell' | 'avatar'
 export function DexNavBar() {
   const me = useMe()
   const router = useRouter()
-  const { account, ogunBalance, connectWallet, isConnectingWallet } = useMagicContext()
+  const { account: magicAccount, ogunBalance: magicOgunBalance, connectWallet, isConnectingWallet } = useMagicContext()
+  const { activeAddress, ogunBalance: unifiedOgunBalance, connectWeb3Modal, isWeb3ModalReady } = useUnifiedWallet()
+  // Canonical address — external wallet wins over Magic, so a public visitor's MM/WC/Coinbase
+  // connection lights up the pill the same way it does on /wallet + /shop.
+  const account = activeAddress || magicAccount
+  const ogunBalance = unifiedOgunBalance || magicOgunBalance
   const { dispatchShowCreateModal } = useModalDispatch()
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -342,11 +348,12 @@ export function DexNavBar() {
               </div>
             ) : (
               <button
-                onClick={() => connectWallet?.()}
+                onClick={() => (isWeb3ModalReady ? connectWeb3Modal() : connectWallet?.())}
                 disabled={isConnectingWallet}
-                className="px-3 py-1.5 rounded-lg text-[10px] font-mono font-bold bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/30 transition"
+                className="px-3 py-1.5 rounded-lg text-[10px] font-mono font-bold bg-gradient-to-r from-cyan-500/20 to-purple-500/20 border border-cyan-500/40 text-cyan-300 hover:from-cyan-500/30 hover:to-purple-500/30 hover:border-cyan-400/60 transition shadow-[0_0_12px_rgba(6,182,212,0.25)]"
+                title="Connect wallet — MetaMask, WalletConnect, Coinbase + 600 more (no account needed)"
               >
-                {isConnectingWallet ? 'CONNECTING...' : 'CONNECT'}
+                {isConnectingWallet ? 'CONNECTING...' : 'CONNECT WALLET'}
               </button>
             )}
 
