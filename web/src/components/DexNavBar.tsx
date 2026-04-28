@@ -342,10 +342,15 @@ export function DexNavBar() {
             </div>
 
             {account ? (
-              <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-green-500/10 border border-green-500/20 text-[10px] font-mono">
+              <button
+                onClick={() => (isWeb3ModalReady ? connectWeb3Modal() : connectWallet?.())}
+                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-green-500/10 hover:bg-green-500/20 border border-green-500/20 hover:border-green-400/50 text-[10px] font-mono transition shadow-[0_0_8px_rgba(34,197,94,0.15)] hover:shadow-[0_0_14px_rgba(34,197,94,0.3)]"
+                title="Tap to switch wallet — MetaMask, WalletConnect, Coinbase + 600 more. Connection persists across Arena, Shop, Wallet, every page."
+              >
+                <Wallet className="w-3 h-3 text-green-400" />
                 <span className="text-green-400">{ogunBalance ? `${Number(ogunBalance).toFixed(2)} OGUN` : '...'}</span>
                 <span className="text-gray-500 hidden sm:inline">· {account.slice(0, 6)}...{account.slice(-4)}</span>
-              </div>
+              </button>
             ) : (
               <button
                 onClick={() => (isWeb3ModalReady ? connectWeb3Modal() : connectWallet?.())}

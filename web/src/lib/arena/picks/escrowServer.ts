@@ -29,6 +29,12 @@ export { NATIVE_TOKEN }
 
 const COMMISSIONER_PATH = "m/44'/60'/9'/0/0"
 
+// Pin network so ethers v5 skips _detectNetwork (eth_chainId round-trip) on every fresh provider.
+// On Vercel cold-starts a slow public RPC's first chainId reply can fail before any contract call
+// runs — the failover then walks all 3 RPCs hitting the same wall and the user sees the misleading
+// "could not detect network" toast. StaticJsonRpcProvider + this constant => zero detection RPC calls.
+const POLYGON_NETWORK = { name: 'matic', chainId: 137 }
+
 // Errors that indicate the RPC itself is broken (vs a real contract revert).
 // On these, rotate to the next RPC in POLYGON_RPC_URLS instead of failing the request.
 function isRpcTransportError(err: any): boolean {
@@ -36,7 +42,11 @@ function isRpcTransportError(err: any): boolean {
   if (code === 'SERVER_ERROR' || code === 'TIMEOUT' || code === 'NETWORK_ERROR') return true
   // ethers v5 throws `processing response error` when the upstream returns malformed JSON or HTML
   const msg = (err?.message || '').toLowerCase()
-  return msg.includes('processing response error') || msg.includes('failed to fetch') || msg.includes('socket hang up') || msg.includes('econnreset')
+  return msg.includes('processing response error')
+    || msg.includes('failed to fetch')
+    || msg.includes('socket hang up')
+    || msg.includes('econnreset')
+    || msg.includes('could not detect network')
 }
 
 let cachedRpcIndex = 0  // sticky to last known-good RPC across requests; rotated on transport error
@@ -44,7 +54,7 @@ let cachedRpcIndex = 0  // sticky to last known-good RPC across requests; rotate
 function buildSigner(rpcUrl: string): ethers.Wallet {
   const seed = process.env.HUMAN_WALLET_SEED
   if (!seed) throw new Error('HUMAN_WALLET_SEED not configured — picks escrow disabled')
-  const provider = new ethers.providers.JsonRpcProvider(rpcUrl)
+  const provider = new ethers.providers.StaticJsonRpcProvider(rpcUrl, POLYGON_NETWORK)
   return ethers.Wallet.fromMnemonic(seed, COMMISSIONER_PATH).connect(provider)
 }
 
@@ -61,7 +71,7 @@ function getEscrow(signer: ethers.Wallet): ethers.Contract {
 }
 
 export function getEscrowReadOnly(): ethers.Contract {
-  const provider = new ethers.providers.JsonRpcProvider(POLYGON_RPC_URLS[cachedRpcIndex])
+  const provider = new ethers.providers.StaticJsonRpcProvider(POLYGON_RPC_URLS[cachedRpcIndex], POLYGON_NETWORK)
   return new ethers.Contract(PICKS_ESCROW_ADDRESS, FANTASY_LEAGUE_ESCROW_ABI, provider)
 }
 
