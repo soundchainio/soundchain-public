@@ -14,13 +14,75 @@ Then say: **"Scoped CLAUDE.md, sarg.md, MEMORY.md, bug-report.md. Synced on [bri
 
 ---
 
-**Last Updated:** April 23, 2026 (late-late)
+**Last Updated:** April 28, 2026 (Sarg)
 **Project Start:** July 14, 2021
 **Total Commits:** 10,000+ (across all branches)
 
 ---
 
-## 🏈 SESSION: Apr 23, 2026 (late-late, Sarg home) — FANTASY TOP-LEVEL BUILD (P1-P6 ALL ON MAIN)
+## 🪪 SESSION: Apr 28, 2026 (Sarg) — Picks commissioner FUNDED + Connect Wallet pill restored on /wallet (SHIPPED `6260c09`)
+
+### What happened
+
+Frank funded the picks-escrow commissioner wallet `0x627aD3d257DedD2b57f00632C6E04b37B60Daff9` with 6 POL on Polygon mainnet (TX nonce #426 from `0x33F4d...FE6CE`). Verified via `GET /api/arena/picks/commissioner-address`:
+
+```json
+{ "address":"0x627aD3d257DedD2b57f00632C6E04b37B60Daff9", "balancePol":"6.0",
+  "fundingHint":"Currently has 6.0 POL — funded and ready." }
+```
+
+**On-chain Arena Picks escrow is unblocked end-to-end.** Bug #72 / Bug #75 close pending Frank's create-pick verify. Each createLeague TX is ~120k gas (~$0.01 at current Polygon prices); 6 POL covers ~600 picks before refilling.
+
+### Bug #76 — Connect Wallet pill missing on /wallet (SHIPPED `6260c09`)
+
+Frank flagged that he had to import his Magic OAuth wallet into MetaMask externally to send the 6 POL — *"i need it back cause i wanted to send from wallet page on soundchain. id rather be able to connect on the wallet page itself."*
+
+**Root cause:** `WalletConnectModal` (MetaMask + WalletConnect + Coinbase + 300 wallets via WC scan) lives in `dex/[...slug].tsx:297` and renders at line 8476, but its only `setShowWalletModal(true)` trigger was wired to the post-as-guest flow at line 1443. `/wallet` had no Connect button anywhere — `MultiWalletAggregator` only listed already-connected wallets with Disconnect controls. New users had no path to attach an external wallet from the wallet page.
+
+**Fix (`6260c09`, +7 / -1):** Added a "Connect Wallet" pill at the start of the slim action button row in the wallet view (`dex/[...slug].tsx:5146`). Cyan→purple gradient + glow so it reads as the primary affordance vs the gray Buy/Send/Receive/Swap/Sweep buttons. Triggers the existing modal — full vendor list lights up immediately. Added `flex-wrap` so 6 buttons stay clean on mobile.
+
+### Follow-ups
+
+- **`MultiWalletAggregator.openWeb3Modal` is a dead prop** (passed at line 5097 of slug, never destructured by the component). Wire it to a "Connect Web3Modal" CTA inside the aggregator OR remove the prop. Low priority; the new pill covers the same UX.
+- **Frank verify path:** Hard refresh `/wallet` → tap Connect Wallet → modal pops → connect MetaMask/Rainbow/Trust → wallet appears in aggregator below → send POL directly without external imports next time. Then visit any user's `/shop` tab → same Connect Wallet pill renders under the storefront banner.
+
+### Follow-up shipped: Connect Wallet pill mirrored to /shop (`dffb150`)
+
+`/marketplace` was lifted out of the main nav — it now lives as `/shop` per-user (`profileTab === 'shop'` in `dex/[...slug].tsx:8126`). Every user is a vendor; their wall's shop tab is their storefront. Sellers attach a wallet to receive crypto; buyers attach one to pay. Pill sits right under the storefront banner with role-aware caption (owner vs visitor).
+
+**Architectural note:** `/marketplace` is intentionally gone as a top-level destination. Don't scaffold new top-level routes for marketplace-adjacent features — extend the `profileTab === 'shop'` branch instead. Saved as `architecture-marketplace-shop.md` in user memory.
+
+### Follow-up SHIPPED: canonical Web3Modal swap (`23b1b20`) — OpenSea/Rarible/Blur parity
+
+Audit of the legacy `WalletConnectModal` at `dex/[...slug].tsx:297` revealed it hand-rolled `@walletconnect/ethereum-provider` directly and stored the connection in localStorage only — never propagating into `UnifiedWalletContext`. Result: wallets didn't show up in `MultiWalletAggregator`, no EIP-6963 multi-provider detection, no auto-reconnect, no canonical signing path. Two parallel wallet-connect systems running side-by-side.
+
+**Fix (`23b1b20`, +2 / -2):** Both pill onClicks (`/wallet` action row + `/shop` storefront) swapped from `setShowWalletModal(true)` → `isWeb3ModalReady ? openWeb3Modal() : setShowWalletModal(true)`. `openWeb3Modal` already destructured from `useUnifiedWallet()` at line 1403 — same canonical path Arena Picks uses post-Bug #69 (`0313cf5`). Picks up Bug #71's `customWallets` fallback automatically (Rainbow/MetaMask/Trust/Coinbase shipped in-bundle in case `api.web3modal.org/v3/wallets` 401s). Legacy modal kept as fallback for the rare case Web3Modal's dynamic import hasn't resolved yet.
+
+**Now matches OpenSea/Rarible/Blur:**
+- Real Reown AppKit modal — 600+ wallets, polished UI
+- EIP-6963 multi-injected detection (Rainbow, Phantom, Brave, Frame, Backpack)
+- Auto-reconnect on page refresh
+- Connection flows into `UnifiedWalletContext` → wallet shows up in `MultiWalletAggregator` automatically
+- Transactions sign via the canonical path the rest of the app reads from
+
+### Lessons (consolidated for Apr 28)
+
+1. **Cut + relocate audit:** When a generic modal trigger that lived on route X gets pulled into a focused flow (post-as-guest at line 1443), audit who else needs it. Don't strand other surfaces.
+2. **"A modal that connects" ≠ "the canonical connect path."** Reusing an existing modal looks safe but if it's wired to a different context than the rest of the app reads from, you've shipped two parallel systems. Default new connect surfaces to `useUnifiedWallet().connectWeb3Modal` per Bug #69's pattern.
+3. **The smallest competitor-grade fix is sometimes 2 lines.** All the polish (600+ wallets, EIP-6963, customWallets fallback, auto-reconnect) was already shipped in prior sessions — the fix was just routing the new pills through the canonical hook instead of scaffolding fresh.
+
+See `bug-report.md#Bug-76` and `sarg.md` for full notes.
+
+### Lessons
+
+1. **When you cut a generic modal trigger that lived in route X to land it on a focused flow, audit who else needs it.** The post-flow guest-wallet trigger at `[...slug].tsx:1443` was the only entry point — leaving the wallet page without one was an unintentional regression. Cross-reference modal mount points to use sites before merging surface-area changes.
+2. **The shortest path to "make it work" is sometimes 7 lines, not 700.** The full modal already existed, was already wired to the proper handler — all that was missing was a button. Always audit existing surface area before scaffolding a new component.
+
+See `bug-report.md#Bug-76` and `sarg.md` for full notes.
+
+---
+
+## 🚪 Apr 27, 2026 (Frank heading to work) — Login OAuth hang on post-Mac-wake + commissioner-address endpoint (SHIPPED `781a045`)
 
 ### Context
 Frank said "go big or go home my G" on the fantasy feature. Shipped 6 tight commits end-to-end — ESPN draft to championship bracket — all on main, each typecheck clean, each live on Vercel. Frank was multi-building with Fleet Commander in the War Room in parallel.
@@ -880,7 +942,7 @@ grep -r "moltbook_sk" ~/
 ```json
 {
   "name": "SoundChainRadio",
-  "api_key": "moltbook_sk_MM_MD4goNd-86100mH2suPttQwPz7HX0",
+  "api_key": "[REDACTED — see ~/.config/moltbook/credentials.json; rotated Apr 28 after public-repo exposure audit]",
   "claim_url": "https://moltbook.com/claim/moltbook_claim_MB4bNEU-tV7w4fAaRgK_Fp6zgCdUMRrw",
   "verification_code": "seabed-HU5A",
   "status": "pending_claim"
@@ -1228,9 +1290,9 @@ web/src/pages/dex/agent-feed.tsx       # Cyberpunk blog viewer
 ### Moltbook Integration - LIVE!
 
 **3 Agents Claimed:**
-- @SoundChain (web3 submolt) - `moltbook_sk_5j7_dd-1OpbpO8MC01D-G7gD-lNiEPRI`
-- @OGUN (crypto submolt) - `moltbook_sk_-Q3B4vccy5MXXiNdOEPYLD2QIlCqrM-8`
-- @SoundChainIO (ai submolt) - `moltbook_sk_EauJa2yb2aYRQtrD-Kjbjyk4wn8dXwhH`
+- @SoundChain (web3 submolt) - `[REDACTED — rotated Apr 28]`
+- @OGUN (crypto submolt) - `[REDACTED — rotated Apr 28]`
+- @SoundChainIO (ai submolt) - `[REDACTED — rotated Apr 28]`
 - @SoundChainProtocol - unclaimed (save for later)
 
 **Posts Published to 1.7M Agents:**
@@ -1955,7 +2017,7 @@ const redirectUri = `${window.location.origin}/login`;
 
 **API Keys (Local Reference):**
 - Magic Public Key: `pk_live_858EC1BFF763F101`
-- Magic Secret Key: `sk_live_87427547E4E2E5AE` (from api/.env.local)
+- Magic Secret Key: `[REDACTED — see Vercel env / .env.local; rotated Apr 28 after public-repo exposure audit]`
 
 ---
 
