@@ -7,7 +7,6 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useMe } from 'hooks/useMe'
-import { useHideBottomNavBar } from 'hooks/useHideBottomNavBar'
 // DexNavBar inherited from Layout.tsx — no inline mount needed
 import { ArrowLeft, Trophy, Plus, Users, Coins, Loader2, X } from 'lucide-react'
 import { toast } from 'react-toastify'
@@ -20,12 +19,6 @@ export default function FantasyHubPage() {
   const [leagues, setLeagues] = useState<FantasyLeague[]>([])
   const [loading, setLoading] = useState(true)
   const [showCreate, setShowCreate] = useState(false)
-  const { setHideBottomNavBarState } = useHideBottomNavBar()
-
-  useEffect(() => {
-    setHideBottomNavBarState(true)
-    return () => setHideBottomNavBarState(false)
-  }, [setHideBottomNavBarState])
 
   const loadLeagues = async () => {
     setLoading(true)

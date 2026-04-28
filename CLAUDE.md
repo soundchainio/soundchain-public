@@ -20,6 +20,57 @@ Then say: **"Scoped CLAUDE.md, sarg.md, MEMORY.md, bug-report.md. Synced on [bri
 
 ---
 
+## 🔁 SESSION: Apr 28, 2026 (Sarg, later4) — Pill regression LOOP ENDED via route guard
+
+### Frank's pushback
+*"why are you making these ui ux mistakes. i tell you about legacy pills and we remove them and then they come back!!! why do we keep staying in that loop bro?!!!! stop that"*
+
+He's right. Bug #73 had been "closed" multiple times and kept reopening because each fix was per-page, not structural. `755128f` (earlier today) shipped per-page `useHideBottomNavBar` effects on the four arena pages — the same pattern that caused the loop in the first place. Adding any new arena subroute would have brought pills back AGAIN.
+
+### Loop-ending fix
+
+`web/src/components/BottomNavBar/BottomNavBarWrapper.tsx` now reads `useRouter().pathname` and consults a constant:
+
+```ts
+const PILL_FREE_ROUTES = ['/arena', '/gallery3d', '/explore3d', '/land', '/nodes', '/radio']
+const isPillFreeRoute = (path: string) =>
+  PILL_FREE_ROUTES.some(p => path === p || path.startsWith(`${p}/`) || path.startsWith(`${p}?`))
+```
+
+Pills render only when `!routeForcesHidden && !state?.modal.anyModalOpened && !hideBottomNavBar && me`.
+
+**Per-page hooks removed** from `arena.tsx`, `arena/picks.tsx`, `arena/fantasy.tsx`, `arena/fantasy/[id].tsx`. They were noise, not signal, and the source of regression every time someone forgot to call them. `useHideBottomNavBar.setHideBottomNavBarState` is now reserved for *transient* hides (modal open, fullscreen mode) — never for "this whole route should be pill-free."
+
+**Adding a new pill-free route family henceforth = one line in `PILL_FREE_ROUTES`.** Zero per-page code. Pattern saved as `feedback_route_gate_chrome_not_per_page.md`.
+
+### Why this is THE fix, not another patch
+
+| Past attempts | This time |
+|---|---|
+| Closed Bug #73 by editing arena.tsx | Closed by editing the wrapper |
+| Each new arena subroute reopens it | Adding new arena subroute is a no-op |
+| Two parallel context hooks made it easy to call wrong setter | Wrapper consults route directly, no setter race |
+| Broken twice in a week | Can only break if someone removes the route from the array |
+
+Frank's complaint was about the *loop*, not the pills. The loop ends here.
+
+### Verify (after deploy ~2 min)
+
+1. Hard-refresh `/arena`, `/arena/picks`, `/arena/fantasy`, `/arena/fantasy/[id]` — no pills.
+2. Bonus: `/gallery3d`, `/explore3d`, `/land`, `/nodes`, `/radio` — also pill-free (was intentional via per-page hides before; now structural).
+3. Other routes (`/dex/feed`, `/`, `/wallet`, etc.) — pills present as expected.
+
+### Lessons
+
+1. **A loop is the bug.** When a regression keeps recurring on different surfaces, the surface isn't the cause — the *opt-in mechanism* is. Move the decision to where it can't be forgotten.
+2. **Page-author opt-in for global chrome is an infinite regression machine.** Wrapper-level route allow/deny lists are the only sustainable pattern.
+3. **When two parallel hooks exist for the same concept, one is dead code.** Document or delete. Don't let new code add a third caller.
+4. **Frank's framing matters.** "Why do we keep staying in that loop bro?" was the right question. The answer wasn't "let me patch it again" — it was "let me end the loop."
+
+See `bug-report.md#Bug-80` and `feedback_route_gate_chrome_not_per_page.md` in user memory.
+
+---
+
 ## 🛠️ SESSION: Apr 28, 2026 (Sarg, later3) — Arena pills off + RPC failover for picks createLeague (SHIPPED `755128f`)
 
 ### Context

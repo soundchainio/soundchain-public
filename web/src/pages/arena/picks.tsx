@@ -8,7 +8,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/router'
 import { useMe } from 'hooks/useMe'
-import { useHideBottomNavBar } from 'hooks/useHideBottomNavBar'
 import { toast } from 'react-toastify'
 import { ethers } from 'ethers'
 import { Loader2, Trophy, Zap, TrendingUp, Clock, Check, X, ChevronDown, Wallet, Sparkles, Pencil, Trash2 } from 'lucide-react'
@@ -663,12 +662,6 @@ export default function ArenaPicksPage() {
   const [loading, setLoading] = useState(true)
   const [pickModal, setPickModal] = useState<{ game: Game; side: 'home' | 'away' } | null>(null)
   const [editModal, setEditModal] = useState<Pick | null>(null)
-  const { setHideBottomNavBarState } = useHideBottomNavBar()
-
-  useEffect(() => {
-    setHideBottomNavBarState(true)
-    return () => setHideBottomNavBarState(false)
-  }, [setHideBottomNavBarState])
 
   // Deep link: ?take=pickId — auto-switch to Open Picks view
   useEffect(() => {
