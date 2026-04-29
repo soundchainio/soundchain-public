@@ -1142,7 +1142,7 @@ export function DexNavBar() {
           any ticker. `relative z-0` ensures popovers/dropdowns paint above the ticker animation
           (some browsers promote marquee animations to their own compositor layer). */}
       {anyTickerVisible && (
-        <div className="relative z-0">
+        <div className="relative z-0" style={{ isolation: 'isolate' }}>{/* isolation:isolate forces the marquee compositor layer to stay contained — was bleeding through the avatar dropdown on /arena per Frank's Apr 29 screenshot */}
           {!tickerCollapsed && (
             <>
               {showBloombergTicker && <OgunPriceTicker />}

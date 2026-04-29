@@ -539,7 +539,10 @@ function CreatePickModal({ game, side, onClose, onCreated }: { game: Game; side:
   const [submitting, setSubmitting] = useState(false)
   const [step, setStep] = useState<'idle' | 'creating' | 'awaiting_signature' | 'finalizing'>('idle')
   const [payoutFlash, setPayoutFlash] = useState(false)
-  const { connectWeb3Modal, activeWalletType, web3ModalProvider } = useUnifiedWallet()
+  const { connectWeb3Modal, activeWalletType, web3ModalProvider, activeAddress } = useUnifiedWallet()
+  const isExternalWalletReady = activeWalletType === 'web3modal' && !!web3ModalProvider && !!activeAddress
+  const isMagicWallet = activeWalletType === 'magic' || (!isExternalWalletReady && !!activeAddress)
+  const shortAddr = activeAddress ? `${activeAddress.slice(0, 6)}…${activeAddress.slice(-4)}` : null
 
   // FD pattern — odds/payout briefly flash cyan when the user changes amount or token. Cheap, hugely tactile.
   useEffect(() => {
@@ -641,6 +644,54 @@ function CreatePickModal({ game, side, onClose, onCreated }: { game: Game; side:
               <p className="text-base font-black text-white tracking-tight">{team} <span className="text-cyan-400">to WIN</span></p>
               <p className="text-[11px] font-mono text-gray-400 uppercase tracking-wider">vs {opponent} · {formatTime(game.gameTime)}</p>
             </div>
+          </div>
+
+          {/* Signing wallet status — explicit per-modal so user knows which wallet will execute the on-chain stake.
+              Magic OAuth = warning (Magic RPC is broken for L2 sends per feedback_oauth_send_broken.md).
+              Web3Modal connected = green check + truncated address.
+              Nothing connected = prominent CTA to open Web3Modal. */}
+          <div className="mb-4">
+            {isExternalWalletReady ? (
+              <div className="flex items-center justify-between p-2.5 rounded-lg bg-emerald-500/[0.06] border border-emerald-500/30">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Wallet className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+                  <span className="text-[10px] font-mono text-emerald-300 truncate">SIGNING · {shortAddr}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => { try { connectWeb3Modal() } catch {} }}
+                  className="text-[9px] font-mono font-bold text-cyan-400 hover:text-cyan-300 tracking-widest"
+                >
+                  SWITCH
+                </button>
+              </div>
+            ) : isMagicWallet ? (
+              <div className="flex items-center justify-between gap-2 p-2.5 rounded-lg bg-amber-500/[0.08] border border-amber-500/40">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Wallet className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-mono font-bold text-amber-300 leading-tight">CONNECT EXTERNAL WALLET</p>
+                    <p className="text-[9px] text-amber-300/70 leading-tight truncate">Magic RPC is broken for on-chain stakes — connect MetaMask / Coinbase / Rainbow / Trust to sign</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => { try { connectWeb3Modal() } catch {} }}
+                  className="flex-shrink-0 text-[9px] font-mono font-black text-black bg-amber-400 hover:bg-amber-300 px-2.5 py-1 rounded tracking-widest transition-colors"
+                >
+                  CONNECT
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => { try { connectWeb3Modal() } catch {} }}
+                className="w-full flex items-center justify-center gap-2 p-2.5 rounded-lg bg-gradient-to-r from-cyan-500/15 to-purple-500/15 border border-cyan-500/40 hover:border-cyan-400/60 transition-colors"
+              >
+                <Wallet className="w-3.5 h-3.5 text-cyan-400" />
+                <span className="text-[11px] font-mono font-black text-cyan-300 tracking-widest">CONNECT WALLET TO PLACE PICK</span>
+              </button>
+            )}
           </div>
 
           {/* Token + Amount */}
