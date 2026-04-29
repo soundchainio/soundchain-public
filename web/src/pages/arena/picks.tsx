@@ -10,7 +10,7 @@ import { useRouter } from 'next/router'
 import { useMe } from 'hooks/useMe'
 import { toast } from 'react-toastify'
 import { ethers } from 'ethers'
-import { Loader2, Trophy, Zap, TrendingUp, Clock, Check, X, ChevronDown, Wallet, Sparkles, Pencil, Trash2 } from 'lucide-react'
+import { Loader2, Trophy, Zap, TrendingUp, Clock, Check, X, ChevronDown, Wallet, Sparkles, Pencil, Trash2, Coins } from 'lucide-react'
 import { TOKEN_CONFIG, LIVE_TOKENS, isTokenLive } from 'lib/arena/fantasy/types'
 import { TOKEN_INFO } from 'constants/tokens'
 import { useUnifiedWallet } from 'contexts/UnifiedWalletContext'
@@ -1013,7 +1013,7 @@ export default function ArenaPicksPage() {
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto px-4 py-6 relative z-10">
+      <div className="max-w-[1600px] mx-auto px-4 py-6 relative z-10">
         {/* Hero — full holographic foil title + animated underline + tagline. The first thing users see, the first thing that has to wow. */}
         <div className="mb-6 relative">
           {/* Glow bloom behind the title — subtle radial bloom adds depth */}
@@ -1091,6 +1091,101 @@ export default function ArenaPicksPage() {
           })}
         </div>
 
+        {/* LIVE NOW horizontal rail — DK signature: in-progress games scrolling at top with score, time, "QUICK PICK" CTA */}
+        {!loading && liveGameCount > 0 && (
+          <div className="mb-6">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
+              <span className="text-[10px] font-mono font-bold text-red-400 tracking-widest">LIVE NOW</span>
+              <span className="text-[10px] font-mono text-gray-600">· {liveGameCount} GAME{liveGameCount === 1 ? '' : 'S'} IN PROGRESS</span>
+              <div className="flex-1 h-px bg-gradient-to-r from-red-500/30 to-transparent ml-2" />
+            </div>
+            <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4">
+              {games.filter(g => g.state === 'in').map(g => (
+                <button
+                  key={g.espnGameId}
+                  onClick={() => g.canPick && setPickModal({ game: g, side: 'home' })}
+                  className="group relative flex-shrink-0 w-64 rounded-xl overflow-hidden border border-red-500/40 bg-gradient-to-br from-red-950/30 via-black to-orange-950/20 p-3 text-left hover:border-red-400/60 transition-all"
+                >
+                  <span className="arena-conic-ring" aria-hidden />
+                  <div className="relative flex items-center justify-between mb-2">
+                    <span className="flex items-center gap-1 text-[9px] font-mono font-bold text-red-400 tracking-widest">
+                      <span className="w-1 h-1 bg-red-500 rounded-full animate-pulse" /> LIVE · {g.statusDetail}
+                    </span>
+                    <span className="text-[9px] font-mono text-gray-500">{g.sportEmoji} {g.sportLabel}</span>
+                  </div>
+                  <div className="relative space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-white truncate">{g.awayTeam}</span>
+                      <span className={`text-base font-mono font-black tabular-nums ${(parseInt(g.awayScore || '0') > parseInt(g.homeScore || '0')) ? 'text-emerald-400' : 'text-gray-300'}`}>{g.awayScore || '0'}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-white truncate">{g.homeTeam}</span>
+                      <span className={`text-base font-mono font-black tabular-nums ${(parseInt(g.homeScore || '0') > parseInt(g.awayScore || '0')) ? 'text-emerald-400' : 'text-gray-300'}`}>{g.homeScore || '0'}</span>
+                    </div>
+                  </div>
+                  {g.canPick && (
+                    <div className="relative mt-2 text-center text-[10px] font-mono font-bold text-cyan-400 tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">QUICK PICK →</div>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Body — 3-column rails layout on lg+. Mobile collapses to single column (rails hidden). */}
+        <div className="lg:grid lg:grid-cols-[220px_1fr_220px] lg:gap-4 xl:grid-cols-[240px_1fr_240px] xl:gap-5">
+          {/* LEFT RAIL — TONIGHT'S CARD: vertical games list, sticky on lg+ */}
+          <aside className="hidden lg:block">
+            <div className="sticky top-20 space-y-3">
+              <div className="flex items-center gap-2">
+                <Zap className="w-3.5 h-3.5 text-cyan-400" />
+                <span className="text-[10px] font-mono font-bold text-cyan-400 tracking-widest">TONIGHT'S CARD</span>
+              </div>
+              <div className="rounded-xl border border-cyan-500/20 bg-black/60 backdrop-blur-sm overflow-hidden">
+                <div className="max-h-[calc(100vh-200px)] overflow-y-auto scrollbar-hide divide-y divide-white/5">
+                  {games.length === 0 && <div className="p-3 text-[11px] font-mono text-gray-500 text-center">No games today</div>}
+                  {games.slice(0, 16).map(g => {
+                    const tip = new Date(g.gameTime)
+                    const tipStr = tip.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+                    const isLive = g.state === 'in'
+                    const isFinal = g.state === 'post'
+                    return (
+                      <button
+                        key={g.espnGameId}
+                        onClick={() => g.canPick && setPickModal({ game: g, side: 'home' })}
+                        disabled={!g.canPick}
+                        className={`w-full p-2.5 text-left transition-colors ${g.canPick ? 'hover:bg-cyan-500/10 cursor-pointer' : 'cursor-default opacity-70'}`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-[9px] font-mono text-gray-500">{g.sportEmoji} {g.sportLabel}</span>
+                          <span className={`text-[9px] font-mono font-bold ${isLive ? 'text-red-400' : isFinal ? 'text-gray-500' : 'text-cyan-400'}`}>
+                            {isLive ? `LIVE · ${g.statusDetail}` : isFinal ? 'FINAL' : tipStr}
+                          </span>
+                        </div>
+                        <div className="space-y-0.5">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="font-bold text-white truncate">{g.awayTeam}</span>
+                            {(isLive || isFinal) && <span className="font-mono tabular-nums text-gray-300">{g.awayScore || 0}</span>}
+                          </div>
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="font-bold text-white truncate">@ {g.homeTeam}</span>
+                            {(isLive || isFinal) && <span className="font-mono tabular-nums text-gray-300">{g.homeScore || 0}</span>}
+                          </div>
+                        </div>
+                        {g.canPick && (
+                          <div className="mt-1.5 text-[9px] font-mono font-bold text-cyan-400/70 tracking-widest">PICK 'EM →</div>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            </div>
+          </aside>
+
+          {/* CENTER — existing loading/grid */}
+          <main className="min-w-0">
         {loading ? (
           /* Premium loading state — radial pulse + tabular caption */
           <div className="flex flex-col items-center justify-center py-24 gap-4">
@@ -1117,7 +1212,7 @@ export default function ArenaPicksPage() {
                 <p className="text-xs font-mono uppercase tracking-wider text-gray-500">Check back when ESPN posts the next slate</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3">
                 {games.map(g => (
                   <GameCard key={g.espnGameId} game={g} onPick={(game, side) => setPickModal({ game, side })} />
                 ))}
@@ -1148,7 +1243,7 @@ export default function ArenaPicksPage() {
                 )}
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
                 {picks.map(p => (
                   <MatchupCard key={p.id} pick={p} me={me} onTake={handleTake} onCancel={handleCancel} onEdit={(pk) => setEditModal(pk)} />
                 ))}
@@ -1156,6 +1251,68 @@ export default function ArenaPicksPage() {
             )}
           </div>
         )}
+          </main>
+
+          {/* RIGHT RAIL — HOT PICKS / TRENDING: most recently matched picks, sticky on lg+ */}
+          <aside className="hidden lg:block">
+            <div className="sticky top-20 space-y-3">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="w-3.5 h-3.5 text-amber-400" />
+                <span className="text-[10px] font-mono font-bold text-amber-400 tracking-widest">HOT PICKS</span>
+              </div>
+              <div className="rounded-xl border border-amber-500/20 bg-black/60 backdrop-blur-sm overflow-hidden">
+                <div className="max-h-[360px] overflow-y-auto scrollbar-hide divide-y divide-white/5">
+                  {(() => {
+                    const hot = [...picks]
+                      .filter(p => p.status === 'matched' || (p.status === 'open' && !p.takerHandle))
+                      .sort((a: any, b: any) => new Date(b.matchedAt || b.createdAt).getTime() - new Date(a.matchedAt || a.createdAt).getTime())
+                      .slice(0, 8)
+                    if (hot.length === 0) return <div className="p-3 text-[11px] font-mono text-gray-500 text-center">No matched picks yet</div>
+                    return hot.map(p => (
+                      <button
+                        key={p.id}
+                        onClick={() => setView(p.status === 'open' ? 'picks' : 'my')}
+                        className="w-full p-2.5 text-left hover:bg-amber-500/10 transition-colors"
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-[9px] font-mono text-gray-500 truncate">@{p.creatorHandle}{p.takerHandle ? ` vs @${p.takerHandle}` : ''}</span>
+                          <span className={`text-[9px] font-mono font-bold ${p.status === 'matched' ? 'text-emerald-400' : 'text-cyan-400'}`}>
+                            {p.status === 'matched' ? 'LOCKED' : 'OPEN'}
+                          </span>
+                        </div>
+                        <div className="text-xs font-bold text-white truncate">{p.awayTeam} @ {p.homeTeam}</div>
+                        <div className="flex items-center justify-between mt-1">
+                          <span className="text-[10px] font-mono text-amber-300">{p.pot} {p.entryToken}</span>
+                          <span className="text-[9px] font-mono text-gray-500 tracking-widest">POT</span>
+                        </div>
+                      </button>
+                    ))
+                  })()}
+                </div>
+              </div>
+
+              {/* Parlay slip placeholder — DK signature side panel */}
+              <div className="rounded-xl border border-white/10 bg-black/60 backdrop-blur-sm p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[10px] font-mono font-bold text-gray-400 tracking-widest">PARLAY SLIP</span>
+                  <span className="text-[8px] font-mono text-amber-300/70 bg-amber-500/10 border border-amber-400/30 px-1.5 py-0.5 rounded uppercase tracking-wider">SOON</span>
+                </div>
+                <p className="text-[10px] text-gray-500 leading-relaxed">Combine 2+ picks for higher payouts. Multi-leg on-chain settlement.</p>
+                <div className="mt-2 text-[10px] font-mono text-gray-600 italic">Tap any open pick to add (coming soon)</div>
+              </div>
+
+              {/* Running pot total */}
+              <div className="rounded-xl border border-purple-500/20 bg-black/60 backdrop-blur-sm p-3">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[10px] font-mono font-bold text-purple-400 tracking-widest">TOTAL ESCROWED</span>
+                  <Coins className="w-3 h-3 text-purple-400" />
+                </div>
+                <div className="arena-hologram-text text-2xl font-black tabular-nums leading-none">{totalEscrowed.toFixed(0)}</div>
+                <div className="text-[9px] font-mono text-gray-500 tracking-widest mt-1">ACROSS {(picks.filter(p => p.status === 'matched' || p.status === 'open').length)} OPEN/LOCKED PICKS</div>
+              </div>
+            </div>
+          </aside>
+        </div>
       </div>
 
       {/* Create Pick Modal */}

@@ -20,7 +20,7 @@ import { useMe } from 'hooks/useMe'
 import { useRouter } from 'next/router'
 // Bottom pills hidden globally for /arena via BottomNavBarWrapper route guard — no per-page hook needed.
 // DexNavBar inherited from Layout.tsx
-import { ArrowLeft, Gamepad2, Trophy, Users, Eye, Coins, Zap, Lock, Radio, ExternalLink, Swords, Plus, Send, X, Loader2 } from 'lucide-react'
+import { ArrowLeft, Gamepad2, Trophy, Users, Eye, Coins, Zap, Lock, Radio, ExternalLink, Swords, Plus, Send, X, Loader2, TrendingUp, Flame } from 'lucide-react'
 import { toast } from 'react-toastify'
 
 interface Challenge {
@@ -94,6 +94,14 @@ export default function ArenaPage() {
   }, [])
 
   useEffect(() => { fetchChallenges() }, [fetchChallenges])
+
+  // Tonight's games + hot picks for desktop side rails (Round 4 density pass)
+  const [tonightGames, setTonightGames] = useState<any[]>([])
+  const [hotPicks, setHotPicks] = useState<any[]>([])
+  useEffect(() => {
+    fetch('/api/arena/picks/games').then(r => r.json()).then(d => setTonightGames(d.games || [])).catch(() => {})
+    fetch('/api/arena/picks').then(r => r.json()).then(d => setHotPicks(d.picks || [])).catch(() => {})
+  }, [])
 
   const createChallenge = async () => {
     if (!me) { toast.error('Login required'); return }
@@ -210,7 +218,65 @@ export default function ArenaPage() {
         </div>
       </div>
 
-      <div className="max-w-[1400px] mx-auto px-4 py-4 space-y-4">
+      <div className="relative max-w-[1600px] mx-auto px-4 py-4 lg:grid lg:grid-cols-[220px_1fr_220px] lg:gap-4 xl:grid-cols-[240px_1fr_240px] xl:gap-5">
+        {/* ─── LEFT RAIL — TONIGHT'S CARD (desktop only) ──────── */}
+        <aside className="hidden lg:block">
+          <div className="sticky top-20 space-y-3">
+            <div className="flex items-center gap-2">
+              <Zap className="w-3.5 h-3.5 text-cyan-400" />
+              <span className="text-[10px] font-mono font-bold text-cyan-400 tracking-widest">TONIGHT'S CARD</span>
+            </div>
+            <div className="rounded-xl border border-cyan-500/20 bg-black/60 backdrop-blur-sm overflow-hidden">
+              <div className="max-h-[calc(100vh-200px)] overflow-y-auto scrollbar-hide divide-y divide-white/5">
+                {tonightGames.length === 0 && <div className="p-3 text-[11px] font-mono text-gray-500 text-center">No games today</div>}
+                {tonightGames.slice(0, 16).map((g: any) => {
+                  const tip = new Date(g.gameTime)
+                  const tipStr = tip.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+                  const isLive = g.state === 'in'
+                  const isFinal = g.state === 'post'
+                  return (
+                    <button
+                      key={g.espnGameId}
+                      onClick={() => router.push('/arena/picks')}
+                      className="w-full p-2.5 text-left hover:bg-cyan-500/10 transition-colors"
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[9px] font-mono text-gray-500">{g.sportEmoji} {g.sportLabel}</span>
+                        <span className={`text-[9px] font-mono font-bold ${isLive ? 'text-red-400' : isFinal ? 'text-gray-500' : 'text-cyan-400'}`}>
+                          {isLive ? `LIVE · ${g.statusDetail}` : isFinal ? 'FINAL' : tipStr}
+                        </span>
+                      </div>
+                      <div className="space-y-0.5">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="font-bold text-white truncate">{g.awayTeam}</span>
+                          {(isLive || isFinal) && <span className="font-mono tabular-nums text-gray-300">{g.awayScore || 0}</span>}
+                        </div>
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="font-bold text-white truncate">@ {g.homeTeam}</span>
+                          {(isLive || isFinal) && <span className="font-mono tabular-nums text-gray-300">{g.homeScore || 0}</span>}
+                        </div>
+                      </div>
+                      {g.canPick && (
+                        <div className="mt-1.5 text-[9px] font-mono font-bold text-cyan-400/70 tracking-widest">PICK 'EM →</div>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+            {/* Broadcast embed shell — placeholder for future feeds */}
+            <div className="rounded-xl border border-white/10 bg-gradient-to-br from-purple-950/40 via-black to-cyan-950/40 overflow-hidden">
+              <div className="aspect-video flex flex-col items-center justify-center text-center p-3 relative">
+                <Radio className="w-6 h-6 text-purple-400 mb-1" />
+                <div className="text-[10px] font-mono font-bold text-purple-300 tracking-widest">BROADCAST</div>
+                <div className="text-[9px] font-mono text-gray-500 tracking-wider mt-0.5">COMING SOON</div>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        {/* ─── CENTER — existing hub content ─────────────────── */}
+        <main className="min-w-0 space-y-4">
         {/* ─── ARENA HUB NAV ──────────────────────────────────── */}
         <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1">
           {[
@@ -497,6 +563,72 @@ export default function ArenaPage() {
             We don't host games — we host the social + economic layer.
           </div>
         </div>
+        </main>
+
+        {/* ─── RIGHT RAIL — HOT PICKS / TRENDING (desktop only) ─────────── */}
+        <aside className="hidden lg:block">
+          <div className="sticky top-20 space-y-3">
+            <div className="flex items-center gap-2">
+              <Flame className="w-3.5 h-3.5 text-orange-400" />
+              <span className="text-[10px] font-mono font-bold text-orange-400 tracking-widest">HOT PICKS</span>
+            </div>
+            <div className="rounded-xl border border-orange-500/20 bg-black/60 backdrop-blur-sm overflow-hidden">
+              <div className="max-h-[420px] overflow-y-auto scrollbar-hide divide-y divide-white/5">
+                {(() => {
+                  const hot = [...hotPicks]
+                    .filter((p: any) => p.status === 'matched' || (p.status === 'open' && !p.takerHandle))
+                    .sort((a: any, b: any) => new Date(b.matchedAt || b.createdAt).getTime() - new Date(a.matchedAt || a.createdAt).getTime())
+                    .slice(0, 10)
+                  if (hot.length === 0) return <div className="p-3 text-[11px] font-mono text-gray-500 text-center">No matched picks yet</div>
+                  return hot.map((p: any) => (
+                    <button
+                      key={p.id || p._id}
+                      onClick={() => router.push('/arena/picks')}
+                      className="w-full p-2.5 text-left hover:bg-orange-500/10 transition-colors"
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[9px] font-mono text-gray-500 truncate">@{p.creatorHandle}{p.takerHandle ? ` vs @${p.takerHandle}` : ''}</span>
+                        <span className={`text-[9px] font-mono font-bold ${p.status === 'matched' ? 'text-emerald-400' : 'text-cyan-400'}`}>{p.status === 'matched' ? 'LOCKED' : 'OPEN'}</span>
+                      </div>
+                      <div className="text-xs font-bold text-white truncate">{p.awayTeam} @ {p.homeTeam}</div>
+                      <div className="flex items-center justify-between mt-1">
+                        <span className="text-[10px] font-mono text-amber-300 tabular-nums">{p.pot} {p.entryToken}</span>
+                        <span className="text-[9px] font-mono text-gray-500 tracking-widest">POT</span>
+                      </div>
+                    </button>
+                  ))
+                })()}
+              </div>
+            </div>
+            <button
+              onClick={() => router.push('/arena/picks')}
+              className="w-full text-[10px] font-mono font-bold text-cyan-400 hover:text-cyan-300 tracking-widest py-2 transition-colors"
+            >
+              VIEW ALL PICKS →
+            </button>
+
+            {/* MY ARENA STAKE pill — DK Live Bets equivalent */}
+            <div className="rounded-xl border border-purple-500/20 bg-black/60 backdrop-blur-sm p-3">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[10px] font-mono font-bold text-purple-400 tracking-widest">MY ARENA STAKE</span>
+                <Coins className="w-3 h-3 text-purple-400" />
+              </div>
+              {(() => {
+                const myHandle = me?.profile?.userHandle || (me as any)?.handle || ''
+                const mine = hotPicks.filter((p: any) => p.creatorHandle === myHandle || p.takerHandle === myHandle)
+                const liveCount = mine.filter((p: any) => p.status === 'matched' && /live|in/i.test(p.gameStatus || '')).length
+                const atRisk = mine.filter((p: any) => p.status === 'open' || p.status === 'matched').reduce((acc: number, p: any) => acc + (p.entryFee || 0), 0)
+                if (mine.length === 0) return <p className="text-[10px] text-gray-500 italic">No picks yet — pick something on the board.</p>
+                return (
+                  <div>
+                    <div className="arena-hologram-text text-2xl font-black tabular-nums leading-none">{mine.length}</div>
+                    <div className="text-[9px] font-mono text-gray-500 tracking-widest mt-1">PICKS · {liveCount} LIVE · {atRisk.toFixed(2)} AT RISK</div>
+                  </div>
+                )
+              })()}
+            </div>
+          </div>
+        </aside>
       </div>
 
       {/* Match viewer modal — PPV gated */}
