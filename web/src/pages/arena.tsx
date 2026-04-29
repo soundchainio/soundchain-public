@@ -150,7 +150,11 @@ export default function ArenaPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col">
+    <div className="min-h-screen bg-black text-white flex flex-col relative overflow-hidden">
+      {/* High-end ambient graphics — framework lives in globals.css (Apr 28 framework, port from /arena/picks) */}
+      <div className="fixed inset-0 arena-mesh-bg pointer-events-none" aria-hidden />
+      <div className="fixed inset-0 arena-grid-overlay pointer-events-none" aria-hidden />
+      <div className="fixed inset-0 arena-grain-overlay pointer-events-none" aria-hidden />
       {/* Lower nav pills */}
       <div className="border-b border-red-500/10 bg-black/40 backdrop-blur-md">
         <div className="flex items-center gap-1.5 px-3 pt-2 pb-2">
@@ -188,18 +192,19 @@ export default function ArenaPage() {
       </div>
 
       {/* Header */}
-      <div className="border-b border-red-500/20 bg-black/80 backdrop-blur-md">
-        <div className="max-w-[1400px] mx-auto px-4 py-3 flex items-center justify-between">
+      <div className="relative border-b border-red-500/20 bg-black/60 backdrop-blur-md">
+        <div className="max-w-[1400px] mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button onClick={() => router.push('/nodes')} className="p-1.5 rounded hover:bg-white/10 transition">
               <ArrowLeft className="w-4 h-4 text-gray-400" />
             </button>
-            <div className="p-2 rounded-lg bg-red-500/10 border border-red-500/20">
+            <div className="relative p-2 rounded-lg bg-red-500/10 border border-red-500/20 group">
               <Gamepad2 className="w-5 h-5 text-red-400" />
+              <span className="arena-conic-ring" aria-hidden />
             </div>
             <div>
-              <h1 className="text-sm font-mono font-bold text-red-400 tracking-wider">ARENA</h1>
-              <p className="text-[9px] font-mono text-gray-600">CONSOLE GAMING via PORTALNODES · OGUN tournaments · spectator mode · PPV exclusive matches</p>
+              <h1 className="arena-hologram-text text-2xl lg:text-4xl font-black tracking-tight inline-block leading-none">ARENA</h1>
+              <p className="text-[9px] font-mono text-gray-500 mt-0.5">CONSOLE GAMING via PORTALNODES · OGUN tournaments · spectator mode · PPV exclusive matches</p>
             </div>
           </div>
         </div>
@@ -227,9 +232,10 @@ export default function ArenaPage() {
 
         {/* ─── GAME PICKS CARD ────────────────────────────────── */}
         <div
-          className="relative rounded-xl overflow-hidden border border-cyan-500/30 bg-gradient-to-br from-cyan-950/50 via-black to-purple-950/40 p-4 sm:p-5 cursor-pointer hover:border-cyan-400/50 transition-all"
+          className="group relative rounded-xl overflow-hidden border border-cyan-500/30 bg-gradient-to-br from-cyan-950/50 via-black to-purple-950/40 p-4 sm:p-5 cursor-pointer hover:border-cyan-400/50 transition-all"
           onClick={() => router.push('/arena/picks')}
         >
+          <span className="arena-conic-ring" aria-hidden />
           <div className="absolute inset-0 opacity-10 pointer-events-none" style={{
             background: 'radial-gradient(ellipse at top left, rgba(6,182,212,0.4), transparent 60%)',
           }} />
@@ -252,8 +258,9 @@ export default function ArenaPage() {
 
         {/* ─── FANTASY LEAGUES (top-level entry) ──────────────── */}
         <div
-          className="relative rounded-xl overflow-hidden border border-green-500/30 bg-gradient-to-br from-green-950/50 via-black to-emerald-950/40 p-4 sm:p-5"
+          className="group relative rounded-xl overflow-hidden border border-green-500/30 bg-gradient-to-br from-green-950/50 via-black to-emerald-950/40 p-4 sm:p-5"
         >
+          <span className="arena-conic-ring" aria-hidden />
           <div className="absolute inset-0 opacity-10 pointer-events-none" style={{
             background: 'radial-gradient(ellipse at top right, rgba(34,197,94,0.4), transparent 60%)',
           }} />

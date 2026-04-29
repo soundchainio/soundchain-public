@@ -39,8 +39,12 @@ export default function FantasyHubPage() {
   }, [router.query.new, me?.profile])
 
   return (
-    <div className="min-h-screen bg-black text-white">
-      <div className="max-w-5xl mx-auto px-4 py-6">
+    <div className="min-h-screen bg-black text-white relative overflow-hidden">
+      {/* High-end ambient graphics — framework lives in globals.css (port from /arena/picks) */}
+      <div className="fixed inset-0 arena-mesh-bg pointer-events-none" aria-hidden />
+      <div className="fixed inset-0 arena-grid-overlay pointer-events-none" aria-hidden />
+      <div className="fixed inset-0 arena-grain-overlay pointer-events-none" aria-hidden />
+      <div className="relative max-w-5xl mx-auto px-4 py-6">
         <div className="flex items-center justify-between mb-6">
           <button onClick={() => router.back()} className="flex items-center gap-1 text-gray-400 hover:text-white text-sm">
             <ArrowLeft className="w-4 h-4" /> Back
@@ -48,7 +52,7 @@ export default function FantasyHubPage() {
           {me?.id && (
             <button
               onClick={() => setShowCreate(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 rounded text-sm font-bold"
+              className="relative flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 hover:from-cyan-400 hover:via-purple-400 hover:to-pink-400 rounded-full text-sm font-black ring-1 ring-cyan-300/50 shadow-[0_0_20px_rgba(34,211,238,0.4)] hover:shadow-[0_0_28px_rgba(168,85,247,0.55)] arena-shimmer overflow-hidden transition-all"
             >
               <Plus className="w-4 h-4" /> New League
             </button>
@@ -56,11 +60,12 @@ export default function FantasyHubPage() {
         </div>
 
         <div className="mb-8">
-          <h1 className="text-3xl font-black bg-gradient-to-r from-green-400 via-cyan-400 to-purple-400 bg-clip-text text-transparent flex items-center gap-2">
-            <Trophy className="w-8 h-8 text-green-400" /> FANTASY LEAGUES
-          </h1>
-          <p className="text-gray-400 text-sm mt-1">
-            NFL fantasy with OGUN / POL prize pools. Smart contract escrow. 0.05% platform fee.
+          <div className="flex items-center gap-3">
+            <Trophy className="w-10 h-10 text-green-400 drop-shadow-[0_0_12px_rgba(34,197,94,0.6)]" />
+            <h1 className="arena-hologram-text text-4xl lg:text-6xl font-black tracking-tight leading-none">FANTASY LEAGUES</h1>
+          </div>
+          <p className="text-gray-400 text-sm mt-2">
+            NFL fantasy with OGUN / POL prize pools. Smart contract escrow. 5% platform fee.
           </p>
         </div>
 
@@ -93,7 +98,8 @@ function LeagueCard({ league }: { league: FantasyLeague }) {
     cancelled: 'bg-red-500/20 text-red-400',
   }
   return (
-    <Link href={`/arena/fantasy/${id}`} className="block bg-gray-900 border border-gray-800 hover:border-cyan-500/50 rounded-lg p-4 transition">
+    <Link href={`/arena/fantasy/${id}`} className="group block relative bg-gray-900/80 border border-gray-800 hover:border-cyan-500/50 rounded-lg p-4 transition overflow-hidden">
+      <span className="arena-conic-ring" aria-hidden />
       <div className="flex items-start justify-between mb-2">
         <h3 className="font-bold text-white">{league.leagueName}</h3>
         <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${statusColor[league.status] || ''}`}>

@@ -113,26 +113,41 @@ export default function FantasyLeagueDetailPage() {
 
   if (loading || !league) {
     return (
-      <div className="min-h-screen bg-black text-white">
-        <div className="flex justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-cyan-400" /></div>
+      <div className="min-h-screen bg-black text-white relative overflow-hidden">
+        <div className="fixed inset-0 arena-mesh-bg pointer-events-none" aria-hidden />
+        <div className="fixed inset-0 arena-grid-overlay pointer-events-none" aria-hidden />
+        <div className="fixed inset-0 arena-grain-overlay pointer-events-none" aria-hidden />
+        <div className="relative flex flex-col items-center justify-center py-20 gap-3">
+          <div className="relative w-14 h-14">
+            <span className="absolute inset-0 rounded-full border-2 border-cyan-500/40 animate-ping" />
+            <span className="absolute inset-1 rounded-full border-2 border-purple-500/40 animate-ping [animation-delay:200ms]" />
+            <span className="absolute inset-2 rounded-full border-2 border-pink-500/40 animate-ping [animation-delay:400ms]" />
+          </div>
+          <span className="arena-hologram-text text-sm font-black tracking-widest">LOADING</span>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-black text-white relative overflow-hidden">
+      {/* High-end ambient graphics — framework lives in globals.css (port from /arena/picks) */}
+      <div className="fixed inset-0 arena-mesh-bg pointer-events-none" aria-hidden />
+      <div className="fixed inset-0 arena-grid-overlay pointer-events-none" aria-hidden />
+      <div className="fixed inset-0 arena-grain-overlay pointer-events-none" aria-hidden />
       {league.status === 'live' && id && <FantasyLiveTicker leagueId={id} />}
-      <div className="max-w-5xl mx-auto px-4 py-6">
+      <div className="relative max-w-5xl mx-auto px-4 py-6">
         <Link href="/arena/fantasy" className="inline-flex items-center gap-1 text-gray-400 hover:text-white text-sm mb-4">
           <ArrowLeft className="w-4 h-4" /> All Leagues
         </Link>
 
         <div className="flex items-start justify-between flex-wrap gap-3 mb-4">
           <div>
-            <h1 className="text-2xl font-black flex items-center gap-2">
-              <Trophy className="w-6 h-6 text-green-400" /> {league.leagueName}
-            </h1>
-            <div className="text-xs text-gray-400 flex items-center gap-3 mt-1">
+            <div className="flex items-center gap-3">
+              <Trophy className="w-8 h-8 text-green-400 drop-shadow-[0_0_10px_rgba(34,197,94,0.55)] shrink-0" />
+              <h1 className="arena-hologram-text text-3xl lg:text-5xl font-black tracking-tight leading-none">{league.leagueName}</h1>
+            </div>
+            <div className="text-xs text-gray-400 flex items-center gap-3 mt-2 flex-wrap">
               <span>@{league.commissionerHandle}</span>
               <span className="flex items-center gap-1"><Users className="w-3 h-3" />{league.teams.length}/{league.maxTeams}</span>
               <span className="flex items-center gap-1"><Coins className="w-3 h-3" />{league.entryFee} {league.entryToken}</span>
