@@ -486,10 +486,11 @@ function GameCard({ game, onPick }: { game: Game; onPick: (game: Game, side: 'ho
             game.canPick ? 'hover:bg-cyan-500/10 hover:ring-1 hover:ring-cyan-500/30 cursor-pointer active:scale-95' : 'cursor-default'
           } ${awayLeading ? 'bg-emerald-500/[0.04]' : ''}`}
         >
-          {game.awayLogo && <img src={game.awayLogo} alt="" className="w-8 h-8 lg:w-10 lg:h-10 object-contain flex-shrink-0" onError={e => (e.target as HTMLImageElement).style.display = 'none'} />}
-          <div className="text-left min-w-0">
-            <p className="text-sm lg:text-base font-black text-white truncate">{game.awayTeam}</p>
-            <p className="text-[9px] lg:text-[10px] text-gray-500 truncate">{game.awayTeamFull}</p>
+          {game.awayLogo && <img src={game.awayLogo} alt={game.awayTeamFull} title={game.awayTeamFull} className="w-8 h-8 lg:w-12 lg:h-12 object-contain flex-shrink-0" onError={e => (e.target as HTMLImageElement).style.display = 'none'} />}
+          {/* Text block — mobile only. Desktop relies on logo alone (mobile screenshot Frank approved Apr 29 keeps these labels; desktop grid is too narrow). */}
+          <div className="text-left min-w-0 lg:hidden">
+            <p className="text-sm font-black text-white truncate">{game.awayTeam}</p>
+            <p className="text-[9px] text-gray-500 truncate">{game.awayTeamFull}</p>
           </div>
           {(isLive || isFinal) && (
             <span className={`text-lg lg:text-xl font-black ml-auto tabular-nums ${awayLeading ? 'text-emerald-300' : 'text-white'}`}>
@@ -508,10 +509,11 @@ function GameCard({ game, onPick }: { game: Game; onPick: (game: Game, side: 'ho
             game.canPick ? 'hover:bg-purple-500/10 hover:ring-1 hover:ring-purple-500/30 cursor-pointer active:scale-95' : 'cursor-default'
           } ${homeLeading ? 'bg-emerald-500/[0.04]' : ''}`}
         >
-          {game.homeLogo && <img src={game.homeLogo} alt="" className="w-8 h-8 lg:w-10 lg:h-10 object-contain flex-shrink-0" onError={e => (e.target as HTMLImageElement).style.display = 'none'} />}
-          <div className="text-left min-w-0">
-            <p className="text-sm lg:text-base font-black text-white truncate">{game.homeTeam}</p>
-            <p className="text-[9px] lg:text-[10px] text-gray-500 truncate">{game.homeTeamFull}</p>
+          {game.homeLogo && <img src={game.homeLogo} alt={game.homeTeamFull} title={game.homeTeamFull} className="w-8 h-8 lg:w-12 lg:h-12 object-contain flex-shrink-0" onError={e => (e.target as HTMLImageElement).style.display = 'none'} />}
+          {/* Text block — mobile only. Desktop logo-only per Apr 29 desktop card-overlap fix. */}
+          <div className="text-left min-w-0 lg:hidden">
+            <p className="text-sm font-black text-white truncate">{game.homeTeam}</p>
+            <p className="text-[9px] text-gray-500 truncate">{game.homeTeamFull}</p>
           </div>
           {(isLive || isFinal) && (
             <span className={`text-lg lg:text-xl font-black ml-auto tabular-nums ${homeLeading ? 'text-emerald-300' : 'text-white'}`}>
@@ -1112,14 +1114,20 @@ export default function ArenaPicksPage() {
                     </span>
                     <span className="text-[9px] font-mono text-gray-500">{g.sportEmoji} {g.sportLabel}</span>
                   </div>
-                  <div className="relative space-y-1">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-white truncate">{g.awayTeam}</span>
-                      <span className={`text-base font-mono font-black tabular-nums ${(parseInt(g.awayScore || '0') > parseInt(g.homeScore || '0')) ? 'text-emerald-400' : 'text-gray-300'}`}>{g.awayScore || '0'}</span>
+                  <div className="relative space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      {g.awayLogo
+                        ? <img src={g.awayLogo} alt={g.awayTeamFull} title={g.awayTeamFull} className="w-7 h-7 object-contain flex-shrink-0" onError={e => (e.target as HTMLImageElement).style.display = 'none'} />
+                        : <span className="w-7 h-7 flex items-center justify-center rounded-full bg-white/5 text-[9px] font-mono text-gray-400 flex-shrink-0">{g.awayTeam.slice(0, 3)}</span>}
+                      <span className="text-xs font-bold text-white truncate lg:hidden">{g.awayTeam}</span>
+                      <span className={`ml-auto text-base font-mono font-black tabular-nums ${(parseInt(g.awayScore || '0') > parseInt(g.homeScore || '0')) ? 'text-emerald-400' : 'text-gray-300'}`}>{g.awayScore || '0'}</span>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-white truncate">{g.homeTeam}</span>
-                      <span className={`text-base font-mono font-black tabular-nums ${(parseInt(g.homeScore || '0') > parseInt(g.awayScore || '0')) ? 'text-emerald-400' : 'text-gray-300'}`}>{g.homeScore || '0'}</span>
+                    <div className="flex items-center gap-2">
+                      {g.homeLogo
+                        ? <img src={g.homeLogo} alt={g.homeTeamFull} title={g.homeTeamFull} className="w-7 h-7 object-contain flex-shrink-0" onError={e => (e.target as HTMLImageElement).style.display = 'none'} />
+                        : <span className="w-7 h-7 flex items-center justify-center rounded-full bg-white/5 text-[9px] font-mono text-gray-400 flex-shrink-0">{g.homeTeam.slice(0, 3)}</span>}
+                      <span className="text-xs font-bold text-white truncate lg:hidden">{g.homeTeam}</span>
+                      <span className={`ml-auto text-base font-mono font-black tabular-nums ${(parseInt(g.homeScore || '0') > parseInt(g.awayScore || '0')) ? 'text-emerald-400' : 'text-gray-300'}`}>{g.homeScore || '0'}</span>
                     </div>
                   </div>
                   {g.canPick && (
@@ -1161,14 +1169,18 @@ export default function ArenaPicksPage() {
                             {isLive ? `LIVE · ${g.statusDetail}` : isFinal ? 'FINAL' : tipStr}
                           </span>
                         </div>
-                        <div className="space-y-0.5">
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="font-bold text-white truncate">{g.awayTeam}</span>
-                            {(isLive || isFinal) && <span className="font-mono tabular-nums text-gray-300">{g.awayScore || 0}</span>}
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-1.5 text-xs">
+                            {g.awayLogo
+                              ? <img src={g.awayLogo} alt={g.awayTeamFull} title={g.awayTeamFull} className="w-5 h-5 object-contain flex-shrink-0" onError={e => (e.target as HTMLImageElement).style.display = 'none'} />
+                              : <span className="w-5 h-5 flex items-center justify-center rounded-full bg-white/5 text-[8px] font-mono text-gray-400 flex-shrink-0">{g.awayTeam.slice(0, 3)}</span>}
+                            {(isLive || isFinal) && <span className="ml-auto font-mono tabular-nums text-gray-300">{g.awayScore || 0}</span>}
                           </div>
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="font-bold text-white truncate">@ {g.homeTeam}</span>
-                            {(isLive || isFinal) && <span className="font-mono tabular-nums text-gray-300">{g.homeScore || 0}</span>}
+                          <div className="flex items-center gap-1.5 text-xs">
+                            {g.homeLogo
+                              ? <img src={g.homeLogo} alt={g.homeTeamFull} title={g.homeTeamFull} className="w-5 h-5 object-contain flex-shrink-0" onError={e => (e.target as HTMLImageElement).style.display = 'none'} />
+                              : <span className="w-5 h-5 flex items-center justify-center rounded-full bg-white/5 text-[8px] font-mono text-gray-400 flex-shrink-0">{g.homeTeam.slice(0, 3)}</span>}
+                            {(isLive || isFinal) && <span className="ml-auto font-mono tabular-nums text-gray-300">{g.homeScore || 0}</span>}
                           </div>
                         </div>
                         {g.canPick && (
@@ -1278,7 +1290,11 @@ export default function ArenaPicksPage() {
                             {p.status === 'matched' ? 'LOCKED' : 'OPEN'}
                           </span>
                         </div>
-                        <div className="text-xs font-bold text-white truncate">{p.awayTeam} @ {p.homeTeam}</div>
+                        <div className="flex items-center gap-1.5">
+                          {p.awayLogo && <img src={p.awayLogo} alt={p.awayTeamFull} title={p.awayTeamFull} className="w-5 h-5 object-contain flex-shrink-0" onError={e => (e.target as HTMLImageElement).style.display = 'none'} />}
+                          <span className="text-[10px] font-mono text-gray-600">@</span>
+                          {p.homeLogo && <img src={p.homeLogo} alt={p.homeTeamFull} title={p.homeTeamFull} className="w-5 h-5 object-contain flex-shrink-0" onError={e => (e.target as HTMLImageElement).style.display = 'none'} />}
+                        </div>
                         <div className="flex items-center justify-between mt-1">
                           <span className="text-[10px] font-mono text-amber-300">{p.pot} {p.entryToken}</span>
                           <span className="text-[9px] font-mono text-gray-500 tracking-widest">POT</span>
