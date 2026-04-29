@@ -308,7 +308,21 @@ export function DexNavBar() {
   const listenerDailyLimit = listenerData?.myListenerRewards?.dailyLimit || 50
 
   // Shared popover wrapper classes — fixed-centered on mobile, absolute-right on desktop.
-  const popoverBase = 'fixed left-1/2 sm:left-auto sm:right-4 top-14 sm:top-12 -translate-x-1/2 sm:translate-x-0 z-[9999] shadow-2xl overflow-hidden rounded-lg'
+  // Mobile: fixed centered slide-down (sm:hidden viewport). Desktop: absolute under the trigger pill
+  // so dropdowns appear directly beneath the icon instead of jumping to the far-right of the nav.
+  // Each pill's parent is `position: relative` so `sm:right-0 sm:top-full` anchors to that pill.
+  const popoverBase = 'fixed left-1/2 -translate-x-1/2 top-14 sm:absolute sm:left-auto sm:right-0 sm:top-full sm:mt-2 sm:translate-x-0 z-[10000] shadow-2xl overflow-hidden rounded-lg'
+
+  // Route-scope the global tickers: Bloomberg (OgunPriceTicker) lives only on /nodes; the
+  // sports-stack (MLB/NHL/NBA/NFL) lives only on /arena*. Frank's directive Apr 29 — *"i want to
+  // only render the full stack tickers for all sports only ones in arena only.. keep bloomberg
+  // only on nodes."*
+  const path = router.pathname || ''
+  const isArenaRoute = path === '/arena' || path.startsWith('/arena/')
+  const isNodesRoute = path === '/nodes' || path.startsWith('/nodes/')
+  const showBloombergTicker = isNodesRoute
+  const showSportsTickers = isArenaRoute
+  const anyTickerVisible = showBloombergTicker || showSportsTickers
 
   return (
     <header className="sticky top-0 z-50" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
@@ -1104,23 +1118,29 @@ export function DexNavBar() {
         </div>
       )}
 
-      {/* Ticker stack: Bloomberg + Sports — collapsible (FURL never touched) */}
-      <div className="relative">
-        {!tickerCollapsed && (
-          <>
-            <OgunPriceTicker />
-            <SportsTickerStack />
-          </>
-        )}
-        {/* Chevron minimizer — toggle ticker stack visibility */}
-        <button
-          onClick={() => setTickerCollapsed(c => !c)}
-          className="absolute -bottom-3 left-1/2 -translate-x-1/2 z-20 w-6 h-6 flex items-center justify-center rounded-full bg-neutral-800 border border-white/10 hover:bg-neutral-700 transition shadow-lg"
-          title={tickerCollapsed ? 'Show tickers' : 'Hide tickers'}
-        >
-          <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform ${tickerCollapsed ? 'rotate-180' : ''}`} />
-        </button>
-      </div>
+      {/* Ticker stack — collapsible. Route-scoped per Frank's directive (Apr 29):
+          Bloomberg renders on /nodes only, sports stack on /arena* only. Chevron only renders
+          when at least one ticker would be visible — no empty handle on routes that don't host
+          any ticker. `relative z-0` ensures popovers/dropdowns paint above the ticker animation
+          (some browsers promote marquee animations to their own compositor layer). */}
+      {anyTickerVisible && (
+        <div className="relative z-0">
+          {!tickerCollapsed && (
+            <>
+              {showBloombergTicker && <OgunPriceTicker />}
+              {showSportsTickers && <SportsTickerStack />}
+            </>
+          )}
+          {/* Chevron minimizer — toggle ticker stack visibility */}
+          <button
+            onClick={() => setTickerCollapsed(c => !c)}
+            className="absolute -bottom-3 left-1/2 -translate-x-1/2 z-20 w-6 h-6 flex items-center justify-center rounded-full bg-neutral-800 border border-white/10 hover:bg-neutral-700 transition shadow-lg"
+            title={tickerCollapsed ? 'Show tickers' : 'Hide tickers'}
+          >
+            <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform ${tickerCollapsed ? 'rotate-180' : ''}`} />
+          </button>
+        </div>
+      )}
     </header>
   )
 }
