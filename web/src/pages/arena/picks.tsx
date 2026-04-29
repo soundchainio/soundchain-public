@@ -10,7 +10,7 @@ import { useRouter } from 'next/router'
 import { useMe } from 'hooks/useMe'
 import { toast } from 'react-toastify'
 import { ethers } from 'ethers'
-import { Loader2, Trophy, Zap, TrendingUp, Clock, Check, X, ChevronDown, Wallet, Sparkles, Pencil, Trash2, Coins } from 'lucide-react'
+import { Loader2, Trophy, Zap, TrendingUp, Clock, Check, X, ChevronDown, Wallet, Sparkles, Pencil, Trash2, Coins, Share2 } from 'lucide-react'
 import { TOKEN_CONFIG, LIVE_TOKENS, isTokenLive } from 'lib/arena/fantasy/types'
 import { TOKEN_INFO } from 'constants/tokens'
 import { useUnifiedWallet } from 'contexts/UnifiedWalletContext'
@@ -360,29 +360,36 @@ function MatchupCard({ pick, me, onTake, onCancel, onEdit }: { pick: Pick; me: a
                     <span className="relative z-10 font-mono uppercase tracking-wider">TAKE {pick.creatorPick === 'home' ? pick.awayTeam : pick.homeTeam}</span>
                   </button>
                 )}
-                {/* Creator controls — share + cancel */}
-                {isCreator && isOpen && (
+                {/* Share button — visible on all non-canceled picks for everyone (creator/taker/viewer) */}
+                {pick.status !== 'canceled' && (
                   <div className="flex items-center gap-2 mt-2">
                     <button
                       onClick={async () => {
-                        const url = `${window.location.origin}/arena/picks?take=${pick.id}`
+                        const url = `${window.location.origin}/pick/${pick.id}`
+                        const opponentTeam = pick.creatorPick === 'home' ? pick.awayTeam : pick.homeTeam
+                        const shareText = isOpen
+                          ? `Take my pick on SoundChain Arena — ${creatorTeam} vs ${opponentTeam} for ${pick.entryFee} ${pick.entryToken === 'MATIC' ? 'POL' : pick.entryToken}`
+                          : `${creatorTeam} vs ${opponentTeam} on SoundChain Arena — ${pick.pot} ${pick.entryToken === 'MATIC' ? 'POL' : pick.entryToken} pot`
                         if (navigator.share) {
-                          try { await navigator.share({ title: `${creatorTeam} vs ${pick.creatorPick === 'home' ? pick.awayTeam : pick.homeTeam} — ${pick.entryFee} ${pick.entryToken}`, url }) } catch {}
+                          try { await navigator.share({ title: shareText, url }) } catch {}
                         } else {
                           await navigator.clipboard.writeText(url)
-                          toast.success('Pick link copied — send to your opponent!')
+                          toast.success('Pick link copied — share with friends to take this pick!')
                         }
                       }}
-                      className="px-3 py-1 text-[10px] font-bold text-gray-400 hover:text-cyan-400 border border-gray-700 hover:border-cyan-500/50 rounded-full transition-all"
+                      className="flex items-center gap-1.5 px-3 py-1 text-[10px] font-bold text-cyan-400 hover:text-cyan-300 border border-cyan-500/40 hover:border-cyan-400 rounded-full transition-all hover:shadow-[0_0_12px_rgba(34,211,238,0.4)]"
                     >
-                      📤 SHARE
+                      <Share2 className="w-3 h-3" />
+                      <span className="font-mono uppercase tracking-wider">SHARE</span>
                     </button>
-                    <button
-                      onClick={() => { if (confirm('Cancel this pick?')) onCancel(pick.id) }}
-                      className="px-3 py-1 text-[10px] font-bold text-gray-500 hover:text-red-400 border border-gray-700 hover:border-red-500/50 rounded-full transition-all"
-                    >
-                      ✕ CANCEL
-                    </button>
+                    {isCreator && isOpen && (
+                      <button
+                        onClick={() => { if (confirm('Cancel this pick?')) onCancel(pick.id) }}
+                        className="px-3 py-1 text-[10px] font-bold text-gray-500 hover:text-red-400 border border-gray-700 hover:border-red-500/50 rounded-full transition-all"
+                      >
+                        ✕ CANCEL
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
