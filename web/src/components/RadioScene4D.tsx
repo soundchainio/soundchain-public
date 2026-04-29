@@ -406,9 +406,10 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
       starPositions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta)
       starPositions[i * 3 + 2] = r * Math.cos(phi)
       starSizes[i] = Math.random() * 1.5 + 0.3
-      // Dimmed color variation (40% brightness for readability)
+      // Dimmed color variation (25% brightness — Apr 29 tuning per Frank's TV test:
+      // stars were overpowering the central sphere + orbiting agents on a 60" TV).
       const colorChoice = Math.random()
-      const dim = 0.4
+      const dim = 0.25
       if (colorChoice < 0.3) {
         starColors[i * 3] = 0.6 * dim; starColors[i * 3 + 1] = 0.8 * dim; starColors[i * 3 + 2] = 1.0 * dim
       } else if (colorChoice < 0.6) {
@@ -437,7 +438,7 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
           gl_PointSize = size * (250.0 / -mvPos.z) * (1.0 + uMids * 0.6);
           gl_Position = projectionMatrix * mvPos;
           float twinkle = sin(uTime * 3.0 + length(position) * 0.5) * 0.3 + 0.7;
-          vAlpha = (0.3 + uMids * 0.5) * twinkle;
+          vAlpha = (0.18 + uMids * 0.3) * twinkle;
         }
       `,
       fragmentShader: `
@@ -448,7 +449,9 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
           if (d > 0.5) discard;
           float core = smoothstep(0.5, 0.0, d);
           float alpha = core * vAlpha;
-          gl_FragColor = vec4(vColor * 1.3, alpha);
+          // Apr 29 TV tuning — was * 1.3 (brightened stars back up after the dim factor),
+          // dropped to * 0.7 so dense additive-blended regions don't overpower the sphere.
+          gl_FragColor = vec4(vColor * 0.7, alpha);
         }
       `,
       vertexColors: true,
