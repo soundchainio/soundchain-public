@@ -43,6 +43,9 @@ export interface GamePick {
   payoutTxHash?: string          // settle() tx hash on Polygon
   platformFeeBps: number         // 5 = 0.05% (matches contract default)
   ogunBonusBps?: number          // 1000 = 10% bonus to winner when entryToken === 'OGUN', paid from rewards pool on settle
+  ogunBonusTxHash?: string       // OGUN bonus transfer tx hash (commissioner -> winner) on settle
+  ogunBonusAt?: string           // ISO timestamp when bonus was attempted (success or skip)
+  ogunBonusSkippedReason?: string // 'commissioner-ogun-balance-insufficient' or other reason if bonus not paid
   // On-chain escrow — FantasyLeagueEscrow contract
   escrowContractAddress?: string
   escrowLeagueId?: string        // contract-issued leagueId from LeagueCreated event

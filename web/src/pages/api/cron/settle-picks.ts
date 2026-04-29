@@ -9,9 +9,11 @@
  * vercel.json cron: every 10 minutes
  */
 import type { NextApiRequest, NextApiResponse } from 'next'
+import { ethers } from 'ethers'
 import clientPromise from 'lib/mongodb'
 import { SPORT_CONFIG, PickSport } from 'lib/arena/picks/types'
-import { escrowSettlePick, escrowCancelPick } from 'lib/arena/picks/escrowServer'
+import { escrowSettlePick, escrowCancelPick, transferErc20FromCommissioner } from 'lib/arena/picks/escrowServer'
+import { TOKEN_CONFIG } from 'lib/arena/fantasy/types'
 
 const ESPN_BASE = 'https://site.api.espn.com/apis/site/v2/sports'
 const CRON_SECRET = process.env.CRON_SECRET || ''
@@ -152,6 +154,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         continue
       }
 
+      // OGUN bonus payout: pot * ogunBonusBps / 10000 OGUN from commissioner -> winner.
+      // Gated on commissioner balance; never aborts the cron.
+      const bonusUpdate: Record<string, any> = {}
+      if (pick.entryToken === 'OGUN' && pick.ogunBonusBps && pick.ogunBonusBps > 0) {
+        try {
+          const ogunCfg = TOKEN_CONFIG['OGUN']
+          const bonusAmount = (pick.entryFee * 2 * pick.ogunBonusBps) / 10000
+          const bonusWei = ethers.utils.parseUnits(bonusAmount.toString(), ogunCfg.decimals)
+          const result = await transferErc20FromCommissioner(ogunCfg.address, winnerWalletAddress, bonusWei)
+          bonusUpdate.ogunBonusAt = new Date().toISOString()
+          if (result.txHash) bonusUpdate.ogunBonusTxHash = result.txHash
+          if (result.skippedReason) bonusUpdate.ogunBonusSkippedReason = result.skippedReason
+        } catch (err: any) {
+          errors.push(`ogun bonus ${pick._id}: ${err?.message || 'unknown'}`)
+          bonusUpdate.ogunBonusAt = new Date().toISOString()
+          bonusUpdate.ogunBonusSkippedReason = `error: ${err?.message || 'unknown'}`
+        }
+      }
+
       await picks.updateOne({ _id: pick._id }, {
         $set: {
           gameStatus: 'post',
@@ -163,6 +184,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           payoutTxHash,
           status: 'settled',
           settledAt: new Date().toISOString(),
+          ...bonusUpdate,
         },
       })
       settled++

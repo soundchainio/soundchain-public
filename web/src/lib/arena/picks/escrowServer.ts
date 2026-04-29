@@ -23,6 +23,7 @@ import {
   PICK_FIRST_BPS,
   PICK_SECOND_BPS,
   PICK_THIRD_BPS,
+  ERC20_MIN_ABI,
 } from './contract'
 
 export { NATIVE_TOKEN }
@@ -165,6 +166,40 @@ export async function escrowCancelPick(leagueId: string): Promise<string> {
     await tx.wait()
     return tx.hash
   })
+}
+
+/**
+ * Transfer ERC-20 tokens from the commissioner wallet to a recipient address.
+ * Used to pay the OGUN bonus to a pick winner after settle.
+ * Returns { txHash } on success, or { skippedReason } if commissioner balance is insufficient.
+ * Real reverts (not balance-related) bubble up. Transport errors rotate through POLYGON_RPC_URLS.
+ */
+export async function transferErc20FromCommissioner(
+  tokenAddress: string,
+  toAddress: string,
+  amountWei: ethers.BigNumber,
+): Promise<{ txHash?: string; skippedReason?: string }> {
+  let lastErr: any = null
+  for (let attempt = 0; attempt < POLYGON_RPC_URLS.length; attempt++) {
+    const rpcIndex = (cachedRpcIndex + attempt) % POLYGON_RPC_URLS.length
+    const signer = buildSigner(POLYGON_RPC_URLS[rpcIndex])
+    try {
+      const erc20 = new ethers.Contract(tokenAddress, ERC20_MIN_ABI, signer)
+      const balance: ethers.BigNumber = await erc20.balanceOf(signer.address)
+      if (balance.lt(amountWei)) {
+        cachedRpcIndex = rpcIndex
+        return { skippedReason: 'commissioner-ogun-balance-insufficient' }
+      }
+      const tx: ethers.ContractTransaction = await erc20.transfer(toAddress, amountWei)
+      await tx.wait()
+      cachedRpcIndex = rpcIndex
+      return { txHash: tx.hash }
+    } catch (err: any) {
+      lastErr = err
+      if (!isRpcTransportError(err)) throw err
+    }
+  }
+  throw lastErr
 }
 
 /**
