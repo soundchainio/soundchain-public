@@ -14,6 +14,8 @@ import {
   getOverride,
   setOverride as setDisplayOverride,
   labelForOverride,
+  getScreenSnapshot,
+  getLargeLandscapeViewport,
   DISPLAY_MODE_OVERRIDE_EVENT,
 } from 'lib/tvMode'
 
@@ -33,6 +35,11 @@ export default function TvDebugPage() {
   const [override, setOverrideState] = useState<DisplayModeOverride>('auto')
   const [width, setWidth] = useState(0)
   const [height, setHeight] = useState(0)
+  const [screenW, setScreenW] = useState(0)
+  const [screenH, setScreenH] = useState(0)
+  const [dpr, setDpr] = useState(1)
+  const [appliedViewport, setAppliedViewport] = useState('')
+  const [computedTvViewport, setComputedTvViewport] = useState('')
   const [ua, setUA] = useState('')
   const [serverInfo, setServerInfo] = useState<unknown>(null)
   const [loading, setLoading] = useState(false)
@@ -43,6 +50,13 @@ export default function TvDebugPage() {
       setOverrideState(getOverride() || 'auto')
       setWidth(window.innerWidth)
       setHeight(window.innerHeight)
+      const snap = getScreenSnapshot()
+      setScreenW(snap.screenWidth)
+      setScreenH(snap.screenHeight)
+      setDpr(snap.dpr)
+      setComputedTvViewport(getLargeLandscapeViewport())
+      const meta = document.querySelector('meta[name="viewport"]') as HTMLMetaElement | null
+      setAppliedViewport(meta?.content || '—')
       setUA(window.navigator.userAgent)
     }
     apply()
@@ -82,8 +96,12 @@ export default function TvDebugPage() {
             <h2 className="text-[11px] uppercase tracking-widest text-cyan-400">Client (this device)</h2>
             <Row label="Detected mode" value={mode} highlight />
             <Row label="Override" value={override === 'auto' ? 'auto (unset)' : labelForOverride(override)} highlight={override !== 'auto'} />
-            <Row label="Viewport" value={`${width} × ${height}`} />
-            <Row label="Tailwind breakpoint" value={breakpointOf(width)} />
+            <Row label="screen.width × height" value={`${screenW} × ${screenH}`} highlight />
+            <Row label="window.innerWidth × innerHeight" value={`${width} × ${height}`} />
+            <Row label="devicePixelRatio" value={String(dpr)} />
+            <Row label="Tailwind breakpoint (innerWidth)" value={breakpointOf(width)} />
+            <Row label="Applied viewport meta" value={appliedViewport} mono />
+            <Row label="Computed TV viewport (would-be)" value={computedTvViewport} mono />
             <Row label="data-display-mode" value={typeof document !== 'undefined' ? (document.documentElement.dataset.displayMode || '—') : '—'} />
             <Row label="data-display-override" value={typeof document !== 'undefined' ? (document.documentElement.dataset.displayOverride || '—') : '—'} />
             <Row label="data-tv (legacy)" value={typeof document !== 'undefined' ? (document.documentElement.dataset.tv || '—') : '—'} />

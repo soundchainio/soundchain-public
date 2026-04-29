@@ -162,10 +162,29 @@ export const DISPLAY_MODE_ATTR = 'display-mode'
  * On Silk (Fire TV) and many smart TV browsers, the default `width=device-width`
  * viewport returns a narrow mobile-style viewport (~980px) even when the physical
  * display is 1920×1080+. That makes Tailwind's md:/lg:/xl: breakpoints never
- * trigger, so the whole site renders as a scaled-up phone. Forcing `width=1920`
- * tells the browser to lay out at desktop breakpoints; the browser then scales
- * the rendered page to fit the actual display.
+ * trigger, so the whole site renders as a scaled-up phone. Forcing a wider
+ * viewport tells the browser to lay out at desktop breakpoints.
+ *
+ * Adaptive sizing: read `window.screen.width` and clamp [1280, 2400]. Avoids the
+ * Apr 24 bug where forcing 1920 caused horizontal scroll on 720p TVs (1280×720)
+ * because the layout was wider than the actual screen. Also avoids forcing 3840
+ * on 4K TVs which makes everything too small for 10-foot viewing.
+ *
+ * Tier breakdown:
+ *   screen.width < 1280 → 1280 (lg: breakpoint floor for TV layouts)
+ *   1280-2400          → use screen.width directly (1:1 layout)
+ *   > 2400 (4K TVs)    → 2400 (cap; otherwise text is too small at 10 feet)
  */
+export const getLargeLandscapeViewport = (): string => {
+  if (typeof window === 'undefined') {
+    return 'width=1920, initial-scale=1.0, minimum-scale=0.5, maximum-scale=2.0, user-scalable=yes'
+  }
+  const reported = window.screen?.width || 1920
+  const target = Math.max(1280, Math.min(reported, 2400))
+  return `width=${target}, initial-scale=1.0, minimum-scale=0.5, maximum-scale=2.0, user-scalable=yes`
+}
+
+/** Legacy constant — keep for any consumer that still imports it. Prefer the function. */
 export const LARGE_LANDSCAPE_VIEWPORT =
   'width=1920, initial-scale=1.0, minimum-scale=0.5, maximum-scale=2.0, user-scalable=yes'
 
@@ -174,15 +193,32 @@ export const FORCED_DESKTOP_VIEWPORT =
   'width=1280, initial-scale=1.0, minimum-scale=0.5, maximum-scale=2.0, user-scalable=yes'
 
 /**
+ * Snapshot of what the device reports — used by /tv debug to show real values.
+ * `screen.width` is what we adapt the viewport to; `innerWidth` is what Tailwind sees.
+ */
+export const getScreenSnapshot = () => {
+  if (typeof window === 'undefined') {
+    return { screenWidth: 0, screenHeight: 0, innerWidth: 0, innerHeight: 0, dpr: 1 }
+  }
+  return {
+    screenWidth: window.screen?.width || 0,
+    screenHeight: window.screen?.height || 0,
+    innerWidth: window.innerWidth,
+    innerHeight: window.innerHeight,
+    dpr: window.devicePixelRatio || 1,
+  }
+}
+
+/**
  * Resolve the viewport meta string for a given mode + override pair.
- * Override has primacy; without one, mode controls (tv/projector → 1920, else mobile).
+ * Override has primacy; without one, mode controls (tv/projector → adaptive 1280-2400, else mobile).
  */
 export const resolveViewport = (mode: DisplayMode, override: DisplayModeOverride | null): string => {
   const STANDARD =
     'width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover'
   if (override === 'desktop') return FORCED_DESKTOP_VIEWPORT
   if (override === 'mobile') return STANDARD
-  if (isLargeLandscape(mode)) return LARGE_LANDSCAPE_VIEWPORT
+  if (isLargeLandscape(mode)) return getLargeLandscapeViewport()
   return STANDARD
 }
 
