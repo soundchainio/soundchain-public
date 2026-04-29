@@ -10,6 +10,15 @@
  *   'kiosk'     — ChromeOS Kiosk, public-display Kiosk UA fragments.
  *   'standard'  — Desktop/laptop/tablet/phone default.
  *
+ * Plus the user-side override (Avatar → Frames):
+ *   localStorage.soundchain.displayModeOverride = 'auto' | 'mobile' | 'desktop' | 'tv'
+ *                                               | 'projector' | 'vr' | 'kiosk'
+ *
+ *   The override always wins over auto-detection. `auto` clears it. Use cases:
+ *   phone plugged into a projection room, tablet HDMI'd to a TV, venue laptop
+ *   that needs to lock as "kiosk". The dropdown lives in the Avatar menu under
+ *   "Frames" so any user can flip it from any page.
+ *
  * The hook (useDisplayMode / legacy useTvMode) writes:
  *   <html data-display-mode="tv|projector|vr|kiosk|standard">
  *   <html data-tv="true">                 ← legacy compat for existing CSS; fires on tv OR projector
@@ -21,6 +30,42 @@
  */
 
 export type DisplayMode = 'tv' | 'projector' | 'vr' | 'kiosk' | 'standard'
+export type DisplayModeOverride = 'auto' | 'mobile' | 'desktop' | DisplayMode
+
+export const DISPLAY_MODE_OVERRIDE_KEY = 'soundchain.displayModeOverride'
+export const DISPLAY_MODE_OVERRIDE_EVENT = 'soundchain:displayModeOverrideChange'
+
+const VALID_OVERRIDES: ReadonlyArray<DisplayModeOverride> = [
+  'auto', 'mobile', 'desktop', 'tv', 'projector', 'vr', 'kiosk',
+]
+
+export const isValidOverride = (val: string | null | undefined): val is DisplayModeOverride =>
+  !!val && (VALID_OVERRIDES as readonly string[]).includes(val)
+
+/** Read the saved override from localStorage. Returns 'auto' (or null on SSR) when unset. */
+export const getOverride = (): DisplayModeOverride | null => {
+  if (typeof window === 'undefined') return null
+  try {
+    const v = window.localStorage.getItem(DISPLAY_MODE_OVERRIDE_KEY)
+    return isValidOverride(v) ? v : 'auto'
+  } catch {
+    return 'auto'
+  }
+}
+
+/** Persist override + broadcast a custom event so the hook re-applies without reload. */
+export const setOverride = (mode: DisplayModeOverride): void => {
+  if (typeof window === 'undefined') return
+  try {
+    if (mode === 'auto') window.localStorage.removeItem(DISPLAY_MODE_OVERRIDE_KEY)
+    else window.localStorage.setItem(DISPLAY_MODE_OVERRIDE_KEY, mode)
+    window.dispatchEvent(new CustomEvent(DISPLAY_MODE_OVERRIDE_EVENT, { detail: { mode } }))
+  } catch {
+    /* localStorage disabled (Safari private mode, SSR) — no-op */
+  }
+}
+
+export const clearOverride = (): void => setOverride('auto')
 
 const TV_UA_PATTERNS = [
   /\bAFT[A-Z0-9]+\b/i,   // Fire TV / Fire Cube: AFTKA, AFTSS, AFTMM, AFTT, AFTB, etc.
@@ -61,6 +106,13 @@ const KIOSK_UA_PATTERNS = [
 
 export const detectDisplayMode = (): DisplayMode => {
   if (typeof window === 'undefined') return 'standard'
+
+  // User-side override beats auto-detection. Phone-into-projector use case.
+  const override = getOverride()
+  if (override && override !== 'auto') {
+    if (override === 'mobile' || override === 'desktop') return 'standard'
+    return override // tv | projector | vr | kiosk
+  }
 
   const ua = window.navigator?.userAgent || ''
 
@@ -116,3 +168,34 @@ export const DISPLAY_MODE_ATTR = 'display-mode'
  */
 export const LARGE_LANDSCAPE_VIEWPORT =
   'width=1920, initial-scale=1.0, minimum-scale=0.5, maximum-scale=2.0, user-scalable=yes'
+
+/** Forced "desktop" viewport when the user pins desktop frame on a smaller device. */
+export const FORCED_DESKTOP_VIEWPORT =
+  'width=1280, initial-scale=1.0, minimum-scale=0.5, maximum-scale=2.0, user-scalable=yes'
+
+/**
+ * Resolve the viewport meta string for a given mode + override pair.
+ * Override has primacy; without one, mode controls (tv/projector → 1920, else mobile).
+ */
+export const resolveViewport = (mode: DisplayMode, override: DisplayModeOverride | null): string => {
+  const STANDARD =
+    'width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover'
+  if (override === 'desktop') return FORCED_DESKTOP_VIEWPORT
+  if (override === 'mobile') return STANDARD
+  if (isLargeLandscape(mode)) return LARGE_LANDSCAPE_VIEWPORT
+  return STANDARD
+}
+
+/** Human-readable label for a mode override — used in UI and the reset pill. */
+export const labelForOverride = (override: DisplayModeOverride): string => {
+  switch (override) {
+    case 'auto': return 'Auto'
+    case 'mobile': return 'Mobile'
+    case 'desktop': return 'Desktop'
+    case 'tv': return 'TV'
+    case 'projector': return 'Projector (Cinema)'
+    case 'vr': return 'VR'
+    case 'kiosk': return 'Kiosk'
+    default: return 'Auto'
+  }
+}

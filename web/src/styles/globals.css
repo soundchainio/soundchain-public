@@ -2362,3 +2362,27 @@ input[type="number"]::-webkit-outer-spin-button {
 .arena-confetti-spark.s1 { background: #fbbf24; left: 18%; top: 0; animation: arena-confetti-1 1.6s ease-out infinite; }
 .arena-confetti-spark.s2 { background: #f0abfc; left: 50%; top: 0; animation: arena-confetti-2 1.9s ease-out infinite 0.2s; }
 .arena-confetti-spark.s3 { background: #67e8f9; left: 80%; top: 0; animation: arena-confetti-3 1.7s ease-out infinite 0.4s; }
+
+/* ================================================================================
+   PROJECTOR (CINEMA) FRAME — visual treatment for venue/cinema projectors.
+   Activated by Avatar → Frames → "Projector (Cinema)" or auto-detected from
+   cinema-scope aspect ratio (≥ 2.35:1 at ≥ 1920px).
+   Lumen falloff at 100"+ throws kills sub-14px text and ultrawide projectors
+   waste the wings if max-w is capped at 1600px.
+   ================================================================================ */
+:root[data-display-mode="projector"] body {
+  font-size: 17px; /* baseline up from 14-16px so 100"+ throws stay legible */
+}
+:root[data-display-mode="projector"] .max-w-7xl,
+:root[data-display-mode="projector"] [class*="max-w-["] {
+  max-width: 2400px !important; /* let 21:9 / 2.35:1 projectors fill the wings */
+}
+:root[data-display-mode="projector"] .text-\[8px\],
+:root[data-display-mode="projector"] .text-\[9px\],
+:root[data-display-mode="projector"] .text-\[10px\] {
+  font-size: 12px; /* boost mono micro-labels */
+}
+:root[data-display-mode="projector"] .text-xs { font-size: 14px; }
+/* Lift contrast — projector throws often soften neutral grays into mush. */
+:root[data-display-mode="projector"] .text-gray-500 { color: rgb(156, 163, 175) !important; }
+:root[data-display-mode="projector"] .text-gray-600 { color: rgb(156, 163, 175) !important; }

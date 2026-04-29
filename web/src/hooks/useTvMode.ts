@@ -5,11 +5,11 @@ import {
   isLargeLandscape,
   TV_BODY_ATTR,
   DISPLAY_MODE_ATTR,
-  LARGE_LANDSCAPE_VIEWPORT,
+  DISPLAY_MODE_OVERRIDE_EVENT,
+  DISPLAY_MODE_OVERRIDE_KEY,
+  getOverride,
+  resolveViewport,
 } from 'lib/tvMode'
-
-const STANDARD_VIEWPORT =
-  'width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover'
 
 const applyViewport = (content: string) => {
   if (typeof document === 'undefined') return
@@ -40,25 +40,33 @@ export const useDisplayMode = (): DisplayMode => {
     if (typeof document === 'undefined') return
 
     const apply = () => {
-      const detected = detectDisplayMode()
+      const override = getOverride()
+      const detected = detectDisplayMode() // already honors override
       setMode(detected)
       const root = document.documentElement
 
       root.setAttribute(`data-${DISPLAY_MODE_ATTR}`, detected)
 
-      if (isLargeLandscape(detected)) {
-        root.setAttribute(`data-${TV_BODY_ATTR}`, 'true')
-        applyViewport(LARGE_LANDSCAPE_VIEWPORT)
-      } else {
-        root.removeAttribute(`data-${TV_BODY_ATTR}`)
-        applyViewport(STANDARD_VIEWPORT)
-      }
+      if (isLargeLandscape(detected)) root.setAttribute(`data-${TV_BODY_ATTR}`, 'true')
+      else root.removeAttribute(`data-${TV_BODY_ATTR}`)
+
+      // Mark when an explicit override is active so the reset pill + CSS branches can target it.
+      if (override && override !== 'auto') root.setAttribute('data-display-override', override)
+      else root.removeAttribute('data-display-override')
+
+      applyViewport(resolveViewport(detected, override))
     }
 
     apply()
     window.addEventListener('resize', apply)
+    window.addEventListener(DISPLAY_MODE_OVERRIDE_EVENT, apply as EventListener)
+    // Cross-tab sync: another tab flipping the override pushes a `storage` event here.
+    const onStorage = (e: StorageEvent) => { if (e.key === DISPLAY_MODE_OVERRIDE_KEY) apply() }
+    window.addEventListener('storage', onStorage)
     return () => {
       window.removeEventListener('resize', apply)
+      window.removeEventListener(DISPLAY_MODE_OVERRIDE_EVENT, apply as EventListener)
+      window.removeEventListener('storage', onStorage)
     }
   }, [])
 

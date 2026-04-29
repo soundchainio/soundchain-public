@@ -52,6 +52,13 @@ const CapacitorInit = dynamic(() => import('hooks/useCapacitor').then(mod => {
 // console browsers so CSS can bump font + logos + focus rings for 10-foot view.
 const TvModeInit = dynamic(() => import('hooks/useTvMode').then(mod => mod.TvModeInit), { ssr: false })
 
+// Frame-override indicator — surfaces an active manual frame override (Avatar → Frames)
+// as a dismissable bottom-right pill so the next user can reset it from any page.
+const FrameOverrideIndicator = dynamic(
+  () => import('components/FrameOverrideIndicator').then(mod => mod.FrameOverrideIndicator),
+  { ssr: false }
+)
+
 // Apollo stays as a direct import for stable React tree (no remount flicker).
 // The speed win comes from Vercel-direct endpoints (/api/me, /api/tracks/list, etc.)
 // which serve data before Lambda cold-starts. Apollo is the fallback, not the fast path.
@@ -173,6 +180,7 @@ function SoundchainMainLayout({ Component, pageProps }: CustomAppProps) {
                           <CheckBodyScroll />
                           <CapacitorInit />
                           <TvModeInit />
+                          <FrameOverrideIndicator />
                           <HeartbeatProvider />
                           <PushEnableFloat />
                           <Layout>
@@ -216,6 +224,7 @@ function SoundchainPageLayout({ Component, pageProps }: CustomAppProps) {
                       <HideBottomNavBarProvider>
                         <LayoutContextProvider>
                           <TvModeInit />
+                          <FrameOverrideIndicator />
                           <HeartbeatProvider />
                           {Component.getLayout(<Component {...pageProps} />)}
                           {/* Standalone pages bypass Layout.tsx (which owns the

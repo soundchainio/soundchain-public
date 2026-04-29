@@ -28,9 +28,16 @@ import {
   PiggyBank, Coins, Headphones, Wallet, Zap, X, Users,
   ShieldCheck, Settings as SettingsIcon, AtSign, ChevronUp, ChevronDown,
   Check, Copy, AlertCircle, LogOut, User as UserIcon,
-  Moon, Sun, Monitor,
+  Moon, Sun, Monitor, Smartphone, Laptop, Tv, Film, Glasses, Lock as LockIcon,
 } from 'lucide-react'
 import { useTheme, ThemeChoice } from 'lib/theme/ThemeContext'
+import {
+  DisplayModeOverride,
+  getOverride,
+  setOverride as setDisplayOverride,
+  labelForOverride,
+  DISPLAY_MODE_OVERRIDE_EVENT,
+} from 'lib/tvMode'
 import { Logo } from 'icons/Logo'
 import { useMagicContext } from 'hooks/useMagicContext'
 import { useMe } from 'hooks/useMe'
@@ -92,7 +99,7 @@ export function DexNavBar() {
   const me = useMe()
   const router = useRouter()
   const { account: magicAccount, ogunBalance: magicOgunBalance, connectWallet, isConnectingWallet } = useMagicContext()
-  const { activeAddress, ogunBalance: unifiedOgunBalance, connectWeb3Modal, isWeb3ModalReady } = useUnifiedWallet()
+  const { activeAddress, activeOgunBalance: unifiedOgunBalance, connectWeb3Modal, isWeb3ModalReady } = useUnifiedWallet()
   // Canonical address — external wallet wins over Magic, so a public visitor's MM/WC/Coinbase
   // connection lights up the pill the same way it does on /wallet + /shop.
   const account = activeAddress || magicAccount
@@ -126,6 +133,20 @@ export function DexNavBar() {
   const [accountSettingsSuccess, setAccountSettingsSuccess] = useState<string | null>(null)
   const [nostrPubkeyCopied, setNostrPubkeyCopied] = useState(false)
   const { choice: themeChoice, setTheme } = useTheme()
+
+  // Frames (display-mode override) — accordion in avatar menu, persists to localStorage
+  const [showFrames, setShowFrames] = useState(false)
+  const [frameOverride, setFrameOverride] = useState<DisplayModeOverride>('auto')
+  useEffect(() => {
+    setFrameOverride(getOverride() || 'auto')
+    const sync = () => setFrameOverride(getOverride() || 'auto')
+    window.addEventListener(DISPLAY_MODE_OVERRIDE_EVENT, sync)
+    return () => window.removeEventListener(DISPLAY_MODE_OVERRIDE_EVENT, sync)
+  }, [])
+  const pickFrame = (mode: DisplayModeOverride) => {
+    setDisplayOverride(mode)
+    setFrameOverride(mode)
+  }
 
   const [updateDisplayName] = useUpdateProfileDisplayNameMutation()
   const [updateHandle] = useUpdateHandleMutation()
@@ -868,6 +889,64 @@ export function DexNavBar() {
                           )
                         })}
                       </div>
+                    </div>
+
+                    {/* Frames — display-mode override (Auto / Mobile / Desktop / TV / Projector / VR / Kiosk).
+                        Lets a user pin the layout when auto-detection can't see the real screen
+                        (e.g. phone HDMI'd into a projection room). Persists to localStorage. */}
+                    <div className="py-1 border-b border-cyan-500/20">
+                      <button
+                        onClick={() => setShowFrames(v => !v)}
+                        className="w-full flex items-center gap-3 px-3 py-2 text-sm text-white hover:bg-cyan-500/10"
+                      >
+                        <Tv className="w-4 h-4 text-cyan-400" />
+                        <span className="flex-1 text-left">Frames</span>
+                        {frameOverride !== 'auto' && (
+                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 uppercase tracking-wider">
+                            {labelForOverride(frameOverride)}
+                          </span>
+                        )}
+                        {showFrames ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                      </button>
+
+                      {showFrames && (
+                        <div className="mx-3 mb-2 px-2 py-2 space-y-1 bg-black/30 rounded-lg border border-cyan-500/20">
+                          <p className="px-2 pt-1 pb-2 text-[10px] text-gray-400 leading-relaxed">
+                            Pin the layout for the screen you're casting to. Phone into a projector? Pick Projector. Tablet on a TV? Pick TV.
+                          </p>
+                          {([
+                            { id: 'auto' as DisplayModeOverride,      Icon: Monitor,    label: 'Auto',              hint: 'Detect from device',   disabled: false },
+                            { id: 'mobile' as DisplayModeOverride,    Icon: Smartphone, label: 'Mobile',            hint: 'Phone-style layout',   disabled: false },
+                            { id: 'desktop' as DisplayModeOverride,   Icon: Laptop,     label: 'Desktop',           hint: '1280px viewport',      disabled: false },
+                            { id: 'tv' as DisplayModeOverride,        Icon: Tv,         label: 'TV',                hint: '1920px / 10-foot UI',  disabled: false },
+                            { id: 'projector' as DisplayModeOverride, Icon: Film,       label: 'Projector (Cinema)',hint: 'Ultrawide / 100"',     disabled: false },
+                            { id: 'vr' as DisplayModeOverride,        Icon: Glasses,    label: 'VR',                hint: 'Coming soon',          disabled: true  },
+                            { id: 'kiosk' as DisplayModeOverride,     Icon: LockIcon,   label: 'Kiosk',             hint: 'Coming soon',          disabled: true  },
+                          ]).map(({ id, Icon, label, hint, disabled }) => {
+                            const active = frameOverride === id
+                            return (
+                              <button
+                                key={id}
+                                onClick={() => !disabled && pickFrame(id)}
+                                disabled={disabled}
+                                className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded text-left transition ${
+                                  active
+                                    ? 'bg-cyan-500/20 border border-cyan-400/50'
+                                    : 'border border-transparent hover:bg-white/5'
+                                } ${disabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
+                                aria-pressed={active}
+                              >
+                                <Icon className={`w-3.5 h-3.5 shrink-0 ${active ? 'text-cyan-300' : 'text-gray-400'}`} />
+                                <div className="flex-1 min-w-0">
+                                  <div className={`text-xs font-semibold ${active ? 'text-white' : 'text-gray-300'}`}>{label}</div>
+                                  <div className="text-[10px] font-mono text-gray-500 truncate">{hint}</div>
+                                </div>
+                                {active && <Check className="w-3.5 h-3.5 text-cyan-300 shrink-0" />}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      )}
                     </div>
 
                     {/* Admin: Verify Users — only for furdA1, jeremy_soundchain, tito */}

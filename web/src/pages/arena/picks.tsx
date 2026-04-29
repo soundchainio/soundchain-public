@@ -280,8 +280,7 @@ function MatchupCard({ pick, me, onTake, onCancel, onEdit }: { pick: Pick; me: a
                 </div>
               )}
             </div>
-            <p className="text-sm lg:text-base font-black text-white">{creatorTeam}</p>
-            <p className="text-[10px] lg:text-xs text-cyan-400 font-bold truncate">@{pick.creatorHandle}</p>
+            <p className="text-[10px] lg:text-xs text-cyan-400 font-bold truncate mt-1">@{pick.creatorHandle}</p>
             {isSettled && pick.creatorPick === 'home' && <p className="text-lg font-black text-white mt-1">{pick.finalHomeScore}</p>}
             {isSettled && pick.creatorPick === 'away' && <p className="text-lg font-black text-white mt-1">{pick.finalAwayScore}</p>}
           </div>
@@ -333,8 +332,7 @@ function MatchupCard({ pick, me, onTake, onCancel, onEdit }: { pick: Pick; me: a
                     </div>
                   )}
                 </div>
-                <p className="text-sm lg:text-base font-black text-white">{takerTeam}</p>
-                <p className="text-[10px] lg:text-xs text-purple-400 truncate">@{pick.takerHandle}</p>
+                <p className="text-[10px] lg:text-xs text-purple-400 truncate mt-1">@{pick.takerHandle}</p>
                 {pick.takerWalletAddress && (
                   <p className="text-[8px] lg:text-[10px] text-emerald-400/80 truncate font-mono" title={`Signed by ${pick.takerWalletAddress}`}>
                     ✓ {pick.takerWalletAddress.slice(0, 6)}…{pick.takerWalletAddress.slice(-4)}
