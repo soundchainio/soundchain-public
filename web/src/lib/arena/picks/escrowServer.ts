@@ -20,9 +20,9 @@ import {
   POLYGON_RPC_URLS,
   FANTASY_LEAGUE_ESCROW_ABI,
   NATIVE_TOKEN,
-  PICK_FIRST_BPS,
   PICK_SECOND_BPS,
   PICK_THIRD_BPS,
+  PICK_PLATFORM_BPS_DEFAULT,
   ERC20_MIN_ABI,
 } from './contract'
 
@@ -101,21 +101,57 @@ async function withRpcFailover<T>(op: (escrow: ethers.Contract) => Promise<T>): 
 }
 
 /**
+ * Read the on-chain `defaultPlatformBps` from FantasyLeagueEscrow.
+ * Cached for 5 minutes so the cron + API don't hammer the RPC; bumps via
+ * `setDefaultPlatformBps(...)` on Polygonscan show up to picks within 5 min.
+ *
+ * Falls back to PICK_PLATFORM_BPS_DEFAULT (500 bps = 5%) if the read fails —
+ * we'd rather pass a sensible default and let `createLeague` revert with a
+ * clear `firstBps + secondBps + thirdBps + platformBps != 10000` error than
+ * silently use a stale value.
+ */
+let cachedPlatformBps: { value: number; at: number } | null = null
+const PLATFORM_BPS_TTL_MS = 5 * 60 * 1000
+export async function getDefaultPlatformBps(): Promise<number> {
+  if (cachedPlatformBps && Date.now() - cachedPlatformBps.at < PLATFORM_BPS_TTL_MS) {
+    return cachedPlatformBps.value
+  }
+  try {
+    const escrow = getEscrowReadOnly()
+    const raw = await escrow.defaultPlatformBps()
+    const value = typeof raw === 'number' ? raw : Number(raw)
+    if (!Number.isFinite(value) || value < 0 || value > 10000) {
+      throw new Error(`defaultPlatformBps out of range: ${raw}`)
+    }
+    cachedPlatformBps = { value, at: Date.now() }
+    return value
+  } catch (err) {
+    console.warn('[picks] getDefaultPlatformBps failed — falling back to default', err)
+    return PICK_PLATFORM_BPS_DEFAULT
+  }
+}
+
+/**
  * Server creates the on-chain league for a pick.
  *   tokenAddress = NATIVE_TOKEN (address(0)) for POL, or ERC-20 contract address for OGUN / USDC / etc.
  *   entryFeeWei  = ethers.utils.parseUnits(entryFee, tokenDecimals)
- * Returns the leagueId emitted in the LeagueCreated event + the txHash.
+ * Returns the leagueId emitted in the LeagueCreated event + the txHash + the
+ * platformFeeBps that was in effect at create time (recorded on the pick doc
+ * so settle math + UI display stay correct even if the contract default is
+ * later bumped).
  */
 export async function escrowCreatePick(
   tokenAddress: string,
   entryFeeWei: ethers.BigNumber,
-): Promise<{ leagueId: string; txHash: string }> {
+): Promise<{ leagueId: string; txHash: string; platformFeeBps: number; firstBps: number }> {
+  const platformFeeBps = await getDefaultPlatformBps()
+  const firstBps = 10000 - PICK_SECOND_BPS - PICK_THIRD_BPS - platformFeeBps
   return withRpcFailover(async escrow => {
     const tx: ethers.ContractTransaction = await escrow.createLeague(
       tokenAddress,
       entryFeeWei,
       2, // maxTeams — pick is always 1v1
-      PICK_FIRST_BPS,
+      firstBps,
       PICK_SECOND_BPS,
       PICK_THIRD_BPS,
     )
@@ -123,7 +159,7 @@ export async function escrowCreatePick(
     const event = receipt.events?.find(e => e.event === 'LeagueCreated')
     if (!event || !event.args) throw new Error('LeagueCreated event not found in receipt')
     const leagueId = (event.args.leagueId as ethers.BigNumber).toString()
-    return { leagueId, txHash: tx.hash }
+    return { leagueId, txHash: tx.hash, platformFeeBps, firstBps }
   })
 }
 
@@ -140,7 +176,9 @@ export async function escrowLockPick(leagueId: string): Promise<string> {
 }
 
 /**
- * Server settles the pick — pays winner 99.95% and treasury 0.05%.
+ * Server settles the pick — contract pays winner (10000 - platformBps) and treasury platformBps,
+ * using whatever bps split was locked at the createLeague call. Apr 28: Arena rate
+ * bumped to 500 bps (5%) to match FanDuel/DraftKings; music side stays at 5 bps (0.05%).
  * Called from the cron after ESPN reports a final score.
  */
 export async function escrowSettlePick(leagueId: string, winnerAddress: string): Promise<string> {

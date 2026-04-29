@@ -3,7 +3,18 @@
  *
  * The FantasyLeagueEscrow contract (deployed on Polygon) is the canonical
  * settlement layer for Arena Game Picks. A "pick" is modeled as a 2-team
- * league: maxTeams=2, firstBps=9995, secondBps=0, thirdBps=0, platformBps=5.
+ * league: maxTeams=2, secondBps=0, thirdBps=0, platformBps=<contract default>.
+ * `firstBps` is computed dynamically as 10000 - platformBps so the server
+ * stays self-healing if the platform rate is bumped on-chain.
+ *
+ * Platform fee policy (Apr 28, 2026):
+ *   • Arena (picks + fantasy): match FanDuel/DraftKings rake — 5% (500 bps)
+ *   • Music side (OGUN streaming, /shop, marketplace, staking, DEX): 0.05% (5 bps)
+ *
+ * Toggle via Polygonscan: `setDefaultPlatformBps(500)` on FantasyLeagueEscrow
+ * (contract owner only). Once bumped, all NEW picks settle at 5% — existing
+ * open / pending_deposit picks stay at whatever rate was locked at create time.
+ * No retro change.
  *
  * Lifecycle:
  *   1. Server (commissioner) calls createLeague(token, ...) → emits LeagueCreated → server reads leagueId from receipt
@@ -45,10 +56,23 @@ export const ERC20_MIN_ABI = [
   'function balanceOf(address owner) view returns (uint256)',
 ] as const
 
-// Pick payout split — must sum with defaultPlatformBps (5) to 10000.
-export const PICK_FIRST_BPS = 9995
+// Pick payout split — second + third are always 0 for 1v1 picks.
+// firstBps is computed at request time as 10000 - platformBps (read from contract);
+// see escrowServer.ts → getDefaultPlatformBps + escrowCreatePick. The server passes
+// the dynamically computed firstBps to createLeague, so the on-chain split adjusts
+// automatically when commissioner runs setDefaultPlatformBps(...) on Polygonscan.
 export const PICK_SECOND_BPS = 0
 export const PICK_THIRD_BPS = 0
-export const PICK_PLATFORM_BPS = 5  // 0.05%, matches contract's defaultPlatformBps
+
+// Default platform-fee rate used as a UI fallback before the API responds with
+// the live on-chain value. Updated to 500 bps (5%) Apr 28, 2026 to match
+// FanDuel / DraftKings / Pinnacle rake on Arena while music side stays 0.05%.
+// The actual rate per-pick is whatever was on-chain at `createLeague` time and
+// is stored on the pick doc as `platformFeeBps`.
+export const PICK_PLATFORM_BPS_DEFAULT = 500
+// Legacy alias — retained for any caller still importing PICK_PLATFORM_BPS.
+// Will be removed once all callers migrate to PICK_PLATFORM_BPS_DEFAULT or read
+// the per-pick `platformFeeBps` field from the API.
+export const PICK_PLATFORM_BPS = PICK_PLATFORM_BPS_DEFAULT
 
 export const FANTASY_LEAGUE_ESCROW_ABI = EscrowAbi as any

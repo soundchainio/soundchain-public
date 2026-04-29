@@ -232,6 +232,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const result = await escrowCreatePick(newTokenAddress, newWei)
       update.escrowLeagueId = result.leagueId
       update.escrowCreateTxHash = result.txHash
+      // Re-record platformFeeBps in case the contract default was bumped between
+      // the original create and this edit — keeps the pick doc in sync with the
+      // on-chain rate that will actually settle this pick.
+      update.platformFeeBps = result.platformFeeBps
     } catch (err: any) {
       return res.status(502).json({ error: `could not re-create on-chain league: ${err?.message || 'unknown'}` })
     }

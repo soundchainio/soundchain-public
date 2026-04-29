@@ -21,6 +21,7 @@ import {
   NATIVE_TOKEN,
   isNativeToken,
   ERC20_MIN_ABI,
+  PICK_PLATFORM_BPS_DEFAULT,
 } from 'lib/arena/picks/contract'
 
 const OGUN_BONUS_BPS = 1000  // 10% OGUN bonus when wager token is OGUN — paid from rewards pool on settle (commissioner OGUN balance funds it)
@@ -138,6 +139,7 @@ interface Pick {
   takerWalletAddress?: string
   takerDepositTxHash?: string
   entryToken: string; entryFee: number; pot: number
+  platformFeeBps?: number  // live on-chain rate locked at createLeague time (Apr 28: 500 bps for Arena)
   status: string; winner?: string; winnerHandle?: string
   finalHomeScore?: number; finalAwayScore?: number
   gameTime: string; gameStatus: string
@@ -350,7 +352,7 @@ function MatchupCard({ pick, me, onTake, onCancel, onEdit }: { pick: Pick; me: a
           <div className="mt-3 text-center py-2 rounded-lg bg-gradient-to-r from-yellow-500/10 to-amber-500/10 border border-yellow-500/30">
             <p className="text-xs font-black text-yellow-400">
               <Trophy className="w-3 h-3 inline mr-1" />
-              @{pick.winnerHandle} wins {(pick.pot * 0.9995).toFixed(4)} {pick.entryToken}
+              @{pick.winnerHandle} wins {(pick.pot * (10000 - (pick.platformFeeBps ?? PICK_PLATFORM_BPS_DEFAULT)) / 10000).toFixed(4)} {pick.entryToken}
             </p>
           </div>
         )}
@@ -552,7 +554,7 @@ function CreatePickModal({ game, side, onClose, onCreated }: { game: Game; side:
           )}
 
           <div className="text-[10px] text-gray-500 text-center mb-4 leading-relaxed">
-            Winner takes {(amount * 2 * 0.9995).toFixed(4)} {token} · 0.05% platform fee
+            Winner takes {(amount * 2 * (10000 - PICK_PLATFORM_BPS_DEFAULT) / 10000).toFixed(4)} {token} · {(PICK_PLATFORM_BPS_DEFAULT / 100).toString()}% platform fee
             <br/>
             <span className="text-gray-600">On-chain escrow on Polygon · stake locked in FantasyLeagueEscrow</span>
           </div>

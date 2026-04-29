@@ -23,7 +23,7 @@ import { authFromRequest } from 'lib/api/authJwt'
 import { GamePick, PickSport, SPORT_CONFIG } from 'lib/arena/picks/types'
 import { TOKEN_CONFIG, isTokenLive } from 'lib/arena/fantasy/types'
 import { escrowCreatePick } from 'lib/arena/picks/escrowServer'
-import { PICKS_ESCROW_ADDRESS, PICK_PLATFORM_BPS, NATIVE_TOKEN, isNativeToken } from 'lib/arena/picks/contract'
+import { PICKS_ESCROW_ADDRESS, NATIVE_TOKEN, isNativeToken } from 'lib/arena/picks/contract'
 
 const OGUN_BONUS_BPS = 1000  // 10% OGUN bonus to winner when wager is in OGUN — paid from rewards pool on settle (commissioner OGUN balance funds it)
 
@@ -155,10 +155,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
   let leagueId: string
   let escrowCreateTxHash: string
+  let platformFeeBps: number
   try {
     const result = await escrowCreatePick(tokenAddress, entryFeeWei)
     leagueId = result.leagueId
     escrowCreateTxHash = result.txHash
+    platformFeeBps = result.platformFeeBps
   } catch (err: any) {
     const msg = err?.reason || err?.message || 'unknown'
     const isTransport = err?.code === 'SERVER_ERROR' || err?.code === 'TIMEOUT' || err?.code === 'NETWORK_ERROR' || /processing response error|failed to fetch|socket hang up/i.test(msg)
@@ -190,7 +192,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     entryToken,
     entryFee: fee,
     pot: 0,
-    platformFeeBps: PICK_PLATFORM_BPS,
+    platformFeeBps,  // live on-chain rate at create time — NOT a hardcoded constant
     ogunBonusBps: entryToken === 'OGUN' ? OGUN_BONUS_BPS : 0,
     status: 'pending_deposit',  // creator must still call escrow.join with their wallet
     createdAt: now.toISOString(),
