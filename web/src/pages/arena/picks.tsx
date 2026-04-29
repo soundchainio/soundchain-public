@@ -175,6 +175,8 @@ function MatchupCard({ pick, me, onTake, onCancel, onEdit }: { pick: Pick; me: a
   const isOpen = pick.status === 'open'
   const isPendingDeposit = pick.status === 'pending_deposit'
   const iWon = isSettled && pick.winnerHandle === myHandle
+  // Live cosmetic detection — pick.gameStatus is from ESPN ('STATUS_IN_PROGRESS' / 'in' / 'LIVE' etc.)
+  const isLive = !isSettled && /live|in.progress|in_progress|^in$/i.test(pick.gameStatus || '')
 
   const creatorTeam = pick.creatorPick === 'home' ? pick.homeTeam : pick.awayTeam
   const creatorLogo = pick.creatorPick === 'home' ? pick.homeLogo : pick.awayLogo
@@ -182,15 +184,32 @@ function MatchupCard({ pick, me, onTake, onCancel, onEdit }: { pick: Pick; me: a
   const takerLogo = pick.takerPick === 'home' ? pick.homeLogo : pick.awayLogo
 
   return (
-    <div className={`relative rounded-2xl overflow-hidden border transition-all duration-300 hover:scale-[1.01] ${
-      isSettled ? 'border-gray-700/50 opacity-80' :
-      isMatched ? 'border-amber-500/40 shadow-lg shadow-amber-500/10' :
-      'border-cyan-500/30 shadow-lg shadow-cyan-500/10'
+    <div className={`group relative rounded-2xl overflow-hidden border transition-all duration-300 hover:scale-[1.015] hover:-translate-y-0.5 backdrop-blur-sm ${
+      isSettled
+        ? iWon
+          ? 'border-yellow-500/50 shadow-2xl shadow-yellow-500/30'
+          : 'border-gray-700/50 opacity-80'
+        : isLive ? 'border-red-500/50 shadow-2xl shadow-red-500/25'
+        : isMatched ? 'border-amber-500/40 shadow-xl shadow-amber-500/15'
+        : isPendingDeposit ? 'border-purple-500/40 shadow-xl shadow-purple-500/15'
+        : 'border-cyan-500/30 shadow-xl shadow-cyan-500/10 hover:border-cyan-400/60 hover:shadow-cyan-400/30'
     }`}>
-      {/* Header — sport + game info + creator controls */}
-      <div className="flex items-center justify-between px-4 py-2 bg-gradient-to-r from-gray-900 to-gray-800 border-b border-white/5">
-        <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
-          {pick.sport.toUpperCase()} · {formatTime(pick.gameTime)}
+      {/* Conic-gradient running-light halo — appears on hover for open/matched picks (premium card-frame signal) */}
+      {!isSettled && !isLive && <span className="arena-conic-ring" aria-hidden />}
+      {/* Won state gets a permanent gold halo */}
+      {iWon && <span className="arena-won-ring" aria-hidden />}
+      {/* Live state gets a red glow shadow underneath the whole card */}
+      {isLive && (
+        <span className="absolute -inset-px rounded-2xl pointer-events-none animate-pulse" aria-hidden style={{
+          boxShadow: '0 0 32px rgba(239,68,68,0.45), inset 0 0 24px rgba(239,68,68,0.08)'
+        }} />
+      )}
+      {/* Header — sport + game info + creator controls (DK pattern: time/league pill top-left, status top-right) */}
+      <div className="flex items-center justify-between px-4 py-2 bg-gradient-to-r from-gray-900 via-black to-gray-900 border-b border-white/5">
+        <span className="flex items-center gap-2 text-[11px] font-mono font-bold text-gray-400 uppercase tracking-wider tabular-nums">
+          <span className="text-gray-500">{pick.sport.toUpperCase()}</span>
+          <span className="text-gray-700">·</span>
+          <span className="text-gray-300">{formatTime(pick.gameTime)}</span>
         </span>
         <div className="flex items-center gap-2">
           {/* Creator chevrons — edit only pre-deposit (entry fee is on-chain immutable post-deposit). Cancel always (refunds via escrow.cancel when funds are staked). */}
@@ -216,14 +235,23 @@ function MatchupCard({ pick, me, onTake, onCancel, onEdit }: { pick: Pick; me: a
               </button>
             </>
           )}
-          <span className={`text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider ${
-            isSettled ? 'bg-gray-700 text-gray-300' :
-            isMatched ? 'bg-amber-500/20 text-amber-400 animate-pulse' :
-            isPendingDeposit ? 'bg-purple-500/20 text-purple-300' :
-            'bg-cyan-500/20 text-cyan-400'
-          }`}>
-            {isSettled ? 'FINAL' : isMatched ? 'LOCKED IN' : isPendingDeposit ? 'AWAITING STAKE' : 'OPEN'}
-          </span>
+          {/* Status pill — DK/FD taxonomy: LIVE (red pulsing dot) > FINAL > LOCKED IN > AWAITING STAKE > OPEN */}
+          {isLive ? (
+            <span className="flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider bg-red-500/20 text-red-400 ring-1 ring-red-500/40 shadow-[0_0_10px_rgba(239,68,68,0.4)]">
+              <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.9)]" />
+              LIVE
+            </span>
+          ) : (
+            <span className={`text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider ${
+              isSettled
+                ? iWon ? 'bg-yellow-500/20 text-yellow-300 ring-1 ring-yellow-500/40' : 'bg-gray-700 text-gray-300'
+                : isMatched ? 'bg-amber-500/20 text-amber-400 ring-1 ring-amber-500/40 animate-pulse'
+                : isPendingDeposit ? 'bg-purple-500/20 text-purple-300 ring-1 ring-purple-500/40'
+                : 'bg-cyan-500/20 text-cyan-400 ring-1 ring-cyan-500/40'
+            }`}>
+              {isSettled ? (iWon ? '🏆 WON' : 'FINAL') : isMatched ? 'LOCKED IN' : isPendingDeposit ? 'AWAITING STAKE' : 'OPEN'}
+            </span>
+          )}
         </div>
       </div>
 
@@ -258,14 +286,26 @@ function MatchupCard({ pick, me, onTake, onCancel, onEdit }: { pick: Pick; me: a
             {isSettled && pick.creatorPick === 'away' && <p className="text-lg font-black text-white mt-1">{pick.finalAwayScore}</p>}
           </div>
 
-          {/* VS divider */}
+          {/* VS divider — tabular numerics for the wager (DK signature), pulsing halo on live, holographic crown on win */}
           <div className="flex flex-col items-center gap-1 px-2">
-            <div className="w-10 h-10 lg:w-14 lg:h-14 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/30">
-              <span className="text-sm lg:text-lg font-black text-black">VS</span>
+            <div className={`relative w-10 h-10 lg:w-14 lg:h-14 rounded-full flex items-center justify-center transition-all ${
+              isLive
+                ? 'arena-live-halo bg-gradient-to-br from-red-500 to-orange-600 shadow-[0_0_24px_rgba(239,68,68,0.7)] ring-2 ring-red-400/60'
+                : isSettled
+                  ? 'bg-gradient-to-br from-yellow-400 via-amber-500 to-orange-600 shadow-[0_0_24px_rgba(251,191,36,0.6)] ring-2 ring-yellow-300/60'
+                  : 'bg-gradient-to-br from-amber-500 to-orange-600 shadow-lg shadow-amber-500/30 ring-1 ring-amber-300/30'
+            }`}>
+              <span className="text-sm lg:text-lg font-black text-black tracking-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]">VS</span>
             </div>
             <div className="text-center">
-              <p className="text-[10px] lg:text-xs font-bold text-amber-400">{pick.entryFee} {pick.entryToken}</p>
-              {isMatched && <p className="text-[8px] lg:text-[10px] text-gray-500">POT: {pick.pot} {pick.entryToken}</p>}
+              <p className="text-[10px] lg:text-xs font-black text-amber-400 tabular-nums leading-tight">
+                {pick.entryFee} <span className="text-amber-300/80 font-mono text-[9px] lg:text-[10px]">{pick.entryToken}</span>
+              </p>
+              {isMatched && (
+                <p className="text-[8px] lg:text-[10px] text-emerald-400/80 tabular-nums font-mono">
+                  POT <span className="font-bold">{pick.pot}</span>
+                </p>
+              )}
             </div>
           </div>
 
@@ -305,16 +345,21 @@ function MatchupCard({ pick, me, onTake, onCancel, onEdit }: { pick: Pick; me: a
               </>
             ) : (
               <div className="flex flex-col items-center">
-                <div className="w-14 h-14 lg:w-20 lg:h-20 rounded-full border-2 border-dashed border-gray-600 flex items-center justify-center mb-2">
-                  <span className="text-2xl text-gray-600">?</span>
+                {/* Waiting placeholder — animated pulsing dashed ring (the slot where the opponent will appear) */}
+                <div className="relative w-14 h-14 lg:w-20 lg:h-20 mb-2">
+                  <div className="absolute inset-0 rounded-full border-2 border-dashed border-gray-600 animate-pulse" />
+                  <div className="absolute inset-0 rounded-full border border-cyan-500/20 animate-ping" style={{ animationDuration: '2.5s' }} />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-2xl text-gray-500 font-mono font-light">?</span>
+                  </div>
                 </div>
-                <p className="text-sm font-bold text-gray-500">Waiting...</p>
+                <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-gray-500">Waiting...</p>
                 {!isCreator && me?.profile && (
                   <button
                     onClick={() => onTake(pick.id)}
-                    className="mt-2 px-4 py-1.5 text-xs font-black bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-400 hover:to-purple-400 text-white rounded-full transition-all hover:scale-105 active:scale-95 shadow-lg shadow-cyan-500/20"
+                    className="relative mt-2 px-4 py-1.5 text-xs font-black bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 hover:from-cyan-400 hover:via-purple-400 hover:to-pink-400 text-white rounded-full transition-all hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(34,211,238,0.5)] hover:shadow-[0_0_28px_rgba(168,85,247,0.6)] ring-1 ring-cyan-300/50 overflow-hidden arena-shimmer"
                   >
-                    TAKE {pick.creatorPick === 'home' ? pick.awayTeam : pick.homeTeam}
+                    <span className="relative z-10 font-mono uppercase tracking-wider">TAKE {pick.creatorPick === 'home' ? pick.awayTeam : pick.homeTeam}</span>
                   </button>
                 )}
                 {/* Creator controls — share + cancel */}
@@ -347,16 +392,57 @@ function MatchupCard({ pick, me, onTake, onCancel, onEdit }: { pick: Pick; me: a
           </div>
         </div>
 
-        {/* Result banner */}
+        {/* Result banner — premium celebration: holographic shimmer for the winner, gradient confetti sparks raining for own win */}
         {isSettled && pick.winnerHandle && (
-          <div className="mt-3 text-center py-2 rounded-lg bg-gradient-to-r from-yellow-500/10 to-amber-500/10 border border-yellow-500/30">
-            <p className="text-xs font-black text-yellow-400">
-              <Trophy className="w-3 h-3 inline mr-1" />
-              @{pick.winnerHandle} wins {(pick.pot * (10000 - (pick.platformFeeBps ?? PICK_PLATFORM_BPS_DEFAULT)) / 10000).toFixed(4)} {pick.entryToken}
+          <div className={`relative mt-3 text-center py-3 rounded-lg border overflow-hidden ${
+            iWon
+              ? 'arena-shimmer bg-gradient-to-r from-yellow-500/25 via-amber-500/35 to-yellow-500/25 border-yellow-400/60 shadow-[0_0_30px_rgba(234,179,8,0.35)]'
+              : 'bg-gradient-to-r from-yellow-500/10 to-amber-500/10 border-yellow-500/30'
+          }`}>
+            {/* Confetti sparks rain on personal win */}
+            {iWon && (
+              <>
+                <span className="arena-confetti-spark s1" aria-hidden />
+                <span className="arena-confetti-spark s2" aria-hidden />
+                <span className="arena-confetti-spark s3" aria-hidden />
+              </>
+            )}
+            <p className={`relative text-xs font-black tabular-nums ${iWon ? 'text-yellow-200' : 'text-yellow-400'}`}>
+              <Trophy className={`w-3.5 h-3.5 inline mr-1.5 ${iWon ? 'animate-bounce text-yellow-300 drop-shadow-[0_0_8px_rgba(251,191,36,0.8)]' : ''}`} />
+              <span className={iWon ? 'arena-hologram-text font-black' : ''}>@{pick.winnerHandle}</span>
+              <span className="text-yellow-300/70 mx-1">wins</span>
+              <span className={`tabular-nums ${iWon ? 'text-yellow-100' : 'text-amber-200'}`}>
+                {(pick.pot * (10000 - (pick.platformFeeBps ?? PICK_PLATFORM_BPS_DEFAULT)) / 10000).toFixed(4)}
+              </span>
+              <span className="text-amber-300/80 font-mono ml-1">{pick.entryToken}</span>
             </p>
           </div>
         )}
       </div>
+
+      {/* BEARER TICKET FOOTER — Vegas-style trust strip: leagueId + tx, Polygonscan deeplink, monospace tabular.
+          Only renders when on-chain refs exist (post-create). The card IS the ticket. */}
+      {(pick.escrowLeagueId || pick.payoutTxHash || pick.escrowCreateTxHash) && (
+        <div className="border-t border-dashed border-gray-700/60 bg-black/40 px-3 py-1.5 flex items-center justify-between gap-2 font-mono text-[9px] uppercase tracking-wider">
+          <span className="text-gray-500 truncate">
+            {pick.escrowLeagueId && (
+              <>LEAGUE <span className="text-cyan-400 tabular-nums">#{pick.escrowLeagueId}</span></>
+            )}
+          </span>
+          {(pick.payoutTxHash || pick.escrowCreateTxHash) && (
+            <a
+              href={`https://polygonscan.com/tx/${pick.payoutTxHash || pick.escrowCreateTxHash}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={e => e.stopPropagation()}
+              className="text-emerald-400/80 hover:text-emerald-300 hover:underline truncate flex-shrink-0"
+              title="Verify on Polygonscan"
+            >
+              {(pick.payoutTxHash || pick.escrowCreateTxHash || '').slice(0, 8)}…{(pick.payoutTxHash || pick.escrowCreateTxHash || '').slice(-4)} ↗
+            </a>
+          )}
+        </div>
+      )}
     </div>
   )
 }
@@ -365,38 +451,56 @@ function MatchupCard({ pick, me, onTake, onCancel, onEdit }: { pick: Pick; me: a
 function GameCard({ game, onPick }: { game: Game; onPick: (game: Game, side: 'home' | 'away') => void }) {
   const isLive = game.state === 'in'
   const isFinal = game.state === 'post'
+  // Score-leader detection so we can highlight the leading side (FD pattern: green on the winning leg)
+  const awayLeading = (isLive || isFinal) && (game.awayScore ?? 0) > (game.homeScore ?? 0)
+  const homeLeading = (isLive || isFinal) && (game.homeScore ?? 0) > (game.awayScore ?? 0)
 
   return (
     <div className={`rounded-xl border p-3 lg:p-4 transition-all ${
-      isLive ? 'border-red-500/40 bg-red-500/5' :
+      isLive ? 'border-red-500/50 bg-red-500/5 shadow-lg shadow-red-500/10' :
       isFinal ? 'border-gray-700/30 bg-gray-900/50 opacity-60' :
-      'border-white/10 bg-white/[0.02] hover:bg-white/[0.04]'
+      'border-white/10 bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/20'
     }`}>
       <div className="flex items-center justify-between mb-2">
-        <span className="text-[10px] lg:text-xs font-bold text-gray-500">{game.sportEmoji} {game.sportLabel}</span>
-        <span className={`text-[10px] lg:text-xs font-bold ${isLive ? 'text-red-400 animate-pulse' : isFinal ? 'text-gray-500' : 'text-gray-400'}`}>
-          {isLive ? `LIVE · ${game.statusDetail}` : isFinal ? 'FINAL' : formatTime(game.gameTime)}
+        <span className="text-[10px] lg:text-xs font-mono font-bold text-gray-500 uppercase tracking-wider">
+          {game.sportEmoji} {game.sportLabel}
         </span>
+        {isLive ? (
+          <span className="flex items-center gap-1 text-[10px] lg:text-xs font-mono font-black text-red-400 uppercase tracking-wider tabular-nums">
+            <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.9)]" />
+            LIVE · {game.statusDetail}
+          </span>
+        ) : isFinal ? (
+          <span className="text-[10px] lg:text-xs font-mono font-black text-gray-500 uppercase tracking-wider">FINAL</span>
+        ) : (
+          <span className="text-[10px] lg:text-xs font-mono font-bold text-gray-400 uppercase tracking-wider tabular-nums">
+            {formatTime(game.gameTime)}
+          </span>
+        )}
       </div>
 
       <div className="flex items-center justify-between gap-2">
-        {/* Away team */}
+        {/* Away team — DK pattern: tap-to-bet on team rows themselves */}
         <button
           onClick={() => game.canPick && onPick(game, 'away')}
           disabled={!game.canPick}
           className={`flex-1 flex items-center gap-2 p-2 rounded-lg transition-all ${
             game.canPick ? 'hover:bg-cyan-500/10 hover:ring-1 hover:ring-cyan-500/30 cursor-pointer active:scale-95' : 'cursor-default'
-          }`}
+          } ${awayLeading ? 'bg-emerald-500/[0.04]' : ''}`}
         >
           {game.awayLogo && <img src={game.awayLogo} alt="" className="w-8 h-8 lg:w-10 lg:h-10 object-contain flex-shrink-0" onError={e => (e.target as HTMLImageElement).style.display = 'none'} />}
           <div className="text-left min-w-0">
             <p className="text-sm lg:text-base font-black text-white truncate">{game.awayTeam}</p>
             <p className="text-[9px] lg:text-[10px] text-gray-500 truncate">{game.awayTeamFull}</p>
           </div>
-          {(isLive || isFinal) && <span className="text-lg lg:text-xl font-black text-white ml-auto">{game.awayScore}</span>}
+          {(isLive || isFinal) && (
+            <span className={`text-lg lg:text-xl font-black ml-auto tabular-nums ${awayLeading ? 'text-emerald-300' : 'text-white'}`}>
+              {game.awayScore}
+            </span>
+          )}
         </button>
 
-        <span className="text-gray-600 text-xs font-bold px-1">@</span>
+        <span className="text-gray-600 text-xs font-mono font-bold px-1">@</span>
 
         {/* Home team */}
         <button
@@ -404,19 +508,25 @@ function GameCard({ game, onPick }: { game: Game; onPick: (game: Game, side: 'ho
           disabled={!game.canPick}
           className={`flex-1 flex items-center gap-2 p-2 rounded-lg transition-all ${
             game.canPick ? 'hover:bg-purple-500/10 hover:ring-1 hover:ring-purple-500/30 cursor-pointer active:scale-95' : 'cursor-default'
-          }`}
+          } ${homeLeading ? 'bg-emerald-500/[0.04]' : ''}`}
         >
           {game.homeLogo && <img src={game.homeLogo} alt="" className="w-8 h-8 lg:w-10 lg:h-10 object-contain flex-shrink-0" onError={e => (e.target as HTMLImageElement).style.display = 'none'} />}
           <div className="text-left min-w-0">
             <p className="text-sm lg:text-base font-black text-white truncate">{game.homeTeam}</p>
             <p className="text-[9px] lg:text-[10px] text-gray-500 truncate">{game.homeTeamFull}</p>
           </div>
-          {(isLive || isFinal) && <span className="text-lg lg:text-xl font-black text-white ml-auto">{game.homeScore}</span>}
+          {(isLive || isFinal) && (
+            <span className={`text-lg lg:text-xl font-black ml-auto tabular-nums ${homeLeading ? 'text-emerald-300' : 'text-white'}`}>
+              {game.homeScore}
+            </span>
+          )}
         </button>
       </div>
 
       {game.canPick && (
-        <p className="text-[9px] text-center text-gray-600 mt-2">Tap a team to create a pick</p>
+        <p className="text-[9px] text-center text-gray-600 mt-2 font-mono uppercase tracking-wider">
+          Tap a team to wager
+        </p>
       )}
     </div>
   )
@@ -428,7 +538,15 @@ function CreatePickModal({ game, side, onClose, onCreated }: { game: Game; side:
   const [amount, setAmount] = useState(1)
   const [submitting, setSubmitting] = useState(false)
   const [step, setStep] = useState<'idle' | 'creating' | 'awaiting_signature' | 'finalizing'>('idle')
+  const [payoutFlash, setPayoutFlash] = useState(false)
   const { connectWeb3Modal, activeWalletType, web3ModalProvider } = useUnifiedWallet()
+
+  // FD pattern — odds/payout briefly flash cyan when the user changes amount or token. Cheap, hugely tactile.
+  useEffect(() => {
+    setPayoutFlash(true)
+    const t = setTimeout(() => setPayoutFlash(false), 350)
+    return () => clearTimeout(t)
+  }, [amount, token])
 
   const team = side === 'home' ? game.homeTeam : game.awayTeam
   const teamFull = side === 'home' ? game.homeTeamFull : game.awayTeamFull
@@ -496,20 +614,32 @@ function CreatePickModal({ game, side, onClose, onCreated }: { game: Game; side:
   }
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4" onClick={onClose}>
-      <div className="w-full max-w-sm bg-gray-900 border border-cyan-500/30 rounded-2xl shadow-2xl shadow-cyan-500/10 overflow-hidden" onClick={e => e.stopPropagation()}>
-        <div className="p-5">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" onClick={onClose}>
+      {/* Layered backdrop — black + radial cyan/purple bloom + grain. The modal feels like it's emerging from a portal */}
+      <div className="absolute inset-0 bg-black/85 backdrop-blur-md" aria-hidden />
+      <div
+        className="absolute inset-0 pointer-events-none"
+        aria-hidden
+        style={{
+          background:
+            'radial-gradient(ellipse 60% 40% at 50% 50%, rgba(34,211,238,0.12) 0%, transparent 60%), radial-gradient(ellipse 50% 35% at 50% 50%, rgba(168,85,247,0.10) 0%, transparent 70%)'
+        }}
+      />
+      <div className="group relative w-full max-w-sm bg-gradient-to-b from-gray-900 via-gray-950 to-black border border-cyan-500/30 rounded-2xl shadow-2xl shadow-cyan-500/20 overflow-hidden" onClick={e => e.stopPropagation()}>
+        {/* Conic running-light ring around the modal frame — premium signal */}
+        <span className="arena-conic-ring" aria-hidden style={{ opacity: 1 }} />
+        <div className="relative p-5">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-black text-white">Create Pick</h2>
-            <button onClick={onClose} className="text-gray-500 hover:text-white"><X className="w-5 h-5" /></button>
+            <h2 className="text-lg font-black arena-hologram-text tracking-tight">Create Pick</h2>
+            <button onClick={onClose} className="text-gray-500 hover:text-white hover:rotate-90 transition-all"><X className="w-5 h-5" /></button>
           </div>
 
-          {/* Team picked */}
-          <div className="flex items-center gap-3 p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/20 mb-4">
-            {logo && <img src={logo} alt="" className="w-12 h-12 object-contain" />}
-            <div>
-              <p className="text-base font-black text-white">{team} to WIN</p>
-              <p className="text-xs text-gray-400">vs {opponent} · {formatTime(game.gameTime)}</p>
+          {/* Team picked — shimmering panel showing the chosen side */}
+          <div className="relative flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-cyan-500/15 via-cyan-500/10 to-purple-500/10 border border-cyan-500/30 mb-4 overflow-hidden">
+            {logo && <img src={logo} alt="" className="relative w-12 h-12 object-contain drop-shadow-[0_0_8px_rgba(34,211,238,0.3)]" />}
+            <div className="relative">
+              <p className="text-base font-black text-white tracking-tight">{team} <span className="text-cyan-400">to WIN</span></p>
+              <p className="text-[11px] font-mono text-gray-400 uppercase tracking-wider">vs {opponent} · {formatTime(game.gameTime)}</p>
             </div>
           </div>
 
@@ -535,10 +665,18 @@ function CreatePickModal({ game, side, onClose, onCreated }: { game: Game; side:
             </label>
           </div>
 
-          {/* Quick amounts */}
+          {/* Quick amounts — FD stake-chip pattern */}
           <div className="flex gap-2 mb-4">
             {[10, 50, 100, 500].map(a => (
-              <button key={a} onClick={() => setAmount(a)} className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${amount === a ? 'bg-cyan-500 text-black' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>
+              <button
+                key={a}
+                onClick={() => setAmount(a)}
+                className={`flex-1 py-1.5 text-xs font-black rounded-lg transition-all active:scale-95 tabular-nums ${
+                  amount === a
+                    ? 'bg-cyan-500 text-black shadow-[0_0_18px_rgba(34,211,238,0.55)] ring-1 ring-cyan-300'
+                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white'
+                }`}
+              >
                 {a}
               </button>
             ))}
@@ -547,26 +685,54 @@ function CreatePickModal({ game, side, onClose, onCreated }: { game: Game; side:
           {token === 'OGUN' && (
             <div className="flex items-center gap-2 mb-3 p-2 rounded-lg bg-gradient-to-r from-amber-500/10 to-yellow-500/10 border border-amber-500/30">
               <Sparkles className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
-              <p className="text-[10px] lg:text-xs text-amber-300 font-bold leading-tight">
+              <p className="text-[10px] lg:text-xs text-amber-300 font-bold leading-tight tabular-nums">
                 +{OGUN_BONUS_BPS / 100}% OGUN bonus to winner — paid from rewards pool on settle
               </p>
             </div>
           )}
 
-          <div className="text-[10px] text-gray-500 text-center mb-4 leading-relaxed">
-            Winner takes {(amount * 2 * (10000 - PICK_PLATFORM_BPS_DEFAULT) / 10000).toFixed(4)} {token} · {(PICK_PLATFORM_BPS_DEFAULT / 100).toString()}% platform fee
-            <br/>
-            <span className="text-gray-600">On-chain escrow on Polygon · stake locked in FantasyLeagueEscrow</span>
+          {/* Live payout calc — FD odds-flash pattern: brief cyan glow on every input change */}
+          <div className={`text-center mb-4 py-2.5 rounded-lg border transition-all duration-200 ${
+            payoutFlash
+              ? 'border-cyan-400/50 bg-cyan-500/[0.07] shadow-[0_0_24px_rgba(34,211,238,0.35)]'
+              : 'border-gray-800 bg-black/20'
+          }`}>
+            <p className="text-[10px] font-mono uppercase tracking-wider text-gray-500 mb-0.5">WINNER TAKES</p>
+            <p className={`text-xl font-black tabular-nums transition-colors ${payoutFlash ? 'text-cyan-300' : 'text-white'}`}>
+              {(amount * 2 * (10000 - PICK_PLATFORM_BPS_DEFAULT) / 10000).toFixed(4)} <span className="text-amber-400 text-base font-mono">{token}</span>
+            </p>
+            <p className="text-[9px] font-mono text-gray-600 mt-1 tracking-wider">
+              {(PICK_PLATFORM_BPS_DEFAULT / 100)}% PLATFORM RAKE · ON-CHAIN ESCROW POLYGON
+            </p>
           </div>
 
-          <button onClick={submit} disabled={submitting || amount <= 0} className="w-full py-3 text-sm font-black bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-400 hover:to-purple-400 text-white rounded-xl transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 shadow-lg shadow-cyan-500/20">
+          {/* CTA — stage-aware. Clean idle. Spinner mid-flight. Always tabular nums on the amount. */}
+          <button
+            onClick={submit}
+            disabled={submitting || amount <= 0}
+            className={`w-full py-3 text-sm font-black rounded-xl transition-all active:scale-95 disabled:opacity-50 tabular-nums ${
+              submitting
+                ? 'bg-gray-800 text-cyan-300 cursor-wait'
+                : 'bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 hover:from-cyan-400 hover:via-purple-400 hover:to-pink-400 text-white hover:scale-[1.02] shadow-lg shadow-cyan-500/30 hover:shadow-cyan-400/50'
+            }`}
+          >
             {submitting ? (
-              <span className="flex items-center justify-center gap-2">
+              <span className="flex items-center justify-center gap-2 font-mono uppercase tracking-wider text-xs">
                 <Loader2 className="w-4 h-4 animate-spin" />
-                {step === 'creating' ? 'Creating on-chain league…' : step === 'awaiting_signature' ? 'Confirm in wallet…' : step === 'finalizing' ? 'Verifying on-chain…' : 'Working…'}
+                {step === 'creating' && '[1/3] CREATING ON-CHAIN LEAGUE'}
+                {step === 'awaiting_signature' && '[2/3] CONFIRM IN WALLET'}
+                {step === 'finalizing' && '[3/3] VERIFYING ON-CHAIN'}
+                {step === 'idle' && 'WORKING'}
               </span>
-            ) : `PLACE PICK — ${amount} ${token}`}
+            ) : (
+              <span className="font-mono uppercase tracking-wider">PLACE PICK · {amount} {token}</span>
+            )}
           </button>
+
+          {/* Trust strip — Vegas bearer-ticket pattern; reinforces "this is real money on a real ledger" */}
+          <p className="text-[9px] font-mono text-center text-gray-600 mt-3 uppercase tracking-wider">
+            Stake locked in <span className="text-emerald-500/80">FantasyLeagueEscrow</span> · auto-settles via ESPN final
+          </p>
         </div>
       </div>
     </div>
@@ -600,17 +766,27 @@ function EditPickModal({ pick, onClose, onSaved }: { pick: Pick; onClose: () => 
   const opponent = pick.creatorPick === 'home' ? pick.awayTeam : pick.homeTeam
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4" onClick={onClose}>
-      <div className="w-full max-w-sm bg-gray-900 border border-cyan-500/30 rounded-2xl shadow-2xl shadow-cyan-500/10 overflow-hidden" onClick={e => e.stopPropagation()}>
-        <div className="p-5">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/85 backdrop-blur-md" aria-hidden />
+      <div
+        className="absolute inset-0 pointer-events-none"
+        aria-hidden
+        style={{
+          background:
+            'radial-gradient(ellipse 60% 40% at 50% 50%, rgba(34,211,238,0.10) 0%, transparent 60%), radial-gradient(ellipse 50% 35% at 50% 50%, rgba(168,85,247,0.08) 0%, transparent 70%)'
+        }}
+      />
+      <div className="group relative w-full max-w-sm bg-gradient-to-b from-gray-900 via-gray-950 to-black border border-cyan-500/30 rounded-2xl shadow-2xl shadow-cyan-500/20 overflow-hidden" onClick={e => e.stopPropagation()}>
+        <span className="arena-conic-ring" aria-hidden style={{ opacity: 1 }} />
+        <div className="relative p-5">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-black text-white">Edit Wager</h2>
-            <button onClick={onClose} className="text-gray-500 hover:text-white"><X className="w-5 h-5" /></button>
+            <h2 className="text-lg font-black arena-hologram-text tracking-tight">Edit Wager</h2>
+            <button onClick={onClose} className="text-gray-500 hover:text-white hover:rotate-90 transition-all"><X className="w-5 h-5" /></button>
           </div>
 
-          <div className="p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/20 mb-4">
-            <p className="text-sm font-black text-white">{creatorTeam} to WIN</p>
-            <p className="text-xs text-gray-400">vs {opponent} · team is locked, edit wager only</p>
+          <div className="p-3 rounded-xl bg-gradient-to-r from-cyan-500/15 via-cyan-500/10 to-purple-500/10 border border-cyan-500/30 mb-4">
+            <p className="text-sm font-black text-white tracking-tight">{creatorTeam} <span className="text-cyan-400">to WIN</span></p>
+            <p className="text-[11px] font-mono text-gray-400 uppercase tracking-wider">vs {opponent} · team locked, edit wager only</p>
           </div>
 
           <div className="grid grid-cols-2 gap-3 mb-4">
@@ -787,61 +963,283 @@ export default function ArenaPicksPage() {
     } catch (e: any) { toast.error(e.message) }
   }
 
+  // Aggregate counts for tab + view badges (DK/FD pattern: lobby header always tells you what's hot)
+  const livePickCount = picks.filter(p => p.status === 'matched' && /live|in/i.test(p.gameStatus || '')).length
+  const openPickCount = picks.filter(p => p.status === 'open' && !p.takerHandle).length
+  const myPickCount = picks.filter(p => {
+    const h = me?.profile?.userHandle || me?.handle || ''
+    return p.creatorHandle === h || p.takerHandle === h
+  }).length
+  const liveGameCount = games.filter(g => g.state === 'in').length
+  const totalEscrowed = picks.reduce((acc, p) => acc + (p.status === 'matched' || p.status === 'open' ? p.entryFee : 0), 0)
+  const sportCount = (id: string) => id === 'all' ? picks.length + games.length : (picks.filter(p => p.sport === id).length + games.filter(g => g.sport === id).length)
+
   return (
-    <div className="min-h-screen bg-black text-white">
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        {/* Hero */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl lg:text-5xl font-black bg-gradient-to-r from-cyan-400 via-purple-400 to-amber-400 bg-clip-text text-transparent">
+    <div className="min-h-screen bg-black text-white relative overflow-hidden">
+      {/* === HIGH-END GRAPHICS LAYER === local <style> for the premium effects.
+           CSS-only: mesh-gradient, conic ring, hologram text, grain overlay, shimmer.
+           Mobile-safe: backdrop-filter and conic-gradient are universally supported on iOS 16+ / Android Chrome. */}
+      <style>{`
+        @keyframes arena-mesh-drift {
+          0%, 100% { background-position: 0% 0%, 100% 100%, 50% 100%; }
+          50%      { background-position: 100% 100%, 0% 0%, 50% 0%; }
+        }
+        @keyframes arena-conic-spin {
+          to { --arena-angle: 360deg; }
+        }
+        @property --arena-angle {
+          syntax: '<angle>';
+          inherits: false;
+          initial-value: 0deg;
+        }
+        @keyframes arena-hologram-shift {
+          0%, 100% { background-position: 0% 50%; }
+          50%      { background-position: 100% 50%; }
+        }
+        @keyframes arena-glow-pulse {
+          0%, 100% { box-shadow:
+              0 0 24px rgba(34,211,238,0.30),
+              0 0 48px rgba(168,85,247,0.18),
+              inset 0 0 18px rgba(34,211,238,0.05); }
+          50%      { box-shadow:
+              0 0 36px rgba(34,211,238,0.50),
+              0 0 80px rgba(168,85,247,0.35),
+              inset 0 0 24px rgba(168,85,247,0.10); }
+        }
+        @keyframes arena-shimmer {
+          0%   { transform: translateX(-120%) skewX(-20deg); }
+          100% { transform: translateX(220%)  skewX(-20deg); }
+        }
+        @keyframes arena-confetti-1 { 0% {transform: translate(0,0) rotate(0); opacity:1} 100% {transform: translate(-40px,80px) rotate(540deg); opacity:0} }
+        @keyframes arena-confetti-2 { 0% {transform: translate(0,0) rotate(0); opacity:1} 100% {transform: translate(50px,90px)  rotate(-720deg); opacity:0} }
+        @keyframes arena-confetti-3 { 0% {transform: translate(0,0) rotate(0); opacity:1} 100% {transform: translate(-15px,110px) rotate(900deg); opacity:0} }
+
+        /* Mesh-gradient ambient bg — three radial blobs slowly drifting on a dark canvas. Premium feel without GPU cost. */
+        .arena-mesh-bg {
+          background:
+            radial-gradient(60% 50% at 18% 22%, rgba(6,182,212,0.18)  0%, transparent 60%),
+            radial-gradient(55% 45% at 82% 78%, rgba(168,85,247,0.16) 0%, transparent 60%),
+            radial-gradient(45% 40% at 50% 110%, rgba(245,158,11,0.10) 0%, transparent 60%);
+          background-size: 200% 200%, 200% 200%, 200% 200%;
+          animation: arena-mesh-drift 28s ease-in-out infinite;
+        }
+        /* Subtle grid texture — Cyberpunk / Vegas big-board surface */
+        .arena-grid-overlay {
+          background-image:
+            linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+          background-size: 44px 44px;
+          mask-image: radial-gradient(ellipse 80% 100% at 50% 0%, black 30%, transparent 90%);
+          -webkit-mask-image: radial-gradient(ellipse 80% 100% at 50% 0%, black 30%, transparent 90%);
+        }
+        /* Film-grain — adds tactile texture, like a printed bearer ticket */
+        .arena-grain-overlay {
+          background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/></svg>");
+          opacity: 0.035;
+          mix-blend-mode: overlay;
+        }
+        /* Holographic foil text — used on the brand title and on big "WON" moments */
+        .arena-hologram-text {
+          background: linear-gradient(110deg,
+            #06b6d4 0%, #67e8f9 12%, #a78bfa 26%, #f0abfc 40%,
+            #fbbf24 54%, #f0abfc 68%, #a78bfa 82%, #06b6d4 100%);
+          background-size: 200% 100%;
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
+          animation: arena-hologram-shift 8s ease-in-out infinite;
+          filter: drop-shadow(0 0 18px rgba(168,85,247,0.35));
+        }
+        /* Conic-gradient running-light border — premium card-frame signal on hover */
+        .arena-conic-ring {
+          position: absolute; inset: -1px; border-radius: inherit; padding: 1.5px;
+          background: conic-gradient(from var(--arena-angle, 0deg),
+            transparent 0deg, transparent 240deg,
+            #22d3ee 280deg, #a78bfa 310deg, #ec4899 340deg, transparent 360deg);
+          -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+                  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          -webkit-mask-composite: xor;
+                  mask-composite: exclude;
+          animation: arena-conic-spin 5s linear infinite;
+          pointer-events: none;
+          opacity: 0;
+          transition: opacity 250ms ease-out;
+        }
+        .group:hover > .arena-conic-ring { opacity: 1; }
+        /* Won-state: ring is permanent and gold-toned */
+        .arena-won-ring {
+          position: absolute; inset: -1px; border-radius: inherit; padding: 1.5px;
+          background: conic-gradient(from var(--arena-angle, 0deg),
+            transparent 0deg, transparent 200deg,
+            #fbbf24 240deg, #fde68a 280deg, #fbbf24 320deg, transparent 360deg);
+          -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+                  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          -webkit-mask-composite: xor;
+                  mask-composite: exclude;
+          animation: arena-conic-spin 6s linear infinite;
+          pointer-events: none;
+        }
+        /* Shimmer stripe — sweeps across cards, ticket banners, success states */
+        .arena-shimmer { position: relative; overflow: hidden; }
+        .arena-shimmer::after {
+          content: ''; position: absolute; inset: 0;
+          background: linear-gradient(110deg,
+            transparent 38%, rgba(255,255,255,0.10) 48%, rgba(255,255,255,0.22) 50%,
+            rgba(255,255,255,0.10) 52%, transparent 62%);
+          animation: arena-shimmer 4.5s ease-in-out infinite;
+          pointer-events: none;
+        }
+        /* LIVE pulse halo — radiates from the VS divider on live picks */
+        .arena-live-halo::before {
+          content: ''; position: absolute; inset: -8px; border-radius: 9999px;
+          background: radial-gradient(circle, rgba(239,68,68,0.45) 0%, transparent 70%);
+          animation: arena-glow-pulse 2.2s ease-in-out infinite;
+          z-index: -1;
+        }
+        /* Confetti sprite — three drifting sparks behind the WON banner */
+        .arena-confetti-spark { position: absolute; width: 6px; height: 6px; border-radius: 1px; }
+        .arena-confetti-spark.s1 { background: #fbbf24; left: 18%; top: 0; animation: arena-confetti-1 1.6s ease-out infinite; }
+        .arena-confetti-spark.s2 { background: #f0abfc; left: 50%; top: 0; animation: arena-confetti-2 1.9s ease-out infinite 0.2s; }
+        .arena-confetti-spark.s3 { background: #67e8f9; left: 80%; top: 0; animation: arena-confetti-3 1.7s ease-out infinite 0.4s; }
+      `}</style>
+
+      {/* Ambient layered atmosphere — mesh + grid + grain. Pinned, non-interactive, no scroll cost. */}
+      <div className="fixed inset-0 arena-mesh-bg pointer-events-none" aria-hidden />
+      <div className="fixed inset-0 arena-grid-overlay pointer-events-none" aria-hidden />
+      <div className="fixed inset-0 arena-grain-overlay pointer-events-none" aria-hidden />
+
+      {/* Big-board live ticker — DK/Vegas inspired: aggregate counts, tabular nums, neon. Hides on small empty boards. */}
+      {(livePickCount + liveGameCount + openPickCount > 0) && (
+        <div className="border-b border-cyan-500/20 bg-gradient-to-r from-black via-cyan-950/20 to-black backdrop-blur-md sticky top-0 z-30">
+          <div className="max-w-7xl mx-auto px-4 py-2 flex items-center gap-4 lg:gap-6 overflow-x-auto scrollbar-hide text-[10px] lg:text-xs font-mono uppercase tracking-wider whitespace-nowrap">
+            {liveGameCount > 0 && (
+              <span className="flex items-center gap-1.5 text-red-400">
+                <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
+                <span className="font-bold tabular-nums">{liveGameCount}</span> GAME{liveGameCount === 1 ? '' : 'S'} LIVE
+              </span>
+            )}
+            {livePickCount > 0 && (
+              <span className="flex items-center gap-1.5 text-amber-400">
+                <span className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(245,158,11,0.8)]" />
+                <span className="font-bold tabular-nums">{livePickCount}</span> LOCKED-IN LIVE
+              </span>
+            )}
+            {openPickCount > 0 && (
+              <span className="flex items-center gap-1.5 text-cyan-400">
+                <span className="font-bold tabular-nums">{openPickCount}</span> OPEN PICKS
+              </span>
+            )}
+            {totalEscrowed > 0 && (
+              <span className="flex items-center gap-1.5 text-purple-400 ml-auto">
+                <span className="font-bold tabular-nums">{totalEscrowed.toFixed(0)}</span> IN ESCROW
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
+      <div className="max-w-7xl mx-auto px-4 py-6 relative z-10">
+        {/* Hero — full holographic foil title + animated underline + tagline. The first thing users see, the first thing that has to wow. */}
+        <div className="mb-6 relative">
+          {/* Glow bloom behind the title — subtle radial bloom adds depth */}
+          <div className="absolute -inset-4 -z-10 rounded-3xl blur-2xl bg-gradient-to-r from-cyan-500/10 via-purple-500/10 to-amber-500/10 pointer-events-none" aria-hidden />
+          <h1 className="arena-hologram-text text-3xl lg:text-5xl font-black tracking-tight inline-block leading-none">
             ARENA PICKS
           </h1>
-          <p className="text-gray-400 text-sm lg:text-base mt-1">Pick winners. Wager crypto. Settle on-chain.</p>
+          <div className="flex items-center gap-2 mt-2">
+            <div className="h-0.5 w-12 bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 rounded-full shadow-[0_0_16px_rgba(34,211,238,0.8)]" />
+            <span className="text-[10px] font-mono text-cyan-400/70 uppercase tracking-[0.25em]">L2 · POLYGON · ON-CHAIN</span>
+          </div>
+          <p className="text-gray-400 text-xs lg:text-sm mt-3 font-mono uppercase tracking-wider">
+            <span className="text-gray-500">PICK WINNERS</span>
+            <span className="text-gray-700 mx-1.5">·</span>
+            <span className="text-gray-500">WAGER CRYPTO</span>
+            <span className="text-gray-700 mx-1.5">·</span>
+            <span className="text-gray-500">SETTLE ON-CHAIN</span>
+            <span className="text-gray-700 mx-1.5">·</span>
+            <span className="text-amber-400">5% RAKE</span>
+          </p>
         </div>
 
-        {/* Sport tabs */}
-        <div className="flex items-center gap-2 mb-6 overflow-x-auto scrollbar-hide pb-1">
-          {SPORT_TABS.map(s => (
-            <button
-              key={s.id}
-              onClick={() => setTab(s.id)}
-              className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-bold transition-all ${
-                tab === s.id ? 'bg-white text-black shadow-lg' : 'bg-white/5 text-gray-400 hover:bg-white/10'
-              }`}
-            >
-              {s.emoji} {s.label}
-            </button>
-          ))}
+        {/* Sport tabs — DK pattern: pill rail, gradient active state, count badges per sport */}
+        <div className="flex items-center gap-2 mb-4 overflow-x-auto scrollbar-hide pb-1 -mx-4 px-4">
+          {SPORT_TABS.map(s => {
+            const count = sportCount(s.id)
+            const active = tab === s.id
+            return (
+              <button
+                key={s.id}
+                onClick={() => setTab(s.id)}
+                className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold transition-all active:scale-95 ${
+                  active
+                    ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white shadow-lg shadow-cyan-500/40 ring-1 ring-cyan-300/50'
+                    : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white border border-white/5'
+                }`}
+              >
+                <span>{s.emoji}</span>
+                <span>{s.label}</span>
+                {count > 0 && (
+                  <span className={`text-[10px] font-mono tabular-nums px-1.5 rounded-full ${active ? 'bg-black/30 text-white' : 'bg-white/10 text-cyan-400'}`}>
+                    {count}
+                  </span>
+                )}
+              </button>
+            )
+          })}
         </div>
 
-        {/* View toggle */}
-        <div className="flex items-center gap-1 mb-6 bg-gray-900 rounded-full p-1 w-fit">
+        {/* View toggle — segmented control with live count badges (FD My Bets pattern) */}
+        <div className="flex items-center gap-1 mb-6 bg-gray-900/80 backdrop-blur rounded-full p-1 w-fit border border-white/5">
           {[
-            { id: 'games', label: "Today's Games", icon: Zap },
-            { id: 'picks', label: 'Open Picks', icon: TrendingUp },
-            { id: 'my', label: 'My Picks', icon: Trophy },
-          ].map(v => (
-            <button
-              key={v.id}
-              onClick={() => setView(v.id as any)}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold transition-all ${
-                view === v.id ? 'bg-white text-black' : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              <v.icon className="w-3.5 h-3.5" /> {v.label}
-            </button>
-          ))}
+            { id: 'games', label: "Today's Games", icon: Zap, count: games.length },
+            { id: 'picks', label: 'Open Picks', icon: TrendingUp, count: openPickCount },
+            { id: 'my', label: 'My Picks', icon: Trophy, count: myPickCount },
+          ].map(v => {
+            const active = view === v.id
+            return (
+              <button
+                key={v.id}
+                onClick={() => setView(v.id as any)}
+                className={`flex items-center gap-1.5 px-3 lg:px-4 py-2 rounded-full text-xs font-bold transition-all active:scale-95 ${
+                  active ? 'bg-white text-black shadow-lg' : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                <v.icon className="w-3.5 h-3.5" />
+                <span>{v.label}</span>
+                {v.count > 0 && (
+                  <span className={`text-[9px] font-mono tabular-nums px-1.5 rounded-full ${active ? 'bg-black/15 text-black' : 'bg-cyan-500/20 text-cyan-400'}`}>
+                    {v.count}
+                  </span>
+                )}
+              </button>
+            )
+          })}
         </div>
 
         {loading ? (
-          <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-cyan-400" /></div>
+          /* Premium loading state — radial pulse + tabular caption */
+          <div className="flex flex-col items-center justify-center py-24 gap-4">
+            <div className="relative w-12 h-12">
+              <div className="absolute inset-0 rounded-full border-2 border-cyan-500/30 animate-ping" />
+              <div className="absolute inset-1 rounded-full border-2 border-purple-500/40 animate-ping" style={{ animationDelay: '0.3s' }} />
+              <Loader2 className="absolute inset-0 m-auto w-6 h-6 animate-spin text-cyan-400" />
+            </div>
+            <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-gray-500">Loading the board…</p>
+          </div>
         ) : view === 'games' ? (
           /* Today's Games Grid */
           <div>
             {games.length === 0 ? (
-              <div className="text-center py-20 text-gray-500">
-                <Zap className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                <p className="text-lg font-bold">No games today</p>
-                <p className="text-sm">Check back when games are scheduled</p>
+              <div className="relative text-center py-24 text-gray-500">
+                <div className="absolute inset-0 -z-10 max-w-md mx-auto blur-3xl opacity-30 bg-gradient-to-br from-cyan-500 via-purple-500 to-amber-500 rounded-full" />
+                <div className="inline-block relative mb-4">
+                  <Zap className="w-16 h-16 mx-auto text-cyan-400/40" />
+                  <span className="absolute inset-0 flex items-center justify-center">
+                    <span className="w-3 h-3 bg-cyan-400 rounded-full animate-ping" />
+                  </span>
+                </div>
+                <p className="text-xl font-black text-white mb-1">No games today</p>
+                <p className="text-xs font-mono uppercase tracking-wider text-gray-500">Check back when ESPN posts the next slate</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
@@ -855,10 +1253,24 @@ export default function ArenaPicksPage() {
           /* Picks Board — matchup cards */
           <div>
             {picks.length === 0 ? (
-              <div className="text-center py-20 text-gray-500">
-                <Trophy className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                <p className="text-lg font-bold">{view === 'my' ? 'No picks yet' : 'No open picks'}</p>
-                <p className="text-sm">{view === 'my' ? 'Create your first pick from Today\'s Games' : 'Be the first to create a pick'}</p>
+              <div className="relative text-center py-24 text-gray-500">
+                <div className="absolute inset-0 -z-10 max-w-md mx-auto blur-3xl opacity-30 bg-gradient-to-br from-cyan-500 via-purple-500 to-amber-500 rounded-full" />
+                <div className="inline-block relative mb-4">
+                  <Trophy className="w-16 h-16 mx-auto text-amber-400/40" />
+                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-amber-400 rounded-full animate-pulse" />
+                </div>
+                <p className="text-xl font-black text-white mb-1">{view === 'my' ? 'No picks yet' : 'No open picks'}</p>
+                <p className="text-xs font-mono uppercase tracking-wider text-gray-500 mb-4">
+                  {view === 'my' ? 'Your wagers will appear here' : 'The board is empty — be the first'}
+                </p>
+                {view !== 'my' && games.length > 0 && (
+                  <button
+                    onClick={() => setView('games')}
+                    className="px-5 py-2 text-xs font-black bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-400 hover:to-purple-400 text-white rounded-full transition-all hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(34,211,238,0.4)] font-mono uppercase tracking-wider"
+                  >
+                    Create the first pick →
+                  </button>
+                )}
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
