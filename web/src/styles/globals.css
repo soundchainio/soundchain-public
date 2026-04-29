@@ -2292,6 +2292,11 @@ input[type="number"]::-webkit-outer-spin-button {
   background-size: 200% 200%, 200% 200%, 200% 200%;
   animation: arena-mesh-drift 28s ease-in-out infinite;
 }
+/* Freeze ambient arena animations while a modal is open — backdrop-blur + animated bg
+   + animated conic ring compound into visible glitch on slower GPUs (Frank's Apr 29 report). */
+body.arena-modal-open .arena-mesh-bg { animation-play-state: paused; }
+body.arena-modal-open .arena-conic-ring { animation-play-state: paused; }
+body.arena-modal-open .arena-hologram-text { animation-play-state: paused; }
 .arena-grid-overlay {
   background-image:
     linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),

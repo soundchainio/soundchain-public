@@ -551,6 +551,15 @@ function CreatePickModal({ game, side, onClose, onCreated }: { game: Game; side:
     return () => clearTimeout(t)
   }, [amount, token])
 
+  // Freeze ambient arena layers (mesh-bg drift, grid, grain) while the modal is open so the
+  // backdrop-blur + animated conic ring + animated bg combo doesn't compound into visible glitch.
+  // CSS rule in globals.css targets `body.arena-modal-open .arena-mesh-bg` to set animation-play-state:paused.
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+    document.body.classList.add('arena-modal-open')
+    return () => { document.body.classList.remove('arena-modal-open') }
+  }, [])
+
   const team = side === 'home' ? game.homeTeam : game.awayTeam
   const teamFull = side === 'home' ? game.homeTeamFull : game.awayTeamFull
   const logo = side === 'home' ? game.homeLogo : game.awayLogo
@@ -630,7 +639,7 @@ function CreatePickModal({ game, side, onClose, onCreated }: { game: Game; side:
       />
       <div className="group relative w-full max-w-sm bg-gradient-to-b from-gray-900 via-gray-950 to-black border border-cyan-500/30 rounded-2xl shadow-2xl shadow-cyan-500/20 overflow-hidden" onClick={e => e.stopPropagation()}>
         {/* Conic running-light ring around the modal frame — premium signal */}
-        <span className="arena-conic-ring" aria-hidden style={{ opacity: 1 }} />
+        <span className="arena-conic-ring" aria-hidden style={{ opacity: 0.35 }} />
         <div className="relative p-5">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-black arena-hologram-text tracking-tight">Create Pick</h2>
@@ -796,6 +805,13 @@ function EditPickModal({ pick, onClose, onSaved }: { pick: Pick; onClose: () => 
   const [amount, setAmount] = useState(pick.entryFee)
   const [submitting, setSubmitting] = useState(false)
 
+  // Freeze ambient arena layers while modal is open — see CreatePickModal counterpart for rationale.
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+    document.body.classList.add('arena-modal-open')
+    return () => { document.body.classList.remove('arena-modal-open') }
+  }, [])
+
   const submit = async () => {
     setSubmitting(true)
     try {
@@ -828,7 +844,7 @@ function EditPickModal({ pick, onClose, onSaved }: { pick: Pick; onClose: () => 
         }}
       />
       <div className="group relative w-full max-w-sm bg-gradient-to-b from-gray-900 via-gray-950 to-black border border-cyan-500/30 rounded-2xl shadow-2xl shadow-cyan-500/20 overflow-hidden" onClick={e => e.stopPropagation()}>
-        <span className="arena-conic-ring" aria-hidden style={{ opacity: 1 }} />
+        <span className="arena-conic-ring" aria-hidden style={{ opacity: 0.35 }} />
         <div className="relative p-5">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-black arena-hologram-text tracking-tight">Edit Wager</h2>
