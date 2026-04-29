@@ -34,13 +34,32 @@ export const PICKS_ESCROW_ADDRESS = '0x9cCB15833767B956cF55aa805D74c62d08F8acEd'
 export const POLYGON_CHAIN_ID = 137
 export const POLYGON_CHAIN_HEX = '0x89'
 
-// Public RPC endpoints — use multiple for redundancy.
-// Server-side: prefer first (PolygonNode public archive). Client falls back via wallet provider.
-export const POLYGON_RPC_URLS = [
-  'https://polygon-bor-rpc.publicnode.com',
-  'https://polygon-rpc.com',
-  'https://polygon.llamarpc.com',
-] as const
+// Polygon RPC rotation — paid/dedicated endpoints FIRST, public fallbacks after.
+// Public RPCs (publicnode/polygon-rpc/llamarpc) get rate-limited under load and produced
+// the "Polygon RPCs are flaky right now" toast on Frank's Apr 29 mid-stake test.
+// ALCHEMY_API_KEY env var is already configured in Vercel (also used by pages/api/rewards/claim.ts).
+// Server-side only — process.env.X resolves to undefined on client builds (no NEXT_PUBLIC_
+// prefix), so client bundles just see the public RPCs in the fallback order, no env leak.
+function buildPolygonRpcUrls(): string[] {
+  const paid: string[] = []
+  if (process.env.ALCHEMY_API_KEY) {
+    paid.push(`https://polygon-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`)
+  }
+  if (process.env.INFURA_API_KEY) {
+    paid.push(`https://polygon-mainnet.infura.io/v3/${process.env.INFURA_API_KEY}`)
+  }
+  if (process.env.QUICKNODE_POLYGON_URL) {
+    paid.push(process.env.QUICKNODE_POLYGON_URL)
+  }
+  const fallback = [
+    'https://polygon-bor-rpc.publicnode.com',
+    'https://polygon-rpc.com',
+    'https://polygon.llamarpc.com',
+  ]
+  return [...paid, ...fallback]
+}
+
+export const POLYGON_RPC_URLS: string[] = buildPolygonRpcUrls()
 
 // Native token sentinel — FantasyLeagueEscrow treats address(0) as native POL.
 export const NATIVE_TOKEN = '0x0000000000000000000000000000000000000000'
