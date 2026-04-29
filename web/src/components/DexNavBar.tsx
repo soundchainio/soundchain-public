@@ -29,6 +29,7 @@ import {
   ShieldCheck, Settings as SettingsIcon, AtSign, ChevronUp, ChevronDown,
   Check, Copy, AlertCircle, LogOut, User as UserIcon,
   Moon, Sun, Monitor, Smartphone, Laptop, Tv, Film, Glasses, Lock as LockIcon,
+  ArrowLeftRight,
 } from 'lucide-react'
 import { useTheme, ThemeChoice } from 'lib/theme/ThemeContext'
 import {
@@ -41,6 +42,7 @@ import {
 import { Logo } from 'icons/Logo'
 import { useMagicContext } from 'hooks/useMagicContext'
 import { useMe } from 'hooks/useMe'
+import { useOgunUsdPrice } from 'hooks/useOgunUsdPrice'
 import { useUnifiedWallet } from 'contexts/UnifiedWalletContext'
 import { useModalDispatch } from 'contexts/ModalContext'
 import {
@@ -104,6 +106,10 @@ export function DexNavBar() {
   // connection lights up the pill the same way it does on /wallet + /shop.
   const account = activeAddress || magicAccount
   const ogunBalance = unifiedOgunBalance || magicOgunBalance
+  // Anti-Spotify thesis made tangible: every page shows OGUN balance + USD value
+  // so users SEE that streaming royalties are one tap away from real money.
+  const ogunUsdPrice = useOgunUsdPrice()
+  const ogunUsdValue = ogunBalance && ogunUsdPrice ? Number(ogunBalance) * ogunUsdPrice : null
   const { dispatchShowCreateModal } = useModalDispatch()
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -377,15 +383,27 @@ export function DexNavBar() {
             </div>
 
             {account ? (
-              <button
-                onClick={() => (isWeb3ModalReady ? connectWeb3Modal() : connectWallet?.())}
-                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-green-500/10 hover:bg-green-500/20 border border-green-500/20 hover:border-green-400/50 text-[10px] font-mono transition shadow-[0_0_8px_rgba(34,197,94,0.15)] hover:shadow-[0_0_14px_rgba(34,197,94,0.3)]"
-                title="Tap to switch wallet — MetaMask, WalletConnect, Coinbase + 600 more. Connection persists across Arena, Shop, Wallet, every page."
-              >
-                <Wallet className="w-3 h-3 text-green-400" />
-                <span className="text-green-400">{ogunBalance ? `${Number(ogunBalance).toFixed(2)} OGUN` : '...'}</span>
-                <span className="text-gray-500 hidden sm:inline">· {account.slice(0, 6)}...{account.slice(-4)}</span>
-              </button>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => (isWeb3ModalReady ? connectWeb3Modal() : connectWallet?.())}
+                  className="flex items-center gap-1 px-2 py-1 rounded-lg bg-green-500/10 hover:bg-green-500/20 border border-green-500/20 hover:border-green-400/50 text-[10px] font-mono transition shadow-[0_0_8px_rgba(34,197,94,0.15)] hover:shadow-[0_0_14px_rgba(34,197,94,0.3)]"
+                  title="Tap to switch wallet — MetaMask, WalletConnect, Coinbase + 600 more. Connection persists across Arena, Shop, Wallet, every page."
+                >
+                  <Wallet className="w-3 h-3 text-green-400" />
+                  <span className="text-green-400">{ogunBalance ? `${Number(ogunBalance).toFixed(2)} OGUN` : '...'}</span>
+                  {ogunUsdValue !== null && (
+                    <span className="text-cyan-300 hidden sm:inline">· ${ogunUsdValue.toFixed(2)}</span>
+                  )}
+                  <span className="text-gray-500 hidden md:inline">· {account.slice(0, 6)}...{account.slice(-4)}</span>
+                </button>
+                <Link
+                  href="/dex?from=OGUN&to=USDC"
+                  className="flex items-center justify-center w-7 h-7 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 hover:border-cyan-400/60 transition shadow-[0_0_8px_rgba(6,182,212,0.2)] hover:shadow-[0_0_14px_rgba(6,182,212,0.4)]"
+                  title="Swap OGUN → USDC. Streaming royalties are one tap from real money."
+                >
+                  <ArrowLeftRight className="w-3.5 h-3.5 text-cyan-400" />
+                </Link>
+              </div>
             ) : (
               <button
                 onClick={() => (isWeb3ModalReady ? connectWeb3Modal() : connectWallet?.())}
