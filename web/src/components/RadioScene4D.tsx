@@ -112,6 +112,11 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
   const dataArrayRef = useRef<Uint8Array<ArrayBuffer> | null>(null)
   const animFrameRef = useRef<number>(0)
   const clockRef = useRef(new THREE.Clock())
+  // Synced from `isPlaying` prop so the animate loop (mounted once) can read it
+  // without re-mounting the whole scene. When paused we throttle to a near-idle
+  // frame rate to save phone battery (was rendering at full 30fps mobile / 60fps
+  // desktop regardless of audio state).
+  const isPlayingRef = useRef(false)
   const artworkTextureRef = useRef<THREE.Texture | null>(null)
   const artworkUrlRef = useRef<string>('')
 
@@ -198,6 +203,7 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
 
   // Resume AudioContext (may still be needed if user interacts before audio starts)
   useEffect(() => {
+    isPlayingRef.current = isPlaying
     if (isPlaying && audioCtxRef.current?.state === 'suspended') {
       audioCtxRef.current.resume().catch(() => {})
     }
@@ -912,13 +918,22 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
     // ==================== ANIMATION LOOP ====================
     let frameCount = 0
     let lastRenderTime = 0
-    const targetInterval = isMobile ? 33.33 : 0 // ~30fps on mobile, uncapped on desktop
+    // Frame budgets: tighter when actively playing, much looser when paused so the
+    // GPU stays mostly idle (was burning the same budget regardless of audio state,
+    // which was the dominant heat/battery culprit on mobile).
+    const playingIntervalMs = isMobile ? 41.66 : 0          // ~24fps mobile / uncapped desktop
+    const pausedIntervalMs = isMobile ? 200 : 66.66         // ~5fps mobile / ~15fps desktop
 
     const animate = (timestamp?: number) => {
+      // Tab hidden — fully stop. The visibilitychange listener below restarts us.
+      if (typeof document !== 'undefined' && document.hidden) {
+        animFrameRef.current = 0
+        return
+      }
       animFrameRef.current = requestAnimationFrame(animate)
 
-      // Throttle to ~30fps on mobile
-      if (isMobile && timestamp) {
+      const targetInterval = isPlayingRef.current ? playingIntervalMs : pausedIntervalMs
+      if (timestamp && targetInterval > 0) {
         if (timestamp - lastRenderTime < targetInterval) return
         lastRenderTime = timestamp
       }
@@ -1155,8 +1170,24 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
     }
     window.addEventListener('resize', handleResize)
 
+    // Pause the entire RAF loop when the tab is backgrounded — was a major source
+    // of phantom battery drain (post-bloom + 12K particles rendering even when
+    // the user wasn't looking at the page).
+    const handleVisibility = () => {
+      if (document.hidden) {
+        if (animFrameRef.current) {
+          cancelAnimationFrame(animFrameRef.current)
+          animFrameRef.current = 0
+        }
+      } else if (animFrameRef.current === 0) {
+        animate()
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+
     return () => {
       window.removeEventListener('resize', handleResize)
+      document.removeEventListener('visibilitychange', handleVisibility)
       cancelAnimationFrame(animFrameRef.current)
       renderer.dispose()
       scene.clear()

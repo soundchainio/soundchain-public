@@ -115,6 +115,21 @@ let lastFetchTime: Date | null = null
 let lastTotalScids: number = 0
 const REFRESH_INTERVAL_MS = 5 * 60 * 1000
 
+// Recently-played ring buffer — prevents short-loop repeats across cold-start re-shuffles
+// and cross-listener interference (radioPlaylist is shared module state across all visitors).
+const RECENTLY_PLAYED_LIMIT = 30
+const recentlyPlayedIds: string[] = []
+function pushRecent(id: string | undefined) {
+  if (!id) return
+  const i = recentlyPlayedIds.indexOf(id)
+  if (i !== -1) recentlyPlayedIds.splice(i, 1)
+  recentlyPlayedIds.push(id)
+  if (recentlyPlayedIds.length > RECENTLY_PLAYED_LIMIT) recentlyPlayedIds.shift()
+}
+function isRecent(id: string | undefined): boolean {
+  return !!id && recentlyPlayedIds.includes(id)
+}
+
 function fisherYatesShuffle<T>(arr: T[]): T[] {
   for (let i = arr.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -280,6 +295,7 @@ async function radioHandler(req: NextApiRequest, res: NextApiResponse) {
     if (!currentTrack && radioPlaylist.length > 0) {
       currentTrack = radioPlaylist[0]
       trackStartTime = new Date()
+      pushRecent(currentTrack?.id)
     }
 
     const availableGenres = getAvailableGenres()
@@ -287,7 +303,11 @@ async function radioHandler(req: NextApiRequest, res: NextApiResponse) {
     if (genreFilter && genreFilter !== 'all') {
       const filtered = getFilteredPlaylist(genreFilter)
       if (filtered.length > 0) {
-        nowPlaying = filtered[Math.floor(Math.random() * filtered.length)]
+        // Exclude recently-played first; fall back to full pool only if everything in the genre is recent.
+        const fresh = filtered.filter(t => !isRecent(t.id))
+        const pool = fresh.length > 0 ? fresh : filtered
+        nowPlaying = pool[Math.floor(Math.random() * pool.length)]
+        pushRecent(nowPlaying?.id)
       }
     }
 
@@ -332,11 +352,39 @@ async function radioHandler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'POST') {
     const broadcast = req.query.broadcast === 'true'
 
+    // Cache-bust action — called by /api/tracks/create-scid after a new SCid upload
+    // so newly-uploaded tracks land in rotation immediately instead of waiting up to 5 min.
+    if (action === 'invalidate') {
+      lastFetchTime = null
+      return res.status(200).json({
+        success: true,
+        data: { invalidated: true },
+        meta: { timestamp: new Date().toISOString(), request_id: requestId, agent: 'OGUN Radio' },
+      })
+    }
+
     if (radioPlaylist.length > 0) {
-      const played = radioPlaylist.shift()
-      if (played) radioPlaylist.push(played)
+      // Skip past recently-played when advancing (defense against cold-start re-shuffle
+      // landing repeats near the top). Bounded scan so we never loop forever.
+      const scanLimit = Math.min(radioPlaylist.length, RECENTLY_PLAYED_LIMIT)
+      let nextIdx = -1
+      for (let i = 1; i < radioPlaylist.length && i <= scanLimit; i++) {
+        if (!isRecent(radioPlaylist[i]?.id)) { nextIdx = i; break }
+      }
+      if (nextIdx > 0) {
+        // Move the picked track to the front, push the displaced head to the back.
+        const [picked] = radioPlaylist.splice(nextIdx, 1)
+        const head = radioPlaylist.shift()
+        if (head) radioPlaylist.push(head)
+        radioPlaylist.unshift(picked)
+      } else {
+        // Plain round-robin if every nearby track is recent (small catalogs / heavy listening).
+        const played = radioPlaylist.shift()
+        if (played) radioPlaylist.push(played)
+      }
       currentTrack = radioPlaylist[0] || null
       trackStartTime = new Date()
+      pushRecent(currentTrack?.id)
     }
 
     const response: any = {

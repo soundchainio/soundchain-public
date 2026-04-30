@@ -106,6 +106,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     }
 
+    // Bust the OGUN Radio playlist cache so this newly-uploaded track lands in
+    // rotation immediately instead of waiting up to REFRESH_INTERVAL_MS (5 min).
+    // Fire-and-forget — we don't want the upload response blocked on this.
+    const baseUrl = process.env.NEXT_PUBLIC_URL || `https://${req.headers.host}`
+    fetch(`${baseUrl}/api/agent/radio?action=invalidate`, { method: 'POST' }).catch(() => {})
+
     return res.status(200).json({
       track: { ...track, id: trackId.toString(), _id: undefined },
       scid: { ...scid, id: scidCode },

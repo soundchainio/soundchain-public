@@ -258,6 +258,21 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
   const audioRef = useRef<HTMLAudioElement>(null)
   const streamLoggedForCurrentPlay = useRef(false)
 
+  // Client-side recently-played set — defense against cross-listener interference and
+  // cold-start re-shuffle (radioPlaylist is shared module state across all visitors,
+  // so even with the server-side ring buffer in place, a track Frank just heard can
+  // re-appear if the function cycles cold/warm or another listener advances the queue).
+  const recentlyPlayedRef = useRef<string[]>([])
+  const RECENTLY_PLAYED_LIMIT = 30
+  const pushRecentlyPlayed = (id: string | undefined) => {
+    if (!id) return
+    const arr = recentlyPlayedRef.current
+    const i = arr.indexOf(id)
+    if (i !== -1) arr.splice(i, 1)
+    arr.push(id)
+    if (arr.length > RECENTLY_PLAYED_LIMIT) arr.shift()
+  }
+
   // Auth + wallet for OGUN streaming rewards and header icons
   const me = useMe()
   const { account: walletAddress } = useMagicContext()
@@ -317,7 +332,9 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
   })
 
   // Fetch current track from OGUN Radio
-  const fetchCurrentTrack = async (genre?: string) => {
+  // attempt: recursion depth — if the returned track was recently played, advance the
+  // server queue and re-fetch (up to 3 times) before giving up and accepting the repeat.
+  const fetchCurrentTrack = async (genre?: string, attempt = 0) => {
     try {
       const genreParam = genre || selectedGenre
       const url = genreParam && genreParam !== 'all' ? `/api/agent/radio?genre=${genreParam}` : '/api/agent/radio'
@@ -325,7 +342,21 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
       const data = await res.json()
 
       if (data.success && data.data?.now_playing) {
-        setCurrentTrack(data.data.now_playing)
+        const np = data.data.now_playing
+        const isRepeat = !!np.id && recentlyPlayedRef.current.includes(np.id)
+
+        if (isRepeat && attempt < 3) {
+          // Advance the server queue and re-fetch. In genre mode the GET re-rolls a
+          // random pick (server-side exclusion makes this almost always fresh on retry);
+          // in 'all' mode we POST to advance the round-robin cursor first.
+          if (!genreParam || genreParam === 'all') {
+            try { await fetch('/api/agent/radio', { method: 'POST' }) } catch {}
+          }
+          return fetchCurrentTrack(genre, attempt + 1)
+        }
+
+        pushRecentlyPlayed(np.id)
+        setCurrentTrack(np)
         setQueueLength(data.data.unique_tracks || data.data.queue_length || 0)
         setTotalTracks(data.data.unique_tracks || data.data.queue_length || 0)
         if (data.data.available_genres) setAvailableGenres(data.data.available_genres)
