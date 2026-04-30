@@ -158,8 +158,8 @@ export const AudioEngine = () => {
     // Skip Web Audio API for external audio devices (CarPlay, AirPlay, Bluetooth)
     // This ensures audio routes through the standard system path
     if (isExternalAudioOutput()) {
-      console.log('External audio detected (iOS/Safari) - using native volume for CarPlay/AirPlay compatibility')
-      // Just set the audio element volume directly for normalization effect
+      // External audio devices (CarPlay/AirPlay/Bluetooth): skip Web Audio API
+      // and use native element volume to keep system audio routing intact.
       if (audioRef.current) {
         audioRef.current.volume = NORMALIZATION_CONFIG.normalizationGain
       }
@@ -210,7 +210,6 @@ export const AudioEngine = () => {
       ;(window as any).__soundchainAudioCtx = ctx
 
       isAudioGraphConnected.current = true
-      console.log('[AudioEngine] Audio graph initialized — source → gain → analyser → destination')
     } catch (error) {
       console.warn('[AudioEngine] Web Audio graph failed, falling back to native playback:', error)
       // CRITICAL: If createMediaElementSource fails, audio element may be consumed but
@@ -237,8 +236,7 @@ export const AudioEngine = () => {
     // EXTERNAL TRACK DETECTION: If src starts with EXTERNAL:, dispatch event and skip audio loading
     // External tracks (YouTube, Spotify, etc.) need iframe embeds, not audio element
     if (currentSong.src.startsWith('EXTERNAL:')) {
-      console.log('[AudioEngine] External track detected, dispatching event:', currentSong.src)
-
+      // External track (YouTube/Spotify/etc.) — iframe embed handles playback.
       // CRITICAL: Pause any currently playing audio to prevent overlap with embed
       if (audioRef.current?.src && !audioRef.current.paused) {
         audioRef.current.pause()

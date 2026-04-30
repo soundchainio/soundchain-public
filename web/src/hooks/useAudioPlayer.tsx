@@ -120,10 +120,6 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
         headers: { 'Range': `bytes=0-${rangeSize}` },
         mode: 'cors',
         credentials: 'omit',
-      }).then(response => {
-        if (response.ok || response.status === 206) {
-          console.log('[Preload] Audio gateway warmed:', src.substring(0, 50) + '...')
-        }
       }).catch(() => {})
 
       // Desktop only: Link preload and Audio element (too heavy for mobile)
@@ -167,10 +163,6 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
         method: 'GET',
         mode: 'cors',
         credentials: 'omit',
-      }).then(response => {
-        if (response.ok) {
-          console.log('[Preload] Artwork gateway warmed:', artworkUrl.substring(0, 50) + '...')
-        }
       }).catch(() => {})
 
       // Image preload for browser cache

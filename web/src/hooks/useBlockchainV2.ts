@@ -3,8 +3,9 @@ import { OAuthExtension } from '@magic-ext/oauth';
 import { config } from 'config';
 import { useMagicContext } from 'hooks/useMagicContext';
 import { useMe } from 'hooks/useMe';
+import { useUnifiedWallet } from 'contexts/UnifiedWalletContext';
 import { MeQuery } from 'lib/graphql-hooks';
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { Soundchain721 } from 'types/web3-v1-contracts/Soundchain721';
 import { SoundchainAuction } from 'types/web3-v1-contracts/SoundchainAuction';
 import { SoundchainMarketplace } from 'types/web3-v1-contracts/SoundchainMarketplace';
@@ -112,6 +113,15 @@ interface DefaultParam {
   contractAddresses?: ContractAddresses;
 }
 
+// External-wallet provider context for Magic-SDK-free signing paths (NFT mints, future surfaces).
+// Threaded down from useBlockchainV2() via useUnifiedWallet(). Optional — falls back to Magic
+// only on the legacy 3-tier _execute() path. The mint path REQUIRES an external wallet here.
+export interface ExternalWalletCtx {
+  web3ModalProvider: any | null; // EIP-1193 provider from Web3Modal / WalletConnect / MM Mobile
+  activeWalletType: string | null;
+  activeAddress: string | null;
+}
+
 class BlockchainFunction<Type> {
   protected params: Type;
   protected me: MeQuery['me'] | undefined;
@@ -123,11 +133,18 @@ class BlockchainFunction<Type> {
   protected onErrorFunction?: (cause: Error) => void;
   protected finallyFunction?: () => void;
   protected magic: InstanceWithExtensions<SDKBase, OAuthExtension[]> | null;
+  protected walletCtx: ExternalWalletCtx;
 
-  constructor(me: MeQuery['me'] | undefined, params: Type, magic: InstanceWithExtensions<SDKBase, OAuthExtension[]> | null) {
+  constructor(
+    me: MeQuery['me'] | undefined,
+    params: Type,
+    magic: InstanceWithExtensions<SDKBase, OAuthExtension[]> | null,
+    walletCtx: ExternalWalletCtx = { web3ModalProvider: null, activeWalletType: null, activeAddress: null },
+  ) {
     this.me = me;
     this.params = params;
     this.magic = magic;
+    this.walletCtx = walletCtx;
   }
 
   protected async validateAddress(address: string) {
@@ -195,7 +212,6 @@ class BlockchainFunction<Type> {
     // web3.js v4 may not expose _parent._address like v1 did, so explicit is critical.
     const to = params.contractAddress || getContractAddressFromTxObject(txObject);
     const data = txObject.encodeABI();
-    console.log('[SignBroadcast] to:', to, 'from:', params.from, 'gas:', params.gas, 'nonce:', nonce);
     if (!to) {
       throw new Error('Contract address could not be resolved from txObject. web3.js v4 _parent may be missing.');
     }
@@ -216,7 +232,6 @@ class BlockchainFunction<Type> {
       txParams.value = '0x' + BigInt(params.value).toString(16);
     }
 
-    console.log('[SignBroadcast] Sending via eth_sendTransaction with chainId 0x89 (Polygon)');
     // eth_sendTransaction returns the tx hash directly
     const txHash: string = await rpcProvider.request({
       method: 'eth_sendTransaction',
@@ -228,7 +243,6 @@ class BlockchainFunction<Type> {
 
     // Wait for on-chain confirmation using direct Polygon RPC
     const polygonProvider = new ethers.providers.JsonRpcProvider('https://polygon-bor-rpc.publicnode.com');
-    console.log('[SignBroadcast] Waiting for tx confirmation:', txHash);
     const ethersReceipt = await polygonProvider.waitForTransaction(txHash, 1, 120000);
 
     // Convert ethers.js receipt to web3.js-compatible format.
@@ -254,7 +268,6 @@ class BlockchainFunction<Type> {
       SoundchainOGUN20.abi,
       merkleClaimERC20.abi,
     ];
-    console.log('[Receipt Decode] ethers receipt logs:', ethersReceipt.logs?.length, 'logs');
     if (ethersReceipt.logs && ethersReceipt.logs.length > 0) {
       for (let abiIdx = 0; abiIdx < knownAbis.length; abiIdx++) {
         try {
@@ -276,7 +289,6 @@ class BlockchainFunction<Type> {
                 logIndex: log.logIndex,
                 transactionHash: log.transactionHash,
               };
-              console.log('[Receipt Decode] Decoded event:', parsed.name, 'returnValues:', returnValues);
             } catch {
               // This ABI doesn't match this log — expected
             }
@@ -286,8 +298,6 @@ class BlockchainFunction<Type> {
         }
       }
     }
-    console.log('[Receipt Decode] Final events:', Object.keys(web3Receipt.events));
-
     this.receipt = web3Receipt as TransactionReceipt;
     this.onReceiptFunction && this.onReceiptFunction(web3Receipt as TransactionReceipt);
   }
@@ -321,7 +331,6 @@ class BlockchainFunction<Type> {
       chainId: '0x89', // 137 = Polygon
     };
 
-    console.log('[SignBroadcastNative] Sending via eth_sendTransaction with chainId 0x89 (Polygon)');
     const txHash: string = await rpcProvider.request({
       method: 'eth_sendTransaction',
       params: [txParams],
@@ -488,7 +497,6 @@ class BlockchainFunction<Type> {
     if (txData && this.me?.hdWalletAddress &&
         txData.from.toLowerCase() === this.me.hdWalletAddress.toLowerCase()) {
       try {
-        console.log('[HD Wallet] Attempting server-side signing for', txData.from);
         await this._signViaHdWallet(txData.txObject, {
           from: txData.from,
           gas: txData.gas,
@@ -527,6 +535,81 @@ class BlockchainFunction<Type> {
         }
       })
       .finally(this.finallyFunction);
+  }
+
+  // Magic-SDK-free signing path. Required for NFT mints (createEdition + safeMintToEditionQuantity)
+  // per Apr 30 directive: NO Magic SDK on mints, EVER. L1 OAuth users must import their Magic
+  // wallet to MetaMask/CBW first (migration step in the how-to deck).
+  // Resolves provider in priority order:
+  //   1. Web3Modal EIP-1193 provider (canonical — WalletConnect/MM Mobile/CBW Mobile/etc.)
+  //   2. window.ethereum (injected — MM extension/CBW extension/Rainbow/Brave)
+  // Throws a migration-guidance error if neither is available, OR if the connected external
+  // wallet's address doesn't match the `from` (i.e. user hasn't imported their L1 key yet).
+  protected async _executeMintViaExternalWallet(
+    txData: { txObject: any; from: string; gas: number; value?: string; nonce?: number; contractAddress?: string },
+  ): Promise<TransactionReceipt> {
+    const eip1193 =
+      this.walletCtx.web3ModalProvider ||
+      (typeof window !== 'undefined' ? (window as any).ethereum : null);
+
+    if (!eip1193) {
+      throw new Error(
+        'NFT minting requires an external wallet. Connect MetaMask, Coinbase Wallet, Rainbow, or Trust — see the Migration step in the How-To deck if you signed up with Google/email.',
+      );
+    }
+
+    // Verify chain — Polygon mainnet only for SoundChain mints.
+    try {
+      const chainIdHex: string = await eip1193.request({ method: 'eth_chainId' });
+      const chainId = typeof chainIdHex === 'string' ? parseInt(chainIdHex, 16) : Number(chainIdHex);
+      if (chainId !== 137) {
+        try {
+          await eip1193.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x89' }] });
+        } catch (_switchErr: any) {
+          throw new Error('Switch your wallet network to Polygon (chainId 137) before minting.');
+        }
+      }
+    } catch (chainErr: any) {
+      // If the rpc method isn't available, proceed — the signer.sendTransaction will fail loudly
+      // if the chain is wrong, which is a better error than blocking on a probe.
+      if (chainErr?.message?.includes('Switch your wallet network')) throw chainErr;
+    }
+
+    // Verify accounts — the connected wallet MUST match `from`. If user has multiple OAuth
+    // wallets (legacy) or hasn't imported their Magic key, the addresses will diverge.
+    const accounts: string[] = await eip1193.request({ method: 'eth_accounts' });
+    const fromLower = txData.from.toLowerCase();
+    const accountsLower = accounts.map(a => a.toLowerCase());
+    if (!accountsLower.includes(fromLower)) {
+      throw new Error(
+        `Connected wallet (${accounts[0] || 'none'}) doesn't match your account address (${txData.from}). Import your Magic OAuth key into MetaMask/Coinbase Wallet first — see the Migration step in the How-To deck.`,
+      );
+    }
+
+    // Sign + broadcast via ethers v5 — the canonical 2026 Web3 path.
+    const provider = new ethers.providers.Web3Provider(eip1193);
+    const signer = provider.getSigner(txData.from);
+
+    const txRequest: any = {
+      from: txData.from,
+      to: txData.contractAddress || getContractAddressFromTxObject(txData.txObject),
+      data: txData.txObject.encodeABI(),
+      gasLimit: txData.gas,
+    };
+    if (txData.value) txRequest.value = txData.value;
+    if (txData.nonce !== undefined) txRequest.nonce = txData.nonce;
+
+    const tx = await signer.sendTransaction(txRequest);
+    this.transactionHash = tx.hash;
+    this.onTransactionHashFunction && this.onTransactionHashFunction(tx.hash);
+
+    const receipt = await tx.wait();
+    // ethers v5 receipt → web3 receipt shape (good enough for downstream consumers reading .status, .transactionHash, .blockNumber)
+    const web3Receipt = receipt as unknown as TransactionReceipt;
+    this.receipt = web3Receipt;
+    this.onReceiptFunction && this.onReceiptFunction(web3Receipt);
+    this.finallyFunction && this.finallyFunction();
+    return web3Receipt;
   }
 
   onTransactionHash(handler: (transactionHash: string) => void) {
@@ -1171,10 +1254,10 @@ class MintNftTokensToEdition extends BlockchainFunction<MintNftTokensToEditionPa
     const transactionObject = this.prepare(web3);
     const gas = await this.estimateGasDirect(transactionObject, { from, contractAddress: nftAddress });
 
-    await this._execute(
-      gasPrice => transactionObject.send({ from, gas, gasPrice, nonce }) as PromiEvent<TransactionReceipt>,
-      { txObject: transactionObject, from, gas, nonce, contractAddress: nftAddress },
-    );
+    // Apr 30 directive: NFT mints sign via external wallet ONLY (no Magic SDK).
+    await this._executeMintViaExternalWallet({
+      txObject: transactionObject, from, gas, nonce, contractAddress: nftAddress,
+    });
 
     return this.receipt;
   };
@@ -1203,10 +1286,10 @@ class CreateEdition extends BlockchainFunction<CreateEditionParams> {
     const transactionObject = this.prepare(web3);
     const gas = await this.estimateGasDirect(transactionObject, { from, contractAddress: nftAddress });
 
-    await this._execute(
-      gasPrice => transactionObject.send({ from, gas, gasPrice, nonce }) as PromiEvent<TransactionReceipt>,
-      { txObject: transactionObject, from, gas, nonce, contractAddress: nftAddress },
-    );
+    // Apr 30 directive: NFT mints sign via external wallet ONLY (no Magic SDK).
+    await this._executeMintViaExternalWallet({
+      txObject: transactionObject, from, gas, nonce, contractAddress: nftAddress,
+    });
 
     return this.receipt;
   };
@@ -1415,6 +1498,11 @@ interface BlockchainV2 {
 const useBlockchainV2 = (): BlockchainV2 => {
   const me = useMe();
   const { magic } = useMagicContext();
+  const { web3ModalProvider, activeWalletType, activeAddress } = useUnifiedWallet();
+  const walletCtx: ExternalWalletCtx = useMemo(
+    () => ({ web3ModalProvider, activeWalletType, activeAddress }),
+    [web3ModalProvider, activeWalletType, activeAddress],
+  );
 
   const placeBid = useCallback(
     (tokenId: number, from: string, value: string, contractAddresses: ContractAddresses) => {
@@ -1579,16 +1667,17 @@ const useBlockchainV2 = (): BlockchainV2 => {
 
   const mintNftTokensToEdition = useCallback(
     (uri: string, from: string, toAddress: string, editionNumber: number, quantity: number, nonce: number) => {
-      return new MintNftTokensToEdition(me, { from, toAddress, uri, editionNumber, quantity, nonce }, magic);
+      // walletCtx threaded so mint signs via Web3Modal/window.ethereum — no Magic SDK.
+      return new MintNftTokensToEdition(me, { from, toAddress, uri, editionNumber, quantity, nonce }, magic, walletCtx);
     },
-    [me, magic],
+    [me, magic, walletCtx],
   );
 
   const createEdition = useCallback(
     (from: string, toAddress: string, royaltyPercentage: number, editionQuantity: number, nonce: number) => {
-      return new CreateEdition(me, { from, toAddress, royaltyPercentage, editionQuantity, nonce }, magic);
+      return new CreateEdition(me, { from, toAddress, royaltyPercentage, editionQuantity, nonce }, magic, walletCtx);
     },
-    [me, magic],
+    [me, magic, walletCtx],
   );
 
   const listEdition = useCallback(

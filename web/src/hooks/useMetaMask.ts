@@ -17,9 +17,7 @@ export const useMetaMask = () => {
   const me = useMe()
   // BYPASS mutation hook - webpack issue
   // const [updateWallet] = useUpdateMetaMaskAddressesMutation()
-  const updateWallet = async () => {
-    console.log('updateWallet disabled - webpack issue')
-  }
+  const updateWallet = async () => {}
   
   const [web3, setWeb3] = useState<Web3>()
   const [loadingAccount, setLoadingAccount] = useState<boolean>(true)
@@ -45,7 +43,6 @@ export const useMetaMask = () => {
     const onSetAccount = async (newAccount: string) => {
       if (newAccount && me) {
         // await updateWallet({ variables: { input: { wallet: newAccount } } })
-        console.log('Wallet update bypassed')
       }
       setAccount(newAccount)
       setLoadingAccount(false)
@@ -168,8 +165,8 @@ export const useMetaMask = () => {
             setLoadingChain(false)
           }).catch(() => setLoadingChain(false))
         })
-        .catch((err: any) => {
-          console.log('MetaMask connection rejected or failed:', err?.message || err)
+        .catch(() => {
+          // User rejected or wallet failed; UI will surface the failure via state.
           setLoadingAccount(false)
         })
     } else {

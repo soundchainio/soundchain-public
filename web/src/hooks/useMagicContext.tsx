@@ -98,7 +98,6 @@ export function MagicProvider({ children }: MagicProviderProps) {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const magicInstance = createMagic(magicPublicKey)
-      console.log("Magic instance created:", magicInstance);
       setMagic(magicInstance)
       if (magicInstance) (window as any).magic = magicInstance;
       if (magicInstance) {
@@ -118,23 +117,14 @@ export function MagicProvider({ children }: MagicProviderProps) {
       sessionRestorationAttempted.current = true
 
       // Skip if not browser or Magic not ready
-      if (typeof window === 'undefined' || !magic) {
-        console.log('[SessionRestore] Skipping - not browser or magic not ready')
-        return
-      }
+      if (typeof window === 'undefined' || !magic) return
 
       // Skip if already have user data (already logged in)
-      if (me) {
-        console.log('[SessionRestore] Already logged in (me exists), skipping')
-        return
-      }
+      if (me) return
 
       // Check if we already have a valid JWT - this is the primary auth
       const existingJwt = getJwt()
-      if (existingJwt) {
-        console.log('[SessionRestore] JWT exists, skipping restoration')
-        return
-      }
+      if (existingJwt) return
 
       // Mobile Safari: Skip Magic iframe validation entirely.
       // ITP blocks cross-origin iframe communication, causing SERVICE_ERROR
@@ -143,19 +133,15 @@ export function MagicProvider({ children }: MagicProviderProps) {
       const ua = typeof navigator !== 'undefined' ? navigator.userAgent : ''
       const isMobileSafari = /Safari/i.test(ua) && !/Chrome|CriOS|Chromium/i.test(ua) && /iPhone|iPad|iPod/i.test(ua)
       if (isMobileSafari) {
-        console.log('[SessionRestore] Mobile Safari — skipping Magic validation (ITP)')
+        // Skip Magic iframe validation entirely on mobile Safari (ITP blocks cross-origin iframes).
         localStorage.removeItem('didToken')
         return
       }
 
       // No JWT - check for stored Magic didToken
       const storedToken = localStorage.getItem('didToken')
-      if (!storedToken) {
-        console.log('[SessionRestore] No stored didToken, user needs to log in')
-        return
-      }
+      if (!storedToken) return
 
-      console.log('[SessionRestore] Found stored didToken, validating with Magic...')
       setIsRestoringSession(true)
 
       try {
@@ -171,44 +157,35 @@ export function MagicProvider({ children }: MagicProviderProps) {
           isLoggedIn = await Promise.race([isLoggedInPromise, timeoutPromise])
         } catch (timeoutErr) {
           // On timeout, try to use token anyway - Magic session might still be valid
-          console.log('[SessionRestore] isLoggedIn timed out, trying token anyway...')
           isLoggedIn = true // Assume valid, let server validate
         }
 
         if (isLoggedIn) {
-          console.log('[SessionRestore] Magic session valid, exchanging for JWT...')
           const loginResult = await login({ variables: { input: { token: storedToken } } })
 
           if (loginResult.data?.login.jwt) {
             await setJwt(loginResult.data.login.jwt)
-            console.log('[SessionRestore] Session restored successfully!')
           } else {
-            console.log('[SessionRestore] Login mutation succeeded but no JWT returned')
             // Try getting a fresh token from Magic
             try {
               const freshToken = await magic.user.getIdToken()
               if (freshToken) {
-                console.log('[SessionRestore] Got fresh token, retrying login...')
                 localStorage.setItem('didToken', freshToken)
                 const retryResult = await login({ variables: { input: { token: freshToken } } })
                 if (retryResult.data?.login.jwt) {
                   await setJwt(retryResult.data.login.jwt)
-                  console.log('[SessionRestore] Session restored with fresh token!')
                 }
               }
             } catch (freshErr) {
-              console.log('[SessionRestore] Fresh token attempt failed:', freshErr)
+              // Silently fail — user will be redirected to login on next gated route.
             }
           }
         } else {
-          console.log('[SessionRestore] Magic session expired, clearing stored token')
           localStorage.removeItem('didToken')
         }
       } catch (error: any) {
-        console.log('[SessionRestore] Restoration failed:', error.message)
         // Always clear token on SERVICE_ERROR to prevent repeated failures
         if (error.message?.includes('SERVICE_ERROR')) {
-          console.log('[SessionRestore] SERVICE_ERROR — clearing stale token')
           localStorage.removeItem('didToken')
         } else if (!error.message?.includes('timeout') && !error.message?.includes('network')) {
           // Don't clear token on network errors - might be temporary
@@ -252,11 +229,8 @@ export function MagicProvider({ children }: MagicProviderProps) {
 
     try {
       setIsConnectingWallet(true)
-      console.log('🔗 Opening Magic wallet connect UI...')
-
       // Use Magic's built-in wallet connection UI
       const accounts = await (magic as any).wallet.connectWithUI()
-      console.log('🔗 Wallet connected:', accounts)
 
       if (accounts && accounts.length > 0) {
         setWalletConnectedAddress(accounts[0])
@@ -266,10 +240,9 @@ export function MagicProvider({ children }: MagicProviderProps) {
       }
       return null
     } catch (error: any) {
-      console.error('🔗 Wallet connect error:', error)
-      // User closed modal or cancelled
-      if (error.message?.includes('User denied') || error.message?.includes('cancelled')) {
-        console.log('🔗 User cancelled wallet connection')
+      // Surface only genuine errors; "user cancelled" is not an error.
+      if (!error?.message?.includes('User denied') && !error?.message?.includes('cancelled')) {
+        console.error('Magic wallet connect error:', error?.message || error)
       }
       return null
     } finally {
@@ -281,7 +254,6 @@ export function MagicProvider({ children }: MagicProviderProps) {
   const disconnectExternalWallet = useCallback(() => {
     setWalletConnectedAddress(null)
     localStorage.removeItem('magic_wallet_connected')
-    console.log('🔗 External wallet disconnected')
   }, [])
 
   // Get wallet provider for web3/ethers integration
@@ -309,17 +281,6 @@ export function MagicProvider({ children }: MagicProviderProps) {
 
   // Helper to get the user's wallet address from any method
   const getUserWalletAddress = useCallback(() => {
-    // Debug: Log all available wallet addresses
-    console.log('💳 getUserWalletAddress - checking all wallets:', {
-      authMethod: me?.authMethod,
-      hdWalletAddress: me?.hdWalletAddress,
-      magicWalletAddress: me?.magicWalletAddress,
-      googleWalletAddress: me?.googleWalletAddress,
-      discordWalletAddress: me?.discordWalletAddress,
-      twitchWalletAddress: me?.twitchWalletAddress,
-      emailWalletAddress: me?.emailWalletAddress,
-    })
-
     // Check all possible wallet addresses
     // Order: hdWallet (new users) > magic (email) > google > discord > twitch > email
     const wallet = me?.hdWalletAddress ||
@@ -408,7 +369,6 @@ export function MagicProvider({ children }: MagicProviderProps) {
     const fallbackWallet = getUserWalletAddress()
     // Set account if we have a wallet and either no account or different account
     if (fallbackWallet && (!account || account.toLowerCase() !== fallbackWallet.toLowerCase())) {
-      console.log('💳 Magic: Setting account from profile (no web3):', fallbackWallet, 'previous:', account || 'none')
       setAccount(fallbackWallet)
     }
   }, [me, web3, handleSetAccount, getUserWalletAddress])
@@ -434,7 +394,6 @@ export function MagicProvider({ children }: MagicProviderProps) {
 
     // Debounce the fetch to prevent rapid re-fetches
     balanceFetchTimeoutRef.current = setTimeout(() => {
-      console.log('💰 Fetching balances for account:', account, '(web3:', web3 ? 'available' : 'using public RPC', ')')
       lastFetchedAccountRef.current = account
       handleSetBalance()
       handleSetOgunBalance()

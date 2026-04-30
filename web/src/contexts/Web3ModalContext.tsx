@@ -133,7 +133,6 @@ async function initializeWeb3Modal() {
       ],
     })
     isInitialized = true
-    console.log('Web3Modal initialized successfully')
   } catch (error) {
     console.error('Failed to initialize Web3Modal:', error)
   }

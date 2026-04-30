@@ -233,7 +233,6 @@ function UnifiedWalletInner({
         const nativeWei = await web3Instance.eth.getBalance(web3ModalAddress)
         const nativeBalance = Number(web3Instance.utils.fromWei(nativeWei, 'ether')).toFixed(6)
         setWeb3ModalNativeBalance(nativeBalance)
-        console.log(`💰 Web3Modal native balance: ${nativeBalance}`)
 
         // Fetch OGUN balance (only on Polygon)
         if (web3ModalChainId === 137) {
@@ -244,7 +243,6 @@ function UnifiedWalletInner({
             const validAmount = tokenAmount ? tokenAmount.toString() : '0'
             const ogunBalance = Number(web3Instance.utils.fromWei(validAmount, 'ether')).toFixed(6)
             setWeb3ModalOgunBalance(ogunBalance)
-            console.log(`💎 Web3Modal OGUN balance: ${ogunBalance}`)
           }
         } else {
           setWeb3ModalOgunBalance(null)
@@ -280,7 +278,6 @@ function UnifiedWalletInner({
         const nativeWei = await web3Instance.eth.getBalance(directAddress)
         const nativeBalance = Number(web3Instance.utils.fromWei(nativeWei, 'ether')).toFixed(6)
         setDirectNativeBalance(nativeBalance)
-        console.log(`💰 Direct wallet native balance: ${nativeBalance}`)
 
         // Fetch OGUN balance (only on Polygon)
         if (directChainId === 137 || !directChainId) {
@@ -291,7 +288,6 @@ function UnifiedWalletInner({
             const validAmount = tokenAmount ? tokenAmount.toString() : '0'
             const ogunBalance = Number(web3Instance.utils.fromWei(validAmount, 'ether')).toFixed(6)
             setDirectOgunBalance(ogunBalance)
-            console.log(`💎 Direct wallet OGUN balance: ${ogunBalance}`)
           }
         } else {
           setDirectOgunBalance(null)
@@ -335,11 +331,12 @@ function UnifiedWalletInner({
     }
   }, [isWeb3ModalConnected, web3ModalAddress, activeWalletType])
 
-  // Auto-detect MetaMask connection (for when user connects via switchToMetaMask)
+  // Auto-detect MetaMask connection (only when no wallet is selected yet).
+  // Guard: if any other wallet (web3modal/direct/magic) is already active, do NOT override.
+  // useMetaMask reads window.ethereum, which Web3Modal/direct also inject — without this guard,
+  // Effect-3 (web3modal) and this effect would ping-pong and burn render cycles.
   useEffect(() => {
-    if (metamaskAccount && activeWalletType !== 'metamask' && activeWalletType !== 'magic') {
-      // MetaMask just connected and we're not on magic - switch to it
-      console.log('🦊 MetaMask connected, switching wallet type')
+    if (metamaskAccount && activeWalletType === null) {
       setActiveWalletType('metamask')
       localStorage.setItem(WALLET_STORAGE_KEY, 'metamask')
     }
@@ -403,7 +400,6 @@ function UnifiedWalletInner({
       persistWalletChoice('metamask')
     } else {
       // Not connected - initiate connection then switch
-      console.log('🦊 Initiating MetaMask connection...')
       connectMetaMaskHook()
       // Will auto-switch when account becomes available via useEffect below
     }
@@ -419,7 +415,6 @@ function UnifiedWalletInner({
 
   // Set direct connection (called from WalletConnectButton after SDK connection)
   const setDirectConnection = useCallback((address: string, walletType: string, chainId?: number) => {
-    console.log('🔗 Direct wallet connection:', walletType, address, chainId)
     setDirectAddress(address)
     setDirectWalletSubtype(walletType)
     setDirectChainId(chainId || 137)

@@ -152,18 +152,12 @@ export function useLogStream(options: UseLogStreamOptions = {}) {
     listenerProfileId?: string
   ): Promise<LogStreamResult | null> => {
     // Check minimum duration
-    if (duration < minDuration) {
-      console.log(`[useLogStream] Duration ${duration}s < ${minDuration}s minimum, skipping`)
-      return null
-    }
+    if (duration < minDuration) return null
 
     // Allow stream every 30 seconds of play time per track (not per-minute window)
     const now = Date.now()
     const lastLog = lastLogTime.current.get(trackId)
-    if (lastLog && (now - lastLog) < (minDuration * 1000)) {
-      console.log(`[useLogStream] Track logged ${Math.floor((now - lastLog) / 1000)}s ago, need ${minDuration}s between logs`)
-      return null
-    }
+    if (lastLog && (now - lastLog) < (minDuration * 1000)) return null
 
     setIsLogging(true)
     setError(null)
@@ -172,7 +166,6 @@ export function useLogStream(options: UseLogStreamOptions = {}) {
       // Get SCid for track
       const scid = await getScidForTrack(trackId)
       if (!scid) {
-        console.log('[useLogStream] No SCid found for track:', trackId)
         setError('Track does not have an SCid registered')
         return null
       }
@@ -221,8 +214,6 @@ export function useLogStream(options: UseLogStreamOptions = {}) {
         if (result.listenerDailyLimitReached && onDailyLimitReached) {
           onDailyLimitReached()
         }
-
-        console.log(`[useLogStream] WIN-WIN Stream: Listener=${listenerReward.toFixed(4)} OGUN, Creator=${creatorReward.toFixed(4)} OGUN, Track="${result.trackTitle}"`)
       }
 
       return result
