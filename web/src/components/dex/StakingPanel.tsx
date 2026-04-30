@@ -11,6 +11,7 @@ import { useWalletConnect } from 'hooks/useWalletConnect'
 import useMetaMask from 'hooks/useMetaMask'
 import useBlockchain from 'hooks/useBlockchain'
 import { useMe } from 'hooks/useMe'
+import { useUnifiedWallet } from 'contexts/UnifiedWalletContext'
 import { gql, useQuery, useMutation } from '@apollo/client'
 import { toast } from 'react-toastify'
 import { formatToCompactNumber } from 'utils/format'
@@ -84,6 +85,14 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
   const { web3: magicLinkWeb3, account: magicLinkAccount, ogunBalance: magicOgunBalance } = useMagicContext()
   const { web3: metamaskWeb3, account: metamaskAccount } = useMetaMask()
   const { web3: wcWeb3, account: walletconnectAccount } = useWalletConnect()
+  // Web3Modal-first per Apr 29 Arena Picks canonical pattern (resolveWalletProvider).
+  // Bug #97 (Apr 30): Frank reported he couldn't stake. Root cause: this panel only
+  // recognized Magic / direct MetaMask / direct WalletConnect, IGNORING wallets connected
+  // via the global Web3Modal (the "CONNECT WALLET" pill in DexNavBar) — those EIP-1193
+  // providers live on UnifiedWalletContext.web3ModalProvider. Adding it as the highest-
+  // priority signer below ensures any external wallet picked from the global pill flows
+  // straight into the staking TX without falling through to broken Magic-RPC paths.
+  const { activeWalletType, web3ModalProvider, activeAddress } = useUnifiedWallet()
   const { getCurrentGasPrice } = useBlockchain()
 
   const [web3, setWeb3] = useState<Web3 | null>(null)
@@ -256,7 +265,17 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
   // Load wallet - prefer connected wallets, fallback to user's stored wallet
   // Now supports balance fetching via public RPC even without Magic web3
   useEffect(() => {
-    if (walletconnectAccount && wcWeb3) {
+    // PRIORITY 1 — Web3Modal (canonical per Apr 29 Arena Picks pattern).
+    // Any wallet connected via the global "CONNECT WALLET" pill (DexNavBar/CreatePickModal)
+    // exposes its EIP-1193 provider on UnifiedWalletContext.web3ModalProvider. Wrap it in
+    // Web3 so the existing handleStake/handleUnstake/handleSwap code paths work unchanged —
+    // contract.methods.X.send() routes the eth_sendTransaction through the user's wallet
+    // (MetaMask/Rainbow/Trust/CBW), NOT through Magic's flaky shared RPC relay.
+    if (activeWalletType === 'web3modal' && web3ModalProvider && activeAddress) {
+      setAccount(activeAddress)
+      setWeb3(new Web3(web3ModalProvider))
+      console.log('💳 Staking: Using Web3Modal (canonical):', activeAddress)
+    } else if (walletconnectAccount && wcWeb3) {
       setAccount(walletconnectAccount)
       setWeb3(wcWeb3)
       console.log('💳 Staking: Using WalletConnect:', walletconnectAccount)
@@ -279,7 +298,7 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
       setAccount(userWallet)
       // web3 stays null - fetchBalances will use public RPC
     }
-  }, [walletconnectAccount, metamaskAccount, magicLinkAccount, wcWeb3, metamaskWeb3, magicLinkWeb3, userWallet])
+  }, [activeWalletType, web3ModalProvider, activeAddress, walletconnectAccount, metamaskAccount, magicLinkAccount, wcWeb3, metamaskWeb3, magicLinkWeb3, userWallet])
 
   // Fetch balances - ALWAYS uses direct Polygon RPC (Magic RPC is unreliable)
   const fetchBalances = useCallback(async () => {
