@@ -58,18 +58,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(401).json({ error: 'Profile not found for user' })
     }
 
-    // Convert profileId string to ObjectId for matching (messages store ObjectId)
+    // Convert profileId string to ObjectId for matching. Defensive: also keep the string form
+    // because legacy Apollo/Lambda-era messages stored fromId/toId as strings, while new
+    // Vercel-direct messages store ObjectId. $in across both shapes catches everything.
     let profileOid: any
     try { profileOid = new ObjectId(profileId) } catch { profileOid = profileId }
+    const profileStr = profileId.toString()
+    const profileIds = [profileOid, profileStr]
 
-    // Find all messages where the authenticated user is sender or recipient
-    // Group by conversation partner, get the latest message per chat
+    // Find all messages where the authenticated user is sender or recipient (either shape).
+    // Group by conversation partner, get the latest message per chat.
     const pipeline = [
       {
         $match: {
           $or: [
-            { fromId: profileOid },
-            { toId: profileOid },
+            { fromId: { $in: profileIds } },
+            { toId: { $in: profileIds } },
           ],
         },
       },
@@ -77,7 +81,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         $addFields: {
           partnerId: {
             $cond: {
-              if: { $eq: ['$fromId', profileOid] },
+              // Use $in for the equality check too — partner is whichever id ISN'T mine.
+              if: { $in: ['$fromId', profileIds] },
               then: '$toId',
               else: '$fromId',
             },

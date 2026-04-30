@@ -26,15 +26,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const messages = db.collection('messages')
     const profiles = db.collection('profiles')
 
+    // Defensive: query against BOTH ObjectId and string shapes for fromId/toId so legacy
+    // Apollo/Lambda-era messages (stored as strings) AND new Vercel-direct messages
+    // (stored as ObjectId) both surface. Discovered Apr 30: pulse chat history was empty
+    // for users with pre-Vercel-port data because the query only matched the ObjectId form.
     let myOid: any, targetOid: any
     try { myOid = new ObjectId(auth.profileId) } catch { myOid = auth.profileId }
     try { targetOid = new ObjectId(targetProfileId) } catch { targetOid = targetProfileId }
+    const myStr = auth.profileId.toString()
+    const targetStr = String(targetProfileId)
+    const myIds = [myOid, myStr]
+    const targetIds = [targetOid, targetStr]
 
-    // Fetch messages between the two users (both directions)
+    // Fetch messages between the two users (both directions, both ID shapes)
     const docs = await messages.find({
       $or: [
-        { fromId: myOid, toId: targetOid },
-        { fromId: targetOid, toId: myOid },
+        { fromId: { $in: myIds }, toId: { $in: targetIds } },
+        { fromId: { $in: targetIds }, toId: { $in: myIds } },
       ],
     }).sort({ createdAt: -1 }).limit(limit).toArray()
 
@@ -44,9 +52,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       profiles.findOne({ _id: targetOid }),
     ])
 
-    // Mark unread messages from the other person as read
+    // Mark unread messages from the other person as read — same dual-shape match
     await messages.updateMany(
-      { fromId: targetOid, toId: myOid, readAt: { $in: [null, undefined] } },
+      { fromId: { $in: targetIds }, toId: { $in: myIds }, readAt: { $in: [null, undefined] } },
       { $set: { readAt: new Date() } }
     )
 
