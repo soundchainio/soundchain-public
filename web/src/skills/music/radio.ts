@@ -17,6 +17,7 @@ async function fetchAllTracks() {
           trackEditionId: 1, editionQuantity: 1,
         },
       })
+      .limit(2000)
       .toArray()
 
     const totalWithEditions = tracks.length
@@ -43,7 +44,7 @@ async function fetchAllTracks() {
       )
       .toArray()
 
-    const totalScids = await db.collection('scids').countDocuments()
+    const totalScids = await db.collection('scids').estimatedDocumentCount()
 
     const scidMap = new Map(scids.map(s => [s.trackId, s]))
 
