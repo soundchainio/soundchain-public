@@ -1,17 +1,21 @@
 /**
- * SportsTickerStack — 4 live sports tickers (MLB, NHL, NBA, NFL)
+ * SportsTickerStack — 4 live tickers (MLB, NHL, NBA, ESPN)
  *
- * Each league has its own scrolling speed/rhythm:
- *   MLB: 30s (steady, relaxed — baseball pace)
- *   NHL: 20s (fast, intense — hockey pace)
- *   NBA: 22s (quick, dynamic — basketball pace)
- *   NFL: 28s in-season (games) / 90s offseason (news headlines need longer read time)
+ * Each row has its own scrolling speed/rhythm:
+ *   MLB:  30s (steady — baseball pace)
+ *   NHL:  20s (fast — hockey pace)
+ *   NBA:  22s (quick — basketball pace)
+ *   ESPN: 90s (cross-sport news headlines, longer read time per item)
  *
  * Stacks below Bloomberg ticker in DexNavBar.
- * Full stack: FURL → Bloomberg → MLB → NHL → NBA → NFL
+ * Full stack: FURL → Bloomberg → MLB → NHL → NBA → ESPN
  *
- * ESPN public API — free, no key, live scores + NFL league news (replaces
- * draft-picks branch retired Apr 30, 2026 once the draft concluded).
+ * ESPN public API — free, no key. MLB/NHL/NBA rows pull live scoreboard data;
+ * ESPN row pulls cross-league news (NFL/NBA/MLB/NHL/NCAAF/etc.) so it stays
+ * populated year-round regardless of any single league's seasonal cycle.
+ *
+ * History: NFL row was draft-picks → games → NFL-only news → REMOVED Apr 30, 2026
+ * in favor of cross-sport ESPN news (NFL articles still appear when in-season).
  */
 import { useState, useEffect } from 'react'
 
@@ -28,7 +32,9 @@ interface NewsItem {
   id: string
   kind: 'news'
   headline: string
-  teams: { abbr: string; logo: string }[]
+  league: string          // URL slug: 'nfl' | 'nba' | 'mlb' | 'nhl' | 'college-football' | ...
+  leagueLabel: string     // Friendly label: 'NFL' | 'NBA' | 'NCAAF' | ...
+  teams: { league: string; abbr: string; logo: string }[]
   ago: string
   state: string
 }
@@ -37,16 +43,14 @@ interface SportsData {
   mlb: Game[]
   nhl: Game[]
   nba: Game[]
-  nfl: (Game | NewsItem)[]
-  nflMode: 'games' | 'news'
+  espn: NewsItem[]
 }
 
 const LEAGUE_CONFIG = {
   mlb: { label: 'MLB', emoji: '⚾', color: 'text-red-400', bgColor: 'bg-red-950/80', borderColor: 'border-red-500/20', speed: '30s' },
   nhl: { label: 'NHL', emoji: '🏒', color: 'text-blue-400', bgColor: 'bg-blue-950/80', borderColor: 'border-blue-500/20', speed: '20s' },
   nba: { label: 'NBA', emoji: '🏀', color: 'text-orange-400', bgColor: 'bg-orange-950/80', borderColor: 'border-orange-500/20', speed: '22s' },
-  nfl: { label: 'NFL', emoji: '🏈', color: 'text-green-400', bgColor: 'bg-green-950/80', borderColor: 'border-green-500/20', speed: '28s' },
-  nflNews: { label: 'NFL', emoji: '🏈', color: 'text-green-400', bgColor: 'bg-green-950/80', borderColor: 'border-green-500/20', speed: '90s' },
+  espn: { label: 'ESPN', emoji: '📰', color: 'text-cyan-300', bgColor: 'bg-zinc-950/85', borderColor: 'border-cyan-500/20', speed: '90s' },
 }
 
 function isNewsItem(item: Game | NewsItem): item is NewsItem {
@@ -68,18 +72,24 @@ function LeagueTicker({
 
   const items = rawItems.map(item => {
     if (isNewsItem(item)) {
-      // News item: render referenced team logos inline before the headline so a reader
-      // immediately sees WHO the article is about. Logos cap at 4 per item upstream.
+      // News item: small league pill (NFL/NBA/MLB/NHL/NCAAF/etc.) → team logos →
+      // headline → ago. Reader gets context on the article's league before the
+      // teams + story. Team logos use league-specific abbr; cap at 4 upstream.
       return (
         <span key={item.id} className="flex items-center gap-1.5 flex-shrink-0">
+          {item.leagueLabel && (
+            <span className="text-[8px] font-bold text-cyan-400/80 px-1 py-0.5 border border-cyan-500/30 rounded-sm">
+              {item.leagueLabel}
+            </span>
+          )}
           {item.teams.length > 0 && (
             <span className="flex items-center gap-0.5">
               {item.teams.map(t => (
                 <img
-                  key={t.abbr}
+                  key={`${t.league}:${t.abbr}`}
                   src={t.logo}
                   alt={t.abbr}
-                  title={t.abbr}
+                  title={`${t.abbr} · ${(LEAGUE_CONFIG as any)[t.league]?.label || t.league.toUpperCase()}`}
                   className="w-4 h-4 object-contain"
                   loading="lazy"
                   onError={(e) => { (e.currentTarget.style.display = 'none') }}
@@ -170,26 +180,20 @@ export function SportsTickerStack() {
 
   if (!data) return null
 
-  // Only show leagues that have content today
+  // Only show rows that have content right now
   const hasMLB = data.mlb.length > 0
   const hasNHL = data.nhl.length > 0
   const hasNBA = data.nba.length > 0
-  const hasNFL = data.nfl && data.nfl.length > 0
+  const hasESPN = data.espn && data.espn.length > 0
 
-  if (!hasMLB && !hasNHL && !hasNBA && !hasNFL) return null
+  if (!hasMLB && !hasNHL && !hasNBA && !hasESPN) return null
 
   return (
     <>
       {hasMLB && <LeagueTicker items={data.mlb} league="mlb" />}
       {hasNHL && <LeagueTicker items={data.nhl} league="nhl" />}
       {hasNBA && <LeagueTicker items={data.nba} league="nba" />}
-      {hasNFL && (
-        <LeagueTicker
-          items={data.nfl}
-          league={data.nflMode === 'news' ? 'nflNews' : 'nfl'}
-          badgeLabel={data.nflMode === 'news' ? 'NFL NEWS' : 'NFL'}
-        />
-      )}
+      {hasESPN && <LeagueTicker items={data.espn} league="espn" />}
     </>
   )
 }

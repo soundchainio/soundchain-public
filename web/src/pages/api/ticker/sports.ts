@@ -1,10 +1,18 @@
 /**
- * GET /api/ticker/sports — live scores from MLB, NHL, NBA + NFL (games or news)
+ * GET /api/ticker/sports — live scores from MLB, NHL, NBA + ESPN cross-sport news
  *
  * Uses ESPN's public scoreboard + news APIs (free, no key needed).
- * NFL row: in-season games preferred, falls back to league news during offseason
- * (was draft picks during draft week — retired Apr 30 once draft concluded).
+ * 4 rows: MLB, NHL, NBA, ESPN.
+ * - MLB/NHL/NBA rows show live game scores from their respective scoreboard endpoints.
+ * - ESPN row pulls cross-league news (NFL/NBA/MLB/NHL/college/etc.) so it stays
+ *   populated year-round regardless of any single league's seasonal cycle.
  * Cached 60s server-side.
+ *
+ * History: NFL row was originally draft-picks (in draft week) → games (in-season).
+ * Apr 30, 2026: draft-picks retired post-draft, replaced w/ NFL-only news.
+ * Apr 30, 2026 (later): replaced NFL row entirely with cross-sport ESPN news —
+ * NFL articles still appear in the mix when NFL is in-season, but the row no longer
+ * sits empty during the ~4-month NFL offseason.
  */
 import type { NextApiRequest, NextApiResponse } from 'next'
 
@@ -77,19 +85,6 @@ async function fetchLeague(sport: string, league: string) {
   } catch { return [] }
 }
 
-// ESPN team ID → abbreviation map (NFL, 32 teams). IDs are stable across ESPN's API surface.
-// Used to derive logo URLs from news-article `categories[].team.id` references — the
-// /news endpoint gives us team IDs but not abbreviations or logo URLs directly.
-// Logo URL pattern: https://a.espncdn.com/i/teamlogos/nfl/500/{abbr.toLowerCase()}.png
-const NFL_TEAM_BY_ID: Record<string, string> = {
-  '1': 'ATL', '2': 'BUF', '3': 'CHI', '4': 'CIN', '5': 'CLE', '6': 'DAL',
-  '7': 'DEN', '8': 'DET', '9': 'GB', '10': 'TEN', '11': 'IND', '12': 'KC',
-  '13': 'LV', '14': 'LAR', '15': 'MIA', '16': 'MIN', '17': 'NE', '18': 'NO',
-  '19': 'NYG', '20': 'NYJ', '21': 'PHI', '22': 'ARI', '23': 'PIT', '24': 'LAC',
-  '25': 'SF', '26': 'SEA', '27': 'TB', '28': 'WSH', '29': 'CAR', '30': 'JAX',
-  '33': 'BAL', '34': 'HOU',
-}
-
 function relativeAgo(publishedIso?: string): string {
   if (!publishedIso) return ''
   const ts = Date.parse(publishedIso)
@@ -101,13 +96,46 @@ function relativeAgo(publishedIso?: string): string {
   return `${Math.floor(ageMin / 1440)}d`
 }
 
-async function fetchNFLNews() {
-  // ESPN's NFL news API — free, no key. Returns recent league-wide articles.
-  // We surface headlines + the teams referenced in each article so the ticker can
-  // render team logos inline (Frank's request: "make sure team logos render if
-  // teams are written about in the ticker").
+// Friendly labels for the per-item league pill rendered before team logos.
+// Keys are the URL slugs ESPN uses in clubhouse links (matches LEAGUE_REGEX below).
+const LEAGUE_LABELS: Record<string, string> = {
+  nfl: 'NFL',
+  nba: 'NBA',
+  mlb: 'MLB',
+  nhl: 'NHL',
+  wnba: 'WNBA',
+  'college-football': 'NCAAF',
+  'mens-college-basketball': 'NCAAM',
+  'womens-college-basketball': 'NCAAW',
+  mma: 'MMA',
+  boxing: 'BOX',
+  f1: 'F1',
+  nascar: 'NASCAR',
+  golf: 'GOLF',
+  tennis: 'TENNIS',
+}
+
+// ESPN clubhouse URLs follow a stable shape: .../{league-slug}/team/_/name/{abbr}/{...}
+// We extract league + abbr in one pass so we can build the logo URL without per-league
+// hardcoded id maps. Logo URL pattern: a.espncdn.com/i/teamlogos/{league}/500/{abbr}.png
+const LEAGUE_REGEX = /\/(nfl|nba|mlb|nhl|wnba|college-football|mens-college-basketball|womens-college-basketball)\/team\/_\/name\/([a-z0-9]+)/i
+
+function extractTeamFromHref(href: string): { league: string; abbr: string } | null {
+  const m = href?.match(LEAGUE_REGEX)
+  if (!m) return null
+  return { league: m[1].toLowerCase(), abbr: m[2].toLowerCase() }
+}
+
+async function fetchEspnNews() {
+  // ESPN's cross-sport news endpoint — returns mixed-league articles (NFL, NBA, MLB,
+  // NHL, college, etc.). Free, no key. Replaces the NFL-only branch so the row never
+  // blanks during one league's offseason.
+  //
+  // Team-logo extraction strategy: parse `categories[].team.links[].href` for the
+  // clubhouse URL pattern and pull league + abbr in one shot. Avoids maintaining
+  // per-league team-id maps (would be ~120 entries across NFL/NBA/MLB/NHL).
   try {
-    const res = await fetch(`${ESPN_BASE}/football/nfl/news?limit=30`, {
+    const res = await fetch(`${ESPN_BASE}/news?limit=50`, {
       headers: { 'Accept': 'application/json' },
     })
     if (!res.ok) return []
@@ -119,43 +147,60 @@ async function fetchNFLNews() {
         const headline: string = (a.headline || a.title || '').trim()
         if (!headline) return null
 
-        // Pull team references out of categories. ESPN's shape: categories is an
-        // array of mixed types ({ type: 'team', team: {...} } | { type: 'athlete', ... }
-        // | { type: 'league', ... }). Dedupe by abbr — same team can appear twice
-        // when an article touches both the team and its athletes.
+        // Walk every category for team references — both direct ({type:'team'})
+        // AND nested ({type:'athlete', athlete: {team: {...}}}). Dedupe by
+        // league:abbr key since same team often appears across multiple categories.
         const seen = new Set<string>()
-        const teams: { abbr: string; logo: string }[] = []
+        const teams: { league: string; abbr: string; logo: string }[] = []
+        let primaryLeague = ''
+
         for (const cat of a.categories || []) {
-          // Direct team category
-          let abbr: string | undefined
-          if (cat?.type === 'team' && cat?.team?.id) {
-            abbr = NFL_TEAM_BY_ID[String(cat.team.id)]
+          const candidateLinks: any[] = [
+            ...(cat?.team?.links || []),
+            ...(cat?.athlete?.team?.links || []),
+            ...(cat?.links || []),
+          ]
+          let extracted: { league: string; abbr: string } | null = null
+          for (const link of candidateLinks) {
+            extracted = extractTeamFromHref(link?.href || '')
+            if (extracted) break
           }
-          // Athlete category often nests team info
-          if (!abbr && cat?.type === 'athlete' && cat?.athlete?.team?.id) {
-            abbr = NFL_TEAM_BY_ID[String(cat.athlete.team.id)]
-          }
-          if (abbr && !seen.has(abbr)) {
-            seen.add(abbr)
-            teams.push({
-              abbr,
-              logo: `https://a.espncdn.com/i/teamlogos/nfl/500/${abbr.toLowerCase()}.png`,
-            })
-          }
-          if (teams.length >= 4) break // Cap at 4 logos per item — ticker space
+          if (!extracted) continue
+
+          const key = `${extracted.league}:${extracted.abbr}`
+          if (seen.has(key)) continue
+          seen.add(key)
+          teams.push({
+            league: extracted.league,
+            abbr: extracted.abbr.toUpperCase(),
+            logo: `https://a.espncdn.com/i/teamlogos/${extracted.league}/500/${extracted.abbr}.png`,
+          })
+          if (!primaryLeague) primaryLeague = extracted.league
+          if (teams.length >= 4) break // Cap at 4 logos/item — ticker space
+        }
+
+        // Article might still have a league label even when no specific team
+        // could be extracted (e.g. league-wide story). Try the article's own
+        // `links.web.href` as a last resort — same /{league}/ slug appears.
+        if (!primaryLeague) {
+          const articleHref: string = a.links?.web?.href || a.links?.mobile?.href || ''
+          const m = articleHref.match(/espn\.com\/(nfl|nba|mlb|nhl|wnba|college-football|mens-college-basketball|womens-college-basketball|mma|boxing|f1|nascar|golf|tennis)\b/i)
+          if (m) primaryLeague = m[1].toLowerCase()
         }
 
         return {
           id: String(a.id || a.dataSourceIdentifier || `news-${i}`),
           kind: 'news' as const,
           headline,
+          league: primaryLeague,
+          leagueLabel: primaryLeague ? (LEAGUE_LABELS[primaryLeague] || primaryLeague.toUpperCase()) : '',
           teams,
           ago: relativeAgo(a.published || a.lastModified),
           state: 'post' as const,
         }
       })
       .filter((n): n is NonNullable<typeof n> => n !== null)
-      .slice(0, 24)
+      .slice(0, 30)
   } catch { return [] }
 }
 
@@ -167,20 +212,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(200).json(cache.data)
   }
 
-  const [mlb, nhl, nba, nflGames, nflNews] = await Promise.all([
+  const [mlb, nhl, nba, espn] = await Promise.all([
     fetchLeague('baseball', 'mlb'),
     fetchLeague('hockey', 'nhl'),
     fetchLeague('basketball', 'nba'),
-    fetchLeague('football', 'nfl'),
-    fetchNFLNews(),
+    fetchEspnNews(),
   ])
 
-  // NFL row prefers in-season games → falls back to league news (offseason / quiet days).
-  // Draft-picks branch retired Apr 30, 2026 once the draft concluded.
-  const nfl = nflGames.length > 0 ? nflGames : nflNews
-  const nflMode = nflGames.length > 0 ? 'games' : 'news'
-
-  const result = { mlb, nhl, nba, nfl, nflMode, fetchedAt: new Date().toISOString() }
+  const result = { mlb, nhl, nba, espn, fetchedAt: new Date().toISOString() }
   cache = { data: result, ts: Date.now() }
   res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=120')
   return res.status(200).json(result)
