@@ -5,12 +5,13 @@
  *   MLB: 30s (steady, relaxed — baseball pace)
  *   NHL: 20s (fast, intense — hockey pace)
  *   NBA: 22s (quick, dynamic — basketball pace)
- *   NFL: 60s draft week / 28s in-season — draft picks have more text per item, need longer read time
+ *   NFL: 28s in-season (games) / 90s offseason (news headlines need longer read time)
  *
  * Stacks below Bloomberg ticker in DexNavBar.
  * Full stack: FURL → Bloomberg → MLB → NHL → NBA → NFL
  *
- * ESPN public API — free, no key, live scores + NFL draft picks.
+ * ESPN public API — free, no key, live scores + NFL league news (replaces
+ * draft-picks branch retired Apr 30, 2026 once the draft concluded).
  */
 import { useState, useEffect } from 'react'
 
@@ -23,16 +24,12 @@ interface Game {
   away: { team: string; score: string }
 }
 
-interface DraftPick {
+interface NewsItem {
   id: string
-  kind: 'pick'
-  pickNumber: number
-  round: number
-  team: string
-  teamLogo?: string
-  player: string
-  position: string
-  college: string
+  kind: 'news'
+  headline: string
+  teams: { abbr: string; logo: string }[]
+  ago: string
   state: string
 }
 
@@ -40,8 +37,8 @@ interface SportsData {
   mlb: Game[]
   nhl: Game[]
   nba: Game[]
-  nfl: (Game | DraftPick)[]
-  nflMode: 'draft' | 'games'
+  nfl: (Game | NewsItem)[]
+  nflMode: 'games' | 'news'
 }
 
 const LEAGUE_CONFIG = {
@@ -49,11 +46,11 @@ const LEAGUE_CONFIG = {
   nhl: { label: 'NHL', emoji: '🏒', color: 'text-blue-400', bgColor: 'bg-blue-950/80', borderColor: 'border-blue-500/20', speed: '20s' },
   nba: { label: 'NBA', emoji: '🏀', color: 'text-orange-400', bgColor: 'bg-orange-950/80', borderColor: 'border-orange-500/20', speed: '22s' },
   nfl: { label: 'NFL', emoji: '🏈', color: 'text-green-400', bgColor: 'bg-green-950/80', borderColor: 'border-green-500/20', speed: '28s' },
-  nflDraft: { label: 'NFL', emoji: '🏈', color: 'text-green-400', bgColor: 'bg-green-950/80', borderColor: 'border-green-500/20', speed: '180s' },
+  nflNews: { label: 'NFL', emoji: '🏈', color: 'text-green-400', bgColor: 'bg-green-950/80', borderColor: 'border-green-500/20', speed: '90s' },
 }
 
-function isDraftPick(item: Game | DraftPick): item is DraftPick {
-  return (item as DraftPick).kind === 'pick'
+function isNewsItem(item: Game | NewsItem): item is NewsItem {
+  return (item as NewsItem).kind === 'news'
 }
 
 function LeagueTicker({
@@ -61,7 +58,7 @@ function LeagueTicker({
   league,
   badgeLabel,
 }: {
-  items: (Game | DraftPick)[]
+  items: (Game | NewsItem)[]
   league: keyof typeof LEAGUE_CONFIG
   badgeLabel?: string
 }) {
@@ -70,33 +67,29 @@ function LeagueTicker({
   if (rawItems.length === 0) return null
 
   const items = rawItems.map(item => {
-    if (isDraftPick(item)) {
-      const isOnClock = item.state === 'pre'
+    if (isNewsItem(item)) {
+      // News item: render referenced team logos inline before the headline so a reader
+      // immediately sees WHO the article is about. Logos cap at 4 per item upstream.
       return (
         <span key={item.id} className="flex items-center gap-1.5 flex-shrink-0">
-          {isOnClock && <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />}
-          <span className={`font-bold ${cfg.color}`}>#{item.pickNumber}</span>
-          <span className="text-[8px] text-gray-500">R{item.round}</span>
-          {item.teamLogo && item.team !== '?' && (
-            <img
-              src={item.teamLogo}
-              alt=""
-              className="w-4 h-4 object-contain"
-              loading="lazy"
-              onError={(e) => { (e.currentTarget.style.display = 'none') }}
-            />
+          {item.teams.length > 0 && (
+            <span className="flex items-center gap-0.5">
+              {item.teams.map(t => (
+                <img
+                  key={t.abbr}
+                  src={t.logo}
+                  alt={t.abbr}
+                  title={t.abbr}
+                  className="w-4 h-4 object-contain"
+                  loading="lazy"
+                  onError={(e) => { (e.currentTarget.style.display = 'none') }}
+                />
+              ))}
+            </span>
           )}
-          <span className="text-gray-400">{item.team}</span>
-          <span className="text-gray-600">·</span>
-          <span className="font-bold text-white">{item.player}</span>
-          {item.position && (
-            <span className="text-[8px] text-yellow-400/80 font-bold">{item.position}</span>
-          )}
-          {item.college && (
-            <span className="text-[8px] text-gray-500">({item.college})</span>
-          )}
-          {isOnClock && (
-            <span className="text-[8px] text-red-400 font-bold">ON THE CLOCK</span>
+          <span className="font-bold text-white">{item.headline}</span>
+          {item.ago && (
+            <span className="text-[8px] text-gray-500">· {item.ago}</span>
           )}
           <span className="text-white/10 mx-1">│</span>
         </span>
@@ -193,8 +186,8 @@ export function SportsTickerStack() {
       {hasNFL && (
         <LeagueTicker
           items={data.nfl}
-          league={data.nflMode === 'draft' ? 'nflDraft' : 'nfl'}
-          badgeLabel={data.nflMode === 'draft' ? 'NFL DRAFT' : 'NFL'}
+          league={data.nflMode === 'news' ? 'nflNews' : 'nfl'}
+          badgeLabel={data.nflMode === 'news' ? 'NFL NEWS' : 'NFL'}
         />
       )}
     </>

@@ -1,8 +1,9 @@
 /**
- * GET /api/ticker/sports — live scores from MLB, NHL, NBA + NFL (draft or games)
+ * GET /api/ticker/sports — live scores from MLB, NHL, NBA + NFL (games or news)
  *
- * Uses ESPN's public scoreboard API (free, no key needed).
- * NFL falls back from draft picks (during draft week) → regular games.
+ * Uses ESPN's public scoreboard + news APIs (free, no key needed).
+ * NFL row: in-season games preferred, falls back to league news during offseason
+ * (was draft picks during draft week — retired Apr 30 once draft concluded).
  * Cached 60s server-side.
  */
 import type { NextApiRequest, NextApiResponse } from 'next'
@@ -76,50 +77,85 @@ async function fetchLeague(sport: string, league: string) {
   } catch { return [] }
 }
 
-async function fetchNFLDraft() {
-  // Try ESPN's draft endpoint first — returns picks during/after draft.
-  // Shape varies; defensive parse across common payloads.
+// ESPN team ID → abbreviation map (NFL, 32 teams). IDs are stable across ESPN's API surface.
+// Used to derive logo URLs from news-article `categories[].team.id` references — the
+// /news endpoint gives us team IDs but not abbreviations or logo URLs directly.
+// Logo URL pattern: https://a.espncdn.com/i/teamlogos/nfl/500/{abbr.toLowerCase()}.png
+const NFL_TEAM_BY_ID: Record<string, string> = {
+  '1': 'ATL', '2': 'BUF', '3': 'CHI', '4': 'CIN', '5': 'CLE', '6': 'DAL',
+  '7': 'DEN', '8': 'DET', '9': 'GB', '10': 'TEN', '11': 'IND', '12': 'KC',
+  '13': 'LV', '14': 'LAR', '15': 'MIA', '16': 'MIN', '17': 'NE', '18': 'NO',
+  '19': 'NYG', '20': 'NYJ', '21': 'PHI', '22': 'ARI', '23': 'PIT', '24': 'LAC',
+  '25': 'SF', '26': 'SEA', '27': 'TB', '28': 'WSH', '29': 'CAR', '30': 'JAX',
+  '33': 'BAL', '34': 'HOU',
+}
+
+function relativeAgo(publishedIso?: string): string {
+  if (!publishedIso) return ''
+  const ts = Date.parse(publishedIso)
+  if (!ts) return ''
+  const ageMin = Math.max(0, Math.floor((Date.now() - ts) / 60_000))
+  if (ageMin < 1) return 'just now'
+  if (ageMin < 60) return `${ageMin}m`
+  if (ageMin < 1440) return `${Math.floor(ageMin / 60)}h`
+  return `${Math.floor(ageMin / 1440)}d`
+}
+
+async function fetchNFLNews() {
+  // ESPN's NFL news API — free, no key. Returns recent league-wide articles.
+  // We surface headlines + the teams referenced in each article so the ticker can
+  // render team logos inline (Frank's request: "make sure team logos render if
+  // teams are written about in the ticker").
   try {
-    const res = await fetch(`${ESPN_BASE}/football/nfl/draft`, {
+    const res = await fetch(`${ESPN_BASE}/football/nfl/news?limit=30`, {
       headers: { 'Accept': 'application/json' },
     })
     if (!res.ok) return []
     const data = await res.json()
-    const rawPicks: any[] =
-      data.picks ||
-      data.draft?.picks ||
-      (Array.isArray(data.rounds) ? data.rounds.flatMap((r: any) => r.picks || []) : []) ||
-      []
+    const articles: any[] = data.articles || []
 
-    return rawPicks
-      .filter((p: any) => p && (p.athlete || p.player || p.overall || p.pick))
-      .slice(0, 64)
-      .map((p: any, i: number) => {
-        const overall = p.overall || p.pick || p.selection || i + 1
-        const round = p.round || p.roundNumber || Math.ceil(overall / 32)
-        const abbr = p.team?.abbreviation as string | undefined
-        const team = abbr || p.team?.displayName || p.team?.name || '?'
-        const teamLogo =
-          p.team?.logo ||
-          p.team?.logos?.[0]?.href ||
-          (abbr ? `https://a.espncdn.com/i/teamlogos/nfl/500/${abbr.toLowerCase()}.png` : undefined)
-        const player = p.athlete?.displayName || p.athlete?.fullName || p.player?.displayName || p.player?.name || 'TBD'
-        const position = p.athlete?.position?.abbreviation || p.position?.abbreviation || p.position || ''
-        const college = p.athlete?.college?.name || p.athlete?.school?.name || p.college?.name || p.college || ''
-        const complete = p.status?.type === 'complete' || p.status === 'complete' || !!player && player !== 'TBD'
+    return articles
+      .map((a: any, i: number) => {
+        const headline: string = (a.headline || a.title || '').trim()
+        if (!headline) return null
+
+        // Pull team references out of categories. ESPN's shape: categories is an
+        // array of mixed types ({ type: 'team', team: {...} } | { type: 'athlete', ... }
+        // | { type: 'league', ... }). Dedupe by abbr — same team can appear twice
+        // when an article touches both the team and its athletes.
+        const seen = new Set<string>()
+        const teams: { abbr: string; logo: string }[] = []
+        for (const cat of a.categories || []) {
+          // Direct team category
+          let abbr: string | undefined
+          if (cat?.type === 'team' && cat?.team?.id) {
+            abbr = NFL_TEAM_BY_ID[String(cat.team.id)]
+          }
+          // Athlete category often nests team info
+          if (!abbr && cat?.type === 'athlete' && cat?.athlete?.team?.id) {
+            abbr = NFL_TEAM_BY_ID[String(cat.athlete.team.id)]
+          }
+          if (abbr && !seen.has(abbr)) {
+            seen.add(abbr)
+            teams.push({
+              abbr,
+              logo: `https://a.espncdn.com/i/teamlogos/nfl/500/${abbr.toLowerCase()}.png`,
+            })
+          }
+          if (teams.length >= 4) break // Cap at 4 logos per item — ticker space
+        }
+
         return {
-          id: String(p.id || `pick-${overall}`),
-          kind: 'pick' as const,
-          pickNumber: overall,
-          round,
-          team,
-          teamLogo,
-          player,
-          position,
-          college,
-          state: complete ? 'post' : 'pre',
+          id: String(a.id || a.dataSourceIdentifier || `news-${i}`),
+          kind: 'news' as const,
+          headline,
+          teams,
+          ago: relativeAgo(a.published || a.lastModified),
+          state: 'post' as const,
         }
       })
+      .filter((n): n is NonNullable<typeof n> => n !== null)
+      .slice(0, 24)
   } catch { return [] }
 }
 
@@ -131,17 +167,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(200).json(cache.data)
   }
 
-  const [mlb, nhl, nba, nflDraft, nflGames] = await Promise.all([
+  const [mlb, nhl, nba, nflGames, nflNews] = await Promise.all([
     fetchLeague('baseball', 'mlb'),
     fetchLeague('hockey', 'nhl'),
     fetchLeague('basketball', 'nba'),
-    fetchNFLDraft(),
     fetchLeague('football', 'nfl'),
+    fetchNFLNews(),
   ])
 
-  // NFL row prefers draft picks (draft week) → regular games (season).
-  const nfl = nflDraft.length > 0 ? nflDraft : nflGames
-  const nflMode = nflDraft.length > 0 ? 'draft' : 'games'
+  // NFL row prefers in-season games → falls back to league news (offseason / quiet days).
+  // Draft-picks branch retired Apr 30, 2026 once the draft concluded.
+  const nfl = nflGames.length > 0 ? nflGames : nflNews
+  const nflMode = nflGames.length > 0 ? 'games' : 'news'
 
   const result = { mlb, nhl, nba, nfl, nflMode, fetchedAt: new Date().toISOString() }
   cache = { data: result, ts: Date.now() }
