@@ -2,10 +2,12 @@
  * Repin SCid — backfills IPFS pinning for tracks created during the Phase-5 window
  * (commit 813c293) where the SCid Vercel-direct port dropped the IPFS pinning step.
  *
- * POST { trackId }     — repin a single track by its Mongo _id
- * POST { all: true }   — sweep all SCid tracks whose playbackUrl still points at the S3 bucket
+ * POST { trackId }            — repin a single track by its Mongo _id (owner only)
+ * POST { all: true }          — sweep up to 50 of caller's S3-only tracks
+ * POST { fleet: true }        — admin-only fleet-wide sweep of ALL S3-only tracks
+ * POST { fleet: true, dryRun: true } — admin-only count without writes
  *
- * Auth required. Owner-only for single-track mode; sweep mode requires admin.
+ * Admin = caller's user.email matches process.env.ADMIN_EMAIL (default frank@soundchain.io).
  */
 import type { NextApiRequest, NextApiResponse } from 'next'
 import clientPromise from 'lib/mongodb'
@@ -60,16 +62,72 @@ async function repinOne(db: any, track: any): Promise<{ ok: boolean; cid?: strin
   return { ok: true, cid }
 }
 
+async function isAdmin(db: any, userId: string): Promise<boolean> {
+  const adminEmail = (process.env.ADMIN_EMAIL || 'frank@soundchain.io').toLowerCase()
+  const user = await db.collection('users').findOne({ _id: new ObjectId(userId) }, { projection: { email: 1 } })
+  return !!user?.email && user.email.toLowerCase() === adminEmail
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' })
   const auth = await authFromRequest(req)
   if (!auth) return res.status(401).json({ error: 'Unauthenticated' })
 
-  const { trackId, all } = req.body || {}
+  const { trackId, all, fleet, dryRun } = req.body || {}
 
   try {
     const client = await clientPromise
     const db = client.db('soundchain')
+
+    // Fleet-wide sweep — admin-only. Walks all tracks with S3 playbackUrl regardless of owner.
+    if (fleet === true) {
+      if (!(await isAdmin(db, auth.userId))) {
+        return res.status(403).json({ error: 'admin only' })
+      }
+
+      const filter = { playbackUrl: { $regex: S3_HOST_FRAGMENT } }
+      const total = await db.collection('tracks').countDocuments(filter)
+
+      if (dryRun === true) {
+        const sample = await db.collection('tracks')
+          .find(filter)
+          .project({ title: 1, profileId: 1, createdAt: 1 })
+          .sort({ createdAt: -1 })
+          .limit(20)
+          .toArray()
+        return res.status(200).json({
+          totalBroken: total,
+          sample: sample.map(t => ({
+            trackId: t._id.toString(),
+            title: t.title,
+            profileId: t.profileId?.toString(),
+            createdAt: t.createdAt,
+          })),
+          note: 'Pass {"fleet":true} (no dryRun) to actually repin. Each pin takes 5-15s.',
+        })
+      }
+
+      // Real sweep — process in chunks so we don't blow past maxDuration
+      const tracks = await db.collection('tracks').find(filter).limit(100).toArray()
+      const results = []
+      let pinned = 0, failed = 0
+      for (const t of tracks) {
+        const r = await repinOne(db, t)
+        if (r.ok) pinned++; else failed++
+        results.push({ trackId: t._id.toString(), title: t.title, ...r })
+      }
+      return res.status(200).json({
+        totalBroken: total,
+        processedThisRun: tracks.length,
+        pinned,
+        failed,
+        remaining: Math.max(0, total - pinned),
+        results,
+        note: total > tracks.length
+          ? `Re-run the same call to process the next chunk of ${Math.min(100, total - pinned)} tracks.`
+          : 'All broken SCids repinned.',
+      })
+    }
 
     if (all === true) {
       const tracks = await db.collection('tracks')
@@ -85,7 +143,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(200).json({ scanned: tracks.length, results })
     }
 
-    if (!trackId) return res.status(400).json({ error: 'trackId or all required' })
+    if (!trackId) return res.status(400).json({ error: 'trackId, all, or fleet required' })
 
     let oid: ObjectId
     try { oid = new ObjectId(trackId) } catch { return res.status(400).json({ error: 'invalid trackId' }) }
