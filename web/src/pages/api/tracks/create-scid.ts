@@ -8,6 +8,40 @@ import clientPromise from 'lib/mongodb'
 import { ObjectId } from 'mongodb'
 import { authFromRequest } from 'lib/api/authJwt'
 
+export const config = {
+  maxDuration: 60,
+}
+
+// Pin an S3-hosted asset to IPFS via Pinata. Returns the IPFS CID, or null on failure.
+// Restores the pre-Phase-5 (Lambda-era) behavior so SCid playback URLs land on a CORS-
+// friendly, decentralized gateway instead of the raw S3 bucket.
+async function pinAssetToIPFS(fileUrl: string, fileName: string): Promise<string | null> {
+  const apiKey = process.env.PINATA_API_KEY
+  const apiSecret = process.env.PINATA_API_SECRET
+  if (!apiKey || !apiSecret) return null
+
+  try {
+    const fileResponse = await fetch(fileUrl)
+    if (!fileResponse.ok) return null
+    const fileBuffer = Buffer.from(await fileResponse.arrayBuffer())
+    const formData = new FormData()
+    formData.append('file', new Blob([fileBuffer]), fileName)
+    formData.append('pinataMetadata', JSON.stringify({ name: fileName }))
+    formData.append('pinataOptions', JSON.stringify({ cidVersion: 1 }))
+
+    const pinResponse = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
+      method: 'POST',
+      headers: { pinata_api_key: apiKey, pinata_secret_api_key: apiSecret },
+      body: formData,
+    })
+    if (!pinResponse.ok) return null
+    const pinResult = await pinResponse.json()
+    return pinResult.IpfsHash || null
+  } catch {
+    return null
+  }
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' })
   const auth = await authFromRequest(req)
@@ -21,12 +55,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const db = client.db('soundchain')
     const now = new Date()
 
+    // Pin asset to IPFS so playbackUrl lands on the decentralized gateway path the
+    // AudioEngine already knows how to route. Falls back to the raw S3 URL if Pinata
+    // is unreachable so the upload still completes.
+    const ipfsCid = await pinAssetToIPFS(assetUrl, title)
+    const playbackUrl = ipfsCid ? `https://soundchain.mypinata.cloud/ipfs/${ipfsCid}` : assetUrl
+
     // Create track document
     const track = {
       profileId: auth.profileId,
       title,
       assetUrl,
-      playbackUrl: assetUrl,
+      playbackUrl,
+      ipfsCid: ipfsCid || undefined,
       artist: artist || '',
       album: album || '',
       artworkUrl: artworkUrl || '',
