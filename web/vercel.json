@@ -34,6 +34,10 @@
     {
       "path": "/api/cron/settle-picks",
       "schedule": "*/10 * * * *"
+    },
+    {
+      "path": "/api/cron/repin-scid",
+      "schedule": "*/5 * * * *"
     }
   ]
 }
