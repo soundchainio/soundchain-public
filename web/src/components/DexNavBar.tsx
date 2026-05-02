@@ -633,13 +633,6 @@ export function DexNavBar() {
               )}
             </div>
 
-            {/* Moltbook */}
-            <Link href="/backend" className="flex-shrink-0" title="Moltbook — Agent Playground">
-              <button className="p-1.5 rounded-full bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 transition w-7 h-7 flex items-center justify-center">
-                <span className="text-sm leading-none">🦞</span>
-              </button>
-            </Link>
-
             {/* Vibes — social links accordion */}
             <div className="relative flex-shrink-0">
               <button

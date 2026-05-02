@@ -310,16 +310,6 @@ export const TopNavBar = ({
             </button>
           </Link>
 
-          {/* Moltbook — Agent Playground */}
-          <Link href="/backend" passHref>
-            <button
-              className="p-1.5 rounded-full bg-red-500/10 border border-red-500/20 hover:border-red-400/40 hover:bg-red-500/20 transition-all flex items-center justify-center w-7 h-7"
-              title="Moltbook — Agent Playground"
-            >
-              <span className="text-sm leading-none">🦞</span>
-            </button>
-          </Link>
-
           {/* Mint+ — Publish Track */}
           <Link href="/upload" passHref>
             <button
