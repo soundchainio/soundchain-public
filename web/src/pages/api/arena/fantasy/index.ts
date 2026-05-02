@@ -37,7 +37,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const auth = await authFromRequest(req)
     if (!auth) return res.status(401).json({ error: 'Unauthenticated' })
 
-    const { leagueName, maxTeams, entryToken, entryFee, prizeSplit } = req.body || {}
+    const { leagueName, maxTeams } = req.body || {}
     if (!leagueName || typeof leagueName !== 'string' || leagueName.length < 3 || leagueName.length > 60) {
       return res.status(400).json({ error: 'leagueName required (3-60 chars)' })
     }
@@ -45,17 +45,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (![4, 6, 8, 10, 12, 14].includes(teams)) {
       return res.status(400).json({ error: 'maxTeams must be one of 4, 6, 8, 10, 12, 14' })
     }
-    const token = (entryToken as EntryToken) || 'OGUN'
-    if (!TOKEN_CONFIG[token]) return res.status(400).json({ error: 'invalid entryToken' })
-    const fee = Number(entryFee)
-    if (!Number.isFinite(fee) || fee <= 0) return res.status(400).json({ error: 'entryFee > 0 required' })
-
-    const split = prizeSplit && typeof prizeSplit === 'object'
-      ? { ...DEFAULT_PRIZE_SPLIT, ...prizeSplit, platform: 500 }
-      : DEFAULT_PRIZE_SPLIT
-    if (split.first + split.second + split.third + split.platform !== 10000) {
-      return res.status(400).json({ error: 'prizeSplit bps must sum to 10000 (including 500 bps platform)' })
-    }
+    // Free-to-play only as of May 2, 2026 — entry fee + prize-split wiring paused for compliance.
+    // Existing leagues continue to function under whatever fee they were created with;
+    // new leagues are zero-stake leaderboard glory only.
+    const token: EntryToken = 'OGUN'
+    const fee = 0
+    const split = DEFAULT_PRIZE_SPLIT
 
     const profiles = db.collection('profiles')
     const me = await profiles.findOne({ _id: auth.profileId })

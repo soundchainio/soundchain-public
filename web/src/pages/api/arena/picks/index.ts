@@ -89,7 +89,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   // POST — create pick
-  if (req.method !== 'POST') return res.status(405).json({ error: 'GET or POST' })
+  // Real-money sports picks paused May 2, 2026 for compliance review. New pick creation is blocked.
+  // Existing picks continue to settle naturally via /api/cron/settle-picks; cancel actions still work
+  // for refunds via /api/arena/picks/[id] action='cancel'.
+  if (req.method === 'POST') {
+    return res.status(410).json({ error: 'Arena Picks is paused. New wagers are not being accepted while we focus on music streaming, SCID royalties, and rewards.' })
+  }
+  if (req.method !== 'POST') return res.status(405).json({ error: 'GET only' })
 
   const auth = await authFromRequest(req)
   if (!auth) return res.status(401).json({ error: 'auth required' })

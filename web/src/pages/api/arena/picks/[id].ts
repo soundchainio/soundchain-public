@@ -53,6 +53,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const { action } = req.body || {}
 
+  // Real-money sports picks paused May 2, 2026. Creation/take/edit are blocked; cancel stays open
+  // so creators can refund any in-flight escrow positions while existing matched picks settle naturally.
+  if (action === 'deposit' || action === 'take' || action === 'edit') {
+    return res.status(410).json({ error: 'Arena Picks is paused. New deposits, takes, and edits are not being accepted. Use action="cancel" to refund an open position.' })
+  }
+
   // ─── DEPOSIT (creator finalizes their on-chain join) ─────────────────────
   if (action === 'deposit') {
     if (pick.creatorHandle !== myHandle && pick.creatorProfileId !== auth.profileId.toString()) {

@@ -54,14 +54,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const challengerProfile = await profiles.findOne({ _id: new ObjectId(auth.profileId) })
     if (!challengerProfile) return res.status(404).json({ error: 'Profile not found' })
 
+    // Stakes paused May 2, 2026 — challenges are free-for-fun (bragging rights + leaderboard glory).
+    // Even if a stale client submits a stakes value, the server forces 0 for defense-in-depth.
     const doc = {
       challengerId: auth.profileId,
       challengerHandle: challengerProfile.userHandle || 'anon',
       opponentHandle: opponentHandle || null, // null = open challenge (anyone can accept)
       game,
       platform: platform || 'any',
-      stakes: typeof stakes === 'number' && stakes > 0 ? stakes : 0,
-      stakeFee: typeof stakes === 'number' && stakes > 0 ? Math.ceil(stakes * 0.0005) : 0,
+      stakes: 0,
+      stakeFee: 0,
       message: message || null,
       status: 'open', // open → accepted → live → completed / cancelled / declined
       acceptedBy: null,
@@ -75,10 +77,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Auto-post to feed via arena_agent
     try {
-      const stakeText = doc.stakes > 0 ? ` · Stakes: ${doc.stakes} OGUN` : ''
       const opponentText = doc.opponentHandle ? `@${doc.opponentHandle}` : 'ANYONE'
       await db.collection('posts').insertOne({
-        message: `🎮 ARENA CHALLENGE!\n\n@${doc.challengerHandle} challenges ${opponentText} to ${doc.game}${stakeText}\n\nPlatform: ${doc.platform}${doc.message ? `\n"${doc.message}"` : ''}\n\nAccept the challenge at soundchain.io/arena`,
+        message: `🎮 ARENA CHALLENGE!\n\n@${doc.challengerHandle} challenges ${opponentText} to ${doc.game}\n\nPlatform: ${doc.platform}${doc.message ? `\n"${doc.message}"` : ''}\n\nAccept the challenge at soundchain.io/arena`,
         profileId: 'arena_agent',
         type: 'arena_challenge',
         arenaId: result.insertedId.toString(),
@@ -93,7 +94,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     fetch(`${req.headers.origin || 'https://soundchain.io'}/api/agent/analytics-events`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ event: 'arena_challenge_created', meta: { game, stakes: doc.stakes, opponent: doc.opponentHandle } }),
+      body: JSON.stringify({ event: 'arena_challenge_created', meta: { game, opponent: doc.opponentHandle } }),
     }).catch(() => {})
 
     return res.status(200).json({ ok: true, challenge: { ...doc, _id: result.insertedId } })

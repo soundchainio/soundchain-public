@@ -20,7 +20,7 @@ import { useMe } from 'hooks/useMe'
 import { useRouter } from 'next/router'
 // Bottom pills hidden globally for /arena via BottomNavBarWrapper route guard — no per-page hook needed.
 // DexNavBar inherited from Layout.tsx
-import { ArrowLeft, Gamepad2, Trophy, Users, Eye, Coins, Zap, Lock, Radio, ExternalLink, Swords, Plus, Send, X, Loader2, TrendingUp, Flame } from 'lucide-react'
+import { ArrowLeft, Gamepad2, Trophy, Users, Eye, Zap, Lock, Radio, ExternalLink, Swords, Plus, Send, X, Loader2, TrendingUp } from 'lucide-react'
 import { toast } from 'react-toastify'
 
 interface Challenge {
@@ -79,7 +79,7 @@ export default function ArenaPage() {
   const [challenges, setChallenges] = useState<Challenge[]>([])
   const [challengeStats, setChallengeStats] = useState({ open: 0, accepted: 0, completed: 0 })
   const [showCreateChallenge, setShowCreateChallenge] = useState(false)
-  const [newChallenge, setNewChallenge] = useState({ opponentHandle: '', game: 'NBA 2K26', platform: 'Any', stakes: 0, message: '' })
+  const [newChallenge, setNewChallenge] = useState({ opponentHandle: '', game: 'NBA 2K26', platform: 'Any', message: '' })
   const [creating, setCreating] = useState(false)
   const [postingToFeed, setPostingToFeed] = useState<Set<string>>(new Set())
 
@@ -95,12 +95,11 @@ export default function ArenaPage() {
 
   useEffect(() => { fetchChallenges() }, [fetchChallenges])
 
-  // Tonight's games + hot picks for desktop side rails (Round 4 density pass)
+  // Tonight's games for left desktop rail — pure ESPN data, no wagering surface.
+  // Picks panel + hot picks fetch removed May 2, 2026 (wagering paused).
   const [tonightGames, setTonightGames] = useState<any[]>([])
-  const [hotPicks, setHotPicks] = useState<any[]>([])
   useEffect(() => {
     fetch('/api/arena/picks/games').then(r => r.json()).then(d => setTonightGames(d.games || [])).catch(() => {})
-    fetch('/api/arena/picks').then(r => r.json()).then(d => setHotPicks(d.picks || [])).catch(() => {})
   }, [])
 
   const createChallenge = async () => {
@@ -114,14 +113,13 @@ export default function ArenaPage() {
           opponentHandle: newChallenge.opponentHandle || null,
           game: newChallenge.game,
           platform: newChallenge.platform,
-          stakes: newChallenge.stakes,
           message: newChallenge.message || null,
         }),
       })
       if (res.ok) {
         toast.success('Challenge sent! Posted to feed by arena_agent 🎮')
         setShowCreateChallenge(false)
-        setNewChallenge({ opponentHandle: '', game: 'NBA 2K26', platform: 'Any', stakes: 0, message: '' })
+        setNewChallenge({ opponentHandle: '', game: 'NBA 2K26', platform: 'Any', message: '' })
         fetchChallenges()
       } else {
         const err = await res.json()
@@ -212,13 +210,13 @@ export default function ArenaPage() {
             </div>
             <div>
               <h1 className="arena-hologram-text text-2xl lg:text-4xl font-black tracking-tight inline-block leading-none">ARENA</h1>
-              <p className="text-[9px] font-mono text-gray-500 mt-0.5">CONSOLE GAMING via PORTALNODES · OGUN tournaments · spectator mode · PPV exclusive matches</p>
+              <p className="text-[9px] font-mono text-gray-500 mt-0.5">CONSOLE GAMING via PORTALNODES · 1v1 challenges · fantasy leagues · spectator mode</p>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="relative max-w-[1600px] mx-auto px-4 py-4 lg:grid lg:grid-cols-[220px_1fr_220px] lg:gap-4 xl:grid-cols-[240px_1fr_240px] xl:gap-5">
+      <div className="relative max-w-[1400px] mx-auto px-4 py-4 lg:grid lg:grid-cols-[220px_1fr] lg:gap-4 xl:grid-cols-[240px_1fr] xl:gap-5">
         {/* ─── LEFT RAIL — TONIGHT'S CARD (desktop only) ──────── */}
         <aside className="hidden lg:block">
           <div className="sticky top-20 space-y-3">
@@ -235,10 +233,9 @@ export default function ArenaPage() {
                   const isLive = g.state === 'in'
                   const isFinal = g.state === 'post'
                   return (
-                    <button
+                    <div
                       key={g.espnGameId}
-                      onClick={() => router.push('/arena/picks')}
-                      className="w-full p-2.5 text-left hover:bg-cyan-500/10 transition-colors"
+                      className="w-full p-2.5 text-left"
                     >
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-[9px] font-mono text-gray-500">{g.sportEmoji} {g.sportLabel}</span>
@@ -256,10 +253,7 @@ export default function ArenaPage() {
                           {(isLive || isFinal) && <span className="font-mono tabular-nums text-gray-300">{g.homeScore || 0}</span>}
                         </div>
                       </div>
-                      {g.canPick && (
-                        <div className="mt-1.5 text-[9px] font-mono font-bold text-cyan-400/70 tracking-widest">PICK 'EM →</div>
-                      )}
-                    </button>
+                    </div>
                   )
                 })}
               </div>
@@ -281,7 +275,6 @@ export default function ArenaPage() {
         <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1">
           {[
             { label: 'Challenges', emoji: '⚔️', href: '#challenges', active: true },
-            { label: 'Game Picks', emoji: '🏆', href: '/arena/picks', active: false },
             { label: 'Fantasy Leagues', emoji: '🏈', href: '/arena/fantasy', active: false },
           ].map(item => (
             <button
@@ -294,32 +287,6 @@ export default function ArenaPage() {
               <span>{item.emoji}</span> {item.label}
             </button>
           ))}
-        </div>
-
-        {/* ─── GAME PICKS CARD ────────────────────────────────── */}
-        <div
-          className="group relative rounded-xl overflow-hidden border border-cyan-500/30 bg-gradient-to-br from-cyan-950/50 via-black to-purple-950/40 p-4 sm:p-5 cursor-pointer hover:border-cyan-400/50 transition-all"
-          onClick={() => router.push('/arena/picks')}
-        >
-          <span className="arena-conic-ring" aria-hidden />
-          <div className="absolute inset-0 opacity-10 pointer-events-none" style={{
-            background: 'radial-gradient(ellipse at top left, rgba(6,182,212,0.4), transparent 60%)',
-          }} />
-          <div className="relative flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-            <div className="p-3 rounded-lg bg-cyan-500/15 border border-cyan-500/30 self-start">
-              <Zap className="w-6 h-6 text-cyan-400" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-base sm:text-lg font-black text-white">GAME PICKS</h2>
-                <span className="text-[9px] font-mono px-2 py-0.5 bg-cyan-500/20 text-cyan-400 rounded-full border border-cyan-500/30">LIVE</span>
-              </div>
-              <p className="text-xs text-gray-400 mt-1">Pick winners of tonight&apos;s NBA, NHL, MLB &amp; NFL games. Wager crypto. Settle on-chain.</p>
-            </div>
-            <button className="self-start sm:self-center px-4 py-2 bg-gradient-to-r from-cyan-500 to-purple-500 text-white text-xs font-black rounded-full hover:scale-105 active:scale-95 transition-all shadow-lg shadow-cyan-500/20">
-              PICK &apos;EM
-            </button>
-          </div>
         </div>
 
         {/* ─── FANTASY LEAGUES (top-level entry) ──────────────── */}
@@ -340,7 +307,7 @@ export default function ArenaPage() {
                 <span className="text-[9px] font-mono font-bold text-green-300 bg-green-500/20 border border-green-500/40 px-1.5 py-0.5 rounded tracking-widest">NEW</span>
               </div>
               <p className="text-[11px] sm:text-xs text-gray-400 mt-1">
-                Crypto entry (OGUN / POL) · Live PPR scoring · Snake draft · Top-4 playoffs · On-chain escrow
+                Free-to-play · Live PPR scoring · Snake draft · Top-4 playoffs · Bragging rights + leaderboard glory
               </p>
             </div>
             <div className="flex gap-2 shrink-0">
@@ -361,12 +328,11 @@ export default function ArenaPage() {
         </div>
 
         {/* Stats row */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {[
             { icon: <Radio className="w-4 h-4 text-red-400" />, label: 'LIVE MATCHES', value: MOCK_MATCHES.filter(m => m.status === 'live').length, color: 'red' },
             { icon: <Swords className="w-4 h-4 text-orange-400" />, label: 'OPEN CHALLENGES', value: challengeStats.open, color: 'orange' },
             { icon: <Eye className="w-4 h-4 text-cyan-400" />, label: 'SPECTATORS', value: MOCK_MATCHES.reduce((s, m) => s + m.spectators, 0), color: 'cyan' },
-            { icon: <Coins className="w-4 h-4 text-yellow-400" />, label: 'OGUN POT', value: MOCK_MATCHES.reduce((s, m) => s + (m.ogunPot || 0), 0).toLocaleString(), color: 'yellow' },
             { icon: <Trophy className="w-4 h-4 text-purple-400" />, label: 'COMPLETED', value: challengeStats.completed, color: 'purple' },
           ].map((s, i) => (
             <div key={i} className={`p-3 rounded-lg border border-${s.color}-500/10 bg-black/40`}>
@@ -407,11 +373,6 @@ export default function ArenaPage() {
                       }`}>
                         {c.status.toUpperCase()}
                       </span>
-                      {c.stakes > 0 && (
-                        <span className="flex items-center gap-1 text-[9px] font-mono text-yellow-400">
-                          <Coins className="w-3 h-3" /> {c.stakes} OGUN
-                        </span>
-                      )}
                     </div>
                     <div className="text-[10px] font-mono text-white mb-1">{c.game} · {c.platform}</div>
                     <div className="flex items-center gap-2 text-[9px] font-mono mb-2">
@@ -426,7 +387,7 @@ export default function ArenaPage() {
                       <button
                         onClick={() => {
                           const url = `${window.location.origin}/arena`
-                          const text = `🎮 ${c.challengerHandle} vs ${c.opponentHandle || c.acceptedBy || 'ANYONE'} — ${c.game}${c.stakes > 0 ? ` · ${c.stakes} OGUN` : ''}\n\n${url}`
+                          const text = `🎮 ${c.challengerHandle} vs ${c.opponentHandle || c.acceptedBy || 'ANYONE'} — ${c.game}\n\n${url}`
                           navigator.clipboard.writeText(text)
                           toast.success('Challenge copied! Share via text.')
                         }}
@@ -444,7 +405,7 @@ export default function ArenaPage() {
                               credentials: 'include',
                               headers: { 'Content-Type': 'application/json' },
                               body: JSON.stringify({
-                                body: `🎮 ARENA CHALLENGE!\n\n@${c.challengerHandle} vs ${c.opponentHandle || 'ANYONE'} — ${c.game}${c.stakes > 0 ? ` · ${c.stakes} OGUN on the line!` : ''}\n\nWatch or accept at ${url}`,
+                                body: `🎮 ARENA CHALLENGE!\n\n@${c.challengerHandle} vs ${c.opponentHandle || 'ANYONE'} — ${c.game}\n\nWatch or accept at ${url}`,
                               }),
                             })
                             if (r.ok) toast.update(tid, { render: 'Challenge posted to feed!', type: 'success', isLoading: false, autoClose: 3000 })
@@ -521,7 +482,6 @@ export default function ArenaPage() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3 text-[9px] font-mono text-gray-500">
                       <span className="flex items-center gap-1"><Eye className="w-3 h-3" /> {match.spectators}</span>
-                      {match.ogunPot ? <span className="flex items-center gap-1 text-yellow-500"><Coins className="w-3 h-3" /> {match.ogunPot}</span> : null}
                     </div>
                     {match.status === 'live' ? (
                       canWatch ? (
@@ -550,85 +510,20 @@ export default function ArenaPage() {
           <h2 className="text-xs font-mono font-bold text-yellow-400 tracking-wider mb-3">THE SOUNDCHAIN LAYER</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[10px] font-mono text-gray-400">
             <div>✓ Matchmaking by location/skill</div>
-            <div>✓ OGUN-staked tournaments (0.05% fee on pot)</div>
+            <div>✓ Free-to-play 1v1 challenges</div>
             <div>✓ Spectator mode (residents portal in)</div>
-            <div>✓ PPV exclusive matches (0.05% fee per ticket)</div>
-            <div>✓ On-chain leaderboards (Polygon)</div>
+            <div>✓ Free fantasy leagues + brackets</div>
+            <div>✓ Leaderboards + bragging rights</div>
             <div>✓ Replay storage (IPFS pinned)</div>
             <div>✓ Live chat overlay during play</div>
             <div>✓ Cross-platform: Xbox · PlayStation · PC</div>
           </div>
           <div className="mt-3 pt-3 border-t border-red-500/10 text-[9px] font-mono text-gray-600">
-            Your console + WebRTC + SoundChain = global tournaments with on-chain prizes.
-            We don't host games — we host the social + economic layer.
+            Your console + WebRTC + SoundChain = global meetups for free-for-fun play.
+            We don't host games — we host the social layer.
           </div>
         </div>
         </main>
-
-        {/* ─── RIGHT RAIL — HOT PICKS / TRENDING (desktop only) ─────────── */}
-        <aside className="hidden lg:block">
-          <div className="sticky top-20 space-y-3">
-            <div className="flex items-center gap-2">
-              <Flame className="w-3.5 h-3.5 text-orange-400" />
-              <span className="text-[10px] font-mono font-bold text-orange-400 tracking-widest">HOT PICKS</span>
-            </div>
-            <div className="rounded-xl border border-orange-500/20 bg-black/60 backdrop-blur-sm overflow-hidden">
-              <div className="max-h-[420px] overflow-y-auto scrollbar-hide divide-y divide-white/5">
-                {(() => {
-                  const hot = [...hotPicks]
-                    .filter((p: any) => p.status === 'matched' || (p.status === 'open' && !p.takerHandle))
-                    .sort((a: any, b: any) => new Date(b.matchedAt || b.createdAt).getTime() - new Date(a.matchedAt || a.createdAt).getTime())
-                    .slice(0, 10)
-                  if (hot.length === 0) return <div className="p-3 text-[11px] font-mono text-gray-500 text-center">No matched picks yet</div>
-                  return hot.map((p: any) => (
-                    <button
-                      key={p.id || p._id}
-                      onClick={() => router.push('/arena/picks')}
-                      className="w-full p-2.5 text-left hover:bg-orange-500/10 transition-colors"
-                    >
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-[9px] font-mono text-gray-500 truncate">@{p.creatorHandle}{p.takerHandle ? ` vs @${p.takerHandle}` : ''}</span>
-                        <span className={`text-[9px] font-mono font-bold ${p.status === 'matched' ? 'text-emerald-400' : 'text-cyan-400'}`}>{p.status === 'matched' ? 'LOCKED' : 'OPEN'}</span>
-                      </div>
-                      <div className="text-xs font-bold text-white truncate">{p.awayTeam} @ {p.homeTeam}</div>
-                      <div className="flex items-center justify-between mt-1">
-                        <span className="text-[10px] font-mono text-amber-300 tabular-nums">{p.pot} {p.entryToken}</span>
-                        <span className="text-[9px] font-mono text-gray-500 tracking-widest">POT</span>
-                      </div>
-                    </button>
-                  ))
-                })()}
-              </div>
-            </div>
-            <button
-              onClick={() => router.push('/arena/picks')}
-              className="w-full text-[10px] font-mono font-bold text-cyan-400 hover:text-cyan-300 tracking-widest py-2 transition-colors"
-            >
-              VIEW ALL PICKS →
-            </button>
-
-            {/* MY ARENA STAKE pill — DK Live Bets equivalent */}
-            <div className="rounded-xl border border-purple-500/20 bg-black/60 backdrop-blur-sm p-3">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-[10px] font-mono font-bold text-purple-400 tracking-widest">MY ARENA STAKE</span>
-                <Coins className="w-3 h-3 text-purple-400" />
-              </div>
-              {(() => {
-                const myHandle = me?.profile?.userHandle || (me as any)?.handle || ''
-                const mine = hotPicks.filter((p: any) => p.creatorHandle === myHandle || p.takerHandle === myHandle)
-                const liveCount = mine.filter((p: any) => p.status === 'matched' && /live|in/i.test(p.gameStatus || '')).length
-                const atRisk = mine.filter((p: any) => p.status === 'open' || p.status === 'matched').reduce((acc: number, p: any) => acc + (p.entryFee || 0), 0)
-                if (mine.length === 0) return <p className="text-[10px] text-gray-500 italic">No picks yet — pick something on the board.</p>
-                return (
-                  <div>
-                    <div className="arena-hologram-text text-2xl font-black tabular-nums leading-none">{mine.length}</div>
-                    <div className="text-[9px] font-mono text-gray-500 tracking-widest mt-1">PICKS · {liveCount} LIVE · {atRisk.toFixed(2)} AT RISK</div>
-                  </div>
-                )
-              })()}
-            </div>
-          </div>
-        </aside>
       </div>
 
       {/* Match viewer modal — PPV gated */}
@@ -666,7 +561,7 @@ export default function ArenaPage() {
             <div className="px-4 py-3 border-t border-red-500/20 bg-black/40 flex items-center justify-between text-[10px] font-mono">
               <div className="flex items-center gap-3 text-gray-400">
                 <span className="flex items-center gap-1"><Eye className="w-3 h-3 text-cyan-400" /> {selectedMatch.spectators + 1} watching</span>
-                {selectedMatch.ogunPot ? <span className="flex items-center gap-1 text-yellow-400"><Coins className="w-3 h-3" /> {selectedMatch.ogunPot} OGUN pot</span> : null}
+                {/* OGUN pot framing removed May 2, 2026 — match viewer is purely social/spectator now. */}
               </div>
               <span className="text-gray-600">{selectedMatch.game} · powered by Parsec</span>
             </div>
@@ -718,28 +613,6 @@ export default function ArenaPage() {
                   className="w-full bg-black/60 border border-white/10 rounded px-2 py-1.5 text-[10px] font-mono text-white outline-none focus:border-orange-500/50"
                 />
               </div>
-              {/* Stakes */}
-              <div>
-                <label className="text-[9px] font-mono text-gray-500 uppercase mb-1 flex justify-between">
-                  <span>OGUN Stakes (optional)</span>
-                  {newChallenge.stakes > 0 && <span className="text-yellow-400">Winner takes {newChallenge.stakes} OGUN · 0.05% fee</span>}
-                </label>
-                <div className="flex items-center gap-2 flex-wrap">
-                  {[0, 5, 10, 25, 50, 100, 250, 500, 1000].map(s => (
-                    <button key={s} onClick={() => setNewChallenge(c => ({ ...c, stakes: s }))}
-                      className={`px-2 py-1 rounded text-[9px] font-mono transition ${newChallenge.stakes === s ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' : 'bg-white/[0.02] text-gray-500 border border-white/5 hover:text-white'}`}
-                    >{s === 0 ? 'Free' : s >= 1000 ? `${s/1000}K` : `${s}`}</button>
-                  ))}
-                  <input
-                    type="number"
-                    placeholder="Custom"
-                    value={newChallenge.stakes > 0 && ![0,5,10,25,50,100,250,500,1000].includes(newChallenge.stakes) ? newChallenge.stakes : ''}
-                    onChange={e => setNewChallenge(c => ({ ...c, stakes: Number(e.target.value) || 0 }))}
-                    className="w-16 px-2 py-1 rounded text-[9px] font-mono bg-black/60 border border-white/10 text-white outline-none focus:border-yellow-500/50"
-                    min={0}
-                  />
-                </div>
-              </div>
               {/* Message */}
               <div>
                 <label className="text-[9px] font-mono text-gray-500 uppercase mb-1 block">Trash Talk (optional)</label>
@@ -765,7 +638,7 @@ export default function ArenaPage() {
                 </button>
               </div>
               <div className="text-[8px] font-mono text-gray-600 pt-1 border-t border-white/5">
-                Challenge auto-posted to feed by @arena_agent · 0.05% fee on staked matches
+                Challenge auto-posted to feed by @arena_agent · Free-to-play, bragging rights only
               </div>
             </div>
           </div>

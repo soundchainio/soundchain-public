@@ -65,7 +65,7 @@ export default function FantasyHubPage() {
             <h1 className="arena-hologram-text text-4xl lg:text-6xl font-black tracking-tight leading-none">FANTASY LEAGUES</h1>
           </div>
           <p className="text-gray-400 text-sm mt-2">
-            NFL fantasy with OGUN / POL prize pools. Smart contract escrow. 5% platform fee.
+            Free-to-play NFL fantasy — leaderboards, brackets, bragging rights. No entry fees.
           </p>
         </div>
 
@@ -288,14 +288,14 @@ function FantasyPreviewTheatre({ onStart, canStart }: { onStart: () => void; can
           <span className="arena-conic-ring" aria-hidden />
           <div className="relative">
             <div className="flex items-center gap-2 mb-3"><Zap className="w-4 h-4 text-cyan-400" /><span className="text-[10px] font-mono text-cyan-300 tracking-widest">EVERY PIXEL ABOVE</span></div>
-            <h3 className="arena-hologram-text text-xl font-black leading-tight tracking-tight mb-2">Build your league. Real prize pools. On-chain escrow.</h3>
+            <h3 className="arena-hologram-text text-xl font-black leading-tight tracking-tight mb-2">Build your league. Compete for the trophy.</h3>
             <p className="text-xs text-gray-400 leading-relaxed">All the numbers above are illustrative — but the moment you start a real league, those tables, brackets and player cards become live.</p>
           </div>
           <div className="relative mt-4 space-y-2">
             <ul className="text-[11px] text-gray-300 space-y-1.5">
-              <li className="flex items-center gap-2"><Shield className="w-3 h-3 text-emerald-400" /> Smart-contract escrow on Polygon</li>
-              <li className="flex items-center gap-2"><Coins className="w-3 h-3 text-amber-400" /> OGUN / POL / USDC / 7 wager tokens</li>
-              <li className="flex items-center gap-2"><Target className="w-3 h-3 text-pink-400" /> Top-4 playoffs · Trophy NFT mints to champ</li>
+              <li className="flex items-center gap-2"><Shield className="w-3 h-3 text-emerald-400" /> Free-to-play, no entry fees</li>
+              <li className="flex items-center gap-2"><Trophy className="w-3 h-3 text-amber-400" /> Champion gets trophy NFT + leaderboard pin</li>
+              <li className="flex items-center gap-2"><Target className="w-3 h-3 text-pink-400" /> Top-4 playoffs · Snake draft · Bragging rights</li>
               <li className="flex items-center gap-2"><TrendingUp className="w-3 h-3 text-cyan-400" /> Live ESPN PPR scoring · 30-min refresh</li>
             </ul>
             <button
@@ -396,7 +396,7 @@ function LeagueCard({ league }: { league: FantasyLeague }) {
       </div>
       <div className="text-xs text-gray-400 flex items-center gap-3">
         <span className="flex items-center gap-1"><Users className="w-3 h-3" />{(league.teams || []).length}/{league.maxTeams}</span>
-        <span className="flex items-center gap-1"><Coins className="w-3 h-3" />{league.entryFee} {league.entryToken}</span>
+        <span className="flex items-center gap-1"><Coins className="w-3 h-3" />{league.entryFee > 0 ? `${league.entryFee} ${league.entryToken}` : 'Free-to-play'}</span>
         <span>by @{league.commissionerHandle}</span>
       </div>
     </Link>
@@ -406,8 +406,6 @@ function LeagueCard({ league }: { league: FantasyLeague }) {
 function CreateLeagueModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
   const [leagueName, setLeagueName] = useState('')
   const [maxTeams, setMaxTeams] = useState(10)
-  const [entryToken, setEntryToken] = useState<EntryToken>('OGUN')
-  const [entryFee, setEntryFee] = useState(100)
   const [submitting, setSubmitting] = useState(false)
 
   const submit = async () => {
@@ -418,7 +416,7 @@ function CreateLeagueModal({ onClose, onCreated }: { onClose: () => void; onCrea
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ leagueName, maxTeams, entryToken, entryFee }),
+        body: JSON.stringify({ leagueName, maxTeams, entryToken: 'OGUN', entryFee: 0 }),
       })
       const d = await r.json()
       if (!r.ok) return toast.error(d.error || 'Failed to create')
@@ -463,41 +461,8 @@ function CreateLeagueModal({ onClose, onCreated }: { onClose: () => void; onCrea
           </select>
         </label>
 
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          <label className="block">
-            <span className="text-xs text-gray-400">Entry Token</span>
-            <select
-              value={entryToken}
-              onChange={e => setEntryToken(e.target.value as EntryToken)}
-              className="w-full mt-1 bg-gray-1A border border-gray-800 rounded px-3 py-2 text-sm"
-            >
-              {Object.keys(TOKEN_CONFIG).map(token => {
-                const live = isTokenLive(token)
-                const info = TOKEN_INFO[token as keyof typeof TOKEN_INFO]
-                return (
-                  <option key={token} value={token} disabled={!live} className="bg-gray-900">
-                    {info?.icon || ''} {TOKEN_CONFIG[token]?.label || token}{!live ? ' (coming)' : ''}
-                  </option>
-                )
-              })}
-            </select>
-          </label>
-          <label className="block">
-            <span className="text-xs text-gray-400">Entry Fee</span>
-            <input
-              type="number"
-              value={entryFee}
-              onChange={e => setEntryFee(Number(e.target.value))}
-              min={1}
-              className="w-full mt-1 bg-gray-1A border border-gray-800 rounded px-3 py-2 text-sm"
-            />
-          </label>
-        </div>
-
         <div className="text-[11px] text-gray-500 mb-4 bg-black/40 border border-gray-800 rounded p-3">
-          Default prize split: 1st 60% · 2nd 25% · 3rd 10% · 5% platform fee · 0.05% SoundChain fee<br />
-          Smart contract: <code className="text-cyan-400">FantasyLeagueEscrow.sol</code> (deployment pending)<br />
-          Phase 1 ships off-chain escrow via arena backend wallet — same pattern as challenge matches.
+          Free-to-play league. Champion gets a trophy NFT + leaderboard pin. No entry fees, no prize pools — bragging rights and platform glory only.
         </div>
 
         <button
