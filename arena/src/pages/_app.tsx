@@ -1,20 +1,34 @@
 import type { AppProps } from 'next/app'
 import Head from 'next/head'
+import { Titillium_Web } from 'next/font/google'
 import '../styles/globals.css'
+
+const titillium = Titillium_Web({
+  subsets: ['latin'],
+  weight: ['300', '400', '600', '700', '900'],
+  variable: '--font-titillium',
+  display: 'swap',
+})
 
 export default function ArenaApp({ Component, pageProps }: AppProps) {
   return (
     <>
       <Head>
-        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
-        <meta name="theme-color" content="#0a0a0f" />
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1"
+        />
+        <meta name="theme-color" content="#fafafa" media="(prefers-color-scheme: light)" />
+        <meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme: dark)" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Arena" />
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/arena-icon-192.png" />
       </Head>
-      <Component {...pageProps} />
+      <div className={`${titillium.variable} font-sans`}>
+        <Component {...pageProps} />
+      </div>
     </>
   )
 }

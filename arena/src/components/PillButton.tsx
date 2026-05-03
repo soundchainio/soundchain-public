@@ -14,11 +14,11 @@ interface PillButtonProps {
 
 const variants: Record<Variant, string> = {
   primary:
-    'text-white bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 shadow-[0_0_32px_rgba(168,85,247,0.35)] hover:shadow-[0_0_42px_rgba(168,85,247,0.5)]',
+    'text-white bg-arena-red hover:bg-arena-red-soft shadow-md hover:shadow-lg hover:shadow-arena-red/30 transition',
   secondary:
-    'text-cyan-300 border border-cyan-500/40 hover:bg-cyan-500/10 hover:border-cyan-400 hover:shadow-[0_0_18px_rgba(34,211,238,0.35)]',
+    'text-arena-red border border-arena-red/40 hover:bg-arena-red hover:text-white transition',
   ghost:
-    'text-gray-300 border border-arena-border hover:bg-white/5 hover:text-white',
+    'text-arena-muted-l dark:text-arena-muted-d border border-arena-border-l dark:border-arena-border-d hover:border-arena-red hover:text-arena-red transition',
 }
 
 export function PillButton({
@@ -29,7 +29,7 @@ export function PillButton({
   className = '',
   onClick,
 }: PillButtonProps) {
-  const classes = `inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full font-bold text-sm transition ${variants[variant]} ${className}`
+  const classes = `inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full font-bold text-sm ${variants[variant]} ${className}`
 
   if (href) {
     if (external) {

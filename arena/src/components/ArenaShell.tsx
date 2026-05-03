@@ -1,75 +1,184 @@
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { ReactNode } from 'react'
-import { Trophy, Swords, Home, ExternalLink } from 'lucide-react'
+import { ReactNode, useEffect, useState } from 'react'
+import {
+  Trophy,
+  Swords,
+  Home,
+  ExternalLink,
+  Sun,
+  Moon,
+  Activity,
+  Flag,
+  Menu,
+  X,
+} from 'lucide-react'
 
 interface ArenaShellProps {
   children: ReactNode
 }
 
 const NAV = [
-  { href: '/', label: 'Hub', icon: Home },
-  { href: '/fantasy', label: 'Fantasy', icon: Trophy },
-  { href: '/picks', label: 'Picks', icon: Swords },
+  { href: '/',         label: 'Hub',     icon: Home },
+  { href: '/live',     label: 'Live',    icon: Activity, accent: true },
+  { href: '/nba',      label: 'NBA',     icon: Trophy },
+  { href: '/nhl',      label: 'NHL',     icon: Trophy },
+  { href: '/mlb',      label: 'MLB',     icon: Trophy },
+  { href: '/f1',       label: 'F1',      icon: Flag },
+  { href: '/fantasy',  label: 'Fantasy', icon: Trophy },
+  { href: '/picks',    label: 'Picks',   icon: Swords },
 ]
+
+function ThemeToggle() {
+  const [isDark, setIsDark] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+    setIsDark(document.documentElement.classList.contains('dark'))
+  }, [])
+
+  const toggle = () => {
+    const next = !isDark
+    setIsDark(next)
+    if (next) {
+      document.documentElement.classList.add('dark')
+      try { localStorage.setItem('arenaTheme', 'dark') } catch (_) {}
+    } else {
+      document.documentElement.classList.remove('dark')
+      try { localStorage.setItem('arenaTheme', 'light') } catch (_) {}
+    }
+  }
+
+  // Don't render icon until mounted to avoid hydration mismatch
+  return (
+    <button
+      onClick={toggle}
+      aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+      className="flex items-center justify-center w-9 h-9 rounded-full border border-arena-border-l dark:border-arena-border-d hover:bg-arena-red/10 hover:border-arena-red transition"
+    >
+      {mounted ? (
+        isDark ? <Sun className="w-4 h-4 text-arena-yellow" /> : <Moon className="w-4 h-4 text-arena-text-l" />
+      ) : (
+        <span className="w-4 h-4" />
+      )}
+    </button>
+  )
+}
 
 export function ArenaShell({ children }: ArenaShellProps) {
   const router = useRouter()
+  const [menuOpen, setMenuOpen] = useState(false)
+
   const isActive = (href: string) =>
     href === '/' ? router.pathname === '/' : router.pathname.startsWith(href)
 
   return (
-    <div className="min-h-screen bg-arena-bg text-white flex flex-col">
+    <div className="min-h-screen flex flex-col bg-arena-paper dark:bg-arena-carbon text-arena-text-l dark:text-arena-text-d">
       {/* Top sticky nav */}
-      <header className="sticky top-0 z-50 arena-safe-top bg-black/80 backdrop-blur-xl border-b border-arena-border">
-        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
-          <Link href="/" className="flex items-center gap-2 group">
-            <span className="text-xs font-black tracking-[0.3em] arena-hologram-text">
-              SOUNDCHAIN ARENA
+      <header className="sticky top-0 z-50 arena-safe-top bg-arena-paper/85 dark:bg-arena-carbon/85 backdrop-blur-xl border-b border-arena-border-l dark:border-arena-border-d">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+          {/* Wordmark */}
+          <Link href="/" className="flex items-center gap-2 flex-shrink-0">
+            <span className="text-xs sm:text-sm font-black tracking-[0.25em] arena-hologram-text">
+              ARENA
+            </span>
+            <span className="hidden sm:inline text-[10px] font-mono tracking-widest text-arena-muted-l dark:text-arena-muted-d">
+              · soundchain
             </span>
           </Link>
 
-          <nav className="flex items-center gap-1 sm:gap-2">
-            {NAV.map(({ href, label, icon: Icon }) => (
+          {/* Desktop nav */}
+          <nav className="hidden lg:flex items-center gap-1">
+            {NAV.map(({ href, label, icon: Icon, accent }) => (
               <Link
                 key={href}
                 href={href}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition ${
                   isActive(href)
-                    ? 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/40'
-                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                    ? 'bg-arena-red text-white shadow-sm'
+                    : accent
+                      ? 'text-arena-red border border-arena-red/40 hover:bg-arena-red hover:text-white'
+                      : 'text-arena-muted-l dark:text-arena-muted-d hover:text-arena-text-l dark:hover:text-arena-text-d hover:bg-arena-border-l dark:hover:bg-arena-border-d'
                 }`}
               >
                 <Icon className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">{label}</span>
+                <span>{label}</span>
+                {accent && isActive(href) === false && <span className="arena-live-dot ml-0.5" />}
               </Link>
             ))}
+          </nav>
+
+          {/* Right cluster */}
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
             <a
               href="https://soundchain.io"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-gray-400 hover:text-white hover:bg-white/5 transition border border-arena-border"
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-arena-muted-l dark:text-arena-muted-d hover:text-arena-text-l dark:hover:text-arena-text-d border border-arena-border-l dark:border-arena-border-d hover:border-arena-red transition"
             >
               <ExternalLink className="w-3.5 h-3.5" />
               <span className="hidden md:inline">soundchain.io</span>
             </a>
-          </nav>
+            {/* Mobile menu trigger */}
+            <button
+              onClick={() => setMenuOpen((m) => !m)}
+              aria-label="Toggle menu"
+              className="lg:hidden flex items-center justify-center w-9 h-9 rounded-full border border-arena-border-l dark:border-arena-border-d hover:bg-arena-red/10 transition"
+            >
+              {menuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+            </button>
+          </div>
         </div>
+
+        {/* Mobile nav drawer */}
+        {menuOpen && (
+          <nav className="lg:hidden border-t border-arena-border-l dark:border-arena-border-d bg-arena-paper dark:bg-arena-carbon">
+            <div className="max-w-7xl mx-auto px-4 py-3 grid grid-cols-3 gap-2">
+              {NAV.map(({ href, label, icon: Icon, accent }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  onClick={() => setMenuOpen(false)}
+                  className={`flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg text-xs font-bold transition ${
+                    isActive(href)
+                      ? 'bg-arena-red text-white'
+                      : accent
+                        ? 'text-arena-red border border-arena-red/40'
+                        : 'text-arena-muted-l dark:text-arena-muted-d border border-arena-border-l dark:border-arena-border-d'
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  <span>{label}</span>
+                </Link>
+              ))}
+              <a
+                href="https://soundchain.io"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="col-span-3 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg text-xs font-bold text-arena-muted-l dark:text-arena-muted-d border border-arena-border-l dark:border-arena-border-d"
+              >
+                <ExternalLink className="w-3.5 h-3.5" /> soundchain.io
+              </a>
+            </div>
+          </nav>
+        )}
       </header>
 
       <main className="flex-1">{children}</main>
 
-      <footer className="arena-safe-bottom border-t border-arena-border bg-black/40 mt-12">
-        <div className="max-w-6xl mx-auto px-4 py-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-500">
+      <footer className="arena-safe-bottom border-t border-arena-border-l dark:border-arena-border-d bg-arena-paper dark:bg-arena-carbon mt-12">
+        <div className="max-w-7xl mx-auto px-4 py-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-arena-muted-l dark:text-arena-muted-d">
           <div className="flex items-center gap-3">
             <span className="font-mono tracking-wider">© SoundChain Arena</span>
             <span>·</span>
-            <span>Free-to-play. Bragging rights only.</span>
+            <span>Free-to-play. Real stats. Bragging rights.</span>
           </div>
           <div className="flex items-center gap-3">
-            <a href="https://soundchain.io" className="hover:text-white transition">soundchain.io</a>
+            <a href="https://soundchain.io" className="hover:text-arena-red transition">soundchain.io</a>
             <span>·</span>
-            <a href="https://soundchain.io/feedback" className="hover:text-white transition">Feedback</a>
+            <a href="https://soundchain.io/feedback" className="hover:text-arena-red transition">Feedback</a>
           </div>
         </div>
       </footer>

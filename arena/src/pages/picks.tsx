@@ -33,24 +33,23 @@ export default function ArenaPicksPaused() {
             Arena Picks is paused
           </h1>
 
-          <p className="text-sm text-gray-400 leading-relaxed">
-            Real-money sports picks are paused while we focus on music streaming, SCID
-            royalties, and on-platform rewards. Fantasy leagues and friendly 1v1
-            console challenges are still live for fun.
+          <p className="text-sm text-arena-muted-l dark:text-arena-muted-d leading-relaxed">
+            Real-money sports picks are paused while we focus on real stats, music
+            streaming, and on-platform utility. Free-to-play fantasy + 1v1 console
+            challenges + the live cross-sport scoreboard are still live.
           </p>
 
           <div className="flex flex-col gap-3 pt-2">
-            <PillButton href="/fantasy" variant="primary">
-              FANTASY LEAGUES →
+            <PillButton href="/live" variant="primary">
+              LIVE SCOREBOARD →
             </PillButton>
             <PillButton href="/" variant="secondary">
               BACK TO ARENA
             </PillButton>
           </div>
 
-          <p className="text-[10px] font-mono text-gray-600 tracking-wider pt-4">
-            Streaming rewards · SCID royalties · OGUN utility — uninterrupted on
-            soundchain.io.
+          <p className="text-[10px] font-mono text-arena-muted-l dark:text-arena-muted-d tracking-wider pt-4">
+            Streaming rewards · SCID royalties · OGUN utility — uninterrupted on soundchain.io.
           </p>
         </div>
       </ArenaShell>

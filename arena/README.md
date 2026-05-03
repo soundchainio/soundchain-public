@@ -9,11 +9,31 @@ Native shells (Capacitor): `io.soundchain.arena` (deferred — see Phase 3 below
 
 ## What lives here
 
-- **Hub** — `/` Arena landing: fantasy + 1v1 challenges entry points
+### Real stats (live data, auto-refresh every 60s)
+- **Hub** — `/` Arena landing
+- **Live Scoreboard** — `/live` cross-sport aggregator (RedZone-style data dashboard)
+- **NBA Playoffs** — `/nba` live scores + Eastern/Western standings
+- **NHL Playoffs** — `/nhl` live Stanley Cup scores + standings (with OT losses column)
+- **MLB** — `/mlb` daily slate + division standings
+- **F1** — `/f1` next race countdown + driver/constructor standings + last race podium
+
+### Free-to-play layer
 - **Fantasy** — `/fantasy` league discovery, `/fantasy/[id]` league detail
 - **Picks** — `/picks` paused splash (real-money wagering retired May 2, 2026 platform-wide)
 
-All features are **free-to-play**. No entry fees, no payouts, no wagering. Bragging rights, leaderboards, trophy NFTs only.
+### Brand identity
+- **Light by default**, dark mode toggle pill in nav (persisted to localStorage)
+- **Titillium Web** font (the F1 font; clean motorsport-grade geometric sans)
+- **Racing Red `#dc2626` + Hot Orange `#f97316` + Checker Yellow `#facc15`** accent palette
+- Visually divorced from soundchain.io's music-side cyan/purple/pink hologram
+
+All features are **free-to-play**. No entry fees, no payouts, no wagering. Real stats, bragging rights, leaderboards, soulbound trophy NFTs only.
+
+## Data sources (all FREE, no API keys)
+
+- **ESPN public scoreboard + standings** — NBA, NHL, MLB, soccer (EPL/MLS), MMA/UFC
+- **Jolpica-F1** — drop-in Ergast successor, actively maintained, free
+- (Phase 2) **OpenF1** — real-time F1 telemetry (car position, speed, RPM, sectors)
 
 ---
 
