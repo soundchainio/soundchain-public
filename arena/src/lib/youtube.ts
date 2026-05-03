@@ -44,13 +44,14 @@ export function getBoxingChannels(): { id: string; name: string }[] {
 }
 
 /** Builds privacy-enhanced embed URL with autoplay + JS API enabled. */
-export function buildEmbedUrl(videoId: string, opts: { autoplay?: boolean } = {}): string {
+export function buildEmbedUrl(videoId: string, opts: { autoplay?: boolean; mute?: boolean } = {}): string {
   const params = new URLSearchParams({
     rel: '0',
     modestbranding: '1',
     playsinline: '1',
   })
   if (opts.autoplay) params.set('autoplay', '1')
+  if (opts.mute) params.set('mute', '1')
   return `https://www.youtube-nocookie.com/embed/${videoId}?${params.toString()}`
 }
 

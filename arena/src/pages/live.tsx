@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { Activity, Tv } from 'lucide-react'
 import { ArenaShell } from '@/components/ArenaShell'
 import { GameCard } from '@/components/GameCard'
+import { GameDetailModal } from '@/components/GameDetailModal'
 import { fetchScoreboard, todayYmd, type EspnGame, type SportKey } from '@/lib/espn'
 
 interface SportBucket {
@@ -26,6 +27,7 @@ export default function LiveScoreboardPage() {
   const [buckets, setBuckets] = useState<SportBucket[]>([])
   const [loaded, setLoaded] = useState(false)
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
+  const [selected, setSelected] = useState<{ game: EspnGame; sport: SportKey } | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -136,7 +138,7 @@ export default function LiveScoreboardPage() {
                     <span>{g._bucket.emoji}</span>
                     <span>{g._bucket.label}</span>
                   </div>
-                  <GameCard game={g} />
+                  <GameCard game={g} onSelect={(game) => setSelected({ game, sport: g._bucket.sport })} />
                 </div>
               ))}
             </div>
@@ -171,7 +173,13 @@ export default function LiveScoreboardPage() {
                 </span>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {b.games.map((g) => <GameCard key={g.id} game={g} />)}
+                {b.games.map((g) => (
+                  <GameCard
+                    key={g.id}
+                    game={g}
+                    onSelect={(game) => setSelected({ game, sport: b.sport })}
+                  />
+                ))}
               </div>
             </div>
           ))}
@@ -181,6 +189,14 @@ export default function LiveScoreboardPage() {
           Data: ESPN public scoreboard · F1 via Jolpica · Auto-refresh 60s · No bets, no wagers, real stats only.
         </div>
       </ArenaShell>
+
+      {selected && (
+        <GameDetailModal
+          sport={selected.sport}
+          game={selected.game}
+          onClose={() => setSelected(null)}
+        />
+      )}
     </>
   )
 }

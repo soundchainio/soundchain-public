@@ -6,7 +6,7 @@ import {
   type EspnGameSummary,
   type SportKey,
 } from '@/lib/espn'
-import { relativeAgo, type YouTubeVideo } from '@/lib/youtube'
+import { buildEmbedUrl, relativeAgo, type YouTubeVideo } from '@/lib/youtube'
 import { PlayerHeadshot } from './PlayerHeadshot'
 import { HighlightModal } from './HighlightModal'
 
@@ -446,6 +446,7 @@ function GameHighlights({ sport, game }: { sport: SportKey; game: EspnGame }) {
   const [allVideos, setAllVideos] = useState<YouTubeVideo[]>([])
   const [loaded, setLoaded] = useState(false)
   const [active, setActive] = useState<YouTubeVideo | null>(null)
+  const [inlineVideo, setInlineVideo] = useState<YouTubeVideo | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -468,22 +469,33 @@ function GameHighlights({ sport, game }: { sport: SportKey; game: EspnGame }) {
 
   const { matched, fallback, mode } = useMemo(() => filterVideosForGame(allVideos, game), [allVideos, game])
   const videos = matched.length > 0 ? matched : fallback
+
+  // Auto-pick first video for inline autoplay (muted) once load completes.
+  // Resets when the underlying list changes (different game).
+  useEffect(() => {
+    if (videos.length > 0) setInlineVideo(videos[0])
+    else setInlineVideo(null)
+  }, [videos])
+
   const headerLabel =
     mode === 'matched'
-      ? `${matched.length} highlight${matched.length === 1 ? '' : 's'} for this matchup`
+      ? `${matched.length} highlight${matched.length === 1 ? '' : 's'} for this matchup · autoplaying muted`
       : loaded
-        ? 'Latest from the league channel'
+        ? 'Latest from the league channel · autoplaying muted'
         : ''
 
   if (!loaded) {
     return (
-      <div className="flex gap-3 overflow-hidden">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <div
-            key={i}
-            className="flex-shrink-0 w-64 aspect-video rounded-xl bg-arena-card dark:bg-arena-surface border border-arena-border-l dark:border-arena-border-d animate-pulse"
-          />
-        ))}
+      <div className="space-y-3">
+        <div className="aspect-video rounded-xl bg-arena-card dark:bg-arena-surface border border-arena-border-l dark:border-arena-border-d animate-pulse" />
+        <div className="flex gap-3 overflow-hidden">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div
+              key={i}
+              className="flex-shrink-0 w-40 aspect-video rounded-lg bg-arena-card dark:bg-arena-surface border border-arena-border-l dark:border-arena-border-d animate-pulse"
+            />
+          ))}
+        </div>
       </div>
     )
   }
@@ -496,6 +508,8 @@ function GameHighlights({ sport, game }: { sport: SportKey; game: EspnGame }) {
     )
   }
 
+  const remaining = inlineVideo ? videos.filter((v) => v.id !== inlineVideo.id) : videos
+
   return (
     <>
       {headerLabel && (
@@ -503,42 +517,73 @@ function GameHighlights({ sport, game }: { sport: SportKey; game: EspnGame }) {
           {headerLabel}
         </p>
       )}
-      <div
-        className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 snap-x snap-mandatory"
-        style={{ scrollbarWidth: 'thin' }}
-      >
-        {videos.map((v) => (
-          <button
-            key={v.id}
-            type="button"
-            onClick={() => setActive(v)}
-            className="group relative flex-shrink-0 w-64 sm:w-72 rounded-xl overflow-hidden border border-arena-border-l dark:border-arena-border-d bg-arena-card dark:bg-arena-surface hover:border-arena-red transition-colors snap-start text-left"
-          >
-            <div className="relative aspect-video bg-arena-bg-l dark:bg-arena-bg-d overflow-hidden">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={v.thumbnail}
-                alt={v.title}
-                loading="lazy"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                onError={(e) => ((e.target as HTMLImageElement).style.opacity = '0')}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-12 h-12 rounded-full bg-arena-red/90 group-hover:bg-arena-red flex items-center justify-center shadow-lg backdrop-blur-sm">
-                  <Play className="w-5 h-5 text-white fill-white ml-0.5" />
+
+      {/* Inline player — autoplay muted on open. Tap "Open with sound" to fullscreen w/ audio. */}
+      {inlineVideo && (
+        <div className="mb-3 rounded-xl overflow-hidden border border-arena-border-l dark:border-arena-border-d bg-black">
+          <div className="relative aspect-video">
+            <iframe
+              key={inlineVideo.id}
+              src={buildEmbedUrl(inlineVideo.id, { autoplay: true, mute: true })}
+              title={inlineVideo.title}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+              className="absolute inset-0 w-full h-full"
+            />
+          </div>
+          <div className="px-3 py-2 flex items-center justify-between gap-3 bg-arena-card dark:bg-arena-surface">
+            <p className="flex-1 min-w-0 text-[12px] font-bold line-clamp-1 leading-tight">{inlineVideo.title}</p>
+            <button
+              type="button"
+              onClick={() => setActive(inlineVideo)}
+              className="flex-shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-mono font-bold tracking-wider text-arena-red border border-arena-red/40 hover:bg-arena-red hover:text-white transition"
+              aria-label="Open fullscreen with sound"
+            >
+              🔊 Sound
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Thumbnail rail — remaining videos. Tap to swap into inline player. */}
+      {remaining.length > 0 && (
+        <div
+          className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 snap-x snap-mandatory"
+          style={{ scrollbarWidth: 'thin' }}
+        >
+          {remaining.map((v) => (
+            <button
+              key={v.id}
+              type="button"
+              onClick={() => setInlineVideo(v)}
+              className="group relative flex-shrink-0 w-44 sm:w-52 rounded-lg overflow-hidden border border-arena-border-l dark:border-arena-border-d bg-arena-card dark:bg-arena-surface hover:border-arena-red transition-colors snap-start text-left"
+            >
+              <div className="relative aspect-video bg-arena-bg-l dark:bg-arena-bg-d overflow-hidden">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={v.thumbnail}
+                  alt={v.title}
+                  loading="lazy"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  onError={(e) => ((e.target as HTMLImageElement).style.opacity = '0')}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-9 h-9 rounded-full bg-arena-red/90 group-hover:bg-arena-red flex items-center justify-center shadow-lg backdrop-blur-sm">
+                    <Play className="w-4 h-4 text-white fill-white ml-0.5" />
+                  </div>
+                </div>
+                <div className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 rounded bg-black/70 text-white text-[9px] font-mono">
+                  {relativeAgo(v.publishedAt)}
                 </div>
               </div>
-              <div className="absolute bottom-2 right-2 px-1.5 py-0.5 rounded bg-black/70 text-white text-[10px] font-mono">
-                {relativeAgo(v.publishedAt)}
+              <div className="p-2">
+                <p className="text-[11px] font-bold line-clamp-2 leading-tight">{v.title}</p>
               </div>
-            </div>
-            <div className="p-2.5">
-              <p className="text-[12px] font-bold line-clamp-2 leading-tight">{v.title}</p>
-            </div>
-          </button>
-        ))}
-      </div>
+            </button>
+          ))}
+        </div>
+      )}
 
       {active && (
         <HighlightModal videoId={active.id} title={active.title} onClose={() => setActive(null)} />
