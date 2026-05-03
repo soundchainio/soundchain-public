@@ -3,7 +3,8 @@ import { ReactNode, useEffect, useState } from 'react'
 import { ArenaShell } from './ArenaShell'
 import { GameCard } from './GameCard'
 import { StandingsTable } from './StandingsTable'
-import { fetchScoreboard, fetchStandings, todayYmd, type EspnGame, type EspnStandingsGroup, type SportKey } from '@/lib/espn'
+import { LeadersBoard } from './LeadersBoard'
+import { fetchScoreboard, fetchStandings, todayYmd, SPORT_LEADER_CATEGORIES, type EspnGame, type EspnStandingsGroup, type SportKey } from '@/lib/espn'
 
 interface SportHubTemplateProps {
   sport: SportKey
@@ -144,6 +145,16 @@ export function SportHubTemplate(props: SportHubTemplateProps) {
             </div>
           )}
         </section>
+
+        {/* Stat Leaders — only when ESPN exposes them for this sport */}
+        {SPORT_LEADER_CATEGORIES[sport] && (
+          <section className="max-w-7xl mx-auto px-4 py-8 sm:py-10">
+            <h2 className="text-xs font-black uppercase tracking-[0.3em] text-arena-muted-l dark:text-arena-muted-d mb-4">
+              Stat Leaders
+            </h2>
+            <LeadersBoard sport={sport} seasonType={highlightSeasonType} topN={5} />
+          </section>
+        )}
 
         {extraSection && (
           <section className="max-w-7xl mx-auto px-4 py-6">{extraSection}</section>

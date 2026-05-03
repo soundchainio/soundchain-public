@@ -197,3 +197,122 @@ export function todayYmd(): string {
   const d = new Date()
   return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`
 }
+
+// ─── Player headshots + stat leaders ──────────────────────────────────────
+
+export interface EspnAthleteRef {
+  id: string
+  fullName: string
+  shortName?: string
+  jersey?: string
+  position?: string                 // "PG" / "C" / "1B" / "QB"
+  headshotUrl?: string              // ESPN CDN
+  team?: { id: string; abbr: string; logo?: string; color?: string }
+}
+
+export interface EspnLeaderCategory {
+  name: string                      // "points" | "rebounds" | ...
+  displayName: string               // "Points" | "Rebounds Per Game"
+  abbreviation: string              // "PTS" | "REB"
+  leaders: { athlete: EspnAthleteRef; value: number; displayValue: string }[]
+}
+
+/** Stable CDN pattern. Works across all major leagues ESPN covers. */
+export function headshotUrl(league: SportKey | string, athleteId: string | number): string {
+  const slug = LEAGUE_HEADSHOT_SLUG[league as SportKey] ?? String(league)
+  return `https://a.espncdn.com/i/headshots/${slug}/players/full/${athleteId}.png`
+}
+
+const LEAGUE_HEADSHOT_SLUG: Partial<Record<SportKey, string>> = {
+  nba: 'nba',
+  wnba: 'wnba',
+  nhl: 'nhl',
+  mlb: 'mlb',
+  nfl: 'nfl',
+  ncaaMens: 'mens-college-basketball',
+  ncaaFootball: 'college-football',
+  mma: 'mma',
+  soccerEpl: 'soccer',
+  soccerMls: 'soccer',
+}
+
+/** Per-sport stat leader categories we render. Order = render order. */
+export const SPORT_LEADER_CATEGORIES: Partial<Record<SportKey, string[]>> = {
+  nba: ['points', 'rebounds', 'assists'],
+  wnba: ['points', 'rebounds', 'assists'],
+  nhl: ['points', 'goals', 'assists'],
+  mlb: ['battingAverage', 'homeRuns', 'RBIs'],
+  nfl: ['passingYards', 'rushingYards', 'receivingYards'],
+}
+
+/** Season leaders. Returns the categories listed in SPORT_LEADER_CATEGORIES,
+ *  in that order. Each category gets up to `topN` athletes (default 5). */
+export async function fetchLeaders(
+  sport: SportKey,
+  opts: { topN?: number; seasonType?: 1 | 2 | 3 } = {}
+): Promise<EspnLeaderCategory[]> {
+  const wanted = new Set(SPORT_LEADER_CATEGORIES[sport] ?? [])
+  if (wanted.size === 0) return []
+
+  const params = new URLSearchParams()
+  if (opts.seasonType) params.set('seasontype', String(opts.seasonType))
+  const qs = params.toString() ? `?${params.toString()}` : ''
+  const url = `${ESPN_BASE}/${SPORT_PATHS[sport]}/leaders${qs}`
+
+  const res = await fetch(url, { next: { revalidate: 600 } as any })
+  if (!res.ok) throw new Error(`ESPN ${sport} leaders ${res.status}`)
+  const data = await res.json()
+
+  // ESPN nests cats under `leaders` (top-level) or under `categories`.
+  const rawCats: any[] = Array.isArray(data?.leaders)
+    ? data.leaders
+    : Array.isArray(data?.categories)
+      ? data.categories
+      : []
+
+  const topN = opts.topN ?? 5
+  const orderedNames = SPORT_LEADER_CATEGORIES[sport] ?? []
+
+  const byName = new Map<string, any>()
+  for (const c of rawCats) {
+    const key = c?.name ?? c?.shortDisplayName ?? c?.abbreviation
+    if (key) byName.set(key, c)
+  }
+
+  return orderedNames
+    .map((name) => byName.get(name))
+    .filter(Boolean)
+    .map((c: any): EspnLeaderCategory => {
+      const leaders = (c.leaders ?? []).slice(0, topN).map((l: any) => {
+        const a = l.athlete ?? l.Athlete ?? {}
+        const team = a.team ?? l.team
+        const athleteId = String(a.id ?? '')
+        return {
+          athlete: {
+            id: athleteId,
+            fullName: a.fullName ?? a.displayName ?? `${a.firstName ?? ''} ${a.lastName ?? ''}`.trim(),
+            shortName: a.shortName,
+            jersey: a.jersey,
+            position: a.position?.abbreviation ?? a.position,
+            headshotUrl: athleteId ? headshotUrl(sport, athleteId) : undefined,
+            team: team
+              ? {
+                  id: String(team.id ?? ''),
+                  abbr: team.abbreviation ?? '',
+                  logo: team.logos?.[0]?.href ?? team.logo,
+                  color: team.color,
+                }
+              : undefined,
+          },
+          value: typeof l.value === 'number' ? l.value : Number(l.value) || 0,
+          displayValue: l.displayValue ?? String(l.value ?? ''),
+        }
+      })
+      return {
+        name: c.name ?? c.shortDisplayName ?? '',
+        displayName: c.displayName ?? c.shortDisplayName ?? c.name ?? '',
+        abbreviation: c.abbreviation ?? c.shortDisplayName ?? c.name ?? '',
+        leaders,
+      }
+    })
+}
