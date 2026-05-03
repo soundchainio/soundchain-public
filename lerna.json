@@ -1,5 +1,5 @@
 {
-  "packages": ["api", "web"],
+  "packages": ["api", "web", "arena"],
   "version": "1.0.0",
   "npmClient": "yarn"
 }
