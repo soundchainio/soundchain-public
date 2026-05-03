@@ -12,16 +12,17 @@ export function HighlightModal({ videoId, title, onClose }: HighlightModalProps)
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
     window.addEventListener('keydown', handler)
+    const prev = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     return () => {
       window.removeEventListener('keydown', handler)
-      document.body.style.overflow = ''
+      document.body.style.overflow = prev
     }
   }, [onClose])
 
   return (
     <div
-      className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4"
+      className="fixed inset-0 z-[180] bg-black/90 flex items-center justify-center p-4"
       onClick={onClose}
       role="dialog"
       aria-modal="true"

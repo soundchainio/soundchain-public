@@ -2,6 +2,7 @@ import Head from 'next/head'
 import { ReactNode, useEffect, useState } from 'react'
 import { ArenaShell } from './ArenaShell'
 import { GameCard } from './GameCard'
+import { GameDetailModal } from './GameDetailModal'
 import { StandingsTable } from './StandingsTable'
 import { LeadersBoard } from './LeadersBoard'
 import { HighlightsStrip } from './HighlightsStrip'
@@ -33,6 +34,7 @@ export function SportHubTemplate(props: SportHubTemplateProps) {
   const [standings, setStandings] = useState<EspnStandingsGroup[]>([])
   const [loaded, setLoaded] = useState(false)
   const [err, setErr] = useState<string | null>(null)
+  const [selectedGame, setSelectedGame] = useState<EspnGame | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -120,7 +122,7 @@ export function SportHubTemplate(props: SportHubTemplateProps) {
                 <span className="arena-live-dot" /> Live now
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {liveGames.map((g) => <GameCard key={g.id} game={g} />)}
+                {liveGames.map((g) => <GameCard key={g.id} game={g} onSelect={setSelectedGame} />)}
               </div>
             </div>
           )}
@@ -131,7 +133,7 @@ export function SportHubTemplate(props: SportHubTemplateProps) {
                 Upcoming
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {upcomingGames.map((g) => <GameCard key={g.id} game={g} />)}
+                {upcomingGames.map((g) => <GameCard key={g.id} game={g} onSelect={setSelectedGame} />)}
               </div>
             </div>
           )}
@@ -142,7 +144,7 @@ export function SportHubTemplate(props: SportHubTemplateProps) {
                 Final
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {finalGames.map((g) => <GameCard key={g.id} game={g} />)}
+                {finalGames.map((g) => <GameCard key={g.id} game={g} onSelect={setSelectedGame} />)}
               </div>
             </div>
           )}
@@ -200,6 +202,14 @@ export function SportHubTemplate(props: SportHubTemplateProps) {
           Data: ESPN public scoreboard · Auto-refresh every 60s · No bets, no wagers, real stats only.
         </div>
       </ArenaShell>
+
+      {selectedGame && (
+        <GameDetailModal
+          sport={sport}
+          game={selectedGame}
+          onClose={() => setSelectedGame(null)}
+        />
+      )}
     </>
   )
 }

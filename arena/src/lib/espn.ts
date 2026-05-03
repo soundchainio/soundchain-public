@@ -316,3 +316,211 @@ export async function fetchLeaders(
       }
     })
 }
+
+// ─── Per-game summary (box score, leaders, plays, recap) ─────────────────
+
+export interface EspnTeamStat {
+  label: string                     // "FG" / "REB" / "AST"
+  displayName: string               // "Field Goals"
+  displayValue: string              // "37-89"
+}
+
+export interface EspnBoxscoreTeam {
+  team: { id: string; abbr: string; displayName: string; logo?: string; color?: string }
+  homeAway: 'home' | 'away'
+  stats: EspnTeamStat[]
+}
+
+export interface EspnLineScore {
+  period: number                    // 1, 2, 3, 4 (or inning #)
+  label: string                     // "Q1" / "1st" / "1"
+  away: string
+  home: string
+}
+
+export interface EspnGameLeaderRow {
+  category: string                  // "points"
+  categoryDisplay: string           // "Points"
+  abbr: string                      // "PTS"
+  away?: { athlete: EspnAthleteRef; value: number; displayValue: string }
+  home?: { athlete: EspnAthleteRef; value: number; displayValue: string }
+}
+
+export interface EspnScoringPlay {
+  id: string
+  text: string
+  period: number
+  clock?: string
+  teamAbbr?: string
+  teamColor?: string
+  scoreValue?: number
+  awayScore?: number
+  homeScore?: number
+}
+
+export interface EspnGameSummary {
+  game: EspnGame
+  linescores: EspnLineScore[]
+  boxscoreTeams: EspnBoxscoreTeam[]
+  leaders: EspnGameLeaderRow[]
+  scoringPlays: EspnScoringPlay[]
+  article?: { headline: string; description: string }
+}
+
+function periodLabel(sport: SportKey, n: number): string {
+  if (sport === 'mlb') return `${n}`
+  if (sport === 'nhl') return `P${n}`
+  if (sport === 'nfl' || sport === 'ncaaFootball') return `Q${n}`
+  return `Q${n}`
+}
+
+/** Per-game summary: boxscore + leaders + scoring plays + recap.
+ *  No API key required. Refreshes ESPN's `summary` endpoint. */
+export async function fetchGameSummary(sport: SportKey, eventId: string): Promise<EspnGameSummary> {
+  const url = `${ESPN_BASE}/${SPORT_PATHS[sport]}/summary?event=${encodeURIComponent(eventId)}`
+  const res = await fetch(url, { next: { revalidate: 30 } as any })
+  if (!res.ok) throw new Error(`ESPN ${sport} summary ${res.status}`)
+  const data = await res.json()
+
+  // ── Header → game ──
+  const header = data?.header ?? {}
+  const comp = header.competitions?.[0] ?? {}
+  const competitors = (comp.competitors ?? []).map((c: any) => ({
+    id: String(c.id ?? c.team?.id ?? ''),
+    abbr: c.team?.abbreviation ?? '',
+    displayName: c.team?.displayName ?? c.team?.name ?? '',
+    shortDisplayName: c.team?.shortDisplayName,
+    logo: c.team?.logos?.[0]?.href ?? c.team?.logo,
+    score: c.score ?? '0',
+    homeAway: c.homeAway === 'home' ? 'home' : 'away',
+    record: c.records?.[0]?.summary,
+    color: c.team?.color,
+  }))
+
+  const game: EspnGame = {
+    id: String(header.id ?? eventId),
+    date: comp.date ?? header.timeStamp ?? '',
+    shortName: header.shortName ?? '',
+    status: {
+      state: (comp.status?.type?.state ?? 'pre') as EspnGameStatusState,
+      completed: !!comp.status?.type?.completed,
+      description: comp.status?.type?.detail ?? comp.status?.type?.description ?? '',
+      period: comp.status?.period,
+      clock: comp.status?.displayClock,
+      detail: comp.status?.type?.shortDetail,
+    },
+    competitors,
+    venue: comp.venue?.fullName,
+    broadcasts: (comp.broadcasts ?? []).flatMap((b: any) => b.names ?? b.media?.shortName ?? []),
+    seriesSummary: comp.series?.summary,
+  }
+
+  const awayComp = comp.competitors?.find((c: any) => c.homeAway === 'away')
+  const homeComp = comp.competitors?.find((c: any) => c.homeAway === 'home')
+
+  // ── Linescores (Q1/Q2/Q3/Q4 or innings) ──
+  const linescores: EspnLineScore[] = []
+  const awayLine = awayComp?.linescores ?? []
+  const homeLine = homeComp?.linescores ?? []
+  const periods = Math.max(awayLine.length, homeLine.length)
+  for (let i = 0; i < periods; i++) {
+    linescores.push({
+      period: i + 1,
+      label: awayLine[i]?.displayValue ? periodLabel(sport, i + 1) : periodLabel(sport, i + 1),
+      away: String(awayLine[i]?.displayValue ?? awayLine[i]?.value ?? '-'),
+      home: String(homeLine[i]?.displayValue ?? homeLine[i]?.value ?? '-'),
+    })
+  }
+
+  // ── Boxscore teams ──
+  const boxscoreTeams: EspnBoxscoreTeam[] = (data?.boxscore?.teams ?? []).map((bt: any): EspnBoxscoreTeam => {
+    const stats: EspnTeamStat[] = (bt.statistics ?? []).map((s: any) => ({
+      label: s.label ?? s.abbreviation ?? s.name ?? '',
+      displayName: s.displayName ?? s.label ?? s.name ?? '',
+      displayValue: s.displayValue ?? String(s.value ?? ''),
+    }))
+    return {
+      team: {
+        id: String(bt.team?.id ?? ''),
+        abbr: bt.team?.abbreviation ?? '',
+        displayName: bt.team?.displayName ?? bt.team?.name ?? '',
+        logo: bt.team?.logos?.[0]?.href ?? bt.team?.logo,
+        color: bt.team?.color,
+      },
+      homeAway: bt.homeAway === 'home' ? 'home' : 'away',
+      stats,
+    }
+  })
+
+  // ── Leaders (per-game, per-category, home + away side-by-side) ──
+  const rawLeaderTeamBlocks: any[] = Array.isArray(data?.leaders) ? data.leaders : []
+  const leaderMap = new Map<string, EspnGameLeaderRow>()
+  for (const block of rawLeaderTeamBlocks) {
+    const homeAway: 'home' | 'away' = block.homeAway === 'home' ? 'home' : 'away'
+    const cats: any[] = block.leaders ?? []
+    for (const cat of cats) {
+      const key = cat.name ?? cat.shortDisplayName ?? cat.displayName
+      if (!key) continue
+      const top = (cat.leaders ?? [])[0]
+      if (!top) continue
+      const a = top.athlete ?? {}
+      const athleteId = String(a.id ?? '')
+      const team = a.team ?? block.team
+      const athleteRef: EspnAthleteRef = {
+        id: athleteId,
+        fullName: a.fullName ?? a.displayName ?? `${a.firstName ?? ''} ${a.lastName ?? ''}`.trim(),
+        shortName: a.shortName,
+        jersey: a.jersey,
+        position: a.position?.abbreviation ?? a.position,
+        headshotUrl: athleteId ? headshotUrl(sport, athleteId) : undefined,
+        team: team
+          ? {
+              id: String(team.id ?? ''),
+              abbr: team.abbreviation ?? '',
+              logo: team.logos?.[0]?.href ?? team.logo,
+              color: team.color,
+            }
+          : undefined,
+      }
+      const entry: EspnGameLeaderRow = leaderMap.get(key) ?? {
+        category: key,
+        categoryDisplay: cat.displayName ?? cat.shortDisplayName ?? key,
+        abbr: cat.abbreviation ?? cat.shortDisplayName ?? key,
+      }
+      entry[homeAway] = {
+        athlete: athleteRef,
+        value: typeof top.value === 'number' ? top.value : Number(top.value) || 0,
+        displayValue: top.displayValue ?? String(top.value ?? ''),
+      }
+      leaderMap.set(key, entry)
+    }
+  }
+  const leaders = Array.from(leaderMap.values()).filter((l) => l.away || l.home)
+
+  // ── Scoring plays (last 12, newest first) ──
+  const rawPlays: any[] = Array.isArray(data?.scoringPlays) ? data.scoringPlays : []
+  const scoringPlays: EspnScoringPlay[] = rawPlays
+    .slice(-12)
+    .reverse()
+    .map((p: any): EspnScoringPlay => ({
+      id: String(p.id ?? Math.random()),
+      text: p.text ?? p.shortText ?? '',
+      period: p.period?.number ?? p.period ?? 0,
+      clock: p.clock?.displayValue,
+      teamAbbr: p.team?.abbreviation,
+      teamColor: p.team?.color,
+      scoreValue: p.scoreValue ?? p.scoringType?.value,
+      awayScore: p.awayScore,
+      homeScore: p.homeScore,
+    }))
+
+  // ── Recap ──
+  const article = data?.article
+    ? {
+        headline: data.article.headline ?? '',
+        description: data.article.description ?? '',
+      }
+    : undefined
+
+  return { game, linescores, boxscoreTeams, leaders, scoringPlays, article }
+}

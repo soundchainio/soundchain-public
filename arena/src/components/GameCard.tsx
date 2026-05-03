@@ -1,3 +1,4 @@
+import type { KeyboardEvent } from 'react'
 import type { EspnGame } from '@/lib/espn'
 
 function StateBadge({ game }: { game: EspnGame }) {
@@ -79,7 +80,7 @@ function TeamRow({
   )
 }
 
-export function GameCard({ game }: { game: EspnGame }) {
+export function GameCard({ game, onSelect }: { game: EspnGame; onSelect?: (g: EspnGame) => void }) {
   const home = game.competitors.find((c) => c.homeAway === 'home')
   const away = game.competitors.find((c) => c.homeAway === 'away')
   if (!home || !away) return null
@@ -89,8 +90,31 @@ export function GameCard({ game }: { game: EspnGame }) {
   const completed = game.status.state === 'post'
   const inProgress = game.status.state === 'in'
 
+  const interactive = !!onSelect
+  const interactiveProps = interactive
+    ? {
+        role: 'button' as const,
+        tabIndex: 0,
+        onClick: () => onSelect!(game),
+        onKeyDown: (e: KeyboardEvent) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            onSelect!(game)
+          }
+        },
+        'aria-label': `${away.displayName} at ${home.displayName} — open game details`,
+      }
+    : {}
+
   return (
-    <div className="rounded-xl border border-arena-border-l dark:border-arena-border-d bg-arena-card dark:bg-arena-surface p-3 sm:p-4 hover:border-arena-red/40 transition">
+    <div
+      {...interactiveProps}
+      className={`rounded-xl border border-arena-border-l dark:border-arena-border-d bg-arena-card dark:bg-arena-surface p-3 sm:p-4 transition ${
+        interactive
+          ? 'cursor-pointer hover:border-arena-red active:scale-[0.99] focus:outline-none focus-visible:ring-2 focus-visible:ring-arena-red'
+          : 'hover:border-arena-red/40'
+      }`}
+    >
       <div className="flex items-center justify-between gap-2 mb-2">
         <StateBadge game={game} />
         {game.broadcasts && game.broadcasts.length > 0 && (
@@ -118,6 +142,11 @@ export function GameCard({ game }: { game: EspnGame }) {
       {game.seriesSummary && (
         <div className="mt-2 pt-2 border-t border-arena-border-l dark:border-arena-border-d text-[11px] font-mono tracking-wide text-arena-muted-l dark:text-arena-muted-d">
           {game.seriesSummary}
+        </div>
+      )}
+      {interactive && (
+        <div className="mt-2 text-[10px] font-mono uppercase tracking-[0.2em] text-arena-muted-l dark:text-arena-muted-d opacity-70">
+          Tap for stats · highlights · plays →
         </div>
       )}
     </div>
