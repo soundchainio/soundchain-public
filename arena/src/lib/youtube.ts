@@ -26,9 +26,21 @@ const LEAGUE_CHANNELS: Partial<Record<SportKey, { id: string; name: string }>> =
 
 const F1_CHANNEL = { id: 'UCB_qr75-ydFVKSF9Dmo6izg', name: 'Formula 1' }
 
+// Boxing has no single official channel — aggregate from major promotions.
+const BOXING_CHANNELS: { id: string; name: string }[] = [
+  { id: 'UCDXdxz0LDVKuy0EWQUluuOA', name: 'Top Rank Boxing' },
+  { id: 'UCYJUL-zmL0IeiE10sVoTC9w', name: 'Premier Boxing Champions' },
+  { id: 'UC2Hl_lEzzAzmjODLzs3-DAg', name: 'Matchroom Boxing' },
+  { id: 'UCFiOI1JhSrwY7y2HDMrI0NA', name: 'DAZN Boxing' },
+]
+
 export function getLeagueChannel(sport: SportKey | 'f1'): { id: string; name: string } | null {
   if (sport === 'f1') return F1_CHANNEL
   return LEAGUE_CHANNELS[sport as SportKey] ?? null
+}
+
+export function getBoxingChannels(): { id: string; name: string }[] {
+  return BOXING_CHANNELS
 }
 
 /** Builds privacy-enhanced embed URL with autoplay + JS API enabled. */
@@ -97,6 +109,32 @@ export async function fetchChannelLatest(sport: SportKey | 'f1', limit = 12): Pr
   if (!res.ok) throw new Error(`YouTube RSS ${sport} ${res.status}`)
   const xml = await res.text()
   return parseChannelRss(xml, channel.name).slice(0, limit)
+}
+
+/** Aggregates from multiple channels, dedupes by video ID, sorts newest-first. */
+export async function fetchMultiChannelLatest(
+  channels: { id: string; name: string }[],
+  limit = 12,
+): Promise<YouTubeVideo[]> {
+  const results = await Promise.allSettled(
+    channels.map(async (ch) => {
+      const res = await fetch(`${RSS_BASE}?channel_id=${ch.id}`, { next: { revalidate: 600 } as any })
+      if (!res.ok) throw new Error(`${ch.name} ${res.status}`)
+      return parseChannelRss(await res.text(), ch.name)
+    }),
+  )
+  const all: YouTubeVideo[] = []
+  const seen = new Set<string>()
+  for (const r of results) {
+    if (r.status !== 'fulfilled') continue
+    for (const v of r.value) {
+      if (seen.has(v.id)) continue
+      seen.add(v.id)
+      all.push(v)
+    }
+  }
+  all.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
+  return all.slice(0, limit)
 }
 
 export function relativeAgo(iso: string): string {

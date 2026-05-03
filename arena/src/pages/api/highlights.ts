@@ -1,11 +1,11 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { fetchChannelLatest, type YouTubeVideo } from '@/lib/youtube'
+import { fetchChannelLatest, fetchMultiChannelLatest, getBoxingChannels, type YouTubeVideo } from '@/lib/youtube'
 import type { SportKey } from '@/lib/espn'
 
-type SportParam = SportKey | 'f1'
+type SportParam = SportKey | 'f1' | 'boxing'
 
 const VALID_SPORTS = new Set<SportParam>([
-  'nba', 'nfl', 'mlb', 'nhl', 'wnba', 'mma', 'soccerEpl', 'soccerMls', 'ncaaFootball', 'ncaaMens', 'f1',
+  'nba', 'nfl', 'mlb', 'nhl', 'wnba', 'mma', 'soccerEpl', 'soccerMls', 'ncaaFootball', 'ncaaMens', 'f1', 'boxing',
 ])
 
 interface CacheEntry { videos: YouTubeVideo[]; fetchedAt: number; error?: string }
@@ -29,7 +29,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const videos = await fetchChannelLatest(sport, limit)
+    const videos = sport === 'boxing'
+      ? await fetchMultiChannelLatest(getBoxingChannels(), limit)
+      : await fetchChannelLatest(sport as SportKey | 'f1', limit)
     cache.set(cacheKey, { videos, fetchedAt: now })
     res.setHeader('Cache-Control', 'public, s-maxage=600, stale-while-revalidate=3600')
     return res.json({ videos, fetchedAt: now, cached: false })
