@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { Flag, Clock, MapPin, Trophy } from 'lucide-react'
 import { ArenaShell } from '@/components/ArenaShell'
 import { PlayerHeadshot } from '@/components/PlayerHeadshot'
+import { HighlightsStrip } from '@/components/HighlightsStrip'
 import {
   fetchF1Schedule, fetchF1DriverStandings, fetchF1ConstructorStandings, fetchF1LastRace,
   findNextRace, teamColor, countryFlag,
@@ -338,6 +339,19 @@ export default function F1Page() {
               )}
             </div>
           </div>
+        </section>
+
+        {/* Highlights from official Formula 1 YouTube channel */}
+        <section className="max-w-7xl mx-auto px-4 py-8 sm:py-10">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xs font-black uppercase tracking-[0.3em] text-arena-muted-l dark:text-arena-muted-d">
+              Highlights
+            </h2>
+            <span className="text-[10px] font-mono text-arena-muted-l dark:text-arena-muted-d">
+              via Formula 1 · YouTube
+            </span>
+          </div>
+          <HighlightsStrip sport="f1" limit={12} />
         </section>
 
         <div className="max-w-7xl mx-auto px-4 pb-8 text-[10px] font-mono text-arena-muted-l dark:text-arena-muted-d text-center">

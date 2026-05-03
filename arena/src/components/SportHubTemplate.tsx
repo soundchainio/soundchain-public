@@ -4,7 +4,9 @@ import { ArenaShell } from './ArenaShell'
 import { GameCard } from './GameCard'
 import { StandingsTable } from './StandingsTable'
 import { LeadersBoard } from './LeadersBoard'
+import { HighlightsStrip } from './HighlightsStrip'
 import { fetchScoreboard, fetchStandings, todayYmd, SPORT_LEADER_CATEGORIES, type EspnGame, type EspnStandingsGroup, type SportKey } from '@/lib/espn'
+import { getLeagueChannel } from '@/lib/youtube'
 
 interface SportHubTemplateProps {
   sport: SportKey
@@ -153,6 +155,21 @@ export function SportHubTemplate(props: SportHubTemplateProps) {
               Stat Leaders
             </h2>
             <LeadersBoard sport={sport} seasonType={highlightSeasonType} topN={5} />
+          </section>
+        )}
+
+        {/* Highlights — only when official YouTube channel is mapped */}
+        {getLeagueChannel(sport) && (
+          <section className="max-w-7xl mx-auto px-4 py-8 sm:py-10">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xs font-black uppercase tracking-[0.3em] text-arena-muted-l dark:text-arena-muted-d">
+                Highlights
+              </h2>
+              <span className="text-[10px] font-mono text-arena-muted-l dark:text-arena-muted-d">
+                via {getLeagueChannel(sport)?.name} · YouTube
+              </span>
+            </div>
+            <HighlightsStrip sport={sport} limit={12} />
           </section>
         )}
 
