@@ -358,10 +358,29 @@ export interface EspnScoringPlay {
   homeScore?: number
 }
 
+export interface EspnBoxscorePlayer {
+  athlete: EspnAthleteRef
+  starter: boolean
+  didNotPlay: boolean
+  reason?: string
+  stats: string[]                   // parallel to category labels
+}
+
+export interface EspnBoxscoreCategory {
+  name: string                      // "team" / "passing" / "rushing" / "batting" / "pitching"
+  displayName: string
+  labels: string[]                  // ["MIN","PTS","REB",...] — column headers
+  awayTeam: { abbr: string; displayName: string; logo?: string; color?: string }
+  homeTeam: { abbr: string; displayName: string; logo?: string; color?: string }
+  awayPlayers: EspnBoxscorePlayer[]
+  homePlayers: EspnBoxscorePlayer[]
+}
+
 export interface EspnGameSummary {
   game: EspnGame
   linescores: EspnLineScore[]
   boxscoreTeams: EspnBoxscoreTeam[]
+  boxscorePlayers: EspnBoxscoreCategory[]
   leaders: EspnGameLeaderRow[]
   scoringPlays: EspnScoringPlay[]
   article?: { headline: string; description: string }
@@ -452,6 +471,70 @@ export async function fetchGameSummary(sport: SportKey, eventId: string): Promis
     }
   })
 
+  // ── Boxscore players (player-by-player stats, per category) ──
+  const awayTeamId = String(awayComp?.team?.id ?? awayComp?.id ?? '')
+  const homeTeamId = String(homeComp?.team?.id ?? homeComp?.id ?? '')
+  const awayTeamMeta = {
+    abbr: awayComp?.team?.abbreviation ?? '',
+    displayName: awayComp?.team?.displayName ?? awayComp?.team?.name ?? '',
+    logo: awayComp?.team?.logos?.[0]?.href ?? awayComp?.team?.logo,
+    color: awayComp?.team?.color,
+  }
+  const homeTeamMeta = {
+    abbr: homeComp?.team?.abbreviation ?? '',
+    displayName: homeComp?.team?.displayName ?? homeComp?.team?.name ?? '',
+    logo: homeComp?.team?.logos?.[0]?.href ?? homeComp?.team?.logo,
+    color: homeComp?.team?.color,
+  }
+
+  const playerBlocks: any[] = Array.isArray(data?.boxscore?.players) ? data.boxscore.players : []
+  const catMap = new Map<string, EspnBoxscoreCategory>()
+  for (const block of playerBlocks) {
+    const teamId = String(block.team?.id ?? '')
+    const side: 'home' | 'away' | null = teamId === homeTeamId ? 'home' : teamId === awayTeamId ? 'away' : null
+    if (!side) continue
+    const blockCats: any[] = Array.isArray(block.statistics) ? block.statistics : []
+    for (const cat of blockCats) {
+      const catName = cat.name ?? cat.type ?? cat.displayName ?? 'stats'
+      let entry = catMap.get(catName)
+      if (!entry) {
+        entry = {
+          name: catName,
+          displayName: cat.text ?? cat.displayName ?? catName,
+          labels: Array.isArray(cat.labels) && cat.labels.length > 0
+            ? cat.labels.map(String)
+            : Array.isArray(cat.keys) ? cat.keys.map(String) : [],
+          awayTeam: awayTeamMeta,
+          homeTeam: homeTeamMeta,
+          awayPlayers: [],
+          homePlayers: [],
+        }
+        catMap.set(catName, entry)
+      }
+      const players: EspnBoxscorePlayer[] = (cat.athletes ?? []).map((row: any): EspnBoxscorePlayer => {
+        const a = row.athlete ?? {}
+        const athleteId = String(a.id ?? '')
+        return {
+          athlete: {
+            id: athleteId,
+            fullName: a.displayName ?? a.fullName ?? `${a.firstName ?? ''} ${a.lastName ?? ''}`.trim(),
+            shortName: a.shortName,
+            jersey: a.jersey,
+            position: a.position?.abbreviation ?? a.position,
+            headshotUrl: a.headshot?.href ?? (athleteId ? headshotUrl(sport, athleteId) : undefined),
+          },
+          starter: !!row.starter,
+          didNotPlay: !!row.didNotPlay,
+          reason: row.reason,
+          stats: Array.isArray(row.stats) ? row.stats.map((s: any) => s == null ? '' : String(s)) : [],
+        }
+      })
+      if (side === 'home') entry.homePlayers = players
+      else entry.awayPlayers = players
+    }
+  }
+  const boxscorePlayers = Array.from(catMap.values())
+
   // ── Leaders (per-game, per-category, home + away side-by-side) ──
   const rawLeaderTeamBlocks: any[] = Array.isArray(data?.leaders) ? data.leaders : []
   const leaderMap = new Map<string, EspnGameLeaderRow>()
@@ -522,5 +605,5 @@ export async function fetchGameSummary(sport: SportKey, eventId: string): Promis
       }
     : undefined
 
-  return { game, linescores, boxscoreTeams, leaders, scoringPlays, article }
+  return { game, linescores, boxscoreTeams, boxscorePlayers, leaders, scoringPlays, article }
 }

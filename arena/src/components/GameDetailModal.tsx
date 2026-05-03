@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useState } from 'react'
 import { X, Play } from 'lucide-react'
 import {
   fetchGameSummary,
+  type EspnBoxscoreCategory,
   type EspnGame,
   type EspnGameSummary,
   type SportKey,
@@ -125,6 +126,12 @@ export function GameDetailModal({ sport, game, onClose }: Props) {
               {summary.boxscoreTeams.length === 2 && summary.boxscoreTeams[0].stats.length > 0 && (
                 <Section title="Team stats">
                   <TeamStatsCompare summary={summary} />
+                </Section>
+              )}
+
+              {summary.boxscorePlayers.length > 0 && (
+                <Section title="Box score">
+                  <BoxscorePlayersList categories={summary.boxscorePlayers} sport={sport} />
                 </Section>
               )}
 
@@ -440,6 +447,198 @@ function ScoringPlaysList({ summary }: { summary: EspnGameSummary }) {
   )
 }
 
+// ─── Player-by-player box score ──────────────────────────────────────────
+
+function BoxscorePlayersList({
+  categories,
+  sport,
+}: {
+  categories: EspnBoxscoreCategory[]
+  sport: SportKey
+}) {
+  void sport
+  const [activeIdx, setActiveIdx] = useState(0)
+  const cat = categories[activeIdx] ?? categories[0]
+  if (!cat) return null
+
+  // Multi-category sports (NFL: passing/rushing/receiving/defensive, MLB: batting/pitching).
+  // Single-category sports (NBA/NHL/WNBA) just render the one block.
+  const showTabs = categories.length > 1
+
+  return (
+    <div className="space-y-3">
+      {showTabs && (
+        <div
+          className="flex gap-1.5 overflow-x-auto -mx-4 px-4 pb-1"
+          style={{ scrollbarWidth: 'none' }}
+        >
+          {categories.map((c, i) => (
+            <button
+              key={c.name}
+              type="button"
+              onClick={() => setActiveIdx(i)}
+              className={`flex-shrink-0 px-3 py-1.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider border transition ${
+                i === activeIdx
+                  ? 'bg-arena-red text-white border-arena-red'
+                  : 'border-arena-border-l dark:border-arena-border-d text-arena-muted-l dark:text-arena-muted-d hover:border-arena-red'
+              }`}
+            >
+              {c.displayName}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <BoxscoreTeamTable
+        team={cat.awayTeam}
+        players={cat.awayPlayers}
+        labels={cat.labels}
+      />
+      <BoxscoreTeamTable
+        team={cat.homeTeam}
+        players={cat.homePlayers}
+        labels={cat.labels}
+      />
+    </div>
+  )
+}
+
+function BoxscoreTeamTable({
+  team,
+  players,
+  labels,
+}: {
+  team: EspnBoxscoreCategory['awayTeam']
+  players: EspnBoxscoreCategory['awayPlayers']
+  labels: string[]
+}) {
+  if (players.length === 0 || labels.length === 0) {
+    return (
+      <div className="rounded-xl border border-arena-border-l dark:border-arena-border-d bg-arena-card dark:bg-arena-surface px-4 py-4 text-[11px] font-mono text-arena-muted-l dark:text-arena-muted-d text-center">
+        {team.abbr || team.displayName} · stats not available yet
+      </div>
+    )
+  }
+  // Split starters from bench/DNP for readability (NBA-style).
+  const starters = players.filter((p) => p.starter && !p.didNotPlay)
+  const bench = players.filter((p) => !p.starter && !p.didNotPlay)
+  const dnp = players.filter((p) => p.didNotPlay)
+  const groups: { label: string; rows: typeof players }[] = []
+  if (starters.length > 0) groups.push({ label: 'Starters', rows: starters })
+  if (bench.length > 0) groups.push({ label: 'Bench', rows: bench })
+  if (dnp.length > 0) groups.push({ label: 'DNP', rows: dnp })
+  // If neither starter flag is set (some sports don't mark them), just dump all.
+  if (groups.length === 0) groups.push({ label: '', rows: players })
+
+  return (
+    <div className="rounded-xl border border-arena-border-l dark:border-arena-border-d bg-arena-card dark:bg-arena-surface overflow-hidden">
+      {/* Team header */}
+      <div className="px-3 py-2 border-b border-arena-border-l dark:border-arena-border-d flex items-center gap-2 bg-arena-paper dark:bg-arena-carbon">
+        {team.logo ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={team.logo}
+            alt={team.abbr}
+            className="w-6 h-6 object-contain"
+            onError={(e) => ((e.target as HTMLImageElement).style.display = 'none')}
+          />
+        ) : (
+          <span className="w-6 h-6 rounded-full bg-arena-border-l dark:bg-arena-border-d flex items-center justify-center text-[9px] font-bold">
+            {team.abbr.slice(0, 3)}
+          </span>
+        )}
+        <span className="text-xs font-black tracking-wide">{team.abbr}</span>
+        <span className="text-[10px] font-mono text-arena-muted-l dark:text-arena-muted-d hidden sm:inline truncate">
+          {team.displayName}
+        </span>
+      </div>
+
+      {/* Horizontally scrollable stat table */}
+      <div className="overflow-x-auto" style={{ scrollbarWidth: 'thin' }}>
+        <table className="w-full min-w-max text-[11px] arena-tabular">
+          <thead>
+            <tr className="border-b border-arena-border-l dark:border-arena-border-d">
+              <th className="text-left px-3 py-1.5 font-mono text-[9px] uppercase tracking-wider text-arena-muted-l dark:text-arena-muted-d sticky left-0 bg-arena-card dark:bg-arena-surface z-[1]">
+                Player
+              </th>
+              {labels.map((label, i) => (
+                <th
+                  key={`${label}-${i}`}
+                  className="px-1.5 py-1.5 font-mono text-[9px] uppercase tracking-wider text-arena-muted-l dark:text-arena-muted-d text-center"
+                >
+                  {label}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {groups.map((group, gi) => (
+              <Fragment key={`${group.label}-${gi}`}>
+                {group.label && (
+                  <tr className="bg-arena-paper/60 dark:bg-arena-carbon/60">
+                    <td
+                      colSpan={labels.length + 1}
+                      className="px-3 py-1 text-[9px] font-mono uppercase tracking-[0.2em] text-arena-muted-l dark:text-arena-muted-d"
+                    >
+                      {group.label}
+                    </td>
+                  </tr>
+                )}
+                {group.rows.map((p) => (
+                  <tr
+                    key={p.athlete.id || p.athlete.fullName}
+                    className="border-b border-arena-border-l/50 dark:border-arena-border-d/50 last:border-b-0"
+                  >
+                    <td className="px-3 py-1.5 sticky left-0 bg-arena-card dark:bg-arena-surface z-[1]">
+                      <div className="flex items-center gap-2 min-w-[140px]">
+                        <PlayerHeadshot
+                          src={p.athlete.headshotUrl}
+                          name={p.athlete.fullName}
+                          size={24}
+                          ringColor={team.color}
+                        />
+                        <div className="min-w-0">
+                          <div className="text-[11px] font-bold truncate leading-tight">
+                            {p.athlete.fullName || '—'}
+                          </div>
+                          {(p.athlete.position || p.athlete.jersey) && (
+                            <div className="text-[9px] font-mono text-arena-muted-l dark:text-arena-muted-d truncate">
+                              {p.athlete.position}
+                              {p.athlete.jersey && ` · #${p.athlete.jersey}`}
+                              {p.starter && ' · S'}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    {p.didNotPlay ? (
+                      <td
+                        colSpan={labels.length}
+                        className="px-3 py-1.5 text-[10px] font-mono text-arena-muted-l dark:text-arena-muted-d italic"
+                      >
+                        Did not play{p.reason ? ` · ${p.reason}` : ''}
+                      </td>
+                    ) : (
+                      labels.map((_, i) => (
+                        <td
+                          key={i}
+                          className="px-1.5 py-1.5 text-center font-mono"
+                        >
+                          {p.stats[i] || '—'}
+                        </td>
+                      ))
+                    )}
+                  </tr>
+                ))}
+              </Fragment>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
 // ─── Game-relevant YouTube highlights ────────────────────────────────────
 
 function GameHighlights({ sport, game }: { sport: SportKey; game: EspnGame }) {
@@ -467,8 +666,8 @@ function GameHighlights({ sport, game }: { sport: SportKey; game: EspnGame }) {
     return () => { cancelled = true }
   }, [sport])
 
-  const { matched, fallback, mode } = useMemo(() => filterVideosForGame(allVideos, game), [allVideos, game])
-  const videos = matched.length > 0 ? matched : fallback
+  const { primary, fallback, mode } = useMemo(() => filterVideosForGame(allVideos, game), [allVideos, game])
+  const videos = primary.length > 0 ? primary : fallback
 
   // Auto-pick first video for inline autoplay (muted) once load completes.
   // Resets when the underlying list changes (different game).
@@ -477,12 +676,15 @@ function GameHighlights({ sport, game }: { sport: SportKey; game: EspnGame }) {
     else setInlineVideo(null)
   }, [videos])
 
-  const headerLabel =
-    mode === 'matched'
-      ? `${matched.length} highlight${matched.length === 1 ? '' : 's'} for this matchup · autoplaying muted`
-      : loaded
-        ? 'Latest from the league channel · autoplaying muted'
-        : ''
+  const away = game.competitors.find((c) => c.homeAway === 'away')
+  const home = game.competitors.find((c) => c.homeAway === 'home')
+  const headerLabel = !loaded
+    ? ''
+    : mode === 'matched'
+      ? `${primary.length} highlight${primary.length === 1 ? '' : 's'} for this matchup · autoplaying muted`
+      : mode === 'related'
+        ? `Featuring ${away?.abbr ?? ''} or ${home?.abbr ?? ''} · autoplaying muted`
+        : 'Latest from the league channel · autoplaying muted'
 
   if (!loaded) {
     return (
@@ -592,51 +794,97 @@ function GameHighlights({ sport, game }: { sport: SportKey; game: EspnGame }) {
   )
 }
 
-/** Title-match score: 10 if both team last-words appear, +8 if both abbrs (word-bounded), +3 if one team. */
+/** Tokens we'll try to find in a video title for a given team:
+ *  mascot (last word), shortDisplayName ("Wolves"), the city portion ("los angeles"),
+ *  full displayName. Lowercased + de-duped. */
+function teamTokens(t: { displayName: string; shortDisplayName?: string }): string[] {
+  const tokens = new Set<string>()
+  const dn = (t.displayName ?? '').trim()
+  if (dn) tokens.add(dn.toLowerCase())
+  const parts = dn.split(/\s+/).filter(Boolean)
+  if (parts.length > 0) {
+    const last = parts[parts.length - 1].toLowerCase()
+    if (last.length >= 3) tokens.add(last)
+    if (parts.length >= 2) {
+      const city = parts.slice(0, -1).join(' ').toLowerCase()
+      if (city.length >= 3) tokens.add(city)
+    }
+  }
+  const sd = (t.shortDisplayName ?? '').trim().toLowerCase()
+  if (sd.length >= 3) tokens.add(sd)
+  return Array.from(tokens)
+}
+
+function titleHasTeam(title: string, tokens: string[]): boolean {
+  return tokens.some((tok) => title.includes(tok))
+}
+
+/** Score per video:
+ *  +10 both team names (mascot/city/shortName) appear in title — strong matchup match
+ *  +8  both team abbrs appear word-bounded — strong abbr match (e.g. "BOS @ LAL")
+ *  +5  one team name + one team abbr mixed — solid single-side match w/ confirmation
+ *  +3  one team name OR one abbr — single-team feature (player-centric clip etc)
+ *
+ *  Tiers (return shape):
+ *    matched (score >= 8): true matchup videos — show w/ "for this matchup" label
+ *    related (score >= 3): single-team clips — show w/ "featuring TEAM" label
+ *    fallback: latest 6 from channel — show w/ "latest from league channel" label
+ */
 function filterVideosForGame(
   videos: YouTubeVideo[],
   game: EspnGame,
-): { matched: YouTubeVideo[]; fallback: YouTubeVideo[]; mode: 'matched' | 'fallback' } {
+): {
+  primary: YouTubeVideo[]
+  fallback: YouTubeVideo[]
+  mode: 'matched' | 'related' | 'fallback'
+} {
   const away = game.competitors.find((c) => c.homeAway === 'away')
   const home = game.competitors.find((c) => c.homeAway === 'home')
   if (!away || !home || videos.length === 0) {
-    return { matched: [], fallback: videos.slice(0, 6), mode: 'fallback' }
+    return { primary: [], fallback: videos.slice(0, 6), mode: 'fallback' }
   }
-  const aLast = lastWord(away.displayName).toLowerCase()
-  const hLast = lastWord(home.displayName).toLowerCase()
+  const aTokens = teamTokens(away)
+  const hTokens = teamTokens(home)
   const aAbbr = away.abbr.toLowerCase()
   const hAbbr = home.abbr.toLowerCase()
-  const aShort = (away.shortDisplayName ?? '').toLowerCase()
-  const hShort = (home.shortDisplayName ?? '').toLowerCase()
+  const aAbbrRe = aAbbr ? new RegExp(`\\b${escapeRegex(aAbbr)}\\b`) : null
+  const hAbbrRe = hAbbr ? new RegExp(`\\b${escapeRegex(hAbbr)}\\b`) : null
 
   const scored = videos
     .map((v) => {
       const t = v.title.toLowerCase()
+      const hasAName = titleHasTeam(t, aTokens)
+      const hasHName = titleHasTeam(t, hTokens)
+      const aAbbrHit = aAbbrRe ? aAbbrRe.test(t) : false
+      const hAbbrHit = hAbbrRe ? hAbbrRe.test(t) : false
+
       let score = 0
-      const hasAName = (aLast && t.includes(aLast)) || (aShort && t.includes(aShort))
-      const hasHName = (hLast && t.includes(hLast)) || (hShort && t.includes(hShort))
-      if (hasAName && hasHName) score += 10
-      else if (hasAName || hasHName) score += 3
-      const aAbbrHit = aAbbr && new RegExp(`\\b${escapeRegex(aAbbr)}\\b`).test(t)
-      const hAbbrHit = hAbbr && new RegExp(`\\b${escapeRegex(hAbbr)}\\b`).test(t)
-      if (aAbbrHit && hAbbrHit) score += 8
-      else if (aAbbrHit || hAbbrHit) score += 2
+      if (hasAName && hasHName) score = Math.max(score, 10)
+      else if (hasAName || hasHName) score = Math.max(score, 3)
+      if (aAbbrHit && hAbbrHit) score = Math.max(score, 8)
+      else if (aAbbrHit || hAbbrHit) score = Math.max(score, 3)
+      // Mixed: one side by name, the other by abbr — strong matchup signal
+      if ((hasAName && hAbbrHit) || (hasHName && aAbbrHit)) score = Math.max(score, 8)
+      // One team name + same-team abbr → confirmed single-team focus
+      if ((hasAName && aAbbrHit) || (hasHName && hAbbrHit)) score = Math.max(score, 5)
       return { video: v, score }
     })
     .filter((x) => x.score > 0)
-    .sort((a, b) => b.score - a.score || new Date(b.video.publishedAt).getTime() - new Date(a.video.publishedAt).getTime())
+    .sort(
+      (a, b) =>
+        b.score - a.score ||
+        new Date(b.video.publishedAt).getTime() - new Date(a.video.publishedAt).getTime(),
+    )
 
-  const matched = scored.filter((x) => x.score >= 10).slice(0, 6).map((x) => x.video)
-  return {
-    matched,
-    fallback: videos.slice(0, 6),
-    mode: matched.length > 0 ? 'matched' : 'fallback',
+  const matched = scored.filter((x) => x.score >= 8).map((x) => x.video).slice(0, 8)
+  if (matched.length > 0) {
+    return { primary: matched, fallback: videos.slice(0, 6), mode: 'matched' }
   }
-}
-
-function lastWord(s: string): string {
-  const parts = s.trim().split(/\s+/)
-  return parts[parts.length - 1] ?? ''
+  const related = scored.filter((x) => x.score >= 3).map((x) => x.video).slice(0, 6)
+  if (related.length > 0) {
+    return { primary: related, fallback: videos.slice(0, 6), mode: 'related' }
+  }
+  return { primary: [], fallback: videos.slice(0, 6), mode: 'fallback' }
 }
 
 function escapeRegex(s: string): string {
