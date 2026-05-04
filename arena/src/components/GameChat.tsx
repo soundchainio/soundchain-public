@@ -21,7 +21,7 @@ import {
   type ChatMessage,
 } from '@/lib/chat'
 import { ARENA_AVATARS, getIdentity, isUrlAvatar, setAvatar, setHandle, type Avatar, type ArenaAvatar } from '@/lib/identity'
-import { SC_EMOTES, TWITCH_EMOTES, fetchExternalEmotes, searchSevenTv, type ArenaEmote } from '@/lib/emotes'
+import { PREFETCHED_EMOTES, SC_EMOTES, TWITCH_EMOTES, searchSevenTv, type ArenaEmote } from '@/lib/emotes'
 import type { SportKey } from '@/lib/espn'
 
 // Render either an emoji avatar (string) or a Pinata-pinned URL as a circle image.
@@ -372,21 +372,8 @@ function HandlePickerModal({
   const [emoteQuery, setEmoteQuery] = useState('')
   const [searchResults, setSearchResults] = useState<ArenaEmote[]>([])
   const [searchingEmotes, setSearchingEmotes] = useState(false)
-  const [externalEmotes, setExternalEmotes] = useState<ArenaEmote[]>([])
   const [brokenUrls, setBrokenUrls] = useState<Set<string>>(new Set())
   const fileRef = useRef<HTMLInputElement>(null)
-
-  // Lazy-load BTTV + FFZ + 7TV global on first modal open. Cached after, so
-  // re-opening the picker is instant.
-  useEffect(() => {
-    let cancelled = false
-    fetchExternalEmotes().then((list) => {
-      if (!cancelled) setExternalEmotes(list)
-    })
-    return () => {
-      cancelled = true
-    }
-  }, [])
 
   // Track broken image URLs and hide their tiles on next render. Some 7TV V2
   // hex IDs redirect to V3 successors that 404 — onError catches those.
@@ -572,10 +559,12 @@ function HandlePickerModal({
                   {a}
                 </button>
               ))}
-              {/* When searching: 7TV live results. Otherwise: every catalog stacked. */}
+              {/* When searching: 7TV live results. Otherwise: every catalog stacked.
+                  All four catalogs (SC + Twitch + 7TV global + BTTV + FFZ) are
+                  baked into the bundle at build time — instant on modal open. */}
               {(emoteQuery.trim()
                 ? searchResults
-                : [...SC_EMOTES, ...TWITCH_EMOTES, ...externalEmotes]
+                : [...SC_EMOTES, ...TWITCH_EMOTES, ...PREFETCHED_EMOTES]
               )
                 .filter((e) => !brokenUrls.has(e.url))
                 .map((e) => (
@@ -607,7 +596,7 @@ function HandlePickerModal({
               )}
             </div>
             <p className="mt-1 text-[10px] text-arena-muted-l dark:text-arena-muted-d">
-              Sport · 7TV · BTTV · FFZ · Twitch · {SC_EMOTES.length + TWITCH_EMOTES.length + externalEmotes.length}+ emotes loaded · search any 7TV emote · or upload your own (2 MB max)
+              Sport · 7TV · BTTV · FFZ · Twitch · {SC_EMOTES.length + TWITCH_EMOTES.length + PREFETCHED_EMOTES.length}+ emotes (instant) · search any 7TV emote · or upload your own (2 MB max)
             </p>
           </div>
           {error && <p className="text-[11px] text-arena-red font-bold">{error}</p>}

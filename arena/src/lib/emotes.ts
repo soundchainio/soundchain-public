@@ -135,93 +135,20 @@ export const TWITCH_EMOTES: ArenaEmote[] = TWITCH_GLOBAL_IDS.map((t) => ({
   url: `${TWITCH_CDN}/${t.id}/default/dark/2.0`,
 }))
 
-// --- LAYER 3: Live external fetches (cached after first load) -----------------
-let externalCache: ArenaEmote[] | null = null
-let externalPromise: Promise<ArenaEmote[]> | null = null
+// --- LAYER 3: External catalogs prefetched at BUILD time ----------------------
+//
+// `scripts/fetch-emotes.mjs` runs as `prebuild` (see package.json). It hits the
+// 7TV global / BTTV global / FFZ global endpoints once during `next build`,
+// dedupes by URL, and writes src/lib/emotes.generated.ts. The bundle ships
+// with that array baked in — modal open is INSTANT, no network round-trip,
+// no spinner, no skeleton tiles.
+//
+// Catalogs refresh on every Vercel deploy, which is fresh enough for surfaces
+// that change quarterly. If you need to refresh between deploys, run
+// `yarn prefetch:emotes` and commit the regenerated file.
+import { PREFETCHED_EMOTES } from './emotes.generated'
 
-async function fetch7tvGlobal(): Promise<ArenaEmote[]> {
-  try {
-    const r = await fetch('https://7tv.io/v3/emote-sets/global')
-    if (!r.ok) return []
-    const j = await r.json()
-    const items: any[] = j?.emotes || []
-    return items.map((e) => ({
-      id: `s7g-${e.id}`,
-      name: e.name as string,
-      url: `${SEVEN_TV_CDN}/${e.id}/2x`,
-    }))
-  } catch {
-    return []
-  }
-}
-
-async function fetchBttvGlobal(): Promise<ArenaEmote[]> {
-  try {
-    const r = await fetch('https://api.betterttv.net/3/cached/emotes/global')
-    if (!r.ok) return []
-    const items: any[] = await r.json()
-    return items.map((e) => ({
-      id: `btv-${e.id}`,
-      name: e.code as string,
-      url: `${BTTV_CDN}/${e.id}/2x.${e.imageType || 'webp'}`,
-    }))
-  } catch {
-    return []
-  }
-}
-
-async function fetchFfzGlobal(): Promise<ArenaEmote[]> {
-  try {
-    const r = await fetch('https://api.frankerfacez.com/v1/set/global')
-    if (!r.ok) return []
-    const j = await r.json()
-    const out: ArenaEmote[] = []
-    const sets = j?.sets || {}
-    for (const setKey of Object.keys(sets)) {
-      const emotes: any[] = sets[setKey]?.emoticons || []
-      for (const e of emotes) {
-        const urls = e?.urls || {}
-        const url = urls['2'] || urls['1'] || urls['4']
-        if (!url) continue
-        // FFZ urls may come in protocol-relative form (//cdn.frankerfacez.com/...).
-        const full = url.startsWith('//') ? `https:${url}` : url
-        out.push({ id: `ffz-${e.id}`, name: e.name, url: full })
-      }
-    }
-    return out
-  } catch {
-    return []
-  }
-}
-
-/**
- * Fetch all external catalogs in parallel, dedupe by URL, cache for the rest of
- * the session. Safe to call multiple times — second + later calls share the
- * promise so we never refetch.
- */
-export function fetchExternalEmotes(): Promise<ArenaEmote[]> {
-  if (externalCache) return Promise.resolve(externalCache)
-  if (externalPromise) return externalPromise
-  externalPromise = (async () => {
-    const [seven, bttv, ffz] = await Promise.all([
-      fetch7tvGlobal(),
-      fetchBttvGlobal(),
-      fetchFfzGlobal(),
-    ])
-    const seen = new Set<string>()
-    const out: ArenaEmote[] = []
-    for (const list of [seven, bttv, ffz]) {
-      for (const e of list) {
-        if (seen.has(e.url)) continue
-        seen.add(e.url)
-        out.push(e)
-      }
-    }
-    externalCache = out
-    return out
-  })()
-  return externalPromise
-}
+export { PREFETCHED_EMOTES }
 
 /**
  * Live search the 7TV public catalog via their GraphQL endpoint. No auth key.
