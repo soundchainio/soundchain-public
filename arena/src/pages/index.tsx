@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { Trophy, Swords, Activity, Flag, Zap, ArrowRight } from 'lucide-react'
 import { ArenaShell } from '@/components/ArenaShell'
 import { PillButton } from '@/components/PillButton'
+import { LiveTakesFeed } from '@/components/LiveTakesFeed'
 
 const PULSE_NOW = [
   { href: '/nba',    label: 'NBA Playoffs',     emoji: '🏀', accent: 'NOW' },
@@ -89,6 +90,9 @@ export default function ArenaHub() {
             ))}
           </div>
         </section>
+
+        {/* Live takes — cross-game fan engagement stream */}
+        <LiveTakesFeed />
 
         {/* Free-to-play layer cards */}
         <section className="max-w-7xl mx-auto px-4 py-10">
