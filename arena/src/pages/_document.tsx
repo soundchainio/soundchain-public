@@ -4,15 +4,16 @@ const themeInitScript = `
 (function() {
   try {
     var stored = localStorage.getItem('arenaTheme');
-    if (stored === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      // Light by default — ignore prefers-color-scheme. Operator directive May 2 2026.
+    if (stored === 'light') {
       document.documentElement.classList.remove('dark');
+    } else {
+      // Dark by default — ignore prefers-color-scheme. Operator directive May 4 2026.
+      // Users who tap the toggle to light have their choice persisted in localStorage.
+      document.documentElement.classList.add('dark');
     }
   } catch (_) {
-    // localStorage unavailable (Capacitor edge cases) — fall back to light
-    document.documentElement.classList.remove('dark');
+    // localStorage unavailable (Capacitor edge cases) — fall back to dark
+    document.documentElement.classList.add('dark');
   }
 })();
 `
