@@ -10,6 +10,7 @@ import {
 import { buildEmbedUrl, relativeAgo, type YouTubeVideo } from '@/lib/youtube'
 import { PlayerHeadshot } from './PlayerHeadshot'
 import { HighlightModal } from './HighlightModal'
+import { GameChat } from './GameChat'
 
 interface Props {
   sport: SportKey
@@ -113,6 +114,15 @@ export function GameDetailModal({ sport, game, onClose }: Props) {
                 </Section>
               )}
 
+              <Section title="Fan chat · live takes">
+                <GameChat
+                  gameId={game.id}
+                  sport={sport}
+                  awayLabel={away?.abbr}
+                  homeLabel={home?.abbr}
+                />
+              </Section>
+
               <Section title="Game highlights">
                 <GameHighlights sport={sport} game={headerGame} />
               </Section>
@@ -157,12 +167,20 @@ export function GameDetailModal({ sport, game, onClose }: Props) {
           )}
 
           {summaryLoaded && !summary && (
-            <div className="rounded-xl border border-arena-border-l dark:border-arena-border-d bg-arena-card dark:bg-arena-surface p-6 text-center">
-              <p className="text-sm text-arena-muted-l dark:text-arena-muted-d">
+            <div className="rounded-xl border border-arena-border-l dark:border-arena-border-d bg-arena-card dark:bg-arena-surface p-6">
+              <p className="text-sm text-arena-muted-l dark:text-arena-muted-d text-center">
                 {summaryErr ?? 'Game details unavailable. Try again in a moment.'}
               </p>
-              {/* Highlights still useful even when boxscore endpoint is down */}
-              <div className="mt-5 text-left">
+              {/* Chat + highlights stay live even when ESPN summary is down */}
+              <div className="mt-5 text-left space-y-7">
+                <Section title="Fan chat · live takes">
+                  <GameChat
+                    gameId={game.id}
+                    sport={sport}
+                    awayLabel={away?.abbr}
+                    homeLabel={home?.abbr}
+                  />
+                </Section>
                 <Section title="League highlights">
                   <GameHighlights sport={sport} game={headerGame} />
                 </Section>
