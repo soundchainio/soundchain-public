@@ -149,7 +149,12 @@ async function handleSend(req: NextApiRequest, res: NextApiResponse, gameId: str
     return res.status(429).json({ error: 'Easy — wait a few seconds before sending another message.' })
   }
 
-  const safeAvatar = (avatar && avatar.length <= 8) ? avatar : '🏟️'
+  // Accept emoji avatars (≤8 chars — covers multi-codepoint emoji) OR Pinata-pinned
+  // image URLs from /api/avatars/upload. URL allowlist mirrors the chat-image guard
+  // above so users can't inject arbitrary image hosts as their avatar.
+  const isEmojiAvatar = avatar && avatar.length <= 8
+  const isUrlAvatar = avatar && /^https:\/\/(soundchain\.mypinata\.cloud|gateway\.pinata\.cloud|ipfs\.io)\//.test(avatar)
+  const safeAvatar = (isEmojiAvatar || isUrlAvatar) ? (avatar as string) : '🏟️'
 
   const doc: ChatDoc = {
     _id: new ObjectId(),

@@ -10,7 +10,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { ImagePlus, Loader2, Send, Sparkles, X } from 'lucide-react'
+import { ImagePlus, Loader2, Send, Sparkles, Upload, X } from 'lucide-react'
 import {
   CHAT_BODY_MAX,
   CHAT_POLL_INTERVAL_MS,
@@ -20,8 +20,31 @@ import {
   uploadChatImage,
   type ChatMessage,
 } from '@/lib/chat'
-import { ARENA_AVATARS, getIdentity, setAvatar, setHandle, type ArenaAvatar } from '@/lib/identity'
+import { ARENA_AVATARS, getIdentity, isUrlAvatar, setAvatar, setHandle, type Avatar, type ArenaAvatar } from '@/lib/identity'
 import type { SportKey } from '@/lib/espn'
+
+// Render either an emoji avatar (string) or a Pinata-pinned URL as a circle image.
+// Used in three places: identity row, chat bubbles, picker preview.
+function AvatarSlot({ avatar, size = 'md' }: { avatar: string; size?: 'sm' | 'md' | 'lg' }) {
+  const dim = size === 'lg' ? 'w-12 h-12' : size === 'sm' ? 'w-7 h-7' : 'w-7 h-7'
+  const text = size === 'lg' ? 'text-3xl' : 'text-base'
+  if (isUrlAvatar(avatar)) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={avatar}
+        alt="avatar"
+        className={`${dim} rounded-full object-cover border border-arena-border-l dark:border-arena-border-d flex-shrink-0`}
+        loading="lazy"
+      />
+    )
+  }
+  return (
+    <span className={`${dim} ${text} leading-none flex items-center justify-center flex-shrink-0`}>
+      {avatar}
+    </span>
+  )
+}
 
 interface Props {
   gameId: string
@@ -158,7 +181,7 @@ export function GameChat({ gameId, sport, awayLabel, homeLabel }: Props) {
       {/* Identity row */}
       <div className="px-3 py-2 flex items-center justify-between gap-2 border-b border-arena-border-l dark:border-arena-border-d bg-arena-paper/60 dark:bg-arena-carbon/60">
         <div className="flex items-center gap-2 min-w-0">
-          <span className="text-xl leading-none flex-shrink-0">{identity.avatar}</span>
+          <AvatarSlot avatar={identity.avatar} size="sm" />
           <div className="min-w-0">
             <div className="text-[11px] font-black uppercase tracking-wider truncate">
               {identity.handle ? `@${identity.handle}` : 'Pick a handle to chat'}
@@ -297,8 +320,8 @@ export function GameChat({ gameId, sport, awayLabel, homeLabel }: Props) {
 function ChatBubble({ msg }: { msg: ChatMessage }) {
   return (
     <div className={`flex gap-2 ${msg.isMine ? 'flex-row-reverse' : ''}`}>
-      <div className="flex-shrink-0 w-7 h-7 rounded-full bg-arena-paper dark:bg-arena-carbon border border-arena-border-l dark:border-arena-border-d flex items-center justify-center text-base leading-none">
-        {msg.avatar}
+      <div className="flex-shrink-0">
+        <AvatarSlot avatar={msg.avatar} size="sm" />
       </div>
       <div className={`flex-1 min-w-0 max-w-[80%] ${msg.isMine ? 'items-end' : ''}`}>
         <div className={`flex items-baseline gap-1.5 text-[10px] mb-0.5 ${msg.isMine ? 'justify-end' : ''}`}>
@@ -337,13 +360,36 @@ function HandlePickerModal({
   onSave,
 }: {
   initialHandle: string
-  initialAvatar: ArenaAvatar
+  initialAvatar: Avatar
   onClose: () => void
   onSave: () => void
 }) {
   const [handle, setHandleInput] = useState(initialHandle)
-  const [avatar, setAvatarInput] = useState<ArenaAvatar>(initialAvatar)
+  const [avatar, setAvatarInput] = useState<Avatar>(initialAvatar)
   const [error, setError] = useState<string | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  const handleAvatarUpload = async (file: File) => {
+    setUploading(true)
+    setError(null)
+    try {
+      const form = new FormData()
+      form.append('file', file)
+      form.append('deviceId', getIdentity().deviceId)
+      const resp = await fetch('/api/avatars/upload', { method: 'POST', body: form })
+      const j = await resp.json()
+      if (!resp.ok || !j.avatarUrl) {
+        setError(j.error || 'Upload failed — try again')
+        return
+      }
+      setAvatarInput(j.avatarUrl)
+    } catch {
+      setError('Upload failed — check your connection')
+    } finally {
+      setUploading(false)
+    }
+  }
 
   const save = () => {
     const result = setHandle(handle)
@@ -394,9 +440,39 @@ function HandlePickerModal({
             </p>
           </div>
           <div>
-            <label className="block text-[10px] font-black uppercase tracking-wider text-arena-muted-l dark:text-arena-muted-d mb-1.5">
-              Avatar
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-[10px] font-black uppercase tracking-wider text-arena-muted-l dark:text-arena-muted-d">
+                Avatar
+              </label>
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                disabled={uploading}
+                className="text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-full bg-arena-card dark:bg-arena-surface border border-arena-border-l dark:border-arena-border-d hover:border-arena-red hover:text-arena-red transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+              >
+                {uploading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
+                {uploading ? 'Uploading…' : 'Upload custom'}
+              </button>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0]
+                  if (f) handleAvatarUpload(f)
+                  e.target.value = ''
+                }}
+              />
+            </div>
+            {isUrlAvatar(avatar) && (
+              <div className="mb-2 flex items-center gap-2 p-2 rounded-lg bg-arena-card dark:bg-arena-surface border border-arena-red">
+                <AvatarSlot avatar={avatar} size="lg" />
+                <div className="text-[10px] text-arena-muted-l dark:text-arena-muted-d flex-1 leading-tight">
+                  Custom avatar set. Pick an emoji below to switch back.
+                </div>
+              </div>
+            )}
             <div className="grid grid-cols-10 gap-1">
               {ARENA_AVATARS.map((a) => (
                 <button
@@ -413,6 +489,9 @@ function HandlePickerModal({
                 </button>
               ))}
             </div>
+            <p className="mt-1 text-[10px] text-arena-muted-l dark:text-arena-muted-d">
+              JPG, PNG, WEBP, GIF · 2 MB max · pinned to IPFS
+            </p>
           </div>
           {error && <p className="text-[11px] text-arena-red font-bold">{error}</p>}
           <button

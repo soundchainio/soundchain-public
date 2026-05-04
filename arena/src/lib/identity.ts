@@ -27,6 +27,16 @@ export const ARENA_AVATARS = [
 
 export type ArenaAvatar = (typeof ARENA_AVATARS)[number]
 
+// An avatar is either an emoji from ARENA_AVATARS or a Pinata-pinned image URL.
+// Render path checks `isUrlAvatar()` to decide between text rendering vs <img>.
+export type Avatar = ArenaAvatar | string
+
+const PINATA_AVATAR_HOST_RE = /^https:\/\/(soundchain\.mypinata\.cloud|gateway\.pinata\.cloud|ipfs\.io)\//
+
+export function isUrlAvatar(a: string | null | undefined): boolean {
+  return !!a && PINATA_AVATAR_HOST_RE.test(a)
+}
+
 function randomDeviceId() {
   // Not crypto — just a stable opaque ID per device. 16 hex chars = 64 bits.
   let s = ''
@@ -48,18 +58,21 @@ export function getDeviceId(): string {
   return id
 }
 
-export function getIdentity(): { handle: string | null; deviceId: string; avatar: ArenaAvatar } {
+export function getIdentity(): { handle: string | null; deviceId: string; avatar: Avatar } {
   if (typeof window === 'undefined') {
     return { handle: null, deviceId: '', avatar: ARENA_AVATARS[0] }
   }
   const handle = localStorage.getItem(HANDLE_KEY)
   const deviceId = getDeviceId()
-  let avatar = (localStorage.getItem(AVATAR_KEY) as ArenaAvatar | null) || null
-  if (!avatar || !ARENA_AVATARS.includes(avatar as ArenaAvatar)) {
+  let avatar = localStorage.getItem(AVATAR_KEY)
+  // Accept either a known emoji OR a Pinata-pinned URL. Anything else gets reset
+  // to a random emoji so a stale or malicious value can't poison the chat row.
+  const isValid = avatar && (ARENA_AVATARS.includes(avatar as ArenaAvatar) || isUrlAvatar(avatar))
+  if (!isValid) {
     avatar = randomAvatar()
     localStorage.setItem(AVATAR_KEY, avatar)
   }
-  return { handle, deviceId, avatar }
+  return { handle, deviceId, avatar: avatar as Avatar }
 }
 
 export function setHandle(raw: string): { ok: true; handle: string } | { ok: false; error: string } {
@@ -71,8 +84,8 @@ export function setHandle(raw: string): { ok: true; handle: string } | { ok: fal
   return { ok: true, handle }
 }
 
-export function setAvatar(avatar: ArenaAvatar): void {
-  if (!ARENA_AVATARS.includes(avatar)) return
+export function setAvatar(avatar: Avatar): void {
+  if (!ARENA_AVATARS.includes(avatar as ArenaAvatar) && !isUrlAvatar(avatar)) return
   localStorage.setItem(AVATAR_KEY, avatar)
 }
 

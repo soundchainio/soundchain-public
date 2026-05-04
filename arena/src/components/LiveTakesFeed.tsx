@@ -12,6 +12,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { ArrowRight, Loader2, MessageCircle } from 'lucide-react'
+import { isUrlAvatar } from '@/lib/identity'
 
 const POLL_MS = 8_000
 const FETCH_LIMIT = 12
@@ -186,9 +187,19 @@ export function LiveTakesFeed() {
             return (
               <li key={t.id} className="p-3 sm:p-4 hover:bg-arena-paper/60 dark:hover:bg-arena-carbon/40 transition">
                 <Link href={meta.route} className="flex items-start gap-3">
-                  <span className="text-2xl leading-none flex-shrink-0 mt-0.5" aria-hidden>
-                    {t.avatar || '🏟️'}
-                  </span>
+                  {isUrlAvatar(t.avatar) ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={t.avatar}
+                      alt=""
+                      loading="lazy"
+                      className="w-8 h-8 rounded-full object-cover border border-arena-border-l dark:border-arena-border-d flex-shrink-0 mt-0.5"
+                    />
+                  ) : (
+                    <span className="text-2xl leading-none flex-shrink-0 mt-0.5" aria-hidden>
+                      {t.avatar || '🏟️'}
+                    </span>
+                  )}
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <span className="text-sm font-bold truncate max-w-[120px] sm:max-w-none">
