@@ -176,21 +176,31 @@ export const SC_EMOTES: ArenaEmote[] = [
 ]
 
 /**
- * Live search the 7TV public catalog. No API key. Returns up to `limit`
- * results, deduped by id. Caller renders the URL the same way SC_EMOTES does.
+ * Live search the 7TV public catalog via their GraphQL endpoint. No auth key.
+ * Returns up to `limit` results, deduped by id. Caller renders the URL the
+ * same way SC_EMOTES does.
  *
- * Public docs: https://7tv.io/docs (REST endpoint /v3/emotes)
+ * 7TV's REST `/v3/emotes` is list-only; search lives at /v3/gql.
+ * Confirmed via curl 2026-05-04 — returns animated + non-animated; we filter
+ * client-side so `animated:false` results still surface (some great static
+ * pixel-art avatars live there).
  */
 export async function searchSevenTv(query: string, limit = 50): Promise<ArenaEmote[]> {
   const q = query.trim()
   if (!q) return []
-  // 7TV REST: filter by exact-name OR fuzzy. We use fuzzy + animated for fun results.
-  const url = `https://7tv.io/v3/emotes?query=${encodeURIComponent(q)}&limit=${limit}&filter[exact_match]=false&filter[case_sensitive]=false&filter[animated]=true`
+  const body = {
+    query: 'query($query:String!,$limit:Int){emotes(query:$query,limit:$limit){items{id name animated}}}',
+    variables: { query: q, limit },
+  }
   try {
-    const resp = await fetch(url)
+    const resp = await fetch('https://7tv.io/v3/gql', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
     if (!resp.ok) return []
     const data = await resp.json()
-    const items: any[] = data?.items || data?.emotes?.items || []
+    const items: any[] = data?.data?.emotes?.items || []
     const seen = new Set<string>()
     const out: ArenaEmote[] = []
     for (const e of items) {
