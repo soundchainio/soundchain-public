@@ -33,10 +33,13 @@ export type Avatar = ArenaAvatar | string
 
 // Allowed avatar image hosts:
 // - Pinata gateways: where /api/avatars/upload pins user-uploaded files
-// - cdn.7tv.app: the open-source emote CDN backing SC_EMOTES + searchSevenTv
-//   (see lib/emotes.ts). Mirrors the host the SoundChain web/ StickerPicker
-//   uses so emote images are already cached for many users on first paint.
-const URL_AVATAR_HOST_RE = /^https:\/\/(soundchain\.mypinata\.cloud|gateway\.pinata\.cloud|ipfs\.io|cdn\.7tv\.app)\//
+// - cdn.7tv.app: 7TV emote CDN (SC_EMOTES + searchSevenTv + 7TV global set)
+// - cdn.betterttv.net: BetterTTV global emote CDN
+// - cdn.frankerfacez.com: FrankerFaceZ global emote CDN
+// - static-cdn.jtvnw.net: Twitch emote CDN (public emoji by ID)
+// All four mirror the catalogs the SoundChain web/ StickerPicker uses so
+// emotes are already cached on first paint for returning users.
+const URL_AVATAR_HOST_RE = /^https:\/\/(soundchain\.mypinata\.cloud|gateway\.pinata\.cloud|ipfs\.io|cdn\.7tv\.app|cdn\.betterttv\.net|cdn\.frankerfacez\.com|static-cdn\.jtvnw\.net)\//
 
 export function isUrlAvatar(a: string | null | undefined): boolean {
   return !!a && URL_AVATAR_HOST_RE.test(a)

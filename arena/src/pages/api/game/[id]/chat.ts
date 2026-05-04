@@ -152,11 +152,14 @@ async function handleSend(req: NextApiRequest, res: NextApiResponse, gameId: str
   // Accept emoji avatars (≤8 chars — covers multi-codepoint emoji) OR allow-listed
   // image URLs:
   //   • Pinata gateways for uploads from /api/avatars/upload
-  //   • cdn.7tv.app for the open-source SC_EMOTES + 7TV search picker
+  //   • cdn.7tv.app for the SC_EMOTES + 7TV search + 7TV global set
+  //   • cdn.betterttv.net for BTTV global emotes
+  //   • cdn.frankerfacez.com for FFZ global emotes
+  //   • static-cdn.jtvnw.net for Twitch global emotes
   // Anything else falls back to the default emoji to defend against arbitrary
   // remote URLs being injected into the chat row (XSS/phishing/NSFW vector).
   const isEmojiAvatar = avatar && avatar.length <= 8
-  const isUrlAvatar = avatar && /^https:\/\/(soundchain\.mypinata\.cloud|gateway\.pinata\.cloud|ipfs\.io|cdn\.7tv\.app)\//.test(avatar)
+  const isUrlAvatar = avatar && /^https:\/\/(soundchain\.mypinata\.cloud|gateway\.pinata\.cloud|ipfs\.io|cdn\.7tv\.app|cdn\.betterttv\.net|cdn\.frankerfacez\.com|static-cdn\.jtvnw\.net)\//.test(avatar)
   const safeAvatar = (isEmojiAvatar || isUrlAvatar) ? (avatar as string) : '🏟️'
 
   const doc: ChatDoc = {
