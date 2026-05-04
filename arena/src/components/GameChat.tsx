@@ -10,7 +10,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { ImagePlus, Loader2, Send, Sparkles, Upload, X } from 'lucide-react'
+import { ImagePlus, Loader2, Search, Send, Sparkles, Upload, X } from 'lucide-react'
 import {
   CHAT_BODY_MAX,
   CHAT_POLL_INTERVAL_MS,
@@ -21,6 +21,7 @@ import {
   type ChatMessage,
 } from '@/lib/chat'
 import { ARENA_AVATARS, getIdentity, isUrlAvatar, setAvatar, setHandle, type Avatar, type ArenaAvatar } from '@/lib/identity'
+import { SC_EMOTES, searchSevenTv, type ArenaEmote } from '@/lib/emotes'
 import type { SportKey } from '@/lib/espn'
 
 // Render either an emoji avatar (string) or a Pinata-pinned URL as a circle image.
@@ -368,7 +369,34 @@ function HandlePickerModal({
   const [avatar, setAvatarInput] = useState<Avatar>(initialAvatar)
   const [error, setError] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
+  const [emoteQuery, setEmoteQuery] = useState('')
+  const [searchResults, setSearchResults] = useState<ArenaEmote[]>([])
+  const [searchingEmotes, setSearchingEmotes] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
+
+  // Debounced 7TV search — fires 300ms after typing stops to avoid hammering
+  // the public API on every keystroke. Cancels in-flight on rapid edits.
+  useEffect(() => {
+    const q = emoteQuery.trim()
+    if (!q) {
+      setSearchResults([])
+      setSearchingEmotes(false)
+      return
+    }
+    setSearchingEmotes(true)
+    let cancelled = false
+    const t = setTimeout(async () => {
+      const hits = await searchSevenTv(q, 50)
+      if (!cancelled) {
+        setSearchResults(hits)
+        setSearchingEmotes(false)
+      }
+    }, 300)
+    return () => {
+      cancelled = true
+      clearTimeout(t)
+    }
+  }, [emoteQuery])
 
   const handleAvatarUpload = async (file: File) => {
     setUploading(true)
@@ -451,7 +479,7 @@ function HandlePickerModal({
                 className="text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-full bg-arena-card dark:bg-arena-surface border border-arena-border-l dark:border-arena-border-d hover:border-arena-red hover:text-arena-red transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
               >
                 {uploading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
-                {uploading ? 'Uploading…' : 'Upload custom'}
+                {uploading ? 'Uploading…' : 'Upload'}
               </button>
               <input
                 ref={fileRef}
@@ -465,20 +493,49 @@ function HandlePickerModal({
                 }}
               />
             </div>
-            {isUrlAvatar(avatar) && (
-              <div className="mb-2 flex items-center gap-2 p-2 rounded-lg bg-arena-card dark:bg-arena-surface border border-arena-red">
-                <AvatarSlot avatar={avatar} size="lg" />
-                <div className="text-[10px] text-arena-muted-l dark:text-arena-muted-d flex-1 leading-tight">
-                  Custom avatar set. Pick an emoji below to switch back.
-                </div>
+
+            {/* Selected preview row — always visible, makes the current pick obvious */}
+            <div className="mb-2 flex items-center gap-2 p-2 rounded-lg bg-arena-card dark:bg-arena-surface border border-arena-red">
+              <AvatarSlot avatar={avatar} size="lg" />
+              <div className="text-[10px] text-arena-muted-l dark:text-arena-muted-d flex-1 leading-tight">
+                {isUrlAvatar(avatar) ? 'Custom avatar set.' : 'Sport emoji selected.'} Tap any item below to switch.
               </div>
-            )}
-            <div className="grid grid-cols-10 gap-1">
-              {ARENA_AVATARS.map((a) => (
+            </div>
+
+            {/* Search any 7TV emote — type to query the open-source catalog. */}
+            <div className="relative mb-2">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-arena-muted-l dark:text-arena-muted-d pointer-events-none" />
+              <input
+                type="text"
+                value={emoteQuery}
+                onChange={(e) => setEmoteQuery(e.target.value)}
+                placeholder="Search emotes (catjam, kekw, gigachad…)"
+                className="w-full rounded-lg bg-arena-card dark:bg-arena-surface border border-arena-border-l dark:border-arena-border-d pl-8 pr-8 py-2 text-xs focus:outline-none focus:border-arena-red"
+              />
+              {emoteQuery && (
                 <button
-                  key={a}
+                  type="button"
+                  onClick={() => setEmoteQuery('')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full flex items-center justify-center hover:bg-arena-border-l dark:hover:bg-arena-border-d"
+                  aria-label="Clear search"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+              {searchingEmotes && (
+                <Loader2 className="absolute right-7 top-1/2 -translate-y-1/2 w-3.5 h-3.5 animate-spin text-arena-muted-l dark:text-arena-muted-d" />
+              )}
+            </div>
+
+            {/* Mixed scroll grid: sport emojis + SC emotes (or search results when querying). */}
+            <div className="grid grid-cols-8 gap-1 max-h-72 overflow-y-auto p-1 rounded-lg bg-arena-paper/40 dark:bg-arena-carbon/40 border border-arena-border-l dark:border-arena-border-d">
+              {/* Sport emoji default set (always visible — fast, no network) */}
+              {!emoteQuery.trim() && ARENA_AVATARS.map((a) => (
+                <button
+                  key={`emoji-${a}`}
                   type="button"
                   onClick={() => setAvatarInput(a)}
+                  title={a}
                   className={`aspect-square rounded-lg flex items-center justify-center text-xl transition ${
                     avatar === a
                       ? 'bg-arena-red ring-2 ring-arena-red'
@@ -488,9 +545,36 @@ function HandlePickerModal({
                   {a}
                 </button>
               ))}
+              {/* SC curated 7TV emotes when no search; live 7TV results when searching. */}
+              {(emoteQuery.trim() ? searchResults : SC_EMOTES).map((e) => (
+                <button
+                  key={e.id}
+                  type="button"
+                  onClick={() => setAvatarInput(e.url)}
+                  title={e.name}
+                  className={`aspect-square rounded-lg flex items-center justify-center transition overflow-hidden ${
+                    avatar === e.url
+                      ? 'bg-arena-red ring-2 ring-arena-red'
+                      : 'bg-arena-card dark:bg-arena-surface border border-arena-border-l dark:border-arena-border-d hover:border-arena-red'
+                  }`}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={e.url}
+                    alt={e.name}
+                    loading="lazy"
+                    className="w-full h-full object-contain p-0.5"
+                  />
+                </button>
+              ))}
+              {emoteQuery.trim() && !searchingEmotes && searchResults.length === 0 && (
+                <div className="col-span-8 py-4 text-center text-[11px] text-arena-muted-l dark:text-arena-muted-d">
+                  No emotes match "{emoteQuery.trim()}". Try another keyword.
+                </div>
+              )}
             </div>
             <p className="mt-1 text-[10px] text-arena-muted-l dark:text-arena-muted-d">
-              JPG, PNG, WEBP, GIF · 2 MB max · pinned to IPFS
+              Sport emoji · {SC_EMOTES.length}+ animated emotes · search 7TV · or upload your own (2 MB max, JPG/PNG/WEBP/GIF)
             </p>
           </div>
           {error && <p className="text-[11px] text-arena-red font-bold">{error}</p>}

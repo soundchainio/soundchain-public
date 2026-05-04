@@ -31,10 +31,15 @@ export type ArenaAvatar = (typeof ARENA_AVATARS)[number]
 // Render path checks `isUrlAvatar()` to decide between text rendering vs <img>.
 export type Avatar = ArenaAvatar | string
 
-const PINATA_AVATAR_HOST_RE = /^https:\/\/(soundchain\.mypinata\.cloud|gateway\.pinata\.cloud|ipfs\.io)\//
+// Allowed avatar image hosts:
+// - Pinata gateways: where /api/avatars/upload pins user-uploaded files
+// - cdn.7tv.app: the open-source emote CDN backing SC_EMOTES + searchSevenTv
+//   (see lib/emotes.ts). Mirrors the host the SoundChain web/ StickerPicker
+//   uses so emote images are already cached for many users on first paint.
+const URL_AVATAR_HOST_RE = /^https:\/\/(soundchain\.mypinata\.cloud|gateway\.pinata\.cloud|ipfs\.io|cdn\.7tv\.app)\//
 
 export function isUrlAvatar(a: string | null | undefined): boolean {
-  return !!a && PINATA_AVATAR_HOST_RE.test(a)
+  return !!a && URL_AVATAR_HOST_RE.test(a)
 }
 
 function randomDeviceId() {
