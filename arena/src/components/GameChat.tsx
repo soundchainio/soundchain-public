@@ -31,6 +31,7 @@ import { ParsedBody } from './ParsedBody'
 import { NotificationBell } from './NotificationBell'
 import { ReactionPicker } from './ReactionPicker'
 import { GifPicker } from './GifPicker'
+import { IdentityModal } from './IdentityModal'
 
 // Render either an emoji avatar (string) or a Pinata-pinned URL as a circle image.
 // Used in three places: identity row, chat bubbles, picker preview.
@@ -68,6 +69,16 @@ export function GameChat({ gameId, sport, awayLabel, homeLabel }: Props) {
   const [error, setError] = useState<string | null>(null)
   const [identity, setIdentity] = useState(() => getIdentity())
   const [showHandlePicker, setShowHandlePicker] = useState(false)
+  const [showIdentityModal, setShowIdentityModal] = useState(false)
+  // Phase 2: native-first auth (Apple/Google/Guest). Provider availability is
+  // server-driven — env vars not provisioned = pill renders disabled. Continue
+  // as Guest always works (today's deviceId-pseudonymous flow).
+  const [providers, setProviders] = useState<{ apple: boolean; google: boolean; sessionReady: boolean }>({
+    apple: false,
+    google: false,
+    sessionReady: false,
+  })
+  const [authed, setAuthed] = useState(false)
   const [body, setBody] = useState('')
   const [sending, setSending] = useState(false)
   const [sendError, setSendError] = useState<string | null>(null)
@@ -126,6 +137,56 @@ export function GameChat({ gameId, sport, awayLabel, homeLabel }: Props) {
 
   const refreshIdentity = useCallback(() => setIdentity(getIdentity()), [])
 
+  // On mount: hydrate provider config + restore auth session (if any). When
+  // signed in via Apple/Google the server returns the persisted handle/avatar;
+  // we mirror those into localStorage so the rest of GameChat (which reads
+  // identity from localStorage today) sees the cross-device-persistent value
+  // without rewiring the chat plumbing. Survives history wipes — only cookies
+  // wipe matters here, and we re-fetch on every mount anyway.
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/auth/me', { credentials: 'include' })
+      .then((r) => r.json())
+      .then((data: {
+        authed?: boolean
+        provider?: 'apple' | 'google' | 'guest'
+        handle?: string | null
+        avatar?: string | null
+        providers?: { apple: boolean; google: boolean; sessionReady: boolean }
+      }) => {
+        if (cancelled) return
+        if (data.providers) setProviders(data.providers)
+        if (data.authed) {
+          setAuthed(true)
+          if (data.handle) {
+            const r = setHandle(data.handle)
+            if (r.ok) {
+              if (data.avatar) setAvatar(data.avatar as Avatar)
+              refreshIdentity()
+            }
+          }
+        }
+      })
+      .catch(() => undefined)
+    return () => {
+      cancelled = true
+    }
+  }, [refreshIdentity])
+
+  // Native-first identity gate. When the user has no handle yet, route them
+  // through IdentityModal first (Apple / Google / Continue as Guest). Already
+  // signed-in users with no handle (first-time on a fresh provider account)
+  // skip straight to HandlePicker since identity is established.
+  const openIdentityGate = useCallback(() => {
+    if (identity.handle) return false
+    if (authed) {
+      setShowHandlePicker(true)
+    } else {
+      setShowIdentityModal(true)
+    }
+    return true
+  }, [identity.handle, authed])
+
   const handleSend = async () => {
     setSendError(null)
     const trimmed = body.trim()
@@ -133,10 +194,7 @@ export function GameChat({ gameId, sport, awayLabel, homeLabel }: Props) {
       setSendError('Say something or attach an image')
       return
     }
-    if (!identity.handle) {
-      setShowHandlePicker(true)
-      return
-    }
+    if (openIdentityGate()) return
 
     setSending(true)
     try {
@@ -214,10 +272,7 @@ export function GameChat({ gameId, sport, awayLabel, homeLabel }: Props) {
       return
     }
     // Image emote → fire as a standalone sticker take.
-    if (!identity.handle) {
-      setShowHandlePicker(true)
-      return
-    }
+    if (openIdentityGate()) return
     setSending(true)
     try {
       const msg = await postChatMessage({
@@ -243,10 +298,7 @@ export function GameChat({ gameId, sport, awayLabel, homeLabel }: Props) {
   // MEDIA_URL_ALLOW gates `media[0-4].giphy.com` + `i.giphy.com` hosts.
   const handleGifPick = async (gifUrl: string) => {
     setSendError(null)
-    if (!identity.handle) {
-      setShowHandlePicker(true)
-      return
-    }
+    if (openIdentityGate()) return
     setSending(true)
     try {
       const msg = await postChatMessage({
@@ -299,10 +351,10 @@ export function GameChat({ gameId, sport, awayLabel, homeLabel }: Props) {
           <NotificationBell />
           <button
             type="button"
-            onClick={() => setShowHandlePicker(true)}
+            onClick={() => identity.handle ? setShowHandlePicker(true) : openIdentityGate()}
             className="flex-shrink-0 text-[10px] font-black uppercase tracking-wider px-2.5 py-1.5 rounded-full bg-arena-card dark:bg-arena-surface border border-arena-border-l dark:border-arena-border-d hover:border-arena-red hover:text-arena-red transition"
           >
-            {identity.handle ? 'Edit' : 'Set up'}
+            {identity.handle ? 'Edit' : 'Sign in'}
           </button>
         </div>
       </div>
@@ -423,7 +475,7 @@ export function GameChat({ gameId, sport, awayLabel, homeLabel }: Props) {
           />
           <button
             type="button"
-            onClick={() => identity.handle ? setShowEmojiPicker(true) : setShowHandlePicker(true)}
+            onClick={() => identity.handle ? setShowEmojiPicker(true) : openIdentityGate()}
             disabled={sending || uploading}
             className="flex-shrink-0 w-9 h-9 rounded-lg bg-arena-card dark:bg-arena-surface border border-arena-border-l dark:border-arena-border-d flex items-center justify-center hover:border-arena-red hover:text-arena-red transition disabled:opacity-50"
             aria-label="Pick an emoji or sticker"
@@ -432,7 +484,7 @@ export function GameChat({ gameId, sport, awayLabel, homeLabel }: Props) {
           </button>
           <button
             type="button"
-            onClick={() => identity.handle ? setShowGifPicker(true) : setShowHandlePicker(true)}
+            onClick={() => identity.handle ? setShowGifPicker(true) : openIdentityGate()}
             disabled={sending || uploading}
             className="flex-shrink-0 w-9 h-9 rounded-lg bg-arena-card dark:bg-arena-surface border border-arena-border-l dark:border-arena-border-d flex items-center justify-center hover:border-arena-red hover:text-arena-red transition disabled:opacity-50"
             aria-label="Pick a GIF from GIPHY"
@@ -442,7 +494,7 @@ export function GameChat({ gameId, sport, awayLabel, homeLabel }: Props) {
           </button>
           <button
             type="button"
-            onClick={() => identity.handle ? fileRef.current?.click() : setShowHandlePicker(true)}
+            onClick={() => identity.handle ? fileRef.current?.click() : openIdentityGate()}
             disabled={sending || uploading}
             className="flex-shrink-0 w-9 h-9 rounded-lg bg-arena-card dark:bg-arena-surface border border-arena-border-l dark:border-arena-border-d flex items-center justify-center hover:border-arena-red hover:text-arena-red transition disabled:opacity-50"
             aria-label="Attach image"
@@ -495,6 +547,35 @@ export function GameChat({ gameId, sport, awayLabel, homeLabel }: Props) {
             handleGifPick(gifUrl)
           }}
           onClose={() => setShowGifPicker(false)}
+        />
+      )}
+
+      {showIdentityModal && (
+        <IdentityModal
+          providers={providers}
+          onAuthSuccess={({ provider, handle, avatar }) => {
+            setAuthed(true)
+            if (handle) {
+              const r = setHandle(handle)
+              if (r.ok && avatar) setAvatar(avatar as Avatar)
+              refreshIdentity()
+              setShowIdentityModal(false)
+            } else {
+              // First-time sign-in with this provider — identity established but
+              // no display handle/avatar yet. Hand off to HandlePickerModal so
+              // the user can pick one. The save endpoint now keys on the auth
+              // sub from the session cookie automatically.
+              setShowIdentityModal(false)
+              setShowHandlePicker(true)
+            }
+            // Mark unused param to silence linter; provider is logged for telemetry follow-up.
+            void provider
+          }}
+          onContinueAsGuest={() => {
+            setShowIdentityModal(false)
+            setShowHandlePicker(true)
+          }}
+          onClose={() => setShowIdentityModal(false)}
         />
       )}
     </div>

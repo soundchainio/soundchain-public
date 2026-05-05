@@ -1,26 +1,28 @@
 /**
  * Persist `{deviceId, handle, avatar}` to the `arena_handles` Mongo collection.
  *
- * Phase 1 = pseudonymous device-keyed identity. Before this endpoint, handle +
- * avatar lived ONLY in localStorage + as denormalized snapshots on each chat
- * message. Two consequences:
- *   - Clearing localStorage = total identity loss (deviceId regenerates too,
- *     so server-side recovery isn't possible — that's by design for Phase 1).
- *   - The "central record" of "who is @courtside_kid right now" had no home;
- *     mention fan-out had to scan the chat collection.
+ * Phase 1 (deviceId-keyed): Pseudonymous device-keyed identity. Handle + avatar
+ * lived ONLY in localStorage and as denormalized snapshots on each chat
+ * message. Clearing localStorage = total identity loss.
  *
- * Now: HandlePickerModal fires-and-forgets to this endpoint on save. The doc
- * is upserted on `deviceId`. Future surfaces (verified-handle checkmark,
- * handle reservation, profile lookup, mention auto-complete) read from here.
+ * Phase 2 (auth-keyed): If the request carries a valid arena session cookie
+ * (Sign in with Apple / Google), we upsert keyed on `appleSub` / `googleSub`
+ * INSTEAD of `deviceId`. Same identity follows the user across devices and
+ * survives history wipes — they just sign in again on the new device.
+ *
+ * The frontend resolves which key to use:
+ *   - Authed: backend reads session cookie → keys on auth sub
+ *   - Guest: backend keys on deviceId (today's flow)
  *
  * Avatar is validated against the same allow-list mirrored across identity.ts /
- * chat.ts / chat-react.ts so an arbitrary URL injection here can't poison the
- * render path elsewhere. Emoji avatars (≤8 chars) bypass the URL check.
+ * chat.ts / chat-react.ts — single source-of-truth regex prevents render-time
+ * XSS / phishing vectors regardless of which identity key wrote the row.
  *
- * Edge runtime — single Mongo write, no auth, low latency.
+ * Edge runtime — single Mongo write, low latency.
  */
 
 import { arenaDb } from '@/lib/mongo'
+import { readSession } from '@/lib/auth'
 
 export const config = {
   runtime: 'nodejs',
@@ -41,7 +43,9 @@ interface SaveBody {
 }
 
 interface ArenaHandleDoc {
-  deviceId: string
+  deviceId?: string
+  appleSub?: string
+  googleSub?: string
   handle: string
   handleLower: string
   avatar: string
@@ -58,7 +62,9 @@ async function ensureIndexes(
   if (indexesEnsured) return
   const col = db.collection<ArenaHandleDoc>('arena_handles')
   await Promise.all([
-    col.createIndex({ deviceId: 1 }, { unique: true, background: true }),
+    col.createIndex({ deviceId: 1 }, { unique: true, sparse: true, background: true }),
+    col.createIndex({ appleSub: 1 }, { unique: true, sparse: true, background: true }),
+    col.createIndex({ googleSub: 1 }, { unique: true, sparse: true, background: true }),
     col.createIndex({ handleLower: 1 }, { background: true }),
   ])
   indexesEnsured = true
@@ -75,9 +81,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const rawHandle = String(body.handle || '').trim()
   const rawAvatar = String(body.avatar || '')
 
-  if (!deviceId || deviceId.length < 8) {
-    return res.status(400).json({ error: 'Missing device id' })
-  }
   if (rawHandle.length < HANDLE_MIN || rawHandle.length > HANDLE_MAX) {
     return res.status(400).json({ error: `Handle must be ${HANDLE_MIN}-${HANDLE_MAX} characters` })
   }
@@ -86,21 +89,39 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   // Avatar must be either a short emoji string (≤8 chars to cover multi-codepoint
-  // emoji like 🏎️) OR a URL on the allow-listed host set. Anything else gets
-  // rejected so we don't persist a render-time XSS/phishing vector.
+  // emoji like 🏎️) OR a URL on the allow-listed host set.
   const isEmoji = rawAvatar.length > 0 && rawAvatar.length <= 8
   const isUrl = URL_AVATAR_HOST_RE.test(rawAvatar)
   if (!isEmoji && !isUrl) {
     return res.status(400).json({ error: 'Invalid avatar' })
   }
 
+  // Phase 2: prefer the session cookie identity if present. Falls back to
+  // deviceId for guests. Either way, exactly one identity field is set on
+  // the doc — sparse unique indexes guarantee no cross-row collisions.
+  const session = await readSession(req)
+  let filter: Record<string, string>
+  let setOnInsert: Partial<ArenaHandleDoc>
+  if (session?.provider === 'apple') {
+    const sub = session.identityKey.slice('apple:'.length)
+    filter = { appleSub: sub }
+    setOnInsert = { appleSub: sub, deviceId: deviceId.length >= 8 ? deviceId : undefined }
+  } else if (session?.provider === 'google') {
+    const sub = session.identityKey.slice('google:'.length)
+    filter = { googleSub: sub }
+    setOnInsert = { googleSub: sub, deviceId: deviceId.length >= 8 ? deviceId : undefined }
+  } else {
+    if (!deviceId || deviceId.length < 8) {
+      return res.status(400).json({ error: 'Missing device id' })
+    }
+    filter = { deviceId }
+    setOnInsert = { deviceId }
+  }
+
   let db: Awaited<ReturnType<typeof arenaDb>>
   try {
     db = await arenaDb()
   } catch (err) {
-    // Mongo unreachable — degrade gracefully. Caller is fire-and-forget anyway,
-    // so the user's localStorage state still works. Phase 2 verified handles
-    // will rely on this being live; Phase 1 chat survives without it.
     return res.status(503).json({ error: 'Handle storage unavailable' })
   }
 
@@ -110,7 +131,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const col = db.collection<ArenaHandleDoc>('arena_handles')
 
   await col.updateOne(
-    { deviceId },
+    filter,
     {
       $set: {
         handle: rawHandle,
@@ -119,12 +140,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         updatedAt: now,
       },
       $setOnInsert: {
-        deviceId,
+        ...setOnInsert,
         createdAt: now,
       },
     },
     { upsert: true },
   )
 
-  return res.status(200).json({ ok: true, handle: rawHandle, avatar: rawAvatar })
+  return res.status(200).json({
+    ok: true,
+    handle: rawHandle,
+    avatar: rawAvatar,
+    provider: session?.provider ?? 'guest',
+  })
 }
