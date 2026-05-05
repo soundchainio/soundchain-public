@@ -24,6 +24,7 @@ interface ArenaHandleDoc {
   deviceId?: string
   appleSub?: string
   googleSub?: string
+  passkeyUserId?: string
   handle?: string
   avatar?: string
 }
@@ -51,7 +52,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         ? { appleSub: session.identityKey.slice('apple:'.length) }
         : session.provider === 'google'
           ? { googleSub: session.identityKey.slice('google:'.length) }
-          : { deviceId: session.identityKey.slice('guest:'.length) }
+          : session.provider === 'passkey'
+            ? { passkeyUserId: session.identityKey.slice('passkey:'.length) }
+            : { deviceId: session.identityKey.slice('guest:'.length) }
     const doc = await col.findOne(filter, { projection: { handle: 1, avatar: 1 } })
     if (doc) {
       handle = doc.handle ?? null

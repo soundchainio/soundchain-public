@@ -46,6 +46,7 @@ interface ArenaHandleDoc {
   deviceId?: string
   appleSub?: string
   googleSub?: string
+  passkeyUserId?: string
   handle: string
   handleLower: string
   avatar: string
@@ -65,6 +66,7 @@ async function ensureIndexes(
     col.createIndex({ deviceId: 1 }, { unique: true, sparse: true, background: true }),
     col.createIndex({ appleSub: 1 }, { unique: true, sparse: true, background: true }),
     col.createIndex({ googleSub: 1 }, { unique: true, sparse: true, background: true }),
+    col.createIndex({ passkeyUserId: 1 }, { unique: true, sparse: true, background: true }),
     col.createIndex({ handleLower: 1 }, { background: true }),
   ])
   indexesEnsured = true
@@ -110,6 +112,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const sub = session.identityKey.slice('google:'.length)
     filter = { googleSub: sub }
     setOnInsert = { googleSub: sub, deviceId: deviceId.length >= 8 ? deviceId : undefined }
+  } else if (session?.provider === 'passkey') {
+    const sub = session.identityKey.slice('passkey:'.length)
+    filter = { passkeyUserId: sub }
+    setOnInsert = { passkeyUserId: sub, deviceId: deviceId.length >= 8 ? deviceId : undefined }
   } else {
     if (!deviceId || deviceId.length < 8) {
       return res.status(400).json({ error: 'Missing device id' })
