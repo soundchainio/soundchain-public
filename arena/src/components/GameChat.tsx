@@ -423,7 +423,7 @@ export function GameChat({ gameId, sport, awayLabel, homeLabel }: Props) {
           />
           <button
             type="button"
-            onClick={() => setShowEmojiPicker(true)}
+            onClick={() => identity.handle ? setShowEmojiPicker(true) : setShowHandlePicker(true)}
             disabled={sending || uploading}
             className="flex-shrink-0 w-9 h-9 rounded-lg bg-arena-card dark:bg-arena-surface border border-arena-border-l dark:border-arena-border-d flex items-center justify-center hover:border-arena-red hover:text-arena-red transition disabled:opacity-50"
             aria-label="Pick an emoji or sticker"
@@ -432,7 +432,7 @@ export function GameChat({ gameId, sport, awayLabel, homeLabel }: Props) {
           </button>
           <button
             type="button"
-            onClick={() => setShowGifPicker(true)}
+            onClick={() => identity.handle ? setShowGifPicker(true) : setShowHandlePicker(true)}
             disabled={sending || uploading}
             className="flex-shrink-0 w-9 h-9 rounded-lg bg-arena-card dark:bg-arena-surface border border-arena-border-l dark:border-arena-border-d flex items-center justify-center hover:border-arena-red hover:text-arena-red transition disabled:opacity-50"
             aria-label="Pick a GIF from GIPHY"
@@ -442,7 +442,7 @@ export function GameChat({ gameId, sport, awayLabel, homeLabel }: Props) {
           </button>
           <button
             type="button"
-            onClick={() => fileRef.current?.click()}
+            onClick={() => identity.handle ? fileRef.current?.click() : setShowHandlePicker(true)}
             disabled={sending || uploading}
             className="flex-shrink-0 w-9 h-9 rounded-lg bg-arena-card dark:bg-arena-surface border border-arena-border-l dark:border-arena-border-d flex items-center justify-center hover:border-arena-red hover:text-arena-red transition disabled:opacity-50"
             aria-label="Attach image"
