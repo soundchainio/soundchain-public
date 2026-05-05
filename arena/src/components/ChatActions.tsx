@@ -17,7 +17,7 @@
  */
 
 import { useState } from 'react'
-import { Loader2, Share2, Smile } from 'lucide-react'
+import { Loader2, MessageSquare, Share2, Smile } from 'lucide-react'
 import { buildTakeShareUrl, reactToChatMessage, type ChatReaction } from '@/lib/chat'
 import type { SportKey } from '@/lib/espn'
 import { ReactionPicker } from './ReactionPicker'
@@ -34,6 +34,8 @@ interface Props {
   onReactionsChange?: (next: { reactions: ChatReaction[]; myReactions: string[] }) => void
   /** Smaller pill heights for the dense LiveTakesFeed homepage layout. */
   compact?: boolean
+  /** Tap-to-reply handler. When provided, renders a Reply pill in the action row. */
+  onReplyClick?: () => void
 }
 
 export function ChatActions({
@@ -45,6 +47,7 @@ export function ChatActions({
   shareText,
   onReactionsChange,
   compact,
+  onReplyClick,
 }: Props) {
   const [showPicker, setShowPicker] = useState(false)
   const [pending, setPending] = useState(false)
@@ -160,6 +163,18 @@ export function ChatActions({
         >
           <Smile className={iconSize} />
         </button>
+
+        {/* Reply (only when parent passes a handler) */}
+        {onReplyClick && (
+          <button
+            type="button"
+            onClick={onReplyClick}
+            className={`flex items-center gap-1.5 ${padX} ${padY} font-medium text-arena-muted-l dark:text-arena-muted-d hover:text-arena-red hover:bg-arena-paper/60 dark:hover:bg-arena-carbon/40 transition-all rounded-xl`}
+            title="Reply"
+          >
+            <MessageSquare className={iconSize} />
+          </button>
+        )}
 
         {/* Share */}
         <button

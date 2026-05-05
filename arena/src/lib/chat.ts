@@ -39,6 +39,14 @@ export type ChatMessage = {
   // Set when the author edited their message. Bubble shows a small "edited"
   // tag next to the timestamp; null on un-edited messages.
   editedAt?: string | null
+  // Inline-reply backbone. When `replyTo` is set, this take is a reply to a
+  // parent take in the same game. Handle + preview are denormalized at
+  // write time so the bubble renders the "↳ replying to @handle: …" header
+  // without an extra fetch. Phase 2 may add real thread expansion; Phase 1
+  // is Twitter/X-style flat threading with visual parent context.
+  replyTo?: string | null
+  replyToHandle?: string | null
+  replyToPreview?: string | null
   // Reaction counts + which reaction keys this device has applied. Default
   // to [] / [] so older docs that pre-date reactions render cleanly without
   // a migration step.
@@ -82,8 +90,10 @@ export async function postChatMessage(args: {
   sport: SportKey
   body: string
   mediaUrl?: string | null
+  /** Optional parent messageId — server denormalizes parent handle + preview. */
+  replyTo?: string | null
 }): Promise<ChatMessage> {
-  const { gameId, sport, body, mediaUrl } = args
+  const { gameId, sport, body, mediaUrl, replyTo } = args
   const { handle, deviceId, avatar } = getIdentity()
   if (!handle) throw new Error('Set a handle before posting')
   const r = await fetch(`/api/game/${encodeURIComponent(gameId)}/chat`, {
@@ -96,6 +106,7 @@ export async function postChatMessage(args: {
       handle,
       deviceId,
       avatar,
+      replyTo: replyTo ?? null,
     }),
   })
   if (r.status === 429) {

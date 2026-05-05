@@ -73,6 +73,7 @@ export function GameChat({ gameId, sport, awayLabel, homeLabel }: Props) {
   const [pendingImage, setPendingImage] = useState<{ file: File; preview: string } | null>(null)
   const [uploading, setUploading] = useState(false)
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
+  const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -147,10 +148,17 @@ export function GameChat({ gameId, sport, awayLabel, homeLabel }: Props) {
           setUploading(false)
         }
       }
-      const msg = await postChatMessage({ gameId, sport, body: trimmed, mediaUrl })
+      const msg = await postChatMessage({
+        gameId,
+        sport,
+        body: trimmed,
+        mediaUrl,
+        replyTo: replyingTo?.id ?? null,
+      })
       setMessages((prev) => [...prev, msg])
       setBody('')
       clearPendingImage()
+      setReplyingTo(null)
     } catch (e: unknown) {
       setSendError((e as Error)?.message ?? 'Send failed')
     } finally {
@@ -210,8 +218,15 @@ export function GameChat({ gameId, sport, awayLabel, homeLabel }: Props) {
     }
     setSending(true)
     try {
-      const msg = await postChatMessage({ gameId, sport, body: '', mediaUrl: args.key })
+      const msg = await postChatMessage({
+        gameId,
+        sport,
+        body: '',
+        mediaUrl: args.key,
+        replyTo: replyingTo?.id ?? null,
+      })
       setMessages((prev) => [...prev, msg])
+      setReplyingTo(null)
     } catch (e: unknown) {
       setSendError((e as Error)?.message ?? 'Send failed')
     } finally {
@@ -298,12 +313,41 @@ export function GameChat({ gameId, sport, awayLabel, homeLabel }: Props) {
             }}
             onEdited={handleMessageEdited}
             onDeleted={handleMessageDeleted}
+            onReplyClick={() => {
+              setReplyingTo(m)
+              setSendError(null)
+              // Focus the composer so the user can start typing right away.
+              requestAnimationFrame(() => textareaRef.current?.focus())
+            }}
           />
         ))}
       </div>
 
       {/* Composer */}
       <div className="border-t border-arena-border-l dark:border-arena-border-d px-3 pt-2 pb-3 bg-arena-paper/60 dark:bg-arena-carbon/60">
+        {replyingTo && (
+          <div className="mb-2 flex items-start gap-2 px-2 py-1.5 rounded-lg bg-arena-card dark:bg-arena-surface border border-arena-red/40 text-[11px]">
+            <div className="flex-1 min-w-0">
+              <div className="font-black uppercase tracking-wider text-arena-red text-[10px]">
+                ↳ Replying to @{replyingTo.handle}
+              </div>
+              <div className="truncate text-arena-muted-l dark:text-arena-muted-d">
+                {replyingTo.body
+                  ? replyingTo.body
+                  : (replyingTo.mediaUrl ? '[image]' : '')}
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setReplyingTo(null)}
+              className="flex-shrink-0 w-5 h-5 rounded-full border border-arena-border-l dark:border-arena-border-d flex items-center justify-center hover:border-arena-red hover:text-arena-red transition"
+              aria-label="Cancel reply"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          </div>
+        )}
+
         {pendingImage && (
           <div className="mb-2 relative inline-block">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -412,11 +456,13 @@ function ChatBubble({
   onReactionsChange,
   onEdited,
   onDeleted,
+  onReplyClick,
 }: {
   msg: ChatMessage
   onReactionsChange: (next: { reactions: ChatReaction[]; myReactions: string[] }) => void
   onEdited: (next: ChatMessage) => void
   onDeleted: (id: string) => void
+  onReplyClick: () => void
 }) {
   const [editing, setEditing] = useState(false)
   const [editValue, setEditValue] = useState(msg.body)
@@ -491,6 +537,15 @@ function ChatBubble({
             </span>
           )}
         </div>
+        {msg.replyTo && msg.replyToHandle && (
+          <div className={`flex items-center gap-1 text-[10px] text-arena-muted-l dark:text-arena-muted-d mb-1 max-w-full ${msg.isMine ? 'justify-end' : ''}`}>
+            <span className="text-arena-red font-bold">↳</span>
+            <span className="font-bold">@{msg.replyToHandle}</span>
+            {msg.replyToPreview && (
+              <span className="truncate italic opacity-80">· {msg.replyToPreview}</span>
+            )}
+          </div>
+        )}
         {editing ? (
           <div
             className={`inline-block w-full max-w-full rounded-2xl px-2 py-2 text-sm ${
@@ -577,6 +632,7 @@ function ChatBubble({
             myReactions={msg.myReactions}
             shareText={msg.body}
             onReactionsChange={onReactionsChange}
+            onReplyClick={onReplyClick}
           />
           {msg.isMine && !editing && (
             <>

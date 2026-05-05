@@ -47,6 +47,14 @@ type ChatDoc = {
   // the bubble timestamp row. Pre-edit body is not retained — typo fixes are
   // overwrite-only by design.
   editedAt?: Date
+  // Inline-reply backbone (Twitter/X style flat threading). When set, this
+  // message is a reply to `replyTo` (parent messageId). Handle + preview
+  // are denormalized at write time so the bubble can render the parent
+  // header without a per-render lookup. Edit + delete on the parent leave
+  // these untouched on the children — the preview becomes a snapshot.
+  replyTo?: string
+  replyToHandle?: string
+  replyToPreview?: string
   // Reactions are appended lazily on first react via $push / positional $inc.
   // Older docs predate these fields — undefined treated as [].
   reactions?: ChatReactionDoc[]
@@ -85,6 +93,9 @@ function shapeMessage(doc: ChatDoc, requestDeviceId: string | null) {
     mediaType: doc.mediaType ?? null,
     createdAt: doc.createdAt.toISOString(),
     editedAt: doc.editedAt ? doc.editedAt.toISOString() : null,
+    replyTo: doc.replyTo ?? null,
+    replyToHandle: doc.replyToHandle ?? null,
+    replyToPreview: doc.replyToPreview ?? null,
     reactions: reactions.map((r) => ({ key: r.key, kind: r.kind, count: r.count })),
     myReactions,
     isMine: !!requestDeviceId && doc.deviceId === requestDeviceId,
@@ -140,13 +151,14 @@ async function handleList(req: NextApiRequest, res: NextApiResponse, gameId: str
 }
 
 async function handleSend(req: NextApiRequest, res: NextApiResponse, gameId: string) {
-  const { sport, body, handle, avatar, deviceId, mediaUrl } = (req.body || {}) as {
+  const { sport, body, handle, avatar, deviceId, mediaUrl, replyTo } = (req.body || {}) as {
     sport?: string
     body?: string
     handle?: string
     avatar?: string
     deviceId?: string
     mediaUrl?: string | null
+    replyTo?: string | null
   }
 
   if (!sport || !SPORT_VALUES.has(sport.toLowerCase())) {
@@ -206,6 +218,35 @@ async function handleSend(req: NextApiRequest, res: NextApiResponse, gameId: str
   const mentions = extractMentions(trimmed)
   const hashtags = extractHashtags(trimmed)
 
+  // Resolve the reply parent (if any). Validates same-game scope, then
+  // denormalizes handle + 80-char preview so the child bubble can render
+  // the "↳ replying to @handle: …" header without an N+1 lookup. Edit /
+  // delete on the parent later don't propagate — preview becomes a snapshot
+  // of the parent at reply-time, which is the right read for chat threads.
+  let resolvedReplyTo: { id: string; handle: string; preview: string; deviceId: string } | null = null
+  if (typeof replyTo === 'string' && replyTo.length > 0) {
+    if (!ObjectId.isValid(replyTo)) {
+      return res.status(400).json({ error: 'Invalid reply target' })
+    }
+    const parent = await col.findOne(
+      { _id: new ObjectId(replyTo), gameId, sport: sport.toLowerCase() },
+      { projection: { handle: 1, body: 1, mediaUrl: 1, deviceId: 1 } },
+    )
+    if (!parent) {
+      return res.status(400).json({ error: 'Parent take not found in this game' })
+    }
+    const parentBody = (parent.body || '').trim()
+    const preview = parentBody
+      ? parentBody.slice(0, 80)
+      : (parent.mediaUrl ? '[image]' : '')
+    resolvedReplyTo = {
+      id: parent._id.toString(),
+      handle: parent.handle,
+      preview,
+      deviceId: parent.deviceId,
+    }
+  }
+
   const doc: ChatDoc = {
     _id: new ObjectId(),
     gameId,
@@ -220,8 +261,33 @@ async function handleSend(req: NextApiRequest, res: NextApiResponse, gameId: str
     reactions: [],
     mentions,
     hashtags,
+    ...(resolvedReplyTo
+      ? {
+          replyTo: resolvedReplyTo.id,
+          replyToHandle: resolvedReplyTo.handle,
+          replyToPreview: resolvedReplyTo.preview,
+        }
+      : {}),
   }
   await col.insertOne(doc)
+
+  // Fire a 'mention'-shaped notif to the parent author so they're pinged
+  // even if the reply body doesn't @-tag them. Reuses the existing
+  // mention notif schema so NotificationBell renders it without changes.
+  // Skip self-replies.
+  if (resolvedReplyTo && resolvedReplyTo.deviceId !== deviceId) {
+    fanOutReplyNotification({
+      db,
+      messageId: doc._id.toString(),
+      gameId,
+      sport: doc.sport,
+      actorHandle: doc.handle,
+      actorAvatar: doc.avatar,
+      preview: trimmed ? trimmed.slice(0, 140) : (hasMedia ? '[image reply]' : ''),
+      recipientDeviceId: resolvedReplyTo.deviceId,
+      recipientHandle: resolvedReplyTo.handle,
+    }).catch(() => undefined)
+  }
 
   // Lazy index creation — runs once per cold start, cheap if already exists.
   ensureIndexes(col).catch(() => undefined)
@@ -412,6 +478,35 @@ async function fanOutMentionNotifications(args: {
     createdAt: now,
   }))
   await notifCol.insertMany(docsToInsert, { ordered: false }).catch(() => undefined)
+  ensureNotificationIndexes(notifCol).catch(() => undefined)
+}
+
+async function fanOutReplyNotification(args: {
+  db: Awaited<ReturnType<typeof arenaDb>>
+  messageId: string
+  gameId: string
+  sport: string
+  actorHandle: string
+  actorAvatar: string
+  preview: string
+  recipientDeviceId: string
+  recipientHandle: string
+}) {
+  const notifCol = args.db.collection<ArenaNotificationDoc>('arena_notifications')
+  await notifCol.insertOne({
+    _id: new ObjectId(),
+    recipientDeviceId: args.recipientDeviceId,
+    recipientHandle: args.recipientHandle,
+    type: 'mention',
+    gameId: args.gameId,
+    sport: args.sport,
+    messageId: args.messageId,
+    actorHandle: args.actorHandle,
+    actorAvatar: args.actorAvatar,
+    preview: args.preview,
+    read: false,
+    createdAt: new Date(),
+  }).catch(() => undefined)
   ensureNotificationIndexes(notifCol).catch(() => undefined)
 }
 

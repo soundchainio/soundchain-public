@@ -31,6 +31,9 @@ type RecentTake = {
   mediaUrl?: string | null
   mediaType?: 'image' | null
   createdAt: string
+  replyTo?: string | null
+  replyToHandle?: string | null
+  replyToPreview?: string | null
   reactions?: ChatReaction[]
   myReactions?: string[]
 }
@@ -225,6 +228,15 @@ export function LiveTakesFeed() {
                         {formatRelative(t.createdAt)}
                       </span>
                     </div>
+                    {t.replyTo && t.replyToHandle && (
+                      <div className="flex items-center gap-1 text-[10px] text-arena-muted-l dark:text-arena-muted-d mb-1">
+                        <span className="text-arena-red font-bold">↳</span>
+                        <span className="font-bold">@{t.replyToHandle}</span>
+                        {t.replyToPreview && (
+                          <span className="truncate italic opacity-80">· {t.replyToPreview}</span>
+                        )}
+                      </div>
+                    )}
                     {t.body && (
                       <ParsedBody
                         body={t.body}

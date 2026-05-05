@@ -33,6 +33,9 @@ type ChatDoc = {
   deviceId: string
   createdAt: Date
   editedAt?: Date
+  replyTo?: string
+  replyToHandle?: string
+  replyToPreview?: string
   reactions?: ChatReactionDoc[]
 }
 
@@ -79,6 +82,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         mediaType: d.mediaType ?? null,
         createdAt: d.createdAt.toISOString(),
         editedAt: d.editedAt ? d.editedAt.toISOString() : null,
+        replyTo: d.replyTo ?? null,
+        replyToHandle: d.replyToHandle ?? null,
+        replyToPreview: d.replyToPreview ?? null,
         reactions: reactions.map((r) => ({ key: r.key, kind: r.kind, count: r.count })),
         myReactions,
       }
