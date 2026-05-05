@@ -472,6 +472,19 @@ function HandlePickerModal({
       return
     }
     setAvatar(avatar)
+    // Persist to arena_handles in Mongo so the handle/avatar pair survives
+    // beyond a single device's localStorage. Fire-and-forget — chat works
+    // either way; this endpoint enables Phase-2 surfaces (verified handle,
+    // mention auto-complete, profile lookup) without blocking the modal.
+    fetch('/api/handles/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        deviceId: getIdentity().deviceId,
+        handle: result.handle,
+        avatar: avatar,
+      }),
+    }).catch(() => undefined)
     onSave()
   }
 

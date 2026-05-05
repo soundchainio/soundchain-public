@@ -19,11 +19,15 @@ const UPLOAD_COOLDOWN_MS = 10_000
 
 // Per-isolate rate limiter. Bursts hitting different isolates are bounded
 // upstream by Vercel concurrency; this stops the easy single-tab spam case.
+// Timestamp is set AFTER a successful pin — failed pins don't consume quota.
 const lastUploadByDevice = new Map<string, number>()
-function rateLimited(deviceId: string): boolean {
+function isRateLimited(deviceId: string): boolean {
   const now = Date.now()
   const last = lastUploadByDevice.get(deviceId) || 0
-  if (now - last < UPLOAD_COOLDOWN_MS) return true
+  return now - last < UPLOAD_COOLDOWN_MS
+}
+function markUploadSuccess(deviceId: string): void {
+  const now = Date.now()
   lastUploadByDevice.set(deviceId, now)
   if (lastUploadByDevice.size > 1000) {
     const cutoff = now - UPLOAD_COOLDOWN_MS * 2
@@ -31,7 +35,6 @@ function rateLimited(deviceId: string): boolean {
       if (v < cutoff) lastUploadByDevice.delete(k)
     }
   }
-  return false
 }
 
 function json(body: unknown, status: number) {
@@ -68,7 +71,10 @@ export default async function handler(req: Request) {
   if (!ALLOWED_MIMES.has(file.type)) {
     return json({ error: 'Use JPG, PNG, WEBP, or GIF' }, 415)
   }
-  if (rateLimited(deviceId)) {
+  // Check rate limit BEFORE attempting the pin. Don't update the timestamp
+  // until the pin succeeds — otherwise a failed Pinata call locks the user
+  // out on a no-op (e.g. transient 502 from Pinata mid-upload).
+  if (isRateLimited(deviceId)) {
     return json({ error: 'Wait a few seconds before uploading another image' }, 429)
   }
 
@@ -95,6 +101,9 @@ export default async function handler(req: Request) {
   }
 
   if (!cid) return json({ error: 'Image pinning returned no CID' }, 502)
+
+  // Pin succeeded — only now consume the user's per-device quota.
+  markUploadSuccess(deviceId)
 
   return json({ mediaUrl: `https://soundchain.mypinata.cloud/ipfs/${cid}` }, 200)
 }
