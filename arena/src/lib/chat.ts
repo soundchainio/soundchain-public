@@ -13,6 +13,19 @@ export const CHAT_BODY_MAX = 280
 export const CHAT_IMAGE_MAX_BYTES = 5 * 1024 * 1024 // 5 MB
 export const CHAT_POLL_INTERVAL_MS = 5_000
 
+/**
+ * Reactions are emoji OR image (7TV/BTTV/FFZ/Twitch CDN URLs from arena's
+ * shared emote catalog). The `key` is the canonical reaction identifier:
+ * for emoji it's the unicode char; for images it's the URL itself.
+ */
+export type ChatReactionKind = 'emoji' | 'image'
+
+export type ChatReaction = {
+  key: string
+  kind: ChatReactionKind
+  count: number
+}
+
 export type ChatMessage = {
   id: string
   gameId: string
@@ -23,6 +36,11 @@ export type ChatMessage = {
   mediaUrl?: string | null
   mediaType?: 'image' | null
   createdAt: string // ISO
+  // Reaction counts + which reaction keys this device has applied. Default
+  // to [] / [] so older docs that pre-date reactions render cleanly without
+  // a migration step.
+  reactions?: ChatReaction[]
+  myReactions?: string[]
   // Echoed back so the client can highlight its own messages without exposing
   // someone else's deviceId. Only present on messages this device authored.
   isMine?: boolean
@@ -115,6 +133,54 @@ export async function uploadChatImage(args: {
     throw new Error(j.error || `Upload failed (${r.status})`)
   }
   return r.json()
+}
+
+/**
+ * POST /api/game/[id]/chat-react — toggle an emoji/emote reaction on a take.
+ * Server returns the authoritative reaction list + the device's current
+ * reaction keys so the UI can settle after optimistic update.
+ */
+export async function reactToChatMessage(args: {
+  gameId: string
+  sport: SportKey
+  messageId: string
+  reactionKey: string
+  reactionKind: ChatReactionKind
+  toggle: 'add' | 'remove'
+}): Promise<{ reactions: ChatReaction[]; myReactions: string[] }> {
+  const { gameId, sport, messageId, reactionKey, reactionKind, toggle } = args
+  const { deviceId } = getIdentity()
+  if (!deviceId) throw new Error('No device id')
+  const r = await fetch(`/api/game/${encodeURIComponent(gameId)}/chat-react`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      sport: sportFromQuery(sport),
+      messageId,
+      reactionKey,
+      reactionKind,
+      toggle,
+      deviceId,
+    }),
+  })
+  if (!r.ok) {
+    const j = await r.json().catch(() => ({}))
+    throw new Error(j.error || `Reaction failed (${r.status})`)
+  }
+  return r.json()
+}
+
+/**
+ * Build a public deep-link to a take. The `?take=` param is Phase-2
+ * (auto-open the game modal scrolled to the message); today the sport hub
+ * still loads cleanly without it. External-share is the primary use case.
+ */
+export function buildTakeShareUrl(args: { sport: SportKey | string; gameId: string; messageId: string }): string {
+  const sport = String(args.sport).toLowerCase()
+  const origin = typeof window !== 'undefined' && window.location?.origin
+    ? window.location.origin
+    : 'https://arena.soundchain.io'
+  return `${origin}/${sport}?game=${encodeURIComponent(args.gameId)}&take=${encodeURIComponent(args.messageId)}`
 }
 
 /** Helper for the GameChat component. */

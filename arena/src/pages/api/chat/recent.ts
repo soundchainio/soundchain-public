@@ -14,6 +14,13 @@ import { arenaDb } from '@/lib/mongo'
 const HARD_LIMIT = 30
 const DEFAULT_LIMIT = 12
 
+type ChatReactionDoc = {
+  key: string
+  kind: 'emoji' | 'image'
+  count: number
+  reactedBy: string[]
+}
+
 type ChatDoc = {
   _id: ObjectId
   gameId: string
@@ -25,6 +32,7 @@ type ChatDoc = {
   mediaType?: 'image' | null
   deviceId: string
   createdAt: Date
+  reactions?: ChatReactionDoc[]
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -35,6 +43,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const limitRaw = parseInt(String(req.query.limit ?? DEFAULT_LIMIT), 10)
   const limit = Number.isFinite(limitRaw) ? Math.max(1, Math.min(HARD_LIMIT, limitRaw)) : DEFAULT_LIMIT
+  const requestDeviceId = typeof req.query.deviceId === 'string' ? req.query.deviceId : null
 
   const db = await arenaDb()
   const col = db.collection<ChatDoc>('arena_game_chat')
@@ -53,17 +62,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   res.setHeader('Cache-Control', 'no-store')
   return res.status(200).json({
-    messages: docs.map((d) => ({
-      id: d._id.toString(),
-      gameId: d.gameId,
-      sport: d.sport,
-      handle: d.handle,
-      avatar: d.avatar,
-      body: d.body,
-      mediaUrl: d.mediaUrl ?? null,
-      mediaType: d.mediaType ?? null,
-      createdAt: d.createdAt.toISOString(),
-    })),
+    messages: docs.map((d) => {
+      const reactions = Array.isArray(d.reactions) ? d.reactions : []
+      const myReactions: string[] = requestDeviceId
+        ? reactions.filter((r) => Array.isArray(r.reactedBy) && r.reactedBy.includes(requestDeviceId)).map((r) => r.key)
+        : []
+      return {
+        id: d._id.toString(),
+        gameId: d.gameId,
+        sport: d.sport,
+        handle: d.handle,
+        avatar: d.avatar,
+        body: d.body,
+        mediaUrl: d.mediaUrl ?? null,
+        mediaType: d.mediaType ?? null,
+        createdAt: d.createdAt.toISOString(),
+        reactions: reactions.map((r) => ({ key: r.key, kind: r.kind, count: r.count })),
+        myReactions,
+      }
+    }),
   })
 }
 

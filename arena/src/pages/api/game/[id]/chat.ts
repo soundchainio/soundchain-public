@@ -25,6 +25,13 @@ const BODY_MAX = 280
 const RATE_LIMIT_MS = 3_000 // one message per 3s per device per game
 const PAGE_LIMIT = 50
 
+type ChatReactionDoc = {
+  key: string
+  kind: 'emoji' | 'image'
+  count: number
+  reactedBy: string[]
+}
+
 type ChatDoc = {
   _id: ObjectId
   gameId: string
@@ -36,6 +43,13 @@ type ChatDoc = {
   mediaType?: 'image' | null
   deviceId: string
   createdAt: Date
+  // Reactions are appended lazily on first react via $push / positional $inc.
+  // Older docs predate these fields — undefined treated as [].
+  reactions?: ChatReactionDoc[]
+  // Lowercased handles + tags extracted from the message body at send time.
+  // Used for @mention notifs + future hashtag filtering on the cross-game feed.
+  mentions?: string[]
+  hashtags?: string[]
 }
 
 function isProfanity(s: string) {
@@ -46,6 +60,10 @@ function isProfanity(s: string) {
 }
 
 function shapeMessage(doc: ChatDoc, requestDeviceId: string | null) {
+  const reactions = Array.isArray(doc.reactions) ? doc.reactions : []
+  const myReactions: string[] = requestDeviceId
+    ? reactions.filter((r) => Array.isArray(r.reactedBy) && r.reactedBy.includes(requestDeviceId)).map((r) => r.key)
+    : []
   return {
     id: doc._id.toString(),
     gameId: doc.gameId,
@@ -56,6 +74,8 @@ function shapeMessage(doc: ChatDoc, requestDeviceId: string | null) {
     mediaUrl: doc.mediaUrl ?? null,
     mediaType: doc.mediaType ?? null,
     createdAt: doc.createdAt.toISOString(),
+    reactions: reactions.map((r) => ({ key: r.key, kind: r.kind, count: r.count })),
+    myReactions,
     isMine: !!requestDeviceId && doc.deviceId === requestDeviceId,
   }
 }
@@ -162,6 +182,12 @@ async function handleSend(req: NextApiRequest, res: NextApiResponse, gameId: str
   const isUrlAvatar = avatar && /^https:\/\/(soundchain\.mypinata\.cloud|gateway\.pinata\.cloud|ipfs\.io|cdn\.7tv\.app|cdn\.betterttv\.net|cdn\.frankerfacez\.com|static-cdn\.jtvnw\.net)\//.test(avatar)
   const safeAvatar = (isEmojiAvatar || isUrlAvatar) ? (avatar as string) : '🏟️'
 
+  // Parse mentions (@handle) + hashtags (#tag) once at write time so reads
+  // never have to re-scan. Lowercased so matching is case-insensitive both
+  // for the mention notif fan-out below and any future hashtag aggregation.
+  const mentions = extractMentions(trimmed)
+  const hashtags = extractHashtags(trimmed)
+
   const doc: ChatDoc = {
     _id: new ObjectId(),
     gameId,
@@ -173,13 +199,138 @@ async function handleSend(req: NextApiRequest, res: NextApiResponse, gameId: str
     mediaType: hasMedia ? 'image' : null,
     deviceId,
     createdAt: new Date(),
+    reactions: [],
+    mentions,
+    hashtags,
   }
   await col.insertOne(doc)
 
   // Lazy index creation — runs once per cold start, cheap if already exists.
   ensureIndexes(col).catch(() => undefined)
 
+  // Fan out mention notifications. Look up every device that has used each
+  // mentioned handle on this collection (handles aren't reserved, so a few
+  // can match — that's fine). Skip self-mentions. Best-effort fire-and-forget.
+  if (mentions.length > 0) {
+    fanOutMentionNotifications({
+      db,
+      messageId: doc._id.toString(),
+      gameId,
+      sport: doc.sport,
+      actorHandle: doc.handle,
+      actorAvatar: doc.avatar,
+      actorDeviceId: deviceId,
+      preview: trimmed.slice(0, 140),
+      mentions,
+    }).catch(() => undefined)
+  }
+
   return res.status(201).json(shapeMessage(doc, deviceId))
+}
+
+const MENTION_RE_SERVER = /@([a-zA-Z0-9_.-]{2,24})/g
+const HASHTAG_RE_SERVER = /#([a-zA-Z0-9_]{1,40})/g
+
+function extractMentions(body: string): string[] {
+  const out = new Set<string>()
+  let m: RegExpExecArray | null
+  while ((m = MENTION_RE_SERVER.exec(body))) out.add(m[1].toLowerCase())
+  return Array.from(out)
+}
+
+function extractHashtags(body: string): string[] {
+  const out = new Set<string>()
+  let m: RegExpExecArray | null
+  while ((m = HASHTAG_RE_SERVER.exec(body))) out.add(m[1].toLowerCase())
+  return Array.from(out)
+}
+
+type ArenaNotificationDoc = {
+  _id: ObjectId
+  recipientDeviceId: string
+  recipientHandle: string
+  type: 'mention' | 'reaction'
+  gameId: string
+  sport: string
+  messageId: string
+  actorHandle: string
+  actorAvatar: string
+  preview: string
+  reactionKey?: string
+  reactionKind?: 'emoji' | 'image'
+  read: boolean
+  createdAt: Date
+}
+
+async function fanOutMentionNotifications(args: {
+  db: Awaited<ReturnType<typeof arenaDb>>
+  messageId: string
+  gameId: string
+  sport: string
+  actorHandle: string
+  actorAvatar: string
+  actorDeviceId: string
+  preview: string
+  mentions: string[]
+}) {
+  const chatCol = args.db.collection<ChatDoc>('arena_game_chat')
+  const notifCol = args.db.collection<ArenaNotificationDoc>('arena_notifications')
+
+  // Find recent devices for each mentioned handle. Use case-insensitive
+  // regex anchored at full string. We cap to recent 50 messages per handle
+  // to keep this cheap; in practice most handles map to 1-3 devices.
+  const targets: Array<{ handle: string; deviceId: string }> = []
+  for (const handle of args.mentions) {
+    const docs = await chatCol
+      .find({ handle: { $regex: `^${escapeRegex(handle)}$`, $options: 'i' } }, { projection: { handle: 1, deviceId: 1 } })
+      .sort({ createdAt: -1 })
+      .limit(50)
+      .toArray()
+    const seen = new Set<string>()
+    for (const d of docs) {
+      if (!d.deviceId || d.deviceId === args.actorDeviceId) continue
+      if (seen.has(d.deviceId)) continue
+      seen.add(d.deviceId)
+      targets.push({ handle: d.handle, deviceId: d.deviceId })
+    }
+  }
+  if (targets.length === 0) return
+
+  const now = new Date()
+  const docsToInsert: ArenaNotificationDoc[] = targets.map((t) => ({
+    _id: new ObjectId(),
+    recipientDeviceId: t.deviceId,
+    recipientHandle: t.handle,
+    type: 'mention',
+    gameId: args.gameId,
+    sport: args.sport,
+    messageId: args.messageId,
+    actorHandle: args.actorHandle,
+    actorAvatar: args.actorAvatar,
+    preview: args.preview,
+    read: false,
+    createdAt: now,
+  }))
+  await notifCol.insertMany(docsToInsert, { ordered: false }).catch(() => undefined)
+  ensureNotificationIndexes(notifCol).catch(() => undefined)
+}
+
+function escapeRegex(s: string) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+let notifIndexesEnsured = false
+async function ensureNotificationIndexes(col: Collection<ArenaNotificationDoc>) {
+  if (notifIndexesEnsured) return
+  notifIndexesEnsured = true
+  try {
+    await Promise.all([
+      col.createIndex({ recipientDeviceId: 1, createdAt: -1 }),
+      col.createIndex({ recipientDeviceId: 1, read: 1 }),
+    ])
+  } catch {
+    notifIndexesEnsured = false
+  }
 }
 
 let indexesEnsured = false

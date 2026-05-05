@@ -19,10 +19,14 @@ import {
   postChatMessage,
   uploadChatImage,
   type ChatMessage,
+  type ChatReaction,
 } from '@/lib/chat'
 import { ARENA_AVATARS, getIdentity, isUrlAvatar, setAvatar, setHandle, type Avatar, type ArenaAvatar } from '@/lib/identity'
 import { PREFETCHED_EMOTES, SC_EMOTES, TWITCH_EMOTES, searchSevenTv, type ArenaEmote } from '@/lib/emotes'
 import type { SportKey } from '@/lib/espn'
+import { ChatActions } from './ChatActions'
+import { ParsedBody } from './ParsedBody'
+import { NotificationBell } from './NotificationBell'
 
 // Render either an emoji avatar (string) or a Pinata-pinned URL as a circle image.
 // Used in three places: identity row, chat bubbles, picker preview.
@@ -192,13 +196,16 @@ export function GameChat({ gameId, sport, awayLabel, homeLabel }: Props) {
             </div>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={() => setShowHandlePicker(true)}
-          className="flex-shrink-0 text-[10px] font-black uppercase tracking-wider px-2.5 py-1.5 rounded-full bg-arena-card dark:bg-arena-surface border border-arena-border-l dark:border-arena-border-d hover:border-arena-red hover:text-arena-red transition"
-        >
-          {identity.handle ? 'Edit' : 'Set up'}
-        </button>
+        <div className="flex items-center gap-1 flex-shrink-0">
+          <NotificationBell />
+          <button
+            type="button"
+            onClick={() => setShowHandlePicker(true)}
+            className="flex-shrink-0 text-[10px] font-black uppercase tracking-wider px-2.5 py-1.5 rounded-full bg-arena-card dark:bg-arena-surface border border-arena-border-l dark:border-arena-border-d hover:border-arena-red hover:text-arena-red transition"
+          >
+            {identity.handle ? 'Edit' : 'Set up'}
+          </button>
+        </div>
       </div>
 
       {/* Messages list */}
@@ -228,7 +235,15 @@ export function GameChat({ gameId, sport, awayLabel, homeLabel }: Props) {
         )}
 
         {loaded && messages.map((m) => (
-          <ChatBubble key={m.id} msg={m} />
+          <ChatBubble
+            key={m.id}
+            msg={m}
+            onReactionsChange={(next) => {
+              setMessages((prev) =>
+                prev.map((p) => (p.id === m.id ? { ...p, reactions: next.reactions, myReactions: next.myReactions } : p)),
+              )
+            }}
+          />
         ))}
       </div>
 
@@ -318,7 +333,13 @@ export function GameChat({ gameId, sport, awayLabel, homeLabel }: Props) {
   )
 }
 
-function ChatBubble({ msg }: { msg: ChatMessage }) {
+function ChatBubble({
+  msg,
+  onReactionsChange,
+}: {
+  msg: ChatMessage
+  onReactionsChange: (next: { reactions: ChatReaction[]; myReactions: string[] }) => void
+}) {
   return (
     <div className={`flex gap-2 ${msg.isMine ? 'flex-row-reverse' : ''}`}>
       <div className="flex-shrink-0">
@@ -336,7 +357,9 @@ function ChatBubble({ msg }: { msg: ChatMessage }) {
               : 'bg-arena-paper dark:bg-arena-carbon border border-arena-border-l dark:border-arena-border-d rounded-tl-sm'
           }`}
         >
-          {msg.body && <p className="whitespace-pre-wrap leading-relaxed">{msg.body}</p>}
+          {msg.body && (
+            <ParsedBody body={msg.body} className="whitespace-pre-wrap leading-relaxed break-words" />
+          )}
           {msg.mediaUrl && msg.mediaType === 'image' && (
             <a href={msg.mediaUrl} target="_blank" rel="noreferrer" className="block mt-1.5 -mx-1">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -348,6 +371,17 @@ function ChatBubble({ msg }: { msg: ChatMessage }) {
               />
             </a>
           )}
+        </div>
+        <div className={msg.isMine ? 'flex justify-end' : ''}>
+          <ChatActions
+            gameId={msg.gameId}
+            sport={msg.sport}
+            messageId={msg.id}
+            reactions={msg.reactions}
+            myReactions={msg.myReactions}
+            shareText={msg.body}
+            onReactionsChange={onReactionsChange}
+          />
         </div>
       </div>
     </div>

@@ -12,7 +12,11 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { ArrowRight, Loader2, MessageCircle } from 'lucide-react'
-import { isUrlAvatar } from '@/lib/identity'
+import { isUrlAvatar, getIdentity } from '@/lib/identity'
+import type { ChatReaction } from '@/lib/chat'
+import { ChatActions } from './ChatActions'
+import { ParsedBody } from './ParsedBody'
+import { NotificationBell } from './NotificationBell'
 
 const POLL_MS = 8_000
 const FETCH_LIMIT = 12
@@ -27,6 +31,8 @@ type RecentTake = {
   mediaUrl?: string | null
   mediaType?: 'image' | null
   createdAt: string
+  reactions?: ChatReaction[]
+  myReactions?: string[]
 }
 
 // Sport key → friendly label + accent + route. The chat API stores lowercase
@@ -71,7 +77,11 @@ export function LiveTakesFeed() {
 
     const load = async () => {
       try {
-        const r = await fetch(`/api/chat/recent?limit=${FETCH_LIMIT}`, { cache: 'no-store' })
+        // Pass deviceId so the server returns this device's myReactions per take.
+        const { deviceId } = getIdentity()
+        const params = new URLSearchParams({ limit: String(FETCH_LIMIT) })
+        if (deviceId) params.set('deviceId', deviceId)
+        const r = await fetch(`/api/chat/recent?${params.toString()}`, { cache: 'no-store' })
         if (cancelledRef.current) return
         if (!r.ok) {
           setError(`Couldn't load takes (${r.status})`)
@@ -171,13 +181,16 @@ export function LiveTakesFeed() {
         <h2 className="text-xs font-black uppercase tracking-[0.3em] text-arena-muted-l dark:text-arena-muted-d">
           Live takes · Right now
         </h2>
-        <span className="flex items-center gap-1.5 text-[10px] font-mono tracking-wider text-arena-red">
-          <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full rounded-full bg-arena-red opacity-75 animate-ping" />
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-arena-red" />
+        <div className="flex items-center gap-2">
+          <span className="flex items-center gap-1.5 text-[10px] font-mono tracking-wider text-arena-red">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full rounded-full bg-arena-red opacity-75 animate-ping" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-arena-red" />
+            </span>
+            LIVE
           </span>
-          LIVE
-        </span>
+          <NotificationBell />
+        </div>
       </div>
 
       <div className="rounded-2xl border border-arena-border-l dark:border-arena-border-d bg-arena-card dark:bg-arena-surface overflow-hidden">
@@ -186,7 +199,7 @@ export function LiveTakesFeed() {
             const meta = SPORT_META[t.sport] ?? { label: t.sport.toUpperCase(), route: '/live', accent: 'text-arena-muted-l dark:text-arena-muted-d border-arena-border-l dark:border-arena-border-d bg-transparent' }
             return (
               <li key={t.id} className="p-3 sm:p-4 hover:bg-arena-paper/60 dark:hover:bg-arena-carbon/40 transition">
-                <Link href={meta.route} className="flex items-start gap-3">
+                <div className="flex items-start gap-3">
                   {isUrlAvatar(t.avatar) ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -205,17 +218,18 @@ export function LiveTakesFeed() {
                       <span className="text-sm font-bold truncate max-w-[120px] sm:max-w-none">
                         @{t.handle}
                       </span>
-                      <span className={`text-[9px] font-mono tracking-wider px-1.5 py-0.5 rounded-full border ${meta.accent}`}>
+                      <Link href={meta.route} className={`text-[9px] font-mono tracking-wider px-1.5 py-0.5 rounded-full border hover:opacity-80 ${meta.accent}`}>
                         {meta.label}
-                      </span>
+                      </Link>
                       <span className="text-[10px] text-arena-muted-l dark:text-arena-muted-d ml-auto">
                         {formatRelative(t.createdAt)}
                       </span>
                     </div>
                     {t.body && (
-                      <p className="text-sm text-arena-text-l dark:text-arena-text-d leading-snug break-words">
-                        {t.body}
-                      </p>
+                      <ParsedBody
+                        body={t.body}
+                        className="text-sm text-arena-text-l dark:text-arena-text-d leading-snug break-words"
+                      />
                     )}
                     {t.mediaUrl && t.mediaType === 'image' && (
                       <img
@@ -225,8 +239,24 @@ export function LiveTakesFeed() {
                         className="mt-2 max-h-48 rounded-lg border border-arena-border-l dark:border-arena-border-d"
                       />
                     )}
+                    <ChatActions
+                      compact
+                      gameId={t.gameId}
+                      sport={t.sport}
+                      messageId={t.id}
+                      reactions={t.reactions}
+                      myReactions={t.myReactions}
+                      shareText={t.body}
+                      onReactionsChange={(next) => {
+                        setTakes((prev) =>
+                          prev
+                            ? prev.map((p) => (p.id === t.id ? { ...p, reactions: next.reactions, myReactions: next.myReactions } : p))
+                            : prev,
+                        )
+                      }}
+                    />
                   </div>
-                </Link>
+                </div>
               </li>
             )
           })}
