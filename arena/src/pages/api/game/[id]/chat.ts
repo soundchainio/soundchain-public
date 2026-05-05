@@ -43,6 +43,10 @@ type ChatDoc = {
   mediaType?: 'image' | null
   deviceId: string
   createdAt: Date
+  // Set when the author edits their own message. Renders as "edited" tag in
+  // the bubble timestamp row. Pre-edit body is not retained — typo fixes are
+  // overwrite-only by design.
+  editedAt?: Date
   // Reactions are appended lazily on first react via $push / positional $inc.
   // Older docs predate these fields — undefined treated as [].
   reactions?: ChatReactionDoc[]
@@ -51,6 +55,12 @@ type ChatDoc = {
   mentions?: string[]
   hashtags?: string[]
 }
+
+// Allow-listed mediaUrl hosts. Pinata IPFS gateways are used by /chat-image
+// uploads. Emote CDNs (7TV/BTTV/FFZ/Twitch) cover the "drop a sticker"
+// composer flow — same source-of-truth as identity.ts and the avatar
+// allow-list. One regex, every endpoint that ingests user-provided URLs.
+const MEDIA_URL_ALLOW = /^https:\/\/(soundchain\.mypinata\.cloud|gateway\.pinata\.cloud|ipfs\.io|cdn\.7tv\.app|cdn\.betterttv\.net|cdn\.frankerfacez\.com|static-cdn\.jtvnw\.net)\//
 
 function isProfanity(s: string) {
   // Keep the bar low — server-side block on a tiny obvious-slur set.
@@ -74,6 +84,7 @@ function shapeMessage(doc: ChatDoc, requestDeviceId: string | null) {
     mediaUrl: doc.mediaUrl ?? null,
     mediaType: doc.mediaType ?? null,
     createdAt: doc.createdAt.toISOString(),
+    editedAt: doc.editedAt ? doc.editedAt.toISOString() : null,
     reactions: reactions.map((r) => ({ key: r.key, kind: r.kind, count: r.count })),
     myReactions,
     isMine: !!requestDeviceId && doc.deviceId === requestDeviceId,
@@ -90,7 +101,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method === 'POST') {
     return handleSend(req, res, gameId)
   }
-  res.setHeader('Allow', 'GET, POST')
+  if (req.method === 'PATCH') {
+    return handleEdit(req, res, gameId)
+  }
+  if (req.method === 'DELETE') {
+    return handleDelete(req, res, gameId)
+  }
+  res.setHeader('Allow', 'GET, POST, PATCH, DELETE')
   return res.status(405).json({ error: 'Method not allowed' })
 }
 
@@ -150,10 +167,11 @@ async function handleSend(req: NextApiRequest, res: NextApiResponse, gameId: str
   if (trimmed.length > BODY_MAX) {
     return res.status(400).json({ error: `Keep it under ${BODY_MAX} chars` })
   }
-  if (hasMedia && !/^https:\/\/(soundchain\.mypinata\.cloud|gateway\.pinata\.cloud|ipfs\.io)\//.test(mediaUrl as string)) {
-    // Only accept images we just pinned via /chat-image. Defends against
-    // arbitrary remote URLs being injected into the chat.
-    return res.status(400).json({ error: 'Image must come from the upload flow' })
+  if (hasMedia && !MEDIA_URL_ALLOW.test(mediaUrl as string)) {
+    // Allow-listed: Pinata uploads (/chat-image) + emote CDNs (sticker drop
+    // from the composer's emoji picker). Defends against arbitrary URL
+    // injection into the chat row.
+    return res.status(400).json({ error: 'Image must come from the upload flow or emote picker' })
   }
   if (trimmed && isProfanity(trimmed)) {
     return res.status(400).json({ error: 'Keep it clean — community guidelines.' })
@@ -226,6 +244,88 @@ async function handleSend(req: NextApiRequest, res: NextApiResponse, gameId: str
   }
 
   return res.status(201).json(shapeMessage(doc, deviceId))
+}
+
+async function handleEdit(req: NextApiRequest, res: NextApiResponse, gameId: string) {
+  const { sport, messageId, deviceId, body } = (req.body || {}) as {
+    sport?: string
+    messageId?: string
+    deviceId?: string
+    body?: string
+  }
+  if (!sport || !SPORT_VALUES.has(sport.toLowerCase())) {
+    return res.status(400).json({ error: 'Invalid sport' })
+  }
+  if (!deviceId || deviceId.length < 8) {
+    return res.status(400).json({ error: 'Missing device id' })
+  }
+  if (!messageId || !ObjectId.isValid(messageId)) {
+    return res.status(400).json({ error: 'Invalid messageId' })
+  }
+  const trimmed = (body || '').trim()
+  if (trimmed.length > BODY_MAX) {
+    return res.status(400).json({ error: `Keep it under ${BODY_MAX} chars` })
+  }
+  if (trimmed && isProfanity(trimmed)) {
+    return res.status(400).json({ error: 'Keep it clean — community guidelines.' })
+  }
+
+  const db = await arenaDb()
+  const col = db.collection<ChatDoc>('arena_game_chat')
+  const oid = new ObjectId(messageId)
+
+  // Fetch first so we can: (a) verify ownership, (b) keep media context when
+  // recomputing whether the post still has content. Allowing an empty body
+  // edit is fine if the original carried a media attachment.
+  const existing = await col.findOne({ _id: oid, gameId, sport: sport.toLowerCase() })
+  if (!existing) return res.status(404).json({ error: 'Message not found' })
+  if (existing.deviceId !== deviceId) {
+    return res.status(403).json({ error: 'You can only edit your own takes' })
+  }
+  const stillHasMedia = typeof existing.mediaUrl === 'string' && existing.mediaUrl.length > 0
+  if (!trimmed && !stillHasMedia) {
+    return res.status(400).json({ error: 'Message can\'t be empty' })
+  }
+
+  const mentions = extractMentions(trimmed)
+  const hashtags = extractHashtags(trimmed)
+  const editedAt = new Date()
+
+  await col.updateOne(
+    { _id: oid },
+    { $set: { body: trimmed, mentions, hashtags, editedAt } },
+  )
+
+  const updated: ChatDoc = { ...existing, body: trimmed, mentions, hashtags, editedAt }
+  return res.status(200).json(shapeMessage(updated, deviceId))
+}
+
+async function handleDelete(req: NextApiRequest, res: NextApiResponse, gameId: string) {
+  const sport = String(req.query.sport || '').toLowerCase()
+  const messageId = typeof req.query.messageId === 'string' ? req.query.messageId : ''
+  const deviceId = typeof req.query.deviceId === 'string' ? req.query.deviceId : ''
+  if (!sport || !SPORT_VALUES.has(sport)) return res.status(400).json({ error: 'Invalid sport' })
+  if (!deviceId || deviceId.length < 8) return res.status(400).json({ error: 'Missing device id' })
+  if (!messageId || !ObjectId.isValid(messageId)) return res.status(400).json({ error: 'Invalid messageId' })
+
+  const db = await arenaDb()
+  const col = db.collection<ChatDoc>('arena_game_chat')
+  const oid = new ObjectId(messageId)
+
+  const existing = await col.findOne({ _id: oid, gameId, sport })
+  if (!existing) return res.status(404).json({ error: 'Message not found' })
+  if (existing.deviceId !== deviceId) {
+    return res.status(403).json({ error: 'You can only delete your own takes' })
+  }
+
+  await col.deleteOne({ _id: oid })
+
+  // Best-effort cleanup of any reaction/mention notifs pointing at this
+  // message — clients filter unknown messageIds gracefully, but keeping
+  // the notif collection lean is the right hygiene.
+  db.collection('arena_notifications').deleteMany({ messageId }).catch(() => undefined)
+
+  return res.status(200).json({ ok: true, id: messageId })
 }
 
 const MENTION_RE_SERVER = /@([a-zA-Z0-9_.-]{2,24})/g

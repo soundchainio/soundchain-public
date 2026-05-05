@@ -36,6 +36,9 @@ export type ChatMessage = {
   mediaUrl?: string | null
   mediaType?: 'image' | null
   createdAt: string // ISO
+  // Set when the author edited their message. Bubble shows a small "edited"
+  // tag next to the timestamp; null on un-edited messages.
+  editedAt?: string | null
   // Reaction counts + which reaction keys this device has applied. Default
   // to [] / [] so older docs that pre-date reactions render cleanly without
   // a migration step.
@@ -102,6 +105,57 @@ export async function postChatMessage(args: {
   if (!r.ok) {
     const j = await r.json().catch(() => ({}))
     throw new Error(j.error || `Send failed (${r.status})`)
+  }
+  return r.json()
+}
+
+/** PATCH /api/game/[id]/chat — edit your own take's body (typo fix). */
+export async function editChatMessage(args: {
+  gameId: string
+  sport: SportKey
+  messageId: string
+  body: string
+}): Promise<ChatMessage> {
+  const { gameId, sport, messageId, body } = args
+  const { deviceId } = getIdentity()
+  if (!deviceId) throw new Error('No device id')
+  const r = await fetch(`/api/game/${encodeURIComponent(gameId)}/chat`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      sport: sportFromQuery(sport),
+      messageId,
+      body,
+      deviceId,
+    }),
+  })
+  if (!r.ok) {
+    const j = await r.json().catch(() => ({}))
+    throw new Error(j.error || `Edit failed (${r.status})`)
+  }
+  return r.json()
+}
+
+/** DELETE /api/game/[id]/chat?messageId=… — author-only delete. */
+export async function deleteChatMessage(args: {
+  gameId: string
+  sport: SportKey
+  messageId: string
+}): Promise<{ ok: true; id: string }> {
+  const { gameId, sport, messageId } = args
+  const { deviceId } = getIdentity()
+  if (!deviceId) throw new Error('No device id')
+  const params = new URLSearchParams({
+    sport: sportFromQuery(sport),
+    messageId,
+    deviceId,
+  })
+  const r = await fetch(`/api/game/${encodeURIComponent(gameId)}/chat?${params.toString()}`, {
+    method: 'DELETE',
+  })
+  if (!r.ok) {
+    const j = await r.json().catch(() => ({}))
+    throw new Error(j.error || `Delete failed (${r.status})`)
   }
   return r.json()
 }

@@ -10,10 +10,12 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { ImagePlus, Loader2, Search, Send, Sparkles, Upload, X } from 'lucide-react'
+import { Check, ImagePlus, Loader2, Pencil, Search, Send, Smile, Sparkles, Trash2, Upload, X } from 'lucide-react'
 import {
   CHAT_BODY_MAX,
   CHAT_POLL_INTERVAL_MS,
+  deleteChatMessage,
+  editChatMessage,
   fetchChatMessages,
   formatChatTime,
   postChatMessage,
@@ -27,6 +29,7 @@ import type { SportKey } from '@/lib/espn'
 import { ChatActions } from './ChatActions'
 import { ParsedBody } from './ParsedBody'
 import { NotificationBell } from './NotificationBell'
+import { ReactionPicker } from './ReactionPicker'
 
 // Render either an emoji avatar (string) or a Pinata-pinned URL as a circle image.
 // Used in three places: identity row, chat bubbles, picker preview.
@@ -69,7 +72,9 @@ export function GameChat({ gameId, sport, awayLabel, homeLabel }: Props) {
   const [sendError, setSendError] = useState<string | null>(null)
   const [pendingImage, setPendingImage] = useState<{ file: File; preview: string } | null>(null)
   const [uploading, setUploading] = useState(false)
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   // Initial load + 5s polling (paused when tab hidden — saves battery on mobile).
   useEffect(() => {
@@ -174,6 +179,54 @@ export function GameChat({ gameId, sport, awayLabel, homeLabel }: Props) {
     if (fileRef.current) fileRef.current.value = ''
   }
 
+  // Composer emoji picker. Unicode emoji insert at cursor position so the
+  // user can keep typing or hit send. Image emotes (7TV/BTTV/FFZ/Twitch)
+  // post immediately as standalone "sticker" takes — same flow SC's wall
+  // and feed use for one-tap emote drops.
+  const handleEmojiPick = async (args: { key: string; kind: 'emoji' | 'image' }) => {
+    setSendError(null)
+    if (args.kind === 'emoji') {
+      const ta = textareaRef.current
+      if (ta) {
+        const start = ta.selectionStart ?? body.length
+        const end = ta.selectionEnd ?? body.length
+        const next = body.slice(0, start) + args.key + body.slice(end)
+        setBody(next)
+        // Restore cursor just after the inserted emoji on the next paint.
+        requestAnimationFrame(() => {
+          ta.focus()
+          const pos = start + args.key.length
+          ta.setSelectionRange(pos, pos)
+        })
+      } else {
+        setBody((prev) => prev + args.key)
+      }
+      return
+    }
+    // Image emote → fire as a standalone sticker take.
+    if (!identity.handle) {
+      setShowHandlePicker(true)
+      return
+    }
+    setSending(true)
+    try {
+      const msg = await postChatMessage({ gameId, sport, body: '', mediaUrl: args.key })
+      setMessages((prev) => [...prev, msg])
+    } catch (e: unknown) {
+      setSendError((e as Error)?.message ?? 'Send failed')
+    } finally {
+      setSending(false)
+    }
+  }
+
+  const handleMessageEdited = (next: ChatMessage) => {
+    setMessages((prev) => prev.map((p) => (p.id === next.id ? { ...p, ...next } : p)))
+  }
+
+  const handleMessageDeleted = (id: string) => {
+    setMessages((prev) => prev.filter((p) => p.id !== id))
+  }
+
   const charCount = body.length
   const charClass = charCount > CHAT_BODY_MAX
     ? 'text-arena-red'
@@ -243,6 +296,8 @@ export function GameChat({ gameId, sport, awayLabel, homeLabel }: Props) {
                 prev.map((p) => (p.id === m.id ? { ...p, reactions: next.reactions, myReactions: next.myReactions } : p)),
               )
             }}
+            onEdited={handleMessageEdited}
+            onDeleted={handleMessageDeleted}
           />
         ))}
       </div>
@@ -266,6 +321,7 @@ export function GameChat({ gameId, sport, awayLabel, homeLabel }: Props) {
 
         <div className="flex items-end gap-2">
           <textarea
+            ref={textareaRef}
             value={body}
             onChange={(e) => {
               setBody(e.target.value)
@@ -290,6 +346,15 @@ export function GameChat({ gameId, sport, awayLabel, homeLabel }: Props) {
             className="hidden"
             onChange={(e) => onPickImage(e.target.files?.[0] ?? null)}
           />
+          <button
+            type="button"
+            onClick={() => setShowEmojiPicker(true)}
+            disabled={sending || uploading}
+            className="flex-shrink-0 w-9 h-9 rounded-lg bg-arena-card dark:bg-arena-surface border border-arena-border-l dark:border-arena-border-d flex items-center justify-center hover:border-arena-red hover:text-arena-red transition disabled:opacity-50"
+            aria-label="Pick an emoji or sticker"
+          >
+            <Smile className="w-4 h-4" />
+          </button>
           <button
             type="button"
             onClick={() => fileRef.current?.click()}
@@ -329,6 +394,15 @@ export function GameChat({ gameId, sport, awayLabel, homeLabel }: Props) {
           }}
         />
       )}
+
+      {showEmojiPicker && (
+        <ReactionPicker
+          onPick={(args) => {
+            handleEmojiPick(args)
+          }}
+          onClose={() => setShowEmojiPicker(false)}
+        />
+      )}
     </div>
   )
 }
@@ -336,10 +410,72 @@ export function GameChat({ gameId, sport, awayLabel, homeLabel }: Props) {
 function ChatBubble({
   msg,
   onReactionsChange,
+  onEdited,
+  onDeleted,
 }: {
   msg: ChatMessage
   onReactionsChange: (next: { reactions: ChatReaction[]; myReactions: string[] }) => void
+  onEdited: (next: ChatMessage) => void
+  onDeleted: (id: string) => void
 }) {
+  const [editing, setEditing] = useState(false)
+  const [editValue, setEditValue] = useState(msg.body)
+  const [editError, setEditError] = useState<string | null>(null)
+  const [savingEdit, setSavingEdit] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const editRef = useRef<HTMLTextAreaElement>(null)
+
+  const startEdit = () => {
+    setEditValue(msg.body)
+    setEditError(null)
+    setEditing(true)
+    requestAnimationFrame(() => editRef.current?.focus())
+  }
+
+  const cancelEdit = () => {
+    setEditing(false)
+    setEditError(null)
+  }
+
+  const saveEdit = async () => {
+    setEditError(null)
+    const trimmed = editValue.trim()
+    if (trimmed === msg.body.trim()) {
+      setEditing(false)
+      return
+    }
+    setSavingEdit(true)
+    try {
+      const next = await editChatMessage({
+        gameId: msg.gameId,
+        sport: msg.sport,
+        messageId: msg.id,
+        body: trimmed,
+      })
+      onEdited(next)
+      setEditing(false)
+    } catch (e: unknown) {
+      setEditError((e as Error)?.message ?? 'Edit failed')
+    } finally {
+      setSavingEdit(false)
+    }
+  }
+
+  const onDelete = async () => {
+    if (deleting) return
+    if (typeof window !== 'undefined' && !window.confirm('Delete this take?')) return
+    setDeleting(true)
+    // Optimistic remove — server is authoritative on the next poll anyway.
+    onDeleted(msg.id)
+    try {
+      await deleteChatMessage({ gameId: msg.gameId, sport: msg.sport, messageId: msg.id })
+    } catch {
+      // Best-effort; if delete fails, the next poll cycle will resurrect it
+      // and the user can retry.
+      setDeleting(false)
+    }
+  }
+
   return (
     <div className={`flex gap-2 ${msg.isMine ? 'flex-row-reverse' : ''}`}>
       <div className="flex-shrink-0">
@@ -349,30 +485,90 @@ function ChatBubble({
         <div className={`flex items-baseline gap-1.5 text-[10px] mb-0.5 ${msg.isMine ? 'justify-end' : ''}`}>
           <span className="font-black text-arena-red">@{msg.handle}</span>
           <span className="text-arena-muted-l dark:text-arena-muted-d font-mono">{formatChatTime(msg.createdAt)}</span>
-        </div>
-        <div
-          className={`inline-block max-w-full rounded-2xl px-3 py-2 text-sm break-words ${
-            msg.isMine
-              ? 'bg-arena-red text-white rounded-tr-sm'
-              : 'bg-arena-paper dark:bg-arena-carbon border border-arena-border-l dark:border-arena-border-d rounded-tl-sm'
-          }`}
-        >
-          {msg.body && (
-            <ParsedBody body={msg.body} className="whitespace-pre-wrap leading-relaxed break-words" />
-          )}
-          {msg.mediaUrl && msg.mediaType === 'image' && (
-            <a href={msg.mediaUrl} target="_blank" rel="noreferrer" className="block mt-1.5 -mx-1">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={msg.mediaUrl}
-                alt="chat attachment"
-                loading="lazy"
-                className="max-h-64 w-auto rounded-lg"
-              />
-            </a>
+          {msg.editedAt && (
+            <span className="text-arena-muted-l dark:text-arena-muted-d italic" title={`Edited ${new Date(msg.editedAt).toLocaleString()}`}>
+              edited
+            </span>
           )}
         </div>
-        <div className={msg.isMine ? 'flex justify-end' : ''}>
+        {editing ? (
+          <div
+            className={`inline-block w-full max-w-full rounded-2xl px-2 py-2 text-sm ${
+              msg.isMine
+                ? 'bg-arena-red/20 border border-arena-red'
+                : 'bg-arena-paper dark:bg-arena-carbon border border-arena-border-l dark:border-arena-border-d'
+            }`}
+          >
+            <textarea
+              ref={editRef}
+              value={editValue}
+              onChange={(e) => {
+                setEditValue(e.target.value)
+                setEditError(null)
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey && !e.metaKey) {
+                  e.preventDefault()
+                  saveEdit()
+                } else if (e.key === 'Escape') {
+                  e.preventDefault()
+                  cancelEdit()
+                }
+              }}
+              rows={2}
+              maxLength={CHAT_BODY_MAX + 50}
+              className="w-full resize-none rounded-lg bg-arena-card dark:bg-arena-surface border border-arena-border-l dark:border-arena-border-d px-2 py-1.5 text-sm focus:outline-none focus:border-arena-red"
+            />
+            <div className="mt-1 flex items-center justify-between gap-2 text-[10px]">
+              <span className={editError ? 'text-arena-red font-bold' : 'text-arena-muted-l dark:text-arena-muted-d'}>
+                {editError ?? 'Enter to save · Esc to cancel'}
+              </span>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={cancelEdit}
+                  disabled={savingEdit}
+                  className="px-2 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-arena-card dark:bg-arena-surface border border-arena-border-l dark:border-arena-border-d hover:border-arena-red hover:text-arena-red transition disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={saveEdit}
+                  disabled={savingEdit}
+                  className="px-2 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-arena-red text-white hover:bg-red-700 transition disabled:opacity-50 flex items-center gap-1"
+                >
+                  {savingEdit ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div
+            className={`inline-block max-w-full rounded-2xl px-3 py-2 text-sm break-words ${
+              msg.isMine
+                ? 'bg-arena-red text-white rounded-tr-sm'
+                : 'bg-arena-paper dark:bg-arena-carbon border border-arena-border-l dark:border-arena-border-d rounded-tl-sm'
+            }`}
+          >
+            {msg.body && (
+              <ParsedBody body={msg.body} className="whitespace-pre-wrap leading-relaxed break-words" />
+            )}
+            {msg.mediaUrl && msg.mediaType === 'image' && (
+              <a href={msg.mediaUrl} target="_blank" rel="noreferrer" className="block mt-1.5 -mx-1">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={msg.mediaUrl}
+                  alt="chat attachment"
+                  loading="lazy"
+                  className="max-h-64 w-auto rounded-lg"
+                />
+              </a>
+            )}
+          </div>
+        )}
+        <div className={`flex items-center gap-1 ${msg.isMine ? 'justify-end' : ''}`}>
           <ChatActions
             gameId={msg.gameId}
             sport={msg.sport}
@@ -382,6 +578,30 @@ function ChatBubble({
             shareText={msg.body}
             onReactionsChange={onReactionsChange}
           />
+          {msg.isMine && !editing && (
+            <>
+              <button
+                type="button"
+                onClick={startEdit}
+                disabled={deleting}
+                className="flex-shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-black uppercase tracking-wider text-arena-muted-l dark:text-arena-muted-d hover:text-arena-red hover:bg-arena-paper/60 dark:hover:bg-arena-carbon/60 transition disabled:opacity-40"
+                aria-label="Edit your take"
+              >
+                <Pencil className="w-3 h-3" />
+                Edit
+              </button>
+              <button
+                type="button"
+                onClick={onDelete}
+                disabled={deleting}
+                className="flex-shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-black uppercase tracking-wider text-arena-muted-l dark:text-arena-muted-d hover:text-arena-red hover:bg-arena-paper/60 dark:hover:bg-arena-carbon/60 transition disabled:opacity-40"
+                aria-label="Delete your take"
+              >
+                {deleting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+                Delete
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>
