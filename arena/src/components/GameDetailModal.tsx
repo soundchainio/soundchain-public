@@ -476,16 +476,53 @@ function BoxscorePlayersList({
 }) {
   void sport
   const [activeIdx, setActiveIdx] = useState(0)
+  const [activeSide, setActiveSide] = useState<'away' | 'home'>('away')
   const cat = categories[activeIdx] ?? categories[0]
   if (!cat) return null
 
   // Multi-category sports (NFL: passing/rushing/receiving/defensive, MLB: batting/pitching).
   // Single-category sports (NBA/NHL/WNBA) just render the one block.
-  const showTabs = categories.length > 1
+  const showCategoryTabs = categories.length > 1
+  const team = activeSide === 'away' ? cat.awayTeam : cat.homeTeam
+  const players = activeSide === 'away' ? cat.awayPlayers : cat.homePlayers
 
   return (
     <div className="space-y-3">
-      {showTabs && (
+      {/* Team toggle pills — split-style, with logos */}
+      <div className="grid grid-cols-2 gap-2 rounded-xl border border-arena-border-l dark:border-arena-border-d bg-arena-card dark:bg-arena-surface p-1.5">
+        {(['away', 'home'] as const).map((side) => {
+          const t = side === 'away' ? cat.awayTeam : cat.homeTeam
+          const isActive = side === activeSide
+          return (
+            <button
+              key={side}
+              type="button"
+              onClick={() => setActiveSide(side)}
+              className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg transition ${
+                isActive
+                  ? 'bg-arena-red text-white shadow-sm'
+                  : 'text-arena-muted-l dark:text-arena-muted-d hover:bg-arena-paper dark:hover:bg-arena-carbon'
+              }`}
+            >
+              {t.logo ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={t.logo}
+                  alt={t.abbr}
+                  className="w-5 h-5 object-contain flex-shrink-0"
+                  onError={(e) => ((e.target as HTMLImageElement).style.display = 'none')}
+                />
+              ) : null}
+              <span className="text-xs font-black tracking-wide">{t.abbr}</span>
+              <span className="text-[10px] font-mono uppercase opacity-70 hidden sm:inline">
+                {side === 'away' ? 'Away' : 'Home'}
+              </span>
+            </button>
+          )
+        })}
+      </div>
+
+      {showCategoryTabs && (
         <div
           className="flex gap-1.5 overflow-x-auto -mx-4 px-4 pb-1"
           style={{ scrollbarWidth: 'none' }}
@@ -507,16 +544,7 @@ function BoxscorePlayersList({
         </div>
       )}
 
-      <BoxscoreTeamTable
-        team={cat.awayTeam}
-        players={cat.awayPlayers}
-        labels={cat.labels}
-      />
-      <BoxscoreTeamTable
-        team={cat.homeTeam}
-        players={cat.homePlayers}
-        labels={cat.labels}
-      />
+      <BoxscoreTeamTable team={team} players={players} labels={cat.labels} />
     </div>
   )
 }
