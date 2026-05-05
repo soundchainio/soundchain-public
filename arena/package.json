@@ -32,6 +32,8 @@
     "@capacitor/status-bar": "^8.0.0",
     "@giphy/js-fetch-api": "^5.7.0",
     "@giphy/react-components": "^10.1.0",
+    "@simplewebauthn/browser": "^13.3.0",
+    "@simplewebauthn/server": "^13.3.0",
     "jose": "^6.2.3",
     "lucide-react": "^0.453.0",
     "mongodb": "^6.3.0",

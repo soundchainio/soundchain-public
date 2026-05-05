@@ -73,9 +73,10 @@ export function GameChat({ gameId, sport, awayLabel, homeLabel }: Props) {
   // Phase 2: native-first auth (Apple/Google/Guest). Provider availability is
   // server-driven — env vars not provisioned = pill renders disabled. Continue
   // as Guest always works (today's deviceId-pseudonymous flow).
-  const [providers, setProviders] = useState<{ apple: boolean; google: boolean; sessionReady: boolean }>({
+  const [providers, setProviders] = useState<{ apple: boolean; google: boolean; passkey: boolean; sessionReady: boolean }>({
     apple: false,
     google: false,
+    passkey: false,
     sessionReady: false,
   })
   const [authed, setAuthed] = useState(false)
@@ -149,10 +150,10 @@ export function GameChat({ gameId, sport, awayLabel, homeLabel }: Props) {
       .then((r) => r.json())
       .then((data: {
         authed?: boolean
-        provider?: 'apple' | 'google' | 'guest'
+        provider?: 'apple' | 'google' | 'passkey' | 'guest'
         handle?: string | null
         avatar?: string | null
-        providers?: { apple: boolean; google: boolean; sessionReady: boolean }
+        providers?: { apple: boolean; google: boolean; passkey: boolean; sessionReady: boolean }
       }) => {
         if (cancelled) return
         if (data.providers) setProviders(data.providers)

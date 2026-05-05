@@ -19,18 +19,20 @@
  */
 
 import { useEffect, useRef, useState } from 'react'
-import { Loader2, X } from 'lucide-react'
+import { Fingerprint, Loader2, X } from 'lucide-react'
+import { startRegistration, startAuthentication, browserSupportsWebAuthn } from '@simplewebauthn/browser'
 import { getDeviceId } from '@/lib/identity'
 
 interface ProviderConfig {
   apple: boolean
   google: boolean
+  passkey: boolean
   sessionReady: boolean
 }
 
 interface Props {
   providers: ProviderConfig
-  onAuthSuccess: (params: { provider: 'apple' | 'google'; handle: string | null; avatar: string | null }) => void
+  onAuthSuccess: (params: { provider: 'apple' | 'google' | 'passkey'; handle: string | null; avatar: string | null }) => void
   onContinueAsGuest: () => void
   onClose: () => void
 }
@@ -59,9 +61,14 @@ const APPLE_CLIENT_ID_PUBLIC = process.env.NEXT_PUBLIC_APPLE_CLIENT_ID || ''
 const GOOGLE_CLIENT_ID_PUBLIC = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ''
 
 export function IdentityModal({ providers, onAuthSuccess, onContinueAsGuest, onClose }: Props) {
-  const [busy, setBusy] = useState<'apple' | 'google' | null>(null)
+  const [busy, setBusy] = useState<'apple' | 'google' | 'passkey-register' | 'passkey-login' | null>(null)
   const [err, setErr] = useState<string | null>(null)
+  const [webAuthnSupported, setWebAuthnSupported] = useState(false)
   const googleBtnRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    setWebAuthnSupported(browserSupportsWebAuthn())
+  }, [])
 
   // Apple JS SDK loader.
   useEffect(() => {
@@ -140,6 +147,72 @@ export function IdentityModal({ providers, onAuthSuccess, onContinueAsGuest, onC
     }
   }
 
+  // Passkey registration — first time saving a passkey on this device.
+  // Triggers iOS Safari Face ID prompt → user authenticates → passkey stored
+  // in iCloud Keychain (auto-syncs to all the user's Apple devices).
+  const handlePasskeyRegister = async () => {
+    setBusy('passkey-register')
+    setErr(null)
+    try {
+      const optsRes = await fetch('/api/auth/passkey/register-options', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ deviceId: getDeviceId() }),
+      })
+      const optsPayload = await optsRes.json().catch(() => ({}))
+      if (!optsRes.ok) throw new Error(optsPayload?.error || `Passkey setup failed (${optsRes.status})`)
+      const attResp = await startRegistration({ optionsJSON: optsPayload.options })
+      const verifyRes = await fetch('/api/auth/passkey/register-verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ deviceId: getDeviceId(), response: attResp }),
+      })
+      const verifyPayload = await verifyRes.json().catch(() => ({}))
+      if (!verifyRes.ok) throw new Error(verifyPayload?.error || `Passkey verify failed (${verifyRes.status})`)
+      onAuthSuccess({ provider: 'passkey', handle: verifyPayload.handle ?? null, avatar: verifyPayload.avatar ?? null })
+    } catch (e: unknown) {
+      const msg = (e as Error)?.message || 'Passkey setup failed'
+      // Suppress benign user-cancelled prompts.
+      if (!/cancel|abort|user.?cancelled|notallowed/i.test(msg)) setErr(msg)
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  // Passkey login — returning user (or new device with synced iCloud Keychain).
+  // Browser shows the Face ID / Touch ID prompt with available passkeys for
+  // arena.soundchain.io. Tap → Face ID → handle restored from server.
+  const handlePasskeyLogin = async () => {
+    setBusy('passkey-login')
+    setErr(null)
+    try {
+      const optsRes = await fetch('/api/auth/passkey/login-options', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+      })
+      const optsPayload = await optsRes.json().catch(() => ({}))
+      if (!optsRes.ok) throw new Error(optsPayload?.error || `Passkey login start failed (${optsRes.status})`)
+      const assResp = await startAuthentication({ optionsJSON: optsPayload.options })
+      const verifyRes = await fetch('/api/auth/passkey/login-verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ response: assResp }),
+      })
+      const verifyPayload = await verifyRes.json().catch(() => ({}))
+      if (!verifyRes.ok) throw new Error(verifyPayload?.error || `Passkey verify failed (${verifyRes.status})`)
+      onAuthSuccess({ provider: 'passkey', handle: verifyPayload.handle ?? null, avatar: verifyPayload.avatar ?? null })
+    } catch (e: unknown) {
+      const msg = (e as Error)?.message || 'Passkey login failed'
+      if (!/cancel|abort|user.?cancelled|notallowed/i.test(msg)) setErr(msg)
+    } finally {
+      setBusy(null)
+    }
+  }
+
   const handleGoogleCredential = async (response: { credential: string }) => {
     if (!response?.credential) return
     setBusy('google')
@@ -189,6 +262,49 @@ export function IdentityModal({ providers, onAuthSuccess, onContinueAsGuest, onC
         </header>
 
         <div className="px-4 py-5 flex flex-col gap-3">
+          {/* Passkey — primary native-first option (Face ID on iOS, Touch ID on macOS,
+              Windows Hello on Win, biometric on Android). Two pills: Save (first time)
+              + Sign In (returning user). Server checks if a passkey already exists for
+              this device but the user can also sign in with a passkey from iCloud Keychain
+              that was created on a different device. */}
+          {providers.passkey && webAuthnSupported && (
+            <>
+              <button
+                type="button"
+                onClick={handlePasskeyRegister}
+                disabled={busy !== null}
+                className="w-full h-11 rounded-lg bg-arena-red text-white text-sm font-semibold flex items-center justify-center gap-2 hover:bg-red-700 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                aria-label="Save handle as passkey"
+              >
+                {busy === 'passkey-register' ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Fingerprint className="w-4 h-4" />
+                )}
+                <span>Save handle with Face ID</span>
+              </button>
+              <button
+                type="button"
+                onClick={handlePasskeyLogin}
+                disabled={busy !== null}
+                className="w-full h-11 rounded-lg bg-arena-card dark:bg-arena-surface border border-arena-red text-arena-red text-sm font-semibold flex items-center justify-center gap-2 hover:bg-arena-red hover:text-white transition disabled:opacity-40 disabled:cursor-not-allowed"
+                aria-label="Sign in with passkey"
+              >
+                {busy === 'passkey-login' ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Fingerprint className="w-4 h-4" />
+                )}
+                <span>Sign in with Face ID</span>
+              </button>
+              <div className="flex items-center gap-3 my-1">
+                <div className="flex-1 h-px bg-arena-border-l dark:bg-arena-border-d" />
+                <span className="text-[10px] text-arena-muted-l dark:text-arena-muted-d uppercase tracking-wider">or</span>
+                <div className="flex-1 h-px bg-arena-border-l dark:bg-arena-border-d" />
+              </div>
+            </>
+          )}
+
           {/* Sign in with Apple */}
           <button
             type="button"
@@ -250,8 +366,8 @@ export function IdentityModal({ providers, onAuthSuccess, onContinueAsGuest, onC
           )}
 
           <p className="text-[10px] text-arena-muted-l dark:text-arena-muted-d text-center mt-2 leading-snug">
-            Apple/Google sign-in lets your handle survive history wipes + new devices.
-            Guest mode keeps you device-only — clear cookies and the handle's gone.
+            Face ID + iCloud Keychain syncs your handle across all your Apple devices —
+            zero passwords. Guest mode keeps you device-only; clear cookies and the handle's gone.
           </p>
         </div>
       </div>

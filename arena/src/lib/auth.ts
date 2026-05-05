@@ -37,7 +37,99 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 const SESSION_COOKIE = 'arena_session'
 const SESSION_TTL_DAYS = 90 // long-lived; user can sign out anytime
 
-export type IdentityProvider = 'apple' | 'google' | 'guest'
+export type IdentityProvider = 'apple' | 'google' | 'passkey' | 'guest'
+
+// WebAuthn relying party config — RP ID = the apex domain users see.
+// Passkeys created at arena.soundchain.io stay scoped to that domain (cannot
+// authenticate against soundchain.io or any other subdomain — perfect for
+// the "arena identity stays separate from SC" constraint).
+export const PASSKEY_RP_ID = 'arena.soundchain.io'
+export const PASSKEY_RP_NAME = 'Arena'
+export const PASSKEY_ORIGIN = `https://${PASSKEY_RP_ID}`
+
+const PASSKEY_CHALLENGE_COOKIE = 'arena_pk_challenge'
+const PASSKEY_CHALLENGE_TTL_SEC = 300 // 5 min — WebAuthn ceremony is fast
+
+interface ChallengePayload {
+  ceremony: 'register' | 'login'
+  challenge: string
+  deviceId?: string
+  passkeyUserId?: string
+}
+
+/**
+ * Issue a short-lived signed challenge cookie. Read back during the verify
+ * phase of the WebAuthn ceremony. Avoids a Mongo round-trip and keeps the
+ * challenge tamper-evident (HS256 signed against the same session secret).
+ */
+export async function signPasskeyChallenge(payload: ChallengePayload): Promise<string | null> {
+  const secret = getSessionSecret()
+  if (!secret) return null
+  return new SignJWT({ ...payload })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime(`${PASSKEY_CHALLENGE_TTL_SEC}s`)
+    .setIssuer('arena.soundchain.io')
+    .setAudience('arena-passkey')
+    .sign(secret)
+}
+
+export async function verifyPasskeyChallenge(token: string): Promise<ChallengePayload | null> {
+  const secret = getSessionSecret()
+  if (!secret) return null
+  try {
+    const { payload } = await jwtVerify(token, secret, {
+      issuer: 'arena.soundchain.io',
+      audience: 'arena-passkey',
+    })
+    if (payload.ceremony !== 'register' && payload.ceremony !== 'login') return null
+    if (typeof payload.challenge !== 'string') return null
+    return {
+      ceremony: payload.ceremony as 'register' | 'login',
+      challenge: payload.challenge,
+      deviceId: typeof payload.deviceId === 'string' ? payload.deviceId : undefined,
+      passkeyUserId: typeof payload.passkeyUserId === 'string' ? payload.passkeyUserId : undefined,
+    }
+  } catch {
+    return null
+  }
+}
+
+export function setPasskeyChallengeCookie(res: NextApiResponse, token: string) {
+  const cookie = [
+    `${PASSKEY_CHALLENGE_COOKIE}=${token}`,
+    'Path=/',
+    `Max-Age=${PASSKEY_CHALLENGE_TTL_SEC}`,
+    'HttpOnly',
+    'Secure',
+    'SameSite=Lax',
+  ].join('; ')
+  // Don't clobber the session cookie if one's being set in the same response.
+  const existing = res.getHeader('Set-Cookie')
+  if (Array.isArray(existing)) {
+    res.setHeader('Set-Cookie', [...existing, cookie])
+  } else if (typeof existing === 'string') {
+    res.setHeader('Set-Cookie', [existing, cookie])
+  } else {
+    res.setHeader('Set-Cookie', cookie)
+  }
+}
+
+export function readPasskeyChallengeCookie(req: NextApiRequest): string | null {
+  return req.cookies?.[PASSKEY_CHALLENGE_COOKIE] ?? null
+}
+
+export function clearPasskeyChallengeCookie(res: NextApiResponse) {
+  const cookie = `${PASSKEY_CHALLENGE_COOKIE}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax`
+  const existing = res.getHeader('Set-Cookie')
+  if (Array.isArray(existing)) {
+    res.setHeader('Set-Cookie', [...existing, cookie])
+  } else if (typeof existing === 'string') {
+    res.setHeader('Set-Cookie', [existing, cookie])
+  } else {
+    res.setHeader('Set-Cookie', cookie)
+  }
+}
 
 export interface ArenaSession {
   identityKey: string // e.g. "apple:001234.abcdef" or "google:11335577..." or "guest:<deviceId>"
@@ -65,10 +157,14 @@ export function getGoogleClientId(): string | null {
  * gracefully when env vars haven't been provisioned yet.
  */
 export function getProviderConfig() {
+  const sessionReady = !!getSessionSecret()
   return {
-    apple: !!getAppleClientId() && !!getSessionSecret(),
-    google: !!getGoogleClientId() && !!getSessionSecret(),
-    sessionReady: !!getSessionSecret(),
+    apple: !!getAppleClientId() && sessionReady,
+    google: !!getGoogleClientId() && sessionReady,
+    // Passkey only needs ARENA_SESSION_SECRET — no external provider creds.
+    // Browser support is the gate (HTTPS, modern WebAuthn API).
+    passkey: sessionReady,
+    sessionReady,
   }
 }
 
@@ -93,7 +189,12 @@ export async function verifySession(token: string): Promise<ArenaSession | null>
       audience: 'arena',
     })
     if (!payload.identityKey || typeof payload.identityKey !== 'string') return null
-    if (payload.provider !== 'apple' && payload.provider !== 'google' && payload.provider !== 'guest') return null
+    if (
+      payload.provider !== 'apple' &&
+      payload.provider !== 'google' &&
+      payload.provider !== 'passkey' &&
+      payload.provider !== 'guest'
+    ) return null
     return {
       identityKey: payload.identityKey,
       provider: payload.provider as IdentityProvider,
