@@ -10,7 +10,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Check, ImagePlus, Loader2, Pencil, Search, Send, Smile, Sparkles, Trash2, Upload, X } from 'lucide-react'
+import { Check, Film, ImagePlus, Loader2, Pencil, Search, Send, Smile, Sparkles, Trash2, Upload, X } from 'lucide-react'
 import {
   CHAT_BODY_MAX,
   CHAT_POLL_INTERVAL_MS,
@@ -30,6 +30,7 @@ import { ChatActions } from './ChatActions'
 import { ParsedBody } from './ParsedBody'
 import { NotificationBell } from './NotificationBell'
 import { ReactionPicker } from './ReactionPicker'
+import { GifPicker } from './GifPicker'
 
 // Render either an emoji avatar (string) or a Pinata-pinned URL as a circle image.
 // Used in three places: identity row, chat bubbles, picker preview.
@@ -73,6 +74,7 @@ export function GameChat({ gameId, sport, awayLabel, homeLabel }: Props) {
   const [pendingImage, setPendingImage] = useState<{ file: File; preview: string } | null>(null)
   const [uploading, setUploading] = useState(false)
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
+  const [showGifPicker, setShowGifPicker] = useState(false)
   const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -223,6 +225,35 @@ export function GameChat({ gameId, sport, awayLabel, homeLabel }: Props) {
         sport,
         body: '',
         mediaUrl: args.key,
+        replyTo: replyingTo?.id ?? null,
+      })
+      setMessages((prev) => [...prev, msg])
+      setReplyingTo(null)
+    } catch (e: unknown) {
+      setSendError((e as Error)?.message ?? 'Send failed')
+    } finally {
+      setSending(false)
+    }
+  }
+
+  // Composer GIF picker. Mirrors the SC wall + feed + comments flow: tap the
+  // film pill, search GIPHY, pick a GIF — posts as a standalone sticker take
+  // via the standard chat POST (mediaUrl + mediaType:'image'). Threads if
+  // replyingTo is set, same as text + emote-sticker sends. Server-side
+  // MEDIA_URL_ALLOW gates `media[0-4].giphy.com` + `i.giphy.com` hosts.
+  const handleGifPick = async (gifUrl: string) => {
+    setSendError(null)
+    if (!identity.handle) {
+      setShowHandlePicker(true)
+      return
+    }
+    setSending(true)
+    try {
+      const msg = await postChatMessage({
+        gameId,
+        sport,
+        body: '',
+        mediaUrl: gifUrl,
         replyTo: replyingTo?.id ?? null,
       })
       setMessages((prev) => [...prev, msg])
@@ -401,6 +432,16 @@ export function GameChat({ gameId, sport, awayLabel, homeLabel }: Props) {
           </button>
           <button
             type="button"
+            onClick={() => setShowGifPicker(true)}
+            disabled={sending || uploading}
+            className="flex-shrink-0 w-9 h-9 rounded-lg bg-arena-card dark:bg-arena-surface border border-arena-border-l dark:border-arena-border-d flex items-center justify-center hover:border-arena-red hover:text-arena-red transition disabled:opacity-50"
+            aria-label="Pick a GIF from GIPHY"
+            title="GIF"
+          >
+            <Film className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
             onClick={() => fileRef.current?.click()}
             disabled={sending || uploading}
             className="flex-shrink-0 w-9 h-9 rounded-lg bg-arena-card dark:bg-arena-surface border border-arena-border-l dark:border-arena-border-d flex items-center justify-center hover:border-arena-red hover:text-arena-red transition disabled:opacity-50"
@@ -445,6 +486,15 @@ export function GameChat({ gameId, sport, awayLabel, homeLabel }: Props) {
             handleEmojiPick(args)
           }}
           onClose={() => setShowEmojiPicker(false)}
+        />
+      )}
+
+      {showGifPicker && (
+        <GifPicker
+          onSelect={(gifUrl) => {
+            handleGifPick(gifUrl)
+          }}
+          onClose={() => setShowGifPicker(false)}
         />
       )}
     </div>

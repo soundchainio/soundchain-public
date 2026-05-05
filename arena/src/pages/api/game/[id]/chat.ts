@@ -67,8 +67,10 @@ type ChatDoc = {
 // Allow-listed mediaUrl hosts. Pinata IPFS gateways are used by /chat-image
 // uploads. Emote CDNs (7TV/BTTV/FFZ/Twitch) cover the "drop a sticker"
 // composer flow — same source-of-truth as identity.ts and the avatar
-// allow-list. One regex, every endpoint that ingests user-provided URLs.
-const MEDIA_URL_ALLOW = /^https:\/\/(soundchain\.mypinata\.cloud|gateway\.pinata\.cloud|ipfs\.io|cdn\.7tv\.app|cdn\.betterttv\.net|cdn\.frankerfacez\.com|static-cdn\.jtvnw\.net)\//
+// allow-list. GIPHY CDN hosts cover the GifPicker composer pill — fixed_height
+// URLs come back as `media[0-4].giphy.com`; legacy + variant hosts covered too.
+// One regex, every endpoint that ingests user-provided URLs.
+const MEDIA_URL_ALLOW = /^https:\/\/(soundchain\.mypinata\.cloud|gateway\.pinata\.cloud|ipfs\.io|cdn\.7tv\.app|cdn\.betterttv\.net|cdn\.frankerfacez\.com|static-cdn\.jtvnw\.net|media\d?\.giphy\.com|i\.giphy\.com)\//
 
 function isProfanity(s: string) {
   // Keep the bar low — server-side block on a tiny obvious-slur set.
