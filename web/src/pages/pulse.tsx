@@ -305,8 +305,19 @@ function PulsePage() {
   const [chatsError, setChatsError] = useState<any>(null)
   const fetchChatsVercel = useCallback(() => {
     if (!me) return
-    fetch('/api/pulse/chats')
-      .then(r => r.json())
+    fetch('/api/pulse/chats', { credentials: 'include' })
+      .then(async r => {
+        // Surface non-OK responses (401, 500) as errors instead of silently
+        // setting chats=[] and showing "No conversations yet" empty state.
+        // Pre-May-6 fix: r.json() ran on 401 bodies and `data.chats || []`
+        // shadowed the auth failure into a fake-empty UI.
+        if (!r.ok) {
+          let detail = ''
+          try { detail = (await r.json())?.error || '' } catch {}
+          throw new Error(`HTTP ${r.status}${detail ? `: ${detail}` : ''}`)
+        }
+        return r.json()
+      })
       .then(data => { setChatsRaw(data.chats || []); setChatsError(null) })
       .catch(e => setChatsError(e))
       .finally(() => setChatsLoading(false))

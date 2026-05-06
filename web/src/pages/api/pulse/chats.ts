@@ -1,47 +1,20 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import jwt from 'jsonwebtoken'
 import clientPromise from '../../../lib/mongodb'
 import { ObjectId } from 'mongodb'
+import { authFromRequest } from 'lib/api/authJwt'
 
-const JWT_SECRET = process.env.JWT_SECRET || 'not-so-secret'
-const JWT_NAMESPACE = 'https://soundchain.io'
-
-function getAuthProfile(req: NextApiRequest): { userId: string; profileId: string; handle: string } | null {
-  let token = ''
-  const auth = req.headers.authorization
-  if (auth?.startsWith('Bearer ')) {
-    token = auth.slice(7)
-  } else if (req.cookies?.token) {
-    token = req.cookies.token
-  }
-  if (!token) return null
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET) as any
-    return {
-      userId: decoded.sub,
-      profileId: decoded[`${JWT_NAMESPACE}/profileId`] || '',
-      handle: decoded[`${JWT_NAMESPACE}/handle`] || '',
-    }
-  } catch {
-    return null
-  }
-}
-
-// Resolve profileId from userId if not present in JWT (agent tokens)
-async function resolveProfileId(auth: { userId: string; profileId: string }, db: any): Promise<string> {
-  if (auth.profileId) return auth.profileId
-  const profiles = db.collection('profiles')
-  const profile = await profiles.findOne({ userId: auth.userId })
-    || await profiles.findOne({ userId: new ObjectId(auth.userId) })
-  return profile?._id?.toString() || ''
-}
+// Auth via canonical `authFromRequest` (looks up users.profileId by userId).
+// The previous inline `getAuthProfile` looked up profiles.findOne({userId}) which
+// silently returns null for accounts where the profiles doc lacks a `userId`
+// back-pointer — the resulting 401 surfaces as "No conversations yet" empty UI
+// because pulse.tsx didn't check r.ok on the fetch. May 6 2026 fix.
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const auth = getAuthProfile(req)
+  const auth = await authFromRequest(req)
   if (!auth) {
     return res.status(401).json({ error: 'Unauthorized' })
   }
@@ -52,11 +25,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const messages = db.collection('messages')
     const profiles = db.collection('profiles')
 
-    // Resolve profileId from userId if not in JWT (agent tokens)
-    const profileId = await resolveProfileId(auth, db)
-    if (!profileId) {
-      return res.status(401).json({ error: 'Profile not found for user' })
-    }
+    const profileId = auth.profileId.toString()
 
     // Convert profileId string to ObjectId for matching. Defensive: also keep the string form
     // because legacy Apollo/Lambda-era messages stored fromId/toId as strings, while new
