@@ -346,12 +346,17 @@ function TraditionalAdvancedView({
   const advTeam = activeSide === 'away' ? main.advanced.awayTeam : main.advanced.homeTeam
 
   return (
-    <div className="grid lg:grid-cols-2 gap-3">
-      {/* Mobile: only the active tab renders. lg+: both render side-by-side. */}
-      <div className={activeTab === 'traditional' ? 'block' : 'hidden lg:block'}>
+    // Side-by-side gates at xl+ (1280px) instead of lg+ (1024px) because the
+    // modal's lg+ 2-col layout puts these tabs in a ~580px-wide right column —
+    // too tight for two stat tables side-by-side. xl+ has the modal at 920px
+    // standalone (chat-rail kicks in at lg+ but the right col widens past 580px
+    // once the viewport gives the modal more breathing room).
+    <div className="grid xl:grid-cols-2 gap-3">
+      {/* Mobile + lg: only the active tab renders (toggle-style). xl+: both render side-by-side. */}
+      <div className={activeTab === 'traditional' ? 'block' : 'hidden xl:block'}>
         <PlayerStatTable team={tradTeam} columns={TRADITIONAL_COLS} sectionLabel="Traditional" />
       </div>
-      <div className={activeTab === 'advanced' ? 'block' : 'hidden lg:block'}>
+      <div className={activeTab === 'advanced' ? 'block' : 'hidden xl:block'}>
         <PlayerStatTable team={advTeam} columns={ADVANCED_COLS} sectionLabel="Advanced" />
       </div>
     </div>

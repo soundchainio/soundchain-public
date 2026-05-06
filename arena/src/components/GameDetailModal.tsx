@@ -115,66 +115,77 @@ export function GameDetailModal({ sport, game, onClose }: Props) {
                 </Section>
               )}
 
-              <Section title="Fan chat · live takes">
-                <GameChat
-                  gameId={game.id}
-                  sport={sport}
-                  awayLabel={away?.abbr}
-                  homeLabel={home?.abbr}
-                />
-              </Section>
+              {/* On lg+ desktop, chat lives in a narrow left rail (340px) and
+                  the wider right column hosts highlights + box-score tabs +
+                  scoring plays + recap. On mobile/sm, the grid degrades to a
+                  vertical stack and section order matches today's flow. Frank
+                  May 6 feedback: chat panel was sprawling at 920px modal width. */}
+              <div className="lg:grid lg:grid-cols-[340px_1fr] lg:gap-6 space-y-7 lg:space-y-0">
+                <div className="space-y-7">
+                  <Section title="Fan chat · live takes">
+                    <GameChat
+                      gameId={game.id}
+                      sport={sport}
+                      awayLabel={away?.abbr}
+                      homeLabel={home?.abbr}
+                    />
+                  </Section>
+                </div>
 
-              <Section title="Game highlights">
-                <GameHighlights sport={sport} game={headerGame} />
-              </Section>
+                <div className="space-y-7">
+                  <Section title="Game highlights">
+                    <GameHighlights sport={sport} game={headerGame} />
+                  </Section>
 
-              {/* NBA gets the nba.com-clone tabbed box score (Traditional /
-                  Advanced / Tracking / Hustle / Matchups / Shot Chart). Other
-                  sports keep the ESPN-fed flat layout — their public APIs don't
-                  expose tracking/matchups so the depth doesn't translate. */}
-              {sport === 'nba' && away && home ? (
-                <Section title="Box score · stats.nba.com">
-                  <NbaBoxScoreTabs
-                    espnGameId={game.id}
-                    gameDateIso={headerGame.date}
-                    awayTricode={away.abbr}
-                    homeTricode={home.abbr}
-                    status={headerGame.status.state}
-                    awayName={away.displayName}
-                    homeName={home.displayName}
-                    awayLogo={away.logo}
-                    homeLogo={home.logo}
-                    awayColor={away.color}
-                    homeColor={home.color}
-                  />
-                </Section>
-              ) : (
-                <>
-                  {summary.leaders.length > 0 && (
-                    <Section title="Game leaders">
-                      <LeadersList sport={sport} summary={summary} />
+                  {/* NBA gets the nba.com-clone tabbed box score (Traditional /
+                      Advanced / Tracking / Hustle / Matchups / Shot Chart). Other
+                      sports keep the ESPN-fed flat layout — their public APIs don't
+                      expose tracking/matchups so the depth doesn't translate. */}
+                  {sport === 'nba' && away && home ? (
+                    <Section title="Box score · stats.nba.com">
+                      <NbaBoxScoreTabs
+                        espnGameId={game.id}
+                        gameDateIso={headerGame.date}
+                        awayTricode={away.abbr}
+                        homeTricode={home.abbr}
+                        status={headerGame.status.state}
+                        awayName={away.displayName}
+                        homeName={home.displayName}
+                        awayLogo={away.logo}
+                        homeLogo={home.logo}
+                        awayColor={away.color}
+                        homeColor={home.color}
+                      />
                     </Section>
+                  ) : (
+                    <>
+                      {summary.leaders.length > 0 && (
+                        <Section title="Game leaders">
+                          <LeadersList sport={sport} summary={summary} />
+                        </Section>
+                      )}
+
+                      {summary.boxscoreTeams.length === 2 && summary.boxscoreTeams[0].stats.length > 0 && (
+                        <Section title="Team stats">
+                          <TeamStatsCompare summary={summary} />
+                        </Section>
+                      )}
+
+                      {summary.boxscorePlayers.length > 0 && (
+                        <Section title="Box score">
+                          <BoxscorePlayersList categories={summary.boxscorePlayers} sport={sport} />
+                        </Section>
+                      )}
+                    </>
                   )}
 
-                  {summary.boxscoreTeams.length === 2 && summary.boxscoreTeams[0].stats.length > 0 && (
-                    <Section title="Team stats">
-                      <TeamStatsCompare summary={summary} />
+                  {summary.scoringPlays.length > 0 && (
+                    <Section title="Scoring plays">
+                      <ScoringPlaysList summary={summary} />
                     </Section>
                   )}
-
-                  {summary.boxscorePlayers.length > 0 && (
-                    <Section title="Box score">
-                      <BoxscorePlayersList categories={summary.boxscorePlayers} sport={sport} />
-                    </Section>
-                  )}
-                </>
-              )}
-
-              {summary.scoringPlays.length > 0 && (
-                <Section title="Scoring plays">
-                  <ScoringPlaysList summary={summary} />
-                </Section>
-              )}
+                </div>
+              </div>
 
               {summary.article && summary.article.headline && (
                 <Section title="Recap">

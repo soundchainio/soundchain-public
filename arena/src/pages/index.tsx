@@ -4,6 +4,7 @@ import { Trophy, Swords, Activity, Flag, Zap, ArrowRight } from 'lucide-react'
 import { ArenaShell } from '@/components/ArenaShell'
 import { PillButton } from '@/components/PillButton'
 import { LiveTakesFeed } from '@/components/LiveTakesFeed'
+import { LiveScoresStrip } from '@/components/LiveScoresStrip'
 
 const PULSE_NOW = [
   { href: '/nba',    label: 'NBA Playoffs',     emoji: '🏀', accent: 'NOW' },
@@ -40,6 +41,11 @@ export default function ArenaHub() {
       </Head>
 
       <ArenaShell>
+        {/* ESPN-style live scores ticker — top of every hub page, auto-refresh
+            60s, hidden when no games. Frank May 6: pointed at espn.com main
+            page as macro reference; this is the anchor of that pattern. */}
+        <LiveScoresStrip />
+
         {/* Hero */}
         <section className="arena-hero-light border-b border-arena-border-l dark:border-arena-border-d">
           <div className="max-w-7xl mx-auto px-4 pt-12 pb-14 sm:pt-20 sm:pb-20 text-center">

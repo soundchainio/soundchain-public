@@ -1,5 +1,6 @@
 import Head from 'next/head'
-import { ReactNode, useEffect, useState } from 'react'
+import { ReactNode, useEffect, useMemo, useState } from 'react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { ArenaShell } from './ArenaShell'
 import { GameCard } from './GameCard'
 import { GameDetailModal } from './GameDetailModal'
@@ -8,6 +9,40 @@ import { LeadersBoard } from './LeadersBoard'
 import { HighlightsStrip } from './HighlightsStrip'
 import { fetchScoreboard, fetchStandings, todayYmd, SPORT_LEADER_CATEGORIES, type EspnGame, type EspnStandingsGroup, type SportKey } from '@/lib/espn'
 import { getLeagueChannel } from '@/lib/youtube'
+
+// ─── Date helpers ──────────────────────────────────────────────────────────
+
+function addYmdDays(yyyymmdd: string, delta: number): string {
+  const y = Number(yyyymmdd.slice(0, 4))
+  const m = Number(yyyymmdd.slice(4, 6)) - 1
+  const d = Number(yyyymmdd.slice(6, 8))
+  const date = new Date(y, m, d)
+  date.setDate(date.getDate() + delta)
+  return `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`
+}
+
+function ymdToDate(yyyymmdd: string): Date {
+  const y = Number(yyyymmdd.slice(0, 4))
+  const m = Number(yyyymmdd.slice(4, 6)) - 1
+  const d = Number(yyyymmdd.slice(6, 8))
+  return new Date(y, m, d)
+}
+
+function ymdLabel(yyyymmdd: string, todayYmdStr: string): string {
+  if (yyyymmdd === todayYmdStr) return 'Today'
+  if (yyyymmdd === addYmdDays(todayYmdStr, -1)) return 'Yesterday'
+  if (yyyymmdd === addYmdDays(todayYmdStr, 1)) return 'Tomorrow'
+  const d = ymdToDate(yyyymmdd)
+  return d.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })
+}
+
+function ymdToInput(yyyymmdd: string): string {
+  return `${yyyymmdd.slice(0, 4)}-${yyyymmdd.slice(4, 6)}-${yyyymmdd.slice(6, 8)}`
+}
+
+function inputToYmd(iso: string): string {
+  return iso.replace(/-/g, '')
+}
 
 interface SportHubTemplateProps {
   sport: SportKey
@@ -35,13 +70,19 @@ export function SportHubTemplate(props: SportHubTemplateProps) {
   const [loaded, setLoaded] = useState(false)
   const [err, setErr] = useState<string | null>(null)
   const [selectedGame, setSelectedGame] = useState<EspnGame | null>(null)
+  // Selected scoreboard date — defaults to today, can be navigated back/forward
+  // for previous-game stats. Frank's macro feedback May 6: arena was today-only,
+  // espn.com/nba.com both surface yesterday's finals + upcoming days too.
+  const [selectedDate, setSelectedDate] = useState<string>(todayYmd())
+  const todayStr = useMemo(() => todayYmd(), [])
+  const isToday = selectedDate === todayStr
 
   useEffect(() => {
     let cancelled = false
     const load = async () => {
       try {
         const [g, s] = await Promise.all([
-          fetchScoreboard(sport, { date: todayYmd(), seasonType: highlightSeasonType }),
+          fetchScoreboard(sport, { date: selectedDate, seasonType: highlightSeasonType }),
           fetchStandings(sport),
         ])
         if (!cancelled) {
@@ -58,10 +99,14 @@ export function SportHubTemplate(props: SportHubTemplateProps) {
         }
       }
     }
+    setLoaded(false)
     load()
+    // Only auto-refresh today's games (past dates are immutable, future dates
+    // don't change until live)
+    if (selectedDate !== todayStr) return () => { cancelled = true }
     const id = setInterval(load, 60_000)
     return () => { cancelled = true; clearInterval(id) }
-  }, [sport, highlightSeasonType, standingsGroupFilter])
+  }, [sport, highlightSeasonType, standingsGroupFilter, selectedDate, todayStr])
 
   const liveGames = games.filter((g) => g.status.state === 'in')
   const upcomingGames = games.filter((g) => g.status.state === 'pre')
@@ -96,22 +141,83 @@ export function SportHubTemplate(props: SportHubTemplateProps) {
           </div>
         </section>
 
-        {/* Today's Games */}
+        {/* Games for the selected date — defaults to today, navigable back/forward */}
         <section className="max-w-7xl mx-auto px-4 py-8 sm:py-10">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xs font-black uppercase tracking-[0.3em] text-arena-muted-l dark:text-arena-muted-d">
-              Today
-            </h2>
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <div className="flex items-center gap-2">
+              <h2 className="text-xs font-black uppercase tracking-[0.3em] text-arena-muted-l dark:text-arena-muted-d">
+                {ymdLabel(selectedDate, todayStr)}
+              </h2>
+              {!isToday && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedDate(todayStr)}
+                  className="px-2 py-1 rounded-full text-[9px] font-mono font-bold uppercase tracking-wider border border-arena-border-l dark:border-arena-border-d text-arena-muted-l dark:text-arena-muted-d hover:border-arena-red hover:text-arena-red transition"
+                >
+                  Jump to Today
+                </button>
+              )}
+            </div>
             <span className="text-[10px] font-mono text-arena-muted-l dark:text-arena-muted-d">
               {loaded ? `${games.length} game${games.length === 1 ? '' : 's'}` : 'Loading…'}
               {err && ` · ${err}`}
             </span>
           </div>
 
+          {/* Date navigator — prev/next pill row + native date input picker */}
+          <div className="flex flex-wrap items-center gap-2 mb-4">
+            <button
+              type="button"
+              onClick={() => setSelectedDate(addYmdDays(selectedDate, -1))}
+              className="inline-flex items-center gap-1 px-3 py-2 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider border border-arena-border-l dark:border-arena-border-d text-arena-muted-l dark:text-arena-muted-d hover:border-arena-red hover:text-arena-red transition min-h-[36px]"
+              aria-label="Previous day"
+            >
+              <ChevronLeft className="w-3 h-3" />
+              <span>Prev</span>
+            </button>
+            {[-1, 0, 1].map((delta) => {
+              const ymd = delta === 0 ? todayStr : addYmdDays(todayStr, delta)
+              const label = delta === -1 ? 'Yesterday' : delta === 0 ? 'Today' : 'Tomorrow'
+              const isActive = selectedDate === ymd
+              return (
+                <button
+                  key={delta}
+                  type="button"
+                  onClick={() => setSelectedDate(ymd)}
+                  className={`inline-flex items-center gap-1 px-3 py-2 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider border transition min-h-[36px] ${
+                    isActive
+                      ? 'bg-arena-red text-white border-arena-red shadow-sm'
+                      : 'border-arena-border-l dark:border-arena-border-d text-arena-muted-l dark:text-arena-muted-d hover:border-arena-red'
+                  }`}
+                >
+                  {label}
+                </button>
+              )
+            })}
+            <button
+              type="button"
+              onClick={() => setSelectedDate(addYmdDays(selectedDate, 1))}
+              className="inline-flex items-center gap-1 px-3 py-2 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider border border-arena-border-l dark:border-arena-border-d text-arena-muted-l dark:text-arena-muted-d hover:border-arena-red hover:text-arena-red transition min-h-[36px]"
+              aria-label="Next day"
+            >
+              <span>Next</span>
+              <ChevronRight className="w-3 h-3" />
+            </button>
+            {/* Native date picker for arbitrary historical dates — falls back gracefully on iOS */}
+            <input
+              type="date"
+              value={ymdToInput(selectedDate)}
+              onChange={(e) => e.target.value && setSelectedDate(inputToYmd(e.target.value))}
+              className="ml-auto sm:ml-0 px-3 py-2 rounded-full text-[10px] font-mono bg-arena-card dark:bg-arena-surface border border-arena-border-l dark:border-arena-border-d text-arena-muted-l dark:text-arena-muted-d hover:border-arena-red transition min-h-[36px]"
+              aria-label="Pick a date"
+            />
+          </div>
+
           {loaded && games.length === 0 && (
             <div className="rounded-xl border border-arena-border-l dark:border-arena-border-d bg-arena-card dark:bg-arena-surface px-6 py-10 text-center">
               <p className="text-sm text-arena-muted-l dark:text-arena-muted-d">
-                No games scheduled today. Check back tomorrow.
+                No games on {ymdLabel(selectedDate, todayStr).toLowerCase()}.
+                {isToday ? ' Check back tomorrow.' : ' Pick another date above.'}
               </p>
             </div>
           )}
