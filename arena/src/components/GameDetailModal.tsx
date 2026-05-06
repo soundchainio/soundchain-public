@@ -11,6 +11,7 @@ import { buildEmbedUrl, relativeAgo, type YouTubeVideo } from '@/lib/youtube'
 import { PlayerHeadshot } from './PlayerHeadshot'
 import { HighlightModal } from './HighlightModal'
 import { GameChat } from './GameChat'
+import { NbaBoxScoreTabs } from './NbaBoxScoreTabs'
 
 interface Props {
   sport: SportKey
@@ -78,7 +79,7 @@ export function GameDetailModal({ sport, game, onClose }: Props) {
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full sm:w-[520px] sm:h-full bg-arena-paper dark:bg-arena-carbon text-arena-fg-l dark:text-arena-fg-d border-t sm:border-t-0 sm:border-l border-arena-border-l dark:border-arena-border-d rounded-t-2xl sm:rounded-none max-h-[92vh] sm:max-h-none flex flex-col shadow-2xl"
+        className="w-full sm:w-[520px] lg:w-[920px] sm:h-full bg-arena-paper dark:bg-arena-carbon text-arena-fg-l dark:text-arena-fg-d border-t sm:border-t-0 sm:border-l border-arena-border-l dark:border-arena-border-d rounded-t-2xl sm:rounded-none max-h-[92vh] sm:max-h-none flex flex-col shadow-2xl"
       >
         {/* Sticky header */}
         <header className="sticky top-0 z-10 bg-arena-paper/95 dark:bg-arena-carbon/95 backdrop-blur border-b border-arena-border-l dark:border-arena-border-d">
@@ -127,22 +128,46 @@ export function GameDetailModal({ sport, game, onClose }: Props) {
                 <GameHighlights sport={sport} game={headerGame} />
               </Section>
 
-              {summary.leaders.length > 0 && (
-                <Section title="Game leaders">
-                  <LeadersList sport={sport} summary={summary} />
+              {/* NBA gets the nba.com-clone tabbed box score (Traditional /
+                  Advanced / Tracking / Hustle / Matchups / Shot Chart). Other
+                  sports keep the ESPN-fed flat layout — their public APIs don't
+                  expose tracking/matchups so the depth doesn't translate. */}
+              {sport === 'nba' && away && home ? (
+                <Section title="Box score · stats.nba.com">
+                  <NbaBoxScoreTabs
+                    espnGameId={game.id}
+                    gameDateIso={headerGame.date}
+                    awayTricode={away.abbr}
+                    homeTricode={home.abbr}
+                    status={headerGame.status.state}
+                    awayName={away.displayName}
+                    homeName={home.displayName}
+                    awayLogo={away.logo}
+                    homeLogo={home.logo}
+                    awayColor={away.color}
+                    homeColor={home.color}
+                  />
                 </Section>
-              )}
+              ) : (
+                <>
+                  {summary.leaders.length > 0 && (
+                    <Section title="Game leaders">
+                      <LeadersList sport={sport} summary={summary} />
+                    </Section>
+                  )}
 
-              {summary.boxscoreTeams.length === 2 && summary.boxscoreTeams[0].stats.length > 0 && (
-                <Section title="Team stats">
-                  <TeamStatsCompare summary={summary} />
-                </Section>
-              )}
+                  {summary.boxscoreTeams.length === 2 && summary.boxscoreTeams[0].stats.length > 0 && (
+                    <Section title="Team stats">
+                      <TeamStatsCompare summary={summary} />
+                    </Section>
+                  )}
 
-              {summary.boxscorePlayers.length > 0 && (
-                <Section title="Box score">
-                  <BoxscorePlayersList categories={summary.boxscorePlayers} sport={sport} />
-                </Section>
+                  {summary.boxscorePlayers.length > 0 && (
+                    <Section title="Box score">
+                      <BoxscorePlayersList categories={summary.boxscorePlayers} sport={sport} />
+                    </Section>
+                  )}
+                </>
               )}
 
               {summary.scoringPlays.length > 0 && (
@@ -189,7 +214,9 @@ export function GameDetailModal({ sport, game, onClose }: Props) {
           )}
 
           <div className="text-center text-[10px] font-mono text-arena-muted-l dark:text-arena-muted-d pt-2 pb-6">
-            Stats: ESPN · Highlights: official YouTube · Auto-refresh during live games.
+            {sport === 'nba'
+              ? 'Stats: stats.nba.com · ESPN · Highlights: official YouTube · Auto-refresh during live games.'
+              : 'Stats: ESPN · Highlights: official YouTube · Auto-refresh during live games.'}
           </div>
         </div>
       </div>
