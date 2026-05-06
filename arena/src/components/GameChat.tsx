@@ -680,10 +680,10 @@ function ChatBubble({
         )}
         {editing ? (
           <div
-            className={`inline-block w-full max-w-full rounded-2xl px-2 py-2 text-sm ${
+            className={`inline-block w-full max-w-full rounded-xl px-2 py-1.5 text-[13px] ${
               msg.isMine
-                ? 'bg-arena-red/20 border border-arena-red'
-                : 'bg-arena-paper dark:bg-arena-carbon border border-arena-border-l dark:border-arena-border-d'
+                ? 'bg-arena-red/15 border border-arena-red/60'
+                : 'bg-arena-paper dark:bg-arena-carbon border border-arena-border-l/70 dark:border-arena-border-d/70'
             }`}
           >
             <textarea
@@ -733,10 +733,10 @@ function ChatBubble({
           </div>
         ) : (
           <div
-            className={`inline-block max-w-full rounded-2xl px-3 py-2 text-sm break-words ${
+            className={`inline-block max-w-full rounded-xl px-2.5 py-1.5 text-[13px] leading-snug break-words ${
               msg.isMine
-                ? 'bg-arena-red text-white rounded-tr-sm'
-                : 'bg-arena-paper dark:bg-arena-carbon border border-arena-border-l dark:border-arena-border-d rounded-tl-sm'
+                ? 'bg-arena-red text-white rounded-tr-sm shadow-[0_0_8px_rgba(220,38,38,0.35)]'
+                : 'bg-arena-paper dark:bg-arena-carbon border border-arena-border-l/70 dark:border-arena-border-d/70 rounded-tl-sm'
             }`}
           >
             {msg.body && (

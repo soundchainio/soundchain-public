@@ -6,11 +6,24 @@ import { PillButton } from '@/components/PillButton'
 import { LiveTakesFeed } from '@/components/LiveTakesFeed'
 import { LiveScoresStrip } from '@/components/LiveScoresStrip'
 
-const PULSE_NOW = [
-  { href: '/nba',    label: 'NBA Playoffs',     emoji: '🏀', accent: 'NOW' },
-  { href: '/nhl',    label: 'Stanley Cup',      emoji: '🏒', accent: 'NOW' },
+// Every sport that has an arena hub or roadmap stub. Slim cyberpunk pills,
+// horizontally-scrollable on mobile so nothing gets cropped at narrow widths.
+// Frank May 6 feedback: only 4 cards rendered on mobile, missing MLS, Boxing,
+// WWE, NFL, FIFA World Cup, Soccer. Treat this list as the canonical "sport
+// universe" — extending it adds a tile w/ no other code change.
+const PULSE_NOW: { href: string; label: string; emoji: string; accent: string; live?: boolean }[] = [
+  { href: '/nba',    label: 'NBA Playoffs',     emoji: '🏀', accent: 'NOW',    live: true },
+  { href: '/nhl',    label: 'Stanley Cup',      emoji: '🏒', accent: 'NOW',    live: true },
   { href: '/mlb',    label: 'MLB Daily',        emoji: '⚾', accent: 'TODAY' },
+  { href: '/wnba',   label: 'WNBA',             emoji: '🏀', accent: 'TODAY' },
+  { href: '/nfl',    label: 'NFL Offseason',    emoji: '🏈', accent: 'NEWS' },
   { href: '/f1',     label: 'Formula 1',        emoji: '🏎️', accent: 'WKND' },
+  { href: '/boxing', label: 'Boxing',           emoji: '🥊', accent: 'CARD' },
+  { href: '/soccer', label: 'EPL · MLS',        emoji: '⚽', accent: 'LIVE' },
+  { href: '/coming-soon?sport=ncaa',  label: 'NCAA Hoops',       emoji: '🏀', accent: 'OFF' },
+  { href: '/coming-soon?sport=wwe',   label: 'WWE',              emoji: '🤼', accent: 'SOON' },
+  { href: '/coming-soon?sport=fifa',  label: 'FIFA WC',          emoji: '🌍', accent: 'SOON' },
+  { href: '/coming-soon?sport=horse', label: 'Horse Racing',     emoji: '🐎', accent: 'SOON' },
 ]
 
 const FEATURE_BULLETS = [
@@ -70,28 +83,47 @@ export default function ArenaHub() {
           </div>
         </section>
 
-        {/* Pulse strip — what's hot RIGHT NOW */}
-        <section className="max-w-7xl mx-auto px-4 py-10 sm:py-12">
-          <h2 className="text-xs font-black uppercase tracking-[0.3em] text-arena-muted-l dark:text-arena-muted-d mb-4">
-            The Pulse · Right now
-          </h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {/* Sports pulse strip — slim cyberpunk pills, horizontally-scrollable on
+            mobile so all sports surface (no 4-card crop). Hairline borders,
+            hologram-text on hover, dimensional accent dot for live. Frank
+            May 6: "those pills are too fat... slimming cyberpunk chic
+            lines-holographic-dimensional". */}
+        <section className="max-w-7xl mx-auto px-4 py-6 sm:py-8">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-xs font-black uppercase tracking-[0.3em] text-arena-muted-l dark:text-arena-muted-d">
+              Sports · Right now
+            </h2>
+            <span className="text-[9px] font-mono tracking-wider text-arena-muted-l dark:text-arena-muted-d hidden sm:inline">
+              swipe →
+            </span>
+          </div>
+
+          {/* Horizontal scroll on all viewports — slim pills, no card sprawl */}
+          <div
+            className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 snap-x snap-mandatory"
+            style={{ scrollbarWidth: 'none' }}
+          >
             {PULSE_NOW.map((p) => (
               <Link
                 key={p.href}
                 href={p.href}
-                className="group rounded-xl border border-arena-border-l dark:border-arena-border-d bg-arena-card dark:bg-arena-surface p-5 hover:border-arena-red transition flex flex-col"
+                className="group relative flex-shrink-0 snap-start flex items-center gap-2 px-3 py-2 rounded-full border border-arena-border-l dark:border-arena-border-d bg-arena-card dark:bg-arena-surface hover:border-arena-red hover:bg-arena-paper dark:hover:bg-arena-carbon transition min-h-[44px]"
               >
-                <div className="flex items-start justify-between mb-3">
-                  <span className="text-3xl">{p.emoji}</span>
-                  <span className="text-[10px] font-mono tracking-wider text-arena-red border border-arena-red/40 bg-arena-red/5 px-2 py-0.5 rounded-full">
+                {/* Holographic accent — only on active/live tiles */}
+                {p.live && (
+                  <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-arena-red animate-arena-pulse-live shadow-[0_0_8px_rgba(220,38,38,0.7)]" />
+                )}
+                <span className="text-base flex-shrink-0" aria-hidden>{p.emoji}</span>
+                <div className="flex flex-col leading-tight">
+                  <span className="text-[12px] sm:text-[13px] font-black tracking-tight whitespace-nowrap group-hover:arena-hologram-text transition-colors">
+                    {p.label}
+                  </span>
+                  <span className={`text-[8px] font-mono uppercase tracking-[0.2em] ${
+                    p.live ? 'text-arena-red' : p.accent === 'SOON' ? 'text-arena-muted-l dark:text-arena-muted-d opacity-60' : 'text-arena-orange'
+                  }`}>
                     {p.accent}
                   </span>
                 </div>
-                <h3 className="text-base sm:text-lg font-black mb-2">{p.label}</h3>
-                <span className="mt-auto text-xs font-bold text-arena-red flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
-                  Open <ArrowRight className="w-3 h-3" />
-                </span>
               </Link>
             ))}
           </div>

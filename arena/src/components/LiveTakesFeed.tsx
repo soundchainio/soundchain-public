@@ -179,8 +179,8 @@ export function LiveTakesFeed() {
   }
 
   return (
-    <section className="max-w-7xl mx-auto px-4 py-10 sm:py-12">
-      <div className="flex items-center justify-between mb-4">
+    <section className="max-w-7xl mx-auto px-4 py-6 sm:py-8">
+      <div className="flex items-center justify-between mb-3">
         <h2 className="text-xs font-black uppercase tracking-[0.3em] text-arena-muted-l dark:text-arena-muted-d">
           Live takes · Right now
         </h2>
@@ -196,23 +196,25 @@ export function LiveTakesFeed() {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-arena-border-l dark:border-arena-border-d bg-arena-card dark:bg-arena-surface overflow-hidden">
-        <ul className="divide-y divide-arena-border-l dark:divide-arena-border-d">
+      {/* Cyberpunk slim — hairline border, tighter rows, subtle holo
+          underglow on hover. Frank May 6 directive. */}
+      <div className="rounded-xl border border-arena-border-l/70 dark:border-arena-border-d/70 bg-arena-card dark:bg-arena-surface overflow-hidden">
+        <ul className="divide-y divide-arena-border-l/60 dark:divide-arena-border-d/60">
           {takes!.map((t) => {
             const meta = SPORT_META[t.sport] ?? { label: t.sport.toUpperCase(), route: '/live', accent: 'text-arena-muted-l dark:text-arena-muted-d border-arena-border-l dark:border-arena-border-d bg-transparent' }
             return (
-              <li key={t.id} className="p-3 sm:p-4 hover:bg-arena-paper/60 dark:hover:bg-arena-carbon/40 transition">
-                <div className="flex items-start gap-3">
+              <li key={t.id} className="px-3 py-2.5 sm:px-4 sm:py-3 hover:bg-arena-paper/60 dark:hover:bg-arena-carbon/40 hover:shadow-[inset_0_0_0_1px_rgba(220,38,38,0.15)] transition">
+                <div className="flex items-start gap-2.5">
                   {isUrlAvatar(t.avatar) ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={t.avatar}
                       alt=""
                       loading="lazy"
-                      className="w-8 h-8 rounded-full object-cover border border-arena-border-l dark:border-arena-border-d flex-shrink-0 mt-0.5"
+                      className="w-7 h-7 rounded-full object-cover border border-arena-border-l/70 dark:border-arena-border-d/70 flex-shrink-0 mt-0.5"
                     />
                   ) : (
-                    <span className="text-2xl leading-none flex-shrink-0 mt-0.5" aria-hidden>
+                    <span className="text-xl leading-none flex-shrink-0 mt-0.5" aria-hidden>
                       {t.avatar || '🏟️'}
                     </span>
                   )}
