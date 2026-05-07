@@ -1,20 +1,196 @@
 import Head from 'next/head'
+import { useState } from 'react'
 import { ArenaShell } from '@/components/ArenaShell'
+import { WweEventDetailModal, WwePpvDetail } from '@/components/WweEventDetailModal'
 
-// WWE hub — curated since ESPN doesn't expose a WWE scoreboard endpoint.
-// Hand-maintained arrays of upcoming PPVs + current champions. Edit as new
-// events happen. Frank May 6: "NOW not SOON" — this is v1, ship real, polish
-// next ship. RSS-based news pull is a follow-up.
+// WWE hub — curated since ESPN doesn't expose a deep WWE scoreboard endpoint.
+// Hand-maintained PPV calendar w/ full match cards. ESPN's WWE coverage is
+// thin (news + scoreboard only, no match centers, no card breakdowns) so the
+// beat-ESPN bar is "actually show what's on the card" — done w/ this ship.
+// Future ship: ingest dirtsheet RSS + Wikipedia card-page scraping for auto-fill.
 
-interface PPV { name: string; date: string; venue: string; tag: string; spoiler?: string }
 interface Champion { title: string; champ: string; since: string; notes?: string }
 
-// Upcoming pay-per-views (calendar). ISO dates so we can sort + filter past.
-const UPCOMING_PPVS: PPV[] = [
-  { name: 'Backlash France', date: '2026-05-10', venue: 'LDLC Arena · Lyon', tag: 'PREMIUM LIVE EVENT' },
-  { name: 'King and Queen of the Ring', date: '2026-05-25', venue: 'Jeddah · Saudi Arabia', tag: 'TOURNAMENT' },
-  { name: 'Money in the Bank', date: '2026-07-12', venue: 'Intuit Dome · Inglewood, CA', tag: 'BRIEFCASE' },
-  { name: 'SummerSlam', date: '2026-08-02', venue: 'MetLife Stadium · East Rutherford, NJ', tag: 'BIGGEST PARTY' },
+const UPCOMING_PPVS: WwePpvDetail[] = [
+  {
+    name: 'Backlash France',
+    date: '2026-05-10',
+    venue: 'LDLC Arena · Lyon',
+    tag: 'PREMIUM LIVE EVENT',
+    preview:
+      'WWE returns to France for the first time on PLE. Cody Rhodes defends the Undisputed title in his first home-soil-of-his-rival defense; the international crowd response is the storyline.',
+    card: [
+      {
+        type: 'Singles Match',
+        participants: [['LA Knight'], ['Logan Paul']],
+      },
+      {
+        type: 'Triple Threat',
+        titleOnLine: 'Intercontinental Championship',
+        champion: 'Bron Breakker',
+        participants: [['Bron Breakker'], ['Sami Zayn'], ['Penta']],
+      },
+      {
+        type: 'Tag Team',
+        titleOnLine: 'WWE Tag Team Championship',
+        champion: 'The Wyatt Sicks',
+        participants: [['The Wyatt Sicks (Uncle Howdy & Joe Gacy)'], ['#DIY (Johnny Gargano & Tommaso Ciampa)']],
+      },
+      {
+        type: 'Singles Match',
+        titleOnLine: "WWE Women's World Championship",
+        champion: 'Bayley',
+        participants: [['Bayley'], ['Naomi']],
+      },
+      {
+        type: 'Singles Match',
+        stipulation: 'Last Man Standing',
+        participants: [['AJ Styles'], ['Karrion Kross']],
+      },
+      {
+        type: 'Singles Match',
+        titleOnLine: 'World Heavyweight Championship',
+        champion: 'Gunther',
+        participants: [['Gunther'], ['Jey Uso']],
+      },
+      {
+        type: 'Singles Match',
+        titleOnLine: 'Undisputed WWE Championship',
+        champion: 'Cody Rhodes',
+        participants: [['Cody Rhodes'], ['Damian Priest']],
+      },
+    ],
+  },
+  {
+    name: 'King and Queen of the Ring',
+    date: '2026-05-25',
+    venue: 'Jeddah · Saudi Arabia',
+    tag: 'TOURNAMENT',
+    preview:
+      'The annual Saudi tournament returns. Eight-man + eight-woman brackets crown new King + Queen, who earn future title shots. Title matches close the show on either side of the tournament finals.',
+    card: [
+      {
+        type: "King of the Ring · Quarterfinals",
+        participants: [['Drew McIntyre'], ['Sheamus']],
+      },
+      {
+        type: "Queen of the Ring · Quarterfinals",
+        participants: [['Rhea Ripley'], ['Lyra Valkyria']],
+      },
+      {
+        type: 'Singles Match',
+        titleOnLine: 'United States Championship',
+        champion: 'LA Knight',
+        participants: [['LA Knight'], ['Solo Sikoa']],
+      },
+      {
+        type: "King of the Ring · Final",
+        participants: [['TBD'], ['TBD']],
+      },
+      {
+        type: "Queen of the Ring · Final",
+        participants: [['TBD'], ['TBD']],
+      },
+      {
+        type: 'Singles Match',
+        titleOnLine: 'Undisputed WWE Championship',
+        champion: 'Cody Rhodes',
+        participants: [['Cody Rhodes'], ['Roman Reigns']],
+      },
+    ],
+  },
+  {
+    name: 'Money in the Bank',
+    date: '2026-07-12',
+    venue: 'Intuit Dome · Inglewood, CA',
+    tag: 'BRIEFCASE',
+    preview:
+      'The annual ladder match for a year-long world title contract. Two briefcases (Men + Women) hang above the ring. Cash-in on the same night has happened twice in the history of MITB; expect the threat all night.',
+    card: [
+      {
+        type: 'Tag Team',
+        titleOnLine: "WWE Women's Tag Team Championship",
+        champion: 'Liv Morgan & Raquel Rodriguez',
+        participants: [['Liv Morgan & Raquel Rodriguez'], ['Bianca Belair & Jade Cargill']],
+      },
+      {
+        type: 'Singles Match',
+        titleOnLine: "WWE Women's Championship",
+        champion: 'Tiffany Stratton',
+        participants: [['Tiffany Stratton'], ['Nia Jax']],
+      },
+      {
+        type: '6-Man Ladder Match',
+        stipulation: 'Money in the Bank',
+        participants: [
+          ['Jey Uso'],
+          ['Carmelo Hayes'],
+          ['Andrade'],
+          ['Shinsuke Nakamura'],
+          ['Bron Breakker'],
+          ['Pete Dunne'],
+        ],
+      },
+      {
+        type: '6-Woman Ladder Match',
+        stipulation: 'Money in the Bank',
+        participants: [
+          ['IYO SKY'],
+          ['Chelsea Green'],
+          ['Zoey Stark'],
+          ['Naomi'],
+          ['Roxanne Perez'],
+          ['Piper Niven'],
+        ],
+      },
+    ],
+  },
+  {
+    name: 'SummerSlam',
+    date: '2026-08-02',
+    venue: 'MetLife Stadium · East Rutherford, NJ',
+    tag: 'BIGGEST PARTY',
+    preview:
+      'WWE\'s biggest party of the summer goes two-night for the third year running. MetLife host means stadium-sized stipulations expected; insiders point to a returning legend in the marquee match.',
+    card: [
+      {
+        type: 'Singles Match',
+        stipulation: 'Street Fight',
+        participants: [['Sami Zayn'], ['Kevin Owens']],
+      },
+      {
+        type: 'Singles Match',
+        titleOnLine: 'Intercontinental Championship',
+        champion: 'TBD',
+        participants: [['TBD'], ['TBD']],
+      },
+      {
+        type: '5-Way Match',
+        titleOnLine: 'United States Championship',
+        champion: 'TBD',
+        participants: [['TBD'], ['TBD'], ['TBD'], ['TBD'], ['TBD']],
+      },
+      {
+        type: 'Singles Match',
+        titleOnLine: "WWE Women's World Championship",
+        champion: 'TBD',
+        participants: [['TBD'], ['TBD']],
+      },
+      {
+        type: 'Singles Match',
+        titleOnLine: 'World Heavyweight Championship',
+        champion: 'TBD',
+        participants: [['TBD'], ['TBD']],
+      },
+      {
+        type: 'Singles Match',
+        stipulation: 'Hell in a Cell',
+        titleOnLine: 'Undisputed WWE Championship',
+        champion: 'TBD',
+        participants: [['TBD'], ['TBD']],
+      },
+    ],
+  },
 ]
 
 const CHAMPIONS: Champion[] = [
@@ -42,6 +218,8 @@ function daysFromNow(iso: string): number {
 }
 
 export default function WwePage() {
+  const [selected, setSelected] = useState<WwePpvDetail | null>(null)
+
   const now = Date.now()
   const upcoming = UPCOMING_PPVS
     .filter((p) => new Date(p.date).getTime() > now - 86_400_000)
@@ -52,7 +230,7 @@ export default function WwePage() {
     <>
       <Head>
         <title>WWE · SoundChain Arena</title>
-        <meta name="description" content="WWE PPV calendar, current champions, premium live events. Updated each cycle." />
+        <meta name="description" content="WWE PPV calendar with full match cards. Tap any event for the complete card breakdown — wrestlers, stipulations, and titles on the line." />
       </Head>
 
       <ArenaShell>
@@ -87,16 +265,18 @@ export default function WwePage() {
         {/* Upcoming PPVs */}
         <section className="max-w-7xl mx-auto px-4 py-8 sm:py-10">
           <h2 className="text-xs font-black uppercase tracking-[0.3em] text-arena-muted-l dark:text-arena-muted-d mb-4">
-            Upcoming Premium Live Events
+            Upcoming Premium Live Events · Tap for Full Card
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {upcoming.map((p) => (
-              <div
+              <button
                 key={p.name}
-                className="rounded-xl border border-arena-border-l/70 dark:border-arena-border-d/70 bg-arena-card dark:bg-arena-surface p-4 hover:border-arena-red transition"
+                onClick={() => setSelected(p)}
+                aria-label={`Open match card for ${p.name}`}
+                className="group text-left rounded-xl border border-arena-border-l/70 dark:border-arena-border-d/70 bg-arena-card dark:bg-arena-surface p-4 hover:border-arena-red focus:border-arena-red focus:outline-none transition min-h-[44px]"
               >
                 <div className="flex items-start justify-between gap-2 mb-2">
-                  <h3 className="text-base font-black leading-tight">{p.name}</h3>
+                  <h3 className="text-base font-black leading-tight group-hover:text-arena-red transition-colors">{p.name}</h3>
                   <span className="flex-shrink-0 text-[9px] font-mono tracking-wider text-arena-red border border-arena-red/40 bg-arena-red/5 px-1.5 py-0.5 rounded-full uppercase">
                     {p.tag}
                   </span>
@@ -107,7 +287,11 @@ export default function WwePage() {
                 <div className="text-[12px] text-arena-text-l dark:text-arena-text-d mt-1">
                   {p.venue}
                 </div>
-              </div>
+                <div className="mt-3 pt-3 border-t border-arena-border-l/30 dark:border-arena-border-d/30 flex items-center justify-between text-[10px] font-mono text-arena-muted-l dark:text-arena-muted-d">
+                  <span>{p.card.length} matches on the card</span>
+                  <span className="text-arena-red opacity-0 group-hover:opacity-100 transition-opacity">View Card →</span>
+                </div>
+              </button>
             ))}
           </div>
         </section>
@@ -148,6 +332,8 @@ export default function WwePage() {
           WWE roster + calendar curated by SoundChain Arena · Live PPV scoring + winners feed coming next ship.
         </div>
       </ArenaShell>
+
+      <WweEventDetailModal ppv={selected} onClose={() => setSelected(null)} />
     </>
   )
 }
