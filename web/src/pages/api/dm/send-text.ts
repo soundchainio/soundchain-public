@@ -3,7 +3,8 @@ import clientPromise from 'lib/mongodb'
 import { ObjectId } from 'mongodb'
 import { authFromRequest } from 'lib/api/authJwt'
 import { sendPrivateDM } from 'lib/nostr/privateDM'
-import { hexToBytes } from '@noble/hashes/utils'
+// @noble/hashes@2.x: only `./utils.js` is exported. See privateDM.ts comment.
+import { hexToBytes } from '@noble/hashes/utils.js'
 // @ts-ignore — web-push has no bundled types and we don't need them at this surface
 import webPush from 'web-push'
 

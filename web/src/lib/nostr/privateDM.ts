@@ -23,7 +23,10 @@ import {
   type Event,
   type UnsignedEvent,
 } from 'nostr-tools'
-import { bytesToHex } from '@noble/hashes/utils'
+// @noble/hashes@2.x dropped extensionless subpath exports — only `./utils.js`
+// is in the exports map now. Keep the `.js` suffix or webpack fails the build
+// w/ "Package path ./utils is not exported".
+import { bytesToHex } from '@noble/hashes/utils.js'
 import { NOSTR_RELAYS } from './concertChat'
 
 const pool = new SimplePool()
