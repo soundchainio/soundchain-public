@@ -303,6 +303,105 @@ export interface NbaScoreboardGame {
   gameTimeUTC: string
 }
 
+// ─── Video highlights (videodetailsasset) ───────────────────────────────────
+
+export interface NbaHighlightClip {
+  uuid: string                   // stats.nba.com video uuid
+  eventId: number                // play-by-play event id
+  description: string            // "Curry 28' 3PT Jump Shot (12 PTS)"
+  period: number
+  clock: string                  // "01:23.4"
+  homeAbbr: string
+  awayAbbr: string
+  homeScore: number
+  awayScore: number
+  thumbnail: string              // best available image
+  mp4Url: string                 // best mp4 (lurl preferred → mp4url → murl)
+}
+
+const VIDEO_PARAM_DEFAULTS = {
+  AheadBehind: '',
+  ClutchTime: '',
+  ContextFilter: '',
+  DateFrom: '',
+  DateTo: '',
+  EndPeriod: '0',
+  EndRange: '28800',
+  GameSegment: '',
+  GroupQuantity: '0',
+  LastNGames: '0',
+  Location: '',
+  Month: '0',
+  OpponentTeamID: '0',
+  Outcome: '',
+  Period: '0',
+  PlayerID: '0',
+  PointDiff: '',
+  Position: '',
+  RangeType: '0',
+  RookieYear: '',
+  SeasonSegment: '',
+  StartPeriod: '0',
+  StartRange: '0',
+  TeamID: '0',
+  VsConference: '',
+  VsDivision: '',
+} as const
+
+/** Video clips for a game, scoped to a ContextMeasure (FGM/FG3M/AST/BLK/STL/etc).
+ *  Default FG3M = 3-pointers made; usually the most highlight-worthy plays
+ *  (15-25 clips per game vs 70-100 for FGM). Also tries FGM as a follow-up
+ *  when too few clips are returned (early game, low-scoring matchup). */
+export async function fetchVideoHighlights(
+  gameId: string,
+  season: string,
+  seasonType: 'Regular Season' | 'Playoffs' = 'Regular Season',
+  contextMeasure: 'FGM' | 'FG3M' | 'AST' | 'BLK' | 'STL' = 'FG3M',
+  limit = 24,
+): Promise<NbaHighlightClip[]> {
+  const data = await nbaGet('videodetailsasset', {
+    ...VIDEO_PARAM_DEFAULTS,
+    LeagueID: '00',
+    Season: season,
+    SeasonType: seasonType,
+    ContextMeasure: contextMeasure,
+    GameID: gameId,
+  })
+  return shapeVideoClips(data, limit)
+}
+
+function shapeVideoClips(data: any, limit: number): NbaHighlightClip[] {
+  // videodetailsasset returns { resultSets: { Meta: { videoUrls: [...] }, playlist: [...] } }
+  const meta = data?.resultSets?.Meta ?? data?.resultSets?.meta
+  const playlist: any[] = data?.resultSets?.playlist ?? []
+  const videoUrls: any[] = meta?.videoUrls ?? []
+  if (!playlist.length || !videoUrls.length) return []
+
+  // playlist[i] pairs with videoUrls[i]
+  const clips: NbaHighlightClip[] = []
+  const max = Math.min(playlist.length, videoUrls.length, limit)
+  for (let i = 0; i < max; i++) {
+    const ev = playlist[i]
+    const vid = videoUrls[i]
+    const mp4Url = str(vid?.lurl) || str(vid?.mp4url) || str(vid?.murl) || str(vid?.surl)
+    if (!mp4Url) continue
+    clips.push({
+      uuid: str(vid?.uuid),
+      eventId: num(ev?.ei),
+      description: str(ev?.dsc),
+      period: num(ev?.p),
+      clock: str(ev?.cl),
+      homeAbbr: str(ev?.ha),
+      awayAbbr: str(ev?.va),
+      homeScore: num(ev?.hpb ?? ev?.hps ?? 0),
+      awayScore: num(ev?.vpb ?? ev?.vps ?? 0),
+      thumbnail: str(vid?.lth) || str(vid?.mth) || str(vid?.sth),
+      mp4Url,
+    })
+  }
+  return clips
+}
+
 /** Schedule by date. Used to map ESPN gameIds → nba.com gameIds via tricode +
  *  date match. Cached aggressively — schedule for past dates is immutable. */
 export async function fetchScoreboardByDate(yyyymmdd: string): Promise<NbaScoreboardGame[]> {

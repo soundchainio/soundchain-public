@@ -13,6 +13,8 @@ import { HighlightModal } from './HighlightModal'
 import { GameChat } from './GameChat'
 import { NbaBoxScoreTabs } from './NbaBoxScoreTabs'
 import { MlbHighlightsStrip } from './MlbHighlightsStrip'
+import { NbaHighlightsStrip } from './NbaHighlightsStrip'
+import { NhlHighlightsStrip } from './NhlHighlightsStrip'
 import { MlbStatcastPanel } from './MlbStatcastPanel'
 
 interface Props {
@@ -144,6 +146,30 @@ export function GameDetailModal({ sport, game, onClose }: Props) {
                           date={(headerGame.date || '').slice(0, 10)}
                           away={away.displayName}
                           home={home.displayName}
+                          status={headerGame.status.state as any}
+                        />
+                      </div>
+                    )}
+                    {sport === 'nba' && away && home && (
+                      <div className="mb-4">
+                        <div className="text-[10px] font-mono uppercase tracking-[0.3em] text-arena-muted-l dark:text-arena-muted-d mb-2">nba.com clips</div>
+                        <NbaHighlightsStrip
+                          espnGameId={game.id}
+                          date={(headerGame.date || '').slice(0, 10)}
+                          away={away.abbr}
+                          home={home.abbr}
+                          status={headerGame.status.state as any}
+                        />
+                      </div>
+                    )}
+                    {sport === 'nhl' && away && home && (
+                      <div className="mb-4">
+                        <div className="text-[10px] font-mono uppercase tracking-[0.3em] text-arena-muted-l dark:text-arena-muted-d mb-2">NHL.com clips</div>
+                        <NhlHighlightsStrip
+                          espnGameId={game.id}
+                          date={(headerGame.date || '').slice(0, 10)}
+                          away={away.abbr}
+                          home={home.abbr}
                           status={headerGame.status.state as any}
                         />
                       </div>
