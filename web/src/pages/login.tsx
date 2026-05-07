@@ -142,6 +142,7 @@ export default function LoginPage() {
   const [passkeyAvailable, setPasskeyAvailable] = useState(false);
   const [passkeyLoading, setPasskeyLoading] = useState(false);
   const [showPasskeyPrompt, setShowPasskeyPrompt] = useState(false);
+  const [showFeaturePrompt, setShowFeaturePrompt] = useState(false);
   const [emailKeyAccounts, setEmailKeyAccounts] = useState<string[]>([]);
   const [emailKeyBookUnlocked, setEmailKeyBookUnlocked] = useState(false);
   const [pendingEmailKeyEmail, setPendingEmailKeyEmail] = useState<string | null>(null);
@@ -1239,6 +1240,39 @@ export default function LoginPage() {
               {/* Logo */}
               <div className="mb-4 flex h-12 items-center justify-center">
                 <LogoAndText className="text-white h-8" />
+              </div>
+
+              {/* COMING SOON — native-style text notifications via WebRTC DataChannel + Nostr NIP-17 */}
+              {/* Hover (desktop) or tap (mobile) to expand. Promotes adding cell # in account settings */}
+              {/* so when the feature ships, discovery is already wired (cell # → hash → Nostr pubkey) */}
+              <div
+                className="group relative mb-3 w-full"
+                onClick={() => setShowFeaturePrompt(v => !v)}
+              >
+                <div className="flex items-center justify-center gap-1.5 cursor-pointer rounded-full bg-gradient-to-r from-cyan-500/15 to-purple-500/15 border border-cyan-400/30 hover:border-cyan-400/60 px-3 py-1.5 transition-colors">
+                  <span className="text-cyan-300 text-[10px]">&#x25CE;</span>
+                  <span className="text-[10px] font-medium text-cyan-100 tracking-wide">
+                    Coming: native text-style alerts
+                  </span>
+                  <span className="text-cyan-400/70 text-[9px]">i</span>
+                </div>
+                <div
+                  className={`absolute left-0 right-0 top-full mt-1 z-20 rounded-lg bg-black/90 border border-cyan-400/40 backdrop-blur-md p-3 text-left shadow-xl shadow-cyan-500/10 transition-all ${
+                    showFeaturePrompt
+                      ? 'opacity-100 pointer-events-auto'
+                      : 'opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto'
+                  }`}
+                >
+                  <p className="text-[11px] font-semibold text-white leading-snug mb-1.5">
+                    SMS-style DMs without the SMS bill.
+                  </p>
+                  <p className="text-[10px] text-gray-300 leading-relaxed mb-2">
+                    Encrypted texts over WebRTC + Nostr land as native lock-screen alerts on iOS/Android — no Twilio, no per-message fees, ever. A 2021 vision finally on deck.
+                  </p>
+                  <p className="text-[10px] text-cyan-300 leading-relaxed">
+                    Add your cell # in <span className="font-semibold text-cyan-200">Settings &rarr; Account</span> now and you&rsquo;re wired the second it ships.
+                  </p>
+                </div>
               </div>
 
               {/* Error */}
