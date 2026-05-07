@@ -63,6 +63,7 @@ const SPORT_PATHS = {
   nba: 'basketball/nba',
   wnba: 'basketball/wnba',
   ncaaMens: 'basketball/mens-college-basketball',
+  ncaaWomens: 'basketball/womens-college-basketball',
   nhl: 'hockey/nhl',
   mlb: 'baseball/mlb',
   nfl: 'football/nfl',
@@ -70,6 +71,10 @@ const SPORT_PATHS = {
   mma: 'mma/ufc',
   soccerEpl: 'soccer/eng.1',
   soccerMls: 'soccer/usa.1',
+  // FIFA World Cup uses the `fifa.world` ESPN league key. Sparse off-tournament,
+  // populates during qualifiers + the WC itself.
+  fifaWorld: 'soccer/fifa.world',
+  uefaCl: 'soccer/uefa.champions',
 } as const
 
 export type SportKey = keyof typeof SPORT_PATHS

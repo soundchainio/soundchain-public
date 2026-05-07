@@ -20,10 +20,10 @@ const PULSE_NOW: { href: string; label: string; emoji: string; accent: string; l
   { href: '/f1',     label: 'Formula 1',        emoji: '🏎️', accent: 'WKND' },
   { href: '/boxing', label: 'Boxing',           emoji: '🥊', accent: 'CARD' },
   { href: '/soccer', label: 'EPL · MLS',        emoji: '⚽', accent: 'LIVE' },
-  { href: '/coming-soon?sport=ncaa',  label: 'NCAA Hoops',       emoji: '🏀', accent: 'OFF' },
-  { href: '/coming-soon?sport=wwe',   label: 'WWE',              emoji: '🤼', accent: 'SOON' },
-  { href: '/coming-soon?sport=fifa',  label: 'FIFA WC',          emoji: '🌍', accent: 'SOON' },
-  { href: '/coming-soon?sport=horse', label: 'Horse Racing',     emoji: '🐎', accent: 'SOON' },
+  { href: '/ncaa',   label: 'NCAA Hoops',       emoji: '🏀', accent: 'BRACKET' },
+  { href: '/wwe',    label: 'WWE',              emoji: '🤼', accent: 'PPV' },
+  { href: '/fifa',   label: 'FIFA WC',          emoji: '🌍', accent: 'GLOBAL' },
+  { href: '/horse',  label: 'Horse Racing',     emoji: '🐎', accent: 'STAKES' },
 ]
 
 const FEATURE_BULLETS = [
