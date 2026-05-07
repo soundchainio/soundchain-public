@@ -13,6 +13,7 @@ import { HighlightModal } from './HighlightModal'
 import { GameChat } from './GameChat'
 import { NbaBoxScoreTabs } from './NbaBoxScoreTabs'
 import { MlbHighlightsStrip } from './MlbHighlightsStrip'
+import { MlbStatcastPanel } from './MlbStatcastPanel'
 
 interface Props {
   sport: SportKey
@@ -154,6 +155,18 @@ export function GameDetailModal({ sport, game, onClose }: Props) {
                       Advanced / Tracking / Hustle / Matchups / Shot Chart). Other
                       sports keep the ESPN-fed flat layout — their public APIs don't
                       expose tracking/matchups so the depth doesn't translate. */}
+                  {sport === 'mlb' && away && home && (
+                    <Section title="Statcast · MLB.com">
+                      <MlbStatcastPanel
+                        espnGameId={game.id}
+                        date={(headerGame.date || '').slice(0, 10)}
+                        away={away.displayName}
+                        home={home.displayName}
+                        status={headerGame.status.state as any}
+                      />
+                    </Section>
+                  )}
+
                   {sport === 'nba' && away && home ? (
                     <Section title="Box score · stats.nba.com">
                       <NbaBoxScoreTabs
