@@ -40,11 +40,29 @@ export interface F1RaceResultEntry {
   constructor: { constructorId: string; name: string }
   status: string               // "Finished" / "+1 Lap" / "Retired"
   time?: { time: string }
+  grid?: string                // qualifying grid slot — pre-fix this was unused, F1RaceDetailModal uses it for grid→finish delta arrows
+  laps?: string
+  fastestLap?: { rank: string; lap: string; time: string; avgSpeed?: string }
 }
 
 export interface F1LastRace {
   race: F1Race
   results: F1RaceResultEntry[]
+}
+
+export interface F1QualifyingEntry {
+  position: string
+  driver: { driverId: string; givenName: string; familyName: string; code?: string }
+  constructor: { constructorId: string; name: string }
+  q1?: string
+  q2?: string
+  q3?: string
+}
+
+export interface F1RaceDetails {
+  race: F1Race
+  results: F1RaceResultEntry[]
+  qualifying: F1QualifyingEntry[]
 }
 
 async function fetchJSON<T>(path: string): Promise<T> {
@@ -137,6 +155,16 @@ export async function fetchF1LastRace(): Promise<F1LastRace | null> {
         },
         status: r.status,
         time: r.Time ? { time: r.Time.time } : undefined,
+        grid: r.grid,
+        laps: r.laps,
+        fastestLap: r.FastestLap
+          ? {
+              rank: r.FastestLap.rank,
+              lap: r.FastestLap.lap,
+              time: r.FastestLap.Time?.time,
+              avgSpeed: r.FastestLap.AverageSpeed?.speed,
+            }
+          : undefined,
       })
     )
     return {
@@ -153,6 +181,92 @@ export async function fetchF1LastRace(): Promise<F1LastRace | null> {
         time: race.time,
       },
       results,
+    }
+  } catch (_) {
+    return null
+  }
+}
+
+/** Race details = results + qualifying for a specific season+round. Both Jolpica
+ *  endpoints are independent (no batching); fan out in parallel. Qualifying may
+ *  404 for very old races (pre-2003 has no Q1/Q2/Q3 split) — we tolerate empty.
+ */
+export async function fetchF1RaceDetails(
+  season: string | number,
+  round: string | number,
+): Promise<F1RaceDetails | null> {
+  try {
+    const [resultsData, qualifyingData] = await Promise.all([
+      fetchJSON<any>(`/${season}/${round}/results`),
+      fetchJSON<any>(`/${season}/${round}/qualifying`).catch(() => null),
+    ])
+    const race = resultsData?.MRData?.RaceTable?.Races?.[0]
+    if (!race) return null
+
+    const results = (race.Results ?? []).map(
+      (r: any): F1RaceResultEntry => ({
+        position: r.position,
+        points: r.points,
+        driver: {
+          driverId: r.Driver?.driverId,
+          givenName: r.Driver?.givenName,
+          familyName: r.Driver?.familyName,
+          code: r.Driver?.code,
+        },
+        constructor: {
+          constructorId: r.Constructor?.constructorId,
+          name: r.Constructor?.name,
+        },
+        status: r.status,
+        time: r.Time ? { time: r.Time.time } : undefined,
+        grid: r.grid,
+        laps: r.laps,
+        fastestLap: r.FastestLap
+          ? {
+              rank: r.FastestLap.rank,
+              lap: r.FastestLap.lap,
+              time: r.FastestLap.Time?.time,
+              avgSpeed: r.FastestLap.AverageSpeed?.speed,
+            }
+          : undefined,
+      }),
+    )
+
+    const qRace = qualifyingData?.MRData?.RaceTable?.Races?.[0]
+    const qualifying: F1QualifyingEntry[] = (qRace?.QualifyingResults ?? []).map(
+      (q: any): F1QualifyingEntry => ({
+        position: q.position,
+        driver: {
+          driverId: q.Driver?.driverId,
+          givenName: q.Driver?.givenName,
+          familyName: q.Driver?.familyName,
+          code: q.Driver?.code,
+        },
+        constructor: {
+          constructorId: q.Constructor?.constructorId,
+          name: q.Constructor?.name,
+        },
+        q1: q.Q1,
+        q2: q.Q2,
+        q3: q.Q3,
+      }),
+    )
+
+    return {
+      race: {
+        season: race.season,
+        round: race.round,
+        raceName: race.raceName,
+        circuit: {
+          circuitName: race.Circuit?.circuitName,
+          locality: race.Circuit?.Location?.locality,
+          country: race.Circuit?.Location?.country,
+        },
+        date: race.date,
+        time: race.time,
+      },
+      results,
+      qualifying,
     }
   } catch (_) {
     return null

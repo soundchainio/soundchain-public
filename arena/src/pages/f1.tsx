@@ -9,6 +9,7 @@ import {
   findNextRace, teamColor, countryFlag,
   type F1Race, type F1DriverStanding, type F1ConstructorStanding, type F1LastRace,
 } from '@/lib/f1'
+import { F1RaceDetailModal } from '@/components/F1RaceDetailModal'
 
 function useCountdown(target: Date | null) {
   const [now, setNow] = useState(() => Date.now())
@@ -91,19 +92,24 @@ function CountdownCell({ value, label }: { value: number; label: string }) {
   )
 }
 
-function PodiumCard({ last }: { last: F1LastRace | null }) {
+function PodiumCard({ last, onOpen }: { last: F1LastRace | null; onOpen?: (r: F1Race) => void }) {
   if (!last) return null
   const top3 = last.results.slice(0, 3)
   if (top3.length === 0) return null
+  const isClickable = !!onOpen
+  const Wrapper: any = isClickable ? 'button' : 'div'
+  const wrapperProps: any = isClickable
+    ? { type: 'button', onClick: () => onOpen!(last.race), className: 'w-full text-left rounded-xl border border-arena-border-l dark:border-arena-border-d bg-arena-card dark:bg-arena-surface p-5 hover:border-arena-red/60 transition-colors min-h-[44px]' }
+    : { className: 'rounded-xl border border-arena-border-l dark:border-arena-border-d bg-arena-card dark:bg-arena-surface p-5' }
   return (
-    <div className="rounded-xl border border-arena-border-l dark:border-arena-border-d bg-arena-card dark:bg-arena-surface p-5">
+    <Wrapper {...wrapperProps}>
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-xs font-black uppercase tracking-[0.3em] flex items-center gap-2">
           <Trophy className="w-3.5 h-3.5 text-arena-yellow" />
           Last race podium
         </h3>
         <span className="text-[10px] font-mono text-arena-muted-l dark:text-arena-muted-d">
-          {last.race.raceName} · R{last.race.round}
+          {last.race.raceName} · R{last.race.round}{isClickable ? ' ›' : ''}
         </span>
       </div>
       <ol className="space-y-2">
@@ -141,7 +147,7 @@ function PodiumCard({ last }: { last: F1LastRace | null }) {
           </li>
         ))}
       </ol>
-    </div>
+    </Wrapper>
   )
 }
 
@@ -248,6 +254,7 @@ export default function F1Page() {
   const [last, setLast] = useState<F1LastRace | null>(null)
   const [loaded, setLoaded] = useState(false)
   const [err, setErr] = useState<string | null>(null)
+  const [selectedRace, setSelectedRace] = useState<F1Race | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -312,7 +319,7 @@ export default function F1Page() {
               )}
             </div>
             <div className="space-y-4">
-              <PodiumCard last={last} />
+              <PodiumCard last={last} onOpen={setSelectedRace} />
               {schedule.length > 0 && (
                 <div className="rounded-xl border border-arena-border-l dark:border-arena-border-d bg-arena-card dark:bg-arena-surface p-5">
                   <h3 className="text-xs font-black uppercase tracking-[0.3em] mb-3">
@@ -320,18 +327,21 @@ export default function F1Page() {
                   </h3>
                   <ol className="space-y-1.5 max-h-80 overflow-y-auto no-scrollbar">
                     {schedule.map((r) => (
-                      <li
-                        key={`${r.season}-${r.round}`}
-                        className="flex items-center gap-2 text-xs py-1 border-b border-arena-border-l dark:border-arena-border-d last:border-b-0"
-                      >
-                        <span className="font-mono text-arena-muted-l dark:text-arena-muted-d w-6 arena-tabular">
-                          R{r.round}
-                        </span>
-                        <span>{countryFlag(r.circuit.country)}</span>
-                        <span className="flex-1 truncate font-bold">{r.raceName}</span>
-                        <span className="font-mono text-[10px] text-arena-muted-l dark:text-arena-muted-d arena-tabular">
-                          {r.date.slice(5)}
-                        </span>
+                      <li key={`${r.season}-${r.round}`} className="border-b border-arena-border-l dark:border-arena-border-d last:border-b-0">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedRace(r)}
+                          className="w-full flex items-center gap-2 text-xs py-2 min-h-[44px] hover:text-arena-red transition-colors text-left"
+                        >
+                          <span className="font-mono text-arena-muted-l dark:text-arena-muted-d w-6 arena-tabular">
+                            R{r.round}
+                          </span>
+                          <span>{countryFlag(r.circuit.country)}</span>
+                          <span className="flex-1 truncate font-bold">{r.raceName}</span>
+                          <span className="font-mono text-[10px] text-arena-muted-l dark:text-arena-muted-d arena-tabular">
+                            {r.date.slice(5)}
+                          </span>
+                        </button>
                       </li>
                     ))}
                   </ol>
@@ -357,6 +367,8 @@ export default function F1Page() {
         <div className="max-w-7xl mx-auto px-4 pb-8 text-[10px] font-mono text-arena-muted-l dark:text-arena-muted-d text-center">
           Data: Jolpica-F1 (Ergast-format successor) · No bets, no wagers, real telemetry only.
         </div>
+
+        <F1RaceDetailModal race={selectedRace} onClose={() => setSelectedRace(null)} />
       </ArenaShell>
     </>
   )
