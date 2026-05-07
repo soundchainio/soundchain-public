@@ -44,8 +44,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     let endCursor: string | null = null
     let hasNextPage = false
 
-    if (feedProfileOid) {
-      // Personal feed: read from feeditems fan-out collection
+    // Hybrid feed: every viewer (anon + authed) gets the global firehose by default
+    // so newly-discovered creators (e.g. an L1 user the viewer doesn't follow yet) are
+    // visible the moment a guest converts to authed. If a profileId is explicitly
+    // passed AND mode === 'personal', return the followed-only fan-out for that surface.
+    const mode = (req.query.mode as string) || 'global'
+
+    if (feedProfileOid && mode === 'personal') {
+      // Personal feed (explicit opt-in): read from feeditems fan-out collection
       const feedFilter: any = { profileId: feedProfileOid }
       if (cursor) feedFilter.postedAt = { $lt: new Date(cursor) }
 
@@ -73,7 +79,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const lastItem = feedItems[feedItems.length - 1]
       endCursor = lastItem?.postedAt?.toISOString() || null
     } else {
-      // Global feed fallback (no auth, no profileId): newest public posts
+      // Default feed: newest public posts across the platform.
+      // Authed viewers' overlay (myReaction / isBookmarked) still personalizes the rendered post.
       const filter: any = { deleted: { $ne: true } }
       if (cursor) filter.createdAt = { $lt: new Date(cursor) }
 
