@@ -12,6 +12,7 @@ import { PlayerHeadshot } from './PlayerHeadshot'
 import { HighlightModal } from './HighlightModal'
 import { GameChat } from './GameChat'
 import { NbaBoxScoreTabs } from './NbaBoxScoreTabs'
+import { MlbHighlightsStrip } from './MlbHighlightsStrip'
 
 interface Props {
   sport: SportKey
@@ -134,6 +135,18 @@ export function GameDetailModal({ sport, game, onClose }: Props) {
 
                 <div className="space-y-7">
                   <Section title="Game highlights">
+                    {sport === 'mlb' && away && home && (
+                      <div className="mb-4">
+                        <div className="text-[10px] font-mono uppercase tracking-[0.3em] text-arena-muted-l dark:text-arena-muted-d mb-2">MLB.com clips</div>
+                        <MlbHighlightsStrip
+                          espnGameId={game.id}
+                          date={(headerGame.date || '').slice(0, 10)}
+                          away={away.displayName}
+                          home={home.displayName}
+                          status={headerGame.status.state as any}
+                        />
+                      </div>
+                    )}
                     <GameHighlights sport={sport} game={headerGame} />
                   </Section>
 
