@@ -112,15 +112,19 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
             .catch(() => {})
         }
       }
-    }, 5000)
+    }, 12000)
   }, [isYouTube, ytBlocked, post?.mediaLink])
 
-  // On mobile (no light mode), start timeout immediately on mount
+  // Start the block-check timer ONLY when the player enters view — not on mount.
+  // The previous mount-trigger fired the 5s timeout before the iframe had a chance
+  // to load on cellular, falsely flagging healthy videos as age-restricted (e.g.
+  // lil binga's post May 7 2026). Tying it to view + bumping the window to 12s
+  // gives mobile networks room to initialize the YT IFrame API.
   useEffect(() => {
-    const isMobile = typeof window !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
-    if (isYouTube && isMobile) startYtBlockCheck()
+    if (!isYouTube || !isPlayerInView) return
+    startYtBlockCheck()
     return () => { if (ytBlockTimer.current) clearTimeout(ytBlockTimer.current) }
-  }, [isYouTube, startYtBlockCheck])
+  }, [isYouTube, isPlayerInView, startYtBlockCheck])
 
   // IntersectionObserver for autoplay-on-scroll.
   // threshold [0, 0.1] + ratio > 0 catches partial visibility on mobile — StoriesBar + compose
