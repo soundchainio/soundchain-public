@@ -45,7 +45,22 @@ export const AudioPlayer = ({ src, title, artist, art, trackId }: Song) => {
     minDuration: 30,
     onReward: (reward) => {
       if (reward > 0) {
-        toast(<OgunRewardToast amount={reward} trackTitle={title || undefined} />, {
+        toast(<OgunRewardToast amount={reward} trackTitle={title || undefined} mode="listener" />, {
+          position: 'bottom-right',
+          autoClose: 4000,
+          hideProgressBar: true,
+          className: 'ogun-reward-toast',
+          bodyClassName: 'ogun-reward-toast-body',
+        })
+      }
+    },
+    // Self-stream / creator earn — fires when the current user is also the
+    // track owner. Backend zeroes listenerReward in that case (anti-farm) so
+    // without this callback wired, self-streamed SCid uploads earned OGUN
+    // silently with no UI feedback. Bug surfaced May 7 — see useLogStream.tsx.
+    onCreatorReward: (reward) => {
+      if (reward > 0) {
+        toast(<OgunRewardToast amount={reward} trackTitle={title || undefined} mode="creator" />, {
           position: 'bottom-right',
           autoClose: 4000,
           hideProgressBar: true,

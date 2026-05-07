@@ -6,13 +6,20 @@ import Image from 'next/image'
 interface OgunRewardToastProps {
   amount: number
   trackTitle?: string
+  // Listener (default) — "you earned X OGUN for listening"
+  // Creator — "your track earned X OGUN" (fires when self-streaming or anytime
+  //   the current user is the track owner). Frank May 7: bug surfaced when
+  //   self-streamed SCid tracks earned creatorReward but never toasted because
+  //   only onReward (listener) callback was wired.
+  mode?: 'listener' | 'creator'
 }
 
 /**
  * Gamified OGUN reward toast with coin-strike animation
  * Shows animated gold coins (using OGUN favicon) falling and collecting
  */
-export const OgunRewardToast = ({ amount, trackTitle }: OgunRewardToastProps) => {
+export const OgunRewardToast = ({ amount, trackTitle, mode = 'listener' }: OgunRewardToastProps) => {
+  const isCreator = mode === 'creator'
   const [coins, setCoins] = useState<number[]>([])
   const [showTotal, setShowTotal] = useState(false)
   const [collected, setCollected] = useState(false)
@@ -96,15 +103,18 @@ export const OgunRewardToast = ({ amount, trackTitle }: OgunRewardToastProps) =>
             +{amount.toFixed(2)}
           </span>
           <span className="text-amber-300 font-bold tracking-wide">OGUN</span>
+          <span className="text-[10px] uppercase tracking-wider text-amber-200/70 font-mono">
+            {isCreator ? '🎤 creator' : '🎧 listener'}
+          </span>
         </div>
         {trackTitle && (
-          <span className="text-gray-400 text-xs truncate max-w-[150px]">
+          <span className="text-gray-400 text-xs truncate max-w-[170px]">
             {trackTitle}
           </span>
         )}
         {showTotal && (
           <span className="text-cyan-400 text-xs animate-fade-in font-medium">
-            Keep streaming to earn more!
+            {isCreator ? 'Your track is earning!' : 'Keep streaming to earn more!'}
           </span>
         )}
       </div>

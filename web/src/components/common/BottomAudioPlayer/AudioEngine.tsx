@@ -64,8 +64,23 @@ export const AudioEngine = () => {
     minDuration: 30, // 30 seconds minimum to count as stream
     onReward: (reward) => {
       if (reward > 0) {
-        // Gamified toast with coin animation
-        toast(<OgunRewardToast amount={reward} trackTitle={currentSong?.title} />, {
+        // Gamified toast with coin animation — listener mode
+        toast(<OgunRewardToast amount={reward} trackTitle={currentSong?.title} mode="listener" />, {
+          position: 'bottom-right',
+          autoClose: 4000,
+          hideProgressBar: true,
+          className: 'ogun-reward-toast',
+          bodyClassName: 'ogun-reward-toast-body',
+        })
+      }
+    },
+    // Creator earn — fires when the current user is also the track owner.
+    // Backend zeroes listenerReward in that case (anti-farm). Bug May 7:
+    // self-streamed SCid uploads earned OGUN silently because only onReward
+    // (listener) was wired. See useLogStream.tsx. Same wiring as AudioPlayer.
+    onCreatorReward: (reward) => {
+      if (reward > 0) {
+        toast(<OgunRewardToast amount={reward} trackTitle={currentSong?.title} mode="creator" />, {
           position: 'bottom-right',
           autoClose: 4000,
           hideProgressBar: true,
