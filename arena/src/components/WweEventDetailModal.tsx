@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
-import { X, Trophy, Swords, ScrollText, MapPin, CalendarClock } from 'lucide-react'
+import { X, Trophy, Swords, ScrollText, MapPin, CalendarClock, Play } from 'lucide-react'
+import { HighlightsStrip } from './HighlightsStrip'
 
 // Wrestler avatar — gradient-initial circle. No licensing surface, scales 1:1
 // across all WWE pages, drop-in for any superstar name. Two-letter initials
@@ -221,9 +222,18 @@ export function WweEventDetailModal({ ppv, onClose }: Props) {
           </ol>
         </div>
 
+        {/* Highlights — official WWE channel via YouTube RSS */}
+        <div className="px-4 sm:px-5 py-4 border-t border-arena-border-l/40 dark:border-arena-border-d/40">
+          <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-arena-muted-l dark:text-arena-muted-d mb-3 flex items-center gap-2">
+            <Play className="w-3 h-3" />
+            Highlights · Promos · Recaps
+          </h3>
+          <HighlightsStrip sport="wwe" limit={8} />
+        </div>
+
         {/* Footer */}
         <div className="px-4 sm:px-5 py-3 border-t border-arena-border-l/40 dark:border-arena-border-d/40 text-[10px] font-mono text-arena-muted-l dark:text-arena-muted-d text-center">
-          Card subject to change · curated by SoundChain Arena
+          Card subject to change · curated by SoundChain Arena · Highlights via WWE official YouTube
         </div>
       </div>
     </div>

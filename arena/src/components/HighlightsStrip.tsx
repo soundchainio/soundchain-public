@@ -5,7 +5,7 @@ import type { SportKey } from '@/lib/espn'
 import { HighlightModal } from './HighlightModal'
 
 interface HighlightsStripProps {
-  sport: SportKey | 'f1' | 'boxing'
+  sport: SportKey | 'f1' | 'boxing' | 'wwe'
   limit?: number
 }
 

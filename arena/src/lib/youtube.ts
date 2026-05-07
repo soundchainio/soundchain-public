@@ -25,6 +25,7 @@ const LEAGUE_CHANNELS: Partial<Record<SportKey, { id: string; name: string }>> =
 }
 
 const F1_CHANNEL = { id: 'UCB_qr75-ydFVKSF9Dmo6izg', name: 'Formula 1' }
+const WWE_CHANNEL = { id: 'UCJ5v_MCY6GNUBTO8-D3XoAg', name: 'WWE' }
 
 // Boxing has no single official channel — aggregate from major promotions.
 const BOXING_CHANNELS: { id: string; name: string }[] = [
@@ -34,8 +35,9 @@ const BOXING_CHANNELS: { id: string; name: string }[] = [
   { id: 'UCFiOI1JhSrwY7y2HDMrI0NA', name: 'DAZN Boxing' },
 ]
 
-export function getLeagueChannel(sport: SportKey | 'f1'): { id: string; name: string } | null {
+export function getLeagueChannel(sport: SportKey | 'f1' | 'wwe'): { id: string; name: string } | null {
   if (sport === 'f1') return F1_CHANNEL
+  if (sport === 'wwe') return WWE_CHANNEL
   return LEAGUE_CHANNELS[sport as SportKey] ?? null
 }
 
@@ -102,7 +104,7 @@ function decodeXmlEntities(s: string): string {
 const RSS_BASE = 'https://www.youtube.com/feeds/videos.xml'
 
 /** Fetches latest videos from a league's official channel. Free, no API key. */
-export async function fetchChannelLatest(sport: SportKey | 'f1', limit = 12): Promise<YouTubeVideo[]> {
+export async function fetchChannelLatest(sport: SportKey | 'f1' | 'wwe', limit = 12): Promise<YouTubeVideo[]> {
   const channel = getLeagueChannel(sport)
   if (!channel) return []
   const url = `${RSS_BASE}?channel_id=${channel.id}`
