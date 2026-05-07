@@ -2129,19 +2129,33 @@ export function AgentStatusTicker() {
   const handleOperatorFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) setOperatorFiles(prev => [...prev, ...Array.from(e.target.files!)])
   }, [])
-  // Fetch node status when Operator tab is active
+  // Fetch node status when Operator tab is active AND tab is visible.
+  // Pre-fix this fired every 15s even with the page backgrounded — pure battery tax
+  // since the user can't see the result. visibilitychange resumes when they return.
   useEffect(() => {
     if (activeTab !== 'operator') return
     let mounted = true
+    let iv: ReturnType<typeof setInterval> | null = null
     const fetchStatus = async () => {
       try {
         const r = await fetch('/api/operator/status')
         if (r.ok && mounted) setOperatorNodeStats(await r.json())
       } catch {}
     }
-    fetchStatus()
-    const iv = setInterval(fetchStatus, 15000)
-    return () => { mounted = false; clearInterval(iv) }
+    const start = () => {
+      if (iv) return
+      fetchStatus()
+      iv = setInterval(fetchStatus, 15000)
+    }
+    const stop = () => { if (iv) { clearInterval(iv); iv = null } }
+    const onVis = () => { (typeof document !== 'undefined' && document.hidden) ? stop() : start() }
+    if (typeof document === 'undefined' || !document.hidden) start()
+    if (typeof document !== 'undefined') document.addEventListener('visibilitychange', onVis)
+    return () => {
+      mounted = false
+      stop()
+      if (typeof document !== 'undefined') document.removeEventListener('visibilitychange', onVis)
+    }
   }, [activeTab])
   // Operator transfer handler
   const [operatorError, setOperatorError] = useState<string | null>(null)
