@@ -269,14 +269,59 @@
       }
     };
 
+    // ─── Render batcher ────────────────────────────────────────────────────
+    // Pre-batch every ttyd byte hit term.write() the moment it landed. A
+    // streaming Claude response = 100s of tiny chunks/sec → 100s of render
+    // passes/sec → measurable phone heat. Coalesce arriving chunks into one
+    // rAF tick (~16ms = 60fps cap) so high-throughput streams render in 1
+    // pass per frame instead of N passes per frame. Single-char bursts
+    // (interactive typing echo) still render same-frame — no perceived lag.
+    // Skip writes entirely while iframe is hidden (parent backgrounded the
+    // page or scrolled cockpit out of view); buffer them and flush on resume.
+    var pendingChunks = [];
+    var rafScheduled = false;
+    function flushChunks() {
+      rafScheduled = false;
+      if (pendingChunks.length === 0) return;
+      // Bail if hidden — keep buffer for resume. Cap at 256KB so a long
+      // background period doesn't pin GBs of stdout in memory.
+      if (document.hidden) {
+        if (pendingChunks.length > 4096) pendingChunks = pendingChunks.slice(-4096);
+        return;
+      }
+      var batch = pendingChunks;
+      pendingChunks = [];
+      // Most chunks are strings; ArrayBuffers may be mixed in. Concat strings,
+      // write buffers individually (cheap — they're rare).
+      var strBuf = '';
+      for (var i = 0; i < batch.length; i++) {
+        var c = batch[i];
+        if (typeof c === 'string') {
+          strBuf += c;
+        } else {
+          if (strBuf) { term.write(strBuf); strBuf = ''; }
+          term.write(c);
+        }
+      }
+      if (strBuf) term.write(strBuf);
+    }
+    function scheduleFlush() {
+      if (rafScheduled) return;
+      rafScheduled = true;
+      requestAnimationFrame(flushChunks);
+    }
+    document.addEventListener('visibilitychange', function() {
+      if (!document.hidden && pendingChunks.length > 0) scheduleFlush();
+    });
+
     ws.onmessage = function(evt) {
       if (typeof evt.data === 'string') {
         var type = evt.data[0];
         var data = evt.data.slice(1);
-        if (type === '0') term.write(data);
+        if (type === '0') { pendingChunks.push(data); scheduleFlush(); }
       } else if (evt.data instanceof ArrayBuffer) {
         var arr = new Uint8Array(evt.data);
-        if (arr.length > 0 && arr[0] === 48) term.write(arr.slice(1));
+        if (arr.length > 0 && arr[0] === 48) { pendingChunks.push(arr.slice(1)); scheduleFlush(); }
       }
     };
 
