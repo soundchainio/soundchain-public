@@ -330,24 +330,48 @@ function PulsePage() {
     return () => clearInterval(interval)
   }, [me, fetchChatsVercel])
   const refetchChats = fetchChatsVercel
-  const startPollingRef = useRef(() => {})
-  const stopPollingRef = useRef(() => {})
+  // Refs typed for the actual call sites: startPolling takes an interval ms,
+  // stopPolling is a no-op. Pre-fix these defaulted to () => {} which inferred
+  // 0-arg signatures and caused TS2554 at the 5000-passing call sites — real
+  // baseline errors per the May 7 "audit-everything" lesson, not ignorable noise.
+  const startPollingRef = useRef<(intervalMs?: number) => void>(() => {})
+  const stopPollingRef = useRef<() => void>(() => {})
   // Shim chatsData shape to match old Apollo format
   const chatsData = { chats: { nodes: chatsRaw } }
 
   // Chat history — Vercel-direct
   const [historyNodes, setHistoryNodes] = useState<any[]>([])
   const [historyLoading, setHistoryLoading] = useState(false)
-  const loadHistory = useCallback(({ variables }: { variables: { profileId: string } }) => {
-    setHistoryLoading(true)
+  // Tracks the most recent payload signature so the 5s poll only updates state
+  // when the underlying messages actually changed. Pre-fix every poll called
+  // setHistoryNodes with a fresh array literal — even with identical content
+  // the parent rerendered the whole thread, every message row re-mounted, and
+  // the scrollIntoView in the [messages] effect re-fired on every tick. That
+  // was Frank's flicker-on-open + "refresh when I scroll down" report.
+  const historySigRef = useRef('')
+  const loadHistory = useCallback(({ variables, silent }: { variables: { profileId: string }; silent?: boolean }) => {
+    if (!silent) setHistoryLoading(true)
     fetch(`/api/pulse/history?profileId=${variables.profileId}`)
       .then(r => r.json())
-      .then(data => setHistoryNodes(data.chatHistory?.nodes || []))
+      .then(data => {
+        const nodes = data.chatHistory?.nodes || []
+        // Cheap content signature: count + last message id + last readAt + last
+        // message body. Catches new messages, edits, and read-state flips
+        // without a deep-equal pass on the whole array.
+        const sig = `${nodes.length}:${nodes[0]?.id ?? ''}:${nodes[0]?.readAt ?? ''}:${nodes[0]?.message ?? ''}`
+        if (sig !== historySigRef.current) {
+          historySigRef.current = sig
+          setHistoryNodes(nodes)
+        }
+      })
       .catch(() => {})
-      .finally(() => setHistoryLoading(false))
+      .finally(() => { if (!silent) setHistoryLoading(false) })
   }, [])
   const refetchHistory = useCallback(() => {
-    if (selectedChat?.profileId) loadHistory({ variables: { profileId: selectedChat.profileId } })
+    // silent: true → don't toggle historyLoading. The 5s poll uses this so the
+    // skeleton/loading swap never fires mid-conversation. Initial chat-open
+    // still uses non-silent for the proper loading state.
+    if (selectedChat?.profileId) loadHistory({ variables: { profileId: selectedChat.profileId }, silent: true })
   }, [selectedChat?.profileId, loadHistory])
   const historyData = { chatHistory: { nodes: historyNodes } }
   const refetchHistoryRef = useRef(refetchHistory)
@@ -357,8 +381,14 @@ function PulsePage() {
       refetchHistory?.()
       refetchChats()
     },
+    // Silence MongoDB "not primary" rejections + transient network errors. The
+    // 4 sendMessage call sites below all `await` or `.then` so retry/UI is
+    // their problem; without this, every backend hiccup spams an Uncaught
+    // promise rejection in the console (visible in Frank's May 7 console
+    // capture) — battery + DevTools cost on Sarg.
+    onError: () => {},
   })
-  const [resetUnread] = useResetUnreadMessageCountMutation()
+  const [resetUnread] = useResetUnreadMessageCountMutation({ onError: () => {} })
   const [fetchUnread, { data: unreadData }] = useUnreadMessageCountLazyQuery({ fetchPolicy: 'no-cache' })
   const [sendTyping] = useMutation(SEND_TYPING, { onError: () => {} }) // Silent fail — backend may not have this yet
 
