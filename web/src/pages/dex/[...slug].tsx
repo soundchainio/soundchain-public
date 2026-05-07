@@ -32,6 +32,7 @@ import { CoinbaseNFTCard } from 'components/dex/CoinbaseNFTCard'
 import { WalletNFTCollection, WalletNFTGrid } from 'components/dex/WalletNFTCollection'
 import { MultiWalletAggregator } from 'components/dex/MultiWalletAggregator'
 import { ChainSwitcher } from 'components/dex/ChainSwitcher'
+import { TextDmPill } from 'components/dex/TextDmPill'
 import { WalletSelector } from 'components/waveform/WalletSelector'
 import { MultiChainProvider, useMultiChain } from 'contexts/MultiChainContext'
 import { WalletConnectButton } from 'components/dex/WalletConnectButton'
@@ -7845,6 +7846,16 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                           >
                             <Gift className="w-4 h-4 text-yellow-400" />
                           </button>
+                        )}
+                        {!isViewingOwnProfile && viewingProfile.id && (
+                          <TextDmPill
+                            recipient={{
+                              profileId: String(viewingProfile.id),
+                              displayName: viewingProfile.displayName || '',
+                              handle: viewingProfile.userHandle || '',
+                              avatar: viewingProfile.profilePicture || null,
+                            }}
+                          />
                         )}
                       </div>
 
