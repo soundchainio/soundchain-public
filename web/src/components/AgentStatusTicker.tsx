@@ -1937,55 +1937,101 @@ function NeuralInlinePanel() {
   const [isLive, setIsLive] = useState(false)
 
   useEffect(() => {
+    // Energy-efficient brain scanner. Three-state machine:
+    //   IDLE  — no audio analyzer present. Don't rAF; poll for analyzer at 3s.
+    //   ACTIVE — analyzer present + tab visible. rAF at native rate (gated to 20fps state-update).
+    //   HIDDEN — tab backgrounded. Stop rAF entirely; resume on visibilitychange.
+    // Pre-fix this loop ran a 60fps rAF + 800ms poll forever, even with no audio,
+    // even on a backgrounded tab — the dominant source of phone heat / drain.
     let mounted = true
-    const checkAnalyzer = () => {
-      const existing = (window as any).__soundchainAnalyzer as AnalyserNode | undefined
-      if (existing) { analyzerRef.current = existing; if (mounted) setIsLive(true) }
-      else { analyzerRef.current = null; if (mounted) setIsLive(false) }
-    }
-    checkAnalyzer()
-    const poll = setInterval(checkAnalyzer, 800)
-
-    // Animation loop — reads FFT and maps to 5 cortical regions
     let prevBass = 0, prevMids = 0, prevHighs = 0
     let frameCount = 0
+
+    const stopLoop = () => {
+      if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = 0 as any }
+    }
+
     const loop = () => {
       if (!mounted) return
+      // Bail if tab hidden or analyzer disappeared mid-flight; visibility / poll handlers will resume.
+      if (typeof document !== 'undefined' && document.hidden) { stopLoop(); return }
+      if (!analyzerRef.current) { stopLoop(); return }
       frameCount++
       let bass = 0, mids = 0, highs = 0, energy = 0
-      if (analyzerRef.current) {
-        try {
-          const data = new Uint8Array(analyzerRef.current.frequencyBinCount)
-          analyzerRef.current.getByteFrequencyData(data)
-          const len = data.length
-          for (let i = 0; i < len; i++) {
-            const val = data[i] / 255
-            if (i < len * 0.15) bass += val
-            else if (i < len * 0.5) mids += val
-            else highs += val
-            energy += val
-          }
-          bass = bass / (len * 0.15)
-          mids = mids / (len * 0.35)
-          highs = highs / (len * 0.5)
-          energy = energy / len
-        } catch {}
-      }
+      try {
+        const data = new Uint8Array(analyzerRef.current.frequencyBinCount)
+        analyzerRef.current.getByteFrequencyData(data)
+        const len = data.length
+        for (let i = 0; i < len; i++) {
+          const val = data[i] / 255
+          if (i < len * 0.15) bass += val
+          else if (i < len * 0.5) mids += val
+          else highs += val
+          energy += val
+        }
+        bass = bass / (len * 0.15)
+        mids = mids / (len * 0.35)
+        highs = highs / (len * 0.5)
+        energy = energy / len
+      } catch {}
       bass = prevBass * 0.7 + bass * 0.3
       mids = prevMids * 0.7 + mids * 0.3
       highs = prevHighs * 0.7 + highs * 0.3
       prevBass = bass; prevMids = mids; prevHighs = highs
       const emotional = Math.min(1, (bass * 0.5 + mids * 0.3 + energy * 0.2) * 1.5)
       const reward = Math.min(1, energy * 2)
-      // Update state every 3 frames to avoid thrashing
       if (frameCount % 3 === 0) {
         setRegions({ auditory: mids, motor: bass, prefrontal: highs, emotional, reward })
         setEngagement(Math.round(((bass + mids + highs + emotional + reward) / 5) * 100))
       }
       rafRef.current = requestAnimationFrame(loop)
     }
-    rafRef.current = requestAnimationFrame(loop)
-    return () => { mounted = false; clearInterval(poll); cancelAnimationFrame(rafRef.current) }
+
+    const startLoopIfReady = () => {
+      if (!mounted) return
+      if (typeof document !== 'undefined' && document.hidden) return
+      if (!analyzerRef.current) return
+      if (rafRef.current) return
+      rafRef.current = requestAnimationFrame(loop)
+    }
+
+    const checkAnalyzer = () => {
+      if (!mounted) return
+      const existing = (window as any).__soundchainAnalyzer as AnalyserNode | undefined
+      const wasLive = !!analyzerRef.current
+      if (existing) {
+        analyzerRef.current = existing
+        if (!wasLive) setIsLive(true)
+        startLoopIfReady()
+      } else {
+        analyzerRef.current = null
+        if (wasLive) {
+          setIsLive(false)
+          stopLoop()
+          // Decay state to zero once instead of leaving stale bars rendered.
+          setRegions({ auditory: 0, motor: 0, prefrontal: 0, emotional: 0, reward: 0 })
+          setEngagement(0)
+        }
+      }
+    }
+
+    const onVisibilityChange = () => {
+      if (typeof document === 'undefined') return
+      if (document.hidden) stopLoop()
+      else startLoopIfReady()
+    }
+
+    checkAnalyzer()
+    // 3000ms poll (was 800ms). Analyzer presence flips on play/pause — no need to react sub-second.
+    const poll = setInterval(checkAnalyzer, 3000)
+    if (typeof document !== 'undefined') document.addEventListener('visibilitychange', onVisibilityChange)
+
+    return () => {
+      mounted = false
+      clearInterval(poll)
+      stopLoop()
+      if (typeof document !== 'undefined') document.removeEventListener('visibilitychange', onVisibilityChange)
+    }
   }, [])
 
   const regionConfig = [
