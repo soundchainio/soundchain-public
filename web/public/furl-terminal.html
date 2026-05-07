@@ -85,6 +85,69 @@
   term.open(document.getElementById('terminal'));
   term.focus();
 
+  // ─── Mobile global scroll: swipe anywhere in the terminal area scrolls the
+  //     scrollback. Default xterm only scrolls when finger lands on the thin
+  //     right-edge scrollbar — unusable on Sarg/iPhone. Capture touchmove on
+  //     the wrap container, translate vertical drag → term.scrollLines(). One
+  //     line per ~16px (matches the 12px font-size + line-height). Held to a
+  //     vertical-swipe threshold so horizontal swipes (selection) still work. ─
+  (function() {
+    var wrap = document.getElementById('term-wrap');
+    if (!wrap) return;
+    var lastY = null;
+    var lastX = null;
+    var totalDy = 0;
+    var totalDx = 0;
+    var mode = null;  // 'scroll' | 'select' | null
+    var LINE_PX = 16;
+    var DECISION_PX = 8;  // axis lock threshold
+
+    wrap.addEventListener('touchstart', function(e) {
+      if (e.touches.length !== 1) return;
+      lastY = e.touches[0].clientY;
+      lastX = e.touches[0].clientX;
+      totalDy = 0;
+      totalDx = 0;
+      mode = null;
+    }, { passive: true });
+
+    wrap.addEventListener('touchmove', function(e) {
+      if (e.touches.length !== 1 || lastY == null) return;
+      var y = e.touches[0].clientY;
+      var x = e.touches[0].clientX;
+      totalDy += (lastY - y);
+      totalDx += Math.abs(lastX - x);
+      lastY = y;
+      lastX = x;
+
+      // Lock axis once the user has moved enough to declare intent
+      if (mode == null) {
+        if (Math.abs(totalDy) > DECISION_PX && Math.abs(totalDy) > totalDx) {
+          mode = 'scroll';
+        } else if (totalDx > DECISION_PX) {
+          mode = 'select';
+          return;  // let xterm handle horizontal selection drag
+        } else {
+          return;
+        }
+      }
+      if (mode !== 'scroll') return;
+
+      // Apply scroll in whole-line increments; preventDefault so the OS
+      // doesn't intercept (page-level scroll, pull-to-refresh)
+      var lines = Math.trunc(totalDy / LINE_PX);
+      if (lines !== 0) {
+        try { term.scrollLines(lines); } catch (_) {}
+        totalDy -= lines * LINE_PX;
+      }
+      if (e.cancelable) e.preventDefault();
+    }, { passive: false });
+
+    wrap.addEventListener('touchend', function() {
+      lastY = null; lastX = null; totalDy = 0; totalDx = 0; mode = null;
+    }, { passive: true });
+  })();
+
   // ─── Clipboard: Copy on selection, Paste on Ctrl/Cmd+V or right-click ───
   term.onSelectionChange(function() {
     var sel = term.getSelection();
