@@ -199,7 +199,21 @@
   }
 
   function doConnect(wsUrl) {
-    try { if (ws) ws.close(); } catch(e){}
+    // CRITICAL: nullify the old WS's handlers BEFORE close. close() is async, and
+    // any in-flight onmessage on the old WS would still fire and write to term —
+    // since the new WS also receives the same chars from ttyd's PTY-buffer replay
+    // on reconnect, every old still-alive handler renders each char once more.
+    // Two reconnects = 2x letters. Six reconnects = 6x. That's the "duplicated
+    // like crazy" Frank flagged when typing "claude" through a flapping tunnel.
+    if (ws) {
+      try {
+        ws.onopen = null;
+        ws.onmessage = null;
+        ws.onclose = null;
+        ws.onerror = null;
+        ws.close();
+      } catch(e){}
+    }
 
     ws = new WebSocket(wsUrl, ['tty']);
     ws.binaryType = 'arraybuffer';
