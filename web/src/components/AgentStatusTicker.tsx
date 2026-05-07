@@ -2716,6 +2716,10 @@ export function AgentStatusTicker() {
     // Check if it's a command (starts with known command word)
     const COMMANDS = ['help', 'status', 'balance', 'wake', 'sleep', 'clear', 'uptime', 'version', 'whoami', 'fingerprint', 'smith', 'copy', 'jack', 'exit', 'keys', 'tunnel', 'cheats', 'cheat', 'export', 'sessions', 'load', 'delete', 'academy']
     const firstWord = cmd.split(' ')[0]
+    // Tokens after the command name, original casing preserved (cmd is lowercased).
+    // Used by `export <label>`, `load <id>`, `delete <id>` — without this they
+    // referenced an undeclared `args` and would have thrown ReferenceError at runtime.
+    const args = trimmed.split(' ').slice(1)
     const isCommand = COMMANDS.includes(firstWord)
 
     if (isCommand) {
