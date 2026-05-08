@@ -17,12 +17,18 @@ import ngeohash from 'ngeohash'
 // Nostr relay pool - same relays Bitchat uses for interoperability
 const pool = new SimplePool()
 
-// Public Nostr relays for concert chat
-// These are highly available and support ephemeral events
-// NOTE: relay.nostr.band removed — dead since Mar 2026, caused infinite reconnect spam
+// Public Nostr relays — single source of truth across the SC web app.
+// Other Nostr-using files (useNostrNotifications, useAgentNostr, etc) MUST
+// import from here instead of redeclaring — Frank May 7 surfaced a console
+// reconnect storm because dead relays were hardcoded in 4+ places. When a
+// relay goes down, fix here once and the storm dies app-wide.
+//
+// Removed since Mar 2026:
+//   relay.nostr.band — dead, infinite reconnect spam
+//   relay.snort.social — refusing connections, persistent WebSocket failures
+//                        in console (May 7) — pull until they stabilize
 export const NOSTR_RELAYS = [
   'wss://relay.damus.io',
-  'wss://relay.snort.social',
   'wss://nos.lol',
   'wss://relay.primal.net',
 ]

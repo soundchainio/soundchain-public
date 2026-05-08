@@ -145,6 +145,7 @@ const UPDATE_NOTIFICATION_SETTINGS = gql`
 interface NotificationSettingsFormProps {
   afterSubmit?: () => void;
   initialValues?: {
+    phoneNumber?: string | null;
     notifyOnFollow?: boolean | null;
     notifyOnLike?: boolean | null;
     notifyOnComment?: boolean | null;
@@ -162,6 +163,14 @@ export function NotificationSettingsForm({ afterSubmit, initialValues }: Notific
 
   const { permission, isSubscribed, subscribe, unsubscribe, isLoading: pushLoading, isSupported } = usePushNotifications();
 
+  // Phone — Phase 2 native text-style DMs. Hashes server-side via
+  // /api/identity/register-phone. Frank May 7: form had the prop wired but no
+  // actual input rendered; this state + UI block close the gap.
+  const [phone, setPhone] = useState(initialValues?.phoneNumber || '');
+  const [phoneSaving, setPhoneSaving] = useState(false);
+  const [phoneSaved, setPhoneSaved] = useState(false);
+  const [phoneError, setPhoneError] = useState<string | null>(null);
+
   const [notifyOnFollow, setNotifyOnFollow] = useState(initialValues?.notifyOnFollow ?? true);
   const [notifyOnLike, setNotifyOnLike] = useState(initialValues?.notifyOnLike ?? true);
   const [notifyOnComment, setNotifyOnComment] = useState(initialValues?.notifyOnComment ?? true);
@@ -175,6 +184,7 @@ export function NotificationSettingsForm({ afterSubmit, initialValues }: Notific
   // Update state when initialValues change
   useEffect(() => {
     if (initialValues) {
+      setPhone(initialValues.phoneNumber || '');
       setNotifyOnFollow(initialValues.notifyOnFollow ?? true);
       setNotifyOnLike(initialValues.notifyOnLike ?? true);
       setNotifyOnComment(initialValues.notifyOnComment ?? true);
@@ -185,6 +195,39 @@ export function NotificationSettingsForm({ afterSubmit, initialValues }: Notific
       setNostrPubkey(initialValues.nostrPubkey || '');
     }
   }, [initialValues]);
+
+  // Light client-side normalize for the input — strips spaces, parens, dashes.
+  // Final hashing happens server-side in /api/identity/register-phone via
+  // normalizeAndHash(). Show "+1 (555) 123-4567" UX while typing, send digits.
+  const handlePhoneSave = async () => {
+    setPhoneError(null);
+    setPhoneSaved(false);
+    const digits = phone.replace(/[^0-9+]/g, '');
+    if (digits.length < 10) {
+      setPhoneError('Enter a valid number with country code, e.g. +15551234567');
+      return;
+    }
+    setPhoneSaving(true);
+    try {
+      const r = await fetch('/api/identity/register-phone', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: digits }),
+      });
+      if (!r.ok) {
+        let detail = '';
+        try { detail = (await r.json())?.error || ''; } catch {}
+        throw new Error(`HTTP ${r.status}${detail ? `: ${detail}` : ''}`);
+      }
+      setPhoneSaved(true);
+      setTimeout(() => setPhoneSaved(false), 4000);
+    } catch (err) {
+      setPhoneError(err instanceof Error ? err.message : 'Could not save phone');
+    } finally {
+      setPhoneSaving(false);
+    }
+  };
 
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -264,6 +307,50 @@ export function NotificationSettingsForm({ afterSubmit, initialValues }: Notific
 
   return (
     <div className="space-y-6">
+      {/* Phone Number Section — Phase 2 native text-style DMs */}
+      <div className="space-y-3">
+        <h3 className="text-white font-bold flex items-center gap-2">
+          <MessageCircle className="w-5 h-5 text-cyan-400" />
+          Phone Number
+          <span className="ml-auto text-[9px] font-mono uppercase tracking-[0.25em] text-cyan-300/70 border border-cyan-400/40 bg-cyan-400/5 px-2 py-0.5 rounded-full">
+            Phase 2
+          </span>
+        </h3>
+        <p className="text-gray-400 text-sm">
+          For native text-style DMs. Hashed server-side w/ pepper before storage — your raw number is never persisted unless you opt in.
+        </p>
+        <div className="bg-black/30 rounded-xl p-4 border border-cyan-500/30 space-y-3">
+          <div className="flex items-center gap-2">
+            <input
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
+              placeholder="+1 (555) 123-4567"
+              value={phone}
+              onChange={(e) => { setPhone(e.target.value); setPhoneError(null); setPhoneSaved(false); }}
+              className="flex-1 px-3 py-2 rounded-lg bg-black/50 border border-gray-700 text-white text-sm placeholder-gray-500 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/20 transition"
+            />
+            <button
+              type="button"
+              onClick={handlePhoneSave}
+              disabled={phoneSaving || !phone.trim()}
+              className="px-4 py-2 rounded-lg font-medium text-sm bg-cyan-600 hover:bg-cyan-500 text-white disabled:opacity-40 transition whitespace-nowrap"
+            >
+              {phoneSaving ? 'Saving…' : phoneSaved ? '✓ Saved' : 'Save Phone'}
+            </button>
+          </div>
+          {phoneError && (
+            <p className="text-red-400 text-xs">{phoneError}</p>
+          )}
+          {phoneSaved && !phoneError && (
+            <p className="text-green-400 text-xs">Phone hash registered. Friends with your number will see you in their contacts.</p>
+          )}
+          <p className="text-[11px] text-gray-500 leading-relaxed">
+            Include country code (e.g. <code className="text-cyan-300">+15551234567</code>). Number is normalized + hashed via the server pepper, then stored as <code className="text-cyan-300">phoneHash</code> only. Sparse unique index — same phone can&apos;t register against two accounts.
+          </p>
+        </div>
+      </div>
+
       {/* Push Notifications Section */}
       {isSupported && (
         <div className="space-y-4">

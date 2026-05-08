@@ -105,14 +105,12 @@ export type AgentSource = typeof AGENT_SOURCE[keyof typeof AGENT_SOURCE]
 
 // ─── Default Relays ─────────────────────────────────────────────────
 
-export const DEFAULT_RELAYS = [
-  'wss://relay.damus.io',
-  'wss://relay.snort.social',
-  'wss://nos.lol',
-  'wss://relay.nostr.band',
-  'wss://purplepag.es',
-  'wss://relay.primal.net',
-] as const
+// Re-export the canonical list from lib/nostr/concertChat. Keeping a
+// `DEFAULT_RELAYS` alias here so existing AgentNostr callers don't break, but
+// the list itself comes from one place — kills the dead-relay reconnect storm
+// when one of them dies (Frank May 7: relay.snort.social + relay.nostr.band).
+import { NOSTR_RELAYS } from 'lib/nostr/concertChat'
+export const DEFAULT_RELAYS = NOSTR_RELAYS
 
 // ─── Types ───────────────────────────────────────────────────────────
 

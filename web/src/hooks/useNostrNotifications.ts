@@ -14,13 +14,9 @@ import { toast } from 'react-toastify'
  * - Works even when browser tab is in background
  */
 
-// Public Nostr relays (fast, reliable)
-const NOSTR_RELAYS = [
-  'wss://relay.damus.io',
-  'wss://relay.nostr.band',
-  'wss://nos.lol',
-  'wss://relay.snort.social',
-]
+// Single source of truth — keeps dead relays out of the reconnect loop.
+// See lib/nostr/concertChat.ts NOSTR_RELAYS for the canonical list.
+import { NOSTR_RELAYS } from 'lib/nostr/concertChat'
 
 interface NostrEvent {
   id: string

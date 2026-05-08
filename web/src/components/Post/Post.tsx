@@ -241,10 +241,10 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
           </div>
         ) : hasProfile ? (
           <div className="flex items-center gap-2 min-w-0 flex-1 flex-wrap">
-            <Link href={`/dex/users/${post.profile!.userHandle}`} className="flex-shrink-0">
+            <Link href={post.profile!.userHandle ? `/profiles/${post.profile!.userHandle}` : '#'} className="flex-shrink-0">
               <Avatar profile={post.profile!} pixels={32} />
             </Link>
-            <Link href={`/dex/users/${post.profile!.userHandle}`} className="flex items-center gap-2 min-w-0 flex-wrap">
+            <Link href={post.profile!.userHandle ? `/profiles/${post.profile!.userHandle}` : '#'} className="flex items-center gap-2 min-w-0 flex-wrap">
               <DisplayName
                 name={post.profile!.displayName || ''}
                 verified={post.profile!.verified}
@@ -771,7 +771,7 @@ const InlineComment = ({ comment, onReplyClick }: {
               </span>
             </>
           ) : hasProfile ? (
-            <Link href={`/dex/users/${comment.profile.userHandle}`}>
+            <Link href={comment.profile.userHandle ? `/profiles/${comment.profile.userHandle}` : '#'}>
               <DisplayName
                 name={comment.profile.displayName}
                 verified={comment.profile.verified}
