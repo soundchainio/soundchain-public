@@ -77,7 +77,7 @@ export const MiniProfileDashboard = () => {
 
           {/* Avatar + Name */}
           <div className="px-4 pb-4 -mt-8">
-            <Link href={`/dex/users/${profile.userHandle}`} className="block group">
+            <Link href={`/users/${profile.userHandle}`} className="block group">
               <div className="w-16 h-16 rounded-full overflow-hidden ring-4 ring-neutral-900 mb-2">
                 <Avatar profile={profile} pixels={64} />
               </div>
@@ -89,11 +89,11 @@ export const MiniProfileDashboard = () => {
 
             {/* Stats Row */}
             <div className="flex items-center gap-4 mt-3">
-              <Link href={`/dex/users/${profile.userHandle}`} className="group">
+              <Link href={`/users/${profile.userHandle}`} className="group">
                 <span className="text-white font-bold text-sm">{followerCount.toLocaleString()}</span>
                 <span className="text-gray-500 text-xs ml-1 group-hover:text-cyan-400 transition-colors">Followers</span>
               </Link>
-              <Link href={`/dex/users/${profile.userHandle}`} className="group">
+              <Link href={`/users/${profile.userHandle}`} className="group">
                 <span className="text-white font-bold text-sm">{followingCount.toLocaleString()}</span>
                 <span className="text-gray-500 text-xs ml-1 group-hover:text-cyan-400 transition-colors">Following</span>
               </Link>
@@ -124,7 +124,7 @@ export const MiniProfileDashboard = () => {
               <span className="text-sm font-medium">Feed</span>
             </Link>
             <Link
-              href={`/dex/users/${profile.userHandle}`}
+              href={`/users/${profile.userHandle}`}
               className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-400 hover:text-orange-400 hover:bg-orange-500/10 transition-all"
             >
               <MessageSquare className="w-4 h-4" />
@@ -167,7 +167,7 @@ export const MiniProfileDashboard = () => {
           <div className="bg-neutral-900/80 rounded-2xl p-4 border border-neutral-800">
             <div className="flex items-center justify-between mb-3">
               <h4 className="text-gray-400 text-xs font-semibold uppercase tracking-wider">Your Tracks</h4>
-              <Link href={`/dex/users/${profile.userHandle}`} className="text-cyan-400 text-xs hover:underline">
+              <Link href={`/users/${profile.userHandle}`} className="text-cyan-400 text-xs hover:underline">
                 View all
               </Link>
             </div>

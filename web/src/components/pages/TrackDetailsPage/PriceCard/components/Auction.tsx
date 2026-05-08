@@ -160,7 +160,7 @@ export const Auction = (props: AuctionProps) => {
 
               <div>
                 <Link
-                  href={`/profiles/${highestBidderData.getUserByWallet.profile.userHandle}`}
+                  href={highestBidderData.getUserByWallet.profile.userHandle ? `/users/${highestBidderData.getUserByWallet.profile.userHandle}` : '#'}
                   passHref
                   className="flex items-center"
                   aria-label={highestBidderData.getUserByWallet.profile.displayName}

@@ -89,7 +89,7 @@ export function renderMentions(text: string): React.ReactNode[] {
       return (
         <a
           key={i}
-          href={`/dex/users/${handle}`}
+          href={`/users/${handle}`}
           className="text-cyan-400 hover:text-cyan-300 hover:underline font-medium"
           onClick={(e) => e.stopPropagation()}
         >

@@ -107,7 +107,7 @@ export const Comment = ({ commentId, onReplyClick }: CommentProps) => {
               </span>
             </>
           ) : hasProfile ? (
-            <NextLink href={`/dex/users/${comment.profile!.userHandle}`}>
+            <NextLink href={comment.profile!.userHandle ? `/users/${comment.profile!.userHandle}` : '#'}>
               <DisplayName
                 name={comment.profile!.displayName}
                 verified={comment.profile!.verified}

@@ -156,7 +156,7 @@ export const RightSidebar = () => {
             {featuredUsers.map((user) => (
               <Link
                 key={user.id}
-                href={`/dex/users/${user.userHandle}`}
+                href={user.userHandle ? `/users/${user.userHandle}` : '#'}
                 className="flex items-center gap-3 p-2 rounded-lg hover:bg-neutral-800/50 transition-colors"
               >
                 {/* Avatar */}

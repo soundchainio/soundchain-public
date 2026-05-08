@@ -97,7 +97,7 @@ export const DesktopTrackCard = (props: Props) => {
                 <TrackTitle>{track.title}</TrackTitle>
               </a>
 
-              <Link href={`/profiles/${track.artist}` || ''} passHref>
+              <Link href={track.artist ? `/users/${track.artist}` : '#'} passHref>
                 <ArtistName>{track.artist}</ArtistName>
               </Link>
             </span>

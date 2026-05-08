@@ -1245,7 +1245,7 @@ function PulsePage() {
           </h1>
           {/* Logged-in user avatar — critical for PWA standalone where there's no browser chrome */}
           {me?.profile && (
-            <Link href={`/dex/users/${me.handle || me.profile.id}`} className="ml-1 flex items-center gap-1.5 px-2 py-0.5 rounded-full hover:bg-white/10 transition-colors" style={{ backgroundColor: `${WA.accent}15` }}>
+            <Link href={`/users/${me.handle || me.profile.id}`} className="ml-1 flex items-center gap-1.5 px-2 py-0.5 rounded-full hover:bg-white/10 transition-colors" style={{ backgroundColor: `${WA.accent}15` }}>
               {me.profile.profilePicture ? (
                 <img
                   src={me.profile.profilePicture}

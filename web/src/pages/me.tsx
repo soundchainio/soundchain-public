@@ -18,7 +18,7 @@ export default function MyProfileRedirect() {
       // Preserve query params (e.g. ?tab=settings from Pulse notification settings link)
       const query = router.query
       const params = Object.entries(query).filter(([k]) => k !== 'slug').map(([k, v]) => `${k}=${v}`).join('&')
-      router.replace(`/dex/users/${handle}${params ? `?${params}` : ''}`)
+      router.replace(`/users/${handle}${params ? `?${params}` : ''}`)
     } else {
       // No profile yet (new user or not logged in) — go to feed
       router.replace('/nodes')

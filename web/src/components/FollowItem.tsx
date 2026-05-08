@@ -10,7 +10,7 @@ interface FollowItemProps {
 
 export const FollowItem = ({ profile }: FollowItemProps) => {
   return (
-    <Link href={`/profiles/${profile.userHandle}`} passHref className="flex flex-row items-center space-x-2 text-sm">
+    <Link href={profile.userHandle ? `/users/${profile.userHandle}` : '#'} passHref className="flex flex-row items-center space-x-2 text-sm">
       <Avatar linkToProfile={false} pixels={40} className="flex" profile={profile} />
       <DisplayName
         name={profile.displayName}

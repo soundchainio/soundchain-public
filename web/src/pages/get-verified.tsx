@@ -47,7 +47,7 @@ export default function GetVerified() {
   }
 
   useEffect(() => {
-    setMyProfileLink(`${window.location.origin}/profiles/${me?.handle}`)
+    setMyProfileLink(`${window.location.origin}/users/${me?.handle}`)
   }, [me])
 
   useEffect(() => {

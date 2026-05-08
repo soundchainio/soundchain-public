@@ -19,7 +19,7 @@ export const ProfileListItem = ({ profile }: ProfileListItemProps) => {
     <div className="relative rounded-lg bg-black p-0.5 hover:bg-rainbow-gradient">
       <div className="relative flex items-center gap-3 rounded-lg bg-black px-3 py-3">
         <NextLink
-          href={`/profiles/${profile.userHandle}`}
+          href={profile.userHandle ? `/users/${profile.userHandle}` : '#'}
           className="relative flex flex-1 items-center gap-3 overflow-hidden rounded-lg"
         >
           <Avatar

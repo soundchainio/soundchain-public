@@ -91,7 +91,7 @@ export const FollowModal = ({ show, profileId, modalType, onClose, compact = fal
                   {profiles.slice(0, 15).map((profile) => (
                     <Link
                       key={profile.id}
-                      href={`/dex/users/${profile.userHandle}`}
+                      href={profile.userHandle ? `/users/${profile.userHandle}` : '#'}
                       onClick={onClose}
                       className="flex flex-col items-center gap-1 group"
                     >
@@ -183,7 +183,7 @@ export const FollowModal = ({ show, profileId, modalType, onClose, compact = fal
                   {profiles.map((profile) => (
                     <Link
                       key={profile.id}
-                      href={`/dex/users/${profile.userHandle}`}
+                      href={profile.userHandle ? `/users/${profile.userHandle}` : '#'}
                       onClick={onClose}
                       className="flex flex-col items-center gap-1 group"
                     >
@@ -273,7 +273,7 @@ export const FollowModal = ({ show, profileId, modalType, onClose, compact = fal
                 {profiles.map((profile) => (
                   <Link
                     key={profile.id}
-                    href={`/dex/users/${profile.userHandle}`}
+                    href={profile.userHandle ? `/users/${profile.userHandle}` : '#'}
                     onClick={onClose}
                     className="flex flex-col items-center gap-1.5 group"
                   >

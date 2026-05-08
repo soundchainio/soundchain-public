@@ -65,7 +65,7 @@ export const ListingItem = (props: ListingItemProps) => {
               {!isPaymentOGUN && <MaticIcon className="mr-[3px] inline h-6 w-6" />}
 
               <div className="flex flex-col items-start gap-1">
-                <Link href={`/profiles/${profileData?.profile.userHandle}`}>
+                <Link href={profileData?.profile.userHandle ? `/users/${profileData.profile.userHandle}` : '#'}>
                   <DisplayName
                     className="text-sm"
                     name={profileData?.profile.displayName || ''}

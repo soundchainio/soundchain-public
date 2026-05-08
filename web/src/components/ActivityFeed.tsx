@@ -147,11 +147,11 @@ const getActivityLink = (activity: Activity): string | null => {
     case 'Posted':
       return metadata?.postId ? `/dex/post/${metadata.postId}` : null;
     case 'Followed':
-      return metadata?.followedHandle ? `/profiles/${metadata.followedHandle}` : null;
+      return metadata?.followedHandle ? `/users/${metadata.followedHandle}` : null;
     case 'Minted':
       return metadata?.trackId ? `/dex/track/${metadata.trackId}` : null;
     default:
-      return `/profiles/${profile.userHandle}`;
+      return profile.userHandle ? `/users/${profile.userHandle}` : null;
   }
 };
 

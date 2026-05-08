@@ -62,7 +62,7 @@ export const HeaderDrawer = ({ open, close }: { open: boolean; close: () => void
                           </Button>
                         </Link>
                       ) : (
-                        <Link href={`/profiles/${me.handle}`} className="group mr-10 flex items-center" passHref>
+                        <Link href={me.handle ? `/users/${me.handle}` : '#'} className="group mr-10 flex items-center" passHref>
                           <span className="text-md bg-gradient-to-r from-[#ab4eff] to-[#84ff82] bg-clip-text text-gray-80 group-hover:text-transparent">
                             @{me.handle}
                           </span>

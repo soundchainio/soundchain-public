@@ -13,12 +13,12 @@ interface AvatarProps extends React.ComponentPropsWithoutRef<'div'> {
 }
 
 export const Avatar = ({ profile, pixels = 30, linkToProfile = true, showOnlineIndicator = false, ...props }: AvatarProps) => {
-  if (!linkToProfile) {
+  if (!linkToProfile || !profile.userHandle) {
     return <Content profile={profile} pixels={pixels} showOnlineIndicator={showOnlineIndicator} {...props} />
   }
 
   return (
-    <Link href={`/profiles/${profile.userHandle}`} passHref className="flex-shrink-0" aria-label={profile.displayName}>
+    <Link href={`/users/${profile.userHandle}`} passHref className="flex-shrink-0" aria-label={profile.displayName}>
       <Content profile={profile} pixels={pixels} showOnlineIndicator={showOnlineIndicator} {...props} />
     </Link>
   )

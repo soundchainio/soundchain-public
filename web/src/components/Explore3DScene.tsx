@@ -704,7 +704,7 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
           if (isGallery) {
             router.push(`/gallery3d?handle=${data.userHandle || data.id}`)
           } else {
-            router.push(`/dex/users/${data.userHandle || data.id}`)
+            router.push(`/users/${data.userHandle || data.id}`)
           }
         }
         return

@@ -24,7 +24,7 @@ export const ProfileWithAvatar = (props: Props) => {
       {showAvatar && <Avatar profile={profile} pixels={avatarSize} />}
 
       <NextLink
-        href={`/profiles/${userHandle}`}
+        href={userHandle ? `/users/${userHandle}` : '#'}
         passHref
         className="flex flex-col items-start truncate"
         aria-label={displayName}

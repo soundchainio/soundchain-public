@@ -1261,7 +1261,7 @@ export function ProfileWall({ profileId, isOwnProfile: isOwnProfileProp, viewerP
                       </button>
                       <button
                         onClick={() => viewerProfileId ? setShareModalPost({ id: post.id, body: post.body, mediaUrl: post.mediaUrl, mediaType: post.mediaType, coverArtUrl: post.coverArtUrl, mediaTitle: post.mediaTitle }) : (() => {
-                          const url = `${window.location.origin}/dex/users/${userHandle || profileId}?wall=${post.id}`
+                          const url = `${window.location.origin}/users/${userHandle || profileId}?wall=${post.id}`
                           if (navigator.share) { navigator.share({ title: 'SoundChain', text: post.body?.slice(0, 100) || 'Check out this wall post', url }).catch(() => {}) }
                           else { navigator.clipboard.writeText(url).then(() => toast.success('Link copied!')).catch(() => {}) }
                         })()}
@@ -1436,7 +1436,7 @@ export function ProfileWall({ profileId, isOwnProfile: isOwnProfileProp, viewerP
                                 </button>
                                 <button
                                   onClick={() => viewerProfileId ? setShareModalPost({ id: reply.id, body: reply.body, mediaUrl: reply.mediaUrl, mediaType: reply.mediaType, mediaTitle: reply.mediaTitle, isReply: true, parentId: post.id }) : (() => {
-                                    const url = `${window.location.origin}/dex/users/${userHandle || profileId}?wall=${post.id}`
+                                    const url = `${window.location.origin}/users/${userHandle || profileId}?wall=${post.id}`
                                     if (navigator.share) { navigator.share({ title: 'SoundChain', text: reply.body?.slice(0, 100) || 'Check out this wall post', url }).catch(() => {}) }
                                     else { navigator.clipboard.writeText(url).then(() => toast.success('Link copied!')).catch(() => {}) }
                                   })()}
@@ -1599,7 +1599,7 @@ export function ProfileWall({ profileId, isOwnProfile: isOwnProfileProp, viewerP
           onClose={() => setShareModalPost(null)}
           postId={shareModalPost.id}
           postBody={shareModalPost.body}
-          customUrl={typeof window !== 'undefined' ? `${window.location.origin}/dex/users/${userHandle || profileId}?wall=${shareModalPost.isReply && shareModalPost.parentId ? shareModalPost.parentId : shareModalPost.id}` : undefined}
+          customUrl={typeof window !== 'undefined' ? `${window.location.origin}/users/${userHandle || profileId}?wall=${shareModalPost.isReply && shareModalPost.parentId ? shareModalPost.parentId : shareModalPost.id}` : undefined}
           onShareToStory={() => {
             const shareEmbedUrl = !shareModalPost.mediaUrl ? getEmbedUrlFromBody(shareModalPost.body) : null
             const shareGifUrl = !shareModalPost.mediaUrl && !shareEmbedUrl ? getGifUrlFromBody(shareModalPost.body) : null
@@ -1737,7 +1737,7 @@ export function ProfileWall({ profileId, isOwnProfile: isOwnProfileProp, viewerP
                   {following.slice(0, 8).map((user: any) => (
                     <Link
                       key={user.id}
-                      href={`/dex/users/${user.userHandle}`}
+                      href={user.userHandle ? `/users/${user.userHandle}` : '#'}
                       className="flex flex-col items-center gap-1 p-1.5 rounded-xl hover:bg-white/5 transition-colors group"
                     >
                       <div className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-purple-500/20 group-hover:ring-purple-500/50 transition-all">

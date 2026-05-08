@@ -167,7 +167,7 @@ export default function ArenaPage() {
           <div className="flex-1 overflow-x-auto scrollbar-hide bg-black/60 backdrop-blur-md rounded-full px-2 py-1">
             <div className="flex items-center gap-1.5 min-w-max">
               {[
-                ...(me?.profile ? [{ id: 'profile', label: 'Profile', route: `/dex/users/${me.profile.userHandle}` }] : []),
+                ...(me?.profile ? [{ id: 'profile', label: 'Profile', route: `/users/${me.profile.userHandle}` }] : []),
                 { id: 'nodes', label: 'Nodes', route: '/nodes' },
                 { id: 'explore3d', label: 'Explore 3D', route: '/explore3d' },
                 { id: 'land', label: 'Land Atlas', route: '/land' },

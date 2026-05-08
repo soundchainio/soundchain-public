@@ -28,7 +28,7 @@ export const ProfileGridItem = ({ profile }: ProfileListItemProps) => {
         />
         <div className="mx-2 mt-6 flex items-center justify-between">
           <div className="mt-[-90px]">
-            <Link href={`/profiles/${profile.userHandle}`} passHref>
+            <Link href={profile.userHandle ? `/users/${profile.userHandle}` : '#'} passHref>
               <Avatar
                 linkToProfile={false}
                 profile={profile}
@@ -66,7 +66,7 @@ export const ProfileGridItem = ({ profile }: ProfileListItemProps) => {
         </div>
         <div className="mx-4 mt-8 mb-2 flex items-start justify-between">
           <span className="flex flex-col items-start">
-            <Link href={`/profiles/${profile.userHandle}`} passHref>
+            <Link href={profile.userHandle ? `/users/${profile.userHandle}` : '#'} passHref>
               <DisplayName
                 name={profile.displayName}
                 verified={profile.verified}

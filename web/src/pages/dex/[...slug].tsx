@@ -3236,7 +3236,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
             <div className="flex-1 overflow-x-auto scrollbar-hide bg-black/60 backdrop-blur-md rounded-full px-2 py-1">
               <div className="flex items-center gap-1.5 min-w-max">
                 {[
-                  ...(me?.profile ? [{ id: 'profile', label: 'Profile', route: `/dex/users/${me?.profile?.userHandle}` }] : []),
+                  ...(me?.profile ? [{ id: 'profile', label: 'Profile', route: `/users/${me?.profile?.userHandle}` }] : []),
                   { id: 'nodes', label: 'Nodes', route: '/nodes' },
                   { id: 'explore3d', label: 'Explore 3D', route: '/explore3d' },
                   { id: 'land', label: 'Land', route: '/land' },
@@ -3296,7 +3296,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                       className="cursor-pointer"
                       onClick={() => {
                         setIsBioExpanded(false)
-                        router.push(`/dex/users/${me?.profile?.userHandle || userData?.me?.profile?.userHandle}`)
+                        router.push(`/users/${me?.profile?.userHandle || userData?.me?.profile?.userHandle}`)
                       }}
                     >
                       <Avatar className="w-16 h-16 border-4 border-black/50 ring-2 ring-cyan-500/50">
@@ -3322,7 +3322,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                       className="text-lg font-bold text-white cursor-pointer hover:text-cyan-400 transition-colors"
                       onClick={() => {
                         setIsBioExpanded(false)
-                        router.push(`/dex/users/${me?.profile?.userHandle || userData?.me?.profile?.userHandle}`)
+                        router.push(`/users/${me?.profile?.userHandle || userData?.me?.profile?.userHandle}`)
                       }}
                     >
                       {me?.profile?.displayName || userData?.me?.profile?.displayName || 'Anonymous'}
@@ -3450,7 +3450,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                       className="flex-1 bg-white/5 border-white/10 hover:bg-white/10 text-white"
                       onClick={() => {
                         setIsBioExpanded(false)
-                        router.push(`/dex/users/${me?.profile?.userHandle || userData?.me?.profile?.userHandle}`)
+                        router.push(`/users/${me?.profile?.userHandle || userData?.me?.profile?.userHandle}`)
                       }}
                     >
                       <User className="w-4 h-4 mr-2" />
@@ -3750,7 +3750,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                 if (isExpanded) {
                   // Second tap on expanded pill → navigate
                   saveUsersScrollPosition()
-                  router.push(`/dex/users/${profile.userHandle}`)
+                  router.push(`/users/${profile.userHandle}`)
                 } else {
                   setExpandedPillId(profile.id)
                 }
@@ -3779,11 +3779,11 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                 saveUsersScrollPosition()
                 setExpandedPillId(null)
                 switch (action) {
-                  case 'profile': router.push(`/dex/users/${profile.userHandle}`); break
+                  case 'profile': router.push(`/users/${profile.userHandle}`); break
                   case 'dm': router.push(`/pulse`); break
-                  case 'tip': router.push(`/dex/users/${profile.userHandle}?tab=tip`); break
-                  case 'wall': router.push(`/dex/users/${profile.userHandle}?tab=wall`); break
-                  case 'manager': router.push(`/dex/users/${profile.userHandle}?tab=manager`); break
+                  case 'tip': router.push(`/users/${profile.userHandle}?tab=tip`); break
+                  case 'wall': router.push(`/users/${profile.userHandle}?tab=wall`); break
+                  case 'manager': router.push(`/users/${profile.userHandle}?tab=manager`); break
                 }
               }
 
@@ -4089,7 +4089,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         .map((profile: any, index: number) => {
                           const seqNum = sortedByCreation.findIndex((p: any) => p.id === profile.id) + 1
                           return (
-                            <Link key={profile.id} href={`/dex/users/${profile.userHandle}`} onClick={saveUsersScrollPosition}>
+                            <Link key={profile.id} href={profile.userHandle ? `/users/${profile.userHandle}` : '#'} onClick={saveUsersScrollPosition}>
                               <div className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5 transition-colors cursor-pointer group">
                                 <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 ${
                                   index === 0 ? 'bg-gradient-to-br from-yellow-400 to-amber-500 text-black' :
@@ -4423,7 +4423,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
               {/* Quick Nav Row */}
               <div className="grid grid-cols-4 gap-2">
-                <button onClick={() => { if (me?.profile?.userHandle) router.push(`/dex/users/${me.profile.userHandle}?tab=shop`); else setSelectedView('profile'); }} className="flex flex-col items-center gap-1 p-3 rounded-lg bg-white/10 hover:bg-white/20 ring-1 ring-white/15 transition-all">
+                <button onClick={() => { if (me?.profile?.userHandle) router.push(`/users/${me.profile.userHandle}?tab=shop`); else setSelectedView('profile'); }} className="flex flex-col items-center gap-1 p-3 rounded-lg bg-white/10 hover:bg-white/20 ring-1 ring-white/15 transition-all">
                   <Flame className="w-5 h-5 text-orange-400" />
                   <span className="text-[10px] text-gray-200">My Shop</span>
                 </button>
@@ -4455,7 +4455,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         ?.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
                         ?.slice(0, 20)
                         ?.map((profile: any) => (
-                        <Link key={profile.id} href={`/dex/users/${profile.userHandle}`}>
+                        <Link key={profile.id} href={profile.userHandle ? `/users/${profile.userHandle}` : '#'}>
                           <div className="flex flex-col items-center gap-1 w-14">
                             <div className="w-12 h-12 rounded-full overflow-hidden ring-1 ring-white/10 hover:ring-cyan-500/50 transition-all">
                               {profile.profilePicture ? (
@@ -6155,7 +6155,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                       {selectedChatProfile ? (
                         <div
                           className="flex items-center gap-3 flex-1 cursor-pointer hover:opacity-80 transition-opacity"
-                          onClick={() => selectedChatProfile?.userHandle && router.push(`/dex/users/${selectedChatProfile.userHandle}`)}
+                          onClick={() => selectedChatProfile?.userHandle && router.push(`/users/${selectedChatProfile.userHandle}`)}
                         >
                           <Avatar className="w-9 h-9">
                             {(selectedChatProfile as any)?.profilePicture ? (
@@ -6573,7 +6573,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                           <h1 className="text-3xl font-bold text-white mb-2">{trackDetailData.track.title}</h1>
                           {/* Artist - Clickable Link to Profile */}
                           {trackDetailData.track.artist ? (
-                            <Link href={`/dex/users/${trackDetailData.track.artist}`}>
+                            <Link href={trackDetailData.track.artist ? `/users/${trackDetailData.track.artist}` : '#'}>
                               <p className="text-cyan-400 text-lg hover:text-cyan-300 cursor-pointer transition-colors">
                                 {trackDetailData.track.artist}
                               </p>
@@ -6847,7 +6847,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                                 {/* Owner profile avatar pill */}
                                 {nftOwnerProfile && (
                                   <a
-                                    href={`/dex/users/${nftOwnerProfile.userHandle || nftOwnerProfile.id}`}
+                                    href={`/users/${nftOwnerProfile.userHandle || nftOwnerProfile.id}`}
                                     className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 transition-all"
                                   >
                                     <img
@@ -6973,7 +6973,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                                   <div className="flex items-center gap-2 min-w-0">
                                     {ownerProfile ? (
                                       <Link
-                                        href={`/dex/users/${ownerProfile.userHandle || ownerProfile.id}`}
+                                        href={`/users/${ownerProfile.userHandle || ownerProfile.id}`}
                                         className="flex items-center gap-2 min-w-0 hover:opacity-80 transition-opacity"
                                       >
                                         <div className="w-6 h-6 rounded-full overflow-hidden bg-gray-700 flex-shrink-0 ring-1 ring-purple-500/30">
@@ -7056,7 +7056,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   <meta name="twitter:site" content="@SoundChainFM" />
 
                   {/* Canonical URL */}
-                  <link rel="canonical" href={`${config.domainUrl}/dex/users/${viewingProfile.userHandle}`} />
+                  <link rel="canonical" href={`${config.domainUrl}/users/${viewingProfile.userHandle}`} />
                 </Head>
               )}
               {viewingProfileLoading && (
@@ -7294,7 +7294,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                                       {followersList.map((user: any) => (
                                         <button
                                           key={user.id}
-                                          onClick={() => { router.push(`/dex/users/${user.userHandle}`); setProfileStatsModal(null); }}
+                                          onClick={() => { router.push(`/users/${user.userHandle}`); setProfileStatsModal(null); }}
                                           className="flex flex-col items-center gap-1.5 hover:bg-white/5 rounded-xl p-2 transition-colors"
                                         >
                                           <div className="w-11 h-11 rounded-full overflow-hidden bg-gray-800 ring-2 ring-white/5">
@@ -7325,7 +7325,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                                       {followingList.map((user: any) => (
                                         <button
                                           key={user.id}
-                                          onClick={() => { router.push(`/dex/users/${user.userHandle}`); setProfileStatsModal(null); }}
+                                          onClick={() => { router.push(`/users/${user.userHandle}`); setProfileStatsModal(null); }}
                                           className="flex flex-col items-center gap-1.5 hover:bg-white/5 rounded-xl p-2 transition-colors"
                                         >
                                           <div className="w-11 h-11 rounded-full overflow-hidden bg-gray-800 ring-2 ring-white/5">
@@ -7433,7 +7433,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         )}
                         <button
                           onClick={async () => {
-                            const profileUrl = `${window.location.origin}/profiles/${viewingProfile.userHandle}`
+                            const profileUrl = `${window.location.origin}/users/${viewingProfile.userHandle}`
                             if (navigator.share) {
                               try { await navigator.share({ title: viewingProfile.displayName, url: profileUrl }); }
                               catch { navigator.clipboard.writeText(profileUrl); toast.success('Link copied!'); }
@@ -7734,7 +7734,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         onTouchMove={handleTouchMove}
                         onTouchEnd={() => handleTouchEnd(globalIdx)}
                         className={`flex flex-col items-center gap-0.5 group ${topFriendsReorderMode ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'}`}
-                        onClick={() => { if (!topFriendsReorderMode) router.push(`/dex/users/${friend.userHandle}`) }}
+                        onClick={() => { if (!topFriendsReorderMode) router.push(`/users/${friend.userHandle}`) }}
                       >
                         <div className="relative">
                           {topFriendsReorderMode && (
@@ -8744,7 +8744,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     <div key={follower.id} className="rounded-lg overflow-hidden">
                       <div className="flex items-center gap-3 p-2 hover:bg-purple-500/10 transition-colors">
                         <Link
-                          href={`/dex/users/${follower.userHandle}`}
+                          href={follower.userHandle ? `/users/${follower.userHandle}` : '#'}
                           onClick={() => setShowFollowersModal(false)}
                           className="flex items-center gap-3 flex-1 min-w-0"
                         >
@@ -8889,7 +8889,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     <div key={following.id} className="rounded-lg overflow-hidden">
                       <div className="flex items-center gap-3 p-2 hover:bg-green-500/10 transition-colors">
                         <Link
-                          href={`/dex/users/${following.userHandle}`}
+                          href={following.userHandle ? `/users/${following.userHandle}` : '#'}
                           onClick={() => setShowFollowingModal(false)}
                           className="flex items-center gap-3 flex-1 min-w-0"
                         >
@@ -9187,7 +9187,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     onClick={() => {
                       setShowBioTracksModal(false)
                       setIsBioExpanded(false)
-                      router.push(`/dex/users/${me?.profile?.userHandle || userData?.me?.profile?.userHandle}`)
+                      router.push(`/users/${me?.profile?.userHandle || userData?.me?.profile?.userHandle}`)
                     }}
                     className="w-full mt-3 py-2 text-xs text-orange-400 hover:text-orange-300 transition-colors border-t border-neutral-800"
                   >

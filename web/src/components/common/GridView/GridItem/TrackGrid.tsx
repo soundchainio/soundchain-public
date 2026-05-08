@@ -216,7 +216,7 @@ const TrackGrid = forwardRef<HTMLDivElement, TrackProps>(
                     {limitTextToNumberOfCharacters(title ? title : 'Unknown Title', 20)}
                   </h3>
                 </Link>
-                <Link href={`/profiles/${artist}`} passHref onClick={(e) => e.stopPropagation()}>
+                <Link href={artist ? `/users/${artist}` : '#'} passHref onClick={(e) => e.stopPropagation()}>
                   <p className="retro-json text-xs truncate">{artist || 'Unknown Artist'}</p>
                 </Link>
 

@@ -391,7 +391,7 @@ export default function ManagerPage({ ogData, handle }: ManagerPageProps) {
                 </button>
               )}
               <Link
-                href={`/dex/users/${pageHandle}`}
+                href={`/users/${pageHandle}`}
                 className="flex items-center gap-2.5 p-4 rounded-xl bg-black/60 border border-gray-700 hover:border-gray-500 hover:bg-white/5 transition-all group"
               >
                 <Music className="w-5 h-5 text-orange-400 group-hover:scale-110 transition-transform" />
@@ -426,7 +426,7 @@ export default function ManagerPage({ ogData, handle }: ManagerPageProps) {
 
           {/* Follow on SoundChain */}
           <Link
-            href={`/dex/users/${pageHandle}`}
+            href={`/users/${pageHandle}`}
             className="block w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-500 text-center text-sm font-semibold text-white hover:opacity-90 transition-opacity"
           >
             Follow on SoundChain

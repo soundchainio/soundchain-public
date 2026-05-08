@@ -68,7 +68,7 @@ export const FavoriteArtists = (props: FavoriteArtistsProps) => {
           <div className="bg-gray-25">
             {data?.followedArtists.nodes.map(followedArtist => (
               <div key={followedArtist.id} className="space-y-6 px-4 py-3">
-                <Link href={`/profiles/${followedArtist.userHandle}`} passHref>
+                <Link href={followedArtist.userHandle ? `/users/${followedArtist.userHandle}` : '#'} passHref>
                   <div className="flex cursor-pointer flex-row items-center space-x-2 text-sm">
                     <Avatar pixels={40} className="flex" profile={followedArtist} />
                     <DisplayName

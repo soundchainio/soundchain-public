@@ -794,7 +794,7 @@ export function DexNavBar() {
 
                     {/* Quick nav */}
                     <div className="py-2 border-b border-cyan-500/20">
-                      <Link href={`/users/${me.profile.userHandle}`} className="flex items-center gap-3 px-3 py-2 text-sm text-white hover:bg-cyan-500/10">
+                      <Link href={me.profile.userHandle ? `/users/${me.profile.userHandle}` : '#'} className="flex items-center gap-3 px-3 py-2 text-sm text-white hover:bg-cyan-500/10">
                         <UserIcon className="w-4 h-4 text-cyan-400" />
                         <span className="flex-1">My Profile</span>
                       </Link>

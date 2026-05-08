@@ -615,7 +615,7 @@ export const StoryViewer = ({ isOpen, onClose, initialUserId, initialStoryId, us
             {/* Avatar - uses identicon for wallet users */}
             <div
               className="w-9 h-9 rounded-full bg-gradient-to-br from-cyan-500 to-purple-500 p-[2px] cursor-pointer"
-              onClick={(e) => { e.stopPropagation(); router.push(`/dex/users/${currentUser.userHandle}`) }}
+              onClick={(e) => { e.stopPropagation(); if (currentUser.userHandle) router.push(`/users/${currentUser.userHandle}`) }}
             >
               <div className="w-full h-full rounded-full bg-neutral-900 flex items-center justify-center overflow-hidden">
                 <img
@@ -902,7 +902,7 @@ export const StoryViewer = ({ isOpen, onClose, initialUserId, initialStoryId, us
                 const handle = currentUser?.userHandle || currentUser?.profileId
                 if (handle) {
                   onClose()
-                  router.push(`/dex/users/${handle}`)
+                  router.push(`/users/${handle}`)
                 }
               }}
             >
