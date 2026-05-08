@@ -13,12 +13,15 @@ interface AvatarProps extends React.ComponentPropsWithoutRef<'div'> {
 }
 
 export const Avatar = ({ profile, pixels = 30, linkToProfile = true, showOnlineIndicator = false, ...props }: AvatarProps) => {
-  if (!linkToProfile || !profile.userHandle) {
+  // Fall back to profile.id when userHandle is missing — the dex slug router
+  // accepts either, so clicks always land on the profile.
+  const slug = profile.userHandle || profile.id
+  if (!linkToProfile || !slug) {
     return <Content profile={profile} pixels={pixels} showOnlineIndicator={showOnlineIndicator} {...props} />
   }
 
   return (
-    <Link href={`/users/${profile.userHandle}`} passHref className="flex-shrink-0" aria-label={profile.displayName}>
+    <Link href={`/users/${slug}`} passHref className="flex-shrink-0" aria-label={profile.displayName}>
       <Content profile={profile} pixels={pixels} showOnlineIndicator={showOnlineIndicator} {...props} />
     </Link>
   )

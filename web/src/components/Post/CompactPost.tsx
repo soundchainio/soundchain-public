@@ -294,7 +294,7 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
                   <span className="text-[10px] text-neutral-400 truncate">{formatWalletAddress(post.walletAddress!)}</span>
                 </>
               ) : hasProfile ? (
-                <Link href={post.profile!.userHandle ? `/users/${post.profile!.userHandle}` : '#'} className="flex items-center gap-1.5 hover:opacity-80" onClick={(e) => e.stopPropagation()}>
+                <Link href={`/users/${post.profile!.userHandle || post.profile!.id}`} className="flex items-center gap-1.5 hover:opacity-80" onClick={(e) => e.stopPropagation()}>
                   <Avatar profile={post.profile!} pixels={20} />
                   <span className="text-xs text-neutral-300 font-medium truncate">{post.profile!.displayName}</span>
                   {post.profile!.verified && <BadgeCheck className="w-3 h-3 text-cyan-400" />}
@@ -383,7 +383,7 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
               </div>
             ) : hasProfile ? (
               <Link
-                href={post.profile!.userHandle ? `/users/${post.profile!.userHandle}` : '#'}
+                href={`/users/${post.profile!.userHandle || post.profile!.id}`}
                 className="flex items-center gap-2 min-w-0 hover:opacity-80 transition-opacity"
                 onClick={(e) => e.stopPropagation()}
               >

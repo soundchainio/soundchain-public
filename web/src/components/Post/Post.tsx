@@ -241,10 +241,10 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
           </div>
         ) : hasProfile ? (
           <div className="flex items-center gap-2 min-w-0 flex-1 flex-wrap">
-            <Link href={post.profile!.userHandle ? `/users/${post.profile!.userHandle}` : '#'} className="flex-shrink-0">
+            <Link href={`/users/${post.profile!.userHandle || post.profile!.id}`} className="flex-shrink-0">
               <Avatar profile={post.profile!} pixels={32} />
             </Link>
-            <Link href={post.profile!.userHandle ? `/users/${post.profile!.userHandle}` : '#'} className="flex items-center gap-2 min-w-0 flex-wrap">
+            <Link href={`/users/${post.profile!.userHandle || post.profile!.id}`} className="flex items-center gap-2 min-w-0 flex-wrap">
               <DisplayName
                 name={post.profile!.displayName || ''}
                 verified={post.profile!.verified}
