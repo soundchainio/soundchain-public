@@ -2046,14 +2046,26 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     fetchPolicy: 'cache-and-network',
   })
 
-  // Atlas REST fallback when GraphQL profileByHandle fails (Lambda timeout/403)
+  // Atlas REST fallback when GraphQL profileByHandle fails OR returns null
+  // (Lambda timeout/403 errors, OR profileByHandle resolver returns nothing for a handle
+  //  that lives on users.handle → users.profileId rather than directly on profiles.userHandle,
+  //  OR avatar-tap fell back to ObjectId because post.profile.userHandle was empty).
   const [atlasFallbackProfile, setAtlasFallbackProfile] = useState<any>(null)
   const [atlasFallbackLoading, setAtlasFallbackLoading] = useState(false)
+  const atlasAttemptedFor = useRef<string | null>(null)
   useEffect(() => {
+    // Reset when handle changes
+    if (atlasAttemptedFor.current && atlasAttemptedFor.current !== routeId) {
+      atlasAttemptedFor.current = null
+      setAtlasFallbackProfile(null)
+      setAtlasFallbackLoading(false)
+    }
     if (!routeId || routeType !== 'users' || selectedView !== 'profile') return
-    if (profileByHandleLoading || profileByHandleData?.profileByHandle) return
-    if (!profileByHandleError && !profileByHandleLoading) return // Still loading or no error
-    // GraphQL failed — try Atlas REST
+    if (profileByHandleLoading) return
+    if (profileByHandleData?.profileByHandle) return // GraphQL already resolved
+    if (atlasAttemptedFor.current === routeId) return // already attempted for this handle
+    // GraphQL errored OR returned null — hit Atlas REST (handles users.handle, profiles.userHandle, ObjectId)
+    atlasAttemptedFor.current = routeId
     setAtlasFallbackLoading(true)
     fetch(`/api/profile/${encodeURIComponent(routeId)}`)
       .then(r => r.json())
