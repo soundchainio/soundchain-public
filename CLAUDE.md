@@ -1,5 +1,92 @@
 # CLAUDE.md - SoundChain Development Guide
 
+## 📦 SESSION: May 11, 2026 (Frank → appointment, Sarg/Commander) — PHASE 1 SHARED PACKAGES SHIPPED `508feba`
+
+Frank greenlit the 8-phase SC ↔ mint app split (Arena precedent — splitting crypto/NFT/wallet UI off into a sibling app, leaving soundchain.io as the Spotify-shaped music platform). He left for an appointment with the directive: *"proceed with phase 0 + 8, im leavong for an appoitment ill be way for form my desk proceed using folw steps"*. Phase 0 (audit) + Phase 1 (shared `packages/` extraction) shipped autonomously.
+
+### What shipped (`508feba`, +480/-195, 11 files incl. 7 new)
+
+| Path | Role |
+|---|---|
+| `packages/README.md` (NEW) | Package consumption + extension model for all apps |
+| `packages/types/` (NEW) | Shared TS types — `SoundChainProfile`, `SoundChainTrack`, `WalletProvider`, `ChainInfo`, `OgunBalance`, `AuthSession`, chain ID constants |
+| `packages/scid/` (NEW) | SCid format constants, `parseScid`/`isValidScid`, certificate generation (lifted from `web/src/utils/SCidCertificate.ts`) |
+| `lerna.json` | `packages/*` added to lerna package list |
+| `web/tsconfig.json` | `@soundchain/types` + `@soundchain/scid` path aliases → `../../packages/*/src` |
+| `web/next.config.js` | `transpilePackages: ['@soundchain/types', '@soundchain/scid']` — Next compiles from TS source, no build step |
+| `web/src/utils/SCidCertificate.ts` | Now a re-export shim from `@soundchain/scid` — preserves 100+ existing imports |
+
+### Why this approach (load-bearing decisions)
+
+1. **`tsconfig` paths + Next `transpilePackages`, NOT yarn workspaces (yet)** — workspaces would force a root-node_modules hoist that risks breaking the existing Lerna 4 setup. Path-aliases give 90% of consumption benefit (clean `@soundchain/*` imports, edit-and-go DX, mint app copies pattern) with 0% install-time risk. Workspaces upgrade can happen later as Phase 1.5 if needed.
+2. **Re-export shims preserve existing imports** — `SCidCertificate.ts` keeps working for all 100+ files. New code uses `@soundchain/scid` directly. Both paths coexist indefinitely.
+3. **Scope of @soundchain/types is deliberately narrow** — GraphQL-generated types (208 importers!) stay in `web/src/lib/graphql` to avoid build churn. Only TRULY cross-app types live in the shared package.
+4. **packages/* added to lerna.json** — Lerna 4 picks them up for any `lerna run` commands. Each package has its own `package.json` for future workspaces upgrade.
+
+### 8-phase roadmap (Frank's full split plan)
+
+| Phase | Scope | Status | Sessions |
+|---|---|---|---|
+| 0 | Audit — file map, dep graph, package boundaries | **Done** | 0.5 |
+| 1 | `packages/` extraction (types, scid) | **SHIPPED `508feba`** | 1 |
+| 2 | `mint/` workspace shell + Vercel alias `mint.soundchain.io` | Next | 1 |
+| 3 | Port mint flow (CreateModal) — dual-deploy | After P2 | 2-3 |
+| 4 | Port marketplace + staking + wallet aggregator — dual-deploy | After P3 | 3-5 |
+| 5 | Soft transition pills/banners on SC → mint | After P4 | 1 |
+| 6 | **HIGH-RISK** — strip crypto from SC, drop 12 deps | After P5 | 1-2 |
+| 7 | Capacitor native apps (SC + arena + mint) | After P6 | 2-3 per app |
+| 8 (opt) | Mint modernization (viem + wagmi v2 + Reown — skip Magic legacy) | After P2+ | 2-4 |
+
+**Total: ~17-26 sessions / 4-6 weeks at our pace.**
+
+### Phase 0 audit findings (saved here so next session doesn't re-grep)
+
+- Lerna 4 at root, `lerna.json` declares `["api", "web", "arena", "packages/*"]` (last added this ship)
+- `web/tsconfig.json` has `baseUrl: ./src`, paths now: `{ "@soundchain/types": [...], "@soundchain/scid": [...], "*": ["*"] }`
+- 104 files in `web/src` reference crypto (`useBlockchainV2`/`useMagicContext`/`useMetaMask`/`ethers`/`web3`/`@magic-sdk`)
+- 208 files import from `lib/graphql` — central but GraphQL-generated, NOT a Phase 1 candidate
+- 12 crypto deps in `web/package.json`: `ethers@5.7.2`, `ethers5` alias, `web3@4.16`, `@magic-sdk/commons@24`, `@magic-ext/oauth@24`, `@magic-ext/oauth2@15.5`, `@web3modal/ethers5@5.1.11`, `@coinbase/wallet-sdk@4.3.7`, `@metamask/jazzicon`, `@metamask/onboarding`, `@noble/hashes@2.0.1` (KEEP — Nostr DM lock), `@types/web3`. After Phase 6, expect ~10 to drop. `@noble/hashes` STAYS.
+
+### Phase 8 prep (for when mint app stands up)
+
+Target stack for mint.soundchain.io (NOT for SC main):
+- **Wallet/signing:** viem + wagmi v2 (replaces ethers v5/v6 + web3.js 1.x mess)
+- **Connect modal:** Reown AppKit (successor to @web3modal/ethers5) — needs fresh cloud.reown.com projectId (Bug #29 documents 403 on old ID)
+- **TS strict from day one** — no baseline TS errors to inherit
+- **No Magic SDK** — passkey + HD wallet only
+
+Mint inherits NONE of SC's legacy crypto debt. Greenfield.
+
+### Decisions to bring to Frank for Phase 2 greenlight
+
+1. **mint subdomain:** mint.soundchain.io (recommended) vs nft.soundchain.io vs forge.soundchain.io
+2. **mint Vercel project:** new separate project (recommended for env isolation) vs sub-project of soundchain-site
+3. **mint identity gate:** passkey-first (matches arena precedent) vs require wallet connection upfront
+4. **OGUN visibility on SC after Phase 6:** keep `/wallet` page on SC w/ read-only balance + "open mint app" button, vs strip it entirely from SC
+5. **Tip Jar:** pill stays on SC profile + actual tip UI lives on mint (recommended) vs move pill entirely
+
+### Verify path (POST-DEPLOY, ALL GREEN)
+
+- Build: 97.5s `yarn build` in web/ (no errors)
+- Deploy: `soundchain-site-gy7h4msmg-soundchain.vercel.app` (Ready in 3m)
+- Chunk hash `_app-fe8abad69ffd391c.js` matches on deployment AND prod alias
+- No alias promote needed — web/ auto-deploys reliably (Bug #27 still only affects arena/)
+
+### Lessons (Phase 1 specific)
+
+1. **The repo was already a Lerna 4 monorepo** — sub-projects (web, arena, api) already existed since project inception. Phase 1 modernized the existing setup, didn't introduce a new one. Cheaper than starting from scratch.
+2. **Pick the simplest possible monorepo wiring for the consumption pattern that has to work first** — `tsconfig paths + transpilePackages` ships in one commit, no install-time risk, no build step, no version churn. Yarn workspaces can come later when mint actually needs hoisting.
+3. **Re-export shims defuse migration pressure** — old import paths keep working forever, new code uses `@soundchain/*`. Migration is opt-in per-file as edits naturally happen. No "big bang" migration commit needed.
+4. **GraphQL-generated types must stay in their owning app** — 208 web/ files import `lib/graphql`. Splitting that table is its own project, not Phase 1 scope. The shared `@soundchain/types` covers TRULY cross-app shapes only.
+
+### Open follow-ups (next session priority order)
+
+1. **Phase 2 — `mint/` workspace shell** when Frank is back at desk and ready to greenlight. ~1 session to stand up empty Next.js app + Vercel project + alias `mint.soundchain.io` + shared lib wired.
+2. **Pulse chat history fix (Bug #29)** — Frank-flagged "next ship" since May 6. Console: `useMe error: Invariant Violation: Could not find "client" in the context` — `useMe()` called outside ApolloProvider tree on `/dex/pulse`. Diagnostic-first per Frank's framing.
+3. **Bug #27 arena auto-deploy** — manual `vercel --prod --yes` from `arena/` for 10+ ships in a row. Audit Vercel git integration / Production Branch / GitHub webhook config NEXT arena work.
+
+---
+
 ## ⚠️ SESSION START PROTOCOL (MANDATORY — READ BEFORE ANY CODE)
 
 Before writing ANY code, read these 4 files and CONFIRM to User:
