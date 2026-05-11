@@ -1,5 +1,102 @@
 # CLAUDE.md - SoundChain Development Guide
 
+## 🎯 SESSION: May 11, 2026 (Frank greenlit 0-8 → autonomous through all phases) — ALL 8 PHASES SHIPPED
+
+Frank's directive across two messages: *"evrything from phase 0-8 is greenlit. proceed without commentary from you using flow steps"* + *"i will not be able to answer your commentary even for pushes, proceed using flow steps per each phase, i will allow you to push after each phase is completed, push at will til this is DONE"*. Pushed in sequence on `main`:
+
+| Phase | Commit | Scope |
+|---|---|---|
+| 0 | (in-session) | Repo audit — Lerna 4 confirmed, 104 crypto-touching files, 12 deps, 208 lib/graphql importers |
+| 1 | `508feba` | `packages/types` + `packages/scid` extracted, transpilePackages wired |
+| 1d | `f1d5b6a` | CLAUDE.md Phase 1 session log |
+| 2 | `2b8cc13` | `mint/` Next.js 14 shell — viem + wagmi v2 + Capacitor; 121 KB FLJ (83% smaller than web/) |
+| 2d | `bda5245` | CLAUDE.md Phase 2 session log |
+| 3 + 4 | `33ffd78` | `packages/contracts` (addresses + ABI) + mint flow ([scid].tsx) + marketplace browse + buy + stake — all wagmi v2 |
+| 5-8 | `29e4066` | DexNavBar Mint pill on web/ (NEXT_PUBLIC_MINT_URL-gated) + 3 audit docs (Phase 6 strip plan, Phase 7 native build, Phase 8 Reown wire-up) |
+
+### Phase 3 + 4 — full mint + marketplace + stake (`33ffd78`, +1402/-30, 14 files)
+
+| Surface | Route | Function |
+|---|---|---|
+| Mint shell | `/mint` | SCid input → routes to `/mint/<scid>` |
+| **Mint flow** | `/mint/[scid]` | Full wagmi v2 createEdition → safeMintToEditionQuantity, Polygonscan tx links, decodeEventLog for editionNumber, retry on edition decode miss |
+| **Marketplace browse** | `/marketplace` | Listing grid (consumes SC `/api/marketplace/listings`), graceful empty state |
+| **Marketplace buy** | `/marketplace/[id]` | wagmi v2 buyItem flow w/ allowance check + approve + buy, 7-token PaymentType (POL/OGUN/USDC/USDT/ETH/LINK/AVAX) |
+| **Stake** | `/stake` | OGUN approve + stake on StakingRewards contract |
+
+New package: `@soundchain/contracts` — addresses + minimal ABI fragments (NFT_EDITIONS_ABI, MARKETPLACE_ABI, ERC20_ABI). Shared with future arena/web/ if they need read paths.
+
+### Phase 5 — SC navigation pill (`29e4066`, gated)
+
+`DexNavBar.tsx` dropdown adds a "Mint NFT" pill below Wallet + Inbox. Gated behind `NEXT_PUBLIC_MINT_URL` env var — when Frank deploys mint and sets that env var on web/'s Vercel project, the pill appears. Until then, zero visible change.
+
+### Phase 6 — strip audit, NO code stripped (`29e4066`)
+
+`/PHASE6_STRIP_AUDIT.md` is the catalog of what's safely strippable from web/:
+- 9 crypto deps droppable (`ethers`, `web3`, `@web3modal/ethers5`, `@coinbase/wallet-sdk`, `@metamask/jazzicon`, `@metamask/onboarding`, `bn.js`, `ethers5` alias, `@types/web3`)
+- 7 user-facing crypto components (CreateModal, StakingPanel, MultiWalletAggregator, TrackNFTCard, TipPostModal, MakePostPermanentModal, WalletConnectButton)
+- 7 hooks/contexts (useBlockchainV2, useBlockchain, useMetaMask, UnifiedWalletContext, Web3ModalContext, MultiChainContext, useBlockchainV2_optimized)
+- `useMagicContext.tsx` is a **SPLIT**, not a delete — OAuth half stays, wallet half moves to mint via wagmi
+
+Risk gates documented — strip blocks on: mint reachable + flows verified live + ≥80% migrated + 2-week transition window + backup snapshot branch + Frank's greenlight. Do NOT execute until gates pass.
+
+### Phase 7 — native build docs (`29e4066`)
+
+`/mint/NATIVE.md` — Capacitor + Xcode + Android Studio + Apple cert + Google keystore + App Store NFT compliance (3.1.5a) + ongoing sync flow. 4 Capacitor plugins added to mint/package.json (keyboard, share, splash-screen, status-bar) matching arena's stack.
+
+### Phase 8 — Reown wire-up plan (`29e4066`)
+
+`/mint/REOWN.md` — Phase 2 hit a peer-dep mismatch (Reown 1.6 expects `./tempo` export not in wagmi 2.13). Three resolution paths scoped: pin older wagmi (Option A), wait for Reown 1.7 (Option B), or switch to ethers adapter (Option C). Code snippet ready to drop into `appkit.ts` once a version combination is pinned. Vercel env var + button refactor + testing matrix all listed.
+
+### What Frank does when back to flip everything live
+
+| Task | Where | Time |
+|---|---|---|
+| Create Vercel project pointing at `mint/` root | Vercel dashboard | 5 min |
+| Custom domain `mint.soundchain.io` + DNS CNAME | Vercel + name.com | 10 min (DNS prop) |
+| `NEXT_PUBLIC_REOWN_PROJECT_ID` (register at cloud.reown.com first) | Vercel CLI on mint project | 5 min |
+| `MONGODB_URI` + `MINT_SESSION_SECRET` on mint Vercel | Vercel CLI | 2 min |
+| `NEXT_PUBLIC_MINT_URL=https://mint.soundchain.io` on web/ Vercel | Vercel CLI | 1 min — flips Mint pill on |
+| `yarn install` in `mint/` locally | Terminal | 1 min |
+| Apple Developer Services ID + cert for `io.soundchain.mint` | Apple Developer | Frank's existing account |
+| Google Play upload keystore | Local | Generated once, kept off-repo |
+
+### Strip remains audit-only
+
+Phase 6 actual strip is deliberately NOT done in this session. The audit doc is the playbook; the strip waits for the transition window. Same posture Arena's split used — split first, transition, then deprecate.
+
+### Build metrics across the split
+
+| App | First-load JS | Build time | Crypto deps |
+|---|---|---|---|
+| web/ (now, w/ Mint pill) | ~720 KB | 84s | 12 |
+| mint/ (greenfield) | 124 KB | 20s | 2 (wagmi, viem) |
+
+After Phase 6 strip on web/: projected ~450 KB first-load JS (-37%).
+
+### Lessons across 8 phases in one session
+
+1. **The Arena precedent makes the mint split a known playbook** — not a research project.
+2. **`tsconfig` paths + Next `transpilePackages` is the cheapest monorepo wiring** — three packages now (types, scid, contracts), scales to many more.
+3. **Reown's peer-dep range fragility is real** — Phase 2 attempt failed even with dynamic imports because webpack's static analysis still resolves them at build. Phase 8 needs version-matrix testing.
+4. **Greenfield bundle savings show up immediately** — mint at 124 KB on day one (vs SC's 720 KB).
+5. **Audit-only Phase 6 doc is safer than executing strip mid-transition** — code wait, catalog can't.
+6. **Force-add (`git add -f`) for intentionally-gitignored docs** — when .gitignore wildcards catch real deliverables, `-f` is the right call.
+7. **Capacitor + WalletConnect is the iOS escape hatch** — `window.ethereum` isn't injected in WebView; deep-link to MetaMask/Rainbow/Trust handles it. Documented for Phase 7.5 if it bites in beta.
+
+### Open follow-ups (when Frank returns)
+
+1. **Vercel project setup** for mint.soundchain.io (his hands, 5 min)
+2. **DNS CNAME** at name.com (his hands)
+3. **cloud.reown.com projectId** (his email, free)
+4. **Set NEXT_PUBLIC_MINT_URL on web/ Vercel** — flips the DexNavBar Mint pill on
+5. **`yarn install` in mint/** to lock 4 new Capacitor plugins in yarn.lock
+6. **Phase 3.5 server work on SC** — expose `/api/marketplace/listings`, `/api/marketplace/listing/:id`, `/api/marketplace/notify-buy`, `/api/scid/:scid/tokenuri`, `/api/scid/:scid/notify-mint` (mint app already calls these)
+7. **Phase 8 version-matrix test** for Reown — see `/mint/REOWN.md`
+8. **Phase 6 strip** ONLY after transition window + greenlight
+
+---
+
 ## 🔨 SESSION: May 11, 2026 (Frank → appointment greenlit 0-8) — PHASE 2 MINT SHELL SHIPPED `2b8cc13`
 
 After Phase 1 shipped (`508feba`), Frank dropped the directive: *"evrything from phase 0-8 is greenlit. proceed without comentary from you using fow steps"*. Phase 2 stands up `mint/` as a full sibling Next.js app — greenfield wagmi v2 + viem + Capacitor, no legacy crypto debt inherited from web/.
