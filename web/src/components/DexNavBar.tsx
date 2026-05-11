@@ -806,6 +806,18 @@ export function DexNavBar() {
                         <MessageCircle className="w-4 h-4 text-cyan-400" />
                         <span className="flex-1">Inbox</span>
                       </Link>
+                      {process.env.NEXT_PUBLIC_MINT_URL && (
+                        <a
+                          href={process.env.NEXT_PUBLIC_MINT_URL}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-3 px-3 py-2 text-sm text-white hover:bg-emerald-500/10 border-t border-emerald-500/10"
+                        >
+                          <span className="w-4 h-4 rounded-full bg-gradient-to-br from-emerald-400 to-violet-500 flex-shrink-0" />
+                          <span className="flex-1">Mint NFT</span>
+                          <span className="text-[9px] uppercase tracking-widest px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">New</span>
+                        </a>
+                      )}
                     </div>
 
                     {/* Get Verified accordion */}
