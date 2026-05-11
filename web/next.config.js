@@ -61,6 +61,10 @@ const withPWA = require('next-pwa')({
 
 module.exports = withPWA({
   reactStrictMode: false,
+  // Phase 1 shared packages — transpile from ../packages/* source at build time.
+  // Lets web/ import @soundchain/types + @soundchain/scid without a build step.
+  // Future mint app will consume the same packages identically.
+  transpilePackages: ['@soundchain/types', '@soundchain/scid'],
   // Rewrites: top-level URLs silently serve content from /dex/ mega-router
   // User sees /users/handle but Next.js renders /dex/users/handle internally
   async rewrites() {

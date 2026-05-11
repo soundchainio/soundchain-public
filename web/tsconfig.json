@@ -17,7 +17,11 @@
     "baseUrl": "./src", // Match legacy root
     "incremental": true,
     "paths": {
-      "*": ["*"] // Simplify paths, rely on baseUrl
+      // Phase 1 shared packages — resolved from repo-root packages/ dir.
+      // baseUrl is ./src, so ../../packages/<name>/src escapes to repo root.
+      "@soundchain/types": ["../../packages/types/src"],
+      "@soundchain/scid": ["../../packages/scid/src"],
+      "*": ["*"] // Existing baseUrl resolution preserved
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "src/**/*.d.ts"],
