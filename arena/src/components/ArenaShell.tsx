@@ -20,18 +20,20 @@ interface ArenaShellProps {
 }
 
 const NAV = [
-  { href: '/',         label: 'Hub',     icon: Home },
-  { href: '/live',     label: 'Live',    icon: Activity, accent: true },
-  { href: '/nba',      label: 'NBA',     icon: Trophy },
-  { href: '/nhl',      label: 'NHL',     icon: Trophy },
-  { href: '/mlb',      label: 'MLB',     icon: Trophy },
-  { href: '/nfl',      label: 'NFL',     icon: Trophy },
-  { href: '/wnba',     label: 'WNBA',    icon: Trophy },
-  { href: '/f1',       label: 'F1',      icon: Flag },
-  { href: '/boxing',   label: 'Boxing',  icon: Zap },
-  { href: '/soccer',   label: 'Soccer',  icon: Trophy },
-  { href: '/fantasy',  label: 'Fantasy', icon: Trophy },
-  { href: '/picks',    label: 'Picks',   icon: Swords },
+  { href: '/',              label: 'Hub',     icon: Home },
+  { href: '/live',          label: 'Live',    icon: Activity, accent: true },
+  { href: '/nba',           label: 'NBA',     icon: Trophy },
+  { href: '/nhl',           label: 'NHL',     icon: Trophy },
+  { href: '/mlb',           label: 'MLB',     icon: Trophy },
+  { href: '/nfl',           label: 'NFL',     icon: Trophy },
+  { href: '/wnba',          label: 'WNBA',    icon: Trophy },
+  { href: '/f1',            label: 'F1',      icon: Flag },
+  { href: '/wwe',           label: 'WWE',     icon: Zap },
+  { href: '/boxing',        label: 'Boxing',  icon: Zap },
+  { href: '/horse-racing',  label: 'Horse',   icon: Flag },
+  { href: '/soccer',        label: 'Soccer',  icon: Trophy },
+  { href: '/fantasy',       label: 'Fantasy', icon: Trophy },
+  { href: '/picks',         label: 'Picks',   icon: Swords },
 ]
 
 function ThemeToggle() {

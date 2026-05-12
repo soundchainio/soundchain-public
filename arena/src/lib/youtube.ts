@@ -35,6 +35,13 @@ const BOXING_CHANNELS: { id: string; name: string }[] = [
   { id: 'UCFiOI1JhSrwY7y2HDMrI0NA', name: 'DAZN Boxing' },
 ]
 
+// Horse racing has no single dominant channel either — aggregate from major
+// racing networks. Verified RSS-reachable channel IDs only. Add more here
+// as Frank ratifies them; fetchMultiChannelLatest skips failed channels.
+const HORSE_RACING_CHANNELS: { id: string; name: string }[] = [
+  { id: 'UCUiL8HPhvqMY5zpYLQDiscw', name: 'At The Races' },
+]
+
 export function getLeagueChannel(sport: SportKey | 'f1' | 'wwe'): { id: string; name: string } | null {
   if (sport === 'f1') return F1_CHANNEL
   if (sport === 'wwe') return WWE_CHANNEL
@@ -43,6 +50,10 @@ export function getLeagueChannel(sport: SportKey | 'f1' | 'wwe'): { id: string; 
 
 export function getBoxingChannels(): { id: string; name: string }[] {
   return BOXING_CHANNELS
+}
+
+export function getHorseRacingChannels(): { id: string; name: string }[] {
+  return HORSE_RACING_CHANNELS
 }
 
 /** Builds privacy-enhanced embed URL with autoplay + JS API enabled. */

@@ -2,6 +2,7 @@ import Head from 'next/head'
 import { useState } from 'react'
 import { ArenaShell } from '@/components/ArenaShell'
 import { WweEventDetailModal, WwePpvDetail } from '@/components/WweEventDetailModal'
+import { HighlightsStrip } from '@/components/HighlightsStrip'
 
 // WWE hub — curated since ESPN doesn't expose a deep WWE scoreboard endpoint.
 // Hand-maintained PPV calendar w/ full match cards. ESPN's WWE coverage is
@@ -294,6 +295,19 @@ export default function WwePage() {
               </button>
             ))}
           </div>
+        </section>
+
+        {/* Highlights from @WWE official YouTube — Raw / SmackDown / PPV recaps */}
+        <section className="max-w-7xl mx-auto px-4 py-8 sm:py-10">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xs font-black uppercase tracking-[0.3em] text-arena-muted-l dark:text-arena-muted-d">
+              Highlights
+            </h2>
+            <span className="text-[10px] font-mono uppercase tracking-wider text-arena-muted-l dark:text-arena-muted-d">
+              @WWE
+            </span>
+          </div>
+          <HighlightsStrip sport="wwe" limit={12} />
         </section>
 
         {/* Current champions */}
