@@ -7,7 +7,7 @@
 import { useState } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
-import { useAccount, useConnect, usePublicClient, useWalletClient } from 'wagmi'
+import { useAccount, useChainId, useConnect, usePublicClient, useSwitchChain, useWalletClient } from 'wagmi'
 import { polygon } from 'wagmi/chains'
 import { CONTRACTS, ERC20_ABI } from 'lib/contracts'
 import { formatUnits, parseUnits } from 'viem'
@@ -16,9 +16,12 @@ type StakeStep = 'idle' | 'approving' | 'waiting-approval' | 'staking' | 'waitin
 
 export default function Stake() {
   const { address, isConnected } = useAccount()
+  const activeChainId = useChainId()
+  const { switchChain } = useSwitchChain()
   const { connect, connectors, isPending: connecting } = useConnect()
   const publicClient = usePublicClient({ chainId: polygon.id })
   const { data: walletClient } = useWalletClient({ chainId: polygon.id })
+  const onPolygon = activeChainId === polygon.id
 
   const [amount, setAmount] = useState('')
   const [step, setStep] = useState<StakeStep>('idle')
@@ -30,12 +33,24 @@ export default function Stake() {
 
   async function handleStake() {
     setError(null)
-    if (!isConnected || !walletClient || !publicClient || !address) {
+    if (!isConnected || !address) {
       setError('Connect a wallet first.')
       return
     }
     if (!amount || Number(amount) <= 0) {
       setError('Enter an amount.')
+      return
+    }
+    if (!onPolygon) {
+      try {
+        await switchChain({ chainId: polygon.id })
+      } catch {
+        setError('OGUN staking runs on Polygon — please switch your wallet to Polygon mainnet.')
+        return
+      }
+    }
+    if (!walletClient || !publicClient) {
+      setError('Wallet is still warming up — try again in a sec.')
       return
     }
 
