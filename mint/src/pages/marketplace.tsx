@@ -50,6 +50,14 @@ export default function Marketplace() {
   const [playingId, setPlayingId] = useState<string | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
+  // ── Tab + filter + sort state ─────────────────────────────────────────
+  type Tab = 'forSale' | 'minted' | 'all'
+  type SortMode = 'newest' | 'priceAsc' | 'priceDesc'
+  // Default to ALL so users always see content; FOR SALE narrows to active listings.
+  const [tab, setTab] = useState<Tab>('all')
+  const [tokenFilter, setTokenFilter] = useState<'all' | PriceToken>('all')
+  const [sortMode, setSortMode] = useState<SortMode>('newest')
+
   // Detail modal is driven off the URL `?id=<listingId>` so a card tap stays
   // on `/marketplace` (shallow route) and shared links still deep-link to the
   // same modal. Direct `/marketplace/[id]` page still works as a fallback.
@@ -143,6 +151,55 @@ export default function Marketplace() {
     [listings, selected]
   )
 
+  // ── Floor price per token (from FOR-SALE listings only) ───────────────
+  const floors = useMemo(() => {
+    const map = new Map<PriceToken, number>()
+    for (const l of listings) {
+      if (!l.forSale || typeof l.price !== 'number' || !l.priceToken) continue
+      const cur = map.get(l.priceToken)
+      if (cur === undefined || l.price < cur) map.set(l.priceToken, l.price)
+    }
+    return Array.from(map.entries()) // [['POL', 0.5], ['OGUN', 12], ...]
+  }, [listings])
+
+  // ── Filter + sort pipeline ────────────────────────────────────────────
+  const filteredListings = useMemo(() => {
+    let out = listings.slice()
+    if (tab === 'forSale') out = out.filter((l) => l.forSale === true)
+    else if (tab === 'minted') out = out.filter((l) => l.forSale !== true)
+    if (tokenFilter !== 'all') {
+      out = out.filter((l) => l.forSale && l.priceToken === tokenFilter)
+    }
+    if (sortMode === 'priceAsc' || sortMode === 'priceDesc') {
+      out = out
+        .filter((l) => typeof l.price === 'number' && l.forSale)
+        .sort((a, b) => {
+          const ap = a.price as number
+          const bp = b.price as number
+          return sortMode === 'priceAsc' ? ap - bp : bp - ap
+        })
+    }
+    return out
+  }, [listings, tab, tokenFilter, sortMode])
+
+  // Price-sorts only make sense on for-sale items. Reset to newest if user
+  // switches off the For-Sale tab while a price sort is active.
+  useEffect(() => {
+    if (tab !== 'forSale' && (sortMode === 'priceAsc' || sortMode === 'priceDesc')) {
+      setSortMode('newest')
+    }
+    if (tab !== 'forSale' && tokenFilter !== 'all') {
+      setTokenFilter('all')
+    }
+  }, [tab, sortMode, tokenFilter])
+
+  // Tokens actually present in for-sale listings — show only relevant pills.
+  const availableTokens = useMemo(() => {
+    const set = new Set<PriceToken>()
+    for (const l of listings) if (l.forSale && l.priceToken) set.add(l.priceToken)
+    return Array.from(set)
+  }, [listings])
+
   const sourceLabel = source === 'merged'
     ? { tag: 'FOR SALE + MINTED', color: 'text-neon-magenta border-neon-magenta/40' }
     : source === 'listings'
@@ -219,7 +276,108 @@ export default function Marketplace() {
           </div>
         </section>
 
-        {/* Grid — dense blur.io-style, mobile 3-col, scales to 6-col wide */}
+        {/* Tabs + filter pills + sort + floor strip */}
+        <section className="px-2 sm:px-4 pt-3 max-w-7xl mx-auto w-full space-y-2">
+          {/* Tab row — FOR SALE / MINTED / ALL */}
+          <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide pb-0.5">
+            {([
+              { id: 'forSale' as const, label: 'FOR SALE', count: counts.listed, color: 'mint' },
+              { id: 'minted' as const, label: 'MINTED', count: Math.max(0, (counts.mintedTotal || counts.minted) - counts.listed), color: 'cyan' },
+              { id: 'all' as const, label: 'ALL', count: counts.mintedTotal || counts.minted, color: 'magenta' },
+            ]).map((t) => {
+              const active = tab === t.id
+              const accent =
+                t.color === 'mint' ? 'neon-mint' :
+                t.color === 'cyan' ? 'neon-cyan' :
+                'neon-magenta'
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => setTab(t.id)}
+                  className={`flex items-center gap-2 px-3 py-1.5 text-[10px] font-mono uppercase tracking-[0.25em] border transition-colors flex-shrink-0 ${
+                    active
+                      ? `bg-${accent}/15 text-${accent} border-${accent}/60`
+                      : 'border-white/10 text-gray-400 hover:border-white/30 hover:text-gray-200'
+                  }`}
+                  style={{ clipPath: 'polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px)' }}
+                >
+                  <span>{t.label}</span>
+                  <span className="tabular-nums opacity-70">{t.count.toString().padStart(2, '0')}</span>
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Token filter pills + sort pills — only meaningful on For-Sale tab */}
+          {tab === 'forSale' && (availableTokens.length > 0 || floors.length > 0) && (
+            <div className="flex flex-wrap items-center gap-1.5 pt-1">
+              {/* Token filter */}
+              <button
+                type="button"
+                onClick={() => setTokenFilter('all')}
+                className={`px-2 py-1 text-[9px] font-mono uppercase tracking-widest border transition-colors ${
+                  tokenFilter === 'all'
+                    ? 'bg-white/10 text-white border-white/30'
+                    : 'border-white/10 text-gray-500 hover:text-gray-200'
+                }`}
+              >
+                ALL
+              </button>
+              {availableTokens.map((tk) => (
+                <button
+                  key={tk}
+                  type="button"
+                  onClick={() => setTokenFilter(tk)}
+                  className={`px-2 py-1 text-[9px] font-mono uppercase tracking-widest border transition-colors ${
+                    tokenFilter === tk
+                      ? 'bg-neon-cyan/15 text-neon-cyan border-neon-cyan/60'
+                      : 'border-white/10 text-gray-500 hover:text-neon-cyan/80'
+                  }`}
+                >
+                  {tk}
+                </button>
+              ))}
+
+              <span className="w-px h-4 bg-white/10 mx-1" aria-hidden />
+
+              {/* Sort */}
+              {([
+                { id: 'newest' as SortMode, label: 'NEWEST' },
+                { id: 'priceAsc' as SortMode, label: 'PRICE ↑' },
+                { id: 'priceDesc' as SortMode, label: 'PRICE ↓' },
+              ]).map((s) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => setSortMode(s.id)}
+                  className={`px-2 py-1 text-[9px] font-mono uppercase tracking-widest border transition-colors ${
+                    sortMode === s.id
+                      ? 'bg-neon-magenta/15 text-neon-magenta border-neon-magenta/60'
+                      : 'border-white/10 text-gray-500 hover:text-neon-magenta/80'
+                  }`}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Floor price strip — only on For-Sale tab when listings exist */}
+          {tab === 'forSale' && floors.length > 0 && (
+            <div className="flex items-center gap-3 font-mono text-[10px] pt-1">
+              <span className="text-[8px] uppercase tracking-[0.3em] text-gray-500">FLOOR</span>
+              {floors.map(([tk, p]) => (
+                <span key={tk} className="flex items-center gap-1">
+                  <span className="text-neon-mint tabular-nums">{formatPrice(p)}</span>
+                  <span className="text-gray-500">{tk}</span>
+                </span>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* Grid — dense, mobile 3-col, scales to 6-col wide */}
         <section className="px-2 sm:px-4 py-3 sm:py-5 max-w-7xl mx-auto w-full">
           {loading && (
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-1.5 sm:gap-2">
@@ -259,9 +417,35 @@ export default function Marketplace() {
             </div>
           )}
 
-          {!loading && !error && listings.length > 0 && (
+          {!loading && !error && listings.length > 0 && filteredListings.length === 0 && (
+            <div className="neon-panel hud-corners p-6 text-center mx-2">
+              <span className="hud-corner hud-corner-tl" />
+              <span className="hud-corner hud-corner-tr" />
+              <span className="hud-corner hud-corner-bl" />
+              <span className="hud-corner hud-corner-br" />
+              <div className="text-[10px] font-mono uppercase tracking-[0.3em] text-neon-mint mb-2">
+                ◌ no matches
+              </div>
+              <p className="text-xs text-gray-400 mb-2">
+                {tab === 'forSale'
+                  ? tokenFilter === 'all'
+                    ? 'No active listings right now.'
+                    : `No ${tokenFilter} listings right now.`
+                  : 'Filter returned nothing.'}
+              </p>
+              <button
+                type="button"
+                onClick={() => { setTab('all'); setTokenFilter('all'); setSortMode('newest') }}
+                className="text-[10px] font-mono uppercase tracking-widest text-neon-cyan hover:underline"
+              >
+                ◤ view all
+              </button>
+            </div>
+          )}
+
+          {!loading && !error && filteredListings.length > 0 && (
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-1.5 sm:gap-2">
-              {listings.map((listing) => (
+              {filteredListings.map((listing) => (
                 <NftChip
                   key={listing.id}
                   listing={listing}
