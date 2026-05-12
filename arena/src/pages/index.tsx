@@ -12,18 +12,20 @@ import { LiveScoresStrip } from '@/components/LiveScoresStrip'
 // WWE, NFL, FIFA World Cup, Soccer. Treat this list as the canonical "sport
 // universe" — extending it adds a tile w/ no other code change.
 const PULSE_NOW: { href: string; label: string; emoji: string; accent: string; live?: boolean }[] = [
-  { href: '/nba',    label: 'NBA Playoffs',     emoji: '🏀', accent: 'NOW',    live: true },
-  { href: '/nhl',    label: 'Stanley Cup',      emoji: '🏒', accent: 'NOW',    live: true },
-  { href: '/mlb',    label: 'MLB Daily',        emoji: '⚾', accent: 'TODAY' },
-  { href: '/wnba',   label: 'WNBA',             emoji: '🏀', accent: 'TODAY' },
-  { href: '/nfl',    label: 'NFL Offseason',    emoji: '🏈', accent: 'NEWS' },
-  { href: '/f1',     label: 'Formula 1',        emoji: '🏎️', accent: 'WKND' },
-  { href: '/boxing', label: 'Boxing',           emoji: '🥊', accent: 'CARD' },
-  { href: '/soccer', label: 'EPL · MLS',        emoji: '⚽', accent: 'LIVE' },
-  { href: '/ncaa',   label: 'NCAA Hoops',       emoji: '🏀', accent: 'BRACKET' },
-  { href: '/wwe',    label: 'WWE',              emoji: '🤼', accent: 'PPV' },
-  { href: '/fifa',   label: 'FIFA WC',          emoji: '🌍', accent: 'GLOBAL' },
-  { href: '/horse',  label: 'Horse Racing',     emoji: '🐎', accent: 'STAKES' },
+  { href: '/nba',          label: 'NBA Playoffs',  emoji: '🏀', accent: 'NOW',     live: true },
+  { href: '/nhl',          label: 'Stanley Cup',   emoji: '🏒', accent: 'NOW',     live: true },
+  { href: '/mlb',          label: 'MLB Daily',     emoji: '⚾', accent: 'TODAY' },
+  { href: '/wnba',         label: 'WNBA',          emoji: '🏀', accent: 'TODAY' },
+  { href: '/nfl',          label: 'NFL Offseason', emoji: '🏈', accent: 'NEWS' },
+  { href: '/f1',           label: 'Formula 1',     emoji: '🏎️', accent: 'WKND' },
+  { href: '/boxing',       label: 'Boxing',        emoji: '🥊', accent: 'CARD' },
+  { href: '/mma',          label: 'UFC / MMA',     emoji: '🥋', accent: 'CAGE' },
+  { href: '/epl',          label: 'EPL',           emoji: '⚽', accent: 'LIVE' },
+  { href: '/mls',          label: 'MLS',           emoji: '⚽', accent: 'TABLE' },
+  { href: '/ncaa',         label: 'NCAA Hoops',    emoji: '🏀', accent: 'BRACKET' },
+  { href: '/wwe',          label: 'WWE',           emoji: '🤼', accent: 'PPV' },
+  { href: '/fifa',         label: 'FIFA WC',       emoji: '🌍', accent: 'GLOBAL' },
+  { href: '/horse-racing', label: 'Horse Racing',  emoji: '🐎', accent: 'STAKES' },
 ]
 
 const FEATURE_BULLETS = [
@@ -83,42 +85,39 @@ export default function ArenaHub() {
           </div>
         </section>
 
-        {/* Sports pulse strip — slim cyberpunk pills, horizontally-scrollable on
-            mobile so all sports surface (no 4-card crop). Hairline borders,
-            hologram-text on hover, dimensional accent dot for live. Frank
-            May 6: "those pills are too fat... slimming cyberpunk chic
-            lines-holographic-dimensional". */}
+        {/* Sports pulse grid — every sport visible at once, no horizontal scroll.
+            Fire TV d-pad navigates the grid cells natively (focus shifts up/
+            down/left/right between Links). Frank May 12: "horizontal scroll
+            wont scroll on tv... create a grid dashboard for the all sports
+            pills". 2 cols on phone → 3 sm → 4 md → 7 lg so the full row of
+            sports lays out on a TV-sized viewport without crops. */}
         <section className="max-w-7xl mx-auto px-4 py-6 sm:py-8">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-xs font-black uppercase tracking-[0.3em] text-arena-muted-l dark:text-arena-muted-d">
               Sports · Right now
             </h2>
-            <span className="text-[9px] font-mono tracking-wider text-arena-muted-l dark:text-arena-muted-d hidden sm:inline">
-              swipe →
+            <span className="text-[9px] font-mono tracking-wider text-arena-muted-l dark:text-arena-muted-d">
+              {PULSE_NOW.length} leagues
             </span>
           </div>
 
-          {/* Horizontal scroll on all viewports — slim pills, no card sprawl */}
-          <div
-            className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 snap-x snap-mandatory"
-            style={{ scrollbarWidth: 'none' }}
-          >
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2 sm:gap-3">
             {PULSE_NOW.map((p) => (
               <Link
                 key={p.href}
                 href={p.href}
-                className="group relative flex-shrink-0 snap-start flex items-center gap-2 px-3 py-2 rounded-full border border-arena-border-l dark:border-arena-border-d bg-arena-card dark:bg-arena-surface hover:border-arena-red hover:bg-arena-paper dark:hover:bg-arena-carbon transition min-h-[44px]"
+                className="group relative flex items-center gap-2 px-3 py-3 rounded-xl border border-arena-border-l dark:border-arena-border-d bg-arena-card dark:bg-arena-surface hover:border-arena-red hover:bg-arena-paper dark:hover:bg-arena-carbon focus:border-arena-red focus:outline-none focus:ring-2 focus:ring-arena-red/40 transition min-h-[60px]"
               >
                 {/* Holographic accent — only on active/live tiles */}
                 {p.live && (
                   <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-arena-red animate-arena-pulse-live shadow-[0_0_8px_rgba(220,38,38,0.7)]" />
                 )}
-                <span className="text-base flex-shrink-0" aria-hidden>{p.emoji}</span>
-                <div className="flex flex-col leading-tight">
-                  <span className="text-[12px] sm:text-[13px] font-black tracking-tight whitespace-nowrap group-hover:arena-hologram-text transition-colors">
+                <span className="text-xl flex-shrink-0" aria-hidden>{p.emoji}</span>
+                <div className="flex flex-col leading-tight min-w-0">
+                  <span className="text-[13px] font-black tracking-tight truncate group-hover:arena-hologram-text transition-colors">
                     {p.label}
                   </span>
-                  <span className={`text-[8px] font-mono uppercase tracking-[0.2em] ${
+                  <span className={`text-[8px] font-mono uppercase tracking-[0.2em] truncate ${
                     p.live ? 'text-arena-red' : p.accent === 'SOON' ? 'text-arena-muted-l dark:text-arena-muted-d opacity-60' : 'text-arena-orange'
                   }`}>
                     {p.accent}
