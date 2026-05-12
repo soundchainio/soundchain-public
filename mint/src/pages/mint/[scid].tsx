@@ -22,11 +22,11 @@ import { useRouter } from 'next/router'
 import { useAccount, useChainId, useSwitchChain, usePublicClient, useWalletClient } from 'wagmi'
 import { polygon } from 'wagmi/chains'
 import { parseScid } from 'lib/scid'
-import { CONTRACTS, NFT_EDITIONS_ABI, PLATFORM_FEE_DECIMAL, getFeeRecipient } from 'lib/contracts'
-import { decodeEventLog, parseEther } from 'viem'
+import { NFT_EDITIONS_ABI, PLATFORM_FEE_DECIMAL } from 'lib/contracts'
+import { getNftEditionsFor, getFeeRecipientFor, listSupportedChains, explorerTxUrl } from 'lib/chains'
+import { decodeEventLog } from 'viem'
 import { WalletRail } from 'components/WalletRail'
 
-const POLYGONSCAN_TX = (hash: string) => `https://polygonscan.com/tx/${hash}`
 
 type MintStep =
   | 'idle'
@@ -46,10 +46,22 @@ export default function MintBySCid() {
   const parsed = parseScid(scid)
 
   const { address, isConnected } = useAccount()
-  const chainId = useChainId()
+  const activeChainId = useChainId()
   const { switchChain } = useSwitchChain()
-  const publicClient = usePublicClient({ chainId: polygon.id })
-  const { data: walletClient } = useWalletClient({ chainId: polygon.id })
+
+  // Chain selection state — defaults to whatever the wallet's on, falls back
+  // to Polygon if disconnected.
+  const supportedChains = useMemo(() => listSupportedChains(), [])
+  const [selectedChainId, setSelectedChainId] = useState<number>(polygon.id)
+  const effectiveChainId = isConnected ? activeChainId : selectedChainId
+
+  const publicClient = usePublicClient({ chainId: effectiveChainId })
+  const { data: walletClient } = useWalletClient({ chainId: effectiveChainId })
+
+  const nftContract = useMemo(() => getNftEditionsFor(effectiveChainId), [effectiveChainId])
+  const feeRecipient = useMemo(() => getFeeRecipientFor(effectiveChainId), [effectiveChainId])
+  const activeChainMeta = supportedChains.find((c) => c.id === effectiveChainId)
+  const chainDeployed = !!nftContract
 
   const [quantity, setQuantity] = useState(10)
   const [royalty, setRoyalty] = useState(10)
@@ -61,8 +73,19 @@ export default function MintBySCid() {
   const [mintTx, setMintTx] = useState<string | null>(null)
   const [editionNumber, setEditionNumber] = useState<bigint | null>(null)
 
-  const onPolygon = chainId === polygon.id
   const busy = step !== 'idle' && step !== 'error' && step !== 'success'
+
+  async function pickChain(chainId: number) {
+    setSelectedChainId(chainId)
+    setError(null)
+    if (isConnected && activeChainId !== chainId) {
+      try {
+        await switchChain({ chainId })
+      } catch {
+        setError('Wallet rejected chain switch — switch manually in your wallet.')
+      }
+    }
+  }
 
   async function fetchTokenURI(): Promise<string> {
     setStep('fetching-meta')
@@ -84,11 +107,15 @@ export default function MintBySCid() {
       setError('Connect a wallet in the rail above first.')
       return
     }
-    if (!onPolygon) {
+    if (!chainDeployed || !nftContract) {
+      setError(`SC contract not deployed on ${activeChainMeta?.name || 'this chain'} yet — pick another chain.`)
+      return
+    }
+    if (activeChainId !== effectiveChainId) {
       try {
-        await switchChain({ chainId: polygon.id })
+        await switchChain({ chainId: effectiveChainId })
       } catch {
-        setError('Please switch the active wallet to Polygon mainnet.')
+        setError(`Please switch wallet to ${activeChainMeta?.name || 'the selected chain'}.`)
         return
       }
     }
@@ -101,27 +128,23 @@ export default function MintBySCid() {
       const uri = await fetchTokenURI()
       setTokenURI(uri)
 
-      // 0.05% platform fee — true 0.05% of estimated total mint gas cost.
-      // Estimates createEdition + safeMintToEditionQuantity, multiplies by
-      // current gasPrice, applies 5/10000 (= 0.05%). Recipient lives in env
-      // (NEXT_PUBLIC_FEE_RECIPIENT) — never in source.
-      const feeRecipient = getFeeRecipient()
+      // 0.05% platform fee — true 0.05% of estimated mint gas cost ON THE
+      // CURRENT CHAIN. publicClient.getGasPrice() returns the active chain's
+      // gas price (gwei on ETH, nAVAX on Avalanche, etc.) so the fee scales
+      // per-chain automatically. Fee is paid in the chain's native token.
       if (feeRecipient) {
         setStep('paying-fee')
 
-        // Estimate gas for both writes the user is about to sign
         const [createGas, mintGas, gasPrice] = await Promise.all([
           publicClient.estimateContractGas({
-            address: CONTRACTS.NFT_EDITIONS as `0x${string}`,
+            address: nftContract,
             abi: NFT_EDITIONS_ABI,
             functionName: 'createEdition',
             args: [BigInt(quantity), address, royalty],
             account: address,
           }),
-          // Edition number isn't known yet — use editionNumber=1 as a stand-in
-          // for estimation only. Gas is identical regardless of editionNumber.
           publicClient.estimateContractGas({
-            address: CONTRACTS.NFT_EDITIONS as `0x${string}`,
+            address: nftContract,
             abi: NFT_EDITIONS_ABI,
             functionName: 'safeMintToEditionQuantity',
             args: [address, uri, 1n, quantity],
@@ -131,7 +154,6 @@ export default function MintBySCid() {
         ])
 
         const totalGasCost = (createGas + mintGas) * gasPrice
-        // 0.05% = 5 / 10000 — bigint math, no rounding loss
         const feeWei = (totalGasCost * 5n) / 10000n
 
         const feeHash = await walletClient.sendTransaction({
@@ -145,7 +167,7 @@ export default function MintBySCid() {
 
       setStep('creating-edition')
       const createHash = await walletClient.writeContract({
-        address: CONTRACTS.NFT_EDITIONS as `0x${string}`,
+        address: nftContract,
         abi: NFT_EDITIONS_ABI,
         functionName: 'createEdition',
         args: [BigInt(quantity), address, royalty],
@@ -185,7 +207,7 @@ export default function MintBySCid() {
 
       setStep('minting')
       const mintHash = await walletClient.writeContract({
-        address: CONTRACTS.NFT_EDITIONS as `0x${string}`,
+        address: nftContract,
         abi: NFT_EDITIONS_ABI,
         functionName: 'safeMintToEditionQuantity',
         args: [address, uri, edNum, quantity],
@@ -204,6 +226,7 @@ export default function MintBySCid() {
             quantity,
             minter: address,
             mintTx: mintHash,
+            chainId: effectiveChainId,
           }),
         })
       } catch {
@@ -306,6 +329,42 @@ export default function MintBySCid() {
                   </label>
                 </div>
 
+                {/* Chain selector — every SC-supported chain. Greyed for not-yet-deployed. */}
+                <div>
+                  <div className="text-[9px] font-mono uppercase tracking-[0.3em] text-neon-cyan mb-2">
+                    CHAIN
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {supportedChains.map((c) => {
+                      const isActive = c.id === effectiveChainId
+                      return (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => pickChain(c.id)}
+                          disabled={busy}
+                          title={c.deployed ? `${c.name} (chainId ${c.id})` : `${c.name} — contract not deployed yet`}
+                          className={`text-[10px] font-mono px-2.5 py-1.5 border transition-colors ${
+                            isActive
+                              ? 'bg-neon-cyan/15 text-neon-cyan border-neon-cyan/60'
+                              : c.deployed
+                              ? 'border-white/10 text-gray-300 hover:border-neon-cyan/40 hover:text-neon-cyan'
+                              : 'border-white/5 text-gray-600 hover:border-gray-700'
+                          }`}
+                          style={{ clipPath: 'polygon(4px 0,100% 0,100% calc(100% - 4px),calc(100% - 4px) 100%,0 100%,0 4px)' }}
+                        >
+                          {c.deployed ? '◉' : '○'} {c.symbol}
+                        </button>
+                      )
+                    })}
+                  </div>
+                  {!chainDeployed && (
+                    <div className="text-[10px] text-amber-300/80 mt-2 font-mono">
+                      ◤ SC contract not deployed on {activeChainMeta?.name} yet — pick another chain
+                    </div>
+                  )}
+                </div>
+
                 <div className="grid grid-cols-3 gap-2 text-[9px] font-mono">
                   <div className="border-l-2 border-neon-cyan/50 pl-2">
                     <div className="uppercase tracking-[0.25em] text-gray-500">FEE</div>
@@ -316,29 +375,42 @@ export default function MintBySCid() {
                     <div className="text-neon-mint">3x</div>
                   </div>
                   <div className="border-l-2 border-neon-magenta/50 pl-2">
-                    <div className="uppercase tracking-[0.25em] text-gray-500">CHAIN</div>
-                    <div className="text-neon-magenta">137</div>
+                    <div className="uppercase tracking-[0.25em] text-gray-500">PAY IN</div>
+                    <div className="text-neon-magenta">{activeChainMeta?.symbol || 'POL'}</div>
                   </div>
                 </div>
 
                 <button
                   type="button"
                   onClick={handleMint}
-                  disabled={!isConnected || busy}
+                  disabled={!isConnected || busy || !chainDeployed}
                   className="btn-neon w-full text-xs"
                 >
                   {!isConnected
                     ? '◌ CONNECT WALLET TO MINT'
+                    : !chainDeployed
+                    ? `◌ ${activeChainMeta?.name?.toUpperCase()} NOT DEPLOYED`
                     : busy
                     ? labelForStep(step)
-                    : `◤ FORGE ${quantity} EDITION${quantity === 1 ? '' : 'S'}`}
+                    : `◤ FORGE ${quantity} EDITION${quantity === 1 ? '' : 'S'} ON ${activeChainMeta?.symbol}`}
                 </button>
 
-                {(createTx || mintTx) && (
+                {(feeTx || createTx || mintTx) && (
                   <div className="space-y-1.5 pt-2 border-t border-white/5">
+                    {feeTx && (
+                      <a
+                        href={explorerTxUrl(effectiveChainId, feeTx)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block text-[10px] text-neon-mint hover:text-white font-mono break-all transition-colors"
+                      >
+                        <span className="text-gray-600 uppercase tracking-widest">FEE → </span>
+                        {feeTx.slice(0, 10)}…{feeTx.slice(-8)}
+                      </a>
+                    )}
                     {createTx && (
                       <a
-                        href={POLYGONSCAN_TX(createTx)}
+                        href={explorerTxUrl(effectiveChainId, createTx)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="block text-[10px] text-neon-cyan hover:text-white font-mono break-all transition-colors"
@@ -349,7 +421,7 @@ export default function MintBySCid() {
                     )}
                     {mintTx && (
                       <a
-                        href={POLYGONSCAN_TX(mintTx)}
+                        href={explorerTxUrl(effectiveChainId, mintTx)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="block text-[10px] text-neon-magenta hover:text-white font-mono break-all transition-colors"

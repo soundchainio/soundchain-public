@@ -1,14 +1,15 @@
 /**
  * wagmi v2 + viem config for Mint.
  *
- * Polygon mainnet first-class (where OGUN + SC contracts live). Ethereum +
- * Base + Arbitrum + Optimism as multi-chain options (NFT buyers may sit on
- * any of those). ZetaChain reserved for cross-chain wagering later.
+ * Multi-chain: every SC-supported chain wired. Mint flow auto-uses whatever
+ * chain the user's wallet is on. Contract address resolution + per-chain
+ * fees handled by lib/chains.ts.
  */
 import { createConfig, http } from 'wagmi'
-import { polygon, mainnet, base, arbitrum, optimism } from 'wagmi/chains'
+import { polygon, mainnet, base, arbitrum, optimism, avalanche } from 'wagmi/chains'
+import { zetachain } from './chains'
 
-export const SUPPORTED_CHAINS = [polygon, mainnet, base, arbitrum, optimism] as const
+export const SUPPORTED_CHAINS = [polygon, mainnet, base, arbitrum, optimism, avalanche, zetachain] as const
 
 export const wagmiConfig = createConfig({
   chains: SUPPORTED_CHAINS,
@@ -18,6 +19,8 @@ export const wagmiConfig = createConfig({
     [base.id]: http(),
     [arbitrum.id]: http(),
     [optimism.id]: http(),
+    [avalanche.id]: http(),
+    [zetachain.id]: http('https://zetachain-mainnet.public.blastapi.io'),
   },
   ssr: true,
 })
