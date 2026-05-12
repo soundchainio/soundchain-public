@@ -1,5 +1,54 @@
 # CLAUDE.md - SoundChain Development Guide
 
+## 🏟️ SESSION: May 12, 2026 (Frank → Sarg, later — landing-pill audit) — EPL/MLS/MMA HUBS LIVE + BOXING WEIGHT-CLASS FILTER + TV LAYOUT (`1c672ba`)
+
+Frank: *"i was testing the new pill look on arena landing page i notice epl mls,boxing arent openeong any metadata. boxing has so many divisions and weight calsses thats a huge dope lift right there needed and maybe because world cup is about tibstart thats why eol and mls dong show anything? at least show something. and ufc/mma at least show up omcoming events. same for boxing . imagine arena on a tv screen bro!! if has to render better than it does now whoch shows mobile scale ratios and aspect ratios."*
+
+Four asks, one ship.
+
+### What shipped (`1c672ba`, +142/-156, 5 files)
+
+| Surface | Change |
+|---|---|
+| `/epl` | Rewired from a barebones hero+HighlightsStrip stub to use shared `SportHubTemplate` — same template NHL/NBA/MLB/NCAA use. Page now ships date-navigated scoreboard (live/upcoming/final fixtures), Premier League table (no group filter — single table), Premier League channel highlights. ESPN endpoint `soccer/eng.1` was already wired in `lib/espn.ts:72`. Off-season gaps graceful via the date picker — Frank can tap "Tomorrow" or pick a date and see future fixtures. |
+| `/mls` | Same template wiring, `soccer/usa.1` ESPN path. `standingsGroupFilter` set to `/eastern|western|conference/i` so the Eastern + Western conference tables render side-by-side on lg+ viewports. MLS season is mid-flight so this hub has live data RIGHT NOW. |
+| `/mma` | Same template wiring, `mma/ufc` ESPN path. UFC events render via the existing `GameCard` (fighter A vs fighter B is the same A-vs-B shape ESPN scoreboard returns). Upcoming events show up under the "Upcoming" bucket; recent results under "Final." UFC channel highlights below. |
+| `/boxing` | Added weight-class filter row above the fight cards. 17 canonical divisions (Minimumweight → Heavyweight) + an "Other" bucket. `divisionFor()` matches via longest-substring case-insensitive so "Super Welterweight" beats "Welterweight" and "WBC Heavyweight Title" → "Heavyweight." Filter pills only render for divisions that actually have fights (`divCounts.has(d)` gate) — no empty filter UI. Counts inline ("Heavyweight · 3"). Tap a pill → fights re-bucket within that division across live/upcoming/recent. |
+| `arena/src/components/SportHubTemplate.tsx` | TV-friendly layout pass on the shared template: hero text `text-3xl sm:text-5xl` → adds `lg:text-6xl xl:text-7xl`; padding `pt-10/sm:pt-14` → adds `lg:pt-20 xl:pt-24`; description `max-w-2xl` → `lg:max-w-3xl`; game grid `lg:grid-cols-3` → adds `xl:grid-cols-4 lg:gap-4`; standings grid `lg:grid-cols-2` → adds `xl:grid-cols-3`. Same `lg:/xl:` polish on boxing's hero + 3 fight-card grids + news grid (9 → 12 cards on xl). Frank's Fire TV (per memory `user-setup-livingroom-firetv.md`) should now render at 10-foot view without horizontal scroll, and the cards fan out instead of stacking. |
+
+### Architecture decisions (load-bearing)
+
+1. **Delegating to `SportHubTemplate` beats re-implementing per-sport.** EPL/MLS/MMA each went from 53-line barebones stubs to 12-line `<SportHubTemplate sport="X" />` calls. ~450 B per page (template-shared chunk). Future sports get the same lift for free — `fifa.world`, `uefa.champions`, etc are one-line additions to `lib/espn.ts:62-78` + a 12-line page.
+2. **Weight-class divisions are canonical + a fallback bucket, not free-text.** ESPN's `weightClass` strings are inconsistent ("Heavyweight," "WBC Welterweight Title," "Lightweight Championship") — canonical list maps them all to one of 17 known divisions, anything that doesn't match falls in "Other" so no fight goes missing from the filter UI. Longest-match-first ordering means "Super Welterweight" can't be misclassified as "Welterweight."
+3. **Filter pills derived from data, not hardcoded.** `divCounts.has(d)` filters the canonical list so pills only render for divisions with active fights. Empty divisions don't appear. When ESPN's boxing schedule is sparse (between PPVs), the user might see just 2-3 pills; when it's loaded, all 17 light up.
+4. **TV layout is additive `lg:/xl:` classes, never overrides.** Existing mobile/sm layouts unchanged. All 23 routes that use `SportHubTemplate` automatically benefit on TV-sized viewports (NHL, NBA, MLB, WNBA, NFL, NCAA, soccer, mma — anything wired through the template). Boxing got the same treatment standalone since it has its own page implementation.
+
+### Verified live
+
+- `arena.soundchain.io` HTTP 200, `age:0`, `last-modified: Tue, 12 May 2026 18:31:20 GMT`
+- `/epl`, `/mls`, `/mma` all HTTP 200 (was barebones stubs returning 200 too, but now ship actual data)
+- Build 19.78s clean, 25 routes prerendered, new template-delegated pages 450-459 B each
+- Deployment: `dpl_FvDuza5gwVNAndRSbNHtVvP7bsbA` (READY)
+
+### Bug #27 x12 (manual arena deploy STILL needed)
+
+Twelfth manual `cd arena && vercel --prod --yes` in a row. mint/ deploys cleanly via same command. The GitHub-webhook auto-deploy gap is arena-specific. NEXT arena session audit Vercel project's git integration / Production Branch / GitHub webhook config — no excuses.
+
+### Lessons
+
+1. **Always read the existing template surface before rewriting a page.** EPL/MLS/MMA were 53-line stubs because at the time they were written, `SportHubTemplate` either didn't exist or wasn't recognized. Today's NHL page at 19 lines proved the template was production-ready. Took two `grep`s to find `SportHubTemplate` and confirm; the rest was wiring.
+2. **TV layout pass via additive `lg:/xl:` classes lifts every shared-template page for free.** No per-page edits needed — one template edit fanned out to 23 routes. Frank's Fire TV ask becomes a one-commit answer when the surface uses a shared template.
+3. **Canonical division list > free-text filter UI.** Sports leagues love giving you free-text weight-class strings ("WBC Light Heavyweight Title"). A canonical list with longest-match-first lookup gives you stable filter pills regardless of how the upstream feed phrases the title.
+
+### Open follow-ups (carried over from prior session)
+
+- Per-sport native CDN video integration (NBA stats.nba.com videoeventsasset, MLB statsapi.mlb.com, NHL api-web.nhle.com) — banked but not shipped
+- Page-level cyberpunk neon-panel + hud-corners lifts on Hub + sport surfaces (foundation landed yesterday, page-level work is next ship)
+- Frank rotates the 5 leaked secrets in dashboards (Moltbook x3 agent keys + 1 claim token + Magic secret key)
+- Bug #27 audit on Vercel git integration (now x12 — really should be next session)
+
+---
+
 ## 🎯 SESSION: May 11, 2026 (Frank greenlit 0-8 → autonomous through all phases) — ALL 8 PHASES SHIPPED
 
 Frank's directive across two messages: *"evrything from phase 0-8 is greenlit. proceed without commentary from you using flow steps"* + *"i will not be able to answer your commentary even for pushes, proceed using flow steps per each phase, i will allow you to push after each phase is completed, push at will til this is DONE"*. Pushed in sequence on `main`:
