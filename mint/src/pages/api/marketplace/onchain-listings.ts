@@ -44,7 +44,10 @@ const ITEM_SOLD_EVENT = parseAbiItem(
 let cache: { ts: number; data: any } | null = null
 const CACHE_TTL_MS = 60_000
 
-const client = createPublicClient({ chain: polygon, transport: http('https://polygon-rpc.com') })
+// LlamaNodes RPC — better rate limits than polygon-rpc.com per CLAUDE.md
+// Jan 26 lesson. eth_getLogs works reliably here at 9k-block chunks.
+const POLYGON_RPC = process.env.POLYGON_RPC_URL || 'https://polygon.llamarpc.com'
+const client = createPublicClient({ chain: polygon, transport: http(POLYGON_RPC) })
 
 // Polygon eth_getLogs limit
 const CHUNK = 9000n
