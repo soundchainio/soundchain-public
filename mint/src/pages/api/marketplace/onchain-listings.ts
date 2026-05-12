@@ -44,10 +44,53 @@ const ITEM_SOLD_EVENT = parseAbiItem(
 let cache: { ts: number; data: any } | null = null
 const CACHE_TTL_MS = 60_000
 
-// LlamaNodes RPC — better rate limits than polygon-rpc.com per CLAUDE.md
-// Jan 26 lesson. eth_getLogs works reliably here at 9k-block chunks.
-const POLYGON_RPC = process.env.POLYGON_RPC_URL || 'https://polygon.llamarpc.com'
-const client = createPublicClient({ chain: polygon, transport: http(POLYGON_RPC) })
+// Multi-RPC fallback — public endpoints rate-limit Vercel serverless IPs
+// aggressively. Override via POLYGON_RPC_URL on Vercel env when you have
+// an authenticated endpoint (Alchemy / QuickNode / Infura).
+const RPC_FALLBACKS = [
+  process.env.POLYGON_RPC_URL,
+  'https://polygon-bor-rpc.publicnode.com',
+  'https://polygon.drpc.org',
+  'https://polygon-mainnet.public.blastapi.io',
+  'https://polygon.llamarpc.com',
+  'https://rpc.ankr.com/polygon',
+  'https://polygon-rpc.com',
+].filter((u): u is string => !!u)
+
+function makeClient(rpcUrl: string) {
+  return createPublicClient({
+    chain: polygon,
+    transport: http(rpcUrl, { timeout: 8000, retryCount: 0 }),
+  })
+}
+
+let activeClient = makeClient(RPC_FALLBACKS[0])
+let activeRpcIdx = 0
+
+/** Call an async fn against the active RPC; rotate to next on transport error. */
+async function withRpcFailover<T>(op: (c: ReturnType<typeof makeClient>) => Promise<T>): Promise<T> {
+  let lastErr: any = null
+  for (let i = 0; i < RPC_FALLBACKS.length; i++) {
+    const tryIdx = (activeRpcIdx + i) % RPC_FALLBACKS.length
+    const c = i === 0 ? activeClient : makeClient(RPC_FALLBACKS[tryIdx])
+    try {
+      const out = await op(c)
+      // success — stick on this RPC
+      if (i !== 0) {
+        activeClient = c
+        activeRpcIdx = tryIdx
+      }
+      return out
+    } catch (err: any) {
+      lastErr = err
+      const msg = String(err?.message || err?.shortMessage || '').toLowerCase()
+      const transport = /http|timeout|fetch|network|rate|429|503|502|socket|econnreset/i.test(msg)
+      if (!transport) throw err // real revert / decode error, don't rotate
+      // else: try next RPC
+    }
+  }
+  throw lastErr || new Error('all RPC fallbacks failed')
+}
 
 // Polygon eth_getLogs limit
 const CHUNK = 9000n
@@ -69,29 +112,29 @@ async function scanWindow(fromBlock: bigint, toBlock: bigint) {
   for (let start = fromBlock; start <= toBlock; start += CHUNK + 1n) {
     const end = start + CHUNK > toBlock ? toBlock : start + CHUNK
 
-    // Parallelize the 3 event-type pulls for this chunk
+    // Parallelize the 3 event-type pulls per chunk, each w/ RPC failover
     const [listedLogs, cancelLogs, soldLogs] = await Promise.all([
-      client.getLogs({
+      withRpcFailover((c) => c.getLogs({
         address: MARKETPLACE_EDITIONS,
         event: ITEM_LISTED_EVENT,
         fromBlock: start,
         toBlock: end,
         args: { nft: NFT_V2 },
-      }),
-      client.getLogs({
+      })),
+      withRpcFailover((c) => c.getLogs({
         address: MARKETPLACE_EDITIONS,
         event: ITEM_CANCELED_EVENT,
         fromBlock: start,
         toBlock: end,
         args: { nft: NFT_V2 },
-      }),
-      client.getLogs({
+      })),
+      withRpcFailover((c) => c.getLogs({
         address: MARKETPLACE_EDITIONS,
         event: ITEM_SOLD_EVENT,
         fromBlock: start,
         toBlock: end,
         args: { nft: NFT_V2 },
-      }),
+      })),
     ])
 
     for (const log of listedLogs) {
@@ -140,7 +183,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const latest = await client.getBlockNumber()
+    const latest = await withRpcFailover((c) => c.getBlockNumber())
     // Look back ~6 days worth of Polygon blocks (~2s blocks → 250k blocks).
     // Override via ?blocks= query for testing.
     const lookback = BigInt(Math.max(1, Math.min(500_000, parseInt(String(req.query.blocks || ''), 10) || 250_000)))
