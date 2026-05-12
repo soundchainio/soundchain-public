@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
-import { openConnectModal, initAppKit } from 'lib/appkit'
+import { useAccount, useConnect, useDisconnect } from 'wagmi'
 
 const TICKER_ITEMS = [
   'POLYGON · CHAIN 137',
@@ -13,20 +13,32 @@ const TICKER_ITEMS = [
 ]
 
 export default function MintLanding() {
-  const [connecting, setConnecting] = useState(false)
   const [msg, setMsg] = useState<string | null>(null)
+  const { address, isConnected } = useAccount()
+  const { connect, connectors, isPending: connecting, error: connectError } = useConnect()
+  const { disconnect } = useDisconnect()
+
+  // Prefer injected wallet (MetaMask, Coinbase Wallet, Rainbow extension);
+  // fall back to whatever else wagmi has wired (WalletConnect mobile etc).
+  const primaryConnector = useMemo(
+    () => connectors.find((c) => c.id === 'injected') || connectors[0],
+    [connectors]
+  )
 
   async function handleConnect() {
-    setConnecting(true)
     setMsg(null)
+    if (isConnected) {
+      disconnect()
+      return
+    }
+    if (!primaryConnector) {
+      setMsg('No wallet detected — install MetaMask, Coinbase Wallet, or Rainbow.')
+      return
+    }
     try {
-      await initAppKit()
-      const opened = openConnectModal()
-      if (!opened) {
-        setMsg('// reown projectId pending — wallet rail offline')
-      }
-    } finally {
-      setConnecting(false)
+      await connect({ connector: primaryConnector })
+    } catch (err: any) {
+      setMsg(err?.shortMessage || err?.message || 'Wallet connection cancelled.')
     }
   }
 
@@ -62,8 +74,9 @@ export default function MintLanding() {
               onClick={handleConnect}
               disabled={connecting}
               className="btn-neon text-[11px]"
+              title={isConnected ? `Connected ${address?.slice(0, 6)}…${address?.slice(-4)}` : 'Connect wallet'}
             >
-              {connecting ? 'LINKING…' : 'CONNECT'}
+              {connecting ? 'LINKING…' : isConnected ? `${address?.slice(0, 6)}…${address?.slice(-4)}` : 'CONNECT'}
             </button>
           </div>
         </nav>
@@ -107,7 +120,11 @@ export default function MintLanding() {
                 disabled={connecting}
                 className="btn-neon"
               >
-                {connecting ? '◌ LINKING…' : '◤ CONNECT WALLET'}
+                {connecting
+                  ? '◌ LINKING…'
+                  : isConnected
+                  ? `◉ ${address?.slice(0, 6)}…${address?.slice(-4)} · DISCONNECT`
+                  : '◤ CONNECT WALLET'}
               </button>
               <Link href="/marketplace" className="btn-ghost">
                 ▣ ENTER MARKETPLACE
