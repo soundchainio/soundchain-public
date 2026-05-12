@@ -122,8 +122,8 @@ export function SportHubTemplate(props: SportHubTemplateProps) {
       <ArenaShell>
         {/* Hero */}
         <section className="arena-hero-light border-b border-arena-border-l dark:border-arena-border-d">
-          <div className="max-w-7xl mx-auto px-4 pt-10 pb-8 sm:pt-14 sm:pb-12">
-            <div className="flex items-center gap-2 text-[10px] font-mono tracking-[0.4em] text-arena-orange mb-3">
+          <div className="max-w-7xl mx-auto px-4 pt-10 pb-8 sm:pt-14 sm:pb-12 lg:pt-20 lg:pb-16 xl:pt-24 xl:pb-20">
+            <div className="flex items-center gap-2 text-[10px] lg:text-xs font-mono tracking-[0.4em] text-arena-orange mb-3">
               {liveGames.length > 0 && <span className="arena-live-dot" />}
               <span>{hologramLabel}</span>
               {liveGames.length > 0 && (
@@ -132,10 +132,10 @@ export function SportHubTemplate(props: SportHubTemplateProps) {
                 </span>
               )}
             </div>
-            <h1 className="text-3xl sm:text-5xl font-black leading-tight mb-2">
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-black leading-tight mb-2">
               <span className="arena-hologram-text">{title}</span>
             </h1>
-            <p className="text-sm sm:text-base text-arena-muted-l dark:text-arena-muted-d max-w-2xl">
+            <p className="text-sm sm:text-base lg:text-lg text-arena-muted-l dark:text-arena-muted-d max-w-2xl lg:max-w-3xl">
               {pageDescription}
             </p>
           </div>
@@ -227,7 +227,7 @@ export function SportHubTemplate(props: SportHubTemplateProps) {
               <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-arena-red mb-2 flex items-center gap-2">
                 <span className="arena-live-dot" /> Live now
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 lg:gap-4">
                 {liveGames.map((g) => <GameCard key={g.id} game={g} onSelect={setSelectedGame} />)}
               </div>
             </div>
@@ -238,7 +238,7 @@ export function SportHubTemplate(props: SportHubTemplateProps) {
               <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-arena-orange mb-2">
                 Upcoming
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 lg:gap-4">
                 {upcomingGames.map((g) => <GameCard key={g.id} game={g} onSelect={setSelectedGame} />)}
               </div>
             </div>
@@ -249,7 +249,7 @@ export function SportHubTemplate(props: SportHubTemplateProps) {
               <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-arena-muted-l dark:text-arena-muted-d mb-2">
                 Final
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 lg:gap-4">
                 {finalGames.map((g) => <GameCard key={g.id} game={g} onSelect={setSelectedGame} />)}
               </div>
             </div>
@@ -291,7 +291,7 @@ export function SportHubTemplate(props: SportHubTemplateProps) {
             <h2 className="text-xs font-black uppercase tracking-[0.3em] text-arena-muted-l dark:text-arena-muted-d mb-4">
               Standings
             </h2>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
               {standings.map((g) => (
                 <StandingsTable
                   key={g.name}

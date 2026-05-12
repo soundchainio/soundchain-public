@@ -107,11 +107,46 @@ function FightCard({ fight }: { fight: BoxingFight }) {
   )
 }
 
+// Canonical boxing divisions, heaviest → lightest. Anything the ESPN feed
+// returns that doesn't map cleanly falls under "Other" so no fights get
+// orphaned from the filter. Match is substring + case-insensitive so we
+// catch titles like "WBC Heavyweight Title" → "Heavyweight".
+const WEIGHT_DIVISIONS = [
+  'Heavyweight',
+  'Cruiserweight',
+  'Light Heavyweight',
+  'Super Middleweight',
+  'Middleweight',
+  'Super Welterweight',
+  'Welterweight',
+  'Super Lightweight',
+  'Lightweight',
+  'Super Featherweight',
+  'Featherweight',
+  'Super Bantamweight',
+  'Bantamweight',
+  'Super Flyweight',
+  'Flyweight',
+  'Light Flyweight',
+  'Minimumweight',
+] as const
+
+function divisionFor(weightClass: string | undefined): string {
+  if (!weightClass) return 'Other'
+  const lc = weightClass.toLowerCase()
+  // Longest match first so "Super Welterweight" beats "Welterweight"
+  for (const d of WEIGHT_DIVISIONS) {
+    if (lc.includes(d.toLowerCase())) return d
+  }
+  return 'Other'
+}
+
 export default function BoxingPage() {
   const [fights, setFights] = useState<BoxingFight[]>([])
   const [news, setNews] = useState<BoxingNewsItem[]>([])
   const [loaded, setLoaded] = useState(false)
   const [err, setErr] = useState<string | null>(null)
+  const [divFilter, setDivFilter] = useState<string>('ALL')
 
   useEffect(() => {
     let cancelled = false
@@ -139,7 +174,20 @@ export default function BoxingPage() {
     return () => { cancelled = true; clearInterval(id) }
   }, [])
 
-  const { live, upcoming, recent } = bucketFights(fights)
+  // Count fights per division (only divisions that actually have fights show
+  // as pills — no empty filters)
+  const divCounts = new Map<string, number>()
+  for (const f of fights) {
+    const d = divisionFor(f.weightClass)
+    divCounts.set(d, (divCounts.get(d) ?? 0) + 1)
+  }
+  const availableDivs = [...WEIGHT_DIVISIONS, 'Other'].filter((d) => divCounts.has(d))
+
+  const filteredFights = divFilter === 'ALL'
+    ? fights
+    : fights.filter((f) => divisionFor(f.weightClass) === divFilter)
+
+  const { live, upcoming, recent } = bucketFights(filteredFights)
 
   return (
     <>
@@ -151,8 +199,8 @@ export default function BoxingPage() {
       <ArenaShell>
         {/* Hero */}
         <section className="arena-hero-light border-b border-arena-border-l dark:border-arena-border-d">
-          <div className="max-w-7xl mx-auto px-4 pt-10 pb-8 sm:pt-14 sm:pb-12">
-            <div className="flex items-center gap-2 text-[10px] font-mono tracking-[0.4em] text-arena-orange mb-3">
+          <div className="max-w-7xl mx-auto px-4 pt-10 pb-8 sm:pt-14 sm:pb-12 lg:pt-20 lg:pb-16 xl:pt-24 xl:pb-20">
+            <div className="flex items-center gap-2 text-[10px] lg:text-xs font-mono tracking-[0.4em] text-arena-orange mb-3">
               {live.length > 0 && <span className="arena-live-dot" />}
               <span>BOXING · FIGHT NIGHT</span>
               {live.length > 0 && (
@@ -161,14 +209,58 @@ export default function BoxingPage() {
                 </span>
               )}
             </div>
-            <h1 className="text-3xl sm:text-5xl font-black leading-tight mb-2">
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-black leading-tight mb-2">
               <span className="arena-hologram-text">Boxing</span>
             </h1>
-            <p className="text-sm sm:text-base text-arena-muted-l dark:text-arena-muted-d max-w-2xl">
+            <p className="text-sm sm:text-base lg:text-lg text-arena-muted-l dark:text-arena-muted-d max-w-2xl lg:max-w-3xl">
               Fight cards, weight-class watch, and highlights from Top Rank, PBC, Matchroom and DAZN — auto-refreshed.
             </p>
           </div>
         </section>
+
+        {/* Weight-class filter — only renders pills for divisions that actually have fights */}
+        {availableDivs.length > 0 && (
+          <section className="max-w-7xl mx-auto px-4 pt-6 sm:pt-8">
+            <div className="flex items-center gap-2 mb-3">
+              <h2 className="text-[10px] lg:text-xs font-black uppercase tracking-[0.3em] text-arena-muted-l dark:text-arena-muted-d">
+                Weight Classes
+              </h2>
+              <span className="text-[10px] font-mono text-arena-muted-l dark:text-arena-muted-d">
+                {availableDivs.length} division{availableDivs.length === 1 ? '' : 's'}
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setDivFilter('ALL')}
+                className={`inline-flex items-center gap-1 px-3 py-2 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider border transition min-h-[36px] ${
+                  divFilter === 'ALL'
+                    ? 'bg-arena-red text-white border-arena-red shadow-sm'
+                    : 'border-arena-border-l dark:border-arena-border-d text-arena-muted-l dark:text-arena-muted-d hover:border-arena-red'
+                }`}
+              >
+                All · {fights.length}
+              </button>
+              {availableDivs.map((d) => {
+                const isActive = divFilter === d
+                return (
+                  <button
+                    key={d}
+                    type="button"
+                    onClick={() => setDivFilter(d)}
+                    className={`inline-flex items-center gap-1 px-3 py-2 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider border transition min-h-[36px] ${
+                      isActive
+                        ? 'bg-arena-red text-white border-arena-red shadow-sm'
+                        : 'border-arena-border-l dark:border-arena-border-d text-arena-muted-l dark:text-arena-muted-d hover:border-arena-red'
+                    }`}
+                  >
+                    {d} · {divCounts.get(d)}
+                  </button>
+                )
+              })}
+            </div>
+          </section>
+        )}
 
         {/* Live + upcoming + recent */}
         <section className="max-w-7xl mx-auto px-4 py-8 sm:py-10 space-y-8">
@@ -191,7 +283,7 @@ export default function BoxingPage() {
               <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-arena-red mb-3 flex items-center gap-2">
                 <span className="arena-live-dot" /> Live now
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 lg:gap-4">
                 {live.map((f) => <FightCard key={f.id} fight={f} />)}
               </div>
             </div>
@@ -200,7 +292,7 @@ export default function BoxingPage() {
           {upcoming.length > 0 && (
             <div>
               <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-arena-orange mb-3">Upcoming</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 lg:gap-4">
                 {upcoming.map((f) => <FightCard key={f.id} fight={f} />)}
               </div>
             </div>
@@ -209,7 +301,7 @@ export default function BoxingPage() {
           {recent.length > 0 && (
             <div>
               <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-arena-muted-l dark:text-arena-muted-d mb-3">Recent</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 lg:gap-4">
                 {recent.map((f) => <FightCard key={f.id} fight={f} />)}
               </div>
             </div>
@@ -235,8 +327,8 @@ export default function BoxingPage() {
             <h2 className="text-xs font-black uppercase tracking-[0.3em] text-arena-muted-l dark:text-arena-muted-d mb-4 flex items-center gap-2">
               <Newspaper className="w-3.5 h-3.5" /> News
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {news.slice(0, 9).map((n) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 lg:gap-4">
+              {news.slice(0, 12).map((n) => (
                 <a
                   key={n.id}
                   href={n.url}
