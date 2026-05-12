@@ -8,11 +8,11 @@
  *
  * Resolution order:
  *   1. SC's /api/marketplace/listings — active marketplace listings (Polygon
- *      MarketplaceEditions contract). Today this collection is sparsely
- *      populated, so step 2 usually fires.
+ *      MarketplaceEditions contract). Grouped by edition: one card per edition
+ *      with floor price + listed/total fraction. Today this collection is
+ *      sparsely populated, so step 2 usually fires.
  *   2. SC's /api/tracks/explore — minted tracks with on-chain nftData, used as
- *      the browse-mode fallback so users can discover OGUN NFTs even when no
- *      active marketplace listings exist.
+ *      the browse-mode fallback. Each track = one edition = one card.
  *
  * When MONGODB_URI is provisioned on the mint Vercel project, this endpoint
  * will swap to a direct Atlas read against `soundchain.listingitems` +
@@ -23,15 +23,35 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 
 const SC_BASE = 'https://soundchain.io'
 
+export type PriceToken = 'POL' | 'OGUN' | 'ETH' | 'USDC' | 'USDT' | 'LINK' | 'AVAX'
+
 export interface ListingPreview {
-  id: string
+  id: string                       // track id or first listing id (used as detail-page key)
   tokenId: string
   title?: string
   artist?: string
   coverArtUrl?: string
   audioUrl?: string
-  priceLabel?: string
+  price?: number                   // numeric floor price (display units, not wei)
+  priceToken?: PriceToken          // currency symbol on the price
+  editionSize?: number             // total edition supply (1 for 1/1s)
+  editionListed?: number           // count actively listed for sale right now
   href?: string
+}
+
+// SC's saleType → token symbol mapping. Reasonable defaults; we treat anything
+// unrecognized as POL since that's the mint app's primary chain native.
+function tokenFromSaleType(saleType?: string | null, isPaymentOGUN?: boolean): PriceToken {
+  if (isPaymentOGUN) return 'OGUN'
+  if (!saleType) return 'POL'
+  const s = String(saleType).toUpperCase()
+  if (s.includes('OGUN')) return 'OGUN'
+  if (s.includes('USDC')) return 'USDC'
+  if (s.includes('USDT')) return 'USDT'
+  if (s.includes('ETH')) return 'ETH'
+  if (s.includes('LINK')) return 'LINK'
+  if (s.includes('AVAX')) return 'AVAX'
+  return 'POL'
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -40,30 +60,56 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const limit = Math.min(parseInt(req.query.limit as string) || 24, 100)
 
   try {
-    const listingsRes = await fetch(`${SC_BASE}/api/marketplace/listings?limit=${limit}`, {
+    const listingsRes = await fetch(`${SC_BASE}/api/marketplace/listings?limit=${limit * 4}`, {
       headers: { 'User-Agent': 'soundchain-mint' },
     })
     const listingsData = listingsRes.ok ? await listingsRes.json() : { nodes: [] }
     const nodes = Array.isArray(listingsData.nodes) ? listingsData.nodes : []
 
     if (nodes.length > 0) {
-      const listings: ListingPreview[] = nodes.map((l: any) => {
-        const isOgun = !!l.isPaymentOGUN
-        const price = typeof l.pricePerItemToShow === 'number'
-          ? l.pricePerItemToShow
-          : l.pricePerItem
-        const priceLabel = price != null
-          ? `${Number(price).toLocaleString(undefined, { maximumFractionDigits: 4 })} ${isOgun ? 'OGUN' : 'POL'}`
-          : undefined
+      // Group by edition — multiple per-token listings of the same edition collapse
+      // into a single card with floor price and "X/N listed" fraction.
+      // Group key prefers track.id (canonical), falls back to track.trackEditionId,
+      // then NFT contract+tokenId as a last resort.
+      const groups = new Map<string, { rep: any; listings: any[] }>()
+      for (const l of nodes) {
+        const key = l.track?.id || l.track?.trackEditionId || `${l.nftAddress}-${l.tokenId}`
+        if (!key) continue
+        const existing = groups.get(key)
+        if (existing) existing.listings.push(l)
+        else groups.set(key, { rep: l, listings: [l] })
+      }
+
+      const listings: ListingPreview[] = Array.from(groups.values()).slice(0, limit).map(({ rep, listings: groupListings }) => {
+        // Floor price across the group, in the dominant payment token
+        let floorPrice: number | undefined
+        let priceToken: PriceToken | undefined
+        for (const l of groupListings) {
+          const price = typeof l.pricePerItemToShow === 'number'
+            ? l.pricePerItemToShow
+            : (typeof l.pricePerItem === 'number' ? l.pricePerItem : undefined)
+          if (price == null) continue
+          if (floorPrice == null || price < floorPrice) {
+            floorPrice = price
+            priceToken = tokenFromSaleType(l.saleType, l.isPaymentOGUN)
+          }
+        }
+
+        const editionSize = rep.track?.editionSize || undefined
+        const editionListed = groupListings.length
+
         return {
-          id: l.id,
-          tokenId: l.tokenId != null ? String(l.tokenId) : '',
-          title: l.track?.title,
-          artist: l.track?.artist,
-          coverArtUrl: l.track?.artworkUrl,
-          audioUrl: l.track?.playbackUrl || l.track?.assetUrl,
-          priceLabel,
-          href: `/marketplace/${l.id}`,
+          id: rep.track?.id || rep.id,
+          tokenId: rep.tokenId != null ? String(rep.tokenId) : '',
+          title: rep.track?.title,
+          artist: rep.track?.artist,
+          coverArtUrl: rep.track?.artworkUrl,
+          audioUrl: rep.track?.playbackUrl || rep.track?.assetUrl,
+          price: floorPrice,
+          priceToken,
+          editionSize,
+          editionListed,
+          href: `/marketplace/${rep.track?.id || rep.id}`,
         }
       })
       res.setHeader('Cache-Control', 's-maxage=30, stale-while-revalidate=60')
@@ -83,9 +129,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .filter((t: any) => t.nftData)
       .slice(0, limit)
       .map((t: any) => {
-        const editionLabel = t.editionSize
-          ? `Edition of ${t.editionSize}`
-          : 'OGUN NFT'
+        const price = typeof t.price === 'number' ? t.price : undefined
+        const priceToken: PriceToken | undefined = price != null
+          ? tokenFromSaleType(t.saleType)
+          : undefined
+        const editionSize = typeof t.editionSize === 'number' && t.editionSize > 0
+          ? t.editionSize
+          : 1
+        const editionListed = typeof t.listingCount === 'number' ? t.listingCount : 0
+
         return {
           id: t.id,
           tokenId: String(t.nftData?.tokenId ?? ''),
@@ -93,7 +145,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           artist: t.artist,
           coverArtUrl: t.artworkUrl,
           audioUrl: t.playbackUrl || t.assetUrl || t.audioUrl,
-          priceLabel: editionLabel,
+          price,
+          priceToken,
+          editionSize,
+          editionListed,
           href: `/marketplace/${t.id}`,
         }
       })

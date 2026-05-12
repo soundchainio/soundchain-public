@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
 
+type PriceToken = 'POL' | 'OGUN' | 'ETH' | 'USDC' | 'USDT' | 'LINK' | 'AVAX'
+
 interface ListingPreview {
   id: string
   tokenId: string
@@ -9,10 +11,20 @@ interface ListingPreview {
   artist?: string
   coverArtUrl?: string
   audioUrl?: string
-  priceLabel?: string
-  priceWei?: string         // when sourced from active listings (POL or OGUN units)
-  priceToken?: 'POL' | 'OGUN' | 'EDITION'
+  price?: number               // numeric floor price (display units)
+  priceToken?: PriceToken      // currency symbol attached to price
+  editionSize?: number         // total edition supply (1 for 1/1s)
+  editionListed?: number       // how many of the edition are listed for sale
   href?: string
+}
+
+// Compact price formatter — keeps cards tight. 1234.5678 → "1.23K", 0.0042 → "0.004"
+function formatPrice(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M`
+  if (n >= 1_000) return `${(n / 1_000).toFixed(2)}K`
+  if (n >= 1) return n.toFixed(2)
+  if (n >= 0.01) return n.toFixed(3)
+  return n.toFixed(4)
 }
 
 type Source = 'listings' | 'browse' | null
@@ -350,17 +362,32 @@ function NftChip({
           <div className="absolute inset-0 border-2 border-neon-cyan animate-pulse pointer-events-none" />
         )}
       </div>
-      <div className="px-1.5 py-1 flex-1 flex flex-col justify-between">
+      <div className="px-1.5 py-1 flex-1 flex flex-col justify-between gap-0.5">
         <div className="text-[10px] sm:text-[11px] font-semibold text-white truncate leading-tight">
           {listing.title || `Token #${listing.tokenId}`}
         </div>
-        <div className="flex items-center justify-between gap-1 mt-0.5">
-          <span className="text-[9px] text-gray-500 truncate flex-1 leading-tight">
-            {listing.artist || '—'}
-          </span>
-          {listing.priceLabel && (
-            <span className="text-[9px] font-mono text-neon-cyan tracking-wide leading-tight flex-shrink-0">
-              {listing.priceLabel.length > 12 ? listing.priceLabel.slice(0, 12) : listing.priceLabel}
+        <div className="text-[9px] text-gray-500 truncate leading-tight">
+          {listing.artist || '—'}
+        </div>
+        {/* Price + edition fraction strip — always renders so cards have a consistent shape */}
+        <div className="flex items-center justify-between gap-1 mt-0.5 font-mono leading-none">
+          {/* Price (when set) — token symbol always attached */}
+          {listing.price != null && listing.priceToken ? (
+            <span className="text-[10px] text-neon-cyan tracking-wide tabular-nums truncate">
+              {formatPrice(listing.price)} <span className="text-[8px] text-neon-cyan/70">{listing.priceToken}</span>
+            </span>
+          ) : (
+            <span className="text-[9px] text-gray-600 uppercase tracking-widest">—</span>
+          )}
+          {/* Edition fraction — X/N. Editions of 1 render as "1/1" so the
+              card shape stays consistent across 1/1s and multi-editions. */}
+          {listing.editionSize != null && (
+            <span className={`text-[9px] tabular-nums flex-shrink-0 ${
+              listing.editionSize > 1 ? 'text-neon-magenta' : 'text-gray-500'
+            }`}>
+              {listing.editionListed != null && listing.editionListed > 0
+                ? `${listing.editionListed}/${listing.editionSize}`
+                : `1/${listing.editionSize}`}
             </span>
           )}
         </div>
