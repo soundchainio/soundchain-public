@@ -88,7 +88,7 @@ export function WalletRail() {
         <span className="hud-corner hud-corner-tr" />
         <span className="hud-corner hud-corner-bl" />
         <span className="hud-corner hud-corner-br" />
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-col gap-3">
           <div className="min-w-0">
             <div className="text-[9px] font-mono uppercase tracking-[0.3em] text-neon-cyan mb-1">
               WALLET RAIL · IDLE
@@ -97,14 +97,22 @@ export function WalletRail() {
               No wallets connected. Mint flow needs at least one signer on Polygon.
             </p>
           </div>
-          <button
-            type="button"
-            disabled={connecting || !addable[0]}
-            onClick={() => addable[0] && connect({ connector: addable[0] })}
-            className="btn-neon text-[10px] flex-shrink-0"
-          >
-            {connecting ? 'LINK…' : '◤ CONNECT'}
-          </button>
+          <div className="grid grid-cols-2 gap-1.5">
+            {connectors.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                disabled={connecting}
+                onClick={() => connect({ connector: c })}
+                className="btn-neon text-[10px] flex items-center justify-center gap-1.5 min-h-[44px]"
+              >
+                {connecting ? 'LINK…' : `◤ ${(c.name || c.id).toUpperCase()}`}
+              </button>
+            ))}
+          </div>
+          <p className="text-[9px] font-mono uppercase tracking-widest text-gray-600 text-center">
+            walletconnect → mobile wallet apps via qr / deep-link
+          </p>
         </div>
       </div>
     )
