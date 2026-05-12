@@ -36,6 +36,7 @@ export interface ListingPreview {
   priceToken?: PriceToken          // currency symbol on the price
   editionSize?: number             // total edition supply (1 for 1/1s)
   editionListed?: number           // count actively listed for sale right now
+  forSale?: boolean                // true = active marketplace listing, false = minted-only
   href?: string
 }
 
@@ -60,74 +61,69 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const limit = Math.min(parseInt(req.query.limit as string) || 24, 100)
 
   try {
-    const listingsRes = await fetch(`${SC_BASE}/api/marketplace/listings?limit=${limit * 4}`, {
-      headers: { 'User-Agent': 'soundchain-mint' },
-    })
-    const listingsData = listingsRes.ok ? await listingsRes.json() : { nodes: [] }
+    // Fetch BOTH sources in parallel. Active listings pin to the top of the
+    // merged feed (holographic-bordered in the UI) and every minted-but-not-
+    // listed NFT shows up underneath. Dedup is by track.id so a track with an
+    // active listing doesn't double-render as both for-sale and browse.
+    const [listingsRes, exploreRes] = await Promise.all([
+      fetch(`${SC_BASE}/api/marketplace/listings?limit=${limit * 4}`, {
+        headers: { 'User-Agent': 'soundchain-mint' },
+      }).catch(() => null),
+      fetch(`${SC_BASE}/api/tracks/explore?sort=popular&limit=${limit * 2}`, {
+        headers: { 'User-Agent': 'soundchain-mint' },
+      }).catch(() => null),
+    ])
+
+    const listingsData = listingsRes?.ok ? await listingsRes.json() : { nodes: [] }
+    const exploreData = exploreRes?.ok ? await exploreRes.json() : { nodes: [] }
     const nodes = Array.isArray(listingsData.nodes) ? listingsData.nodes : []
-
-    if (nodes.length > 0) {
-      // Group by edition — multiple per-token listings of the same edition collapse
-      // into a single card with floor price and "X/N listed" fraction.
-      // Group key prefers track.id (canonical), falls back to track.trackEditionId,
-      // then NFT contract+tokenId as a last resort.
-      const groups = new Map<string, { rep: any; listings: any[] }>()
-      for (const l of nodes) {
-        const key = l.track?.id || l.track?.trackEditionId || `${l.nftAddress}-${l.tokenId}`
-        if (!key) continue
-        const existing = groups.get(key)
-        if (existing) existing.listings.push(l)
-        else groups.set(key, { rep: l, listings: [l] })
-      }
-
-      const listings: ListingPreview[] = Array.from(groups.values()).slice(0, limit).map(({ rep, listings: groupListings }) => {
-        // Floor price across the group, in the dominant payment token
-        let floorPrice: number | undefined
-        let priceToken: PriceToken | undefined
-        for (const l of groupListings) {
-          const price = typeof l.pricePerItemToShow === 'number'
-            ? l.pricePerItemToShow
-            : (typeof l.pricePerItem === 'number' ? l.pricePerItem : undefined)
-          if (price == null) continue
-          if (floorPrice == null || price < floorPrice) {
-            floorPrice = price
-            priceToken = tokenFromSaleType(l.saleType, l.isPaymentOGUN)
-          }
-        }
-
-        const editionSize = rep.track?.editionSize || undefined
-        const editionListed = groupListings.length
-
-        return {
-          id: rep.track?.id || rep.id,
-          tokenId: rep.tokenId != null ? String(rep.tokenId) : '',
-          title: rep.track?.title,
-          artist: rep.track?.artist,
-          coverArtUrl: rep.track?.artworkUrl,
-          audioUrl: rep.track?.playbackUrl || rep.track?.assetUrl,
-          price: floorPrice,
-          priceToken,
-          editionSize,
-          editionListed,
-          href: `/marketplace/${rep.track?.id || rep.id}`,
-        }
-      })
-      res.setHeader('Cache-Control', 's-maxage=30, stale-while-revalidate=60')
-      return res.status(200).json({ listings, source: 'listings' })
-    }
-
-    // Popular-sort surfaces minted NFTs (newest is dominated by SCid-only
-    // uploads where nftData is null). 2x limit gives headroom in case some
-    // tracks at the top are still SCid-only.
-    const exploreRes = await fetch(`${SC_BASE}/api/tracks/explore?sort=popular&limit=${limit * 2}`, {
-      headers: { 'User-Agent': 'soundchain-mint' },
-    })
-    const exploreData = exploreRes.ok ? await exploreRes.json() : { nodes: [] }
     const tracks = Array.isArray(exploreData.nodes) ? exploreData.nodes : []
 
+    // Group listings by edition — multiple per-token listings of the same edition
+    // collapse into one card with floor price + "X/N listed" fraction.
+    const groups = new Map<string, { rep: any; listings: any[] }>()
+    for (const l of nodes) {
+      const key = l.track?.id || l.track?.trackEditionId || `${l.nftAddress}-${l.tokenId}`
+      if (!key) continue
+      const existing = groups.get(key)
+      if (existing) existing.listings.push(l)
+      else groups.set(key, { rep: l, listings: [l] })
+    }
+
+    const listed: ListingPreview[] = Array.from(groups.values()).map(({ rep, listings: groupListings }) => {
+      let floorPrice: number | undefined
+      let priceToken: PriceToken | undefined
+      for (const l of groupListings) {
+        const price = typeof l.pricePerItemToShow === 'number'
+          ? l.pricePerItemToShow
+          : (typeof l.pricePerItem === 'number' ? l.pricePerItem : undefined)
+        if (price == null) continue
+        if (floorPrice == null || price < floorPrice) {
+          floorPrice = price
+          priceToken = tokenFromSaleType(l.saleType, l.isPaymentOGUN)
+        }
+      }
+
+      return {
+        id: rep.track?.id || rep.id,
+        tokenId: rep.tokenId != null ? String(rep.tokenId) : '',
+        title: rep.track?.title,
+        artist: rep.track?.artist,
+        coverArtUrl: rep.track?.artworkUrl,
+        audioUrl: rep.track?.playbackUrl || rep.track?.assetUrl,
+        price: floorPrice,
+        priceToken,
+        editionSize: rep.track?.editionSize || undefined,
+        editionListed: groupListings.length,
+        forSale: true,
+        href: `/marketplace/${rep.track?.id || rep.id}`,
+      }
+    })
+
+    const listedIds = new Set(listed.map((c) => c.id))
+
     const browse: ListingPreview[] = tracks
-      .filter((t: any) => t.nftData)
-      .slice(0, limit)
+      .filter((t: any) => t.nftData && !listedIds.has(t.id))
       .map((t: any) => {
         const price = typeof t.price === 'number' ? t.price : undefined
         const priceToken: PriceToken | undefined = price != null
@@ -149,12 +145,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           priceToken,
           editionSize,
           editionListed,
+          forSale: false,
           href: `/marketplace/${t.id}`,
         }
       })
 
-    res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=120')
-    return res.status(200).json({ listings: browse, source: 'browse' })
+    // Listed first (holographic-bordered in UI), then unique minted-only.
+    const merged = [...listed, ...browse].slice(0, limit)
+
+    const source = listed.length > 0 && browse.length > 0
+      ? 'merged'
+      : listed.length > 0
+      ? 'listings'
+      : 'browse'
+
+    res.setHeader('Cache-Control', 's-maxage=30, stale-while-revalidate=60')
+    return res.status(200).json({
+      listings: merged,
+      source,
+      counts: { listed: listed.length, minted: browse.length },
+    })
   } catch (err: any) {
     return res.status(500).json({ error: err.message || 'failed to load' })
   }

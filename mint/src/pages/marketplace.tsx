@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
+import { useRouter } from 'next/router'
+import { MarketplaceDetailModal } from 'components/MarketplaceDetailModal'
 
 type PriceToken = 'POL' | 'OGUN' | 'ETH' | 'USDC' | 'USDT' | 'LINK' | 'AVAX'
 
@@ -15,6 +17,7 @@ interface ListingPreview {
   priceToken?: PriceToken      // currency symbol attached to price
   editionSize?: number         // total edition supply (1 for 1/1s)
   editionListed?: number       // how many of the edition are listed for sale
+  forSale?: boolean            // active marketplace listing (holographic border)
   href?: string
 }
 
@@ -27,11 +30,14 @@ function formatPrice(n: number): string {
   return n.toFixed(4)
 }
 
-type Source = 'listings' | 'browse' | null
+type Source = 'listings' | 'browse' | 'merged' | null
+interface SourceCounts { listed: number; minted: number }
 
 export default function Marketplace() {
+  const router = useRouter()
   const [listings, setListings] = useState<ListingPreview[]>([])
   const [source, setSource] = useState<Source>(null)
+  const [counts, setCounts] = useState<SourceCounts>({ listed: 0, minted: 0 })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [sweepMode, setSweepMode] = useState(false)
@@ -39,8 +45,23 @@ export default function Marketplace() {
   const [playingId, setPlayingId] = useState<string | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
+  // Detail modal is driven off the URL `?id=<listingId>` so a card tap stays
+  // on `/marketplace` (shallow route) and shared links still deep-link to the
+  // same modal. Direct `/marketplace/[id]` page still works as a fallback.
+  const detailIdRaw = router.query.id
+  const detailId = Array.isArray(detailIdRaw) ? detailIdRaw[0] : detailIdRaw
+
+  function openDetail(id: string) {
+    router.push({ pathname: '/marketplace', query: { id } }, undefined, { shallow: true })
+  }
+  function closeDetail() {
+    router.push({ pathname: '/marketplace' }, undefined, { shallow: true })
+  }
+
   // Single shared audio element. Tapping play on a different chip swaps src
-  // cleanly; tapping play on the active chip pauses. Stops on unmount.
+  // cleanly; tapping play on the active chip pauses. Stops on unmount. The
+  // same audio state threads through the detail modal so playback survives
+  // open/close.
   function togglePlay(id: string, audioUrl?: string) {
     if (!audioUrl) return
     if (playingId === id) {
@@ -76,6 +97,12 @@ export default function Marketplace() {
         if (cancelled) return
         setListings(Array.isArray(data.listings) ? data.listings : [])
         setSource(data.source || null)
+        if (data.counts) {
+          setCounts({
+            listed: typeof data.counts.listed === 'number' ? data.counts.listed : 0,
+            minted: typeof data.counts.minted === 'number' ? data.counts.minted : 0,
+          })
+        }
       } catch (err: any) {
         if (!cancelled) setError(err?.message || 'feed offline')
       } finally {
@@ -85,10 +112,10 @@ export default function Marketplace() {
     return () => { cancelled = true }
   }, [])
 
-  // Sweep-mode is only useful against active on-chain listings — browse-mode
-  // cards link out to soundchain.io and have no priceWei to aggregate. Auto-
-  // disable sweep when there's nothing buyable here.
-  const sweepable = source === 'listings'
+  // Sweep-mode is only useful against active listings (forSale cards). Auto-
+  // disables when nothing in the merged feed is actually buyable. Sweep taps
+  // only register on for-sale cards (the chip ignores selection on browse cards).
+  const sweepable = counts.listed > 0
   useEffect(() => {
     if (!sweepable && sweepMode) setSweepMode(false)
   }, [sweepable, sweepMode])
@@ -107,7 +134,9 @@ export default function Marketplace() {
     [listings, selected]
   )
 
-  const sourceLabel = source === 'listings'
+  const sourceLabel = source === 'merged'
+    ? { tag: 'FOR SALE + MINTED', color: 'text-neon-magenta border-neon-magenta/40' }
+    : source === 'listings'
     ? { tag: 'LIVE LISTINGS', color: 'text-neon-mint border-neon-mint/40' }
     : source === 'browse'
     ? { tag: 'BROWSE · MINTED', color: 'text-neon-cyan border-neon-cyan/40' }
@@ -163,9 +192,13 @@ export default function Marketplace() {
               </h1>
             </div>
             <div className="flex items-center gap-3 font-mono text-[10px] flex-shrink-0">
+              <div className="border-l-2 border-neon-mint/60 pl-2">
+                <div className="text-[8px] uppercase tracking-[0.25em] text-gray-500">SALE</div>
+                <div className="text-neon-mint tabular-nums">{counts.listed.toString().padStart(2, '0')}</div>
+              </div>
               <div className="border-l-2 border-neon-cyan/50 pl-2">
-                <div className="text-[8px] uppercase tracking-[0.25em] text-gray-500">N</div>
-                <div className="text-neon-cyan tabular-nums">{listings.length.toString().padStart(2, '0')}</div>
+                <div className="text-[8px] uppercase tracking-[0.25em] text-gray-500">MINTED</div>
+                <div className="text-neon-cyan tabular-nums">{counts.minted.toString().padStart(2, '0')}</div>
               </div>
               <div className="border-l-2 border-neon-magenta/50 pl-2">
                 <div className="text-[8px] uppercase tracking-[0.25em] text-gray-500">FEE</div>
@@ -224,6 +257,7 @@ export default function Marketplace() {
                   selected={selected.has(listing.id)}
                   sweepMode={sweepMode}
                   onSelect={toggleSelect}
+                  onOpenDetail={openDetail}
                   isPlaying={playingId === listing.id}
                   onTogglePlay={togglePlay}
                 />
@@ -270,6 +304,15 @@ export default function Marketplace() {
             <span>// MARKET.IDX</span>
           </footer>
         )}
+
+        {detailId && (
+          <MarketplaceDetailModal
+            id={detailId}
+            onClose={closeDetail}
+            isPlaying={playingId === detailId}
+            onTogglePlay={togglePlay}
+          />
+        )}
       </main>
     </>
   )
@@ -280,6 +323,7 @@ function NftChip({
   selected,
   sweepMode,
   onSelect,
+  onOpenDetail,
   isPlaying,
   onTogglePlay,
 }: {
@@ -287,6 +331,7 @@ function NftChip({
   selected: boolean
   sweepMode: boolean
   onSelect: (id: string) => void
+  onOpenDetail: (id: string) => void
   isPlaying: boolean
   onTogglePlay: (id: string, audioUrl?: string) => void
 }) {
@@ -296,10 +341,12 @@ function NftChip({
     e.stopPropagation()
     onTogglePlay(listing.id, listing.audioUrl)
   }
-  const isExternal = (listing.href || '').startsWith('http')
+  const isForSale = listing.forSale === true
   const baseClass = `relative aspect-[3/4] overflow-hidden border bg-ink-800/60 group transition-all duration-150 active:scale-[0.98] ${
     selected
       ? 'border-neon-magenta shadow-neon-magenta'
+      : isForSale
+      ? 'holo-listed'
       : 'border-white/8 hover:border-neon-cyan/60'
   }`
 
@@ -323,11 +370,6 @@ function NftChip({
         <div className="absolute top-1 left-1 px-1 py-[1px] bg-ink-900/90 text-[8px] font-mono tracking-wide text-neon-cyan/90 leading-none">
           #{listing.tokenId || '?'}
         </div>
-        {isExternal && !sweepMode && (
-          <div className="absolute top-1 right-1 px-1 py-[1px] bg-ink-900/90 text-[8px] font-mono tracking-wide text-neon-magenta/90 leading-none">
-            ↗
-          </div>
-        )}
         {/* Selection check — sweep mode only */}
         {sweepMode && (
           <div
@@ -395,34 +437,16 @@ function NftChip({
     </>
   )
 
-  if (sweepMode) {
-    return (
-      <button
-        type="button"
-        onClick={() => onSelect(listing.id)}
-        className={`${baseClass} flex flex-col text-left`}
-      >
-        {inner}
-      </button>
-    )
-  }
-
-  if (isExternal) {
-    return (
-      <a
-        href={listing.href}
-        target="_blank"
-        rel="noopener noreferrer"
-        className={`${baseClass} flex flex-col`}
-      >
-        {inner}
-      </a>
-    )
-  }
-
   return (
-    <Link href={listing.href || `/marketplace/${listing.id}`} className={`${baseClass} flex flex-col`}>
+    <button
+      type="button"
+      onClick={() => {
+        if (sweepMode && isForSale) onSelect(listing.id)
+        else onOpenDetail(listing.id)
+      }}
+      className={`${baseClass} flex flex-col text-left`}
+    >
       {inner}
-    </Link>
+    </button>
   )
 }

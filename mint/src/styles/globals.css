@@ -183,6 +183,43 @@ body::after {
   }
 }
 
+/* Holographic listed-card ring — applied only to cards that have an active
+   marketplace listing. Animates box-shadow color through cyan → magenta →
+   mint so for-sale cards stand out at a glance against the minted-only ones.
+   Pure CSS keyframes; no rAF; honors prefers-reduced-motion below. */
+@keyframes holo-listed-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 0 1px rgba(0, 240, 255, 0.95),
+      0 0 14px rgba(0, 240, 255, 0.35),
+      inset 0 0 10px rgba(0, 240, 255, 0.12);
+  }
+  33% {
+    box-shadow:
+      0 0 0 1px rgba(255, 43, 214, 0.95),
+      0 0 14px rgba(255, 43, 214, 0.4),
+      inset 0 0 10px rgba(255, 43, 214, 0.12);
+  }
+  66% {
+    box-shadow:
+      0 0 0 1px rgba(52, 211, 153, 0.95),
+      0 0 14px rgba(52, 211, 153, 0.4),
+      inset 0 0 10px rgba(52, 211, 153, 0.12);
+  }
+}
+.holo-listed {
+  border-color: transparent !important;
+  animation: holo-listed-pulse 5s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .holo-listed {
+    animation: none;
+    box-shadow:
+      0 0 0 1px rgba(0, 240, 255, 0.9),
+      0 0 10px rgba(0, 240, 255, 0.3);
+  }
+}
+
 /* Marquee ticker — pure CSS, GPU-cheap. No JS rAF (battery directive). */
 @keyframes ticker {
   0% { transform: translateX(0); }
