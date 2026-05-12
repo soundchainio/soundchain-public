@@ -94,7 +94,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           coverArtUrl: t.artworkUrl,
           audioUrl: t.playbackUrl || t.assetUrl || t.audioUrl,
           priceLabel: editionLabel,
-          href: `${SC_BASE}/tracks/${t.id}`,
+          href: `/marketplace/${t.id}`,
         }
       })
 
