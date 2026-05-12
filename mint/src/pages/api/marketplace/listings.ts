@@ -1,27 +1,30 @@
 /**
  * GET /api/marketplace/listings
  *
- * Proxies SC's marketplace data into the mint app so the marketplace grid is
- * self-contained (no client-side cross-origin fetch). Returns a unified shape:
+ * Surfaces EVERY minted NFT edition as one card. Sources:
  *
- *   { listings: ListingPreview[], source: 'listings' | 'browse' }
- *
- * Resolution order:
- *   1. SC's /api/marketplace/listings — active marketplace listings (Polygon
+ *   1. SC's REST /api/marketplace/listings — active marketplace listings (Polygon
  *      MarketplaceEditions contract). Grouped by edition: one card per edition
  *      with floor price + listed/total fraction. Today this collection is
- *      sparsely populated, so step 2 usually fires.
- *   2. SC's /api/tracks/explore — minted tracks with on-chain nftData, used as
- *      the browse-mode fallback. Each track = one edition = one card.
+ *      sparsely populated, so step 2 contributes most cards.
+ *   2. SC's GraphQL exploreTracks (cursor-paginated) — every NFT-minted track
+ *      with `nftData != null`. Sorted by PLAYBACK_COUNT DESC so popular mints
+ *      come first; we paginate the full set (max ~20 pages of 100) and filter
+ *      client-side for `nftData`. This replaces the REST /api/tracks/explore
+ *      path which silently capped at 100.
  *
- * When MONGODB_URI is provisioned on the mint Vercel project, this endpoint
- * will swap to a direct Atlas read against `soundchain.listingitems` +
- * `soundchain.tracks` (same schema SC reads). Until then, server-side proxy
- * keeps the dependency one-way: mint → soundchain.io, never the reverse.
+ * Authoritative on-chain mint count comes from `totalSupply()` on V1 + V2 NFT
+ * contracts (unchanged from previous implementation).
+ *
+ * Response shape (backward-compatible):
+ *   {
+ *     listings: ListingPreview[],   // ALL unique edition cards
+ *     source: 'merged' | 'listings' | 'browse',
+ *     counts: { listed, minted, mintedTotal },
+ *     contracts: { v1: { address, count }, v2: { address, count } }
+ *   }
  */
 import type { NextApiRequest, NextApiResponse } from 'next'
-
-const SC_BASE = 'https://soundchain.io'
 
 // Canonical on-chain NFT contract addresses on Polygon mainnet. Every mint
 // since 2021 lives on one of these two — V1 (legacy ERC-721) for the 2021-2022
@@ -50,6 +53,25 @@ export interface ListingPreview {
   href?: string
 }
 
+// SC base URL for the listings REST endpoint (active marketplace listings).
+const SC_BASE = 'https://soundchain.io'
+
+// GraphQL endpoint. NEXT_PUBLIC_API_URL is the same env var the web app reads;
+// in production this resolves to https://api.soundchain.io/graphql via the
+// API Gateway custom domain. Fallback hardcoded for resilience.
+const GRAPHQL_URL =
+  process.env.NEXT_PUBLIC_API_URL || 'https://api.soundchain.io/graphql'
+
+// Defensive pagination ceiling: 20 pages × 100 = 2000 records max. SC currently
+// has ~600 tracks total (~500 NFT-minted); this leaves plenty of headroom for
+// 2x growth without runaway loops. Each page is one GraphQL round-trip.
+const MAX_PAGES = 20
+const PAGE_SIZE = 100
+
+// Inter-page delay to be polite to the upstream GraphQL Lambda. 100ms × 7 pages
+// (typical) = 700ms — well below SWR window.
+const PAGE_DELAY_MS = 100
+
 // SC's saleType → token symbol mapping. Reasonable defaults; we treat anything
 // unrecognized as POL since that's the mint app's primary chain native.
 function tokenFromSaleType(saleType?: string | null, isPaymentOGUN?: boolean): PriceToken {
@@ -64,12 +86,6 @@ function tokenFromSaleType(saleType?: string | null, isPaymentOGUN?: boolean): P
   if (s.includes('AVAX')) return 'AVAX'
   return 'POL'
 }
-
-// SC's /api/tracks/explore caps at 100 nodes and does NOT honor `offset` —
-// verified May 12 (offset=0 and offset=4900 returned identical first record).
-// Card grid is therefore capped at the popular-sort top 100; the authoritative
-// on-chain totals come from `totalSupply()` directly on each NFT contract.
-const SC_EXPLORE_PAGE_SIZE = 100
 
 // Polygon public RPC for reading totalSupply(). 1rpc.io confirmed working when
 // polygon-rpc.com / publicnode 403 the request (May 12).
@@ -100,33 +116,150 @@ async function readTotalSupply(contract: string): Promise<number> {
   }
 }
 
+// Minimal GraphQL track shape we project from exploreTracks. Matches the
+// shape the marketplace card grid + detail page consume.
+interface ExploreTrack {
+  id: string
+  title?: string
+  artist?: string
+  artworkUrl?: string
+  playbackUrl?: string
+  assetUrl?: string
+  createdAt?: string
+  editionSize?: number
+  trackEditionId?: string | null
+  nftData?: { tokenId: number | string; contract: string } | null
+  saleType?: string | null
+  price?: number | null
+  listingCount?: number | null
+}
+
+// The exploreTracks GraphQL query. PLAYBACK_COUNT sort makes the highest-traffic
+// (and therefore most NFT-rich) tracks paginate first — important if Lambda
+// times out mid-loop, we still return the most relevant cards.
+const EXPLORE_TRACKS_QUERY = /* GraphQL */ `
+  query MintMarketplaceExploreTracks($page: PageInput) {
+    exploreTracks(sort: { field: PLAYBACK_COUNT, order: DESC }, page: $page) {
+      nodes {
+        id
+        title
+        artist
+        artworkUrl
+        playbackUrl
+        assetUrl
+        createdAt
+        editionSize
+        trackEditionId
+        nftData {
+          tokenId
+          contract
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+        totalCount
+      }
+    }
+  }
+`
+
+async function fetchExploreTracksPage(
+  after: string | null,
+): Promise<{
+  nodes: ExploreTrack[]
+  hasNextPage: boolean
+  endCursor: string | null
+  totalCount: number
+} | null> {
+  try {
+    const res = await fetch(GRAPHQL_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'User-Agent': 'soundchain-mint',
+      },
+      body: JSON.stringify({
+        query: EXPLORE_TRACKS_QUERY,
+        variables: { page: { first: PAGE_SIZE, ...(after ? { after } : {}) } },
+      }),
+    })
+
+    if (res.status === 429) {
+      // Rate-limited — back off and let the outer loop decide whether to retry.
+      await new Promise((r) => setTimeout(r, 1000))
+      return null
+    }
+
+    if (!res.ok) return null
+    const json = await res.json()
+    const data = json?.data?.exploreTracks
+    if (!data) return null
+
+    return {
+      nodes: Array.isArray(data.nodes) ? data.nodes : [],
+      hasNextPage: !!data.pageInfo?.hasNextPage,
+      endCursor: data.pageInfo?.endCursor || null,
+      totalCount: typeof data.pageInfo?.totalCount === 'number' ? data.pageInfo.totalCount : 0,
+    }
+  } catch {
+    return null
+  }
+}
+
+// Loop exploreTracks until exhausted (or MAX_PAGES safety cap). Returns the
+// concatenated list of ALL NFT-minted tracks in popularity order.
+async function fetchAllMintedTracks(): Promise<ExploreTrack[]> {
+  const all: ExploreTrack[] = []
+  let cursor: string | null = null
+
+  for (let page = 0; page < MAX_PAGES; page++) {
+    const result = await fetchExploreTracksPage(cursor)
+    if (!result) break
+
+    // Keep only minted tracks (NFT-backed). The exploreTracks query returns
+    // unminted tracks too (SCid-only uploads); marketplace surfaces NFTs only.
+    for (const t of result.nodes) {
+      if (t.nftData && t.nftData.contract && t.nftData.tokenId != null) {
+        all.push(t)
+      }
+    }
+
+    if (!result.hasNextPage || !result.endCursor) break
+    cursor = result.endCursor
+
+    // Politeness delay between pages.
+    if (page < MAX_PAGES - 1) {
+      await new Promise((r) => setTimeout(r, PAGE_DELAY_MS))
+    }
+  }
+
+  return all
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' })
 
   // limit caps the card-grid output. On-chain totals are fetched in parallel
   // and reflect every mint regardless of how many cards the grid actually shows.
-  const limit = Math.min(parseInt(req.query.limit as string) || 60, 200)
+  const limit = Math.min(parseInt(req.query.limit as string) || 60, 2000)
 
   try {
-    // Three parallel reads:
+    // Four parallel reads:
     //   1. SC active marketplace listings (for the top-of-feed for-sale cards)
-    //   2. SC popular minted tracks (for the metadata-rich card grid; SC caps at 100)
+    //   2. SC paginated exploreTracks (ALL minted NFT cards via GraphQL)
     //   3+4. On-chain totalSupply() on both NFT contracts (authoritative mint counts)
-    const [listingsRes, exploreRes, v1Total, v2Total] = await Promise.all([
-      fetch(`${SC_BASE}/api/marketplace/listings?limit=${limit * 4}`, {
+    const [listingsRes, allMintedTracks, v1Total, v2Total] = await Promise.all([
+      fetch(`${SC_BASE}/api/marketplace/listings?limit=${Math.min(limit * 4, 400)}`, {
         headers: { 'User-Agent': 'soundchain-mint' },
       }).catch(() => null),
-      fetch(`${SC_BASE}/api/tracks/explore?sort=popular&limit=${SC_EXPLORE_PAGE_SIZE}`, {
-        headers: { 'User-Agent': 'soundchain-mint' },
-      }).catch(() => null),
+      fetchAllMintedTracks(),
       readTotalSupply(NFT_CONTRACTS.V1),
       readTotalSupply(NFT_CONTRACTS.V2),
     ])
 
     const listingsData = listingsRes?.ok ? await listingsRes.json() : { nodes: [] }
-    const exploreData = exploreRes?.ok ? await exploreRes.json() : { nodes: [] }
     const nodes = Array.isArray(listingsData.nodes) ? listingsData.nodes : []
-    const tracks = Array.isArray(exploreData.nodes) ? exploreData.nodes : []
 
     // Group listings by edition — multiple per-token listings of the same edition
     // collapse into one card with floor price + "X/N listed" fraction.
@@ -176,16 +309,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // happened on either NFT contract.
     const totalMinted = v1Total + v2Total
 
-    // Sort browse cards newest-first (createdAt desc) so the most recent mints
-    // surface immediately under the for-sale section.
-    const browse: ListingPreview[] = tracks
-      .filter((t: any) => t.nftData && !listedIds.has(t.id))
-      .sort((a: any, b: any) => {
+    // Browse cards: every minted track from GraphQL pagination (already filtered
+    // to nftData-present). Skip any track already represented in `listed`.
+    // Sort newest-first within the browse set so recent mints surface
+    // immediately under the for-sale section.
+    const browse: ListingPreview[] = allMintedTracks
+      .filter((t) => !listedIds.has(t.id))
+      .sort((a, b) => {
         const ad = new Date(a.createdAt || 0).getTime()
         const bd = new Date(b.createdAt || 0).getTime()
         return bd - ad
       })
-      .map((t: any) => {
+      .map((t) => {
         const price = typeof t.price === 'number' ? t.price : undefined
         const priceToken: PriceToken | undefined = price != null
           ? tokenFromSaleType(t.saleType)
@@ -201,7 +336,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           title: t.title,
           artist: t.artist,
           coverArtUrl: t.artworkUrl,
-          audioUrl: t.playbackUrl || t.assetUrl || t.audioUrl,
+          audioUrl: t.playbackUrl || t.assetUrl,
           price,
           priceToken,
           editionSize,
@@ -220,16 +355,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       ? 'listings'
       : 'browse'
 
-    // 60s edge cache — pagination across 5-10 SC API calls is ~1-3s cold, so
+    // 120s edge cache — pagination across 5-10 GraphQL calls is ~2-5s cold, so
     // most requests should hit edge. SWR keeps tail-fetch from blocking users.
-    res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300')
+    res.setHeader('Cache-Control', 's-maxage=120, stale-while-revalidate=600')
     return res.status(200).json({
       listings: merged,
       source,
       counts: {
         listed: listed.length,
-        minted: browse.length,        // unique minted-only cards shown
-        mintedTotal: totalMinted,     // every mint across V1+V2 contracts
+        minted: browse.length,        // unique minted-only cards available
+        mintedTotal: totalMinted,     // every mint across V1+V2 contracts (on-chain)
       },
       contracts: {
         v1: { address: NFT_CONTRACTS.V1, count: v1Total },
