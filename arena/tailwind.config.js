@@ -27,6 +27,15 @@ module.exports = {
         'arena-red-soft': '#ef4444',
         'arena-orange': '#f97316',
         'arena-yellow': '#facc15',
+
+        // Cyberpunk overlay tokens — match mint app. Dark-mode HUD accents
+        // layered over the racing-red brand. May 12 2026 cyberpunk lift.
+        'ink-900':       '#05070d',
+        'ink-800':       '#0a0d1a',
+        'ink-700':       '#10131f',
+        'neon-cyan':     '#22d3ee',
+        'neon-magenta':  '#e879f9',
+        'neon-mint':     '#4ade80',
       },
       fontFamily: {
         display: ['var(--font-titillium)', 'system-ui', 'sans-serif'],

@@ -114,3 +114,170 @@ html.dark .arena-carbon-bg {
 
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ─── Cyberpunk overlay (matches mint app, May 12 2026 lift) ────────────── */
+/* Layered on top of arena's red/orange/yellow brand — neon-cyan +          */
+/* neon-magenta become HUD accent colors; arena-red stays for LIVE dots,    */
+/* primary CTAs, and brand identity. Dark-mode only — light mode keeps the  */
+/* paper-clean look the racing program established. Respect                 */
+/* prefers-reduced-motion for the animated scanline/grid (battery on Sarg). */
+
+/* Holographic grid backdrop — applied to <body> in dark mode, fixed so     */
+/* the grid stays put while content scrolls past it. */
+html.dark body {
+  background-color: #050507;
+  background-image:
+    linear-gradient(rgba(6, 182, 212, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(6, 182, 212, 0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+  background-attachment: fixed;
+  background-position: center top;
+}
+
+/* Scanline texture overlay — pure CSS, no rAF. Pointer-events none so it   */
+/* doesn't eat taps. Only renders dark mode. */
+html.dark body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 2px,
+    rgba(0, 0, 0, 0.18) 2px,
+    rgba(0, 0, 0, 0.18) 3px
+  );
+  background-size: 100% 3px;
+  opacity: 0.5;
+  mix-blend-mode: multiply;
+}
+@media (prefers-reduced-motion: reduce) {
+  html.dark body::before { display: none; }
+}
+
+/* Neon panel — primary cyberpunk container. Replaces .rounded-xl border    */
+/* arena-card pattern for surfaces that need cyberpunk vibe. */
+.neon-panel {
+  position: relative;
+  background: linear-gradient(180deg, rgba(15, 18, 28, 0.95) 0%, rgba(10, 12, 20, 0.95) 100%);
+  border: 1px solid rgba(6, 182, 212, 0.25);
+  box-shadow:
+    0 0 0 1px rgba(6, 182, 212, 0.08) inset,
+    0 1px 0 rgba(6, 182, 212, 0.1) inset,
+    0 8px 24px -8px rgba(6, 182, 212, 0.18);
+}
+html:not(.dark) .neon-panel {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(250, 250, 250, 0.95) 100%);
+  border-color: rgba(220, 38, 38, 0.25);
+  box-shadow: 0 8px 24px -8px rgba(220, 38, 38, 0.18);
+}
+.neon-panel-magenta {
+  border-color: rgba(217, 70, 239, 0.35);
+  box-shadow:
+    0 0 0 1px rgba(217, 70, 239, 0.1) inset,
+    0 8px 24px -8px rgba(217, 70, 239, 0.22);
+}
+.neon-panel-red {
+  border-color: rgba(220, 38, 38, 0.4);
+  box-shadow:
+    0 0 0 1px rgba(220, 38, 38, 0.12) inset,
+    0 8px 24px -8px rgba(220, 38, 38, 0.25);
+}
+
+/* HUD corner brackets — absolute-positioned spans pinned to corners */
+.hud-corners { position: relative; }
+.hud-corner {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-color: rgb(6, 182, 212);
+  border-style: solid;
+  border-width: 0;
+  pointer-events: none;
+}
+.hud-corner-tl { top: -1px; left: -1px; border-top-width: 2px; border-left-width: 2px; }
+.hud-corner-tr { top: -1px; right: -1px; border-top-width: 2px; border-right-width: 2px; }
+.hud-corner-bl { bottom: -1px; left: -1px; border-bottom-width: 2px; border-left-width: 2px; }
+.hud-corner-br { bottom: -1px; right: -1px; border-bottom-width: 2px; border-right-width: 2px; }
+.neon-panel-magenta .hud-corner { border-color: rgb(217, 70, 239); }
+.neon-panel-red .hud-corner { border-color: rgb(220, 38, 38); }
+
+/* Clip-path corner pill — replaces rounded-full for cyberpunk pills */
+.clip-pill {
+  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+}
+.clip-pill-sm {
+  clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);
+}
+
+/* btn-neon — primary cyberpunk button (dark mode), reverts to arena-red    */
+/* gradient in light mode so light pages don't look broken. */
+.btn-neon {
+  position: relative;
+  padding: 0.625rem 1rem;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  background: rgba(6, 182, 212, 0.12);
+  color: rgb(34, 211, 238);
+  border: 1px solid rgba(6, 182, 212, 0.55);
+  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+  transition: all 0.18s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+}
+.btn-neon:hover:not(:disabled) {
+  background: rgba(6, 182, 212, 0.95);
+  color: #000;
+  box-shadow: 0 0 18px rgba(6, 182, 212, 0.55);
+}
+.btn-neon:disabled { opacity: 0.45; cursor: not-allowed; }
+html:not(.dark) .btn-neon {
+  background: linear-gradient(90deg, #dc2626 0%, #f97316 100%);
+  color: #fff;
+  border-color: transparent;
+}
+html:not(.dark) .btn-neon:hover:not(:disabled) {
+  box-shadow: 0 6px 18px rgba(220, 38, 38, 0.35);
+}
+
+/* btn-ghost — secondary cyberpunk pill */
+.btn-ghost {
+  padding: 0.5rem 0.875rem;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  background: transparent;
+  color: #94a3b8;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px);
+  transition: all 0.18s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+}
+.btn-ghost:hover { color: rgb(34, 211, 238); border-color: rgba(6, 182, 212, 0.55); }
+
+/* neon-text — colored text utilities */
+.neon-text-cyan    { color: rgb(34, 211, 238); text-shadow: 0 0 12px rgba(6, 182, 212, 0.5); }
+.neon-text-magenta { color: rgb(232, 121, 249); text-shadow: 0 0 12px rgba(217, 70, 239, 0.5); }
+.neon-text-mint    { color: rgb(74, 222, 128); text-shadow: 0 0 12px rgba(34, 197, 94, 0.5); }
+
+/* shadow-neon-* — glow utilities */
+.shadow-neon-cyan    { box-shadow: 0 0 16px rgba(6, 182, 212, 0.55); }
+.shadow-neon-magenta { box-shadow: 0 0 16px rgba(217, 70, 239, 0.55); }
+.shadow-neon-mint    { box-shadow: 0 0 16px rgba(34, 197, 94, 0.55); }
+.shadow-neon-red     { box-shadow: 0 0 16px rgba(220, 38, 38, 0.55); }
+
+/* z-stack — content above the holographic grid + scanline */
+main, header, nav, footer, .arena-content { position: relative; z-index: 1; }
+
