@@ -101,14 +101,39 @@ export default function MintBySCid() {
       const uri = await fetchTokenURI()
       setTokenURI(uri)
 
-      // 0.05% platform fee — flat 0.0005 POL × edition count, sent before the
-      // mint so it's atomic w/ the user's intent to forge. Recipient address
-      // lives in env (NEXT_PUBLIC_FEE_RECIPIENT) — never in source.
+      // 0.05% platform fee — true 0.05% of estimated total mint gas cost.
+      // Estimates createEdition + safeMintToEditionQuantity, multiplies by
+      // current gasPrice, applies 5/10000 (= 0.05%). Recipient lives in env
+      // (NEXT_PUBLIC_FEE_RECIPIENT) — never in source.
       const feeRecipient = getFeeRecipient()
       if (feeRecipient) {
         setStep('paying-fee')
-        const feePerEdition = parseEther('0.0005')
-        const feeWei = feePerEdition * BigInt(quantity)
+
+        // Estimate gas for both writes the user is about to sign
+        const [createGas, mintGas, gasPrice] = await Promise.all([
+          publicClient.estimateContractGas({
+            address: CONTRACTS.NFT_EDITIONS as `0x${string}`,
+            abi: NFT_EDITIONS_ABI,
+            functionName: 'createEdition',
+            args: [BigInt(quantity), address, royalty],
+            account: address,
+          }),
+          // Edition number isn't known yet — use editionNumber=1 as a stand-in
+          // for estimation only. Gas is identical regardless of editionNumber.
+          publicClient.estimateContractGas({
+            address: CONTRACTS.NFT_EDITIONS as `0x${string}`,
+            abi: NFT_EDITIONS_ABI,
+            functionName: 'safeMintToEditionQuantity',
+            args: [address, uri, 1n, quantity],
+            account: address,
+          }).catch(() => 65000n + 50000n * BigInt(quantity)),
+          publicClient.getGasPrice(),
+        ])
+
+        const totalGasCost = (createGas + mintGas) * gasPrice
+        // 0.05% = 5 / 10000 — bigint math, no rounding loss
+        const feeWei = (totalGasCost * 5n) / 10000n
+
         const feeHash = await walletClient.sendTransaction({
           to: feeRecipient,
           value: feeWei,
