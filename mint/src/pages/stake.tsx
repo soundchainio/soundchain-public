@@ -9,7 +9,7 @@ import Head from 'next/head'
 import Link from 'next/link'
 import { useAccount, useConnect, usePublicClient, useWalletClient } from 'wagmi'
 import { polygon } from 'wagmi/chains'
-import { CONTRACTS, ERC20_ABI } from '@soundchain/contracts'
+import { CONTRACTS, ERC20_ABI } from 'lib/contracts'
 import { formatUnits, parseUnits } from 'viem'
 
 type StakeStep = 'idle' | 'approving' | 'waiting-approval' | 'staking' | 'waiting-stake' | 'success' | 'error'

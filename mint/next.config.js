@@ -2,7 +2,9 @@
 const nextConfig = {
   reactStrictMode: false,
   // Shared monorepo packages — compiled from TS source at build time
-  transpilePackages: ['@soundchain/types', '@soundchain/scid', '@soundchain/contracts'],
+  // @soundchain/* packages inlined locally for now (Vercel monorepo
+  // workspace not configured at Root Directory = mint/). When yarn
+  // workspaces lands, restore: ['@soundchain/types', '@soundchain/scid', '@soundchain/contracts']
   // Capacitor-friendly: keep server-rendered shape simple, no edge runtime quirks
   experimental: {
     // Reserved for future tweaks; intentionally empty so we don't carry over web/ debt

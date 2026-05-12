@@ -1,6 +1,16 @@
 import { useState } from 'react'
 import Head from 'next/head'
+import Link from 'next/link'
 import { openConnectModal, initAppKit } from 'lib/appkit'
+
+const TICKER_ITEMS = [
+  'POLYGON · CHAIN 137',
+  'PLATFORM FEE 0.05%',
+  'EDITIONS V2 0x7EfC…9239',
+  'OGUN 0x45f1…a15c',
+  'PAYMENTS · POL · OGUN · USDC · USDT · ETH · LINK · AVAX',
+  'PHASE 2 SHELL · CAPACITOR-READY',
+]
 
 export default function MintLanding() {
   const [connecting, setConnecting] = useState(false)
@@ -13,7 +23,7 @@ export default function MintLanding() {
       await initAppKit()
       const opened = openConnectModal()
       if (!opened) {
-        setMsg('Wallet connect not yet provisioned (Reown projectId pending).')
+        setMsg('// reown projectId pending — wallet rail offline')
       }
     } finally {
       setConnecting(false)
@@ -23,22 +33,27 @@ export default function MintLanding() {
   return (
     <>
       <Head>
-        <title>SoundChain Mint</title>
+        <title>SoundChain Mint — Forge</title>
       </Head>
       <main className="min-h-screen flex flex-col">
-        <nav className="px-6 py-4 flex items-center justify-between border-b border-white/5">
+        {/* Header */}
+        <nav className="sticky top-0 z-30 px-4 sm:px-6 py-3 flex items-center justify-between border-b border-white/5 backdrop-blur-md bg-ink-900/70">
+          <Link href="/" className="flex items-center gap-2">
+            <span className="relative inline-flex">
+              <span className="absolute -inset-1 rounded-sm bg-neon-cyan/30 blur-sm animate-pulse-neon" />
+              <span className="relative w-2.5 h-2.5 rounded-sm bg-neon-cyan" />
+            </span>
+            <span className="text-lg sm:text-xl font-bold tracking-tight bg-gradient-to-r from-mint-400 via-neon-cyan to-forge-400 bg-clip-text text-transparent">
+              SOUNDCHAIN <span className="text-neon-magenta">/</span> MINT
+            </span>
+            <span className="hidden sm:inline-block text-[9px] font-mono uppercase tracking-[0.2em] px-1.5 py-0.5 border border-neon-cyan/40 text-neon-cyan">
+              PH.02
+            </span>
+          </Link>
           <div className="flex items-center gap-2">
-            <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-mint-400 to-forge-500 bg-clip-text text-transparent">
-              SoundChain Mint
-            </span>
-            <span className="text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full bg-mint-500/15 text-mint-300 border border-mint-500/30">
-              Beta
-            </span>
-          </div>
-          <div className="flex items-center gap-3">
             <a
               href="https://soundchain.io"
-              className="text-xs text-gray-400 hover:text-mint-300 transition-colors"
+              className="hidden sm:inline-block text-[10px] font-mono uppercase tracking-widest text-gray-500 hover:text-neon-cyan transition-colors"
             >
               ← soundchain.io
             </a>
@@ -46,83 +61,143 @@ export default function MintLanding() {
               type="button"
               onClick={handleConnect}
               disabled={connecting}
-              className="px-4 py-2 rounded-full bg-gradient-to-r from-mint-500 to-forge-500 text-white text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
+              className="btn-neon text-[11px]"
             >
-              {connecting ? 'Connecting…' : 'Connect Wallet'}
+              {connecting ? 'LINKING…' : 'CONNECT'}
             </button>
           </div>
         </nav>
 
-        <section className="flex-1 flex items-center justify-center px-6 py-16">
-          <div className="max-w-3xl text-center">
-            <h1 className="text-5xl md:text-6xl font-extrabold mb-6 leading-tight">
-              The forge for{' '}
-              <span className="bg-gradient-to-r from-mint-400 via-mint-300 to-forge-400 bg-clip-text text-transparent">
-                music NFTs
+        {/* Live ticker */}
+        <div className="relative overflow-hidden border-b border-neon-cyan/20 bg-ink-800/60">
+          <div className="ticker-track flex gap-8 py-1.5 whitespace-nowrap text-[10px] font-mono uppercase tracking-[0.25em] text-neon-cyan/80 w-max">
+            {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
+              <span key={i} className="flex items-center gap-3">
+                <span className="text-neon-magenta">▰</span>
+                {item}
               </span>
+            ))}
+          </div>
+        </div>
+
+        {/* Hero */}
+        <section className="relative flex-1 flex items-center justify-center px-4 sm:px-6 py-14 sm:py-20">
+          <div className="absolute inset-0 bg-holo-sweep opacity-50 pointer-events-none" />
+          <div className="relative max-w-3xl text-center">
+            <div className="inline-flex items-center gap-2 mb-5 px-3 py-1 border border-neon-mint/30 bg-neon-mint/5">
+              <span className="w-1.5 h-1.5 bg-neon-mint rounded-full animate-pulse" />
+              <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-neon-mint">
+                node online · polygon 137
+              </span>
+            </div>
+            <h1 className="text-4xl sm:text-6xl md:text-7xl font-extrabold mb-5 leading-[0.95] tracking-tight">
+              <span className="neon-text-cyan">FORGE</span>
+              <br />
+              <span className="text-white">MUSIC</span>{' '}
+              <span className="neon-text-magenta">NFT/s</span>
             </h1>
-            <p className="text-lg text-gray-400 mb-10 max-w-2xl mx-auto">
-              Mint editions of your SCid-registered tracks, trade in the marketplace,
-              stake OGUN, and earn royalties — all in one place. Spun off from{' '}
-              <a href="https://soundchain.io" className="text-mint-300 hover:underline">
-                soundchain.io
-              </a>{' '}
-              so the music platform stays focused and the forge can ship modern wallet UX.
+            <p className="text-sm sm:text-base text-gray-400 mb-8 max-w-xl mx-auto leading-relaxed">
+              Mint editions of SCid-registered tracks · trade in sub-1% marketplace ·
+              stake OGUN · earn royalties · <span className="text-neon-cyan">all on-chain</span>.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <button
                 type="button"
                 onClick={handleConnect}
                 disabled={connecting}
-                className="px-6 py-3 rounded-full bg-gradient-to-r from-mint-500 to-forge-500 text-white font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
+                className="btn-neon"
               >
-                {connecting ? 'Connecting…' : 'Connect Wallet'}
+                {connecting ? '◌ LINKING…' : '◤ CONNECT WALLET'}
               </button>
-              <a
-                href="/marketplace"
-                className="px-6 py-3 rounded-full bg-white/5 border border-white/10 text-white font-semibold hover:bg-white/10 transition-colors"
-              >
-                Browse marketplace
-              </a>
+              <Link href="/marketplace" className="btn-ghost">
+                ▣ ENTER MARKETPLACE
+              </Link>
             </div>
             {msg && (
-              <p className="mt-6 text-sm text-amber-300/80">{msg}</p>
+              <p className="mt-6 text-xs font-mono text-amber-300/80 tracking-wider">{msg}</p>
             )}
           </div>
         </section>
 
-        <section className="px-6 py-12 border-t border-white/5 grid md:grid-cols-3 gap-6 max-w-5xl mx-auto w-full">
-          <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/5">
-            <div className="text-mint-300 text-xs uppercase tracking-widest mb-2">Mint</div>
-            <h3 className="text-xl font-bold mb-2">Edition NFTs from SCid</h3>
-            <p className="text-sm text-gray-400">
-              Any track registered with a SoundChain ID (SCid) can be minted as a
-              limited edition NFT on Polygon. Multi-collaborator splits supported.
-            </p>
-          </div>
-          <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/5">
-            <div className="text-mint-300 text-xs uppercase tracking-widest mb-2">Marketplace</div>
-            <h3 className="text-xl font-bold mb-2">Sub-1% fees</h3>
-            <p className="text-sm text-gray-400">
-              0.05% platform fee on sales. OpenSea charges 2.5%. Blur charges 0.5%.
-              The lowest-fee music NFT marketplace in Web3 — by design.
-            </p>
-          </div>
-          <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/5">
-            <div className="text-mint-300 text-xs uppercase tracking-widest mb-2">Stake</div>
-            <h3 className="text-xl font-bold mb-2">OGUN + LP rewards</h3>
-            <p className="text-sm text-gray-400">
-              Stake OGUN single-asset or in the OGUN/POL LP. Streaming rewards
-              earned on soundchain.io claim here via Merkle proofs.
-            </p>
+        {/* Feature panels — mobile-stack, 3-up at md */}
+        <section className="relative px-4 sm:px-6 py-10 border-t border-white/5">
+          <div className="max-w-5xl mx-auto grid sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {[
+              {
+                tag: 'MINT',
+                tagColor: 'text-neon-cyan border-neon-cyan/40',
+                title: 'Edition NFTs from SCid',
+                body: 'Any SCid-registered track → limited edition on Polygon. Multi-collaborator splits supported, royalties on-chain.',
+                href: '/mint',
+                cta: 'OPEN FORGE',
+              },
+              {
+                tag: 'MARKET',
+                tagColor: 'text-neon-magenta border-neon-magenta/40',
+                title: 'Sub-1% Fees',
+                body: '0.05% platform fee on sales. OpenSea: 2.5%. Blur: 0.5%. The lowest-fee music NFT marketplace in Web3 — by design.',
+                href: '/marketplace',
+                cta: 'BROWSE LISTINGS',
+              },
+              {
+                tag: 'STAKE',
+                tagColor: 'text-neon-amber border-neon-amber/40',
+                title: 'OGUN + LP Rewards',
+                body: 'Single-asset OGUN or OGUN/POL LP. Streaming rewards from soundchain.io claim here via Merkle proofs.',
+                href: '/stake',
+                cta: 'STAKE OGUN',
+              },
+            ].map((card) => (
+              <Link
+                key={card.tag}
+                href={card.href}
+                className={`neon-panel ${card.tag === 'MARKET' ? 'neon-panel-magenta' : ''} hud-corners p-5 sm:p-6 flex flex-col group`}
+              >
+                <span className="hud-corner hud-corner-tl" />
+                <span className="hud-corner hud-corner-tr" />
+                <span className="hud-corner hud-corner-bl" />
+                <span className="hud-corner hud-corner-br" />
+                <div className={`inline-block self-start text-[9px] font-mono uppercase tracking-[0.25em] px-2 py-0.5 border ${card.tagColor} mb-3`}>
+                  {card.tag}
+                </div>
+                <h3 className="text-lg font-bold mb-2 text-white">{card.title}</h3>
+                <p className="text-xs sm:text-sm text-gray-400 leading-relaxed mb-4 flex-1">
+                  {card.body}
+                </p>
+                <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-neon-cyan group-hover:text-white transition-colors">
+                  {card.cta} →
+                </span>
+              </Link>
+            ))}
           </div>
         </section>
 
-        <footer className="px-6 py-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-gray-500">
-          <div>SoundChain Mint · Phase 2 shell (mint.soundchain.io)</div>
+        {/* HUD stat strip */}
+        <section className="px-4 sm:px-6 py-6 border-t border-white/5 bg-ink-800/40">
+          <div className="max-w-5xl mx-auto grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {[
+              { label: 'CHAIN', value: 'POLYGON' },
+              { label: 'FEE BPS', value: '5' },
+              { label: 'TOKEN', value: 'OGUN' },
+              { label: 'STATUS', value: 'LIVE' },
+            ].map((s) => (
+              <div key={s.label} className="border-l-2 border-neon-cyan/50 pl-3">
+                <div className="text-[9px] font-mono uppercase tracking-[0.3em] text-gray-500">
+                  {s.label}
+                </div>
+                <div className="text-sm sm:text-base font-mono tracking-wider text-neon-cyan mt-0.5">
+                  {s.value}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <footer className="px-4 sm:px-6 py-6 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-3 text-[10px] font-mono uppercase tracking-[0.2em] text-gray-500">
+          <div>// SC.MINT · PHASE 2 SHELL · mint.soundchain.io</div>
           <div className="flex items-center gap-4">
-            <a href="https://soundchain.io" className="hover:text-mint-300">soundchain.io</a>
-            <a href="https://arena.soundchain.io" className="hover:text-mint-300">arena.soundchain.io</a>
+            <a href="https://soundchain.io" className="hover:text-neon-cyan transition-colors">soundchain.io</a>
+            <a href="https://arena.soundchain.io" className="hover:text-neon-magenta transition-colors">arena.soundchain.io</a>
           </div>
         </footer>
       </main>

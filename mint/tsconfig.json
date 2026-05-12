@@ -15,9 +15,6 @@
     "incremental": true,
     "baseUrl": "./src",
     "paths": {
-      "@soundchain/types": ["../../packages/types/src"],
-      "@soundchain/scid": ["../../packages/scid/src"],
-      "@soundchain/contracts": ["../../packages/contracts/src"],
       "*": ["*"]
     },
     "plugins": [

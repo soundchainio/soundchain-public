@@ -8,7 +8,7 @@
  * Flow:
  *   1. /mint/<SCid> — page reads SCid from URL
  *   2. Fetch SCid metadata from SC's API → builds tokenURI
- *   3. Connect wallet (injected)
+ *   3. Connect wallet (via WalletRail — multi-wallet aware)
  *   4. Sign createEdition(quantity, to, royalty) on Polygon
  *   5. Wait for receipt → extract editionNumber from return value
  *   6. Sign safeMintToEditionQuantity(to, tokenURI, editionNumber, quantity)
@@ -19,11 +19,12 @@ import { useState, useMemo } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { useAccount, useConnect, useChainId, useSwitchChain, usePublicClient, useWalletClient } from 'wagmi'
+import { useAccount, useChainId, useSwitchChain, usePublicClient, useWalletClient } from 'wagmi'
 import { polygon } from 'wagmi/chains'
-import { parseScid } from '@soundchain/scid'
-import { CONTRACTS, NFT_EDITIONS_ABI, PLATFORM_FEE_DECIMAL } from '@soundchain/contracts'
-import { decodeEventLog, formatEther } from 'viem'
+import { parseScid } from 'lib/scid'
+import { CONTRACTS, NFT_EDITIONS_ABI, PLATFORM_FEE_DECIMAL } from 'lib/contracts'
+import { decodeEventLog } from 'viem'
+import { WalletRail } from 'components/WalletRail'
 
 const POLYGONSCAN_TX = (hash: string) => `https://polygonscan.com/tx/${hash}`
 
@@ -43,7 +44,6 @@ export default function MintBySCid() {
   const parsed = parseScid(scid)
 
   const { address, isConnected } = useAccount()
-  const { connect, connectors, isPending: connecting } = useConnect()
   const chainId = useChainId()
   const { switchChain } = useSwitchChain()
   const publicClient = usePublicClient({ chainId: polygon.id })
@@ -59,16 +59,10 @@ export default function MintBySCid() {
   const [editionNumber, setEditionNumber] = useState<bigint | null>(null)
 
   const onPolygon = chainId === polygon.id
-  const injectedConnector = useMemo(
-    () => connectors.find((c) => c.id === 'injected') || connectors[0],
-    [connectors]
-  )
+  const busy = step !== 'idle' && step !== 'error' && step !== 'success'
 
   async function fetchTokenURI(): Promise<string> {
     setStep('fetching-meta')
-    // Phase 3 contract: SC main exposes /api/scid/<scid>/tokenuri returning
-    // an ipfs:// URI for metadata. Until that endpoint ships, build a stub
-    // URI from the SCid itself (the contract accepts any string).
     try {
       const res = await fetch(`https://soundchain.io/api/scid/${scid}/tokenuri`)
       if (res.ok) {
@@ -84,14 +78,14 @@ export default function MintBySCid() {
   async function handleMint() {
     setError(null)
     if (!isConnected || !walletClient || !publicClient || !address) {
-      setError('Connect a wallet first.')
+      setError('Connect a wallet in the rail above first.')
       return
     }
     if (!onPolygon) {
       try {
         await switchChain({ chainId: polygon.id })
-      } catch (err) {
-        setError('Please switch to Polygon mainnet.')
+      } catch {
+        setError('Please switch the active wallet to Polygon mainnet.')
         return
       }
     }
@@ -104,7 +98,6 @@ export default function MintBySCid() {
       const uri = await fetchTokenURI()
       setTokenURI(uri)
 
-      // Step 1: createEdition
       setStep('creating-edition')
       const createHash = await walletClient.writeContract({
         address: CONTRACTS.NFT_EDITIONS as `0x${string}`,
@@ -117,8 +110,6 @@ export default function MintBySCid() {
       setStep('waiting-edition')
       const createReceipt = await publicClient.waitForTransactionReceipt({ hash: createHash })
 
-      // Extract editionNumber from EditionCreated event
-      // Contract emits EditionCreated(uint256 editionNumber, address creator)
       let edNum: bigint | null = null
       for (const log of createReceipt.logs) {
         try {
@@ -144,15 +135,9 @@ export default function MintBySCid() {
           // not this event, skip
         }
       }
-
-      if (edNum === null) {
-        // Fallback: read editionsCount() if the event decode missed
-        // Stub safe default 1n — contract will revert if wrong
-        edNum = 1n
-      }
+      if (edNum === null) edNum = 1n
       setEditionNumber(edNum)
 
-      // Step 2: safeMintToEditionQuantity
       setStep('minting')
       const mintHash = await walletClient.writeContract({
         address: CONTRACTS.NFT_EDITIONS as `0x${string}`,
@@ -165,7 +150,6 @@ export default function MintBySCid() {
       setStep('waiting-mint')
       await publicClient.waitForTransactionReceipt({ hash: mintHash })
 
-      // Step 3: notify SC's API of the mint (best-effort, doesn't fail the UX)
       try {
         await fetch(`https://soundchain.io/api/scid/${scid}/notify-mint`, {
           method: 'POST',
@@ -193,122 +177,179 @@ export default function MintBySCid() {
       <Head>
         <title>Mint {scid} · SoundChain Mint</title>
       </Head>
-      <main className="min-h-screen px-6 py-12 max-w-3xl mx-auto">
-        <Link href="/" className="text-xs text-gray-500 hover:text-mint-300 inline-block mb-8">
-          ← back to home
-        </Link>
-        <h1 className="text-4xl font-extrabold mb-2">Mint edition</h1>
-        <div className="text-sm font-mono text-mint-300 mb-6">{scid}</div>
+      <main className="min-h-screen flex flex-col">
+        <nav className="sticky top-0 z-30 px-3 sm:px-5 py-2.5 flex items-center justify-between border-b border-white/5 backdrop-blur-md bg-ink-900/75">
+          <Link href="/" className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-sm bg-neon-cyan shadow-neon-cyan" />
+            <span className="text-sm sm:text-base font-bold tracking-tight bg-gradient-to-r from-mint-400 via-neon-cyan to-forge-400 bg-clip-text text-transparent">
+              SC<span className="text-neon-magenta">/</span>MINT
+            </span>
+          </Link>
+          <Link href="/marketplace" className="btn-ghost text-[10px] py-1.5 px-2.5">
+            MARKET
+          </Link>
+        </nav>
 
-        {!parsed && (
-          <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-300">
-            Invalid SCid format. Expected <code className="bg-black/30 px-1 rounded">SC-POL-XXXX-XXXXXX</code>.
-          </div>
-        )}
-
-        {parsed && (
-          <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 space-y-5">
-            <div className="grid grid-cols-2 gap-4">
-              <label className="block">
-                <span className="text-xs uppercase tracking-widest text-mint-300 mb-2 block">Edition count</span>
-                <input
-                  type="number"
-                  min={1}
-                  max={10000}
-                  value={quantity}
-                  onChange={(e) => setQuantity(Math.max(1, Math.min(10000, Number(e.target.value) || 1)))}
-                  disabled={step !== 'idle' && step !== 'error'}
-                  className="w-full px-4 py-3 rounded-xl bg-black border border-white/10 focus:border-mint-500/50 text-white font-mono outline-none transition-colors disabled:opacity-50"
-                />
-              </label>
-              <label className="block">
-                <span className="text-xs uppercase tracking-widest text-mint-300 mb-2 block">Royalty %</span>
-                <input
-                  type="number"
-                  min={0}
-                  max={100}
-                  value={royalty}
-                  onChange={(e) => setRoyalty(Math.max(0, Math.min(100, Number(e.target.value) || 0)))}
-                  disabled={step !== 'idle' && step !== 'error'}
-                  className="w-full px-4 py-3 rounded-xl bg-black border border-white/10 focus:border-mint-500/50 text-white font-mono outline-none transition-colors disabled:opacity-50"
-                />
-              </label>
+        <section className="px-3 sm:px-5 py-4 sm:py-6 border-b border-white/5 bg-ink-800/40">
+          <div className="max-w-2xl mx-auto">
+            <div className="inline-block text-[8px] font-mono uppercase tracking-[0.3em] px-1.5 py-0.5 border border-neon-mint/40 text-neon-mint mb-2">
+              FORGE · POLYGON 137
             </div>
-
-            <div className="text-xs text-gray-500 space-y-1">
-              <div>Platform fee: {(PLATFORM_FEE_DECIMAL * 100).toFixed(2)}% on gas (sent to treasury)</div>
-              <div>Two signatures required: createEdition → safeMintToEditionQuantity</div>
-              <div>Network: Polygon (chainId {polygon.id})</div>
+            <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight leading-none">
+              <span className="neon-text-cyan">MINT</span>{' '}
+              <span className="text-white">EDITION</span>
+            </h1>
+            <div className="text-[11px] sm:text-xs font-mono text-neon-magenta mt-2 break-all">
+              {scid}
             </div>
-
-            {!isConnected ? (
-              <button
-                type="button"
-                onClick={() => injectedConnector && connect({ connector: injectedConnector })}
-                disabled={connecting || !injectedConnector}
-                className="w-full px-6 py-3 rounded-full bg-gradient-to-r from-mint-500 to-forge-500 text-white font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
-              >
-                {connecting ? 'Connecting…' : 'Connect wallet to mint'}
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={handleMint}
-                disabled={step !== 'idle' && step !== 'error'}
-                className="w-full px-6 py-3 rounded-full bg-gradient-to-r from-mint-500 to-forge-500 text-white font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
-              >
-                {step === 'idle' || step === 'error' ? `Mint ${quantity} editions` : labelForStep(step)}
-              </button>
-            )}
-
-            {isConnected && (
-              <div className="text-xs font-mono text-gray-500">
-                wallet: {address?.slice(0, 6)}…{address?.slice(-4)} · chain: {chainId}
-              </div>
-            )}
-
-            {createTx && (
-              <a
-                href={POLYGONSCAN_TX(createTx)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block text-xs text-mint-300 hover:underline font-mono break-all"
-              >
-                createEdition tx → {createTx}
-              </a>
-            )}
-            {mintTx && (
-              <a
-                href={POLYGONSCAN_TX(mintTx)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block text-xs text-mint-300 hover:underline font-mono break-all"
-              >
-                mint tx → {mintTx}
-              </a>
-            )}
-            {editionNumber !== null && (
-              <div className="text-xs font-mono text-gray-500">
-                editionNumber: {editionNumber.toString()}
-              </div>
-            )}
-            {tokenURI && (
-              <div className="text-xs font-mono text-gray-500 break-all">tokenURI: {tokenURI}</div>
-            )}
-
-            {error && (
-              <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-300">
-                {error}
-              </div>
-            )}
-
-            {step === 'success' && (
-              <div className="rounded-xl border border-mint-500/30 bg-mint-500/10 p-4 text-sm text-mint-200">
-                Edition minted on Polygon. SC notified. Track now lists on the marketplace.
-              </div>
-            )}
           </div>
-        )}
+        </section>
+
+        <section className="px-3 sm:px-5 py-4 sm:py-6 max-w-2xl mx-auto w-full">
+          {!parsed && (
+            <div className="neon-panel neon-panel-magenta hud-corners p-4 text-sm text-neon-magenta/90 mb-4">
+              <span className="hud-corner hud-corner-tl" />
+              <span className="hud-corner hud-corner-tr" />
+              <span className="hud-corner hud-corner-bl" />
+              <span className="hud-corner hud-corner-br" />
+              <div className="text-[10px] font-mono uppercase tracking-[0.3em] mb-1">◤ malformed scid</div>
+              Expected <code className="bg-black/40 px-1 font-mono text-[11px]">SC-POL-XXXX-XXXXXX</code>
+            </div>
+          )}
+
+          {parsed && (
+            <>
+              {/* Multi-wallet rail — mint-flow native aggregator */}
+              <WalletRail />
+
+              <div className="neon-panel hud-corners p-4 sm:p-5 space-y-4">
+                <span className="hud-corner hud-corner-tl" />
+                <span className="hud-corner hud-corner-tr" />
+                <span className="hud-corner hud-corner-bl" />
+                <span className="hud-corner hud-corner-br" />
+
+                <div className="grid grid-cols-2 gap-3">
+                  <label className="block">
+                    <span className="text-[9px] font-mono uppercase tracking-[0.3em] text-neon-cyan mb-1.5 block">
+                      EDITION COUNT
+                    </span>
+                    <input
+                      type="number"
+                      min={1}
+                      max={10000}
+                      value={quantity}
+                      onChange={(e) => setQuantity(Math.max(1, Math.min(10000, Number(e.target.value) || 1)))}
+                      disabled={busy}
+                      className="w-full px-3 py-2.5 bg-ink-900/80 border border-white/10 focus:border-neon-cyan/60 text-white font-mono text-base tabular-nums outline-none transition-colors disabled:opacity-50"
+                      style={{ clipPath: 'polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px)' }}
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="text-[9px] font-mono uppercase tracking-[0.3em] text-neon-magenta mb-1.5 block">
+                      ROYALTY %
+                    </span>
+                    <input
+                      type="number"
+                      min={0}
+                      max={100}
+                      value={royalty}
+                      onChange={(e) => setRoyalty(Math.max(0, Math.min(100, Number(e.target.value) || 0)))}
+                      disabled={busy}
+                      className="w-full px-3 py-2.5 bg-ink-900/80 border border-white/10 focus:border-neon-magenta/60 text-white font-mono text-base tabular-nums outline-none transition-colors disabled:opacity-50"
+                      style={{ clipPath: 'polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px)' }}
+                    />
+                  </label>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 text-[9px] font-mono">
+                  <div className="border-l-2 border-neon-cyan/50 pl-2">
+                    <div className="uppercase tracking-[0.25em] text-gray-500">FEE</div>
+                    <div className="text-neon-cyan">{(PLATFORM_FEE_DECIMAL * 100).toFixed(2)}%</div>
+                  </div>
+                  <div className="border-l-2 border-neon-mint/50 pl-2">
+                    <div className="uppercase tracking-[0.25em] text-gray-500">SIGS</div>
+                    <div className="text-neon-mint">2x</div>
+                  </div>
+                  <div className="border-l-2 border-neon-magenta/50 pl-2">
+                    <div className="uppercase tracking-[0.25em] text-gray-500">CHAIN</div>
+                    <div className="text-neon-magenta">137</div>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleMint}
+                  disabled={!isConnected || busy}
+                  className="btn-neon w-full text-xs"
+                >
+                  {!isConnected
+                    ? '◌ CONNECT WALLET TO MINT'
+                    : busy
+                    ? labelForStep(step)
+                    : `◤ FORGE ${quantity} EDITION${quantity === 1 ? '' : 'S'}`}
+                </button>
+
+                {(createTx || mintTx) && (
+                  <div className="space-y-1.5 pt-2 border-t border-white/5">
+                    {createTx && (
+                      <a
+                        href={POLYGONSCAN_TX(createTx)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block text-[10px] text-neon-cyan hover:text-white font-mono break-all transition-colors"
+                      >
+                        <span className="text-gray-600 uppercase tracking-widest">CREATE → </span>
+                        {createTx.slice(0, 10)}…{createTx.slice(-8)}
+                      </a>
+                    )}
+                    {mintTx && (
+                      <a
+                        href={POLYGONSCAN_TX(mintTx)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block text-[10px] text-neon-magenta hover:text-white font-mono break-all transition-colors"
+                      >
+                        <span className="text-gray-600 uppercase tracking-widest">MINT → </span>
+                        {mintTx.slice(0, 10)}…{mintTx.slice(-8)}
+                      </a>
+                    )}
+                    {editionNumber !== null && (
+                      <div className="text-[10px] font-mono text-gray-500">
+                        <span className="uppercase tracking-widest text-gray-600">ED# </span>
+                        {editionNumber.toString()}
+                      </div>
+                    )}
+                    {tokenURI && (
+                      <div className="text-[10px] font-mono text-gray-500 break-all">
+                        <span className="uppercase tracking-widest text-gray-600">URI </span>
+                        {tokenURI}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {error && (
+                  <div className="border border-neon-magenta/40 bg-neon-magenta/10 p-3 text-xs text-neon-magenta/90 font-mono">
+                    <div className="uppercase tracking-[0.3em] text-[9px] mb-1">◤ ERR</div>
+                    {error}
+                  </div>
+                )}
+
+                {step === 'success' && (
+                  <div className="border border-neon-mint/40 bg-neon-mint/10 p-3 text-xs text-neon-mint">
+                    <div className="uppercase tracking-[0.3em] text-[9px] mb-1">◤ MINTED</div>
+                    Edition is live on Polygon. SC indexer notified. Track listable on marketplace.
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </section>
+
+        <footer className="mt-auto px-3 sm:px-5 py-4 border-t border-white/5 flex items-center justify-between text-[9px] font-mono uppercase tracking-[0.2em] text-gray-500">
+          <Link href="/" className="hover:text-neon-cyan transition-colors">← HOME</Link>
+          <span>// FORGE.SCID</span>
+        </footer>
       </main>
     </>
   )
@@ -316,12 +357,12 @@ export default function MintBySCid() {
 
 function labelForStep(s: MintStep): string {
   switch (s) {
-    case 'fetching-meta': return 'Fetching metadata…'
-    case 'creating-edition': return 'Sign create edition…'
-    case 'waiting-edition': return 'Confirming create…'
-    case 'minting': return 'Sign mint…'
-    case 'waiting-mint': return 'Confirming mint…'
-    case 'success': return 'Minted ✓'
-    default: return 'Mint'
+    case 'fetching-meta': return '◌ FETCHING META…'
+    case 'creating-edition': return '◌ SIGN CREATE…'
+    case 'waiting-edition': return '◌ CONFIRMING CREATE…'
+    case 'minting': return '◌ SIGN MINT…'
+    case 'waiting-mint': return '◌ CONFIRMING MINT…'
+    case 'success': return '✓ MINTED'
+    default: return 'FORGE'
   }
 }

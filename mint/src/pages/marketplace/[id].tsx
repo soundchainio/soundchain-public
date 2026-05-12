@@ -13,7 +13,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useAccount, useConnect, useChainId, useSwitchChain, usePublicClient, useWalletClient } from 'wagmi'
 import { polygon } from 'wagmi/chains'
-import { CONTRACTS, MARKETPLACE_ABI, ERC20_ABI, PaymentType, PLATFORM_FEE_DECIMAL } from '@soundchain/contracts'
+import { CONTRACTS, MARKETPLACE_ABI, ERC20_ABI, PaymentType, PLATFORM_FEE_DECIMAL } from 'lib/contracts'
 import { parseUnits, formatEther } from 'viem'
 
 const POLYGONSCAN_TX = (hash: string) => `https://polygonscan.com/tx/${hash}`
