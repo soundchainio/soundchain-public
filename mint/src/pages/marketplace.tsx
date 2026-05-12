@@ -104,17 +104,62 @@ export default function Marketplace() {
     let cancelled = false
     ;(async () => {
       try {
-        // Pull a larger slice — the API paginates SC's full catalog (~500+
-        // NFTs across V1+V2 contracts) and returns per-contract totals.
-        const res = await fetch('/api/marketplace/listings?limit=120')
-        if (!res.ok) throw new Error(`status ${res.status}`)
-        const data = await res.json()
+        // Fetch SC's merged listings + on-chain ItemListed scanner in parallel.
+        // On-chain scanner pulls real listings from Polygon RPC, so even when
+        // SC's API has nothing in its listings collection, active on-chain
+        // listings still surface as buyable cards.
+        const [listingsRes, onchainRes] = await Promise.all([
+          fetch('/api/marketplace/listings?limit=120').catch(() => null),
+          fetch('/api/marketplace/onchain-listings').catch(() => null),
+        ])
+
+        if (!listingsRes || !listingsRes.ok) throw new Error('listings feed offline')
+        const data = await listingsRes.json()
         if (cancelled) return
-        setListings(Array.isArray(data.listings) ? data.listings : [])
+
+        let merged: ListingPreview[] = Array.isArray(data.listings) ? data.listings : []
+        let onchainCount = 0
+
+        if (onchainRes && onchainRes.ok) {
+          const onchain = await onchainRes.json()
+          const onchainListings: Array<{ owner: string; tokenId: string; quantity: string }> =
+            Array.isArray(onchain?.listings) ? onchain.listings : []
+          onchainCount = onchainListings.length
+
+          // Mark any merged listing whose tokenId matches an on-chain listing as forSale=true.
+          // For on-chain listings not already in the merged feed, add them as raw cards.
+          const onchainByToken = new Map<string, { owner: string; quantity: string }>()
+          for (const ocl of onchainListings) {
+            onchainByToken.set(String(ocl.tokenId), { owner: ocl.owner, quantity: ocl.quantity })
+          }
+
+          merged = merged.map((m) => {
+            const oc = onchainByToken.get(String(m.tokenId))
+            if (oc) return { ...m, forSale: true }
+            return m
+          })
+
+          // Surface on-chain listings that aren't in the SC index as bare cards
+          // (no metadata yet — clicking opens detail modal which hydrates from SC).
+          const knownTokenIds = new Set(merged.map((m) => String(m.tokenId)))
+          for (const [tokenId, oc] of onchainByToken) {
+            if (knownTokenIds.has(tokenId)) continue
+            merged.push({
+              id: `onchain-${tokenId}`,
+              tokenId,
+              title: `Token #${tokenId}`,
+              artist: `${oc.owner.slice(0, 6)}…${oc.owner.slice(-4)}`,
+              forSale: true,
+            })
+          }
+        }
+
+        setListings(merged)
         setSource(data.source || null)
         if (data.counts) {
           setCounts({
-            listed: typeof data.counts.listed === 'number' ? data.counts.listed : 0,
+            // Override listed count with combined SC-index + on-chain total.
+            listed: Math.max(typeof data.counts.listed === 'number' ? data.counts.listed : 0, onchainCount),
             minted: typeof data.counts.minted === 'number' ? data.counts.minted : 0,
             mintedTotal: typeof data.counts.mintedTotal === 'number' ? data.counts.mintedTotal : 0,
           })
