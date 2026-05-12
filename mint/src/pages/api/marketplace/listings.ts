@@ -57,10 +57,14 @@ export interface ListingPreview {
 const SC_BASE = 'https://soundchain.io'
 
 // GraphQL endpoint. NEXT_PUBLIC_API_URL is the same env var the web app reads;
-// in production this resolves to https://api.soundchain.io/graphql via the
-// API Gateway custom domain. Fallback hardcoded for resilience.
+// in production this should resolve to https://api.soundchain.io/graphql via
+// the API Gateway custom domain. However, the api.soundchain.io DNS still
+// routes through a broken EC2 proxy (54.89.147.104) for some clients, so we
+// fall back to the direct API Gateway invoke URL which is always reachable
+// (see CLAUDE.md Feb 2-4, 2026 sessions on API Gateway direct migration).
 const GRAPHQL_URL =
-  process.env.NEXT_PUBLIC_API_URL || 'https://api.soundchain.io/graphql'
+  process.env.NEXT_PUBLIC_API_URL ||
+  'https://19ne212py4.execute-api.us-east-1.amazonaws.com/production'
 
 // Defensive pagination ceiling: 20 pages × 100 = 2000 records max. SC currently
 // has ~600 tracks total (~500 NFT-minted); this leaves plenty of headroom for
