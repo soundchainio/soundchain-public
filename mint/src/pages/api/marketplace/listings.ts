@@ -23,6 +23,16 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 
 const SC_BASE = 'https://soundchain.io'
 
+// Canonical on-chain NFT contract addresses on Polygon mainnet. Every mint
+// since 2021 lives on one of these two — V1 (legacy ERC-721) for the 2021-2022
+// era, V2 (Editions) for everything since. We surface both addresses + counts
+// in the API response so the marketplace UI can render an on-chain transparency
+// footer with Polygonscan links.
+export const NFT_CONTRACTS = {
+  V1: '0x01E2ae47222B23EE1887c5b863FA36Af580E8A5c',
+  V2: '0xf01D323bdAc88ee39543CbBc568C6Fc76258FfE0',
+} as const
+
 export type PriceToken = 'POL' | 'OGUN' | 'ETH' | 'USDC' | 'USDT' | 'LINK' | 'AVAX'
 
 export interface ListingPreview {
@@ -55,29 +65,58 @@ function tokenFromSaleType(saleType?: string | null, isPaymentOGUN?: boolean): P
   return 'POL'
 }
 
+// Page size SC's API serves before truncating. Verified empirically May 12.
+const SC_EXPLORE_PAGE_SIZE = 100
+// Defensive upper bound on iterations — at 100/page that's 5000 NFTs of headroom.
+// Mint history is ~500 today; this gives ~10x cushion before requiring a config bump.
+const MAX_EXPLORE_PAGES = 50
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' })
 
-  const limit = Math.min(parseInt(req.query.limit as string) || 24, 100)
+  // limit caps the OUTPUT card count for grid rendering. The pagination loop
+  // still pulls every mint (subject to MAX_EXPLORE_PAGES) so per-contract
+  // counts in the transparency footer reflect the full on-chain inventory.
+  const limit = Math.min(parseInt(req.query.limit as string) || 60, 500)
 
   try {
-    // Fetch BOTH sources in parallel. Active listings pin to the top of the
-    // merged feed (holographic-bordered in the UI) and every minted-but-not-
-    // listed NFT shows up underneath. Dedup is by track.id so a track with an
-    // active listing doesn't double-render as both for-sale and browse.
-    const [listingsRes, exploreRes] = await Promise.all([
+    // Fetch active listings in parallel with the first page of explore. Listings
+    // pin to the top of the merged feed (holographic-bordered) and every minted
+    // NFT shows up underneath. Dedup is by track.id so a track with an active
+    // listing doesn't double-render as both for-sale and browse.
+    const [listingsRes, firstExploreRes] = await Promise.all([
       fetch(`${SC_BASE}/api/marketplace/listings?limit=${limit * 4}`, {
         headers: { 'User-Agent': 'soundchain-mint' },
       }).catch(() => null),
-      fetch(`${SC_BASE}/api/tracks/explore?sort=popular&limit=${limit * 2}`, {
+      fetch(`${SC_BASE}/api/tracks/explore?sort=popular&limit=${SC_EXPLORE_PAGE_SIZE}&offset=0`, {
         headers: { 'User-Agent': 'soundchain-mint' },
       }).catch(() => null),
     ])
 
     const listingsData = listingsRes?.ok ? await listingsRes.json() : { nodes: [] }
-    const exploreData = exploreRes?.ok ? await exploreRes.json() : { nodes: [] }
+    const firstExploreData = firstExploreRes?.ok ? await firstExploreRes.json() : { nodes: [] }
     const nodes = Array.isArray(listingsData.nodes) ? listingsData.nodes : []
-    const tracks = Array.isArray(exploreData.nodes) ? exploreData.nodes : []
+    const firstPage = Array.isArray(firstExploreData.nodes) ? firstExploreData.nodes : []
+
+    // Paginate remaining explore pages sequentially until a page comes back
+    // shorter than the page size (signals end-of-feed). MAX_EXPLORE_PAGES
+    // caps the loop in case SC's API ever paginates differently.
+    const tracks: any[] = [...firstPage]
+    if (firstPage.length === SC_EXPLORE_PAGE_SIZE) {
+      for (let page = 1; page < MAX_EXPLORE_PAGES; page++) {
+        const offset = page * SC_EXPLORE_PAGE_SIZE
+        const r = await fetch(
+          `${SC_BASE}/api/tracks/explore?sort=popular&limit=${SC_EXPLORE_PAGE_SIZE}&offset=${offset}`,
+          { headers: { 'User-Agent': 'soundchain-mint' } },
+        ).catch(() => null)
+        if (!r?.ok) break
+        const d = await r.json()
+        const pageNodes = Array.isArray(d.nodes) ? d.nodes : []
+        if (pageNodes.length === 0) break
+        tracks.push(...pageNodes)
+        if (pageNodes.length < SC_EXPLORE_PAGE_SIZE) break
+      }
+    }
 
     // Group listings by edition — multiple per-token listings of the same edition
     // collapse into one card with floor price + "X/N listed" fraction.
@@ -122,8 +161,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const listedIds = new Set(listed.map((c) => c.id))
 
+    // Per-contract tally — runs across the ENTIRE paginated set (not just the
+    // sliced grid output) so the transparency footer reflects every mint, V1
+    // and V2, regardless of how many cards the UI actually renders.
+    const contractCounts: Record<string, number> = {}
+    let totalMinted = 0
+    for (const t of tracks) {
+      const nft = t?.nftData
+      if (!nft) continue
+      totalMinted++
+      const addr = String(nft.contract || '').toLowerCase()
+      if (addr) contractCounts[addr] = (contractCounts[addr] || 0) + 1
+    }
+
+    // Sort browse cards newest-first (createdAt desc) so the most recent mints
+    // surface immediately under the for-sale section.
     const browse: ListingPreview[] = tracks
       .filter((t: any) => t.nftData && !listedIds.has(t.id))
+      .sort((a: any, b: any) => {
+        const ad = new Date(a.createdAt || 0).getTime()
+        const bd = new Date(b.createdAt || 0).getTime()
+        return bd - ad
+      })
       .map((t: any) => {
         const price = typeof t.price === 'number' ? t.price : undefined
         const priceToken: PriceToken | undefined = price != null
@@ -150,7 +209,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
       })
 
-    // Listed first (holographic-bordered in UI), then unique minted-only.
+    // Listed first (holographic-bordered in UI), then full newest-first minted list.
     const merged = [...listed, ...browse].slice(0, limit)
 
     const source = listed.length > 0 && browse.length > 0
@@ -159,11 +218,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       ? 'listings'
       : 'browse'
 
-    res.setHeader('Cache-Control', 's-maxage=30, stale-while-revalidate=60')
+    // 60s edge cache — pagination across 5-10 SC API calls is ~1-3s cold, so
+    // most requests should hit edge. SWR keeps tail-fetch from blocking users.
+    res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300')
     return res.status(200).json({
       listings: merged,
       source,
-      counts: { listed: listed.length, minted: browse.length },
+      counts: {
+        listed: listed.length,
+        minted: browse.length,        // unique minted-only cards shown
+        mintedTotal: totalMinted,     // every mint across V1+V2 contracts
+      },
+      contracts: {
+        v1: { address: NFT_CONTRACTS.V1, count: contractCounts[NFT_CONTRACTS.V1.toLowerCase()] || 0 },
+        v2: { address: NFT_CONTRACTS.V2, count: contractCounts[NFT_CONTRACTS.V2.toLowerCase()] || 0 },
+      },
     })
   } catch (err: any) {
     return res.status(500).json({ error: err.message || 'failed to load' })

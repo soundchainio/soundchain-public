@@ -31,13 +31,18 @@ function formatPrice(n: number): string {
 }
 
 type Source = 'listings' | 'browse' | 'merged' | null
-interface SourceCounts { listed: number; minted: number }
+interface SourceCounts { listed: number; minted: number; mintedTotal: number }
+interface ContractsInfo {
+  v1: { address: string; count: number }
+  v2: { address: string; count: number }
+}
 
 export default function Marketplace() {
   const router = useRouter()
   const [listings, setListings] = useState<ListingPreview[]>([])
   const [source, setSource] = useState<Source>(null)
-  const [counts, setCounts] = useState<SourceCounts>({ listed: 0, minted: 0 })
+  const [counts, setCounts] = useState<SourceCounts>({ listed: 0, minted: 0, mintedTotal: 0 })
+  const [contracts, setContracts] = useState<ContractsInfo | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [sweepMode, setSweepMode] = useState(false)
@@ -91,7 +96,9 @@ export default function Marketplace() {
     let cancelled = false
     ;(async () => {
       try {
-        const res = await fetch('/api/marketplace/listings?limit=40')
+        // Pull a larger slice — the API paginates SC's full catalog (~500+
+        // NFTs across V1+V2 contracts) and returns per-contract totals.
+        const res = await fetch('/api/marketplace/listings?limit=120')
         if (!res.ok) throw new Error(`status ${res.status}`)
         const data = await res.json()
         if (cancelled) return
@@ -101,8 +108,10 @@ export default function Marketplace() {
           setCounts({
             listed: typeof data.counts.listed === 'number' ? data.counts.listed : 0,
             minted: typeof data.counts.minted === 'number' ? data.counts.minted : 0,
+            mintedTotal: typeof data.counts.mintedTotal === 'number' ? data.counts.mintedTotal : 0,
           })
         }
+        if (data.contracts) setContracts(data.contracts as ContractsInfo)
       } catch (err: any) {
         if (!cancelled) setError(err?.message || 'feed offline')
       } finally {
@@ -198,7 +207,9 @@ export default function Marketplace() {
               </div>
               <div className="border-l-2 border-neon-cyan/50 pl-2">
                 <div className="text-[8px] uppercase tracking-[0.25em] text-gray-500">MINTED</div>
-                <div className="text-neon-cyan tabular-nums">{counts.minted.toString().padStart(2, '0')}</div>
+                <div className="text-neon-cyan tabular-nums">
+                  {(counts.mintedTotal || counts.minted).toString().padStart(2, '0')}
+                </div>
               </div>
               <div className="border-l-2 border-neon-magenta/50 pl-2">
                 <div className="text-[8px] uppercase tracking-[0.25em] text-gray-500">FEE</div>
@@ -296,6 +307,52 @@ export default function Marketplace() {
               </button>
             </div>
           </div>
+        )}
+
+        {/* On-chain transparency footer — every NFT shown above lives in one of
+            these two contracts on Polygon mainnet. Click through to verify on
+            Polygonscan. */}
+        {contracts && (
+          <section className="px-3 sm:px-5 py-3 border-t border-white/5 bg-ink-900/50">
+            <div className="max-w-7xl mx-auto">
+              <div className="text-[8px] font-mono uppercase tracking-[0.3em] text-gray-500 mb-2">
+                ◤ ON-CHAIN PROOF · POLYGON 137
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <a
+                  href={`https://polygonscan.com/address/${contracts.v1.address}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block border border-white/10 hover:border-neon-cyan/60 transition-colors p-2"
+                >
+                  <div className="flex items-center justify-between text-[9px] font-mono uppercase tracking-widest mb-1">
+                    <span className="text-neon-cyan">NFT V1 · 2021–2022</span>
+                    <span className="text-neon-mint tabular-nums">{contracts.v1.count} MINTS</span>
+                  </div>
+                  <div className="text-[10px] font-mono text-gray-400 break-all">
+                    {contracts.v1.address}
+                  </div>
+                </a>
+                <a
+                  href={`https://polygonscan.com/address/${contracts.v2.address}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block border border-white/10 hover:border-neon-magenta/60 transition-colors p-2"
+                >
+                  <div className="flex items-center justify-between text-[9px] font-mono uppercase tracking-widest mb-1">
+                    <span className="text-neon-magenta">NFT V2 (EDITIONS) · 2023+</span>
+                    <span className="text-neon-mint tabular-nums">{contracts.v2.count} MINTS</span>
+                  </div>
+                  <div className="text-[10px] font-mono text-gray-400 break-all">
+                    {contracts.v2.address}
+                  </div>
+                </a>
+              </div>
+              <div className="text-[9px] font-mono text-gray-500 mt-2">
+                TOTAL ON-CHAIN: <span className="text-neon-cyan tabular-nums">{counts.mintedTotal || counts.minted}</span> · Every mint since 2021 surfaces here.
+              </div>
+            </div>
+          </section>
         )}
 
         {!sweepMode && (
