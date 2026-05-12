@@ -79,7 +79,7 @@ export function MarketplaceDetailModal({ id, onClose, isPlaying, onTogglePlay }:
     ;(async () => {
       setLoading(true)
       try {
-        const listingRes = await fetch(`${SC_BASE}/api/marketplace/listing/${id}`)
+        const listingRes = await fetch(`/api/marketplace/listing/${id}`)
         if (listingRes.ok) {
           const data = await listingRes.json()
           if (data?.listing && !cancelled) {
@@ -87,7 +87,7 @@ export function MarketplaceDetailModal({ id, onClose, isPlaying, onTogglePlay }:
             return
           }
         }
-        const trackRes = await fetch(`${SC_BASE}/api/tracks/list?trackId=${id}`)
+        const trackRes = await fetch(`/api/tracks/list?trackId=${id}`)
         if (trackRes.ok) {
           const data = await trackRes.json()
           if (data?.track && !cancelled) {

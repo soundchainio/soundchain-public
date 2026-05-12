@@ -83,8 +83,8 @@ export default function MarketplaceItem() {
     ;(async () => {
       setLoading(true)
       try {
-        // 1. Try active marketplace listing first
-        const listingRes = await fetch(`${SC_BASE}/api/marketplace/listing/${id}`)
+        // 1. Try active marketplace listing first (mint proxy → SC)
+        const listingRes = await fetch(`/api/marketplace/listing/${id}`)
         if (listingRes.ok) {
           const data = await listingRes.json()
           if (data?.listing && !cancelled) {
@@ -92,8 +92,8 @@ export default function MarketplaceItem() {
             return
           }
         }
-        // 2. Fall back to browse-mode track fetch
-        const trackRes = await fetch(`${SC_BASE}/api/tracks/list?trackId=${id}`)
+        // 2. Fall back to browse-mode track fetch (mint proxy → SC)
+        const trackRes = await fetch(`/api/tracks/list?trackId=${id}`)
         if (trackRes.ok) {
           const data = await trackRes.json()
           if (data?.track && !cancelled) {

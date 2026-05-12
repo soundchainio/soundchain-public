@@ -24,8 +24,19 @@ export const CONTRACTS = {
   STREAMING_REWARDS: '0xcf9416c49D525f7a50299c71f33606A158F28546',
   STREAM_REWARDS: '0xcf9416c49D525f7a50299c71f33606A158F28546',
   QUICKSWAP_ROUTER: '0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff',
-  TREASURY: '0x519bed3fe32272fa8f1aecaf86dbfbd674ee703b',
 } as const
+
+/**
+ * Fee recipient — read from env var so the address never lives in source.
+ * Set NEXT_PUBLIC_FEE_RECIPIENT on the mint Vercel project (Production +
+ * Preview + Development). NEXT_PUBLIC_* inlines at build time; rebuild
+ * after changing.
+ */
+export function getFeeRecipient(): `0x${string}` | null {
+  const raw = process.env.NEXT_PUBLIC_FEE_RECIPIENT
+  if (!raw || !raw.startsWith('0x') || raw.length !== 42) return null
+  return raw as `0x${string}`
+}
 
 export const PLATFORM_FEE_BPS = 5
 export const FEE_DENOMINATOR = 10000
