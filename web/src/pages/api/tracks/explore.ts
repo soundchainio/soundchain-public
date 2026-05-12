@@ -4,7 +4,8 @@
  * ?search=xxx — search by title or artist
  * ?genre=xxx — filter by genre
  * ?sort=popular|newest — sort order
- * ?limit=20 — pagination
+ * ?limit=24 — page size (default 24, max 200)
+ * ?offset=0 — pagination offset (default 0)
  */
 import type { NextApiRequest, NextApiResponse } from 'next'
 import clientPromise from 'lib/mongodb'
@@ -15,7 +16,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const search = req.query.search as string
   const genre = req.query.genre as string
   const sort = (req.query.sort as string) || 'popular'
-  const limit = Math.min(parseInt(req.query.limit as string) || 20, 100)
+  const limit = Math.min(Math.max(parseInt(req.query.limit as string) || 24, 1), 200)
+  const offset = Math.max(parseInt(req.query.offset as string) || 0, 0)
 
   try {
     const client = await clientPromise
@@ -35,6 +37,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const tracks = await db.collection('tracks')
       .find(filter)
       .sort(sortObj)
+      .skip(offset)
       .limit(limit)
       .project({ title: 1, artist: 1, artworkUrl: 1, playbackUrl: 1, genres: 1, playbackCount: 1, favoriteCount: 1, createdAt: 1, nftData: 1, editionSize: 1 })
       .toArray()
