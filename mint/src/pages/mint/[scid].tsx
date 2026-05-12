@@ -22,8 +22,8 @@ import { useRouter } from 'next/router'
 import { useAccount, useChainId, useSwitchChain, usePublicClient, useWalletClient } from 'wagmi'
 import { polygon } from 'wagmi/chains'
 import { parseScid } from 'lib/scid'
-import { CONTRACTS, NFT_EDITIONS_ABI, PLATFORM_FEE_DECIMAL } from 'lib/contracts'
-import { decodeEventLog } from 'viem'
+import { CONTRACTS, NFT_EDITIONS_ABI, PLATFORM_FEE_DECIMAL, getFeeRecipient } from 'lib/contracts'
+import { decodeEventLog, parseEther } from 'viem'
 import { WalletRail } from 'components/WalletRail'
 
 const POLYGONSCAN_TX = (hash: string) => `https://polygonscan.com/tx/${hash}`
@@ -31,6 +31,8 @@ const POLYGONSCAN_TX = (hash: string) => `https://polygonscan.com/tx/${hash}`
 type MintStep =
   | 'idle'
   | 'fetching-meta'
+  | 'paying-fee'
+  | 'waiting-fee'
   | 'creating-edition'
   | 'waiting-edition'
   | 'minting'
@@ -54,6 +56,7 @@ export default function MintBySCid() {
   const [step, setStep] = useState<MintStep>('idle')
   const [error, setError] = useState<string | null>(null)
   const [tokenURI, setTokenURI] = useState<string | null>(null)
+  const [feeTx, setFeeTx] = useState<string | null>(null)
   const [createTx, setCreateTx] = useState<string | null>(null)
   const [mintTx, setMintTx] = useState<string | null>(null)
   const [editionNumber, setEditionNumber] = useState<bigint | null>(null)
@@ -97,6 +100,23 @@ export default function MintBySCid() {
     try {
       const uri = await fetchTokenURI()
       setTokenURI(uri)
+
+      // 0.05% platform fee — flat 0.0005 POL × edition count, sent before the
+      // mint so it's atomic w/ the user's intent to forge. Recipient address
+      // lives in env (NEXT_PUBLIC_FEE_RECIPIENT) — never in source.
+      const feeRecipient = getFeeRecipient()
+      if (feeRecipient) {
+        setStep('paying-fee')
+        const feePerEdition = parseEther('0.0005')
+        const feeWei = feePerEdition * BigInt(quantity)
+        const feeHash = await walletClient.sendTransaction({
+          to: feeRecipient,
+          value: feeWei,
+        })
+        setFeeTx(feeHash)
+        setStep('waiting-fee')
+        await publicClient.waitForTransactionReceipt({ hash: feeHash })
+      }
 
       setStep('creating-edition')
       const createHash = await walletClient.writeContract({
@@ -268,7 +288,7 @@ export default function MintBySCid() {
                   </div>
                   <div className="border-l-2 border-neon-mint/50 pl-2">
                     <div className="uppercase tracking-[0.25em] text-gray-500">SIGS</div>
-                    <div className="text-neon-mint">2x</div>
+                    <div className="text-neon-mint">3x</div>
                   </div>
                   <div className="border-l-2 border-neon-magenta/50 pl-2">
                     <div className="uppercase tracking-[0.25em] text-gray-500">CHAIN</div>
