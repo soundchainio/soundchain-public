@@ -471,19 +471,31 @@ export default function Marketplace() {
               <div className="text-[10px] font-mono uppercase tracking-[0.3em] text-neon-mint mb-2">
                 ◌ no matches
               </div>
-              <p className="text-xs text-gray-400 mb-2">
-                {tab === 'forSale'
-                  ? tokenFilter === 'all'
-                    ? 'No active listings right now.'
-                    : `No ${tokenFilter} listings right now.`
-                  : 'Filter returned nothing.'}
-              </p>
+              {tab === 'forSale' && tokenFilter === 'all' ? (
+                <>
+                  <p className="text-xs text-gray-300 mb-1.5">
+                    <span className="text-neon-cyan font-semibold">{counts.mintedTotal.toLocaleString()}</span>
+                    {' minted · '}
+                    <span className="text-neon-magenta font-semibold">0</span>
+                    {' currently for sale.'}
+                  </p>
+                  <p className="text-[10px] font-mono text-gray-500 mb-2">
+                    most SC NFTs are 1/1s — owners hold, don&apos;t flip
+                  </p>
+                </>
+              ) : (
+                <p className="text-xs text-gray-400 mb-2">
+                  {tab === 'forSale'
+                    ? `No ${tokenFilter} listings right now.`
+                    : 'Filter returned nothing.'}
+                </p>
+              )}
               <button
                 type="button"
                 onClick={() => { setTab('all'); setTokenFilter('all'); setSortMode('newest') }}
                 className="text-[10px] font-mono uppercase tracking-widest text-neon-cyan hover:underline"
               >
-                ◤ view all
+                ◤ view all {counts.mintedTotal.toLocaleString()} minted
               </button>
             </div>
           )}

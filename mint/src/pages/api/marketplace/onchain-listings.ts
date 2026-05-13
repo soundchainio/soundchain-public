@@ -29,15 +29,30 @@ import { polygon } from 'viem/chains'
 const MARKETPLACE_EDITIONS = '0x7EfC9A7F3381A4B28a2113EA99E2d80832589239' as const
 const NFT_V2 = '0xf01D323bdAc88ee39543CbBc568C6Fc76258FfE0' as const
 
-// Event signatures (decoded from SoundchainMarketplaceEditions.sol):
-const ITEM_LISTED_EVENT = parseAbiItem(
+// V1 (legacy 2021-2022 marketplace + single-edition NFT contract)
+const MARKETPLACE_V1 = '0x27302E3ff5287a5973d8D5328C4cEFCd752778f2' as const
+const NFT_V1 = '0x01E2ae47222B23EE1887c5b863FA36Af580E8A5c' as const
+
+// V2 event signatures (SoundchainMarketplaceEditions.sol):
+const ITEM_LISTED_V2 = parseAbiItem(
   'event ItemListed(address indexed owner, address indexed nft, uint256 tokenId, uint256 quantity, uint256 chainId)'
 )
-const ITEM_CANCELED_EVENT = parseAbiItem(
+const ITEM_CANCELED_V2 = parseAbiItem(
   'event ItemCanceled(address indexed owner, address indexed nft, uint256 tokenId)'
 )
-const ITEM_SOLD_EVENT = parseAbiItem(
+const ITEM_SOLD_V2 = parseAbiItem(
   'event ItemSold(address indexed seller, address indexed buyer, address indexed nft, uint256 tokenId, uint256 quantity, address payToken, uint256 unitPrice, uint256 pricePerItem)'
+)
+
+// V1 event signatures (SoundchainMarketplace.sol — legacy, no payToken/chainId/unitPrice):
+const ITEM_LISTED_V1 = parseAbiItem(
+  'event ItemListed(address indexed owner, address indexed nft, uint256 tokenId, uint256 quantity, uint256 pricePerItem, uint256 startingTime)'
+)
+const ITEM_CANCELED_V1 = parseAbiItem(
+  'event ItemCanceled(address indexed owner, address indexed nft, uint256 tokenId)'
+)
+const ITEM_SOLD_V1 = parseAbiItem(
+  'event ItemSold(address indexed seller, address indexed buyer, address indexed nft, uint256 tokenId, uint256 quantity, uint256 pricePerItem)'
 )
 
 // In-memory cache — fine across single Vercel function invocations.
@@ -102,9 +117,19 @@ interface ActiveListing {
   chainId: string
   blockNumber: string
   txHash: string
+  source: 'v1' | 'v2'
 }
 
-async function scanWindow(fromBlock: bigint, toBlock: bigint) {
+type ScanConfig = {
+  source: 'v1' | 'v2'
+  marketplace: `0x${string}`
+  nft: `0x${string}`
+  listedEvent: typeof ITEM_LISTED_V2 | typeof ITEM_LISTED_V1
+  cancelEvent: typeof ITEM_CANCELED_V2 | typeof ITEM_CANCELED_V1
+  soldEvent: typeof ITEM_SOLD_V2 | typeof ITEM_SOLD_V1
+}
+
+async function scanContract(cfg: ScanConfig, fromBlock: bigint, toBlock: bigint) {
   const listed: Map<string, ActiveListing> = new Map() // key = owner:tokenId
   const cancelled = new Set<string>()
   const sold = new Set<string>()
@@ -115,25 +140,25 @@ async function scanWindow(fromBlock: bigint, toBlock: bigint) {
     // Parallelize the 3 event-type pulls per chunk, each w/ RPC failover
     const [listedLogs, cancelLogs, soldLogs] = await Promise.all([
       withRpcFailover((c) => c.getLogs({
-        address: MARKETPLACE_EDITIONS,
-        event: ITEM_LISTED_EVENT,
+        address: cfg.marketplace,
+        event: cfg.listedEvent,
         fromBlock: start,
         toBlock: end,
-        args: { nft: NFT_V2 },
+        args: { nft: cfg.nft },
       })),
       withRpcFailover((c) => c.getLogs({
-        address: MARKETPLACE_EDITIONS,
-        event: ITEM_CANCELED_EVENT,
+        address: cfg.marketplace,
+        event: cfg.cancelEvent,
         fromBlock: start,
         toBlock: end,
-        args: { nft: NFT_V2 },
+        args: { nft: cfg.nft },
       })),
       withRpcFailover((c) => c.getLogs({
-        address: MARKETPLACE_EDITIONS,
-        event: ITEM_SOLD_EVENT,
+        address: cfg.marketplace,
+        event: cfg.soldEvent,
         fromBlock: start,
         toBlock: end,
-        args: { nft: NFT_V2 },
+        args: { nft: cfg.nft },
       })),
     ])
 
@@ -144,9 +169,11 @@ async function scanWindow(fromBlock: bigint, toBlock: bigint) {
         owner: args.owner,
         tokenId: args.tokenId.toString(),
         quantity: args.quantity?.toString() || '1',
+        // V1 has no chainId field; assume Polygon 137 (only chain V1 deployed on).
         chainId: args.chainId?.toString() || '137',
         blockNumber: log.blockNumber.toString(),
         txHash: log.transactionHash || '',
+        source: cfg.source,
       })
     }
     for (const log of cancelLogs) {
@@ -169,6 +196,23 @@ async function scanWindow(fromBlock: bigint, toBlock: bigint) {
   return active
 }
 
+const V2_CFG: ScanConfig = {
+  source: 'v2',
+  marketplace: MARKETPLACE_EDITIONS,
+  nft: NFT_V2,
+  listedEvent: ITEM_LISTED_V2,
+  cancelEvent: ITEM_CANCELED_V2,
+  soldEvent: ITEM_SOLD_V2,
+}
+const V1_CFG: ScanConfig = {
+  source: 'v1',
+  marketplace: MARKETPLACE_V1,
+  nft: NFT_V1,
+  listedEvent: ITEM_LISTED_V1,
+  cancelEvent: ITEM_CANCELED_V1,
+  soldEvent: ITEM_SOLD_V1,
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET')
@@ -184,15 +228,36 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const latest = await withRpcFailover((c) => c.getBlockNumber())
-    // Look back ~6 days worth of Polygon blocks (~2s blocks → 250k blocks).
-    // Override via ?blocks= query for testing.
-    const lookback = BigInt(Math.max(1, Math.min(500_000, parseInt(String(req.query.blocks || ''), 10) || 250_000)))
+    // Default: ~1 day worth of Polygon blocks (~2s blocks → 40k blocks).
+    // 250k was the old default but consistently exhausted public RPC rate limits
+    // (28 chunks × 3 event types × 2 contracts in parallel = 168 eth_getLogs/scan).
+    // 40k keeps each scan under ~28 parallel calls and finishes in <5s on a cold cache.
+    // Override via ?blocks= query if you need a deeper sweep.
+    const lookback = BigInt(Math.max(1, Math.min(500_000, parseInt(String(req.query.blocks || ''), 10) || 40_000)))
     const fromBlock = latest > lookback ? latest - lookback : 0n
 
-    const active = await scanWindow(fromBlock, latest)
+    // Scan V1 + V2 marketplaces in parallel. V1 is legacy (2021-2022 era) so we
+    // soft-fail it — a V1 RPC blowup must not take down the V2 path which has the
+    // bulk of real listings.
+    const [v2Active, v1ActiveSettled] = await Promise.all([
+      scanContract(V2_CFG, fromBlock, latest),
+      scanContract(V1_CFG, fromBlock, latest).catch((err) => {
+        // Logged but swallowed — V1 listings are rare; don't fail the whole response.
+        // eslint-disable-next-line no-console
+        console.warn('[onchain-listings] V1 scan failed:', err?.shortMessage || err?.message)
+        return [] as ActiveListing[]
+      }),
+    ])
+    const active = [...v2Active, ...v1ActiveSettled]
 
     const payload = {
       source: 'onchain',
+      contracts: {
+        v2: { nft: NFT_V2, marketplace: MARKETPLACE_EDITIONS, count: v2Active.length },
+        v1: { nft: NFT_V1, marketplace: MARKETPLACE_V1, count: v1ActiveSettled.length },
+      },
+      // Back-compat: keep top-level nftContract/marketplace pointing at V2 since
+      // V2 is the active marketplace; older clients only read these two fields.
       nftContract: NFT_V2,
       marketplace: MARKETPLACE_EDITIONS,
       scannedFrom: fromBlock.toString(),
