@@ -1,5 +1,70 @@
 # CLAUDE.md - SoundChain Development Guide
 
+## 🛒 SESSION: May 12, 2026 (User → Sarg, late — MetaMask browser test) — MINT MARKETPLACE FOR SALE/BROWSE GAPS CLOSED (`2e1797a`)
+
+User tested `mint.soundchain.io` via MetaMask browser on Sarg. Wallet connect OK. Bug report: FOR SALE filter renders "No active listings right now" despite 8178 NFTs minted. Then expanded scope: *"i need to see bith L1 aV1 and V2 in the marketplace and non listed for sale page its time to show it all again and do what ae devs couldnt do back in 2021-2022"*.
+
+### Diagnosis (live curls before fix)
+
+- `/api/marketplace/onchain-listings` (default 250k blocks) → `{"error":"HTTP request failed."}` — RPC failover loop exhausted because 250k × 9k chunks × 3 event types × 2 contracts = 168 parallel `eth_getLogs` calls per scan, public RPCs throttle.
+- `/api/marketplace/onchain-listings?blocks=20000` → `count: 0` cleanly. Genuinely zero on-chain V2 listings in recent window.
+- `/api/marketplace/listings?limit=400` → `counts: { listed: 0, minted: 201, mintedTotal: 8178 }` — only 201 indexed cards surfacing out of 8178 on-chain mints. V1 legacy 2021-2022 NFTs entirely missing.
+
+Two stacked issues: scanner default lookback silently exhausting, and BROWSE feed only covering SC's GraphQL-indexed subset.
+
+### What shipped (`2e1797a`, +328/-34, 4 files incl. 1 new)
+
+| File | Change |
+|---|---|
+| `mint/src/pages/api/marketplace/onchain-listings.ts` | Default lookback `250k → 40k blocks` (~1 day). Added V1 marketplace scan (`0x27302E3...`) alongside V2 with separate event signatures — V1 events lack `payToken`/`chainId`/`unitPrice` per the legacy `SoundchainMarketplace.sol` ABI (verified via `web/src/contract/Marketplace.sol/SoundchainMarketplace.json`). V1 scan soft-fails so V1 RPC errors can't take down the V2 path. Response now exposes per-contract `contracts: { v2: {...}, v1: {...} }` breakdown for transparency. |
+| `mint/src/pages/api/marketplace/v1-catalog.ts` (NEW) | Enumerates ALL 393 legacy V1 mints via the V1 ERC-721 Enumerable `tokenByIndex(i)` reads through viem `client.multicall({ batchSize: 100 })`. V1 contract supports `tokenByIndex` (confirmed via ABI inspection); V2 Editions does NOT — V2 enumeration needs a different strategy (next ship). 24h module cache since V1 is frozen post-2022. Cold start ~3s, warm clients near-zero. RPC failover + stale-while-error posture matches the rest of the marketplace surface. |
+| `mint/src/pages/api/marketplace/listings.ts` | Fetches `getV1Catalog()` in parallel with SC GraphQL paginated `exploreTracks`. Merges V1 catalog placeholder cards (id=`v1-${tokenId}`, title=`Legacy NFT #${tokenId}`, artist=`SoundChain · V1 (2021–2022)`) into BROWSE feed for every V1 tokenId NOT already indexed by SC. Detail-page hydration on click. New `counts.v1Enumerated` field surfaces the legacy-catalog count. |
+| `mint/src/pages/marketplace.tsx` | Cleaner FOR SALE empty state: when `tab === 'forSale' && tokenFilter === 'all'` and zero results, shows `${mintedTotal} minted · 0 currently for sale` + caption "most SC NFTs are 1/1s — owners hold, don't flip". "View All" button reads `◤ view all ${mintedTotal} minted`. Makes the gap explicit instead of looking like a broken UI. |
+
+### Verified live (post manual `vercel --prod --yes`)
+
+| Metric | Before | After |
+|---|---|---|
+| `/api/marketplace/onchain-listings` default response | `{"error":"HTTP request failed."}` | `count: 0, scannedFrom→To`, V1+V2 breakdown |
+| `/api/marketplace/v1-catalog` | 404 (didn't exist) | `totalSupply: 393, count: 393` |
+| `/api/marketplace/listings?limit=600` `counts.minted` | 201 | **551** (201 indexed + 350 V1 placeholders) |
+| `/api/marketplace/listings` `counts.v1Enumerated` | (absent) | 393 |
+| V1 tokenIds (first 5 / last 5) | (invisible) | `[0, 1, 8, 3, 4] … [459, 460, 461, 462, 463]` |
+
+V1 tokenIds are NOT sequential — sample [0,1,8,3,4] confirms gaps. Guessing `0..392` would have surfaced phantom cards for burned/skipped IDs. Multicall+tokenByIndex was the correct call.
+
+Deployment: `dpl_3aNiMtF1Uf4Acsm9eGNnnDbV2Gru` (READY). **Manual deploy required — GitHub auto-deploy webhook is now missing for `mint/` too, not just `arena/`** (Bug #27 has expanded its blast radius). Vercel `vercel ls` showed no deploy from the git push 5+ min after; `vercel --prod --yes` from `mint/` was needed.
+
+### Architecture decisions (load-bearing)
+
+1. **Multicall over event-scanning for V1.** V1 supports `tokenByIndex` so 393 reads through Multicall3 (4-8 RPC round-trips at batchSize 100) is far cheaper than scanning ~3 years of Transfer events from V1 deployment. V1 is frozen — one cold enumeration, cache 24h, done forever.
+2. **V1 placeholder cards, not full hydration.** Reading `tokenByIndex` gives tokenIds for free; reading `tokenURI` + fetching IPFS metadata for each would add ~30s cold-start latency (393 IPFS fetches, gateways are slow/flaky for 2021-era pins). Detail page handles per-token hydration on click — the catalog grid just needs presence + click-target.
+3. **V2 enumeration is intentionally NOT in this ship.** V2 Editions is NOT ERC-721 Enumerable (no `tokenByIndex`). Has `ConsecutiveTransfer` event (ERC-2309) + `Transfer` events but scanning ~3 years of Polygon blocks for those is ~5000 chunks of `eth_getLogs` — needs a proper background indexer (Mongo-persisted, refreshed on cron). Saved as next ship.
+4. **40k default lookback gives ~1 day** of V2 marketplace coverage with ~28 parallel `eth_getLogs` calls per scan, well within public RPC throttle limits. `?blocks=` query param overrides for deeper sweeps.
+5. **Soft-fail on V1 marketplace scan + V1 catalog.** Both run in parallel with V2 paths but errors are swallowed (with `console.warn`) so a V1 RPC blowup can't take down the primary V2 listings response.
+6. **Multicall over per-call retries.** viem `client.multicall({ allowFailure: true, batchSize: 100 })` handles per-call reverts gracefully — if any single `tokenByIndex(i)` reverts unexpectedly, the rest still complete and we surface what V1 actually exposes through enumeration.
+
+### Bug #27 expanded — mint/ now also needs manual deploys
+
+Per May 12 prior session: *"mint/ deploys cleanly via GitHub webhook (Bug #27 is arena-specific)"*. That's no longer true — this session's push to `main` did NOT trigger an auto-deploy on mint either. Manual `cd mint && vercel --prod --yes` was needed. Both `arena/` and `mint/` now require manual deploys. NEXT mint or arena session must audit Vercel git integration / Production Branch / GitHub webhook config for both projects.
+
+### Open follow-ups
+
+- **V2 full catalog enumeration** — 7785 V2 tokens currently surface only via SC GraphQL indexing (~201 cards). Needs ConsecutiveTransfer+Transfer event indexer with Mongo persistence + cron refresh. ETA: 1 session standalone.
+- **V1 catalog IPFS metadata hydration** — 393 V1 cards currently render as `Legacy NFT #N` placeholders. Lazy hydration in detail page works; bulk pre-hydration of titles/cover art would need a background pinner + Mongo cache. Low priority — placeholders are clickable and load metadata on tap.
+- **Bug #27 audit** — both `arena/` and `mint/` need GitHub auto-deploy investigated, not just arena.
+- **Vercel project DNS for `mint.soundchain.io`** — already wired (alias confirmed in this session).
+
+### Lessons
+
+1. **Verify the bug premise BEFORE proposing fixes.** User reported "FOR SALE shows nothing" — first instinct would be to debug the listings query. Curling the on-chain endpoint with smaller block ranges (`?blocks=20000`) confirmed (a) scanner was genuinely returning `count: 0` for V2 in recent windows, (b) the default 250k was silently failing. Two different root causes hiding behind the same empty state.
+2. **Empty states must explain the gap when the gap is the product reality.** "No active listings right now" reads like a bug when 8178 NFTs are visible above it. "8178 minted · 0 currently for sale — most SC NFTs are 1/1s, owners hold" reads like context. Same data, opposite UX.
+3. **ABI inspection > guessing event signatures.** V1 marketplace events differ from V2 — fewer args, no payToken/chainId/unitPrice. Confirmed via `python3 -c "import json; abi=json.load(open(...))"` on the existing `SoundchainMarketplace.json` rather than guessing or fetching from Polygonscan.
+4. **ERC-721 Enumerable matters at runtime.** V1 has `tokenByIndex` → 393 enumerated via Multicall in ~3s. V2 doesn't → next ship needs event indexer. Always check `tokenByIndex` presence before scoping enumeration cost.
+5. **V1 tokenIds are NOT sequential.** Sample `[0, 1, 8, 3, 4]` from live response — proves the guessable shortcut "tokenIds 0..N-1" would surface phantoms. Always enumerate, never assume.
+
+---
+
 ## 🏟️ SESSION: May 12, 2026 (Frank → Sarg, later — landing-pill audit) — EPL/MLS/MMA HUBS LIVE + BOXING WEIGHT-CLASS FILTER + TV LAYOUT (`1c672ba`)
 
 Frank: *"i was testing the new pill look on arena landing page i notice epl mls,boxing arent openeong any metadata. boxing has so many divisions and weight calsses thats a huge dope lift right there needed and maybe because world cup is about tibstart thats why eol and mls dong show anything? at least show something. and ufc/mma at least show up omcoming events. same for boxing . imagine arena on a tv screen bro!! if has to render better than it does now whoch shows mobile scale ratios and aspect ratios."*
