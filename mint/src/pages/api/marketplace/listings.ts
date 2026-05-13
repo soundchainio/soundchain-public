@@ -26,6 +26,7 @@
  */
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { getV1Catalog } from './v1-catalog'
+import { getV2Catalog } from './v2-catalog'
 
 // Canonical on-chain NFT contract addresses on Polygon mainnet. Every mint
 // since 2021 lives on one of these two — V1 (legacy ERC-721) for the 2021-2022
@@ -250,14 +251,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const limit = Math.min(parseInt(req.query.limit as string) || 60, 2000)
 
   try {
-    // Five parallel reads:
+    // Six parallel reads:
     //   1. SC active marketplace listings (for the top-of-feed for-sale cards)
     //   2. SC paginated exploreTracks (ALL minted NFT cards via GraphQL)
     //   3. V1 catalog enumeration (all 393 legacy V1 tokenIds via ERC-721 Enumerable)
-    //   4+5. On-chain totalSupply() on both NFT contracts (authoritative mint counts)
-    // V1 catalog is soft-failed because it's a "nice to have" — never block the
-    // primary listings response on V1 enumeration RPC failures.
-    const [listingsRes, allMintedTracks, v1CatalogResult, v1Total, v2Total] = await Promise.all([
+    //   4. V2 catalog enumeration (all ~7787 V2 tokenIds via sequential ownerOf probe)
+    //   5+6. On-chain totalSupply() on both NFT contracts (authoritative mint counts)
+    // V1+V2 catalogs are soft-failed — never block the primary listings response
+    // on enumeration RPC failures. The catalogs cache aggressively (V1: 24h, V2: 1h)
+    // so most requests serve from module memory near-instantly.
+    const [listingsRes, allMintedTracks, v1CatalogResult, v2CatalogResult, v1Total, v2Total] = await Promise.all([
       fetch(`${SC_BASE}/api/marketplace/listings?limit=${Math.min(limit * 4, 400)}`, {
         headers: { 'User-Agent': 'soundchain-mint' },
       }).catch(() => null),
@@ -266,6 +269,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         // eslint-disable-next-line no-console
         console.warn('[listings] V1 catalog enumeration failed:', err?.shortMessage || err?.message)
         return { tokenIds: [] as string[], totalSupply: 0, cached: false }
+      }),
+      getV2Catalog().catch((err) => {
+        // eslint-disable-next-line no-console
+        console.warn('[listings] V2 catalog enumeration failed:', err?.shortMessage || err?.message)
+        return { tokenIds: [] as string[], totalSupply: 0, observedCeiling: 0, cached: false }
       }),
       readTotalSupply(NFT_CONTRACTS.V1),
       readTotalSupply(NFT_CONTRACTS.V2),
@@ -322,6 +330,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // happened on either NFT contract.
     const totalMinted = v1Total + v2Total
 
+    // Track which (contract, tokenId) pairs SC GraphQL already indexed. V1 and
+    // V2 tokenIds overlap numerically (both start from 0), so dedupe must be
+    // contract-aware. Build the set during browse-card construction.
+    const indexedV1 = new Set<string>()
+    const indexedV2 = new Set<string>()
+
     // Browse cards: every minted track from GraphQL pagination (already filtered
     // to nftData-present). Skip any track already represented in `listed`.
     // Sort newest-first within the browse set so recent mints surface
@@ -343,9 +357,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           : 1
         const editionListed = typeof t.listingCount === 'number' ? t.listingCount : 0
 
+        // Record this card's (contract, tokenId) so the V1/V2 catalog merge
+        // below skips it. Contract addresses are case-insensitive — lowercase
+        // both sides of the comparison.
+        const contractLower = String(t.nftData?.contract || '').toLowerCase()
+        const tokenIdStr = String(t.nftData?.tokenId ?? '')
+        if (tokenIdStr && contractLower === NFT_CONTRACTS.V1.toLowerCase()) {
+          indexedV1.add(tokenIdStr)
+        } else if (tokenIdStr && contractLower === NFT_CONTRACTS.V2.toLowerCase()) {
+          indexedV2.add(tokenIdStr)
+        }
+
         return {
           id: t.id,
-          tokenId: String(t.nftData?.tokenId ?? ''),
+          tokenId: tokenIdStr,
           title: t.title,
           artist: t.artist,
           coverArtUrl: t.artworkUrl,
@@ -363,19 +388,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // GraphQL gets a bare card so the legacy 2021-2022 catalog is visible.
     // Title/cover are intentionally minimal here; the detail page hydrates
     // metadata from SC's track index or tokenURI on click.
-    const surfacedTokenIds = new Set<string>()
-    for (const c of [...listed, ...browse]) {
-      // Only dedupe V1 tokenIds — V2 tokenIds can collide numerically with V1
-      // (both start from low numbers) so we use the tokenId set as a soft
-      // dedupe. The V2 cards from GraphQL come with `nftData.contract` info
-      // upstream — we trust that they're V2 if they came through the indexed
-      // path. V1 placeholder cards only appear when SC GraphQL has no record.
-      if (c.tokenId) surfacedTokenIds.add(String(c.tokenId))
-    }
-
     const v1Placeholder: ListingPreview[] = []
     for (const tokenId of v1CatalogResult.tokenIds) {
-      if (surfacedTokenIds.has(tokenId)) continue
+      if (indexedV1.has(tokenId)) continue
       v1Placeholder.push({
         id: `v1-${tokenId}`,
         tokenId,
@@ -388,12 +403,29 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       })
     }
 
-    // Listed first (holographic-bordered in UI), then GraphQL-indexed browse cards,
-    // then V1 legacy placeholders. limit applies to the combined slice — V1 catalog
-    // gets surfaced when the user paginates past the indexed cards.
-    const merged = [...listed, ...browse, ...v1Placeholder].slice(0, limit)
+    // V2 catalog placeholder cards — same pattern. Surfaces every V2 mint that
+    // SC GraphQL hasn't indexed (the dominant case: only ~201 of 7785 V2 tokens
+    // are in the GraphQL exploreTracks projection). Detail-page hydrates.
+    const v2Placeholder: ListingPreview[] = []
+    for (const tokenId of v2CatalogResult.tokenIds) {
+      if (indexedV2.has(tokenId)) continue
+      v2Placeholder.push({
+        id: `v2-${tokenId}`,
+        tokenId,
+        title: `V2 NFT #${tokenId}`,
+        artist: 'SoundChain · V2 (2023+)',
+        editionSize: 1,
+        editionListed: 0,
+        forSale: false,
+        href: `/marketplace/v2-${tokenId}`,
+      })
+    }
 
-    const source = listed.length > 0 && (browse.length > 0 || v1Placeholder.length > 0)
+    // Order: listed (holographic in UI) → GraphQL-indexed → V2 placeholders (newer, more relevant)
+    // → V1 placeholders (legacy 2021-2022 catalog at the tail). limit applies to the combined slice.
+    const merged = [...listed, ...browse, ...v2Placeholder, ...v1Placeholder].slice(0, limit)
+
+    const source = listed.length > 0 && (browse.length > 0 || v1Placeholder.length > 0 || v2Placeholder.length > 0)
       ? 'merged'
       : listed.length > 0
       ? 'listings'
@@ -407,9 +439,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       source,
       counts: {
         listed: listed.length,
-        minted: browse.length + v1Placeholder.length,  // unique minted-only cards (indexed + V1 placeholders)
+        // Total visible browse cards: GraphQL-indexed + V1 placeholders + V2 placeholders.
+        minted: browse.length + v1Placeholder.length + v2Placeholder.length,
         mintedTotal: totalMinted,                       // every mint across V1+V2 contracts (on-chain)
-        v1Enumerated: v1CatalogResult.tokenIds.length,  // V1 tokens surfaced via on-chain enumeration
+        v1Enumerated: v1CatalogResult.tokenIds.length,  // V1 tokens surfaced via ERC-721 Enumerable
+        v2Enumerated: v2CatalogResult.tokenIds.length,  // V2 tokens surfaced via sequential ownerOf probe
       },
       contracts: {
         v1: { address: NFT_CONTRACTS.V1, count: v1Total },
