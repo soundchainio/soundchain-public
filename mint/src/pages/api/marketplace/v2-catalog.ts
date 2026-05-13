@@ -175,23 +175,32 @@ async function enumerateV2Catalog(): Promise<{ tokenIds: string[]; totalSupply: 
     }
   }
 
-  // Second pass: retry any tokenIds in [0..total-1] that failed first pass.
-  // We know these SHOULD exist (totalSupply confirms them). Reverts past the
-  // ceiling are expected; failures before the ceiling are RPC throttling.
-  const missingIds: number[] = []
-  for (let i = 0; i < total; i++) {
-    if (!successMap.has(i)) missingIds.push(i)
-  }
+  // Multi-pass retry loop: chip away at misses. Each pass uses an offset rotation
+  // so retries start at a different RPC than the one that originally failed.
+  // Loop terminates when (a) coverage is complete, (b) we exhausted MAX_RETRY_PASSES,
+  // (c) a pass added zero new successes (plateau), or (d) we're approaching the
+  // 90s Vercel hard cap.
+  const MAX_RETRY_PASSES = 6
+  const TIME_BUDGET_MS = 70_000 // leave ~20s headroom before the 90s cap
+  const startTime = Date.now()
+  let rotationOffset = 3
 
-  if (missingIds.length > 0 && missingIds.length < total) {
-    // Group missing IDs into chunks. We do contiguous-ID chunks per retry batch
-    // — most misses cluster (single failed batch = 50 sequential IDs) so this
-    // packs well into Multicall3 aggregations.
+  for (let pass = 0; pass < MAX_RETRY_PASSES; pass++) {
+    if (Date.now() - startTime > TIME_BUDGET_MS) break
+    const missingIds: number[] = []
+    for (let i = 0; i < total; i++) {
+      if (!successMap.has(i)) missingIds.push(i)
+    }
+    if (missingIds.length === 0) break
+
+    const beforeCount = successMap.size
     const retryChunks: number[][] = []
     for (let i = 0; i < missingIds.length; i += CHUNK_SIZE) {
       retryChunks.push(missingIds.slice(i, i + CHUNK_SIZE))
     }
+
     for (let i = 0; i < retryChunks.length; i += PARALLEL_CHUNKS) {
+      if (Date.now() - startTime > TIME_BUDGET_MS) break
       const wave = retryChunks.slice(i, i + PARALLEL_CHUNKS)
       const waveResults = await Promise.all(
         wave.map(async (idList, waveIdx) => {
@@ -202,11 +211,9 @@ async function enumerateV2Catalog(): Promise<{ tokenIds: string[]; totalSupply: 
             args: [BigInt(id)] as const,
           }))
           try {
-            // Retry pass uses an offset rotation so misses from first pass
-            // start at a different RPC than the one that originally failed them.
             const res = await withRpcFailover(
               (c) => c.multicall({ contracts: calls, allowFailure: true, batchSize: CHUNK_SIZE }),
-              i + waveIdx + 3,
+              i + waveIdx + rotationOffset,
             )
             return idList.map((id, idx) => ({ tokenId: id, success: res[idx].status === 'success' }))
           } catch {
@@ -220,6 +227,10 @@ async function enumerateV2Catalog(): Promise<{ tokenIds: string[]; totalSupply: 
         }
       }
     }
+
+    // Bail if this pass added zero new tokens — RPCs are consistently failing the same range
+    if (successMap.size === beforeCount) break
+    rotationOffset += 2
   }
 
   // Materialize sorted tokenId list + find observed ceiling.
