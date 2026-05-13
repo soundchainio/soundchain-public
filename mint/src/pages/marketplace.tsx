@@ -18,8 +18,14 @@ interface ListingPreview {
   editionSize?: number         // total edition supply (1 for 1/1s)
   editionListed?: number       // how many of the edition are listed for sale
   forSale?: boolean            // active marketplace listing (holographic border)
+  version?: 'v1' | 'v2'        // which NFT contract the card lives on
   href?: string
 }
+
+// Cards per page in the grid. 120 = exactly 20 rows of 6 (lg) / 24 rows of 5 (md)
+// / 30 rows of 4 (sm) / 40 rows of 3 (mobile). Tight enough for mobile to scroll
+// through without burning RAM; big enough to feel like a real catalog page.
+const PAGE_SIZE = 120
 
 // Compact price formatter — keeps cards tight. 1234.5678 → "1.23K", 0.0042 → "0.004"
 function formatPrice(n: number): string {
@@ -31,7 +37,13 @@ function formatPrice(n: number): string {
 }
 
 type Source = 'listings' | 'browse' | 'merged' | null
-interface SourceCounts { listed: number; minted: number; mintedTotal: number }
+interface SourceCounts {
+  listed: number
+  minted: number
+  mintedTotal: number
+  v1Enumerated?: number
+  v2Enumerated?: number
+}
 interface ContractsInfo {
   v1: { address: string; count: number }
   v2: { address: string; count: number }
@@ -53,10 +65,13 @@ export default function Marketplace() {
   // ── Tab + filter + sort state ─────────────────────────────────────────
   type Tab = 'forSale' | 'minted' | 'all'
   type SortMode = 'newest' | 'priceAsc' | 'priceDesc'
+  type VersionFilter = 'all' | 'v1' | 'v2'
   // Default to ALL so users always see content; FOR SALE narrows to active listings.
   const [tab, setTab] = useState<Tab>('all')
   const [tokenFilter, setTokenFilter] = useState<'all' | PriceToken>('all')
   const [sortMode, setSortMode] = useState<SortMode>('newest')
+  const [versionFilter, setVersionFilter] = useState<VersionFilter>('all')
+  const [currentPage, setCurrentPage] = useState(1)
 
   // Detail modal is driven off the URL `?id=<listingId>` so a card tap stays
   // on `/marketplace` (shallow route) and shared links still deep-link to the
@@ -108,8 +123,10 @@ export default function Marketplace() {
         // On-chain scanner pulls real listings from Polygon RPC, so even when
         // SC's API has nothing in its listings collection, active on-chain
         // listings still surface as buyable cards.
+        // 10k cap is generous headroom — V1 (393) + V2 enumerated (~7K) + indexed (~200) ≈ 7.5K.
+        // The API edge-caches the full payload (s-maxage=120) so this is one cold hit per ~2min.
         const [listingsRes, onchainRes] = await Promise.all([
-          fetch('/api/marketplace/listings?limit=120').catch(() => null),
+          fetch('/api/marketplace/listings?limit=10000').catch(() => null),
           fetch('/api/marketplace/onchain-listings').catch(() => null),
         ])
 
@@ -162,6 +179,8 @@ export default function Marketplace() {
             listed: Math.max(typeof data.counts.listed === 'number' ? data.counts.listed : 0, onchainCount),
             minted: typeof data.counts.minted === 'number' ? data.counts.minted : 0,
             mintedTotal: typeof data.counts.mintedTotal === 'number' ? data.counts.mintedTotal : 0,
+            v1Enumerated: typeof data.counts.v1Enumerated === 'number' ? data.counts.v1Enumerated : undefined,
+            v2Enumerated: typeof data.counts.v2Enumerated === 'number' ? data.counts.v2Enumerated : undefined,
           })
         }
         if (data.contracts) setContracts(data.contracts as ContractsInfo)
@@ -210,6 +229,7 @@ export default function Marketplace() {
   // ── Filter + sort pipeline ────────────────────────────────────────────
   const filteredListings = useMemo(() => {
     let out = listings.slice()
+    if (versionFilter !== 'all') out = out.filter((l) => l.version === versionFilter)
     if (tab === 'forSale') out = out.filter((l) => l.forSale === true)
     else if (tab === 'minted') out = out.filter((l) => l.forSale !== true)
     if (tokenFilter !== 'all') {
@@ -225,7 +245,38 @@ export default function Marketplace() {
         })
     }
     return out
-  }, [listings, tab, tokenFilter, sortMode])
+  }, [listings, tab, tokenFilter, sortMode, versionFilter])
+
+  // ── Pagination ────────────────────────────────────────────────────────
+  // Slice the filtered set to 120 cards per page. Total pages derive from
+  // current filter result, so changing version/tab recomputes page count.
+  const totalPages = Math.max(1, Math.ceil(filteredListings.length / PAGE_SIZE))
+  const safePage = Math.min(currentPage, totalPages)
+  const pageStart = (safePage - 1) * PAGE_SIZE
+  const pageEnd = pageStart + PAGE_SIZE
+  const pageListings = useMemo(
+    () => filteredListings.slice(pageStart, pageEnd),
+    [filteredListings, pageStart, pageEnd]
+  )
+
+  // Reset to page 1 any time the user changes a filter — otherwise they'd
+  // land mid-catalog on the new filter's result set.
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [tab, tokenFilter, sortMode, versionFilter])
+
+  // Per-version counts for the pill labels. Computed across the full listings
+  // set, NOT the post-tab-filter set, so the pill counts stay stable as the
+  // user toggles FOR SALE / MINTED / ALL.
+  const versionCounts = useMemo(() => {
+    let v1 = 0
+    let v2 = 0
+    for (const l of listings) {
+      if (l.version === 'v1') v1++
+      else if (l.version === 'v2') v2++
+    }
+    return { v1, v2, all: listings.length }
+  }, [listings])
 
   // Price-sorts only make sense on for-sale items. Reset to newest if user
   // switches off the For-Sale tab while a price sort is active.
@@ -318,6 +369,59 @@ export default function Marketplace() {
                 <div className="text-neon-magenta">0.05%</div>
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* V1/V2 version filter — sticky right below the top nav so it stays
+            in reach while scrolling deep catalog pages. Counts come from the
+            full listings set (not post-tab-filter) so toggling FOR SALE /
+            MINTED / ALL doesn't churn the numbers. */}
+        <section className="sticky top-[42px] z-20 px-2 sm:px-4 py-2 border-b border-white/5 bg-ink-900/85 backdrop-blur-md">
+          <div className="max-w-7xl mx-auto flex items-center gap-1.5 overflow-x-auto scrollbar-hide">
+            <span className="text-[8px] font-mono uppercase tracking-[0.3em] text-gray-500 flex-shrink-0 pl-1">
+              VERSION
+            </span>
+            {/* Active-state classes are hardcoded per pill so Tailwind JIT
+                picks them up. Dynamic interpolation like `bg-${accent}/15`
+                won't be scanned and the styles never make it into the CSS. */}
+            {([
+              {
+                id: 'all' as const,
+                label: 'ALL',
+                count: counts.mintedTotal || versionCounts.all,
+                activeClass: 'bg-neon-cyan/15 text-neon-cyan border-neon-cyan/60',
+              },
+              {
+                id: 'v2' as const,
+                label: 'V2',
+                count: counts.v2Enumerated ?? versionCounts.v2,
+                activeClass: 'bg-neon-magenta/15 text-neon-magenta border-neon-magenta/60',
+              },
+              {
+                id: 'v1' as const,
+                label: 'V1',
+                count: counts.v1Enumerated ?? versionCounts.v1,
+                activeClass: 'bg-neon-mint/15 text-neon-mint border-neon-mint/60',
+              },
+            ]).map((v) => {
+              const active = versionFilter === v.id
+              return (
+                <button
+                  key={v.id}
+                  type="button"
+                  onClick={() => setVersionFilter(v.id)}
+                  className={`flex items-center gap-2 px-3 py-1.5 text-[10px] font-mono uppercase tracking-[0.25em] border transition-colors flex-shrink-0 ${
+                    active
+                      ? v.activeClass
+                      : 'border-white/10 text-gray-400 hover:border-white/30 hover:text-gray-200'
+                  }`}
+                  style={{ clipPath: 'polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px)' }}
+                >
+                  <span>{v.label}</span>
+                  <span className="tabular-nums opacity-80">{v.count.toLocaleString()}</span>
+                </button>
+              )
+            })}
           </div>
         </section>
 
@@ -501,20 +605,39 @@ export default function Marketplace() {
           )}
 
           {!loading && !error && filteredListings.length > 0 && (
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-1.5 sm:gap-2">
-              {filteredListings.map((listing) => (
-                <NftChip
-                  key={listing.id}
-                  listing={listing}
-                  selected={selected.has(listing.id)}
-                  sweepMode={sweepMode}
-                  onSelect={toggleSelect}
-                  onOpenDetail={openDetail}
-                  isPlaying={playingId === listing.id}
-                  onTogglePlay={togglePlay}
-                />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-1.5 sm:gap-2">
+                {pageListings.map((listing) => (
+                  <NftChip
+                    key={listing.id}
+                    listing={listing}
+                    selected={selected.has(listing.id)}
+                    sweepMode={sweepMode}
+                    onSelect={toggleSelect}
+                    onOpenDetail={openDetail}
+                    isPlaying={playingId === listing.id}
+                    onTogglePlay={togglePlay}
+                  />
+                ))}
+              </div>
+
+              {/* Pagination — Prev / Page X of Y / Next + jump input. Shows
+                  even on single-page result sets so the count is always visible. */}
+              <PaginationControls
+                currentPage={safePage}
+                totalPages={totalPages}
+                pageStart={pageStart + 1}
+                pageEnd={Math.min(pageEnd, filteredListings.length)}
+                totalItems={filteredListings.length}
+                onPageChange={(p) => {
+                  setCurrentPage(p)
+                  // Snap to top of grid so user sees the first card of the new page.
+                  if (typeof window !== 'undefined') {
+                    window.scrollTo({ top: 0, behavior: 'smooth' })
+                  }
+                }}
+              />
+            </>
           )}
         </section>
 
@@ -746,5 +869,107 @@ function NftChip({
     >
       {inner}
     </button>
+  )
+}
+
+// Pagination controls — Prev / Page X of Y / Next + jump-to-page input.
+// Renders as a sticky-feeling bar under the grid with a "Showing X-Y of Z"
+// position indicator so the user always knows where they are in the catalog.
+function PaginationControls({
+  currentPage,
+  totalPages,
+  pageStart,
+  pageEnd,
+  totalItems,
+  onPageChange,
+}: {
+  currentPage: number
+  totalPages: number
+  pageStart: number
+  pageEnd: number
+  totalItems: number
+  onPageChange: (p: number) => void
+}) {
+  const [jumpValue, setJumpValue] = useState<string>('')
+
+  const handleJump = (e: React.FormEvent) => {
+    e.preventDefault()
+    const n = parseInt(jumpValue, 10)
+    if (Number.isFinite(n) && n >= 1 && n <= totalPages) {
+      onPageChange(n)
+      setJumpValue('')
+    }
+  }
+
+  const canPrev = currentPage > 1
+  const canNext = currentPage < totalPages
+
+  return (
+    <nav
+      aria-label="Pagination"
+      className="mt-4 sm:mt-6 pt-3 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-2"
+    >
+      <div className="text-[10px] font-mono uppercase tracking-[0.25em] text-gray-500 tabular-nums">
+        Showing{' '}
+        <span className="text-neon-cyan">{pageStart.toLocaleString()}</span>–
+        <span className="text-neon-cyan">{pageEnd.toLocaleString()}</span>{' '}
+        of{' '}
+        <span className="text-neon-mint">{totalItems.toLocaleString()}</span>
+      </div>
+
+      <div className="flex items-center gap-1.5">
+        <button
+          type="button"
+          onClick={() => canPrev && onPageChange(currentPage - 1)}
+          disabled={!canPrev}
+          className={`px-3 py-1.5 text-[10px] font-mono uppercase tracking-[0.25em] border transition-colors ${
+            canPrev
+              ? 'border-white/15 text-gray-300 hover:border-neon-cyan/60 hover:text-neon-cyan'
+              : 'border-white/5 text-gray-700 cursor-not-allowed'
+          }`}
+          style={{ clipPath: 'polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px)' }}
+        >
+          ← PREV
+        </button>
+
+        <div className="px-3 py-1.5 text-[10px] font-mono uppercase tracking-[0.25em] border border-neon-magenta/60 bg-neon-magenta/10 text-neon-magenta tabular-nums">
+          {currentPage} / {totalPages}
+        </div>
+
+        <button
+          type="button"
+          onClick={() => canNext && onPageChange(currentPage + 1)}
+          disabled={!canNext}
+          className={`px-3 py-1.5 text-[10px] font-mono uppercase tracking-[0.25em] border transition-colors ${
+            canNext
+              ? 'border-white/15 text-gray-300 hover:border-neon-cyan/60 hover:text-neon-cyan'
+              : 'border-white/5 text-gray-700 cursor-not-allowed'
+          }`}
+          style={{ clipPath: 'polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px)' }}
+        >
+          NEXT →
+        </button>
+
+        {totalPages > 5 && (
+          <form onSubmit={handleJump} className="hidden sm:flex items-center gap-1.5 ml-2">
+            <input
+              type="number"
+              min={1}
+              max={totalPages}
+              value={jumpValue}
+              onChange={(e) => setJumpValue(e.target.value)}
+              placeholder="JUMP"
+              className="w-16 px-2 py-1.5 text-[10px] font-mono uppercase tracking-widest tabular-nums bg-ink-800 border border-white/10 text-white placeholder:text-gray-600 focus:border-neon-cyan/60 focus:outline-none"
+            />
+            <button
+              type="submit"
+              className="px-2 py-1.5 text-[10px] font-mono uppercase tracking-widest border border-white/15 text-gray-400 hover:border-neon-cyan/60 hover:text-neon-cyan"
+            >
+              GO
+            </button>
+          </form>
+        )}
+      </div>
+    </nav>
   )
 }

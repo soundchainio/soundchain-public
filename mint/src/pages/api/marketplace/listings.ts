@@ -52,7 +52,17 @@ export interface ListingPreview {
   editionSize?: number             // total edition supply (1 for 1/1s)
   editionListed?: number           // count actively listed for sale right now
   forSale?: boolean                // true = active marketplace listing, false = minted-only
+  version?: 'v1' | 'v2'            // which NFT contract (v1=legacy 2021-22, v2=Editions 2023+)
   href?: string
+}
+
+// Detect which contract a card lives on from its contract address.
+function detectVersion(contract?: string | null): 'v1' | 'v2' | undefined {
+  if (!contract) return undefined
+  const c = contract.toLowerCase()
+  if (c === NFT_CONTRACTS.V1.toLowerCase()) return 'v1'
+  if (c === NFT_CONTRACTS.V2.toLowerCase()) return 'v2'
+  return undefined
 }
 
 // SC base URL for the listings REST endpoint (active marketplace listings).
@@ -319,6 +329,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         editionSize: rep.track?.editionSize || undefined,
         editionListed: groupListings.length,
         forSale: true,
+        version: detectVersion(rep.nftAddress),
         href: `/marketplace/${rep.track?.id || rep.id}`,
       }
     })
@@ -380,6 +391,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           editionSize,
           editionListed,
           forSale: false,
+          version: detectVersion(t.nftData?.contract),
           href: `/marketplace/${t.id}`,
         }
       })
@@ -399,6 +411,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         editionSize: 1,
         editionListed: 0,
         forSale: false,
+        version: 'v1',
         href: `/marketplace/v1-${tokenId}`,
       })
     }
@@ -417,6 +430,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         editionSize: 1,
         editionListed: 0,
         forSale: false,
+        version: 'v2',
         href: `/marketplace/v2-${tokenId}`,
       })
     }
