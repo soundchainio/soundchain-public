@@ -68,16 +68,22 @@ const RPC_FALLBACKS = [
 function makeClient(rpcUrl: string) {
   return createPublicClient({
     chain: polygon,
-    transport: http(rpcUrl, { timeout: 8000, retryCount: 0, batch: { batchSize: 100 } }),
+    // 4s per-RPC timeout (was 8s) — fast failover to next RPC when one throttles
+    // rather than burning seconds waiting on a hung connection. Cumulative time
+    // matters since the route has a 90s Vercel hard cap.
+    transport: http(rpcUrl, { timeout: 4000, retryCount: 0, batch: { batchSize: 100 } }),
     batch: { multicall: true },
   })
 }
 
-async function withRpcFailover<T>(op: (c: ReturnType<typeof makeClient>) => Promise<T>): Promise<T> {
+async function withRpcFailover<T>(op: (c: ReturnType<typeof makeClient>) => Promise<T>, startIndex = 0): Promise<T> {
   let lastErr: any = null
+  // Try RPCs in rotated order starting from `startIndex` so parallel callers
+  // spread load across the fallback pool instead of all flooding RPC[0].
   for (let i = 0; i < RPC_FALLBACKS.length; i++) {
+    const rpcIndex = (startIndex + i) % RPC_FALLBACKS.length
     try {
-      const c = makeClient(RPC_FALLBACKS[i])
+      const c = makeClient(RPC_FALLBACKS[rpcIndex])
       return await op(c)
     } catch (err: any) {
       lastErr = err
@@ -98,13 +104,15 @@ const CACHE_TTL_MS = 60 * 60 * 1000 // 1h
 // throttling better — a single failed chunk only loses CHUNK_SIZE tokens, not
 // 100. Each chunk gets its own RPC failover loop, so a throttled RPC swaps to
 // the next fallback transparently.
-const CHUNK_SIZE = 50
+const CHUNK_SIZE = 100
 
-// Max chunks to run in parallel. Higher = faster but more RPC pressure.
-// 4 keeps total concurrent eth_call pressure reasonable across all fallbacks.
-const PARALLEL_CHUNKS = 4
+// Max chunks to run in parallel. 12 = aggressive but withRpcFailover spreads
+// load across multiple RPC fallbacks; each chunk hits its preferred RPC then
+// rotates on failure. Need this throughput to fit ~78 chunks for full
+// totalSupply=7785 catalog inside the 90s Vercel hard cap.
+const PARALLEL_CHUNKS = 12
 
-async function probeChunk(startId: number, count: number): Promise<Array<{ tokenId: number; success: boolean }>> {
+async function probeChunk(startId: number, count: number, chunkIndex: number): Promise<Array<{ tokenId: number; success: boolean }>> {
   const calls = Array.from({ length: count }, (_, i) => ({
     address: NFT_V2,
     abi: V2_ABI,
@@ -113,12 +121,11 @@ async function probeChunk(startId: number, count: number): Promise<Array<{ token
   }))
 
   try {
-    const results = await withRpcFailover((c) =>
-      c.multicall({
-        contracts: calls,
-        allowFailure: true,
-        batchSize: CHUNK_SIZE,
-      }),
+    // Each chunk starts at a rotated RPC index so 12 parallel chunks fan out
+    // across the fallback pool instead of all hitting RPC[0] simultaneously.
+    const results = await withRpcFailover(
+      (c) => c.multicall({ contracts: calls, allowFailure: true, batchSize: CHUNK_SIZE }),
+      chunkIndex,
     )
     return results.map((r, i) => ({ tokenId: startId + i, success: r.status === 'success' }))
   } catch {
@@ -151,12 +158,15 @@ async function enumerateV2Catalog(): Promise<{ tokenIds: string[]; totalSupply: 
   }
 
   // Run chunks PARALLEL_CHUNKS at a time. Each chunk has independent RPC
-  // failover, so a throttled RPC on chunk N doesn't affect chunks N+1..M.
+  // failover starting from a rotated index (chunk N starts at RPC[N % count])
+  // so a wave of 12 parallel chunks spreads load across 7 RPC fallbacks.
   const successMap = new Set<number>()
   for (let i = 0; i < chunkStarts.length; i += PARALLEL_CHUNKS) {
     const wave = chunkStarts.slice(i, i + PARALLEL_CHUNKS)
     const waveResults = await Promise.all(
-      wave.map((start) => probeChunk(start, Math.min(CHUNK_SIZE, totalCalls - start))),
+      wave.map((start, waveIdx) =>
+        probeChunk(start, Math.min(CHUNK_SIZE, totalCalls - start), i + waveIdx),
+      ),
     )
     for (const chunkResult of waveResults) {
       for (const { tokenId, success } of chunkResult) {
@@ -184,7 +194,7 @@ async function enumerateV2Catalog(): Promise<{ tokenIds: string[]; totalSupply: 
     for (let i = 0; i < retryChunks.length; i += PARALLEL_CHUNKS) {
       const wave = retryChunks.slice(i, i + PARALLEL_CHUNKS)
       const waveResults = await Promise.all(
-        wave.map(async (idList) => {
+        wave.map(async (idList, waveIdx) => {
           const calls = idList.map((id) => ({
             address: NFT_V2,
             abi: V2_ABI,
@@ -192,8 +202,11 @@ async function enumerateV2Catalog(): Promise<{ tokenIds: string[]; totalSupply: 
             args: [BigInt(id)] as const,
           }))
           try {
-            const res = await withRpcFailover((c) =>
-              c.multicall({ contracts: calls, allowFailure: true, batchSize: CHUNK_SIZE }),
+            // Retry pass uses an offset rotation so misses from first pass
+            // start at a different RPC than the one that originally failed them.
+            const res = await withRpcFailover(
+              (c) => c.multicall({ contracts: calls, allowFailure: true, batchSize: CHUNK_SIZE }),
+              i + waveIdx + 3,
             )
             return idList.map((id, idx) => ({ tokenId: id, success: res[idx].status === 'success' }))
           } catch {
