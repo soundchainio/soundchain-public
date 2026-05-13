@@ -289,13 +289,6 @@ export default function Marketplace() {
     }
   }, [tab, sortMode, tokenFilter])
 
-  // Tokens actually present in for-sale listings — show only relevant pills.
-  const availableTokens = useMemo(() => {
-    const set = new Set<PriceToken>()
-    for (const l of listings) if (l.forSale && l.priceToken) set.add(l.priceToken)
-    return Array.from(set)
-  }, [listings])
-
   const sourceLabel = source === 'merged'
     ? { tag: 'FOR SALE + MINTED', color: 'text-neon-magenta border-neon-magenta/40' }
     : source === 'listings'
@@ -341,7 +334,10 @@ export default function Marketplace() {
           </div>
         </nav>
 
-        {/* Header strip — compact, single-row on mobile */}
+        {/* Header strip — H1 reflects the active tab so the name matches what's
+            actually rendering. "MARKETPLACE" implies for-sale; when 0 cards are
+            listed and 7K+ are sitting minted, "MINTED CATALOG" reads more
+            honest. ALL tab gets the dual label. */}
         <section className="px-3 sm:px-5 py-3 sm:py-4 border-b border-white/5 bg-ink-800/40">
           <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
             <div className="min-w-0">
@@ -349,9 +345,40 @@ export default function Marketplace() {
                 {sourceLabel.tag}
               </div>
               <h1 className="text-xl sm:text-3xl font-extrabold tracking-tight leading-none">
-                <span className="neon-text-cyan">MARKET</span>
-                <span className="text-white">PLACE</span>
+                {tab === 'forSale' ? (
+                  <>
+                    <span className="neon-text-cyan">MARKET</span>
+                    <span className="text-white">PLACE</span>
+                  </>
+                ) : tab === 'minted' ? (
+                  <>
+                    <span className="neon-text-cyan">MINTED</span>
+                    <span className="text-white"> · CATALOG</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="neon-text-cyan">MINTED</span>
+                    <span className="text-white"> · </span>
+                    <span className="neon-text-magenta">MARKET</span>
+                  </>
+                )}
               </h1>
+              {/* Grand total under the H1 — bigger than the stat strip so the
+                  full catalog size is unmistakable on mobile. */}
+              <div className="mt-1.5 text-[10px] font-mono tabular-nums text-gray-400">
+                <span className="text-neon-cyan font-semibold text-xs">
+                  {(counts.mintedTotal || versionCounts.all).toLocaleString()}
+                </span>
+                <span className="text-gray-500"> MINTED ON-CHAIN</span>
+                {(counts.v1Enumerated || counts.v2Enumerated) && (
+                  <>
+                    <span className="text-gray-600"> · </span>
+                    <span className="text-neon-mint">V1 {(counts.v1Enumerated || 0).toLocaleString()}</span>
+                    <span className="text-gray-600"> + </span>
+                    <span className="text-neon-magenta">V2 {(counts.v2Enumerated || 0).toLocaleString()}</span>
+                  </>
+                )}
+              </div>
             </div>
             <div className="flex items-center gap-3 font-mono text-[10px] flex-shrink-0">
               <div className="border-l-2 border-neon-mint/60 pl-2">
@@ -361,7 +388,7 @@ export default function Marketplace() {
               <div className="border-l-2 border-neon-cyan/50 pl-2">
                 <div className="text-[8px] uppercase tracking-[0.25em] text-gray-500">MINTED</div>
                 <div className="text-neon-cyan tabular-nums">
-                  {(counts.mintedTotal || counts.minted).toString().padStart(2, '0')}
+                  {(counts.mintedTotal || versionCounts.all).toLocaleString()}
                 </div>
               </div>
               <div className="border-l-2 border-neon-magenta/50 pl-2">
@@ -427,18 +454,31 @@ export default function Marketplace() {
 
         {/* Tabs + filter pills + sort + floor strip */}
         <section className="px-2 sm:px-4 pt-3 max-w-7xl mx-auto w-full space-y-2">
-          {/* Tab row — FOR SALE / MINTED / ALL */}
+          {/* Tab row — FOR SALE / MINTED / ALL. Active-state classes hardcoded
+              per pill (template-literal `bg-${accent}` doesn't get scanned by
+              Tailwind JIT). */}
           <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide pb-0.5">
             {([
-              { id: 'forSale' as const, label: 'FOR SALE', count: counts.listed, color: 'mint' },
-              { id: 'minted' as const, label: 'MINTED', count: Math.max(0, (counts.mintedTotal || counts.minted) - counts.listed), color: 'cyan' },
-              { id: 'all' as const, label: 'ALL', count: counts.mintedTotal || counts.minted, color: 'magenta' },
+              {
+                id: 'forSale' as const,
+                label: 'FOR SALE',
+                count: counts.listed,
+                activeClass: 'bg-neon-mint/15 text-neon-mint border-neon-mint/60',
+              },
+              {
+                id: 'minted' as const,
+                label: 'MINTED',
+                count: Math.max(0, (counts.mintedTotal || versionCounts.all) - counts.listed),
+                activeClass: 'bg-neon-cyan/15 text-neon-cyan border-neon-cyan/60',
+              },
+              {
+                id: 'all' as const,
+                label: 'ALL',
+                count: counts.mintedTotal || versionCounts.all,
+                activeClass: 'bg-neon-magenta/15 text-neon-magenta border-neon-magenta/60',
+              },
             ]).map((t) => {
               const active = tab === t.id
-              const accent =
-                t.color === 'mint' ? 'neon-mint' :
-                t.color === 'cyan' ? 'neon-cyan' :
-                'neon-magenta'
               return (
                 <button
                   key={t.id}
@@ -446,22 +486,28 @@ export default function Marketplace() {
                   onClick={() => setTab(t.id)}
                   className={`flex items-center gap-2 px-3 py-1.5 text-[10px] font-mono uppercase tracking-[0.25em] border transition-colors flex-shrink-0 ${
                     active
-                      ? `bg-${accent}/15 text-${accent} border-${accent}/60`
+                      ? t.activeClass
                       : 'border-white/10 text-gray-400 hover:border-white/30 hover:text-gray-200'
                   }`}
                   style={{ clipPath: 'polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px)' }}
                 >
                   <span>{t.label}</span>
-                  <span className="tabular-nums opacity-70">{t.count.toString().padStart(2, '0')}</span>
+                  <span className="tabular-nums opacity-70">{t.count.toLocaleString()}</span>
                 </button>
               )
             })}
           </div>
 
-          {/* Token filter pills + sort pills — only meaningful on For-Sale tab */}
-          {tab === 'forSale' && (availableTokens.length > 0 || floors.length > 0) && (
+          {/* Token filter + price sort pills — ALWAYS render on the FOR SALE
+              tab so the pricing UX is visible even when zero cards are listed
+              (the dominant case today: SC NFTs are 1/1s held, not flipped).
+              Per-token counts shown inline; tokens with 0 listings render
+              faded but stay clickable so the filter dimension is discoverable.
+              All 7 SC-supported tokens render; the 24-token cross-chain set
+              comes online once those listings start landing. */}
+          {tab === 'forSale' && (
             <div className="flex flex-wrap items-center gap-1.5 pt-1">
-              {/* Token filter */}
+              {/* Token filter — count per token from current listings set */}
               <button
                 type="button"
                 onClick={() => setTokenFilter('all')}
@@ -473,28 +519,38 @@ export default function Marketplace() {
               >
                 ALL
               </button>
-              {availableTokens.map((tk) => (
-                <button
-                  key={tk}
-                  type="button"
-                  onClick={() => setTokenFilter(tk)}
-                  className={`px-2 py-1 text-[9px] font-mono uppercase tracking-widest border transition-colors ${
-                    tokenFilter === tk
-                      ? 'bg-neon-cyan/15 text-neon-cyan border-neon-cyan/60'
-                      : 'border-white/10 text-gray-500 hover:text-neon-cyan/80'
-                  }`}
-                >
-                  {tk}
-                </button>
-              ))}
+              {(['POL', 'OGUN', 'ETH', 'USDC', 'USDT', 'LINK', 'AVAX'] as PriceToken[]).map((tk) => {
+                const tkCount = listings.filter((l) => l.forSale && l.priceToken === tk).length
+                const active = tokenFilter === tk
+                const empty = tkCount === 0
+                return (
+                  <button
+                    key={tk}
+                    type="button"
+                    onClick={() => setTokenFilter(tk)}
+                    className={`flex items-center gap-1 px-2 py-1 text-[9px] font-mono uppercase tracking-widest border transition-colors ${
+                      active
+                        ? 'bg-neon-cyan/15 text-neon-cyan border-neon-cyan/60'
+                        : empty
+                        ? 'border-white/5 text-gray-600 hover:text-gray-400'
+                        : 'border-white/10 text-gray-300 hover:text-neon-cyan/80 hover:border-neon-cyan/30'
+                    }`}
+                  >
+                    <span>{tk}</span>
+                    {tkCount > 0 && (
+                      <span className="tabular-nums opacity-80">{tkCount}</span>
+                    )}
+                  </button>
+                )
+              })}
 
               <span className="w-px h-4 bg-white/10 mx-1" aria-hidden />
 
-              {/* Sort */}
+              {/* Price sort — FLOOR = priceAsc, HIGHEST = priceDesc, NEWEST = createdAt */}
               {([
                 { id: 'newest' as SortMode, label: 'NEWEST' },
-                { id: 'priceAsc' as SortMode, label: 'PRICE ↑' },
-                { id: 'priceDesc' as SortMode, label: 'PRICE ↓' },
+                { id: 'priceAsc' as SortMode, label: 'FLOOR ↑' },
+                { id: 'priceDesc' as SortMode, label: 'HIGHEST ↓' },
               ]).map((s) => (
                 <button
                   key={s.id}

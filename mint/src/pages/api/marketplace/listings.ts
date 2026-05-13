@@ -258,7 +258,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   // limit caps the card-grid output. On-chain totals are fetched in parallel
   // and reflect every mint regardless of how many cards the grid actually shows.
-  const limit = Math.min(parseInt(req.query.limit as string) || 60, 2000)
+  // 10k headroom — V1 (393) + V2 enumerated (~7K) + indexed (~200) ≈ 7.5K real
+  // max today, with room for V2 enumeration to finish reaching its 7,785 ceiling.
+  const limit = Math.min(parseInt(req.query.limit as string) || 60, 10000)
 
   try {
     // Six parallel reads:
