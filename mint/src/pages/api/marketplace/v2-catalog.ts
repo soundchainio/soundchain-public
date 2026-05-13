@@ -38,7 +38,10 @@ import { polygon } from 'viem/chains'
 // cold cache. Default Vercel serverless timeout is 10s — bump for this route
 // so the first request after deploy doesn't time out before the cache primes.
 export const config = {
-  maxDuration: 60,
+  // Two-pass enumeration (initial parallel sweep + retry for misses) hits
+  // ~25-40s on cold start across ~7800 tokens. 90s gives generous headroom
+  // when public RPCs are extra throttled.
+  maxDuration: 90,
 }
 
 const NFT_V2 = '0xf01D323bdAc88ee39543CbBc568C6Fc76258FfE0' as const
@@ -91,6 +94,40 @@ async function withRpcFailover<T>(op: (c: ReturnType<typeof makeClient>) => Prom
 let cache: { ts: number; data: { tokenIds: string[]; totalSupply: number; observedCeiling: number } } | null = null
 const CACHE_TTL_MS = 60 * 60 * 1000 // 1h
 
+// Chunk size for each Multicall3 RPC call. Smaller chunks survive public-RPC
+// throttling better — a single failed chunk only loses CHUNK_SIZE tokens, not
+// 100. Each chunk gets its own RPC failover loop, so a throttled RPC swaps to
+// the next fallback transparently.
+const CHUNK_SIZE = 50
+
+// Max chunks to run in parallel. Higher = faster but more RPC pressure.
+// 4 keeps total concurrent eth_call pressure reasonable across all fallbacks.
+const PARALLEL_CHUNKS = 4
+
+async function probeChunk(startId: number, count: number): Promise<Array<{ tokenId: number; success: boolean }>> {
+  const calls = Array.from({ length: count }, (_, i) => ({
+    address: NFT_V2,
+    abi: V2_ABI,
+    functionName: 'ownerOf' as const,
+    args: [BigInt(startId + i)] as const,
+  }))
+
+  try {
+    const results = await withRpcFailover((c) =>
+      c.multicall({
+        contracts: calls,
+        allowFailure: true,
+        batchSize: CHUNK_SIZE,
+      }),
+    )
+    return results.map((r, i) => ({ tokenId: startId + i, success: r.status === 'success' }))
+  } catch {
+    // Entire chunk failed across all RPC fallbacks — mark all as failures.
+    // Caller can retry these specific tokenIds in a second pass if needed.
+    return calls.map((_, i) => ({ tokenId: startId + i, success: false }))
+  }
+}
+
 async function enumerateV2Catalog(): Promise<{ tokenIds: string[]; totalSupply: number; observedCeiling: number }> {
   const supply = await withRpcFailover((c) =>
     c.readContract({
@@ -105,29 +142,80 @@ async function enumerateV2Catalog(): Promise<{ tokenIds: string[]; totalSupply: 
   // Probe 0..(total + buffer). V2 verified-dense in this range; reverts past
   // the actual ceiling get filtered out via allowFailure.
   const probeCeiling = total + CEILING_BUFFER
-  const calls = Array.from({ length: probeCeiling + 1 }, (_, i) => ({
-    address: NFT_V2,
-    abi: V2_ABI,
-    functionName: 'ownerOf' as const,
-    args: [BigInt(i)] as const,
-  }))
+  const totalCalls = probeCeiling + 1
 
-  const results = await withRpcFailover((c) =>
-    c.multicall({
-      contracts: calls,
-      allowFailure: true,
-      batchSize: 100, // 1 Multicall3 aggregate3 tx packs 100 ownerOf calls per RPC round-trip
-    }),
-  )
+  // Build chunk plan.
+  const chunkStarts: number[] = []
+  for (let start = 0; start < totalCalls; start += CHUNK_SIZE) {
+    chunkStarts.push(start)
+  }
 
-  // Successful index → real tokenId.
+  // Run chunks PARALLEL_CHUNKS at a time. Each chunk has independent RPC
+  // failover, so a throttled RPC on chunk N doesn't affect chunks N+1..M.
+  const successMap = new Set<number>()
+  for (let i = 0; i < chunkStarts.length; i += PARALLEL_CHUNKS) {
+    const wave = chunkStarts.slice(i, i + PARALLEL_CHUNKS)
+    const waveResults = await Promise.all(
+      wave.map((start) => probeChunk(start, Math.min(CHUNK_SIZE, totalCalls - start))),
+    )
+    for (const chunkResult of waveResults) {
+      for (const { tokenId, success } of chunkResult) {
+        if (success) successMap.add(tokenId)
+      }
+    }
+  }
+
+  // Second pass: retry any tokenIds in [0..total-1] that failed first pass.
+  // We know these SHOULD exist (totalSupply confirms them). Reverts past the
+  // ceiling are expected; failures before the ceiling are RPC throttling.
+  const missingIds: number[] = []
+  for (let i = 0; i < total; i++) {
+    if (!successMap.has(i)) missingIds.push(i)
+  }
+
+  if (missingIds.length > 0 && missingIds.length < total) {
+    // Group missing IDs into chunks. We do contiguous-ID chunks per retry batch
+    // — most misses cluster (single failed batch = 50 sequential IDs) so this
+    // packs well into Multicall3 aggregations.
+    const retryChunks: number[][] = []
+    for (let i = 0; i < missingIds.length; i += CHUNK_SIZE) {
+      retryChunks.push(missingIds.slice(i, i + CHUNK_SIZE))
+    }
+    for (let i = 0; i < retryChunks.length; i += PARALLEL_CHUNKS) {
+      const wave = retryChunks.slice(i, i + PARALLEL_CHUNKS)
+      const waveResults = await Promise.all(
+        wave.map(async (idList) => {
+          const calls = idList.map((id) => ({
+            address: NFT_V2,
+            abi: V2_ABI,
+            functionName: 'ownerOf' as const,
+            args: [BigInt(id)] as const,
+          }))
+          try {
+            const res = await withRpcFailover((c) =>
+              c.multicall({ contracts: calls, allowFailure: true, batchSize: CHUNK_SIZE }),
+            )
+            return idList.map((id, idx) => ({ tokenId: id, success: res[idx].status === 'success' }))
+          } catch {
+            return idList.map((id) => ({ tokenId: id, success: false }))
+          }
+        }),
+      )
+      for (const chunkResult of waveResults) {
+        for (const { tokenId, success } of chunkResult) {
+          if (success) successMap.add(tokenId)
+        }
+      }
+    }
+  }
+
+  // Materialize sorted tokenId list + find observed ceiling.
   const tokenIds: string[] = []
   let highestSuccess = 0
-  for (let i = 0; i < results.length; i++) {
-    if (results[i].status === 'success') {
-      tokenIds.push(String(i))
-      if (i > highestSuccess) highestSuccess = i
-    }
+  const sortedIds = Array.from(successMap).sort((a, b) => a - b)
+  for (const id of sortedIds) {
+    tokenIds.push(String(id))
+    if (id > highestSuccess) highestSuccess = id
   }
 
   return { tokenIds, totalSupply: total, observedCeiling: highestSuccess }
@@ -166,6 +254,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       totalSupply,
       observedCeiling,
       count: tokenIds.length,
+      cached,
       tokenIds,
     })
   } catch (err: any) {
