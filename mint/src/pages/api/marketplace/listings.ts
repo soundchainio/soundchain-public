@@ -443,31 +443,50 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // → V1 placeholders (legacy 2021-2022 catalog at the tail). limit applies to the combined slice.
     const merged = [...listed, ...browse, ...v2Placeholder, ...v1Placeholder].slice(0, limit)
 
-    // Hydrate V1/V2 placeholder cards within the visible slice using on-chain
-    // tokenURI → IPFS metadata. Without this, legacy NFTs render as "Legacy NFT
-    // #N" with no cover art. The detail page already does the same lookup via
-    // `/api/tracks/list?trackId=v1-X` on click — same `hydrateOnchain` helper.
+    // Hydrate V1/V2 placeholder cards with on-chain tokenURI → IPFS metadata.
+    // Without this, legacy NFTs render as "Legacy NFT #N" with no cover art.
     //
-    // Bounded work: only cards in the merged slice (max `limit`, default 60) get
-    // hydrated. `hydrateOnchain` carries a 24h in-memory cache keyed on id, so
-    // warm requests skip the RPC + IPFS round-trip entirely. Cold start cost is
-    // bounded by `limit` × (1 RPC read + 1 IPFS fetch) in parallel ≈ 1-3s.
-    //
-    // Promise.allSettled — one failed hydration (dead IPFS pin, RPC error) must
-    // not block the rest. Cards that fail stay as placeholders rather than 502.
-    const placeholdersInSlice = merged
-      .map((card, idx) => ({ card, idx }))
-      .filter(({ card }) => /^v[12]-\d+$/.test(card.id))
+    // BOUNDED BUDGETS — frontend fetches at limit=10000, but hydrating 7000+
+    // placeholders crushes the function (RPC rate limits + 7000 parallel IPFS
+    // fetches → 90%+ failure + 2+ min response). Per-type caps below cover the
+    // first few pages of EACH version filter (V1, V2, ALL); cards beyond the
+    // budget render as placeholders and lazy-hydrate via /api/tracks/list on
+    // detail-page click. 24h hydrateOnchain cache means warm requests are
+    // instant — the budget only bites on the very first load after deploy.
+    const HYDRATE_BUDGET_V1 = 100
+    const HYDRATE_BUDGET_V2 = 200
+    const HYDRATE_CONCURRENCY = 8
 
+    let v1Used = 0
+    let v2Used = 0
+    const placeholdersInSlice: Array<{ idx: number; isV1: boolean }> = []
+    for (let i = 0; i < merged.length; i++) {
+      const card = merged[i]
+      if (card.id.startsWith('v1-') && v1Used < HYDRATE_BUDGET_V1) {
+        placeholdersInSlice.push({ idx: i, isV1: true })
+        v1Used++
+      } else if (card.id.startsWith('v2-') && v2Used < HYDRATE_BUDGET_V2) {
+        placeholdersInSlice.push({ idx: i, isV1: false })
+        v2Used++
+      }
+      if (v1Used >= HYDRATE_BUDGET_V1 && v2Used >= HYDRATE_BUDGET_V2) break
+    }
+
+    // Concurrency-limited Promise.allSettled — keep RPC + Pinata gateway happy.
+    // 8 in-flight is comfortable for public-node.com + Pinata's free tier,
+    // ~1-3s per chunk × ~38 chunks for 300 cards ≈ 6-8s cold start total.
     if (placeholdersInSlice.length > 0) {
-      await Promise.allSettled(
-        placeholdersInSlice.map(async ({ card, idx }) => {
-          const isV1 = card.id.startsWith('v1-')
-          const contract = (isV1 ? NFT_V1 : CONTRACTS.NFT_EDITIONS) as `0x${string}`
-          const label: 'V1' | 'V2' = isV1 ? 'V1' : 'V2'
+      const queue = [...placeholdersInSlice]
+      const workers = Array.from({ length: Math.min(HYDRATE_CONCURRENCY, queue.length) }, async () => {
+        while (queue.length > 0) {
+          const job = queue.shift()
+          if (!job) break
+          const card = merged[job.idx]
+          const contract = (job.isV1 ? NFT_V1 : CONTRACTS.NFT_EDITIONS) as `0x${string}`
+          const label: 'V1' | 'V2' = job.isV1 ? 'V1' : 'V2'
           try {
             const { track } = await hydrateOnchain(card.id, contract, card.tokenId, label)
-            merged[idx] = {
+            merged[job.idx] = {
               ...card,
               title: track.title || card.title,
               artist: track.artist || card.artist,
@@ -475,11 +494,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               audioUrl: track.playbackUrl || card.audioUrl,
             }
           } catch {
-            // Leave placeholder in place — failed hydration shows as "Legacy NFT #N"
-            // rather than blocking the whole response.
+            // Leave placeholder — failed hydration shows as "Legacy NFT #N"
+            // rather than blocking the response.
           }
-        }),
-      )
+        }
+      })
+      await Promise.all(workers)
     }
 
     const source = listed.length > 0 && (browse.length > 0 || v1Placeholder.length > 0 || v2Placeholder.length > 0)
