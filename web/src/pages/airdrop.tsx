@@ -21,7 +21,7 @@ import { useEffect, useState } from 'react'
     import { RPCErrorCode } from 'magic-sdk'
     import Link from 'next/link'
     import { useRouter } from 'next/router'
-    import { toast, ToastContainer } from 'react-toastify'
+    import { toast } from 'react-toastify'
     import { errorHandler } from 'utils/errorHandler'
     import Web3 from 'web3'
 
@@ -309,16 +309,8 @@ import { useEffect, useState } from 'react'
 
       return (
         <>
-          <ToastContainer
-            position="top-center"
-            autoClose={6 * 1000}
-            toastStyle={{
-              backgroundColor: '#202020',
-              color: 'white',
-              fontSize: '12px',
-              textAlign: 'center',
-            }}
-          />
+          {/* ToastContainer removed — Layout.tsx already mounts a default one.
+              Two default containers cause every toast() call to render twice. */}
           <SEO title="Airdrop" canonicalUrl="/airdrop" description="Collect your Ogun tokens" />
           <main className="flex h-full w-full items-center justify-center py-32 font-rubik text-white">
             <div className="flex max-w-3xl flex-col items-center justify-center gap-y-12 pb-0 md:pb-40">

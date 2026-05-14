@@ -52,7 +52,7 @@ import { useLogStream } from 'hooks/useLogStream'
 import { useMe } from 'hooks/useMe'
 import { useMagicContext } from 'hooks/useMagicContext'
 import { gql, useQuery } from '@apollo/client'
-import { toast, ToastContainer } from 'react-toastify'
+import { toast } from 'react-toastify'
 import { OgunRewardToast, DailyLimitToast } from 'components/common/OgunRewardToast'
 import { SimpleTrackUploadForm } from 'components/forms/track/SimpleTrackUploadForm'
 import { useUpload } from 'hooks/useUpload'
@@ -1538,24 +1538,11 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
         } : null}
       />
 
-      {/* Toast container for OGUN reward notifications */}
-      <ToastContainer
-        position="bottom-right"
-        autoClose={4000}
-        newestOnTop
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss={false}
-        draggable
-        pauseOnHover
-        theme="dark"
-        toastStyle={{
-          background: 'rgba(10, 22, 40, 0.95)',
-          border: '1px solid rgba(234, 179, 8, 0.3)',
-          borderRadius: '12px',
-          backdropFilter: 'blur(8px)',
-        }}
-      />
+      {/* ToastContainer removed — _app.tsx's SoundchainPageLayout already mounts
+          a default one for every getLayout-using page. Two default containers
+          cause every toast() call to render twice. The OgunRewardToast component
+          carries its own visual styling so removing the radio-themed container
+          background only changes the outer pill, not the content. */}
 
       {/* SCID Upload Modal — full overlay, radio keeps playing */}
       {showUploadForm && (

@@ -13,7 +13,7 @@ import { MetaMask } from 'icons/MetaMask'
 import { WalletConnect } from 'icons/WalletConnect'
 import { testnetNetwork } from 'lib/blockchainNetworks'
 import { useEffect, useState } from 'react'
-import { toast, ToastContainer } from 'react-toastify'
+import { toast } from 'react-toastify'
 import Web3 from 'web3'
 import { Contract } from 'web3-eth-contract'
 import { AbiItem } from 'web3-utils'
@@ -447,16 +447,8 @@ export default function LPStake() {
   return (
     <main className="flex h-full flex-col items-center gap-y-20 pt-32 font-rubik text-white md:gap-y-32">
       {account ? <StakeState /> : <ConnectAccountState />}
-      <ToastContainer
-        position="top-center"
-        autoClose={6 * 1000}
-        toastStyle={{
-          backgroundColor: '#202020',
-          color: 'white',
-          fontSize: '12px',
-          textAlign: 'center',
-        }}
-      />
+      {/* ToastContainer removed — Layout.tsx already mounts a default one.
+          Two default containers cause every toast() call to render twice. */}
       <CustomModal show={showModal} onClose={() => setShowModal(false)}>
         <div className="w-96 rounded bg-white p-6">
           <h1 className="text-2xl font-bold text-blue-500">CONNECT WALLET</h1>

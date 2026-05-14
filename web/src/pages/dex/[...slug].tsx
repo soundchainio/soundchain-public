@@ -63,7 +63,7 @@ import { LayoutContextProvider } from 'hooks/useLayoutContext'
 import { useOmnichain } from 'hooks/useOmnichain'
 import { ENABLED_CHAINS, getChainsByCategory } from 'constants/chains'
 import { SUPPORTED_TOKENS, TOKEN_INFO, Token, getDisplaySymbol } from 'constants/tokens'
-import { ToastContainer, toast } from 'react-toastify'
+import { toast } from 'react-toastify'
 import dynamic from 'next/dynamic'
 import { useUnifiedWallet } from 'contexts/UnifiedWalletContext'
 import { LeftSidebar, RightSidebar, MiniProfileDashboard } from 'components/Sidebar'
@@ -9357,16 +9357,10 @@ DEXDashboard.getLayout = (page: ReactElement) => {
                 <AudioEngine />
                 <MobileBottomAudioPlayer />
                 <DesktopBottomAudioPlayer />
-                <ToastContainer
-                  position="top-center"
-                  autoClose={6 * 1000}
-                  toastStyle={{
-                    backgroundColor: '#202020',
-                    color: 'white',
-                    fontSize: '12px',
-                    textAlign: 'center',
-                  }}
-                />
+                {/* ToastContainer removed — _app.tsx's SoundchainPageLayout already
+                    mounts one for every getLayout-using page. Two default containers
+                    cause every toast() call to render twice (react-toastify dispatches
+                    to ALL mounted containers without containerId). */}
                 {/* Portal container for modals - required for Posts video/music embed modals */}
                 <div id="modals">
                   {/* NFT Minting Modal */}
