@@ -1,0 +1,13 @@
+[Unit]
+Description=Reverse SSH tunnel to EC2 for Lucy/Norman
+After=network-online.target ollama.service
+Wants=network-online.target
+
+[Service]
+User=soundchain
+ExecStart=/usr/bin/ssh -NT -i /home/soundchain/.ssh/soundchain-key-pair-2025.pem -o ServerAliveInterval=60 -o ExitOnForwardFailure=yes -o StrictHostKeyChecking=accept-new -R 11434:localhost:11434 ubuntu@44.209.136.62
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
