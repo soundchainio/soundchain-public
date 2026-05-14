@@ -1929,24 +1929,28 @@ const CATEGORY_ICONS: Record<string, React.FC<{ className?: string }>> = {
 }
 
 // ─── Neural Inline Panel — Live FFT Brain Scanner ─────────────────────
-// Reads from window.__soundchainAnalyzer (shared with RadioScene4D / AudioEngine)
+// Reads from window.__soundchainAnalyzer (shared with RadioScene4D / AudioEngine).
+// ALSO reads window.__lucyThinking — when Lucy (anvil LLM) is generating tokens,
+// the visualizer pulses with synthetic activity so the brain scanner reflects
+// real inference happening on the M5000 in Frank's house.
 function NeuralInlinePanel() {
   const analyzerRef = useRef<AnalyserNode | null>(null)
   const rafRef = useRef<number>(0)
+  const lucyActiveRef = useRef<boolean>(false)
   const [regions, setRegions] = useState({ auditory: 0, motor: 0, prefrontal: 0, emotional: 0, reward: 0 })
   const [engagement, setEngagement] = useState(0)
   const [isLive, setIsLive] = useState(false)
+  const [signalSource, setSignalSource] = useState<'audio' | 'lucy' | null>(null)
 
   useEffect(() => {
     // Energy-efficient brain scanner. Three-state machine:
-    //   IDLE  — no audio analyzer present. Don't rAF; poll for analyzer at 3s.
-    //   ACTIVE — analyzer present + tab visible. rAF at native rate (gated to 20fps state-update).
+    //   IDLE  — no audio analyzer + no Lucy thinking. Don't rAF; poll at 3s.
+    //   ACTIVE — analyzer or Lucy thinking, tab visible. rAF gated to 20fps.
     //   HIDDEN — tab backgrounded. Stop rAF entirely; resume on visibilitychange.
-    // Pre-fix this loop ran a 60fps rAF + 800ms poll forever, even with no audio,
-    // even on a backgrounded tab — the dominant source of phone heat / drain.
     let mounted = true
     let prevBass = 0, prevMids = 0, prevHighs = 0
     let frameCount = 0
+    let lucyStartedAt = 0
 
     const stopLoop = () => {
       if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = 0 as any }
@@ -1954,26 +1958,37 @@ function NeuralInlinePanel() {
 
     const loop = () => {
       if (!mounted) return
-      // Bail if tab hidden or analyzer disappeared mid-flight; visibility / poll handlers will resume.
       if (typeof document !== 'undefined' && document.hidden) { stopLoop(); return }
-      if (!analyzerRef.current) { stopLoop(); return }
+      if (!analyzerRef.current && !lucyActiveRef.current) { stopLoop(); return }
       frameCount++
       let bass = 0, mids = 0, highs = 0, energy = 0
       try {
-        const data = new Uint8Array(analyzerRef.current.frequencyBinCount)
-        analyzerRef.current.getByteFrequencyData(data)
-        const len = data.length
-        for (let i = 0; i < len; i++) {
-          const val = data[i] / 255
-          if (i < len * 0.15) bass += val
-          else if (i < len * 0.5) mids += val
-          else highs += val
-          energy += val
+        if (analyzerRef.current) {
+          // Real FFT from audio engine
+          const data = new Uint8Array(analyzerRef.current.frequencyBinCount)
+          analyzerRef.current.getByteFrequencyData(data)
+          const len = data.length
+          for (let i = 0; i < len; i++) {
+            const val = data[i] / 255
+            if (i < len * 0.15) bass += val
+            else if (i < len * 0.5) mids += val
+            else highs += val
+            energy += val
+          }
+          bass = bass / (len * 0.15)
+          mids = mids / (len * 0.35)
+          highs = highs / (len * 0.5)
+          energy = energy / len
+        } else if (lucyActiveRef.current) {
+          // Synthetic "thinking" activity — bias toward prefrontal cortex.
+          // Three offset sine waves give a believable neural rhythm without
+          // claiming we're reading actual inference telemetry.
+          const t = (performance.now() - lucyStartedAt) / 1000
+          bass = 0.25 + Math.sin(t * 1.3) * 0.15 + Math.random() * 0.05
+          mids = 0.35 + Math.sin(t * 2.1 + 1.5) * 0.2 + Math.random() * 0.05
+          highs = 0.65 + Math.sin(t * 3.7 + 0.7) * 0.25 + Math.random() * 0.08
+          energy = 0.45 + Math.sin(t * 1.9 + 2.3) * 0.2
         }
-        bass = bass / (len * 0.15)
-        mids = mids / (len * 0.35)
-        highs = highs / (len * 0.5)
-        energy = energy / len
       } catch {}
       bass = prevBass * 0.7 + bass * 0.3
       mids = prevMids * 0.7 + mids * 0.3
@@ -1991,7 +2006,7 @@ function NeuralInlinePanel() {
     const startLoopIfReady = () => {
       if (!mounted) return
       if (typeof document !== 'undefined' && document.hidden) return
-      if (!analyzerRef.current) return
+      if (!analyzerRef.current && !lucyActiveRef.current) return
       if (rafRef.current) return
       rafRef.current = requestAnimationFrame(loop)
     }
@@ -1999,20 +2014,26 @@ function NeuralInlinePanel() {
     const checkAnalyzer = () => {
       if (!mounted) return
       const existing = (window as any).__soundchainAnalyzer as AnalyserNode | undefined
-      const wasLive = !!analyzerRef.current
-      if (existing) {
-        analyzerRef.current = existing
+      const lucy = !!(window as any).__lucyThinking
+      const wasLive = !!analyzerRef.current || lucyActiveRef.current
+      const nowLive = !!existing || lucy
+
+      analyzerRef.current = existing || null
+      if (lucy && !lucyActiveRef.current) lucyStartedAt = performance.now()
+      lucyActiveRef.current = lucy
+
+      // Source priority: audio (more meaningful), then Lucy
+      const source: 'audio' | 'lucy' | null = existing ? 'audio' : lucy ? 'lucy' : null
+      setSignalSource(source)
+
+      if (nowLive) {
         if (!wasLive) setIsLive(true)
         startLoopIfReady()
-      } else {
-        analyzerRef.current = null
-        if (wasLive) {
-          setIsLive(false)
-          stopLoop()
-          // Decay state to zero once instead of leaving stale bars rendered.
-          setRegions({ auditory: 0, motor: 0, prefrontal: 0, emotional: 0, reward: 0 })
-          setEngagement(0)
-        }
+      } else if (wasLive) {
+        setIsLive(false)
+        stopLoop()
+        setRegions({ auditory: 0, motor: 0, prefrontal: 0, emotional: 0, reward: 0 })
+        setEngagement(0)
       }
     }
 
@@ -2023,8 +2044,10 @@ function NeuralInlinePanel() {
     }
 
     checkAnalyzer()
-    // 3000ms poll (was 800ms). Analyzer presence flips on play/pause — no need to react sub-second.
-    const poll = setInterval(checkAnalyzer, 3000)
+    // 1000ms poll. Audio analyzer presence flips on play/pause, and Lucy's
+    // thinking window can be brief (a few seconds per response) so we want
+    // to catch the start without missing the visualization entirely.
+    const poll = setInterval(checkAnalyzer, 1000)
     if (typeof document !== 'undefined') document.addEventListener('visibilitychange', onVisibilityChange)
 
     return () => {
@@ -2093,9 +2116,13 @@ function NeuralInlinePanel() {
         {/* Status line */}
         <div className="text-center space-y-1">
           {isLive ? (
-            <div className="text-[10px] text-purple-300 font-mono">Reading FFT from audio engine · {engagement > 50 ? 'HIGH ACTIVITY' : engagement > 20 ? 'MODERATE' : 'LOW SIGNAL'}</div>
+            <div className="text-[10px] text-purple-300 font-mono">
+              {signalSource === 'lucy'
+                ? `Lucy thinking on anvil · M5000 · ${engagement > 50 ? 'HIGH ACTIVITY' : engagement > 20 ? 'MODERATE' : 'LOW SIGNAL'}`
+                : `Reading FFT from audio engine · ${engagement > 50 ? 'HIGH ACTIVITY' : engagement > 20 ? 'MODERATE' : 'LOW SIGNAL'}`}
+            </div>
           ) : (
-            <div className="text-[10px] text-gray-500 font-mono">Play any track to activate the brain scanner</div>
+            <div className="text-[10px] text-gray-500 font-mono">Play any track or summon Lucy to activate the brain scanner</div>
           )}
           <div className="text-[8px] text-purple-500/40 font-mono">TRIBE v2 × SoundChain × NVIDIA · Meta Ray-Bans · Apple Vision Pro</div>
         </div>
