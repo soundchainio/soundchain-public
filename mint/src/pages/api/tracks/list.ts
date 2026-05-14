@@ -121,8 +121,11 @@ async function hydrateOnchain(
     id,
     title: meta.name || meta.title || `${contractLabel} NFT #${tokenId}`,
     artist: artist || `SoundChain · ${contractLabel}`,
-    artworkUrl: ipfsToHttp(meta.image || meta.cover_image || meta.coverArtUrl || ''),
-    playbackUrl: ipfsToHttp(meta.animation_url || meta.audio || meta.audioUrl || meta.playbackUrl || ''),
+    // V1's 2021-2022 metadata uses `art` (cover) + `asset` (audio); V2 and most
+    // OpenSea-shaped formats use `image` + `animation_url`. Both branches are
+    // covered so the same code path renders for either era of mint.
+    artworkUrl: ipfsToHttp(meta.image || meta.cover_image || meta.coverArtUrl || meta.art || ''),
+    playbackUrl: ipfsToHttp(meta.animation_url || meta.audio || meta.audioUrl || meta.playbackUrl || meta.asset || ''),
     description: meta.description || '',
     nftData: {
       tokenId,
