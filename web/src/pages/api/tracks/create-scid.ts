@@ -90,19 +90,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const count = await db.collection('scids').estimatedDocumentCount()
     const scidNumber = count + 2600001
     const prefix = 'SC-POL'
-    const block = Math.floor(scidNumber / 1000000).toString().padStart(4, '0').slice(-4)
+    const artistHash = Math.floor(scidNumber / 1000000).toString().padStart(4, '0').slice(-4)
     const seq = (scidNumber % 1000000).toString().padStart(7, '0')
-    const scidCode = `${prefix}-${block}-${seq}`
+    const scidCode = `${prefix}-${artistHash}-${seq}`
 
+    // Field names must match the canonical SCid schema in api/src/models/SCid.ts —
+    // GraphQL queries + slug.tsx display read `.scid` (not `.code`), `.ogunRewardsEarned`
+    // (not `.totalOgunEarned`), `.isNft` (not `.isNFT`). The `scid` unique index also
+    // means writes missing the `scid` field collide on null.
     const scid = {
+      scid: scidCode,
       trackId,
       profileId: auth.profileId,
-      code: scidCode,
+      chainCode: 'POL',
+      artistHash,
+      year: String(new Date().getFullYear()).slice(-2),
+      sequence: scidNumber,
+      status: 'PENDING',
       streamCount: 0,
-      totalOgunEarned: 0,
-      claimedOgun: 0,
-      unclaimedOgun: 0,
-      isNFT: false,
+      ogunRewardsEarned: 0,
+      ogunRewardsClaimed: 0,
+      dailyOgunEarned: 0,
+      isNft: false,
       createdAt: now,
       updatedAt: now,
     }

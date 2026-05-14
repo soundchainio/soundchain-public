@@ -20,17 +20,31 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const scid = await db.collection('scids').findOne({ trackId: new ObjectId(trackId) })
     if (!scid) return res.status(200).json({ scidByTrack: null })
 
+    // Canonical field is `scid` per api/src/models/SCid.ts + GraphQL schema. Older
+    // Vercel-direct docs (pre-bugfix May 14, 2026) stored the code under `code` and
+    // earnings under `totalOgunEarned`/`claimedOgun` — fall back so legacy uploads
+    // keep rendering. Response shape matches the GraphQL `scidByTrack` query the
+    // track-detail UI in dex/[...slug].tsx reads.
+    const scidCode = scid.scid || scid.code || scid.scidCode || ''
+    const ogunRewardsEarned = scid.ogunRewardsEarned ?? scid.totalOgunEarned ?? scid.ogunEarned ?? 0
+    const ogunRewardsClaimed = scid.ogunRewardsClaimed ?? scid.claimedOgun ?? 0
+    const isNft = scid.isNft ?? scid.isNFT ?? false
+
     return res.status(200).json({
       scidByTrack: {
         id: scid._id.toString(),
-        scidCode: scid.scidCode || '',
+        scid: scidCode,
+        scidCode, // back-compat for any caller still reading scidCode
         trackId: scid.trackId?.toString() || '',
         profileId: scid.profileId?.toString() || '',
+        chainCode: scid.chainCode || 'POL',
+        status: scid.status || 'PENDING',
         streamCount: scid.streamCount || 0,
-        ogunEarned: scid.ogunEarned || 0,
+        ogunRewardsEarned,
+        ogunRewardsClaimed,
         ipfsCid: scid.ipfsCid || '',
         playbackUrl: scid.playbackUrl || '',
-        isNft: scid.isNft || false,
+        isNft,
         tokenId: scid.tokenId ?? null,
         createdAt: scid.createdAt || null,
         streamCountCalibratedAt: scid.streamCountCalibratedAt || null,
