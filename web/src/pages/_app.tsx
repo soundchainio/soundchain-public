@@ -38,6 +38,10 @@ const PushEnableFloat = dynamic(() => import('components/PushEnableFloat').then(
 const FederatedSearchLauncher = dynamic(() => import('components/FederatedSearchLauncher'), { ssr: false })
 const LegacyWalletBanner = dynamic(() => import('components/LegacyWalletBanner').then(m => ({ default: m.LegacyWalletBanner })), { ssr: false })
 
+// FURL terminal iframe singleton — lives on document.body so the ttyd session
+// survives every route change. See web/src/lib/furlTerminalStore.ts.
+const FurlTerminalHost = dynamic(() => import('components/FurlTerminalHost').then(m => m.FurlTerminalHost), { ssr: false })
+
 // Capacitor native app detection and safe area handling
 const CapacitorInit = dynamic(() => import('hooks/useCapacitor').then(mod => {
   // Return a component that uses the hook
@@ -183,6 +187,7 @@ function SoundchainMainLayout({ Component, pageProps }: CustomAppProps) {
                           <FrameOverrideIndicator />
                           <HeartbeatProvider />
                           <PushEnableFloat />
+                          <FurlTerminalHost />
                           <Layout>
                             <Component {...pageProps} />
                           </Layout>
@@ -226,6 +231,7 @@ function SoundchainPageLayout({ Component, pageProps }: CustomAppProps) {
                           <TvModeInit />
                           <FrameOverrideIndicator />
                           <HeartbeatProvider />
+                          <FurlTerminalHost />
                           {Component.getLayout(<Component {...pageProps} />)}
                           {/* Standalone pages bypass Layout.tsx (which owns the
                               global ToastContainer), so mount one here too —

@@ -11,6 +11,7 @@ import { ChevronDown, ChevronUp, ChevronLeft, ChevronRight, X, Terminal, Slash, 
 import { useAgentManager, AGENT_STATUS, PRIORITY_LEVEL, type AgentInfo, type AgentStatus, type PriorityLevel } from 'hooks/useAgentManager'
 import { useMagicContext } from 'hooks/useMagicContext'
 import { useMe } from 'hooks/useMe'
+import { furlTerminal } from 'lib/furlTerminalStore'
 
 // Tunnel CLI bridge whitelist — only these handles can use `jack cli`
 const CLI_BRIDGE_WHITELIST = ['homie_yay_yay', 'furda1', 'furl_bldr', 'furl', 'jeremy_soundchain', 'jsan619']
@@ -2323,84 +2324,26 @@ export function AgentStatusTicker() {
   const jackStreamRef = useRef<string>('') // accumulates current streaming response
 
   // ─── CLI Bridge State (iframe-isolated terminal) ───────────────
+  // Container refs are now MEASUREMENT TARGETS, not iframe hosts. The iframe
+  // itself lives on document.body via FurlTerminalHost (mounted in _app.tsx)
+  // so it survives Next.js route changes. We publish container rect + mode
+  // into furlTerminalStore; the host repositions the iframe accordingly.
+  // When this component unmounts (route change to a page w/o the cockpit),
+  // the cleanup falls back to 'mini' mode so the terminal stays visible.
   const xtermContainerMobileRef = useRef<HTMLDivElement>(null)
   const xtermContainerDesktopRef = useRef<HTMLDivElement>(null)
-  const xtermIframeRef = useRef<HTMLIFrameElement | null>(null) // iframe hosting terminal
-  const pendingCliUrlRef = useRef<string | null>(null) // URL waiting for container mount
+  const pendingCliUrlRef = useRef<string | null>(null) // URL waiting for store action
 
-  // ─── CLI Bridge: iframe-isolated terminal ───────────────────────────
-  // Terminal runs in an iframe (/furl-terminal.html) so it survives
-  // React re-renders and Next.js client-side navigation.
-  // Only a hard refresh (F5) kills the iframe session.
   const connectCliBridge = useCallback(async (tunnelUrl: string) => {
-    // Pick the visible container (mobile vs desktop)
-    const pickContainer = () => {
-      const mob = xtermContainerMobileRef.current
-      const desk = xtermContainerDesktopRef.current
-      if (mob && mob.getBoundingClientRect().height > 0) return mob
-      if (mob && mob.offsetParent !== null) return mob
-      if (desk && desk.getBoundingClientRect().height > 0) return desk
-      if (desk && desk.offsetParent !== null) return desk
-      return mob || desk
-    }
-    const container = pickContainer()
-    if (!container) return
-
-    // Clean up any previous iframe
-    if (xtermIframeRef.current) {
-      try { xtermIframeRef.current.contentWindow?.postMessage({ type: 'furl-disconnect' }, '*') } catch {}
-      try { xtermIframeRef.current.remove() } catch {}
-      xtermIframeRef.current = null
-    }
-
-    // Build iframe URL — tunnel URL passed as query param
-    const cleanUrl = tunnelUrl.replace(/^https?:\/\//, '').replace(/\/+$/, '')
-    const iframeSrc = `/furl-terminal.html?tunnel=${encodeURIComponent(cleanUrl)}`
-
-    // Create iframe element
-    const iframe = document.createElement('iframe')
-    iframe.src = iframeSrc
-    iframe.style.cssText = 'width:100%;height:100%;border:none;background:#0a0a0a;display:block'
-    iframe.setAttribute('allow', 'clipboard-read; clipboard-write')
-    iframe.title = 'FURL Terminal'
-
-    // Append to container
-    container.innerHTML = '' // clear any previous content
-    container.appendChild(iframe)
-    xtermIframeRef.current = iframe
-
-    // Focus iframe on click
-    const handleContainerClick = () => {
-      try { iframe.contentWindow?.postMessage({ type: 'furl-focus' }, '*') } catch {}
-    }
-    container.addEventListener('click', handleContainerClick)
-
-    // Re-fit on window resize
-    const handleResize = () => {
-      try { iframe.contentWindow?.postMessage({ type: 'furl-fit' }, '*') } catch {}
-    }
-    window.addEventListener('resize', handleResize)
-
-    // Store cleanup function on the iframe element
-    ;(iframe as any)._furlCleanup = () => {
-      window.removeEventListener('resize', handleResize)
-      container.removeEventListener('click', handleContainerClick)
-    }
+    furlTerminal.connect(tunnelUrl)
   }, [])
 
   const disconnectCliBridge = useCallback(() => {
-    if (xtermIframeRef.current) {
-      try { xtermIframeRef.current.contentWindow?.postMessage({ type: 'furl-disconnect' }, '*') } catch {}
-      try {
-        if ((xtermIframeRef.current as any)._furlCleanup) (xtermIframeRef.current as any)._furlCleanup()
-        xtermIframeRef.current.remove()
-      } catch {}
-      xtermIframeRef.current = null
-    }
+    furlTerminal.disconnect()
   }, [])
 
-  // When jackMode switches to CLI_BRIDGE, wait for xterm container to actually mount, then connect
-  // On page refresh, restore tunnel URL from sessionStorage
+  // When jackMode switches to CLI_BRIDGE, restore tunnel URL from sessionStorage
+  // (if missing) and connect via the store. The host handles iframe lifecycle.
   useEffect(() => {
     if (jackMode !== 'CLI_BRIDGE') return
     if (!pendingCliUrlRef.current) {
@@ -2409,33 +2352,70 @@ export function AgentStatusTicker() {
       else return
     }
     const url = pendingCliUrlRef.current
-    let attempt = 0
-    const maxAttempts = 20 // 20 × 100ms = 2s max wait for DOM
-    const tryConnect = () => {
+    if (url && !furlTerminal.getState().isConnected) {
+      pendingCliUrlRef.current = null
+      furlTerminal.connect(url)
+    }
+  }, [jackMode])
+
+  // Publish mode + target rect to the store whenever visual state changes.
+  // The host iframe overlays the visible container in 'embedded' mode, snaps
+  // to viewport in 'fullscreen', or floats as PiP in 'mini'.
+  useEffect(() => {
+    if (jackMode !== 'CLI_BRIDGE') return
+    const visualMode: 'embedded' | 'mini' | 'fullscreen' =
+      fullscreen ? 'fullscreen' : (miniMode ? 'mini' : 'embedded')
+    furlTerminal.setMode(visualMode)
+
+    if (visualMode !== 'embedded') {
+      furlTerminal.setTargetRect(null)
+      return
+    }
+
+    let rafId = 0
+    const publishRect = () => {
       const mob = xtermContainerMobileRef.current
       const desk = xtermContainerDesktopRef.current
-      const container = (mob && (mob.getBoundingClientRect().height > 0 || mob.offsetParent !== null))
-        ? mob
-        : (desk && (desk.getBoundingClientRect().height > 0 || desk.offsetParent !== null))
-          ? desk
-          : (mob || desk) // last resort: use whichever ref exists
-      if (container) {
-        pendingCliUrlRef.current = null
-        connectCliBridge(url)
-      } else if (++attempt < maxAttempts) {
-        setTimeout(tryConnect, 100)
+      const container =
+        (mob && (mob.getBoundingClientRect().height > 0 || mob.offsetParent !== null)) ? mob :
+        (desk && (desk.getBoundingClientRect().height > 0 || desk.offsetParent !== null)) ? desk :
+        null
+      if (!container) {
+        furlTerminal.setTargetRect(null)
+        return
+      }
+      const r = container.getBoundingClientRect()
+      furlTerminal.setTargetRect({ x: r.left, y: r.top, w: r.width, h: r.height })
+    }
+    const schedulePublish = () => {
+      if (rafId) cancelAnimationFrame(rafId)
+      rafId = requestAnimationFrame(publishRect)
+    }
+    publishRect()
+    const ro = new ResizeObserver(schedulePublish)
+    if (xtermContainerMobileRef.current) ro.observe(xtermContainerMobileRef.current)
+    if (xtermContainerDesktopRef.current) ro.observe(xtermContainerDesktopRef.current)
+    window.addEventListener('resize', schedulePublish)
+    window.addEventListener('scroll', schedulePublish, true)
+    return () => {
+      if (rafId) cancelAnimationFrame(rafId)
+      ro.disconnect()
+      window.removeEventListener('resize', schedulePublish)
+      window.removeEventListener('scroll', schedulePublish, true)
+    }
+  }, [jackMode, fullscreen, miniMode, colTerminal, activeTab, expanded])
+
+  // On unmount (route change to a page w/o this navbar variant): fall back to
+  // floating mini PiP so the terminal stays visible. The host iframe lives on
+  // document.body and survives — only the cockpit shell goes away.
+  useEffect(() => {
+    return () => {
+      if (furlTerminal.getState().isConnected) {
+        furlTerminal.setMode('mini')
+        furlTerminal.setTargetRect(null)
       }
     }
-    // First attempt after a tick (DOM needs to commit)
-    setTimeout(tryConnect, 50)
-  }, [jackMode, colTerminal, activeTab, connectCliBridge])
-
-  // Re-fit xterm when fullscreen toggles (CSS change, not window resize)
-  useEffect(() => {
-    if (xtermIframeRef.current) {
-      setTimeout(() => { try { xtermIframeRef.current?.contentWindow?.postMessage({ type: 'furl-fit' }, '*') } catch {} }, 100)
-    }
-  }, [terminalMode])
+  }, [])
 
   // Admin on localhost = voice settings access
   const isAdminLocal = typeof window !== 'undefined' && (
@@ -3450,19 +3430,11 @@ export function AgentStatusTicker() {
         return
       }
 
-      // CLI_BRIDGE mode — forward keystrokes to the iframe terminal
+      // CLI_BRIDGE mode — forward keystrokes to the singleton iframe terminal
+      // (lives on document.body via FurlTerminalHost, survives route changes).
       if (jackMode === 'CLI_BRIDGE') {
-        const iframe = xtermIframeRef.current
-        if (iframe?.contentWindow) {
-          try {
-            iframe.contentWindow.postMessage({ type: 'furl-input', text: trimmed + '\n' }, '*')
-            iframe.contentWindow.postMessage({ type: 'furl-focus' }, '*')
-          } catch {
-            addLine(`  CLI bridge send failed — click the terminal and type directly`, 'error')
-          }
-        } else {
-          addLine(`  CLI bridge not ready — wait for connection`, 'info')
-        }
+        const sent = furlTerminal.sendInput(trimmed + '\n')
+        if (!sent) addLine(`  CLI bridge not ready — wait for connection`, 'info')
         return
       }
 
