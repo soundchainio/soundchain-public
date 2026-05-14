@@ -27,6 +27,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { getV1Catalog } from './v1-catalog'
 import { getV2Catalog } from './v2-catalog'
+import { hydrateOnchain, NFT_V1 } from '../tracks/list'
+import { CONTRACTS } from 'lib/contracts'
 
 // Canonical on-chain NFT contract addresses on Polygon mainnet. Every mint
 // since 2021 lives on one of these two — V1 (legacy ERC-721) for the 2021-2022
@@ -440,6 +442,45 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Order: listed (holographic in UI) → GraphQL-indexed → V2 placeholders (newer, more relevant)
     // → V1 placeholders (legacy 2021-2022 catalog at the tail). limit applies to the combined slice.
     const merged = [...listed, ...browse, ...v2Placeholder, ...v1Placeholder].slice(0, limit)
+
+    // Hydrate V1/V2 placeholder cards within the visible slice using on-chain
+    // tokenURI → IPFS metadata. Without this, legacy NFTs render as "Legacy NFT
+    // #N" with no cover art. The detail page already does the same lookup via
+    // `/api/tracks/list?trackId=v1-X` on click — same `hydrateOnchain` helper.
+    //
+    // Bounded work: only cards in the merged slice (max `limit`, default 60) get
+    // hydrated. `hydrateOnchain` carries a 24h in-memory cache keyed on id, so
+    // warm requests skip the RPC + IPFS round-trip entirely. Cold start cost is
+    // bounded by `limit` × (1 RPC read + 1 IPFS fetch) in parallel ≈ 1-3s.
+    //
+    // Promise.allSettled — one failed hydration (dead IPFS pin, RPC error) must
+    // not block the rest. Cards that fail stay as placeholders rather than 502.
+    const placeholdersInSlice = merged
+      .map((card, idx) => ({ card, idx }))
+      .filter(({ card }) => /^v[12]-\d+$/.test(card.id))
+
+    if (placeholdersInSlice.length > 0) {
+      await Promise.allSettled(
+        placeholdersInSlice.map(async ({ card, idx }) => {
+          const isV1 = card.id.startsWith('v1-')
+          const contract = (isV1 ? NFT_V1 : CONTRACTS.NFT_EDITIONS) as `0x${string}`
+          const label: 'V1' | 'V2' = isV1 ? 'V1' : 'V2'
+          try {
+            const { track } = await hydrateOnchain(card.id, contract, card.tokenId, label)
+            merged[idx] = {
+              ...card,
+              title: track.title || card.title,
+              artist: track.artist || card.artist,
+              coverArtUrl: track.artworkUrl || card.coverArtUrl,
+              audioUrl: track.playbackUrl || card.audioUrl,
+            }
+          } catch {
+            // Leave placeholder in place — failed hydration shows as "Legacy NFT #N"
+            // rather than blocking the whole response.
+          }
+        }),
+      )
+    }
 
     const source = listed.length > 0 && (browse.length > 0 || v1Placeholder.length > 0 || v2Placeholder.length > 0)
       ? 'merged'

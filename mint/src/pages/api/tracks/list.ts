@@ -22,7 +22,7 @@ import { CONTRACTS } from 'lib/contracts'
 const SC_BASE = 'https://soundchain.io'
 const IPFS_GATEWAY = 'https://soundchain.mypinata.cloud/ipfs/'
 
-const NFT_V1 = '0x01E2ae47222B23EE1887c5b863FA36Af580E8A5c' as const
+export const NFT_V1 = '0x01E2ae47222B23EE1887c5b863FA36Af580E8A5c' as const
 
 // ERC-721 standard tokenURI — V1 and V2 both expose it.
 const TOKEN_URI_ABI = parseAbi([
@@ -80,7 +80,7 @@ function ipfsToHttp(uri: string): string {
 const META_CACHE = new Map<string, { ts: number; data: any }>()
 const META_TTL_MS = 24 * 60 * 60 * 1000
 
-async function hydrateOnchain(
+export async function hydrateOnchain(
   id: string,
   contract: `0x${string}`,
   tokenId: string,
