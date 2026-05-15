@@ -49,11 +49,13 @@ export default function NormanPage() {
   const [listening, setListening] = useState(false)
   const [voiceOutEnabled, setVoiceOutEnabled] = useState(false)
   const [speechSupported, setSpeechSupported] = useState({ in: false, out: false })
-  // Phase 11 — vision: pending image (base64, no data: prefix) attached to
-  // the next message. iOS native picker handles source selection (Take Photo,
-  // Photo Library, Choose Files) via a hidden <input type="file"> — no need
-  // for a custom camera overlay anymore.
+  // Phase 11 — vision: pending image(s) attached to the next message. For
+  // video files (Phase 11.2 — Lucy sees motion), we extract 5 evenly-spaced
+  // keyframes and send them all as a chronological images array. LLaVA gets
+  // a sense of motion across the clip without needing a true video-LM.
   const [pendingImage, setPendingImage] = useState<string | null>(null)
+  const [pendingImages, setPendingImages] = useState<string[]>([])
+  const [pendingIsVideo, setPendingIsVideo] = useState(false)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   // Phase 11.5 — Lucy Live Mode (body-cam + Jarvis-style realtime). Tap the
   // 📡 GO LIVE button in the header to open the fullscreen FaceTime-style
@@ -138,12 +140,38 @@ export default function NormanPage() {
 
   // Hide the global FURL pill on /norman — Lucy IS the agent surface here,
   // FURL's mini search pill overlaps Lucy's reply bubbles in mid-screen.
-  // The body class is consumed by globals.css to display:none the iframe.
-  // Restored on unmount when leaving /norman.
+  // Three-pronged defense: (1) body class + globals.css rule, (2) imperative
+  // display:none on any iframe matching FURL on mount, (3) MutationObserver
+  // re-applies hide if the iframe gets re-mounted or its style is reset.
+  // The CSS-only approach kept failing in the field — likely inline styles
+  // on the iframe from positionIframe() were outranking the rule.
   useEffect(() => {
     if (typeof document === 'undefined') return
     document.body.classList.add('lucy-active')
-    return () => { document.body.classList.remove('lucy-active') }
+
+    const hideFurl = () => {
+      const iframes = document.querySelectorAll<HTMLIFrameElement>(
+        'iframe[title="FURL Terminal"], iframe[src*="furl-terminal"]'
+      )
+      iframes.forEach((f) => {
+        f.style.setProperty('display', 'none', 'important')
+      })
+    }
+    hideFurl()
+    const observer = new MutationObserver(hideFurl)
+    observer.observe(document.body, { childList: true, attributes: true, subtree: true, attributeFilter: ['style', 'src'] })
+
+    return () => {
+      document.body.classList.remove('lucy-active')
+      observer.disconnect()
+      // Restore FURL iframe on unmount
+      const iframes = document.querySelectorAll<HTMLIFrameElement>(
+        'iframe[title="FURL Terminal"], iframe[src*="furl-terminal"]'
+      )
+      iframes.forEach((f) => {
+        f.style.removeProperty('display')
+      })
+    }
   }, [])
 
   useEffect(() => {
@@ -238,18 +266,27 @@ export default function NormanPage() {
 
   async function sendWithText(text: string) {
     const trimmed = text.trim()
-    // Phase 11 — vision: allow send-with-image-only (no text) by defaulting
-    // the user message to "what is in this image?" when only an image is attached.
-    const effectiveText = trimmed || (pendingImage ? 'What do you see?' : '')
+    // Phase 11 + 11.2 — allow send-with-image-only or video-only. For
+    // videos we attach all keyframes and prepend a hint to the user
+    // message so LLaVA knows these frames are chronological.
+    const hasMedia = pendingImages.length > 0 || !!pendingImage
+    const defaultText = pendingIsVideo
+      ? 'These are 5 keyframes from a short video, in chronological order. Describe what happens.'
+      : pendingImage
+      ? 'What do you see?'
+      : ''
+    const effectiveText = trimmed || defaultText
     if (!effectiveText || streaming) return
     setError(null)
+    const imagesForSend = pendingImages.length > 0 ? pendingImages : pendingImage ? [pendingImage] : []
     const userMsg: ChatMessage = {
       role: 'user',
       content: effectiveText,
-      ...(pendingImage ? { images: [pendingImage] } : {}),
+      ...(imagesForSend.length > 0 ? { images: imagesForSend } : {}),
     }
-    const imageForSend = pendingImage
     setPendingImage(null)
+    setPendingImages([])
+    setPendingIsVideo(false)
     const next = [...messages, userMsg, { role: 'assistant' as const, content: '' }]
     setMessages(next)
     setInput('')
@@ -343,36 +380,92 @@ export default function NormanPage() {
   async function handleFilePicked(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-    // Reset the input so picking the same file twice still fires onChange
     e.target.value = ''
+    const isVideo = file.type.startsWith('video/')
     try {
-      const dataUrl = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader()
-        reader.onload = () => resolve(String(reader.result))
-        reader.onerror = () => reject(reader.error || new Error('read failed'))
-        reader.readAsDataURL(file)
-      })
-      // Downscale via canvas to a max longest-side of 768px
-      const img = new Image()
-      img.src = dataUrl
-      await new Promise<void>((res, rej) => {
-        img.onload = () => res()
-        img.onerror = () => rej(new Error('image decode failed'))
-      })
-      const w = img.naturalWidth
-      const h = img.naturalHeight
-      const scale = Math.min(1, 768 / Math.max(w, h))
-      const canvas = document.createElement('canvas')
-      canvas.width = Math.round(w * scale)
-      canvas.height = Math.round(h * scale)
-      const ctx = canvas.getContext('2d')
-      if (!ctx) throw new Error('canvas 2d ctx unavailable')
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
-      const out = canvas.toDataURL('image/jpeg', 0.85)
-      const b64 = out.replace(/^data:image\/[^;]+;base64,/, '')
-      setPendingImage(b64)
+      if (isVideo) {
+        // Phase 11.2 — extract 5 evenly-spaced keyframes from the video.
+        // LLaVA can take multiple images per message; we send them in
+        // chronological order so Lucy can reason about motion + change
+        // across the clip even without a true video-language model.
+        const url = URL.createObjectURL(file)
+        const video = document.createElement('video')
+        video.src = url
+        video.muted = true
+        video.playsInline = true
+        await new Promise<void>((res, rej) => {
+          video.onloadedmetadata = () => res()
+          video.onerror = () => rej(new Error('video decode failed'))
+        })
+        const duration = video.duration
+        if (!isFinite(duration) || duration <= 0) {
+          URL.revokeObjectURL(url)
+          throw new Error('video has no duration')
+        }
+        const frames: string[] = []
+        const FRAME_COUNT = 5
+        for (let i = 0; i < FRAME_COUNT; i++) {
+          // Seek evenly across the clip — 10%, 30%, 50%, 70%, 90%
+          const t = duration * (0.1 + (0.8 * i) / (FRAME_COUNT - 1))
+          await new Promise<void>((res, rej) => {
+            const onSeeked = () => {
+              video.removeEventListener('seeked', onSeeked)
+              try {
+                const w = video.videoWidth
+                const h = video.videoHeight
+                const scale = Math.min(1, 768 / Math.max(w, h))
+                const canvas = document.createElement('canvas')
+                canvas.width = Math.round(w * scale)
+                canvas.height = Math.round(h * scale)
+                const ctx = canvas.getContext('2d')
+                if (!ctx) return rej(new Error('canvas ctx'))
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+                const out = canvas.toDataURL('image/jpeg', 0.78)
+                frames.push(out.replace(/^data:image\/[^;]+;base64,/, ''))
+                res()
+              } catch (err: any) {
+                rej(err)
+              }
+            }
+            video.addEventListener('seeked', onSeeked, { once: true })
+            video.currentTime = t
+          })
+        }
+        URL.revokeObjectURL(url)
+        setPendingImages(frames)
+        setPendingImage(frames[0]) // also set primary so single-image UI shows preview
+        setPendingIsVideo(true)
+      } else {
+        // Image path — downscale via canvas to 768px longest side
+        const dataUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onload = () => resolve(String(reader.result))
+          reader.onerror = () => reject(reader.error || new Error('read failed'))
+          reader.readAsDataURL(file)
+        })
+        const img = new Image()
+        img.src = dataUrl
+        await new Promise<void>((res, rej) => {
+          img.onload = () => res()
+          img.onerror = () => rej(new Error('image decode failed'))
+        })
+        const w = img.naturalWidth
+        const h = img.naturalHeight
+        const scale = Math.min(1, 768 / Math.max(w, h))
+        const canvas = document.createElement('canvas')
+        canvas.width = Math.round(w * scale)
+        canvas.height = Math.round(h * scale)
+        const ctx = canvas.getContext('2d')
+        if (!ctx) throw new Error('canvas 2d ctx unavailable')
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+        const out = canvas.toDataURL('image/jpeg', 0.85)
+        const b64 = out.replace(/^data:image\/[^;]+;base64,/, '')
+        setPendingImage(b64)
+        setPendingImages([])
+        setPendingIsVideo(false)
+      }
     } catch (err: any) {
-      setError(`Image: ${err?.message || 'failed to load'}`)
+      setError(`${isVideo ? 'Video' : 'Image'}: ${err?.message || 'failed to load'}`)
     }
   }
 
@@ -431,12 +524,14 @@ export default function NormanPage() {
         {/* Phase 11.5 — Lucy Live Mode overlay (body-cam + JARVIS) */}
         {liveOpen && <LucyLiveMode onClose={() => setLiveOpen(false)} />}
 
-        {/* Hidden native file picker — tap the 📷 composer button to trigger it.
-            iOS shows action sheet: Take Photo / Photo Library / Choose Files. */}
+        {/* Hidden native file picker — tap 📷 to trigger. iOS action sheet:
+            Take Photo / Take Video / Photo Library / Choose Files. accept
+            covers both image and video; on video pick we extract 5 keyframes
+            and send as chronological images array (Phase 11.2). */}
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/*"
+          accept="image/*,video/*"
           onChange={handleFilePicked}
           className="hidden"
           aria-hidden="true"
@@ -561,11 +656,19 @@ export default function NormanPage() {
                 alt="attached"
                 className="w-12 h-12 rounded-lg object-cover"
               />
-              <div className="flex-1 text-xs text-gray-400">Image attached — Lucy will see this when you send</div>
+              <div className="flex-1 text-xs text-gray-400">
+                {pendingIsVideo
+                  ? `Video attached — Lucy will see ${pendingImages.length} keyframes`
+                  : 'Image attached — Lucy will see this when you send'}
+              </div>
               <button
-                onClick={() => setPendingImage(null)}
+                onClick={() => {
+                  setPendingImage(null)
+                  setPendingImages([])
+                  setPendingIsVideo(false)
+                }}
                 className="text-xs text-gray-400 hover:text-red-400 px-2 py-1"
-                aria-label="remove attached image"
+                aria-label="remove attached media"
               >
                 ✕
               </button>

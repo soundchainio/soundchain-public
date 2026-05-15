@@ -37,6 +37,14 @@ interface LucyLiveModeProps {
   captureIntervalMs?: number
 }
 
+/**
+ * iOS audio quirk: while SpeechRecognition runs continuously, the audio
+ * session is locked in voice-chat mode and TTS playback gets attenuated
+ * or routed weirdly through BT earbuds. The reliable fix is to PAUSE
+ * recognition while Lucy speaks, then resume after. This module-level
+ * helper is shared between the continuous-listener and the TTS pump.
+ */
+
 export default function LucyLiveMode({ onClose, captureIntervalMs = 6000 }: LucyLiveModeProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -53,7 +61,9 @@ export default function LucyLiveMode({ onClose, captureIntervalMs = 6000 }: Lucy
   const [latestNarration, setLatestNarration] = useState<string>('')
   const [error, setError] = useState<string | null>(null)
   const [muted, setMuted] = useState(false)
+  const [showBubbles, setShowBubbles] = useState(true)
   const mutedRef = useRef(false)
+  const sttPausedRef = useRef(false)
   useEffect(() => { mutedRef.current = muted }, [muted])
 
   // ───────── Camera startup
@@ -144,15 +154,21 @@ export default function LucyLiveMode({ onClose, captureIntervalMs = 6000 }: Lucy
         captureAndAsk(pendingQuestionRef.current)
         pendingQuestionRef.current = ''
       }
-      // Auto-restart so the call stays "open" continuously
-      restartTimer = setTimeout(() => {
-        try { rec.start() } catch {}
-      }, 200)
+      // Auto-restart so the call stays "open" continuously — but ONLY if
+      // we haven't been paused for TTS playback. sttPausedRef means Lucy
+      // is speaking; mic stays off until she's done so iOS audio session
+      // can stay in playback mode and BT earbuds hear her clearly.
+      if (!sttPausedRef.current) {
+        restartTimer = setTimeout(() => {
+          try { rec.start() } catch {}
+        }, 200)
+      }
     }
     recognitionRef.current = rec
     try { rec.start() } catch {}
 
     return () => {
+      try { rec.abort?.() } catch {}
       try { rec.stop() } catch {}
       if (restartTimer) clearTimeout(restartTimer)
     }
@@ -182,6 +198,9 @@ export default function LucyLiveMode({ onClose, captureIntervalMs = 6000 }: Lucy
     if (typeof window === 'undefined' || !window.speechSynthesis) return
     if (mutedRef.current) {
       ttsQueueRef.current = []
+      sttPausedRef.current = false
+      // Mic can resume now that we're not speaking
+      try { recognitionRef.current?.start() } catch {}
       return
     }
     const synth = window.speechSynthesis
@@ -193,7 +212,19 @@ export default function LucyLiveMode({ onClose, captureIntervalMs = 6000 }: Lucy
     if (!text) {
       // No more queued — back to WATCHING when nothing else in flight
       if (!inFlightRef.current) setStatus('watching')
+      // Resume mic now that Lucy's done speaking
+      if (sttPausedRef.current) {
+        sttPausedRef.current = false
+        try { recognitionRef.current?.start() } catch {}
+      }
       return
+    }
+    // Pause continuous mic during TTS so iOS audio session stays in
+    // playback mode — otherwise voice-chat mode attenuates Lucy's voice
+    // through BT earbuds and Frank can't hear her.
+    if (!sttPausedRef.current) {
+      sttPausedRef.current = true
+      try { recognitionRef.current?.stop() } catch {}
     }
     const u = new SpeechSynthesisUtterance(text)
     u.volume = 1.0
@@ -329,13 +360,24 @@ export default function LucyLiveMode({ onClose, captureIntervalMs = 6000 }: Lucy
   }
 
   function endCall() {
+    // Full teardown — without this, the audio session stays locked in
+    // voice-chat mode after Live closes and TTS playback on the regular
+    // /norman page comes out attenuated or silent. Order matters: stop
+    // mic FIRST (releases iOS audio session), then cancel TTS, then
+    // release camera.
+    sttPausedRef.current = true
+    try { recognitionRef.current?.abort?.() } catch {}
+    try { recognitionRef.current?.stop() } catch {}
     if (typeof window !== 'undefined' && window.speechSynthesis) {
       window.speechSynthesis.cancel()
     }
+    ttsQueueRef.current = []
+    ttsActiveRef.current = false
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((t) => t.stop())
       streamRef.current = null
     }
+    if (captureTimerRef.current) clearTimeout(captureTimerRef.current)
     onClose()
   }
 
@@ -372,10 +414,10 @@ export default function LucyLiveMode({ onClose, captureIntervalMs = 6000 }: Lucy
         </button>
       </div>
 
-      {/* Lucy's latest narration overlay (closed-caption style) */}
+      {/* Lucy's latest narration overlay (closed-caption style) — togglable */}
       <div className="flex-1" />
 
-      {latestNarration && (
+      {showBubbles && latestNarration && (
         <div className="relative z-10 mx-4 mb-3 p-3 rounded-2xl bg-black/70 backdrop-blur-sm border border-white/10 max-h-[40vh] overflow-y-auto">
           <div className="text-[10px] uppercase tracking-wide text-cyan-400 mb-1">Lucy</div>
           <div className="text-white text-sm leading-relaxed whitespace-pre-wrap">{latestNarration}</div>
@@ -401,6 +443,18 @@ export default function LucyLiveMode({ onClose, captureIntervalMs = 6000 }: Lucy
             {muted ? '🔇' : '🔊'}
           </div>
           <div className="text-[10px] text-white/70">{muted ? 'muted' : 'voice'}</div>
+        </button>
+        <button
+          onClick={() => setShowBubbles((b) => !b)}
+          className={`flex flex-col items-center gap-1 ${showBubbles ? '' : 'opacity-60'}`}
+          aria-label={showBubbles ? 'hide subtitles' : 'show subtitles'}
+        >
+          <div className={`w-12 h-12 rounded-full grid place-items-center text-xl ${
+            showBubbles ? 'bg-cyan-500/20 border border-cyan-500/40' : 'bg-white/10 border border-white/20'
+          }`}>
+            {showBubbles ? '💬' : '🚫'}
+          </div>
+          <div className="text-[10px] text-white/70">{showBubbles ? 'subtitles' : 'voice only'}</div>
         </button>
         <button
           onClick={() => captureAndAsk('What do you see right now? Describe in detail.')}
