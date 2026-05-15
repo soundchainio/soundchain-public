@@ -1940,7 +1940,11 @@ function NeuralInlinePanel() {
   const [regions, setRegions] = useState({ auditory: 0, motor: 0, prefrontal: 0, emotional: 0, reward: 0 })
   const [engagement, setEngagement] = useState(0)
   const [isLive, setIsLive] = useState(false)
-  const [signalSource, setSignalSource] = useState<'audio' | 'lucy' | null>(null)
+  const [signalSource, setSignalSource] = useState<'audio' | 'lucy' | 'anvil' | null>(null)
+  // Phase 14 — anvil-driven Neural override. When /api/neural/state returns
+  // fresh data, those scores trump the audio-FFT-derived ones. The real
+  // model lives on anvil (M5000); this panel is just the visualizer.
+  const anvilModelRef = useRef<string | null>(null)
 
   useEffect(() => {
     // Energy-efficient brain scanner. Three-state machine:
@@ -2050,13 +2054,63 @@ function NeuralInlinePanel() {
     const poll = setInterval(checkAnalyzer, 1000)
     if (typeof document !== 'undefined') document.addEventListener('visibilitychange', onVisibilityChange)
 
+    // Phase 14 — anvil-driven Neural poll. /api/neural/state returns real
+    // cortical region scores from anvil's Lucy Neural server (synthetic v0,
+    // EEG/audio-ML modes coming). When live, anvil scores OVERRIDE the
+    // audio-FFT path. When unreachable (NEURAL_URL unset, anvil offline),
+    // we silently revert to audio-FFT mode — graceful degradation.
+    let anvilFailures = 0
+    const ANVIL_BACKOFF_THRESHOLD = 5 // after 5 consecutive failures, slow polling
+    const anvilPoll = setInterval(async () => {
+      if (!mounted) return
+      if (typeof document !== 'undefined' && document.hidden) return
+      // After repeated failures, back off to once per minute instead of 1s
+      if (anvilFailures >= ANVIL_BACKOFF_THRESHOLD && Date.now() % 60000 > 1500) return
+      try {
+        const r = await fetch('/api/neural/state', { cache: 'no-store' })
+        if (!r.ok) {
+          anvilFailures++
+          return
+        }
+        const data = await r.json()
+        if (data?.error || !data?.regions) {
+          anvilFailures++
+          return
+        }
+        // Live anvil data — override audio-FFT-driven state
+        anvilFailures = 0
+        anvilModelRef.current = data?.source && data?.model
+          ? `${data.source} · ${data.model}`
+          : data?.source || 'anvil'
+        setRegions({
+          auditory: Number(data.regions.auditory) || 0,
+          motor: Number(data.regions.motor) || 0,
+          prefrontal: Number(data.regions.prefrontal) || 0,
+          emotional: Number(data.regions.emotional) || 0,
+          reward: Number(data.regions.reward) || 0,
+        })
+        setEngagement(Number(data.engagement) || 0)
+        // anvil takes signal-source priority — overrides audio/lucy
+        setSignalSource('anvil')
+        if (!isLiveRef.current) setIsLive(true)
+      } catch {
+        anvilFailures++
+      }
+    }, 1000)
+
     return () => {
       mounted = false
       clearInterval(poll)
+      clearInterval(anvilPoll)
       stopLoop()
       if (typeof document !== 'undefined') document.removeEventListener('visibilitychange', onVisibilityChange)
     }
   }, [])
+
+  // Mirror isLive into a ref so the anvil poll closure (which captures it
+  // at mount-time) can read the latest value without re-binding.
+  const isLiveRef = useRef(false)
+  useEffect(() => { isLiveRef.current = isLive }, [isLive])
 
   const regionConfig = [
     { key: 'auditory', label: 'Audio', color: 'bg-orange-500', glow: 'shadow-orange-500/50' },
@@ -2117,7 +2171,9 @@ function NeuralInlinePanel() {
         <div className="text-center space-y-1">
           {isLive ? (
             <div className="text-[10px] text-purple-300 font-mono">
-              {signalSource === 'lucy'
+              {signalSource === 'anvil'
+                ? `anvil · M5000 · ${anvilModelRef.current || 'neural'} · ${engagement > 50 ? 'HIGH ACTIVITY' : engagement > 20 ? 'MODERATE' : 'LOW SIGNAL'}`
+                : signalSource === 'lucy'
                 ? `Lucy thinking on anvil · M5000 · ${engagement > 50 ? 'HIGH ACTIVITY' : engagement > 20 ? 'MODERATE' : 'LOW SIGNAL'}`
                 : `Reading FFT from audio engine · ${engagement > 50 ? 'HIGH ACTIVITY' : engagement > 20 ? 'MODERATE' : 'LOW SIGNAL'}`}
             </div>
