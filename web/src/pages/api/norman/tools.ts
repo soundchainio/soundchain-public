@@ -139,6 +139,21 @@ export const LUCY_TOOLS: OllamaTool[] = [
       },
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'sc_post_to_feed',
+      description: 'Post a public message to the user\'s SoundChain feed AS the user. THIS IS A WRITE ACTION — handle carefully. Two-step ceremony: FIRST call without confirmed=true to show the user a preview of what you intend to post and ask them to confirm in plain English. ONLY after the user explicitly confirms (e.g. "yes post it", "go ahead", "do it") should you call again with confirmed=true to actually post. Never assume confirmation. If the user dictates a post out loud, propose it back to them first, even if they said "post X to my feed" — they may want to tweak it.',
+      parameters: {
+        type: 'object',
+        properties: {
+          body: { type: 'string', description: 'The post text. Keep concise — feed posts are public and brief.' },
+          confirmed: { type: 'boolean', description: 'Must be true to actually post. Default false = preview only — returns the proposed post for the user to approve.' },
+        },
+        required: ['body'],
+      },
+    },
+  },
 ]
 
 /** Origin for internal agent-endpoint calls. Vercel function calling itself. */
@@ -159,6 +174,10 @@ function truncate(s: string, max = 2000): string {
  * Execute a tool call. Returns a string Lucy can ingest as a tool-role
  * message. Catches all errors so a failing tool never crashes the chat
  * loop — Lucy can read the error and try a different approach.
+ *
+ * Phase 13.2 — also handles WRITE tools with confirmation gates. Write
+ * tools require `confirmed: true` arg before any actual mutation; without
+ * it, returns a preview the user must explicitly approve in chat.
  */
 export async function executeToolCall(
   req: NextApiRequest,
@@ -169,6 +188,43 @@ export async function executeToolCall(
   const ctl = new AbortController()
   const timeout = setTimeout(() => ctl.abort(), 10_000)
   try {
+    // ─── WRITE TOOLS — confirmation-gated ───
+    if (name === 'sc_post_to_feed') {
+      const body = String(args?.body || '').trim()
+      if (!body) return JSON.stringify({ error: 'body parameter required' })
+      if (!args?.confirmed) {
+        // Preview-only — Lucy must show this to the user and wait for an
+        // explicit "yes" before calling again with confirmed:true.
+        return JSON.stringify({
+          status: 'preview',
+          message: `PREVIEW (not posted yet): "${body}"`,
+          instruction: 'Show this preview to the user and ask them to confirm in plain English (e.g. "yes post it"). Only call sc_post_to_feed again with confirmed:true after they explicitly approve.',
+        })
+      }
+      // Forward the user's auth cookie so /api/feed/create writes as them
+      const cookieHeader = req.headers.cookie || ''
+      const r = await fetch(`${origin}/api/feed/create`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(cookieHeader ? { Cookie: cookieHeader } : {}),
+        },
+        body: JSON.stringify({ body }),
+        signal: ctl.signal,
+      })
+      if (!r.ok) {
+        const text = await r.text().catch(() => '')
+        return JSON.stringify({ error: `post failed: ${r.status}`, detail: text.slice(0, 300) })
+      }
+      const data = await r.json().catch(() => ({}))
+      return JSON.stringify({
+        status: 'posted',
+        message: `Successfully posted "${body}" to the feed.`,
+        post: data,
+      })
+    }
+
+    // ─── READ TOOLS — no confirmation needed ───
     let url = ''
     let result: any = null
     switch (name) {
