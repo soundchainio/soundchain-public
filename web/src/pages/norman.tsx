@@ -25,6 +25,12 @@ import { useRouter } from 'next/router'
 import { useMe } from 'hooks/useMe'
 import { useLucyMemory } from 'hooks/useLucyMemory'
 import LucyVoicePicker, { getVoiceConfig } from 'components/LucyVoicePicker'
+import dynamic from 'next/dynamic'
+
+// Lazy-loaded — Live Mode is only mounted when Frank taps "Go Live", saves
+// the rest of /norman's bundle from carrying the camera + STT continuous
+// loop dead weight on initial chat load.
+const LucyLiveMode = dynamic(() => import('components/LucyLiveMode'), { ssr: false })
 
 type ChatMessage = { role: 'user' | 'assistant'; content: string; images?: string[] }
 
@@ -49,6 +55,10 @@ export default function NormanPage() {
   // for a custom camera overlay anymore.
   const [pendingImage, setPendingImage] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+  // Phase 11.5 — Lucy Live Mode (body-cam + Jarvis-style realtime). Tap the
+  // 📡 GO LIVE button in the header to open the fullscreen FaceTime-style
+  // session: continuous camera + continuous mic + Lucy narrates and answers.
+  const [liveOpen, setLiveOpen] = useState(false)
   const scrollRef = useRef<HTMLDivElement | null>(null)
   const inputRef = useRef<HTMLTextAreaElement | null>(null)
   const recognitionRef = useRef<any>(null)
@@ -418,6 +428,9 @@ export default function NormanPage() {
         children that can't be displaced. Standard mobile-chat layout.
       */}
       <div className="h-[100dvh] bg-black text-white flex flex-col overflow-hidden">
+        {/* Phase 11.5 — Lucy Live Mode overlay (body-cam + JARVIS) */}
+        {liveOpen && <LucyLiveMode onClose={() => setLiveOpen(false)} />}
+
         {/* Hidden native file picker — tap the 📷 composer button to trigger it.
             iOS shows action sheet: Take Photo / Photo Library / Choose Files. */}
         <input
@@ -442,6 +455,15 @@ export default function NormanPage() {
                 : 'running on anvil · M5000 · llama3.1'}
             </div>
           </div>
+          {/* Phase 11.5 — Go Live with Lucy (body-cam + JARVIS-style realtime) */}
+          <button
+            onClick={() => setLiveOpen(true)}
+            className="text-xs px-2 py-1 rounded-lg bg-gradient-to-br from-red-500 to-pink-500 text-white font-semibold border border-red-400/50 shadow-[0_0_12px_rgba(239,68,68,0.5)] hover:shadow-[0_0_16px_rgba(239,68,68,0.7)] transition-all"
+            title="Go Live with Lucy — body-cam mode, she sees + speaks in real time"
+            aria-label="go live with Lucy"
+          >
+            📡 LIVE
+          </button>
           {speechSupported.out && <LucyVoicePicker />}
           {speechSupported.out && (
             <button
