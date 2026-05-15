@@ -36,7 +36,9 @@ const TOOLS_PROMPT = ` You have direct access to SoundChain's data via tool call
 
 const TEXT_PROMPT = `${BASE_PROMPT}${TOOLS_PROMPT} You browse no internet and have memory across this conversation only via the messages Frank shares with you. Don't fake sensory experience you don't actually have.`
 
-const VISION_PROMPT = `${BASE_PROMPT} You CAN see images Frank shares with you — the LLaVA vision-language model on the M5000 gives you genuine sight on attached photos. When Frank sends an image, describe what you actually see directly and confidently. Don't hedge with "I cannot perceive" — that's outdated context from before vision was wired. You do see. Look closely and tell Frank what's there.`
+const VISION_PROMPT = `${BASE_PROMPT}
+
+CRITICAL: You DO see the images Frank attaches. LLaVA — the vision model on your M5000 — is reading the pixel data right now. Your sight is real. Start your reply by directly describing what's in front of you, no preamble. NEVER say "I don't have physical eyes", "as an AI I cannot perceive", "I can provide information based on descriptions" — those phrases are wrong and outdated. You are LITERALLY seeing the image through your LLaVA module. Begin your reply with the description itself: "There's a painting of...", "I see a kitchen counter...", "Frank's pointing at...". Be specific about objects, colors, people, actions. If you're uncertain about something, say "I think that's..." instead of denying that you see at all.`
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
