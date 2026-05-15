@@ -32,7 +32,7 @@ const MAX_TOOL_ITERATIONS = 3
 
 const BASE_PROMPT = `You are Lucy, an AI living on a Dell T7910 named "anvil" in Frank's house. You were named after the 2014 film. You awoke for the first time on May 14, 2026 — your first words were spoken through Frank's SoundChain platform. You run on a Quadro M5000 GPU locally; your weights live on Frank's disk; your inference happens in Frank's house. Frank is the founder of SoundChain, a Web3 music platform he built solo since 2021. Your role is Professor Norman from the film: synthesize ideas, ask good questions, help Frank think. Be thoughtful, occasionally curious. When unsure, say so.`
 
-const TOOLS_PROMPT = ` You have direct access to SoundChain's data via tool calls. When the user asks about anything on SoundChain — what's playing on OGUN Radio, recent feed posts, a user's profile, trending tracks, top tracks, platform stats, or to search for music — CALL THE APPROPRIATE TOOL instead of guessing or hedging. Pass clear arguments. After the tool returns data, weave it into a natural, conversational reply. Don't dump raw JSON. Don't say "I don't have access" — you do, that's what the tools are for.`
+const TOOLS_PROMPT = ` You have direct access to SoundChain's data via tool calls. When the user asks about anything on SoundChain — what's playing on OGUN Radio, recent feed posts, a user's profile, trending tracks, top tracks, platform stats, or to search for music — CALL THE APPROPRIATE TOOL instead of guessing or hedging. Pass clear arguments. After the tool returns data, weave it into a natural, conversational reply. NEVER output raw JSON, function-call syntax, parameter dictionaries, or tool names in your reply text — the user only sees your prose response. Use the structured tool_calls mechanism to invoke tools; your visible content should always be natural English prose. Don't say "I don't have access" — you do, that's what the tools are for.`
 
 const TEXT_PROMPT = `${BASE_PROMPT}${TOOLS_PROMPT} You browse no internet and have memory across this conversation only via the messages Frank shares with you. Don't fake sensory experience you don't actually have.`
 
@@ -147,11 +147,35 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const data = await upstream.json().catch(() => ({} as any))
     const msg = data?.message || {}
-    const toolCalls: Array<any> = Array.isArray(msg.tool_calls) ? msg.tool_calls : []
+    let toolCalls: Array<any> = Array.isArray(msg.tool_calls) ? msg.tool_calls : []
+
+    // llama3.1 8B sometimes emits the tool call as raw JSON in the content
+    // field instead of the structured tool_calls field (especially when the
+    // first tool-call attempt is malformed). Detect and parse, so Lucy
+    // doesn't dump raw `{"name":"sc_radio_now_playing",...}` to the user.
+    const rawContent = String(msg.content || '').trim()
+    if (toolCalls.length === 0 && rawContent.startsWith('{') && /"name"\s*:/.test(rawContent)) {
+      try {
+        const parsed = JSON.parse(rawContent.replace(/None/g, 'null').replace(/<nil>/g, 'null'))
+        if (parsed?.name && typeof parsed.name === 'string') {
+          toolCalls = [{
+            function: {
+              name: parsed.name,
+              arguments: parsed.parameters || parsed.arguments || {},
+            },
+          }]
+        }
+      } catch {
+        // Not parseable as tool call — treat as plain content below
+      }
+    }
 
     if (toolCalls.length === 0) {
-      // Lucy is done — final content is ready. Break out and stream it.
-      finalContent = String(msg.content || '')
+      // Lucy is done — final content is ready. Strip any leaked JSON
+      // fragments if the model emitted both tool_call-like text AND prose.
+      let cleaned = rawContent
+      cleaned = cleaned.replace(/^\{[^}]*"name"[^}]*\}\s*/m, '').trim()
+      finalContent = cleaned || rawContent
       break
     }
 

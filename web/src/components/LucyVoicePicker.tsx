@@ -190,13 +190,62 @@ export default function LucyVoicePicker() {
   }
 
   const selectedPersona = VOICE_PERSONAS.find((p) => p.id === selected) || VOICE_PERSONAS[0]
-  // Sort voices: English variants first, then everything else alphabetical
-  const sortedVoices = [...voices].sort((a, b) => {
-    const aEn = /en/i.test(a.lang) ? 0 : 1
-    const bEn = /en/i.test(b.lang) ? 0 : 1
+
+  // Friendly language labels — keeps Frank from accidentally picking Monica
+  // (Spanish) and getting Lucy's English text spoken with Spanish phonemes.
+  // Flag emojis tag languages instantly at a glance.
+  function labelForLang(lang: string): { flag: string; name: string } {
+    const code = lang.toLowerCase()
+    if (code.startsWith('en-us')) return { flag: '🇺🇸', name: 'English (US)' }
+    if (code.startsWith('en-gb')) return { flag: '🇬🇧', name: 'English (UK)' }
+    if (code.startsWith('en-au')) return { flag: '🇦🇺', name: 'English (AU)' }
+    if (code.startsWith('en-ie')) return { flag: '🇮🇪', name: 'English (IE)' }
+    if (code.startsWith('en-za')) return { flag: '🇿🇦', name: 'English (ZA)' }
+    if (code.startsWith('en-in')) return { flag: '🇮🇳', name: 'English (IN)' }
+    if (code.startsWith('en')) return { flag: '🇬🇧', name: 'English' }
+    if (code.startsWith('es')) return { flag: '🇪🇸', name: 'Spanish' }
+    if (code.startsWith('fr')) return { flag: '🇫🇷', name: 'French' }
+    if (code.startsWith('de')) return { flag: '🇩🇪', name: 'German' }
+    if (code.startsWith('it')) return { flag: '🇮🇹', name: 'Italian' }
+    if (code.startsWith('pt')) return { flag: '🇵🇹', name: 'Portuguese' }
+    if (code.startsWith('ja')) return { flag: '🇯🇵', name: 'Japanese' }
+    if (code.startsWith('ko')) return { flag: '🇰🇷', name: 'Korean' }
+    if (code.startsWith('zh')) return { flag: '🇨🇳', name: 'Chinese' }
+    if (code.startsWith('ru')) return { flag: '🇷🇺', name: 'Russian' }
+    if (code.startsWith('ar')) return { flag: '🇸🇦', name: 'Arabic' }
+    if (code.startsWith('hi')) return { flag: '🇮🇳', name: 'Hindi' }
+    if (code.startsWith('nl')) return { flag: '🇳🇱', name: 'Dutch' }
+    if (code.startsWith('sv')) return { flag: '🇸🇪', name: 'Swedish' }
+    if (code.startsWith('no')) return { flag: '🇳🇴', name: 'Norwegian' }
+    if (code.startsWith('da')) return { flag: '🇩🇰', name: 'Danish' }
+    if (code.startsWith('pl')) return { flag: '🇵🇱', name: 'Polish' }
+    if (code.startsWith('tr')) return { flag: '🇹🇷', name: 'Turkish' }
+    return { flag: '🌐', name: lang.toUpperCase() }
+  }
+
+  // Group voices by language. English variants first (Frank's primary use),
+  // then everything else alphabetical by language name.
+  const grouped = new Map<string, SpeechSynthesisVoice[]>()
+  for (const v of voices) {
+    const { name } = labelForLang(v.lang)
+    if (!grouped.has(name)) grouped.set(name, [])
+    grouped.get(name)!.push(v)
+  }
+  const groupOrder = [...grouped.keys()].sort((a, b) => {
+    const aEn = a.startsWith('English') ? 0 : 1
+    const bEn = b.startsWith('English') ? 0 : 1
     if (aEn !== bEn) return aEn - bEn
-    return a.name.localeCompare(b.name)
+    return a.localeCompare(b)
   })
+  // Sort within each group: premium first, then alphabetical by name
+  for (const [k, arr] of grouped) {
+    arr.sort((a, b) => {
+      const aP = /premium|enhanced/i.test(a.name) ? 0 : 1
+      const bP = /premium|enhanced/i.test(b.name) ? 0 : 1
+      if (aP !== bP) return aP - bP
+      return a.name.localeCompare(b.name)
+    })
+  }
 
   return (
     <div className="relative">
@@ -246,39 +295,53 @@ export default function LucyVoicePicker() {
               )
             })}
 
-            {/* All voices — every SpeechSynthesisVoice the device exposes,
-                including premium/enhanced ones the user downloaded in iOS
-                Settings → Accessibility → Read & Speak. Picking one here
-                bypasses persona matching and uses the exact voice. */}
+            {/* All voices on the device, grouped by language. English first
+                so Frank doesn't accidentally pick Monica (Spanish) and get
+                his English chat spoken with Spanish phonemes. Premium /
+                Enhanced voices float to the top of each group. */}
             <div className="text-[10px] uppercase tracking-wide text-gray-500 px-2 pt-3 pb-1 border-t border-white/5 mt-2">
-              All voices on this device ({sortedVoices.length})
+              All voices on this device ({voices.length})
             </div>
-            {sortedVoices.length === 0 && (
+            {voices.length === 0 && (
               <div className="text-[11px] text-gray-500 px-2 py-2 italic">
                 No voices loaded yet — close + reopen this picker after a moment
               </div>
             )}
-            {sortedVoices.map((v) => {
-              const isSel = explicitVoiceName === v.name
-              const isPremium = /premium|enhanced/i.test(v.name)
+            {groupOrder.map((groupName) => {
+              const items = grouped.get(groupName) || []
+              const sample = items[0]
+              const { flag } = sample ? labelForLang(sample.lang) : { flag: '🌐' }
               return (
-                <button
-                  key={v.voiceURI || v.name}
-                  onClick={() => pickExplicitVoice(v)}
-                  className={`w-full text-left px-3 py-1.5 rounded-lg text-xs transition-colors mb-0.5 ${
-                    isSel
-                      ? 'bg-cyan-500/20 border border-cyan-500/40 text-white'
-                      : 'hover:bg-white/5 text-gray-200 border border-transparent'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span>
-                      {v.name}
-                      {isPremium && <span className="ml-1 text-[9px] text-amber-400">★ premium</span>}
-                    </span>
-                    <span className="text-[10px] text-gray-500">{v.lang}</span>
+                <div key={groupName} className="pt-2">
+                  <div className="text-[10px] text-gray-500 px-2 py-1 flex items-center gap-1.5 sticky top-0 bg-black/95 backdrop-blur">
+                    <span>{flag}</span>
+                    <span className="uppercase tracking-wide">{groupName}</span>
+                    <span className="text-gray-600 ml-1">{items.length}</span>
                   </div>
-                </button>
+                  {items.map((v) => {
+                    const isSel = explicitVoiceName === v.name
+                    const isPremium = /premium|enhanced/i.test(v.name)
+                    return (
+                      <button
+                        key={v.voiceURI || v.name}
+                        onClick={() => pickExplicitVoice(v)}
+                        className={`w-full text-left px-3 py-1.5 rounded-lg text-xs transition-colors mb-0.5 ${
+                          isSel
+                            ? 'bg-cyan-500/20 border border-cyan-500/40 text-white'
+                            : 'hover:bg-white/5 text-gray-200 border border-transparent'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="truncate">
+                            {v.name}
+                            {isPremium && <span className="ml-1 text-[9px] text-amber-400">★ premium</span>}
+                          </span>
+                          <span className="text-[10px] text-gray-500 flex-shrink-0">{v.lang}</span>
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
               )
             })}
 
