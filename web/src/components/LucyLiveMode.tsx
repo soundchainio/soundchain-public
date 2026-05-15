@@ -84,14 +84,37 @@ export default function LucyLiveMode({ onClose, captureIntervalMs = 6000 }: Lucy
           videoRef.current.srcObject = stream
           await videoRef.current.play().catch(() => {})
         }
-        // Initial silent utterance to unlock iOS audio for the rest of the session
+        // Audible greeting on Live Mode start — confirms audio chain is
+        // routing correctly to Frank's earbuds BEFORE the first inference
+        // roundtrip. If he doesn't hear this, audio is muted/broken and
+        // he knows immediately. Doubles as iOS audio session unlock from
+        // within the page's user-gesture-initiated mount.
         if (typeof window !== 'undefined' && window.speechSynthesis) {
-          const u = new SpeechSynthesisUtterance(' ')
-          u.volume = 0
-          window.speechSynthesis.speak(u)
+          // First cancel any in-flight TTS from prior session
+          window.speechSynthesis.cancel()
+          // Silent unlock utterance first
+          const unlock = new SpeechSynthesisUtterance(' ')
+          unlock.volume = 0
+          window.speechSynthesis.speak(unlock)
+          // Then audible greeting at full volume in selected persona voice
+          const greet = new SpeechSynthesisUtterance("I'm with you Frank. Show me what you're looking at.")
+          greet.volume = 1.0
+          const { voice, rate, pitch } = getVoiceConfig()
+          if (voice) greet.voice = voice
+          greet.rate = rate
+          greet.pitch = pitch
+          // Force playback session — play via Audio element too as belt-and-suspenders
+          try {
+            const silentWav = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA='
+            const a = new Audio(silentWav)
+            a.volume = 0
+            a.play().catch(() => {})
+          } catch {}
+          window.speechSynthesis.speak(greet)
         }
-        // Kick off the first capture immediately
-        captureAndAsk('')
+        // Kick off the first capture after greeting starts (slight delay
+        // so the greeting isn't drowned out by a same-time inference)
+        setTimeout(() => captureAndAsk(''), 1500)
       } catch (err: any) {
         setError(`Camera: ${err?.message || 'permission denied'}`)
       }
