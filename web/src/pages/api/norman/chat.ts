@@ -102,6 +102,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   if (!upstream.ok || !upstream.body) {
     const text = await upstream.text().catch(() => '')
+    // Friendlier error for the most common gotcha — vision model not installed.
+    if (upstream.status === 404 && hasImages) {
+      return res.status(502).json({
+        error: `Vision model not installed on anvil. SSH in and run: ollama pull ${targetModel}`,
+        detail: text.slice(0, 500),
+      })
+    }
+    if (upstream.status === 404) {
+      return res.status(502).json({
+        error: `Model "${targetModel}" not found on anvil. SSH in and run: ollama pull ${targetModel}`,
+        detail: text.slice(0, 500),
+      })
+    }
     return res.status(502).json({ error: `anvil returned ${upstream.status}`, detail: text.slice(0, 500) })
   }
 
