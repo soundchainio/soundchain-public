@@ -328,11 +328,20 @@ export default function NormanPage() {
     if (typeof window !== 'undefined') (window as any).__lucyThinking = true
 
     try {
+      // Phase 8.5 — long-context: send the full encrypted conversation
+      // history (already loaded from IndexedDB by useLucyMemory). llama3.1
+      // supports 128k tokens so a ~200-turn conversation still fits with
+      // headroom. Lucy now genuinely remembers what was discussed yesterday,
+      // last week, since first awakening. Cap at last 100 turns to keep
+      // request size sane — we can soften this once we measure typical
+      // conversation depth in practice.
+      const HISTORY_CAP = 100
+      const historyTurns = [...messages, userMsg].slice(-HISTORY_CAP)
       const res = await fetch('/api/norman/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: [...messages, userMsg].map((m) => ({
+          messages: historyTurns.map((m) => ({
             role: m.role,
             content: m.content,
             ...(m.images && m.images.length > 0 ? { images: m.images } : {}),
