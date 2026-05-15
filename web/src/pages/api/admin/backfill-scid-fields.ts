@@ -29,11 +29,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const client = await clientPromise
   const db = client.db('soundchain')
 
-  // Gate to furdA1 — only Frank's account can trigger this
-  const profile = await db
-    .collection('profiles')
-    .findOne({ _id: auth.profileId }, { projection: { userHandle: 1 } })
-  if (profile?.userHandle !== 'furdA1') {
+  // Gate to furdA1 — only Frank's account can trigger this. Legacy 2021 users
+  // store handle on users.handle (not profiles.userHandle); check both.
+  const { ObjectId } = await import('mongodb')
+  const [profile, user] = await Promise.all([
+    db.collection('profiles').findOne(
+      { _id: auth.profileId },
+      { projection: { userHandle: 1, displayName: 1 } }
+    ),
+    db.collection('users').findOne(
+      { _id: new ObjectId(auth.userId) },
+      { projection: { handle: 1 } }
+    ),
+  ])
+  const handle = String(
+    profile?.userHandle || user?.handle || profile?.displayName || ''
+  ).toLowerCase()
+  if (handle !== 'furda1') {
     return res.status(403).json({ error: 'Forbidden' })
   }
 

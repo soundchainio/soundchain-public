@@ -43,10 +43,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const client = await clientPromise
   const db = client.db('soundchain')
-  const profile = await db
-    .collection('profiles')
-    .findOne({ _id: auth.profileId }, { projection: { userHandle: 1 } })
-  if (profile?.userHandle !== 'furdA1') {
+  // Legacy users (pre-Feb 2026) store handle on users.handle, not
+  // profiles.userHandle. furdA1 is a 2021 account — check both, case-
+  // insensitive, so Lucy's gate doesn't gaslight her own founder.
+  const { ObjectId } = await import('mongodb')
+  const [profile, user] = await Promise.all([
+    db.collection('profiles').findOne(
+      { _id: auth.profileId },
+      { projection: { userHandle: 1, displayName: 1 } }
+    ),
+    db.collection('users').findOne(
+      { _id: new ObjectId(auth.userId) },
+      { projection: { handle: 1 } }
+    ),
+  ])
+  const handle = String(
+    profile?.userHandle || user?.handle || profile?.displayName || ''
+  ).toLowerCase()
+  if (handle !== 'furda1') {
     return res.status(403).json({ error: 'Lucy is currently in furdA1-only beta.' })
   }
 
