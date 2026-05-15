@@ -23,6 +23,7 @@ import { useEffect, useRef, useState } from 'react'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 import { useMe } from 'hooks/useMe'
+import { useLucyMemory } from 'hooks/useLucyMemory'
 
 type ChatMessage = { role: 'user' | 'assistant'; content: string }
 
@@ -31,7 +32,10 @@ export default function NormanPage() {
   // useMe() returns the me object directly (not { me }) and returns undefined
   // when rendered outside Apollo provider — defensive destructure required.
   const me = useMe()
-  const [messages, setMessages] = useState<ChatMessage[]>([])
+  // Phase 8: encrypted IndexedDB memory. Restores prior conversation on
+  // mount, persists every assistant-complete turn. Local-only, never
+  // touches a server.
+  const { messages, setMessages, save: persistMessages, clear: clearMemory, ready: memoryReady } = useLucyMemory()
   const [input, setInput] = useState('')
   const [streaming, setStreaming] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -203,6 +207,13 @@ export default function NormanPage() {
       // Speak any final sentence-without-terminator
       const finalTail = accumulated.slice(spokenIndexRef.current).trim()
       if (finalTail.length > 1 && voiceOutRef.current) speakSentence(finalTail)
+      // Phase 8: persist the now-complete turn to encrypted IndexedDB
+      try {
+        const completed = [...messages, userMsg, { role: 'assistant' as const, content: accumulated }]
+        await persistMessages(completed)
+      } catch {
+        // memory persistence is best-effort — never block chat on it
+      }
     } catch (err: any) {
       setError(err?.message || 'Lucy is unreachable.')
       setMessages((prev) => (prev[prev.length - 1]?.content === '' ? prev.slice(0, -1) : prev))
@@ -293,6 +304,21 @@ export default function NormanPage() {
               aria-label="toggle Lucy's voice"
             >
               {voiceOutEnabled ? '🔊' : '🔇'}
+            </button>
+          )}
+          {messages.length > 0 && (
+            <button
+              onClick={async () => {
+                if (confirm('Clear this conversation? Lucy will forget what we talked about. This only affects this device.')) {
+                  await clearMemory()
+                  if (typeof window !== 'undefined' && window.speechSynthesis) window.speechSynthesis.cancel()
+                }
+              }}
+              className="text-xs text-gray-400 hover:text-red-400 transition-colors px-2 py-1"
+              title="Clear conversation memory on this device"
+              aria-label="clear memory"
+            >
+              🗑️
             </button>
           )}
           <button
