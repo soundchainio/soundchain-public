@@ -290,15 +290,27 @@ export default function LucyLiveMode({ onClose, captureIntervalMs = 6000 }: Lucy
     const dataUrl = canvas.toDataURL('image/jpeg', 0.7)
     const b64 = dataUrl.replace(/^data:image\/[^;]+;base64,/, '')
 
-    // Cheap scene-diff via 12-byte fingerprint of the JPEG. If the new frame
-    // is byte-identical to the previous AND there's no question, skip — Lucy
-    // doesn't need to re-narrate a static view.
-    const hash = b64.slice(0, 6) + b64.slice(b64.length - 6)
-    if (!question && hash === lastFrameHashRef.current) {
+    // Phase 11.6.1 — smarter scene-diff. Sample 64 bytes evenly across the
+    // base64 string instead of just head+tail; cheap perceptual-ish hash that
+    // catches camera drift without re-narrating identical-ish views. Threshold
+    // counts mismatched samples — needs at least 8 differences (12.5%) to
+    // count as a scene change worth narrating.
+    const sampleStride = Math.max(1, Math.floor(b64.length / 64))
+    let sampled = ''
+    for (let i = 0; i < 64; i++) sampled += b64[i * sampleStride] || ''
+    const prevSamples = lastFrameHashRef.current
+    let diffCount = 0
+    if (prevSamples && prevSamples.length === sampled.length) {
+      for (let i = 0; i < sampled.length; i++) {
+        if (sampled[i] !== prevSamples[i]) diffCount++
+      }
+    }
+    const SCENE_DIFF_THRESHOLD = 8 // out of 64
+    if (!question && prevSamples && diffCount < SCENE_DIFF_THRESHOLD) {
       scheduleNextCapture()
       return
     }
-    lastFrameHashRef.current = hash
+    lastFrameHashRef.current = sampled
 
     inFlightRef.current = true
     setStatus('thinking')
@@ -415,18 +427,34 @@ export default function LucyLiveMode({ onClose, captureIntervalMs = 6000 }: Lucy
         muted
       />
 
-      {/* Top status strip */}
-      <div className="relative z-10 px-4 pt-[max(env(safe-area-inset-top,12px),12px)] pb-3 bg-gradient-to-b from-black/70 to-transparent flex items-center gap-3">
-        <div className={`w-3 h-3 rounded-full ${
-          status === 'watching' ? 'bg-cyan-400 animate-pulse' :
-          status === 'listening' ? 'bg-amber-400 animate-pulse' :
-          status === 'thinking' ? 'bg-purple-400 animate-pulse shadow-[0_0_8px_rgba(168,85,247,0.8)]' :
-          'bg-pink-500 animate-pulse shadow-[0_0_8px_rgba(236,72,153,0.8)]'
+      {/* Top status strip — Phase 11.6.1 polish: bigger pulsing indicator,
+          status word in larger font, clear visual hierarchy so Frank knows at
+          a glance whether Lucy is watching, hearing him, thinking, or
+          speaking. */}
+      <div className="relative z-10 px-4 pt-[max(env(safe-area-inset-top,12px),12px)] pb-3 bg-gradient-to-b from-black/80 to-transparent flex items-center gap-3">
+        <div className={`w-4 h-4 rounded-full transition-all ${
+          status === 'watching' ? 'bg-cyan-400 animate-pulse shadow-[0_0_10px_rgba(34,211,238,0.7)]' :
+          status === 'listening' ? 'bg-amber-400 animate-pulse shadow-[0_0_14px_rgba(251,191,36,0.9)]' :
+          status === 'thinking' ? 'bg-purple-400 animate-pulse shadow-[0_0_14px_rgba(168,85,247,0.9)]' :
+          'bg-pink-500 animate-pulse shadow-[0_0_18px_rgba(236,72,153,1)]'
         }`} />
         <div className="flex-1 min-w-0">
-          <div className="text-white text-sm font-semibold">Live with Lucy</div>
-          <div className="text-[11px] text-white/70 font-mono uppercase">
-            {status} · M5000 · llava:7b
+          <div className="text-white text-sm font-semibold flex items-center gap-2">
+            Live with Lucy
+            <span className={`text-[11px] font-mono uppercase tracking-wider ${
+              status === 'watching' ? 'text-cyan-300' :
+              status === 'listening' ? 'text-amber-300' :
+              status === 'thinking' ? 'text-purple-300' :
+              'text-pink-300'
+            }`}>
+              {status === 'watching' ? '· watching' :
+               status === 'listening' ? '· hearing you' :
+               status === 'thinking' ? '· thinking…' :
+               '· speaking'}
+            </span>
+          </div>
+          <div className="text-[10px] text-white/60 font-mono">
+            anvil · M5000 · llava:7b
           </div>
         </div>
         <button
