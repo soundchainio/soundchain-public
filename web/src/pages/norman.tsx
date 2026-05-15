@@ -410,55 +410,120 @@ export default function NormanPage() {
     try {
       if (isVideo) {
         // Phase 11.2 — extract 5 evenly-spaced keyframes from the video.
-        // LLaVA can take multiple images per message; we send them in
-        // chronological order so Lucy can reason about motion + change
-        // across the clip even without a true video-language model.
+        // iOS Safari quirks handled: (1) blob-URL videos report duration as
+        // Infinity until scrubbed, (2) detached <video> elements sometimes
+        // fail to load metadata, (3) the 'seeked' event is unreliable —
+        // every step has a timeout fallback.
         const url = URL.createObjectURL(file)
         const video = document.createElement('video')
-        video.src = url
+        // iOS requires video element to be in DOM for metadata to load.
+        video.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none'
         video.muted = true
         video.playsInline = true
+        // @ts-ignore — webkit-only attribute for iOS playsinline behavior
+        video.setAttribute('webkit-playsinline', 'true')
+        video.preload = 'auto'
+        video.src = url
+        document.body.appendChild(video)
+
+        // Wait for metadata with multiple-event fallback
         await new Promise<void>((res, rej) => {
-          video.onloadedmetadata = () => res()
-          video.onerror = () => rej(new Error('video decode failed'))
+          let done = false
+          const finish = () => { if (!done) { done = true; res() } }
+          video.addEventListener('loadedmetadata', finish, { once: true })
+          video.addEventListener('loadeddata', finish, { once: true })
+          video.addEventListener('canplay', finish, { once: true })
+          video.addEventListener('error', () => rej(new Error('video decode failed')), { once: true })
+          setTimeout(() => rej(new Error('video metadata timeout (10s)')), 10000)
         })
-        const duration = video.duration
+
+        // iOS Safari WebKit quirk: duration is Infinity for blob URLs until
+        // we scrub past the end. Hack: seek to a huge value, wait for the
+        // duration to settle.
+        let duration = video.duration
         if (!isFinite(duration) || duration <= 0) {
-          URL.revokeObjectURL(url)
-          throw new Error('video has no duration')
-        }
-        const frames: string[] = []
-        const FRAME_COUNT = 5
-        for (let i = 0; i < FRAME_COUNT; i++) {
-          // Seek evenly across the clip — 10%, 30%, 50%, 70%, 90%
-          const t = duration * (0.1 + (0.8 * i) / (FRAME_COUNT - 1))
-          await new Promise<void>((res, rej) => {
-            const onSeeked = () => {
-              video.removeEventListener('seeked', onSeeked)
-              try {
-                const w = video.videoWidth
-                const h = video.videoHeight
-                const scale = Math.min(1, 768 / Math.max(w, h))
-                const canvas = document.createElement('canvas')
-                canvas.width = Math.round(w * scale)
-                canvas.height = Math.round(h * scale)
-                const ctx = canvas.getContext('2d')
-                if (!ctx) return rej(new Error('canvas ctx'))
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
-                const out = canvas.toDataURL('image/jpeg', 0.78)
-                frames.push(out.replace(/^data:image\/[^;]+;base64,/, ''))
+          await new Promise<void>((res) => {
+            const onUpdate = () => {
+              if (isFinite(video.duration) && video.duration > 0) {
+                video.removeEventListener('durationchange', onUpdate)
+                video.removeEventListener('timeupdate', onUpdate)
                 res()
-              } catch (err: any) {
-                rej(err)
               }
             }
+            video.addEventListener('durationchange', onUpdate)
+            video.addEventListener('timeupdate', onUpdate)
+            try { video.currentTime = 1e9 } catch {}
+            setTimeout(() => {
+              video.removeEventListener('durationchange', onUpdate)
+              video.removeEventListener('timeupdate', onUpdate)
+              res()
+            }, 3000)
+          })
+          duration = video.duration
+        }
+
+        // Final fallback: if duration is still bad, fall back to single
+        // frame from current time (better than total failure)
+        const usableDuration = isFinite(duration) && duration > 0 ? duration : 0
+        const frames: string[] = []
+        const FRAME_COUNT = usableDuration > 0 ? 5 : 1
+
+        const captureCurrentFrame = (): string | null => {
+          try {
+            const w = video.videoWidth
+            const h = video.videoHeight
+            if (!w || !h) return null
+            const scale = Math.min(1, 768 / Math.max(w, h))
+            const canvas = document.createElement('canvas')
+            canvas.width = Math.round(w * scale)
+            canvas.height = Math.round(h * scale)
+            const ctx = canvas.getContext('2d')
+            if (!ctx) return null
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+            const out = canvas.toDataURL('image/jpeg', 0.78)
+            return out.replace(/^data:image\/[^;]+;base64,/, '')
+          } catch {
+            return null
+          }
+        }
+
+        for (let i = 0; i < FRAME_COUNT; i++) {
+          let t = 0
+          if (usableDuration > 0) {
+            t = usableDuration * (FRAME_COUNT === 1 ? 0 : 0.1 + (0.8 * i) / (FRAME_COUNT - 1))
+          }
+          // Seek + extract with timeout fallback
+          await new Promise<void>((res) => {
+            let resolved = false
+            const finish = () => { if (!resolved) { resolved = true; res() } }
+            const onSeeked = () => {
+              video.removeEventListener('seeked', onSeeked)
+              const b64 = captureCurrentFrame()
+              if (b64) frames.push(b64)
+              finish()
+            }
             video.addEventListener('seeked', onSeeked, { once: true })
-            video.currentTime = t
+            try { video.currentTime = t } catch {}
+            // iOS seeked-event reliability bug — capture anyway after timeout
+            setTimeout(() => {
+              video.removeEventListener('seeked', onSeeked)
+              if (!resolved) {
+                const b64 = captureCurrentFrame()
+                if (b64) frames.push(b64)
+              }
+              finish()
+            }, 2500)
           })
         }
+
+        // Cleanup
+        try { document.body.removeChild(video) } catch {}
         URL.revokeObjectURL(url)
+
+        if (frames.length === 0) throw new Error('could not extract any frames from video')
+
         setPendingImages(frames)
-        setPendingImage(frames[0]) // also set primary so single-image UI shows preview
+        setPendingImage(frames[0])
         setPendingIsVideo(true)
       } else {
         // Image path — downscale via canvas to 768px longest side
