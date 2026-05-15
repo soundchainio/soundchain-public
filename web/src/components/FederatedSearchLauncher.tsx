@@ -55,7 +55,7 @@ export default function FederatedSearchLauncher() {
         onClick={() => setOpen(true)}
         aria-label="Open SoundChain search"
         title="Search  ·  /  or  ⌘K"
-        className="fixed bottom-28 left-4 z-40 w-12 h-12 rounded-full bg-black/80 backdrop-blur-xl border border-cyan-500/50 shadow-[0_0_20px_rgba(6,182,212,0.35)] hover:shadow-[0_0_30px_rgba(6,182,212,0.55)] flex items-center justify-center transition"
+        className="fixed bottom-20 right-3 z-40 w-12 h-12 rounded-full bg-black/80 backdrop-blur-xl border border-cyan-500/50 shadow-[0_0_20px_rgba(6,182,212,0.35)] hover:shadow-[0_0_30px_rgba(6,182,212,0.55)] flex items-center justify-center transition"
       >
         <Search className="w-5 h-5 text-cyan-400 drop-shadow-[0_0_6px_rgba(6,182,212,0.8)]" />
       </button>

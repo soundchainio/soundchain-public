@@ -58,7 +58,7 @@ export default function LucyPill() {
   return (
     <button
       onClick={() => router.push('/norman')}
-      className={`fixed bottom-20 right-3 z-[80] w-12 h-12 rounded-full grid place-items-center text-xl shadow-lg transition-all ${
+      className={`fixed bottom-36 right-3 z-[80] w-12 h-12 rounded-full grid place-items-center text-xl shadow-lg transition-all ${
         thinking
           ? 'bg-gradient-to-br from-cyan-400 via-purple-500 to-pink-500 shadow-[0_0_24px_rgba(34,211,238,0.6)] animate-pulse'
           : 'bg-gradient-to-br from-cyan-400 via-purple-500 to-pink-500 shadow-[0_0_12px_rgba(168,85,247,0.4)] hover:scale-110'
