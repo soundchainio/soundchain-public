@@ -43,13 +43,12 @@ export default function NormanPage() {
   const [listening, setListening] = useState(false)
   const [voiceOutEnabled, setVoiceOutEnabled] = useState(false)
   const [speechSupported, setSpeechSupported] = useState({ in: false, out: false })
-  // Phase 11 — vision: pending image (base64, no data: prefix) attached to the
-  // next message; camera overlay state for live preview/capture.
+  // Phase 11 — vision: pending image (base64, no data: prefix) attached to
+  // the next message. iOS native picker handles source selection (Take Photo,
+  // Photo Library, Choose Files) via a hidden <input type="file"> — no need
+  // for a custom camera overlay anymore.
   const [pendingImage, setPendingImage] = useState<string | null>(null)
-  const [cameraOpen, setCameraOpen] = useState(false)
-  const [cameraSupported, setCameraSupported] = useState(false)
-  const videoRef = useRef<HTMLVideoElement | null>(null)
-  const cameraStreamRef = useRef<MediaStream | null>(null)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
   const scrollRef = useRef<HTMLDivElement | null>(null)
   const inputRef = useRef<HTMLTextAreaElement | null>(null)
   const recognitionRef = useRef<any>(null)
@@ -76,7 +75,6 @@ export default function NormanPage() {
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
     const synth = window.speechSynthesis
     setSpeechSupported({ in: !!SR, out: !!synth })
-    setCameraSupported(!!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia))
 
     if (SR) {
       const rec = new SR()
@@ -324,52 +322,48 @@ export default function NormanPage() {
 
   function send() { sendWithText(input) }
 
-  async function openCamera() {
-    if (!cameraSupported) return
+  // iOS native file picker — accept=image/* without a capture attribute opens
+  // the action sheet (Take Photo / Photo Library / Choose Files). The picked
+  // file is downscaled to 768px longest side + JPEG-encoded to keep the
+  // base64 payload small enough for LLaVA on M5000 to handle quickly.
+  function openImagePicker() {
+    fileInputRef.current?.click()
+  }
+
+  async function handleFilePicked(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    // Reset the input so picking the same file twice still fires onChange
+    e.target.value = ''
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: 'environment' } }, // back camera on phones
-        audio: false,
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(String(reader.result))
+        reader.onerror = () => reject(reader.error || new Error('read failed'))
+        reader.readAsDataURL(file)
       })
-      cameraStreamRef.current = stream
-      setCameraOpen(true)
-      // Wait a tick for the video element to mount, then attach
-      setTimeout(() => {
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream
-          videoRef.current.play().catch(() => {})
-        }
-      }, 50)
+      // Downscale via canvas to a max longest-side of 768px
+      const img = new Image()
+      img.src = dataUrl
+      await new Promise<void>((res, rej) => {
+        img.onload = () => res()
+        img.onerror = () => rej(new Error('image decode failed'))
+      })
+      const w = img.naturalWidth
+      const h = img.naturalHeight
+      const scale = Math.min(1, 768 / Math.max(w, h))
+      const canvas = document.createElement('canvas')
+      canvas.width = Math.round(w * scale)
+      canvas.height = Math.round(h * scale)
+      const ctx = canvas.getContext('2d')
+      if (!ctx) throw new Error('canvas 2d ctx unavailable')
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+      const out = canvas.toDataURL('image/jpeg', 0.85)
+      const b64 = out.replace(/^data:image\/[^;]+;base64,/, '')
+      setPendingImage(b64)
     } catch (err: any) {
-      setError(`Camera: ${err?.message || 'permission denied'}`)
+      setError(`Image: ${err?.message || 'failed to load'}`)
     }
-  }
-
-  function closeCamera() {
-    if (cameraStreamRef.current) {
-      cameraStreamRef.current.getTracks().forEach((t) => t.stop())
-      cameraStreamRef.current = null
-    }
-    setCameraOpen(false)
-  }
-
-  function captureFrame() {
-    const video = videoRef.current
-    if (!video) return
-    const canvas = document.createElement('canvas')
-    // Cap longest side to 768 — enough for LLaVA, keeps base64 payload sane
-    const w = video.videoWidth
-    const h = video.videoHeight
-    const scale = Math.min(1, 768 / Math.max(w, h))
-    canvas.width = Math.round(w * scale)
-    canvas.height = Math.round(h * scale)
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.85)
-    const b64 = dataUrl.replace(/^data:image\/[^;]+;base64,/, '')
-    setPendingImage(b64)
-    closeCamera()
   }
 
   function toggleMic() {
@@ -424,31 +418,16 @@ export default function NormanPage() {
         children that can't be displaced. Standard mobile-chat layout.
       */}
       <div className="h-[100dvh] bg-black text-white flex flex-col overflow-hidden">
-        {cameraOpen && (
-          <div className="fixed inset-0 z-[200] bg-black flex flex-col">
-            <video
-              ref={videoRef}
-              className="flex-1 w-full object-cover"
-              autoPlay
-              playsInline
-              muted
-            />
-            <div className="p-4 flex items-center justify-between gap-3 bg-black border-t border-white/10">
-              <button
-                onClick={closeCamera}
-                className="px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-sm text-gray-300"
-              >
-                cancel
-              </button>
-              <button
-                onClick={captureFrame}
-                className="w-16 h-16 rounded-full bg-white border-4 border-cyan-500 shadow-[0_0_20px_rgba(34,211,238,0.6)] active:scale-95 transition-transform"
-                aria-label="capture"
-              />
-              <div className="w-[80px]" />
-            </div>
-          </div>
-        )}
+        {/* Hidden native file picker — tap the 📷 composer button to trigger it.
+            iOS shows action sheet: Take Photo / Photo Library / Choose Files. */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleFilePicked}
+          className="hidden"
+          aria-hidden="true"
+        />
         <header className="px-4 py-3 border-b border-white/10 flex items-center gap-3 bg-black/95 backdrop-blur z-10 flex-shrink-0">
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 via-purple-500 to-pink-500 grid place-items-center text-xl">
             🧠
@@ -571,17 +550,15 @@ export default function NormanPage() {
             </div>
           )}
           <div className="flex gap-2 max-w-3xl mx-auto items-end">
-            {cameraSupported && (
-              <button
-                onClick={openCamera}
-                disabled={streaming || cameraOpen}
-                className="px-3 py-3 rounded-2xl text-lg transition-all flex-shrink-0 bg-white/5 border border-white/10 hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed"
-                title="show Lucy what you see"
-                aria-label="open camera"
-              >
-                📷
-              </button>
-            )}
+            <button
+              onClick={openImagePicker}
+              disabled={streaming}
+              className="px-3 py-3 rounded-2xl text-lg transition-all flex-shrink-0 bg-white/5 border border-white/10 hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed"
+              title="show Lucy a photo or take one"
+              aria-label="attach image — camera, library, or files"
+            >
+              📷
+            </button>
             {speechSupported.in && (
               <button
                 onClick={toggleMic}
