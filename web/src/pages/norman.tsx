@@ -24,6 +24,7 @@ import Head from 'next/head'
 import { useRouter } from 'next/router'
 import { useMe } from 'hooks/useMe'
 import { useLucyMemory } from 'hooks/useLucyMemory'
+import LucyVoicePicker, { getVoiceConfig } from 'components/LucyVoicePicker'
 
 type ChatMessage = { role: 'user' | 'assistant'; content: string }
 
@@ -120,13 +121,14 @@ export default function NormanPage() {
     if (!voiceOutRef.current) return
     if (typeof window === 'undefined' || !window.speechSynthesis) return
     const u = new SpeechSynthesisUtterance(text)
-    u.rate = 1.05
-    u.pitch = 1.0
     u.volume = 1.0
-    // Pick a higher-quality voice if available — Apple's Samantha or similar
-    const voices = window.speechSynthesis.getVoices()
-    const preferred = voices.find((v) => /samantha|karen|moira|en-US/i.test(v.name + v.lang)) || voices[0]
-    if (preferred) u.voice = preferred
+    // Phase 10 — read currently-selected persona from localStorage + match
+    // against available SpeechSynthesisVoice options. Falls back gracefully
+    // if the selected persona's voice isn't installed on this device.
+    const { voice, rate, pitch } = getVoiceConfig()
+    if (voice) u.voice = voice
+    u.rate = rate
+    u.pitch = pitch
     window.speechSynthesis.speak(u)
   }
 
@@ -292,6 +294,7 @@ export default function NormanPage() {
                 : 'running on anvil · M5000 · llama3.1'}
             </div>
           </div>
+          {speechSupported.out && <LucyVoicePicker />}
           {speechSupported.out && (
             <button
               onClick={toggleVoiceOut}
