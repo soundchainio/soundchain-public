@@ -1,0 +1,16 @@
+[Unit]
+Description=Lucy Neural — anvil-side cortical region server (port 11437)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=soundchain
+Environment=LUCY_NEURAL_MODE=synthetic
+Environment=LUCY_NEURAL_MODEL=oscillator-v0
+ExecStart=/home/soundchain/piper-venv/bin/python -m uvicorn lucy-neural-server:app --host 127.0.0.1 --port 11437
+WorkingDirectory=/home/soundchain
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
