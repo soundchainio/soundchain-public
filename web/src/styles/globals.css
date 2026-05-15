@@ -2391,3 +2391,9 @@ body.arena-modal-open .arena-hologram-text { animation-play-state: paused; }
 /* Lift contrast — projector throws often soften neutral grays into mush. */
 :root[data-display-mode="projector"] .text-gray-500 { color: rgb(156, 163, 175) !important; }
 :root[data-display-mode="projector"] .text-gray-600 { color: rgb(156, 163, 175) !important; }
+/* /norman page — Lucy IS the agent here. Hide the global FURL pill iframe
+   so its mini search circle doesn't overlap Lucy's reply bubbles.
+   Body class set by pages/norman.tsx; auto-restored on unmount. */
+body.lucy-active iframe[title="FURL Terminal"] {
+  display: none !important;
+}

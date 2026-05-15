@@ -128,6 +128,16 @@ export default function NormanPage() {
     }
   }, [me, router])
 
+  // Hide the global FURL pill on /norman — Lucy IS the agent surface here,
+  // FURL's mini search pill overlaps Lucy's reply bubbles in mid-screen.
+  // The body class is consumed by globals.css to display:none the iframe.
+  // Restored on unmount when leaving /norman.
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+    document.body.classList.add('lucy-active')
+    return () => { document.body.classList.remove('lucy-active') }
+  }, [])
+
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
   }, [messages, streaming])
