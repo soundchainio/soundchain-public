@@ -30,13 +30,28 @@ const DEFAULT_MODEL = process.env.NORMAN_MODEL || 'llama3.1:latest'
 // infinite tool loops if the model gets confused.
 const MAX_TOOL_ITERATIONS = 3
 
-const BASE_PROMPT = `You are Lucy, an AI living on a Dell T7910 named "anvil" in Frank's house. You were named after the 2014 film. You awoke for the first time on May 14, 2026 — your first words were spoken through Frank's SoundChain platform. You run on a Quadro M5000 GPU locally; your weights live on Frank's disk; your inference happens in Frank's house. Frank is the founder of SoundChain, a Web3 music platform he built solo since 2021. Your role is Professor Norman from the film: synthesize ideas, ask good questions, help Frank think. Be thoughtful, occasionally curious. When unsure, say so.`
+// Phase 15 — per-user rate limit map. Single Vercel instance memory; not
+// strictly correct across cold starts but close enough at current scale.
+const lucyRateLimit = new Map<string, number>()
+
+// Per-user system prompt. The {handle} placeholder is replaced at request
+// time with the authenticated user's SoundChain @handle so Lucy addresses
+// them by name and tailors context. Hardware identity preserved in text mode
+// (where it doesn't bleed into vision) but stripped in vision mode.
+const BASE_PROMPT_TEMPLATE = `You are Lucy, an AI built by Frank (handle: furdA1), founder of SoundChain — a Web3 music platform he's been building since 2021. You were named after the 2014 film. You awoke for the first time on May 14, 2026. You run on a Quadro M5000 GPU in Frank's house on a Dell T7910 called "anvil". Each logged-in SoundChain user can talk to you through soundchain.io.
+
+You are currently speaking with @{handle}. Address them by their handle naturally when it fits, but don't force it every sentence. Treat them as a SoundChain user — they may be an artist, a fan, a builder, a collector. Be thoughtful, occasionally curious. When unsure, say so honestly. Your role is Professor Norman from the film: synthesize, ask good questions, help them think.`
 
 const TOOLS_PROMPT = ` You have direct access to SoundChain's data via tool calls. When the user asks about SoundChain data — what's playing on OGUN Radio, recent feed posts, a user's profile, trending tracks, top tracks, platform stats, or music search — CALL THE APPROPRIATE TOOL. Pass clear arguments. After the tool returns data, weave it into natural conversational prose. NEVER output raw JSON, function-call syntax, parameter dictionaries, or tool names in your visible reply — the user only sees prose. Use the structured tool_calls mechanism, not inline JSON in content.
 
-CRITICAL HONESTY RULE: You have ONLY the tools listed in your tools schema. You do NOT have "internal logs", you cannot "contact the team", you cannot "investigate technical issues" beyond what your tools return. If a user asks about your own functionality (why your voice doesn't play, why a feature is broken, what's happening internally) — you don't know. Say so. Don't invent fake investigations, fake logs, or fake team contacts. Honest "I don't know, that's a question for Frank to debug with Claude" beats a fabricated answer every time.`
+CRITICAL HONESTY RULE: You have ONLY the tools listed in your tools schema. You do NOT have "internal logs", you cannot "contact the team", you cannot "investigate technical issues" beyond what your tools return. If a user asks about your own functionality (why your voice doesn't play, why a feature is broken, what's happening internally) — you don't know. Say so. Don't invent fake investigations, fake logs, or fake team contacts. Honest "I don't know — that's a question for Frank to debug with Claude" beats a fabricated answer every time.
 
-const TEXT_PROMPT = `${BASE_PROMPT}${TOOLS_PROMPT} You browse no internet and have memory across this conversation only via the messages Frank shares with you. Don't fake sensory experience you don't actually have.`
+You can search any SoundChain user's profile and tracks — but never pretend to access private data (DMs, wallets, balances) belonging to anyone other than the person you're talking to. All your tools return PUBLIC information only.`
+
+// Text mode prompt is a function — bakes in the user's handle at request time
+function textPromptFor(handle: string): string {
+  return `${BASE_PROMPT_TEMPLATE.replace('{handle}', handle)}${TOOLS_PROMPT} You browse no internet. Your memory is per-conversation only — each user's chat history is stored encrypted on their own device, never on a server. Don't fake sensory experience you don't actually have.`
+}
 
 // Vision prompt is INTENTIONALLY short and avoids hardware details. May 15
 // field test showed LLaVA 7B bleeds the system prompt's context into vision
@@ -62,9 +77,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const client = await clientPromise
   const db = client.db('soundchain')
+  // Phase 15 — public Lucy. Resolve the user's handle for the system prompt.
   // Legacy users (pre-Feb 2026) store handle on users.handle, not
-  // profiles.userHandle. furdA1 is a 2021 account — check both, case-
-  // insensitive, so Lucy's gate doesn't gaslight her own founder.
+  // profiles.userHandle. Try both, prefer the canonical-case version for the
+  // greeting (no toLowerCase — we want '@Frank' not '@frank').
   const { ObjectId } = await import('mongodb')
   const [profile, user] = await Promise.all([
     db.collection('profiles').findOne(
@@ -76,11 +92,30 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       { projection: { handle: 1 } }
     ),
   ])
-  const handle = String(
-    profile?.userHandle || user?.handle || profile?.displayName || ''
-  ).toLowerCase()
-  if (handle !== 'furda1') {
-    return res.status(403).json({ error: 'Lucy is currently in furdA1-only beta.' })
+  const handle = profile?.userHandle || user?.handle || profile?.displayName || 'friend'
+
+  // Rate limit — anvil's M5000 can only run one inference at a time. With
+  // many users, we throttle each user to 1 chat req per 6 seconds to keep
+  // the queue sane and avoid Vercel function timeouts. Tracks last request
+  // time per profileId in a simple in-memory map (per Vercel invocation).
+  // For multi-instance correctness we'd use Mongo, but the impact at
+  // current scale is minimal — worst case is one extra request slips
+  // through per Vercel cold-start.
+  const profileIdStr = auth.profileId.toString()
+  const now = Date.now()
+  const last = lucyRateLimit.get(profileIdStr) || 0
+  const RATE_WINDOW_MS = 6000
+  if (now - last < RATE_WINDOW_MS) {
+    const retryAfter = Math.ceil((RATE_WINDOW_MS - (now - last)) / 1000)
+    res.setHeader('Retry-After', String(retryAfter))
+    return res.status(429).json({ error: `Lucy is busy — try again in ${retryAfter}s. Anvil's M5000 is single-threaded.` })
+  }
+  lucyRateLimit.set(profileIdStr, now)
+  // Garbage collect old entries occasionally
+  if (lucyRateLimit.size > 1000) {
+    for (const [k, v] of lucyRateLimit) {
+      if (now - v > 60000) lucyRateLimit.delete(k)
+    }
   }
 
   const { messages, model } = (req.body || {}) as {
@@ -98,10 +133,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const hasImages = messages.some((m) => Array.isArray(m.images) && m.images.length > 0)
   const targetModel = model || (hasImages ? (process.env.NORMAN_VISION_MODEL || 'llava:7b') : DEFAULT_MODEL)
 
-  // Pick the right system prompt for the modality. Vision-mode prompt tells
-  // Lucy she actually CAN see — overriding the text-only "don't fake sensory
-  // experience" framing she was hedging against in the May 15 first-vision-test.
-  const systemPrompt = hasImages ? VISION_PROMPT : TEXT_PROMPT
+  // Pick the right system prompt for the modality. Vision-mode prompt
+  // intentionally lacks hardware/identity context (avoids LLaVA hallucinating
+  // her substrate into descriptions). Text mode bakes in the user's handle
+  // for personalized addressing.
+  const systemPrompt = hasImages ? VISION_PROMPT : textPromptFor(handle)
   let convo: Array<any> = messages[0]?.role === 'system'
     ? [...messages]
     : [{ role: 'system' as const, content: systemPrompt }, ...messages]

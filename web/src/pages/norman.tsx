@@ -129,12 +129,13 @@ export default function NormanPage() {
     }
   }, [])
 
-  // Gate page — only furdA1 sees Lucy
+  // Phase 15 — Lucy is public for all authenticated users. Bounce only
+  // logged-out visitors back to /. Each authenticated user gets their own
+  // Lucy session — handle-aware system prompt, per-device memory.
   useEffect(() => {
-    if (!me) return
-    const handle = String(me.profile?.userHandle || '').toLowerCase()
-    if (handle && handle !== 'furda1') {
-      router.replace('/')
+    if (me === null) {
+      // explicitly logged out (useMe returned null, not undefined-loading)
+      router.replace('/login')
     }
   }, [me, router])
 
@@ -594,9 +595,9 @@ export default function NormanPage() {
     }
   }
 
-  if (me && String(me.profile?.userHandle || '').toLowerCase() !== 'furda1') {
-    return null
-  }
+  // Bounce unauthenticated visitors via the useEffect above; render nothing
+  // until me resolves (avoids flash-of-content for logged-out users)
+  if (me === null) return null
 
   return (
     <>

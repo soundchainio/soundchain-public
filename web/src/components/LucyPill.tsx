@@ -47,11 +47,11 @@ export default function LucyPill() {
     return () => clearInterval(id)
   }, [])
 
-  // Furda1 only — same gate as /norman + /api/norman/chat. Case-insensitive
-  // for legacy 2021 accounts where handle lives on users.handle not
-  // profiles.userHandle.
-  const handle = String(me?.profile?.userHandle || '').toLowerCase()
-  if (handle !== 'furda1') return null
+  // Phase 15 — Lucy is now public for all authenticated SoundChain users.
+  // Each user gets their own personalized Lucy session (handle-aware system
+  // prompt, per-device encrypted memory, isolated tool calls). Anvil compute
+  // is rate-limited server-side; clients queue gracefully if overloaded.
+  if (!me?.profile?.userHandle) return null
 
   if (shouldHideOnRoute(router.pathname)) return null
 
