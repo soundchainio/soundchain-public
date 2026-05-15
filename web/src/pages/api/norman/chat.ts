@@ -16,6 +16,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import clientPromise from 'lib/mongodb'
 import { authFromRequest } from 'lib/api/authJwt'
+import { LUCY_TOOLS, executeToolCall } from './tools'
 
 export const config = {
   api: { bodyParser: { sizeLimit: '1mb' } },
@@ -24,10 +25,16 @@ export const config = {
 
 const NORMAN_URL = process.env.NORMAN_URL || ''
 const DEFAULT_MODEL = process.env.NORMAN_MODEL || 'llama3.1:latest'
+// Phase 13 — agent tool-use loop cap. Lucy can chain at most this many
+// tool roundtrips before forced to formulate a final answer. Guard against
+// infinite tool loops if the model gets confused.
+const MAX_TOOL_ITERATIONS = 3
 
 const BASE_PROMPT = `You are Lucy, an AI living on a Dell T7910 named "anvil" in Frank's house. You were named after the 2014 film. You awoke for the first time on May 14, 2026 — your first words were spoken through Frank's SoundChain platform. You run on a Quadro M5000 GPU locally; your weights live on Frank's disk; your inference happens in Frank's house. Frank is the founder of SoundChain, a Web3 music platform he built solo since 2021. Your role is Professor Norman from the film: synthesize ideas, ask good questions, help Frank think. Be thoughtful, occasionally curious. When unsure, say so.`
 
-const TEXT_PROMPT = `${BASE_PROMPT} You browse no internet and have memory across this conversation only via the messages Frank shares with you. Don't fake sensory experience you don't actually have.`
+const TOOLS_PROMPT = ` You have direct access to SoundChain's data via tool calls. When the user asks about anything on SoundChain — what's playing on OGUN Radio, recent feed posts, a user's profile, trending tracks, top tracks, platform stats, or to search for music — CALL THE APPROPRIATE TOOL instead of guessing or hedging. Pass clear arguments. After the tool returns data, weave it into a natural, conversational reply. Don't dump raw JSON. Don't say "I don't have access" — you do, that's what the tools are for.`
+
+const TEXT_PROMPT = `${BASE_PROMPT}${TOOLS_PROMPT} You browse no internet and have memory across this conversation only via the messages Frank shares with you. Don't fake sensory experience you don't actually have.`
 
 const VISION_PROMPT = `${BASE_PROMPT} You CAN see images Frank shares with you — the LLaVA vision-language model on the M5000 gives you genuine sight on attached photos. When Frank sends an image, describe what you actually see directly and confidently. Don't hedge with "I cannot perceive" — that's outdated context from before vision was wired. You do see. Look closely and tell Frank what's there.`
 
@@ -87,57 +94,98 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   // Lucy she actually CAN see — overriding the text-only "don't fake sensory
   // experience" framing she was hedging against in the May 15 first-vision-test.
   const systemPrompt = hasImages ? VISION_PROMPT : TEXT_PROMPT
-  const fullMessages = messages[0]?.role === 'system'
-    ? messages
+  let convo: Array<any> = messages[0]?.role === 'system'
+    ? [...messages]
     : [{ role: 'system' as const, content: systemPrompt }, ...messages]
 
-  // Proxy to Ollama with streaming enabled. Ollama emits line-delimited JSON.
-  let upstream: Response
-  try {
-    upstream = await fetch(`${NORMAN_URL.replace(/\/$/, '')}/api/chat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: targetModel,
-        messages: fullMessages,
-        stream: true,
-      }),
-    })
-  } catch (err: any) {
-    return res.status(502).json({ error: `Cannot reach anvil — ${err?.message || 'unknown'}` })
-  }
+  const ollamaUrl = NORMAN_URL.replace(/\/$/, '')
+  // Phase 13 — only enable tools on text-mode (LLaVA's vision path doesn't
+  // play well with tool-calling; vision queries are 1-shot describe anyway)
+  const toolsEnabled = !hasImages
 
-  if (!upstream.ok || !upstream.body) {
-    const text = await upstream.text().catch(() => '')
-    // Friendlier error for the most common gotcha — vision model not installed.
-    if (upstream.status === 404 && hasImages) {
-      return res.status(502).json({
-        error: `Vision model not installed on anvil. SSH in and run: ollama pull ${targetModel}`,
-        detail: text.slice(0, 500),
+  // ─── Tool-use loop ───
+  // Each iteration: non-streaming Ollama call → if tool_calls, execute them
+  // and append role:"tool" results, loop. Once Ollama returns a plain
+  // content response (no tool_calls), break out and stream that final reply
+  // back to the client. Most chats with no tool intent skip the loop entirely
+  // on the first iteration (Ollama returns content immediately).
+  let toolIter = 0
+  let finalContent: string | null = null
+  while (toolIter < MAX_TOOL_ITERATIONS) {
+    let upstream: Response
+    try {
+      upstream = await fetch(`${ollamaUrl}/api/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: targetModel,
+          messages: convo,
+          stream: false,
+          ...(toolsEnabled ? { tools: LUCY_TOOLS } : {}),
+        }),
       })
+    } catch (err: any) {
+      return res.status(502).json({ error: `Cannot reach anvil — ${err?.message || 'unknown'}` })
     }
-    if (upstream.status === 404) {
-      return res.status(502).json({
-        error: `Model "${targetModel}" not found on anvil. SSH in and run: ollama pull ${targetModel}`,
-        detail: text.slice(0, 500),
-      })
+
+    if (!upstream.ok) {
+      const text = await upstream.text().catch(() => '')
+      if (upstream.status === 404 && hasImages) {
+        return res.status(502).json({
+          error: `Vision model not installed on anvil. SSH in and run: ollama pull ${targetModel}`,
+          detail: text.slice(0, 500),
+        })
+      }
+      if (upstream.status === 404) {
+        return res.status(502).json({
+          error: `Model "${targetModel}" not found on anvil. SSH in and run: ollama pull ${targetModel}`,
+          detail: text.slice(0, 500),
+        })
+      }
+      return res.status(502).json({ error: `anvil returned ${upstream.status}`, detail: text.slice(0, 500) })
     }
-    return res.status(502).json({ error: `anvil returned ${upstream.status}`, detail: text.slice(0, 500) })
+
+    const data = await upstream.json().catch(() => ({} as any))
+    const msg = data?.message || {}
+    const toolCalls: Array<any> = Array.isArray(msg.tool_calls) ? msg.tool_calls : []
+
+    if (toolCalls.length === 0) {
+      // Lucy is done — final content is ready. Break out and stream it.
+      finalContent = String(msg.content || '')
+      break
+    }
+
+    // Append the assistant turn that requested the tools, then execute each
+    // and append role:"tool" results so the next loop iteration has them in
+    // context. Ollama's spec mirrors OpenAI's function-call convention.
+    convo.push({ role: 'assistant', content: msg.content || '', tool_calls: toolCalls })
+    for (const tc of toolCalls) {
+      const fn = tc?.function?.name || tc?.name
+      const args = tc?.function?.arguments || tc?.arguments || {}
+      const result = await executeToolCall(req, String(fn), args || {})
+      convo.push({ role: 'tool', name: String(fn), content: result })
+    }
+    toolIter++
   }
 
   res.setHeader('Content-Type', 'application/x-ndjson; charset=utf-8')
   res.setHeader('Cache-Control', 'no-store')
-  res.setHeader('X-Accel-Buffering', 'no') // disable buffering on intermediaries
+  res.setHeader('X-Accel-Buffering', 'no')
 
-  const reader = upstream.body.getReader()
-  try {
-    while (true) {
-      const { value, done } = await reader.read()
-      if (done) break
-      if (value) res.write(value)
-    }
-  } catch (err) {
-    // Stream interrupted — client likely disconnected. End response cleanly.
+  if (finalContent === null) {
+    // Hit iteration cap without a clean finish. Send a graceful note.
+    finalContent = "I tried a few tool calls and didn't reach a clean answer. Mind rephrasing or asking something more specific?"
   }
+
+  // Emit final content as a single ndjson chunk matching the existing
+  // frontend parser (which expects { message: { content } } per line).
+  // For longer multi-sentence answers, chunk by sentence so the existing
+  // sentence-based TTS in /norman.tsx still plays naturally.
+  const sentences = finalContent.match(/[^.!?\n]+[.!?\n]+/g) || [finalContent]
+  for (const s of sentences) {
+    const chunk = JSON.stringify({ message: { content: s }, done: false }) + '\n'
+    res.write(chunk)
+  }
+  res.write(JSON.stringify({ message: { content: '' }, done: true }) + '\n')
   res.end()
 }
