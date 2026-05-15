@@ -92,31 +92,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       { projection: { handle: 1 } }
     ),
   ])
-  const handle = profile?.userHandle || user?.handle || profile?.displayName || 'friend'
+  // Resolve handle for system prompt personalization (keep this — Lucy still
+  // addresses Frank by handle even though gate is restored).
+  const handleLower = String(profile?.userHandle || user?.handle || profile?.displayName || '').toLowerCase()
+  if (handleLower !== 'furda1') {
+    return res.status(403).json({ error: 'Lucy is under construction — furdA1-only until the 3-headed-triangle phase.' })
+  }
+  const handle = profile?.userHandle || user?.handle || profile?.displayName || 'Frank'
 
-  // Rate limit — anvil's M5000 can only run one inference at a time. With
-  // many users, we throttle each user to 1 chat req per 6 seconds to keep
-  // the queue sane and avoid Vercel function timeouts. Tracks last request
-  // time per profileId in a simple in-memory map (per Vercel invocation).
-  // For multi-instance correctness we'd use Mongo, but the impact at
-  // current scale is minimal — worst case is one extra request slips
-  // through per Vercel cold-start.
+  // Rate limit kept as defense even for single user — prevents accidental
+  // request floods from breaking anvil's queue.
   const profileIdStr = auth.profileId.toString()
   const now = Date.now()
   const last = lucyRateLimit.get(profileIdStr) || 0
-  const RATE_WINDOW_MS = 6000
+  const RATE_WINDOW_MS = 3000
   if (now - last < RATE_WINDOW_MS) {
     const retryAfter = Math.ceil((RATE_WINDOW_MS - (now - last)) / 1000)
     res.setHeader('Retry-After', String(retryAfter))
-    return res.status(429).json({ error: `Lucy is busy — try again in ${retryAfter}s. Anvil's M5000 is single-threaded.` })
+    return res.status(429).json({ error: `Hold a second — last request still processing.` })
   }
   lucyRateLimit.set(profileIdStr, now)
-  // Garbage collect old entries occasionally
-  if (lucyRateLimit.size > 1000) {
-    for (const [k, v] of lucyRateLimit) {
-      if (now - v > 60000) lucyRateLimit.delete(k)
-    }
-  }
 
   const { messages, model } = (req.body || {}) as {
     messages?: Array<{ role: 'user' | 'assistant' | 'system'; content: string; images?: string[] }>
