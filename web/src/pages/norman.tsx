@@ -114,8 +114,15 @@ export default function NormanPage() {
       <Head>
         <title>Lucy · SoundChain</title>
       </Head>
-      <div className="min-h-screen bg-black text-white flex flex-col">
-        <header className="px-4 py-3 border-b border-white/10 flex items-center gap-3 sticky top-0 bg-black/95 backdrop-blur z-10">
+      {/*
+        h-[100dvh] (dynamic viewport height) shrinks when iOS keyboard opens so
+        the header stays pinned at the visible viewport top instead of being
+        pushed off-screen with 100vh. overflow-hidden on the outer flex column
+        confines scroll to the messages list — header + composer are flex
+        children that can't be displaced. Standard mobile-chat layout.
+      */}
+      <div className="h-[100dvh] bg-black text-white flex flex-col overflow-hidden">
+        <header className="px-4 py-3 border-b border-white/10 flex items-center gap-3 bg-black/95 backdrop-blur z-10 flex-shrink-0">
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 via-purple-500 to-pink-500 grid place-items-center text-xl">
             🧠
           </div>
@@ -165,7 +172,7 @@ export default function NormanPage() {
           )}
         </div>
 
-        <div className="border-t border-white/10 p-3 sticky bottom-0 bg-black/95 backdrop-blur">
+        <div className="border-t border-white/10 p-3 bg-black/95 backdrop-blur flex-shrink-0">
           <div className="flex gap-2 max-w-3xl mx-auto">
             <textarea
               ref={inputRef}
