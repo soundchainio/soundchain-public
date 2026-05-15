@@ -18,7 +18,9 @@ type ChatMessage = { role: 'user' | 'assistant'; content: string }
 
 export default function NormanPage() {
   const router = useRouter()
-  const { me } = useMe()
+  // useMe() returns the me object directly (not { me }) and returns undefined
+  // when rendered outside Apollo provider — defensive destructure required.
+  const me = useMe()
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
   const [streaming, setStreaming] = useState(false)
