@@ -9,16 +9,33 @@
  */
 import { useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
+import { useRouter } from 'next/router'
 import { Search } from 'lucide-react'
 
 const FederatedSearchModal = dynamic(() => import('./FederatedSearchModal'), { ssr: false })
 
+// Routes where the global SoundChain search pill is hidden. Lucy's /norman
+// page is the agent surface — she IS the search interface there, the
+// cyan-magnifying-glass pill overlapping her reply bubbles was a months-long
+// thorn (May 15 audit revealed this component was the actual culprit, not
+// FURL as previously suspected).
+const HIDDEN_ROUTES = ['/norman']
+
+function shouldHideOnRoute(pathname: string): boolean {
+  return HIDDEN_ROUTES.some((p) => pathname === p || pathname.startsWith(`${p}/`))
+}
+
 export default function FederatedSearchLauncher() {
+  const router = useRouter()
   const [open, setOpen] = useState(false)
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (open) return
+      // Also disable global / shortcut on hidden routes — Lucy's textarea
+      // captures '/' input as a literal character. The Cmd+K still works
+      // for power users but doesn't render the pill.
+      if (shouldHideOnRoute(router.pathname)) return
       const target = e.target as HTMLElement | null
       const typing = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)
       if ((e.key === '/' && !typing) || ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k')) {
@@ -28,7 +45,9 @@ export default function FederatedSearchLauncher() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [open])
+  }, [open, router.pathname])
+
+  if (shouldHideOnRoute(router.pathname)) return null
 
   return (
     <>
