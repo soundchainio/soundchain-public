@@ -1,0 +1,16 @@
+[Unit]
+Description=Lucy Piper TTS server (port 11435)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=soundchain
+Environment=PIPER_BIN=/home/soundchain/piper-venv/bin/piper
+Environment=PIPER_MODEL=/home/soundchain/piper-voices/en_US-lessac-medium.onnx
+ExecStart=/home/soundchain/piper-venv/bin/python -m uvicorn lucy-piper-server:app --host 127.0.0.1 --port 11435
+WorkingDirectory=/home/soundchain
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
