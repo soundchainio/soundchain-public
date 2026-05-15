@@ -140,38 +140,63 @@ export default function NormanPage() {
 
   // Hide the global FURL pill on /norman — Lucy IS the agent surface here,
   // FURL's mini search pill overlaps Lucy's reply bubbles in mid-screen.
-  // Three-pronged defense: (1) body class + globals.css rule, (2) imperative
-  // display:none on any iframe matching FURL on mount, (3) MutationObserver
-  // re-applies hide if the iframe gets re-mounted or its style is reset.
-  // The CSS-only approach kept failing in the field — likely inline styles
-  // on the iframe from positionIframe() were outranking the rule.
+  // Three-pronged defense + a final nuclear option: any iframe at fixed
+  // position smaller than 100×100 on /norman is hidden, since the FURL
+  // pill is the only such element and the title-attribute selector has
+  // been unreliable in the field.
   useEffect(() => {
     if (typeof document === 'undefined') return
     document.body.classList.add('lucy-active')
 
     const hideFurl = () => {
-      const iframes = document.querySelectorAll<HTMLIFrameElement>(
-        'iframe[title="FURL Terminal"], iframe[src*="furl-terminal"]'
-      )
+      const iframes = document.querySelectorAll<HTMLIFrameElement>('iframe')
       iframes.forEach((f) => {
-        f.style.setProperty('display', 'none', 'important')
+        const isFurl = f.title === 'FURL Terminal' || (f.src || '').includes('furl-terminal')
+        if (isFurl) {
+          f.style.setProperty('display', 'none', 'important')
+          return
+        }
+        // Nuclear option — any small fixed-position iframe is suspect
+        const rect = f.getBoundingClientRect()
+        const style = window.getComputedStyle(f)
+        if (style.position === 'fixed' && rect.width < 200 && rect.height < 200) {
+          f.style.setProperty('display', 'none', 'important')
+        }
       })
     }
     hideFurl()
     const observer = new MutationObserver(hideFurl)
-    observer.observe(document.body, { childList: true, attributes: true, subtree: true, attributeFilter: ['style', 'src'] })
+    observer.observe(document.body, { childList: true, attributes: true, subtree: true, attributeFilter: ['style', 'src', 'title'] })
+    // Also re-run periodically in case MutationObserver misses a re-mount
+    const interval = setInterval(hideFurl, 2000)
 
     return () => {
       document.body.classList.remove('lucy-active')
       observer.disconnect()
-      // Restore FURL iframe on unmount
-      const iframes = document.querySelectorAll<HTMLIFrameElement>(
-        'iframe[title="FURL Terminal"], iframe[src*="furl-terminal"]'
-      )
+      clearInterval(interval)
+      const iframes = document.querySelectorAll<HTMLIFrameElement>('iframe')
       iframes.forEach((f) => {
-        f.style.removeProperty('display')
+        const isFurl = f.title === 'FURL Terminal' || (f.src || '').includes('furl-terminal')
+        if (isFurl) f.style.removeProperty('display')
       })
     }
+  }, [])
+
+  // iOS audio session reset — after using continuous SpeechRecognition
+  // (Live Mode) or any getUserMedia call, iOS keeps the audio session
+  // in "playAndRecord" mode, which routes TTS output through the tiny
+  // earpiece speaker instead of the loud bottom speaker. Playing a
+  // silent WAV on mount forces the session back to "playback" mode.
+  // Triggered on every /norman mount as a safety net.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      const silentWav = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA='
+      const a = new Audio(silentWav)
+      a.volume = 0
+      const p = a.play()
+      if (p && typeof p.catch === 'function') p.catch(() => {})
+    } catch {}
   }, [])
 
   useEffect(() => {

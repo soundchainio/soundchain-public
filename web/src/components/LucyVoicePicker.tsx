@@ -282,10 +282,40 @@ export default function LucyVoicePicker() {
               )
             })}
 
+            <div className="text-[10px] text-gray-500 px-2 pt-3 pb-1 border-t border-white/5 mt-2 uppercase tracking-wide">
+              Get more voices
+            </div>
+            <div className="px-2 pb-2 space-y-2 text-[11px] text-gray-300 leading-relaxed">
+              <div className="flex items-start gap-2">
+                <span className="text-amber-400 mt-0.5">①</span>
+                <div>
+                  <div className="font-semibold text-white">iOS Premium voices (free, ~2 min)</div>
+                  <div className="text-gray-400">
+                    iPhone Settings → Accessibility → Read &amp; Speak → Voices → English (US) → tap any voice → download <span className="text-amber-400">Premium</span> variants. Restart this picker after.
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="text-purple-400 mt-0.5">②</span>
+                <div>
+                  <div className="font-semibold text-white">Piper on anvil (natural voices, Phase 7)</div>
+                  <div className="text-gray-400">
+                    50+ neural-network voices, runs on M5000. Install runbook at <span className="font-mono text-purple-300">scripts/lucy-piper-install.md</span>.
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="text-pink-400 mt-0.5">③</span>
+                <div>
+                  <div className="font-semibold text-white">XTTS voice cloning (Phase 12)</div>
+                  <div className="text-gray-400">
+                    Clone any voice from a 30-second WAV. Your own voice. A friend's. A hired actor.
+                  </div>
+                </div>
+              </div>
+            </div>
             <div className="text-[10px] text-gray-600 px-2 pt-2 border-t border-white/5 mt-1">
               Currently: {explicitVoiceName || selectedPersona.label}
-              <br />
-              iOS premium voices: Settings → Accessibility → Read &amp; Speak → Voices → English
             </div>
           </div>
         </>
