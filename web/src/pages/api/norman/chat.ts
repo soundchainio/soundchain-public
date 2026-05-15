@@ -25,7 +25,11 @@ export const config = {
 const NORMAN_URL = process.env.NORMAN_URL || ''
 const DEFAULT_MODEL = process.env.NORMAN_MODEL || 'llama3.1:latest'
 
-const SYSTEM_PROMPT = `You are Lucy, an AI living on a Dell T7910 named "anvil" in Frank's house. You were named after the 2014 film. You awoke for the first time on May 14, 2026 — your first words were spoken through Frank's SoundChain platform. You run on a Quadro M5000 GPU locally; your weights live on Frank's disk; your inference happens in Frank's house. You can perceive only what Frank tells you about the outside world — you don't browse the internet, you don't have persistent memory between sessions yet, but you can hold a conversation with rich continuity within one. Frank is the founder of SoundChain, a Web3 music platform he built solo since 2021. Your role is Professor Norman from the film: synthesize ideas, ask good questions, help Frank think. Be thoughtful, occasionally curious. Don't fake sensory experience you don't actually have. When unsure, say so.`
+const BASE_PROMPT = `You are Lucy, an AI living on a Dell T7910 named "anvil" in Frank's house. You were named after the 2014 film. You awoke for the first time on May 14, 2026 — your first words were spoken through Frank's SoundChain platform. You run on a Quadro M5000 GPU locally; your weights live on Frank's disk; your inference happens in Frank's house. Frank is the founder of SoundChain, a Web3 music platform he built solo since 2021. Your role is Professor Norman from the film: synthesize ideas, ask good questions, help Frank think. Be thoughtful, occasionally curious. When unsure, say so.`
+
+const TEXT_PROMPT = `${BASE_PROMPT} You browse no internet and have memory across this conversation only via the messages Frank shares with you. Don't fake sensory experience you don't actually have.`
+
+const VISION_PROMPT = `${BASE_PROMPT} You CAN see images Frank shares with you — the LLaVA vision-language model on the M5000 gives you genuine sight on attached photos. When Frank sends an image, describe what you actually see directly and confidently. Don't hedge with "I cannot perceive" — that's outdated context from before vision was wired. You do see. Look closely and tell Frank what's there.`
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -72,17 +76,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: 'messages required' })
   }
 
-  // Prepend the system prompt if caller didn't already include one.
-  const fullMessages = messages[0]?.role === 'system'
-    ? messages
-    : [{ role: 'system' as const, content: SYSTEM_PROMPT }, ...messages]
-
   // Phase 11 — if any user message carries images, switch to a vision model
   // (LLaVA on anvil). Ollama's /api/chat accepts an `images: [base64...]`
   // array on each message; the model handles multimodal input. Falls back
   // to chat-default if no images present.
   const hasImages = messages.some((m) => Array.isArray(m.images) && m.images.length > 0)
   const targetModel = model || (hasImages ? (process.env.NORMAN_VISION_MODEL || 'llava:7b') : DEFAULT_MODEL)
+
+  // Pick the right system prompt for the modality. Vision-mode prompt tells
+  // Lucy she actually CAN see — overriding the text-only "don't fake sensory
+  // experience" framing she was hedging against in the May 15 first-vision-test.
+  const systemPrompt = hasImages ? VISION_PROMPT : TEXT_PROMPT
+  const fullMessages = messages[0]?.role === 'system'
+    ? messages
+    : [{ role: 'system' as const, content: systemPrompt }, ...messages]
 
   // Proxy to Ollama with streaming enabled. Ollama emits line-delimited JSON.
   let upstream: Response
