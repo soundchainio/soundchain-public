@@ -17,6 +17,10 @@
 import { useEffect, useState } from 'react'
 
 const STORAGE_KEY = 'lucy.voice.v1'
+// Phase 10.1 — explicit voice-name selection wins over persona matching, so
+// user-downloaded Premium/Enhanced voices (Ava, Zoe, Serena etc.) become
+// pickable directly instead of being filtered to a curated set.
+const VOICE_NAME_KEY = 'lucy.voice.name.v1'
 
 // Personas — name + match criteria for picking a SpeechSynthesisVoice.
 // Phase 10.5 will map these IDs to Piper voice files on anvil.
@@ -106,9 +110,19 @@ export function getVoiceConfig(): VoiceConfig {
   if (typeof window === 'undefined' || !window.speechSynthesis) {
     return { voice: null, rate: 1.0, pitch: 1.0, personaId: 'lucy-default' }
   }
+  const voices = window.speechSynthesis.getVoices()
+  // Explicit voice-name selection wins (Premium/Enhanced voices Frank picks
+  // directly from the All Voices list).
+  const explicitName = localStorage.getItem(VOICE_NAME_KEY) || ''
+  if (explicitName) {
+    const exactMatch = voices.find((v) => v.name === explicitName)
+    if (exactMatch) {
+      return { voice: exactMatch, rate: 1.05, pitch: 1.0, personaId: 'custom' }
+    }
+  }
+  // Fall back to persona heuristic match
   const personaId = localStorage.getItem(STORAGE_KEY) || 'lucy-default'
   const persona = VOICE_PERSONAS.find((p) => p.id === personaId) || VOICE_PERSONAS[0]
-  const voices = window.speechSynthesis.getVoices()
   const voice = voices.find(persona.matchVoice) || voices.find((v) => /en/i.test(v.lang)) || voices[0] || null
   return {
     voice,
@@ -122,11 +136,14 @@ export default function LucyVoicePicker() {
   const [open, setOpen] = useState(false)
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([])
   const [selected, setSelected] = useState<string>('lucy-default')
+  const [explicitVoiceName, setExplicitVoiceName] = useState<string>('')
 
   useEffect(() => {
     if (typeof window === 'undefined' || !window.speechSynthesis) return
     const stored = localStorage.getItem(STORAGE_KEY)
     if (stored) setSelected(stored)
+    const explicitName = localStorage.getItem(VOICE_NAME_KEY) || ''
+    setExplicitVoiceName(explicitName)
 
     const refresh = () => {
       setVoices(window.speechSynthesis.getVoices())
@@ -138,11 +155,14 @@ export default function LucyVoicePicker() {
     }
   }, [])
 
-  function pick(id: string) {
+  function pickPersona(id: string) {
     setSelected(id)
     localStorage.setItem(STORAGE_KEY, id)
+    // Selecting a persona clears the explicit-voice override so persona
+    // heuristic takes effect next utterance.
+    localStorage.removeItem(VOICE_NAME_KEY)
+    setExplicitVoiceName('')
     setOpen(false)
-    // Preview the voice with a short utterance so user hears it immediately
     if (typeof window !== 'undefined' && window.speechSynthesis) {
       window.speechSynthesis.cancel()
       const persona = VOICE_PERSONAS.find((p) => p.id === id) || VOICE_PERSONAS[0]
@@ -155,7 +175,28 @@ export default function LucyVoicePicker() {
     }
   }
 
+  function pickExplicitVoice(voice: SpeechSynthesisVoice) {
+    localStorage.setItem(VOICE_NAME_KEY, voice.name)
+    setExplicitVoiceName(voice.name)
+    setOpen(false)
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel()
+      const u = new SpeechSynthesisUtterance('Hello Frank. This is my new voice.')
+      u.voice = voice
+      u.rate = 1.05
+      u.pitch = 1.0
+      window.speechSynthesis.speak(u)
+    }
+  }
+
   const selectedPersona = VOICE_PERSONAS.find((p) => p.id === selected) || VOICE_PERSONAS[0]
+  // Sort voices: English variants first, then everything else alphabetical
+  const sortedVoices = [...voices].sort((a, b) => {
+    const aEn = /en/i.test(a.lang) ? 0 : 1
+    const bEn = /en/i.test(b.lang) ? 0 : 1
+    if (aEn !== bEn) return aEn - bEn
+    return a.name.localeCompare(b.name)
+  })
 
   return (
     <div className="relative">
@@ -173,15 +214,15 @@ export default function LucyVoicePicker() {
             className="fixed inset-0 z-[90]"
             onClick={() => setOpen(false)}
           />
-          <div className="absolute right-0 top-full mt-2 w-64 max-h-[60vh] overflow-y-auto rounded-xl bg-black border border-white/15 shadow-2xl z-[95] p-2">
+          <div className="absolute right-0 top-full mt-2 w-72 max-h-[70vh] overflow-y-auto rounded-xl bg-black border border-white/15 shadow-2xl z-[95] p-2">
             <div className="text-[10px] uppercase tracking-wide text-gray-500 px-2 py-1">Voice persona</div>
             {VOICE_PERSONAS.map((persona) => {
-              const isSel = persona.id === selected
+              const isSel = !explicitVoiceName && persona.id === selected
               const hasMatch = !!voices.find(persona.matchVoice)
               return (
                 <button
                   key={persona.id}
-                  onClick={() => pick(persona.id)}
+                  onClick={() => pickPersona(persona.id)}
                   disabled={!hasMatch}
                   className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors mb-0.5 ${
                     isSel
@@ -204,10 +245,47 @@ export default function LucyVoicePicker() {
                 </button>
               )
             })}
+
+            {/* All voices — every SpeechSynthesisVoice the device exposes,
+                including premium/enhanced ones the user downloaded in iOS
+                Settings → Accessibility → Read & Speak. Picking one here
+                bypasses persona matching and uses the exact voice. */}
+            <div className="text-[10px] uppercase tracking-wide text-gray-500 px-2 pt-3 pb-1 border-t border-white/5 mt-2">
+              All voices on this device ({sortedVoices.length})
+            </div>
+            {sortedVoices.length === 0 && (
+              <div className="text-[11px] text-gray-500 px-2 py-2 italic">
+                No voices loaded yet — close + reopen this picker after a moment
+              </div>
+            )}
+            {sortedVoices.map((v) => {
+              const isSel = explicitVoiceName === v.name
+              const isPremium = /premium|enhanced/i.test(v.name)
+              return (
+                <button
+                  key={v.voiceURI || v.name}
+                  onClick={() => pickExplicitVoice(v)}
+                  className={`w-full text-left px-3 py-1.5 rounded-lg text-xs transition-colors mb-0.5 ${
+                    isSel
+                      ? 'bg-cyan-500/20 border border-cyan-500/40 text-white'
+                      : 'hover:bg-white/5 text-gray-200 border border-transparent'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span>
+                      {v.name}
+                      {isPremium && <span className="ml-1 text-[9px] text-amber-400">★ premium</span>}
+                    </span>
+                    <span className="text-[10px] text-gray-500">{v.lang}</span>
+                  </div>
+                </button>
+              )
+            })}
+
             <div className="text-[10px] text-gray-600 px-2 pt-2 border-t border-white/5 mt-1">
-              Currently: {selectedPersona.label}
+              Currently: {explicitVoiceName || selectedPersona.label}
               <br />
-              Phase 10.5: Piper natural voices on anvil
+              iOS premium voices: Settings → Accessibility → Read &amp; Speak → Voices → English
             </div>
           </div>
         </>

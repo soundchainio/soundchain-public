@@ -143,12 +143,20 @@ export default function NormanPage() {
   }, [messages, streaming])
 
   function speakNext() {
+    if (typeof window === 'undefined' || !window.speechSynthesis) return
+    // Bug B fix — iOS sometimes silently drops the onend callback, leaving
+    // ttsActiveRef stuck at true forever. If we *think* we're active but
+    // speechSynthesis itself reports neither speaking nor pending, the
+    // utterance ended without firing onend — recover by clearing active.
+    const synth = window.speechSynthesis
+    if (ttsActiveRef.current && !synth.speaking && !synth.pending) {
+      ttsActiveRef.current = false
+    }
     if (ttsActiveRef.current) return
     if (!voiceOutRef.current) {
       ttsQueueRef.current = []
       return
     }
-    if (typeof window === 'undefined' || !window.speechSynthesis) return
     const text = ttsQueueRef.current.shift()
     if (!text) return
     const u = new SpeechSynthesisUtterance(text)
@@ -159,7 +167,6 @@ export default function NormanPage() {
     u.pitch = pitch
     u.onend = () => {
       ttsActiveRef.current = false
-      // Chain the next sentence — this is the iOS-reliable pattern
       speakNext()
     }
     u.onerror = () => {
@@ -167,7 +174,7 @@ export default function NormanPage() {
       speakNext()
     }
     ttsActiveRef.current = true
-    window.speechSynthesis.speak(u)
+    synth.speak(u)
   }
 
   function speakSentence(text: string) {
@@ -181,17 +188,29 @@ export default function NormanPage() {
 
   // iOS Safari pauses speechSynthesis after ~15 seconds of utterance time.
   // Documented workaround: pause+resume periodically while voice is active.
-  // Without this, multi-sentence replies get cut off mid-thought on iPhones.
+  // Also runs a queue-flush pump every 1s as a safety net for dropped onend
+  // callbacks (iOS bug — sometimes the callback never fires and we'd be
+  // stuck at ttsActiveRef=true forever, blocking the next sentence).
   useEffect(() => {
     if (!voiceOutEnabled) return
     if (typeof window === 'undefined' || !window.speechSynthesis) return
-    const id = setInterval(() => {
+    const keepalive = setInterval(() => {
       if (window.speechSynthesis.speaking) {
         window.speechSynthesis.pause()
         window.speechSynthesis.resume()
       }
     }, 10000)
-    return () => clearInterval(id)
+    const pump = setInterval(() => {
+      // If we have queued sentences and synth is idle, force-flush. speakNext
+      // includes a state-mismatch detector that resets ttsActiveRef on idle.
+      if (ttsQueueRef.current.length > 0) {
+        speakNext()
+      }
+    }, 1000)
+    return () => {
+      clearInterval(keepalive)
+      clearInterval(pump)
+    }
   }, [voiceOutEnabled])
 
   function maybeSpeakNew(fullText: string) {
