@@ -63,6 +63,13 @@ export default function NormanPage() {
   const voiceOutRef = useRef(false)
   useEffect(() => { voiceOutRef.current = voiceOutEnabled }, [voiceOutEnabled])
 
+  // Managed sequential TTS queue. iOS Safari silently drops utterances
+  // queued via consecutive speak() calls — the reliable pattern is to
+  // chain each via onend. Kept in refs so streaming-token callbacks can
+  // push without re-renders.
+  const ttsQueueRef = useRef<string[]>([])
+  const ttsActiveRef = useRef(false)
+
   // Detect SpeechRecognition + SpeechSynthesis support on mount
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -125,20 +132,57 @@ export default function NormanPage() {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
   }, [messages, streaming])
 
-  function speakSentence(text: string) {
-    if (!voiceOutRef.current) return
+  function speakNext() {
+    if (ttsActiveRef.current) return
+    if (!voiceOutRef.current) {
+      ttsQueueRef.current = []
+      return
+    }
     if (typeof window === 'undefined' || !window.speechSynthesis) return
+    const text = ttsQueueRef.current.shift()
+    if (!text) return
     const u = new SpeechSynthesisUtterance(text)
     u.volume = 1.0
-    // Phase 10 — read currently-selected persona from localStorage + match
-    // against available SpeechSynthesisVoice options. Falls back gracefully
-    // if the selected persona's voice isn't installed on this device.
     const { voice, rate, pitch } = getVoiceConfig()
     if (voice) u.voice = voice
     u.rate = rate
     u.pitch = pitch
+    u.onend = () => {
+      ttsActiveRef.current = false
+      // Chain the next sentence — this is the iOS-reliable pattern
+      speakNext()
+    }
+    u.onerror = () => {
+      ttsActiveRef.current = false
+      speakNext()
+    }
+    ttsActiveRef.current = true
     window.speechSynthesis.speak(u)
   }
+
+  function speakSentence(text: string) {
+    if (!voiceOutRef.current) return
+    if (typeof window === 'undefined' || !window.speechSynthesis) return
+    // Phase 10 — voice config (persona + rate + pitch) read inside speakNext
+    // so each utterance picks up live persona changes mid-conversation.
+    ttsQueueRef.current.push(text)
+    speakNext()
+  }
+
+  // iOS Safari pauses speechSynthesis after ~15 seconds of utterance time.
+  // Documented workaround: pause+resume periodically while voice is active.
+  // Without this, multi-sentence replies get cut off mid-thought on iPhones.
+  useEffect(() => {
+    if (!voiceOutEnabled) return
+    if (typeof window === 'undefined' || !window.speechSynthesis) return
+    const id = setInterval(() => {
+      if (window.speechSynthesis.speaking) {
+        window.speechSynthesis.pause()
+        window.speechSynthesis.resume()
+      }
+    }, 10000)
+    return () => clearInterval(id)
+  }, [voiceOutEnabled])
 
   function maybeSpeakNew(fullText: string) {
     if (!voiceOutRef.current) return
@@ -174,7 +218,9 @@ export default function NormanPage() {
     setInput('')
     liveTranscriptRef.current = ''
     spokenIndexRef.current = 0
-    // Cancel any in-flight TTS from previous turn
+    // Cancel any in-flight TTS from previous turn (and clear our managed queue)
+    ttsQueueRef.current = []
+    ttsActiveRef.current = false
     if (typeof window !== 'undefined' && window.speechSynthesis) {
       window.speechSynthesis.cancel()
     }
