@@ -26,7 +26,7 @@ import { useMe } from 'hooks/useMe'
 import { useLucyMemory } from 'hooks/useLucyMemory'
 import LucyVoicePicker, { getVoiceConfig } from 'components/LucyVoicePicker'
 
-type ChatMessage = { role: 'user' | 'assistant'; content: string }
+type ChatMessage = { role: 'user' | 'assistant'; content: string; images?: string[] }
 
 export default function NormanPage() {
   const router = useRouter()
@@ -43,6 +43,13 @@ export default function NormanPage() {
   const [listening, setListening] = useState(false)
   const [voiceOutEnabled, setVoiceOutEnabled] = useState(false)
   const [speechSupported, setSpeechSupported] = useState({ in: false, out: false })
+  // Phase 11 — vision: pending image (base64, no data: prefix) attached to the
+  // next message; camera overlay state for live preview/capture.
+  const [pendingImage, setPendingImage] = useState<string | null>(null)
+  const [cameraOpen, setCameraOpen] = useState(false)
+  const [cameraSupported, setCameraSupported] = useState(false)
+  const videoRef = useRef<HTMLVideoElement | null>(null)
+  const cameraStreamRef = useRef<MediaStream | null>(null)
   const scrollRef = useRef<HTMLDivElement | null>(null)
   const inputRef = useRef<HTMLTextAreaElement | null>(null)
   const recognitionRef = useRef<any>(null)
@@ -62,6 +69,7 @@ export default function NormanPage() {
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
     const synth = window.speechSynthesis
     setSpeechSupported({ in: !!SR, out: !!synth })
+    setCameraSupported(!!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia))
 
     if (SR) {
       const rec = new SR()
@@ -149,9 +157,18 @@ export default function NormanPage() {
 
   async function sendWithText(text: string) {
     const trimmed = text.trim()
-    if (!trimmed || streaming) return
+    // Phase 11 — vision: allow send-with-image-only (no text) by defaulting
+    // the user message to "what is in this image?" when only an image is attached.
+    const effectiveText = trimmed || (pendingImage ? 'What do you see?' : '')
+    if (!effectiveText || streaming) return
     setError(null)
-    const userMsg: ChatMessage = { role: 'user', content: trimmed }
+    const userMsg: ChatMessage = {
+      role: 'user',
+      content: effectiveText,
+      ...(pendingImage ? { images: [pendingImage] } : {}),
+    }
+    const imageForSend = pendingImage
+    setPendingImage(null)
     const next = [...messages, userMsg, { role: 'assistant' as const, content: '' }]
     setMessages(next)
     setInput('')
@@ -169,7 +186,11 @@ export default function NormanPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: [...messages, userMsg].map((m) => ({ role: m.role, content: m.content })),
+          messages: [...messages, userMsg].map((m) => ({
+            role: m.role,
+            content: m.content,
+            ...(m.images && m.images.length > 0 ? { images: m.images } : {}),
+          })),
         }),
       })
       if (!res.ok || !res.body) {
@@ -228,6 +249,54 @@ export default function NormanPage() {
 
   function send() { sendWithText(input) }
 
+  async function openCamera() {
+    if (!cameraSupported) return
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' } }, // back camera on phones
+        audio: false,
+      })
+      cameraStreamRef.current = stream
+      setCameraOpen(true)
+      // Wait a tick for the video element to mount, then attach
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream
+          videoRef.current.play().catch(() => {})
+        }
+      }, 50)
+    } catch (err: any) {
+      setError(`Camera: ${err?.message || 'permission denied'}`)
+    }
+  }
+
+  function closeCamera() {
+    if (cameraStreamRef.current) {
+      cameraStreamRef.current.getTracks().forEach((t) => t.stop())
+      cameraStreamRef.current = null
+    }
+    setCameraOpen(false)
+  }
+
+  function captureFrame() {
+    const video = videoRef.current
+    if (!video) return
+    const canvas = document.createElement('canvas')
+    // Cap longest side to 768 — enough for LLaVA, keeps base64 payload sane
+    const w = video.videoWidth
+    const h = video.videoHeight
+    const scale = Math.min(1, 768 / Math.max(w, h))
+    canvas.width = Math.round(w * scale)
+    canvas.height = Math.round(h * scale)
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.85)
+    const b64 = dataUrl.replace(/^data:image\/[^;]+;base64,/, '')
+    setPendingImage(b64)
+    closeCamera()
+  }
+
   function toggleMic() {
     if (!recognitionRef.current) return
     if (listening) {
@@ -280,6 +349,31 @@ export default function NormanPage() {
         children that can't be displaced. Standard mobile-chat layout.
       */}
       <div className="h-[100dvh] bg-black text-white flex flex-col overflow-hidden">
+        {cameraOpen && (
+          <div className="fixed inset-0 z-[200] bg-black flex flex-col">
+            <video
+              ref={videoRef}
+              className="flex-1 w-full object-cover"
+              autoPlay
+              playsInline
+              muted
+            />
+            <div className="p-4 flex items-center justify-between gap-3 bg-black border-t border-white/10">
+              <button
+                onClick={closeCamera}
+                className="px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-sm text-gray-300"
+              >
+                cancel
+              </button>
+              <button
+                onClick={captureFrame}
+                className="w-16 h-16 rounded-full bg-white border-4 border-cyan-500 shadow-[0_0_20px_rgba(34,211,238,0.6)] active:scale-95 transition-transform"
+                aria-label="capture"
+              />
+              <div className="w-[80px]" />
+            </div>
+          </div>
+        )}
         <header className="px-4 py-3 border-b border-white/10 flex items-center gap-3 bg-black/95 backdrop-blur z-10 flex-shrink-0">
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 via-purple-500 to-pink-500 grid place-items-center text-xl">
             🧠
@@ -353,6 +447,18 @@ export default function NormanPage() {
               <div className="text-[10px] uppercase tracking-wide text-gray-500 mb-1">
                 {m.role === 'user' ? 'Frank' : 'Lucy'}
               </div>
+              {m.images && m.images.length > 0 && (
+                <div className="mb-1 flex gap-1 flex-wrap justify-end">
+                  {m.images.map((img, ix) => (
+                    <img
+                      key={ix}
+                      src={`data:image/jpeg;base64,${img}`}
+                      alt="sent"
+                      className="max-w-[200px] max-h-[200px] rounded-lg border border-cyan-500/30"
+                    />
+                  ))}
+                </div>
+              )}
               <div
                 className={`rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
                   m.role === 'user'
@@ -372,7 +478,35 @@ export default function NormanPage() {
         </div>
 
         <div className="border-t border-white/10 p-3 bg-black/95 backdrop-blur flex-shrink-0">
+          {pendingImage && (
+            <div className="max-w-3xl mx-auto mb-2 flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl p-2">
+              <img
+                src={`data:image/jpeg;base64,${pendingImage}`}
+                alt="attached"
+                className="w-12 h-12 rounded-lg object-cover"
+              />
+              <div className="flex-1 text-xs text-gray-400">Image attached — Lucy will see this when you send</div>
+              <button
+                onClick={() => setPendingImage(null)}
+                className="text-xs text-gray-400 hover:text-red-400 px-2 py-1"
+                aria-label="remove attached image"
+              >
+                ✕
+              </button>
+            </div>
+          )}
           <div className="flex gap-2 max-w-3xl mx-auto items-end">
+            {cameraSupported && (
+              <button
+                onClick={openCamera}
+                disabled={streaming || cameraOpen}
+                className="px-3 py-3 rounded-2xl text-lg transition-all flex-shrink-0 bg-white/5 border border-white/10 hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed"
+                title="show Lucy what you see"
+                aria-label="open camera"
+              >
+                📷
+              </button>
+            )}
             {speechSupported.in && (
               <button
                 onClick={toggleMic}

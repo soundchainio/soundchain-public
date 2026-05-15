@@ -65,7 +65,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   const { messages, model } = (req.body || {}) as {
-    messages?: Array<{ role: 'user' | 'assistant' | 'system'; content: string }>
+    messages?: Array<{ role: 'user' | 'assistant' | 'system'; content: string; images?: string[] }>
     model?: string
   }
   if (!Array.isArray(messages) || messages.length === 0) {
@@ -77,6 +77,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     ? messages
     : [{ role: 'system' as const, content: SYSTEM_PROMPT }, ...messages]
 
+  // Phase 11 — if any user message carries images, switch to a vision model
+  // (LLaVA on anvil). Ollama's /api/chat accepts an `images: [base64...]`
+  // array on each message; the model handles multimodal input. Falls back
+  // to chat-default if no images present.
+  const hasImages = messages.some((m) => Array.isArray(m.images) && m.images.length > 0)
+  const targetModel = model || (hasImages ? (process.env.NORMAN_VISION_MODEL || 'llava:7b') : DEFAULT_MODEL)
+
   // Proxy to Ollama with streaming enabled. Ollama emits line-delimited JSON.
   let upstream: Response
   try {
@@ -84,7 +91,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: model || DEFAULT_MODEL,
+        model: targetModel,
         messages: fullMessages,
         stream: true,
       }),
