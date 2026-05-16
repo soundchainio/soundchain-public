@@ -1,0 +1,21 @@
+[Unit]
+Description=Lucy SDXL — anvil-side image generation server (port 11438)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=soundchain
+Environment=LUCY_SDXL_MODEL=stabilityai/stable-diffusion-xl-base-1.0
+Environment=LUCY_SDXL_DEVICE=cuda:1
+# HuggingFace cache lives in the soundchain user's home so weights persist
+# across service restarts. ~7GB for SDXL base, downloaded on first request.
+Environment=HF_HOME=/home/soundchain/.cache/huggingface
+ExecStart=/home/soundchain/piper-venv/bin/python -m uvicorn lucy-sdxl-server:app --host 127.0.0.1 --port 11438
+WorkingDirectory=/home/soundchain
+Restart=always
+RestartSec=10
+# SDXL eats memory during load — give it room before OOM kill
+MemoryMax=14G
+
+[Install]
+WantedBy=multi-user.target
