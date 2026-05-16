@@ -90,6 +90,19 @@ VARIANT_PRESETS = {
         "width": 1536,
         "height": 768,
     },
+    # Phase 16.1 — Character Designer AI BUILD tab (NBA2K-style player builds)
+    "character-portrait": {
+        "prefix": "full body character portrait, photorealistic, centered, neutral pose, clean background, video game character render",
+        "negative": "watermark, text, logo, multiple people, deformed anatomy, extra limbs, low quality, blurry",
+        "width": 768,
+        "height": 1024,
+    },
+    "character-face": {
+        "prefix": "character face portrait, close-up, photorealistic, neutral expression, even lighting, video game character render",
+        "negative": "watermark, text, logo, multiple faces, deformed, low quality",
+        "width": 768,
+        "height": 768,
+    },
 }
 
 

@@ -29,7 +29,7 @@ export { DEFAULT_FACE } from 'lib/nodeverse/characterMesh'
 export type { FaceConfig } from 'lib/nodeverse/characterMesh'
 
 export interface CharacterConfig {
-  type: 'agent' | 'human' | 'opensource'  // visual class: pill / RPM GLB / curated CC0 GLB
+  type: 'agent' | 'human' | 'opensource' | 'ai'  // pill / RPM GLB / CC0 GLB / AI-generated portrait
   bodyColor: string         // hex (agent only)
   headShape: 'capsule' | 'sphere' | 'cube' | 'cone'
   height: number            // 0.6 - 1.4 multiplier
@@ -45,6 +45,9 @@ export interface CharacterConfig {
   outfit?: Outfit           // equipped wearables by slot: hat, sunglasses, hoodie, pants, shoes...
   outfitColors?: OutfitColors // per-slot color overrides
   face?: FaceConfig         // close-up face designer: skin tone, eyes, mouth, beard, paint
+  aiPortraitDataUrl?: string // Phase 16.1 — AI BUILD tab: SDXL-generated portrait (data: URL)
+  aiPortraitPrompt?: string // The prompt used to generate aiPortraitDataUrl (for regen)
+  aiPortraitSeed?: number   // Deterministic seed (same seed + prompt → same portrait)
 }
 
 // FaceConfig + DEFAULT_FACE moved to lib/nodeverse/characterMesh.ts (shared
@@ -428,7 +431,20 @@ export function CharacterDesigner({ open, onClose, initialName }: CharacterDesig
           >
             🎨 OPEN SOURCE <span className="opacity-60 text-[8px]">(CC0)</span>
           </button>
+          <button
+            onClick={() => update({ type: 'ai' })}
+            className={`flex-1 sm:flex-none px-3 py-1.5 rounded text-[10px] font-mono font-bold transition ${config.type === 'ai' ? 'bg-pink-500/20 text-pink-400 border border-pink-500/30' : 'bg-white/[0.02] text-gray-500 border border-white/5 hover:text-white'}`}
+          >
+            ✨ AI BUILD <span className="opacity-60 text-[8px]">(SDXL)</span>
+          </button>
         </div>
+
+        {/* AI BUILD MODE — anvil SDXL-generated character portraits (Phase 16.1).
+            NBA2K-style player builds: describe character → SDXL on RTX 5000 generates
+            full-body portrait → save to profile + display in Explore3D. */}
+        {config.type === 'ai' && (
+          <AiBuildPanel config={config} update={update} />
+        )}
 
         {/* HUMAN MODE — Ready Player Me iframe */}
         {config.type === 'human' && (
@@ -1254,6 +1270,176 @@ function OpenSourceAvatarBrowser({ selectedId, currentName, config, onUpdate, on
       <div className="px-4 py-2 border-t border-cyan-500/10 bg-black/40 flex items-center justify-between text-[8px] font-mono text-gray-600">
         <span>{OPEN_SOURCE_AVATARS.length} avatars · all CC0/MIT/CC-BY · ZERO third-party deps</span>
         <span className="text-green-500">🌱 Phase 1 of ∞</span>
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Phase 16.1 — AI BUILD Panel
+// NBA2K-style player build via anvil SDXL on RTX 5000.
+// Free-form text prompt → SDXL portrait → save as character avatar.
+// ─────────────────────────────────────────────────────────────────────────
+
+const AI_BUILD_PRESETS: Array<{ label: string; prompt: string }> = [
+  { label: '🏀 Baller', prompt: 'athletic basketball player, 6\'4 tall, cornrows, basketball jersey, shorts, sneakers' },
+  { label: '🎤 MC', prompt: 'hip-hop artist, chains, hoodie, snapback hat, jeans, sneakers, confident stance' },
+  { label: '🤖 Cyberpunk', prompt: 'cyberpunk hacker, neon-lit, leather jacket, glowing visor, tactical pants, boots' },
+  { label: '🌿 Skater', prompt: 'skateboarder, slim build, beanie, oversized hoodie, baggy jeans, vans sneakers' },
+  { label: '🎨 Artist', prompt: 'creative artist, paint-stained jacket, beret, ripped jeans, boots' },
+  { label: '👑 Royal', prompt: 'regal noble in modern streetwear, gold accents, designer sneakers, confident' },
+]
+
+function AiBuildPanel({
+  config,
+  update,
+}: {
+  config: CharacterConfig
+  update: (partial: Partial<CharacterConfig>) => void
+}) {
+  const [prompt, setPrompt] = useState<string>(config.aiPortraitPrompt || '')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [variant, setVariant] = useState<'portrait' | 'face'>('portrait')
+
+  async function generate() {
+    const text = prompt.trim()
+    if (text.length < 5) {
+      setError('Describe your character — at least 5 characters')
+      return
+    }
+    setLoading(true)
+    setError(null)
+    try {
+      // Deterministic seed from prompt — same description → same portrait
+      let seedHash = 0
+      for (let i = 0; i < text.length; i++) {
+        seedHash = ((seedHash << 5) + seedHash + text.charCodeAt(i)) & 0xffffffff
+      }
+      const seed = Math.abs(seedHash) || 1
+      const res = await fetch('/api/character/generate-portrait', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: text, variant, seed }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error || `HTTP ${res.status}`)
+      }
+      const blob = await res.blob()
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onloadend = () => resolve(String(reader.result))
+        reader.onerror = () => reject(reader.error)
+        reader.readAsDataURL(blob)
+      })
+      update({
+        aiPortraitDataUrl: dataUrl,
+        aiPortraitPrompt: text,
+        aiPortraitSeed: seed,
+      })
+    } catch (err: any) {
+      setError(err?.message || 'Generation failed — is anvil SDXL live?')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="bg-black space-y-0">
+      <div className="px-4 py-2 bg-pink-500/5 border-b border-pink-500/10">
+        <p className="text-[10px] font-mono text-pink-300">
+          NBA2K-style player builder. Describe your character — SDXL on anvil's RTX 5000 generates the portrait.
+          Cold first call ~30-60s · subsequent calls ~10-15s · same prompt always gives the same character.
+        </p>
+      </div>
+
+      <div className="p-4 space-y-3">
+        {/* Variant toggle */}
+        <div className="flex items-center gap-2">
+          <span className="text-[9px] font-mono text-gray-500 uppercase">View:</span>
+          <button
+            onClick={() => setVariant('portrait')}
+            className={`px-3 py-1 rounded text-[10px] font-mono ${variant === 'portrait' ? 'bg-pink-500/20 text-pink-400 border border-pink-500/30' : 'bg-white/[0.02] text-gray-500 border border-white/5'}`}
+          >
+            Full body
+          </button>
+          <button
+            onClick={() => setVariant('face')}
+            className={`px-3 py-1 rounded text-[10px] font-mono ${variant === 'face' ? 'bg-pink-500/20 text-pink-400 border border-pink-500/30' : 'bg-white/[0.02] text-gray-500 border border-white/5'}`}
+          >
+            Face only
+          </button>
+        </div>
+
+        {/* Quick-start preset chips */}
+        <div className="space-y-1">
+          <div className="text-[9px] font-mono text-gray-500 uppercase">Quick start:</div>
+          <div className="flex flex-wrap gap-1">
+            {AI_BUILD_PRESETS.map((p) => (
+              <button
+                key={p.label}
+                onClick={() => setPrompt(p.prompt)}
+                className="px-2 py-1 rounded text-[10px] font-mono bg-white/[0.02] text-gray-300 border border-white/5 hover:bg-pink-500/10 hover:text-pink-300 hover:border-pink-500/20 transition"
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Free-form prompt */}
+        <div>
+          <label className="text-[9px] font-mono text-gray-500 uppercase tracking-wider mb-1 block">
+            Describe your character
+          </label>
+          <textarea
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            placeholder="athletic 6'2 male with short dreads, blue hoodie, ripped jeans, white sneakers, confident pose"
+            rows={3}
+            className="w-full bg-white/[0.02] border border-white/10 rounded px-3 py-2 text-xs text-white placeholder:text-gray-600 resize-none focus:outline-none focus:border-pink-500/40"
+            disabled={loading}
+          />
+        </div>
+
+        {/* Generate button */}
+        <button
+          onClick={generate}
+          disabled={loading || prompt.trim().length < 5}
+          className="w-full py-2 rounded text-xs font-mono font-bold bg-gradient-to-br from-pink-500/30 to-purple-500/30 text-pink-300 border border-pink-500/40 hover:from-pink-500/40 hover:to-purple-500/40 disabled:opacity-40 disabled:cursor-not-allowed transition"
+        >
+          {loading ? '⚡ Generating on RTX 5000…' : config.aiPortraitDataUrl ? '🔁 Regenerate Portrait' : '✨ Generate Portrait'}
+        </button>
+
+        {error && (
+          <div className="text-[10px] font-mono text-red-400 bg-red-500/10 border border-red-500/20 rounded px-3 py-2">
+            {error}
+          </div>
+        )}
+
+        {/* Portrait preview */}
+        {config.aiPortraitDataUrl && (
+          <div className="space-y-2">
+            <div className="text-[9px] font-mono text-gray-500 uppercase">Generated portrait:</div>
+            <img
+              src={config.aiPortraitDataUrl}
+              alt="AI-generated character"
+              className="w-full max-w-[400px] mx-auto rounded border border-pink-500/20"
+            />
+            {config.aiPortraitPrompt && (
+              <div className="text-[9px] font-mono text-gray-500 italic">
+                Prompt: "{config.aiPortraitPrompt}"
+                {config.aiPortraitSeed != null ? ` · seed: ${config.aiPortraitSeed}` : ''}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className="px-4 py-2 border-t border-pink-500/10 bg-black/40 flex items-center justify-between text-[8px] font-mono text-gray-600">
+        <span>Powered by Lucy SDXL on anvil · RTX 5000 · stable-diffusion-xl</span>
+        <span className="text-pink-500">🎨 Phase 16.1</span>
       </div>
     </div>
   )
