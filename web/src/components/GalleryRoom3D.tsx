@@ -621,10 +621,17 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
     scene.add(playerGroup)
 
     const character = getStoredCharacter()
-    const glbUrl = character.type === 'ai'
-      ? (character as any).aiGlbUrl || character.humanGlbUrl
-      : character.humanGlbUrl
-    const isGlbAvatar = (character.type === 'human' || character.type === 'opensource' || character.type === 'ai') && glbUrl
+    // Phase 16.11 — find ANY GLB URL on the saved character, not just the one
+    // matching type. This way a user who saved their AI BUILD mesh but kept
+    // their type as 'agent' still sees their custom mesh in the gallery.
+    const glbUrl = (character as any).aiGlbUrl || character.humanGlbUrl
+    const isGlbAvatar = !!glbUrl
+    console.log('[GalleryRoom3D] character', {
+      type: character.type,
+      hasAiGlb: !!(character as any).aiGlbUrl,
+      hasHumanGlb: !!character.humanGlbUrl,
+      willLoadGlb: isGlbAvatar,
+    })
 
     if (isGlbAvatar) {
       const loader = new GLTFLoader()
@@ -634,8 +641,23 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
           const model = gltf.scene
           const baseScale = character.humanScale ?? 1
           const heightMul = character.height ?? 1
-          model.scale.setScalar(baseScale * heightMul)
-          model.position.y = character.humanYOffset ?? 0
+          // Auto-frame the model to character bounds. TripoSR meshes come out
+          // at varying scales — without re-fitting they'd be tiny or massive.
+          const preBox = new THREE.Box3().setFromObject(model)
+          const preSize = new THREE.Vector3(); preBox.getSize(preSize)
+          if (preSize.y > 0 && (preSize.y < 0.5 || preSize.y > 4)) {
+            // Mesh is wildly off from human-scale (1.8u); auto-rescale to 1.8u
+            const autoScale = 1.8 / preSize.y
+            model.scale.setScalar(autoScale * heightMul)
+          } else {
+            model.scale.setScalar(baseScale * heightMul)
+          }
+          // Recompute bbox + center on feet
+          const box = new THREE.Box3().setFromObject(model)
+          const center = new THREE.Vector3(); box.getCenter(center)
+          model.position.x -= center.x
+          model.position.z -= center.z
+          model.position.y = (character.humanYOffset ?? 0) - box.min.y
           model.traverse((obj: any) => {
             if (obj.isMesh) {
               obj.castShadow = true
@@ -643,6 +665,7 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
             }
           })
           playerGroup.add(model)
+          console.log('[GalleryRoom3D] GLB loaded + auto-scaled')
         },
         undefined,
         (err) => {

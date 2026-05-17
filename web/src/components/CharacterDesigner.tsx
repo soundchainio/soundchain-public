@@ -1999,22 +1999,46 @@ function AiBuildPanel({
         </p>
       </div>
 
-      {/* Phase 16.18 — desktop side-by-side (InZOI layout):
-          - lg+: 3D preview LEFT half (sticky), sliders RIGHT half (scroll)
-          - mobile/sm: stacked (3D preview on top, sliders below)
-          Uses lg:flex so mobile keeps the column flow it already has. */}
+      {/* Phase 16.18 — desktop side-by-side (InZOI layout)
+          Phase 16.22 — MOBILE: tabs sticky at top, then preview sticky
+          BELOW tabs so it stays visible while user scrolls sliders.
+          - lg+: 3D preview LEFT half (sticky), tabs+sliders RIGHT half (scroll)
+          - mobile/sm: pink banner → sticky tabs → sticky preview → scrollable sliders */}
+
+      {/* MOBILE-ONLY tab strip — at top of scroll so it's the first sticky anchor.
+          Hidden on lg+ where tabs live inside the right column. */}
+      <div className="lg:hidden flex items-center px-2 py-1.5 border-b border-pink-500/10 bg-black/80 backdrop-blur-md sticky top-[97px] z-[6] gap-1 overflow-x-auto">
+        {([
+          ['body', '👤 BODY'],
+          ['face', '😀 FACE'],
+          ['outfit', '👕 OUTFIT'],
+          ['accessories', '💎 EXTRAS'],
+          ['render', '✨ RENDER'],
+        ] as const).map(([key, label]) => (
+          <button key={key} onClick={() => setActiveTab(key)}
+            className={`flex-1 min-w-[68px] px-2 py-1.5 rounded text-[10px] font-mono font-bold transition whitespace-nowrap ${activeTab === key ? 'bg-pink-500/25 text-pink-300 border border-pink-500/40' : 'bg-white/[0.02] text-gray-500 border border-white/5 hover:text-white'}`}>
+            {label}
+          </button>
+        ))}
+      </div>
+
       <div className="lg:flex lg:items-start">
-        {/* LEFT: live 3D preview — sticky on desktop so it stays visible while
-            user scrolls through sliders on the right. On mobile this is a
-            normal block element above the sliders (no sticky, no flex). */}
-        <div className="lg:w-1/2 lg:sticky lg:top-[97px] lg:self-start lg:h-[calc(100vh-200px)] lg:max-h-[700px] lg:border-r lg:border-pink-500/10">
+        {/* LEFT: live 3D preview
+            - lg+: sticky at top-[97px] in the left half, fills column height
+            - mobile: sticky BELOW the tab strip (top-[137px] = 97 header + 40 tabs)
+              so it stays visible while sliders scroll underneath. z-[5] sits
+              below the tabs (z-[6]) so they layer correctly. bg-black so
+              scrolling sliders don't bleed through. */}
+        <div className="lg:w-1/2 sticky top-[137px] lg:top-[97px] z-[5] bg-black lg:self-start lg:h-[calc(100vh-200px)] lg:max-h-[700px] lg:border-r lg:border-pink-500/10">
           <LivePreview3D spec={spec} face={face} bigMode={activeTab === 'face'} />
         </div>
 
-        {/* RIGHT: tabs + sliders — scrollable column on desktop */}
+        {/* RIGHT: sliders. On lg+ this column also contains the tab strip
+            (since the mobile tab strip is `lg:hidden`). On mobile this is just
+            the slider content that scrolls underneath the sticky preview. */}
         <div className="lg:w-1/2 lg:flex lg:flex-col lg:min-h-0">
-          {/* Phase 16.6 — InZOI-style tab strip */}
-          <div className="flex items-center px-2 py-1.5 border-b border-pink-500/10 bg-black/60 backdrop-blur-md sticky top-[97px] lg:top-0 z-[5] gap-1 overflow-x-auto">
+          {/* Desktop-only tab strip — lives in the right column above sliders */}
+          <div className="hidden lg:flex items-center px-2 py-1.5 border-b border-pink-500/10 bg-black/60 backdrop-blur-md lg:sticky lg:top-0 z-[5] gap-1 overflow-x-auto">
             {([
               ['body', '👤 BODY'],
               ['face', '😀 FACE'],
