@@ -1699,6 +1699,9 @@ function AiBuildPanel({
             <div className="text-[10px] font-mono text-pink-300/70 bg-pink-500/5 p-2 rounded border border-pink-500/10 leading-relaxed">
               🧬 Precision face sliders. Will morph the 3D mannequin in real-time once Phase 16.7 swaps in a rigged GLB with face blendshapes (coming next). UI is live now — values save to your character config and flow into the SDXL prompt.
             </div>
+            <div className="text-[10px] font-mono text-pink-300/70 bg-pink-500/5 p-2 rounded border border-pink-500/10 leading-relaxed">
+              💇 Hair piece library (CC0 GLBs swapped on the head bone) lands in Phase 16.8. For now these pickers flow into the SDXL prompt — hair renders when you tap Generate.
+            </div>
             <PickerSection label="Hair length">
               <ChipRow value={spec.hairLength} options={[['bald', 'Bald'], ['buzz', 'Buzz'], ['short', 'Short'], ['medium', 'Medium'], ['long', 'Long']]} onPick={(v) => tweak({ hairLength: v as any })} />
             </PickerSection>
@@ -1743,6 +1746,9 @@ function AiBuildPanel({
         {/* ─── OUTFIT TAB ─── */}
         {activeTab === 'outfit' && (
           <>
+            <div className="text-[10px] font-mono text-pink-300/70 bg-pink-500/5 p-2 rounded border border-pink-500/10 leading-relaxed">
+              👕 Outfit slot system (top/bottom/shoes as swappable 3D GLBs that snap to the rig) lands in Phase 16.9. For now these pickers flow into the SDXL prompt — your character gets dressed when you tap Generate.
+            </div>
             <PickerSection label="Top">
               <ChipRow value={spec.topPiece} options={[['hoodie', 'Hoodie'], ['tshirt', 'T-shirt'], ['jersey', 'Jersey'], ['tank', 'Tank'], ['jacket', 'Jacket'], ['buttonup', 'Button-up'], ['sweater', 'Sweater'], ['crop', 'Crop']]} onPick={(v) => tweak({ topPiece: v as any })} />
             </PickerSection>
