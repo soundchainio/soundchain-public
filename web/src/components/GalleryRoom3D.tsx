@@ -67,6 +67,12 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
   // Phase 16.13 — gamepad connection state (HUD indicator)
   const [gamepadConnected, setGamepadConnected] = useState(false)
   const gamepadConnectedRef = useRef(false)
+  // Phase 16.26 — city location state (street search result)
+  const [cityLocation, setCityLocation] = useState<{ label: string; lat: number; lng: number } | null>(null)
+  const cityLocationRef = useRef<{ label: string; lat: number; lng: number } | null>(null)
+  // Scene ref so the cityLocation useEffect can paint the in-world sign
+  // without rebuilding the whole 3D scene.
+  const sceneRef = useRef<THREE.Scene | null>(null)
   const [placedFurniture, setPlacedFurniture] = useState<PlacedFurniture[]>(() => getPlacedFurniture(ownerHandle))
   const [placingItem, setPlacingItem] = useState<string | null>(null)
   const [hideFurnitureCount, setHideFurnitureCount] = useState(false)
@@ -105,6 +111,7 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
 
     // ─── Scene Setup ─────────────────────────────────────────
     const scene = new THREE.Scene()
+    sceneRef.current = scene
     scene.background = new THREE.Color(themeCfg.floor).multiplyScalar(0.5)
     // City fog reaches MUCH farther for open-world feel; gallery rooms stay tight.
     scene.fog = theme === 'city'
@@ -383,6 +390,54 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
       comingSign.position.set(-7, 2.5, courtZ + 1)
       comingSign.rotation.y = Math.PI / 6
       scene.add(comingSign)
+
+      // Phase 16.26 — LOCATION SIGN at spawn point. Updates when user
+      // searches a city/street in the HUD search bar. Default shows "spawn"
+      // copy with hint to use the search. After search, shows the address.
+      // The canvas + texture refs are stored at scene level so the search-
+      // result useEffect (below) can mutate them without rebuilding the scene.
+      const locSignCanvas = document.createElement('canvas')
+      locSignCanvas.width = 1024; locSignCanvas.height = 192
+      const locCtx = locSignCanvas.getContext('2d')!
+      const paintLocSign = (loc: { label: string; lat: number; lng: number } | null) => {
+        locCtx.fillStyle = 'rgba(0,0,0,0.85)'; locCtx.fillRect(0, 0, 1024, 192)
+        locCtx.strokeStyle = '#facc15'; locCtx.lineWidth = 4; locCtx.strokeRect(8, 8, 1008, 176)
+        locCtx.fillStyle = '#facc15'; locCtx.font = 'bold 36px monospace'; locCtx.textAlign = 'center'
+        if (loc) {
+          locCtx.fillText('📍 NOW EXPLORING', 512, 60)
+          locCtx.fillStyle = '#ffffff'; locCtx.font = 'bold 28px monospace'
+          // Wrap long addresses across 2 lines
+          const words = loc.label.split(' ')
+          const lines: string[] = []
+          let line = ''
+          for (const w of words) {
+            if ((line + ' ' + w).trim().length > 38) { lines.push(line.trim()); line = w }
+            else line = (line + ' ' + w).trim()
+          }
+          if (line) lines.push(line)
+          lines.slice(0, 2).forEach((ln, i) => locCtx.fillText(ln, 512, 105 + i * 32))
+          locCtx.fillStyle = '#facc15'; locCtx.font = '18px monospace'
+          locCtx.fillText(`${loc.lat.toFixed(4)}°, ${loc.lng.toFixed(4)}°`, 512, 170)
+        } else {
+          locCtx.fillText('🌍 OPEN WORLD', 512, 60)
+          locCtx.fillStyle = '#ffffff'; locCtx.font = '24px monospace'
+          locCtx.fillText('search any city or address in the HUD', 512, 105)
+          locCtx.fillText('to set your "you are here" location', 512, 140)
+          locCtx.fillStyle = '#facc15'; locCtx.font = '18px monospace'
+          locCtx.fillText('try: "Times Square Manhattan"', 512, 175)
+        }
+      }
+      paintLocSign(cityLocationRef.current)
+      const locSignTex = new THREE.CanvasTexture(locSignCanvas)
+      const locSign = new THREE.Mesh(
+        new THREE.PlaneGeometry(7, 1.3),
+        new THREE.MeshStandardMaterial({ map: locSignTex, emissive: 0xfacc15, emissiveIntensity: 0.2, emissiveMap: locSignTex, transparent: true }),
+      )
+      locSign.position.set(0, 3.5, 8)  // in front of spawn (player spawns at z=5, sign faces them)
+      locSign.rotation.y = Math.PI  // face the player
+      scene.add(locSign)
+      // Store refs on the scene's userData so the cityLocation useEffect can update
+      ;(scene.userData as any).locSign = { canvas: locSignCanvas, paint: paintLocSign, texture: locSignTex }
 
       // Streetlamps every 12 units on both sides for the full city length
       for (let lz = -90; lz <= 90; lz += 12) {
@@ -1097,6 +1152,20 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
     if (containerRef.current) containerRef.current.focus()
   }, [loading])
 
+  // Phase 16.26 — repaint in-world location sign when cityLocation changes.
+  // Scene's userData stores the sign's canvas + paint fn so we can mutate
+  // the existing texture without rebuilding the whole 3D scene.
+  useEffect(() => {
+    cityLocationRef.current = cityLocation
+    const scene = sceneRef.current
+    if (!scene) return
+    const ls = (scene.userData as any).locSign as { paint: (l: any) => void; texture: THREE.CanvasTexture } | undefined
+    if (ls) {
+      ls.paint(cityLocation)
+      ls.texture.needsUpdate = true
+    }
+  }, [cityLocation])
+
   return (
     <div className="relative w-full h-full" tabIndex={0} onFocus={() => containerRef.current?.focus()}>
       <div ref={containerRef} className="absolute inset-0" tabIndex={0} style={{ cursor: 'grab', outline: 'none' }} onClick={() => containerRef.current?.focus()} />
@@ -1130,6 +1199,12 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
             🎮 GAMEPAD CONNECTED · L-stick to move
           </div>
         )}
+        {/* Phase 16.26 — current city location HUD badge (set by search) */}
+        {theme === 'city' && cityLocation && (
+          <div className="px-2 py-1 rounded bg-yellow-500/15 backdrop-blur border border-yellow-500/40 text-[9px] font-mono text-yellow-300 max-w-[60vw] truncate">
+            📍 {cityLocation.label}
+          </div>
+        )}
         {/* Phase 16.16 — city-mode address search (OSM Nominatim, free, no key).
             Phase 16.25 — bulletproof input fix: stop ALL pointer events from
             bubbling to the canvas behind, set z-[20] above the canvas, and
@@ -1148,7 +1223,14 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
                 })
                 const data = await res.json()
                 if (Array.isArray(data) && data[0]) {
-                  toast.success(`📍 ${data[0].display_name.slice(0, 60)}`)
+                  const loc = {
+                    label: data[0].display_name.split(',').slice(0, 3).join(',').trim(),
+                    lat: parseFloat(data[0].lat),
+                    lng: parseFloat(data[0].lon),
+                  }
+                  setCityLocation(loc)
+                  cityLocationRef.current = loc
+                  toast.success(`📍 ${loc.label}`)
                   console.log('[city-search]', data[0])
                 } else {
                   toast.info('Address not found')
@@ -1168,7 +1250,7 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
               autoCorrect="off"
               autoCapitalize="off"
               spellCheck={false}
-              placeholder="🌍 search city / address…"
+              placeholder="🌍 city, street, or full address…"
               onKeyDown={(e) => e.stopPropagation()}
               onKeyUp={(e) => e.stopPropagation()}
               onPointerDown={(e) => e.stopPropagation()}
