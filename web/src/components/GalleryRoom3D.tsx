@@ -37,7 +37,7 @@ interface Track {
 interface GalleryRoom3DProps {
   ownerHandle: string
   ownerProfileId?: string
-  theme?: 'modern' | 'cyberpunk' | 'vinyl' | 'vault'
+  theme?: 'modern' | 'cyberpunk' | 'vinyl' | 'vault' | 'city'
 }
 
 const THEME_CONFIG = {
@@ -45,6 +45,10 @@ const THEME_CONFIG = {
   cyberpunk: { wall: 0x1a1a3a, floor: 0x0a0a1a, accent: 0xa855f7, ambient: 0x4040ff, name: 'CYBERPUNK' },
   vinyl: { wall: 0x3a2a1a, floor: 0x2a1a0a, accent: 0xfacc15, ambient: 0xfacc15, name: 'VINYL STORE' },
   vault: { wall: 0x0a0a0a, floor: 0x050505, accent: 0xfacc15, ambient: 0x666666, name: 'NFT VAULT' },
+  // Phase 16.12 — GTA / NBA2K-style city street. Brick storefronts on side
+  // walls, alley gaps, billboards on building facades displaying user's NFTs.
+  // Walk through the "block" like a player-one mode game.
+  city: { wall: 0x3a2520, floor: 0x222428, accent: 0xfacc15, ambient: 0x5a4a3a, name: 'CITY STREETS' },
 }
 
 export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cyberpunk' }: GalleryRoom3DProps) {
@@ -123,12 +127,127 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
     scene.add(accentLight)
 
     // ─── Floor ───────────────────────────────────────────────
+    // City theme gets asphalt + painted street lines instead of polished floor
     const floorGeo = new THREE.PlaneGeometry(40, 40)
-    const floorMat = new THREE.MeshStandardMaterial({ color: themeCfg.floor, metalness: 0.6, roughness: 0.3 })
+    let floorMat: THREE.MeshStandardMaterial
+    if (theme === 'city') {
+      floorMat = new THREE.MeshStandardMaterial({ color: themeCfg.floor, metalness: 0.05, roughness: 0.95 })
+    } else {
+      floorMat = new THREE.MeshStandardMaterial({ color: themeCfg.floor, metalness: 0.6, roughness: 0.3 })
+    }
     const floor = new THREE.Mesh(floorGeo, floorMat)
     floor.rotation.x = -Math.PI / 2
     floor.receiveShadow = true
     scene.add(floor)
+
+    // Phase 16.12 — CITY THEME: street markings, brick storefronts, awnings,
+    // alley gaps, billboards. Builds on top of the existing wall structure
+    // so frames/tracks still work; just adds GTA/NBA2K-style city ambiance.
+    if (theme === 'city') {
+      // Dashed center line down the street
+      for (let i = -18; i <= 18; i += 3) {
+        const dash = new THREE.Mesh(
+          new THREE.PlaneGeometry(0.3, 1.8),
+          new THREE.MeshStandardMaterial({ color: 0xfacc15, emissive: 0xfacc15, emissiveIntensity: 0.15 })
+        )
+        dash.rotation.x = -Math.PI / 2
+        dash.position.set(0, 0.01, i)
+        scene.add(dash)
+      }
+      // Sidewalk strips along left/right walls
+      const sidewalkMat = new THREE.MeshStandardMaterial({ color: 0x3a3a3a, roughness: 0.95 })
+      ;[-16.5, 16.5].forEach((x) => {
+        const sw = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.15, 40), sidewalkMat)
+        sw.position.set(x, 0.075, 0)
+        sw.receiveShadow = true
+        scene.add(sw)
+      })
+      // Procedural brick texture for the storefront walls
+      const brickCanvas = document.createElement('canvas')
+      brickCanvas.width = 256; brickCanvas.height = 256
+      const bctx = brickCanvas.getContext('2d')!
+      bctx.fillStyle = '#5a3a30'; bctx.fillRect(0, 0, 256, 256)
+      bctx.strokeStyle = '#2a1810'; bctx.lineWidth = 2
+      const brickH = 16
+      const brickW = 36
+      for (let row = 0; row < 256 / brickH; row++) {
+        const xOff = (row % 2 === 0) ? 0 : brickW / 2
+        for (let col = -1; col <= 256 / brickW; col++) {
+          const x = col * brickW + xOff
+          const y = row * brickH
+          bctx.strokeRect(x, y, brickW, brickH)
+          // mortar shading
+          bctx.fillStyle = `rgba(0,0,0,${0.05 + Math.random() * 0.08})`
+          bctx.fillRect(x + 1, y + 1, brickW - 2, brickH - 2)
+        }
+      }
+      const brickTex = new THREE.CanvasTexture(brickCanvas)
+      brickTex.wrapS = brickTex.wrapT = THREE.RepeatWrapping
+      brickTex.repeat.set(8, 2)
+      const brickMat = new THREE.MeshStandardMaterial({ map: brickTex, roughness: 0.85, metalness: 0.05 })
+      // Storefront facades flat against side walls (brick texture overlay)
+      ;[
+        { x: -19.0, rot: Math.PI / 2 },
+        { x: 19.0, rot: -Math.PI / 2 },
+      ].forEach(({ x, rot }) => {
+        const facade = new THREE.Mesh(new THREE.PlaneGeometry(40, 8), brickMat)
+        facade.position.set(x, 4, 0)
+        facade.rotation.y = rot
+        scene.add(facade)
+      })
+      // Storefront awnings — bright colored stripes along the walls
+      const awningColors = [0xdc2626, 0x16a34a, 0x2563eb, 0xfacc15, 0xa855f7]
+      for (let i = 0; i < 6; i++) {
+        const ax = -16 + i * 6.5
+        const acol = awningColors[i % awningColors.length]
+        const aMat = new THREE.MeshStandardMaterial({ color: acol, emissive: acol, emissiveIntensity: 0.1, roughness: 0.5 })
+        ;[-18.5, 18.5].forEach((wx) => {
+          const awning = new THREE.Mesh(new THREE.BoxGeometry(4, 0.2, 1.5), aMat)
+          awning.position.set(wx + (wx < 0 ? 1 : -1), 3.5, ax)
+          awning.castShadow = true
+          scene.add(awning)
+          // Storefront door (dark rectangle below awning)
+          const doorMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, metalness: 0.6, roughness: 0.3, emissive: 0xfacc15, emissiveIntensity: 0.05 })
+          const door = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 2.5), doorMat)
+          door.position.set(wx + (wx < 0 ? 0.05 : -0.05), 1.5, ax)
+          door.rotation.y = wx < 0 ? Math.PI / 2 : -Math.PI / 2
+          scene.add(door)
+          // Storefront window beside the door
+          const winMat = new THREE.MeshStandardMaterial({ color: 0x88aabb, transparent: true, opacity: 0.45, metalness: 0.9, roughness: 0.1, emissive: 0xfacc15, emissiveIntensity: 0.08 })
+          const win = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), winMat)
+          win.position.set(wx + (wx < 0 ? 0.05 : -0.05), 1.8, ax + 1.6)
+          win.rotation.y = wx < 0 ? Math.PI / 2 : -Math.PI / 2
+          scene.add(win)
+        })
+      }
+      // Streetlamps every 8 units on both sides
+      for (let lz = -16; lz <= 16; lz += 8) {
+        ;[-15, 15].forEach((lx) => {
+          const pole = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.1, 0.1, 5, 8),
+            new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.7, roughness: 0.4 })
+          )
+          pole.position.set(lx, 2.5, lz)
+          pole.castShadow = true
+          scene.add(pole)
+          const arm = new THREE.Mesh(
+            new THREE.BoxGeometry(1.5, 0.1, 0.1),
+            new THREE.MeshStandardMaterial({ color: 0x222222 })
+          )
+          arm.position.set(lx + (lx > 0 ? -0.75 : 0.75), 5, lz)
+          scene.add(arm)
+          const bulb = new THREE.Mesh(
+            new THREE.SphereGeometry(0.25, 12, 12),
+            new THREE.MeshStandardMaterial({ color: 0xfff7c2, emissive: 0xfff7c2, emissiveIntensity: 0.8 })
+          )
+          bulb.position.set(lx + (lx > 0 ? -1.5 : 1.5), 4.9, lz)
+          scene.add(bulb)
+          const lampLight = new THREE.PointLight(0xfff7c2, 0.7, 8)
+          lampLight.position.copy(bulb.position)
+          scene.add(lampLight)
+        })
+      }
+    }
 
     // Grid lines for depth
     const gridHelper = new THREE.GridHelper(40, 20, themeCfg.accent, themeCfg.accent)
@@ -206,6 +325,69 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         ? -wallLength / 2 + wallPadding + (i + 0.5) * (10 / Math.max(framesPerWall / 2, 1))
         : wallLength / 2 - wallPadding - (i - framesPerWall / 2 + 0.5) * (10 / Math.max(framesPerWall / 2, 1))
       positions.push({ pos: new THREE.Vector3(x, 3, 19.5), rot: Math.PI })
+    }
+
+    // Phase 16.12 — CITY THEME BILLBOARDS. Mount large NFT-artwork billboards
+    // high on the building facades (above the storefront level). Up to 6
+    // billboards distributed across left/right walls. Each shows the artwork
+    // of one of the user's tracks. As character walks past = ad strip /
+    // GTA-style storefront branding.
+    if (theme === 'city' && tracks.length > 0) {
+      const billboardCount = Math.min(6, tracks.length)
+      for (let bi = 0; bi < billboardCount; bi++) {
+        const t = tracks[bi]
+        if (!t.artworkUrl) continue
+        const isLeft = bi % 2 === 0
+        const x = isLeft ? -18.4 : 18.4
+        // Distribute along z within sidewalk range
+        const z = -14 + (Math.floor(bi / 2)) * 10
+        // Billboard "frame" — dark backing
+        const frameMat = new THREE.MeshStandardMaterial({ color: 0x0a0a0a, metalness: 0.6, roughness: 0.4 })
+        const frameMesh = new THREE.Mesh(new THREE.BoxGeometry(0.3, 4.2, 6.2), frameMat)
+        frameMesh.position.set(x, 6, z)
+        scene.add(frameMesh)
+        // Artwork plane on top of the frame
+        textureLoader.load(
+          t.artworkUrl,
+          (tex) => {
+            const billMat = new THREE.MeshStandardMaterial({
+              map: tex,
+              emissive: 0xffffff,
+              emissiveIntensity: 0.25,
+              emissiveMap: tex,
+            })
+            const bill = new THREE.Mesh(new THREE.PlaneGeometry(6, 4), billMat)
+            bill.position.set(x + (isLeft ? 0.16 : -0.16), 6, z)
+            bill.rotation.y = isLeft ? Math.PI / 2 : -Math.PI / 2
+            scene.add(bill)
+            // Caption strip below billboard
+            const labelCanvas = document.createElement('canvas')
+            labelCanvas.width = 512; labelCanvas.height = 96
+            const lctx = labelCanvas.getContext('2d')!
+            lctx.fillStyle = '#0a0a0a'; lctx.fillRect(0, 0, 512, 96)
+            lctx.fillStyle = '#facc15'; lctx.font = 'bold 36px monospace'; lctx.textAlign = 'center'
+            lctx.fillText((t.title || 'TRACK').slice(0, 24).toUpperCase(), 256, 50)
+            if (t.artist) {
+              lctx.fillStyle = '#ffffff'; lctx.font = '20px monospace'
+              lctx.fillText(`@ ${t.artist}`.slice(0, 32), 256, 78)
+            }
+            const labelTex = new THREE.CanvasTexture(labelCanvas)
+            const labelMat = new THREE.MeshStandardMaterial({ map: labelTex, emissive: 0xfacc15, emissiveIntensity: 0.3, emissiveMap: labelTex })
+            const label = new THREE.Mesh(new THREE.PlaneGeometry(6, 0.9), labelMat)
+            label.position.set(x + (isLeft ? 0.16 : -0.16), 3.6, z)
+            label.rotation.y = isLeft ? Math.PI / 2 : -Math.PI / 2
+            scene.add(label)
+          },
+          undefined,
+          (err) => console.warn('[GalleryRoom3D] billboard texture failed:', err),
+        )
+        // Spotlight illuminating the billboard
+        const spot = new THREE.SpotLight(0xffffff, 1.5, 12, Math.PI / 6, 0.4, 1)
+        spot.position.set(x + (isLeft ? 3 : -3), 9, z)
+        spot.target.position.set(x, 6, z)
+        scene.add(spot)
+        scene.add(spot.target)
+      }
     }
 
     tracks.forEach((track, i) => {
