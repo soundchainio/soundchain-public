@@ -24,8 +24,16 @@ InstantMesh / Hunyuan3D-2 / Stable Fast 3D when ready.
 import base64
 import io
 import os
+import sys
 import time
 from typing import Optional
+
+# TripoSR ships as a HF Space repo (not a pip package). Clone is at
+# /home/soundchain/TripoSR; add its root to sys.path so `from tsr.system
+# import TSR` resolves cleanly.
+TRIPO_REPO = os.environ.get("LUCY_TRIPO_REPO", "/home/soundchain/TripoSR")
+if TRIPO_REPO and os.path.isdir(TRIPO_REPO) and TRIPO_REPO not in sys.path:
+    sys.path.insert(0, TRIPO_REPO)
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import Response
