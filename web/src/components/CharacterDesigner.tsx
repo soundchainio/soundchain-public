@@ -122,10 +122,29 @@ export function getStoredCharacter(): CharacterConfig {
 
 export function saveCharacter(config: CharacterConfig) {
   if (typeof window === 'undefined') return
+  // localStorage gets the FULL config including AI-generated portrait/mesh
+  // data URLs (which can be several MB each).
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(config))
     window.dispatchEvent(new CustomEvent('character-updated', { detail: config }))
   } catch {}
+  // Server gets a SLIMMED config — data: URLs stripped out because the server
+  // has a 20KB guardrail (a 3MB GLB blows it past 413). The slider/preset
+  // values still sync cross-device; portrait + mesh stay localStorage-only
+  // until we wire IPFS hosting for the assets (next ship).
+  const serverConfig: any = { ...config }
+  if (typeof serverConfig.aiPortraitDataUrl === 'string' && serverConfig.aiPortraitDataUrl.startsWith('data:')) {
+    delete serverConfig.aiPortraitDataUrl
+  }
+  if (typeof serverConfig.aiGlbUrl === 'string' && serverConfig.aiGlbUrl.startsWith('data:')) {
+    delete serverConfig.aiGlbUrl
+  }
+  if (typeof serverConfig.humanGlbUrl === 'string' && serverConfig.humanGlbUrl.startsWith('data:')) {
+    delete serverConfig.humanGlbUrl
+  }
+  if (typeof serverConfig.humanAvatarPng === 'string' && serverConfig.humanAvatarPng.startsWith('data:')) {
+    delete serverConfig.humanAvatarPng
+  }
   // Fire-and-forget Mongo sync — if logged in, server stores it on profile so
   // other devices pick it up on next load. If 401 (guest), silently no-op.
   try {
@@ -133,7 +152,12 @@ export function saveCharacter(config: CharacterConfig) {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ character: config }),
+      body: JSON.stringify({ character: serverConfig }),
+    }).then(async (r) => {
+      if (!r.ok) {
+        const data = await r.json().catch(() => ({}))
+        console.warn('[saveCharacter] server reject:', r.status, data?.error)
+      }
     }).catch(() => {})
   } catch {}
 }
