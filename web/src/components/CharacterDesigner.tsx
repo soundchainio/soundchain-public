@@ -54,9 +54,10 @@ export interface CharacterConfig {
 }
 
 // Phase 16.6 — face precision sliders. Maps 1:1 to ARkit-style face blendshapes
-// when the rigged mannequin has them. UI is live now; morph application kicks
-// in the moment Phase 16.7 swaps in a humanoid GLB with these blendshapes.
+// on facecap.glb. Phase 16.19 — added eye/eyebrow/lip/face-shape pickers +
+// makeup + freckles/dimples/moles + age + skin sheen.
 export interface AiFaceSpec {
+  // Precision sliders (morphTargetInfluences on facecap.glb)
   jawWidth: number       // -1 (narrow) .. 1 (wide)
   jawLength: number      // -1 (short) .. 1 (long)
   noseSize: number       // -1 (small) .. 1 (large)
@@ -68,26 +69,79 @@ export interface AiFaceSpec {
   lipThickness: number   // -1 (thin) .. 1 (full)
   chinTip: number        // -1 (receding) .. 1 (pronounced)
   symmetry: boolean      // mirror left/right edits — matches InZOI "Symmetry Mode"
+  // Phase 16.19 — face structure presets
+  faceShape: 'oval' | 'round' | 'square' | 'heart' | 'diamond' | 'oblong' | 'triangle'
+  eyeShape: 'almond' | 'round' | 'hooded' | 'upturned' | 'downturned' | 'monolid' | 'wide-set' | 'close-set'
+  eyeColor: 'brown' | 'blue' | 'green' | 'hazel' | 'grey' | 'amber' | 'violet' | 'heterochromia'
+  eyeColorHex?: string  // optional precise eye color override
+  eyebrowShape: 'arched' | 'straight' | 'rounded' | 'angled' | 'soft' | 'feathered' | 'thin-line' | 'bold'
+  lipShape: 'full' | 'thin' | 'heart' | 'wide' | 'bow' | 'asymmetric' | 'pouty'
+  lipColor: 'natural' | 'red' | 'dark' | 'glossy' | 'matte' | 'nude' | 'berry' | 'black'
+  lipColorHex?: string  // optional precise lip color override
+  // Skin details
+  freckles: number  // 0 .. 1 — intensity slider
+  dimples: 'none' | 'cheek' | 'chin' | 'both'
+  moles: 'none' | 'single-cheek' | 'lip-corner' | 'scattered' | 'beauty-mark'
+  makeup: 'none' | 'natural' | 'glam' | 'dramatic' | 'cyber' | 'festival' | 'gothic' | 'minimalist'
+  // Phase 16.19 — accessories layered on face
+  glasses: 'none' | 'reading' | 'sunglasses-aviator' | 'sunglasses-round' | 'cyber-visor' | 'monocle'
+  earrings: 'none' | 'studs' | 'hoops' | 'dangling' | 'cuffs' | 'gauges'
 }
 
 // Phase 16.2 — NBA2K-style structured character config.
 // Each field composes into a fragment of the SDXL prompt; the BuildSpec lets
 // users tweak one trait (e.g. swap hair style) and regenerate with the same
 // seed so the rest of the character stays largely consistent.
+// Phase 16.19 — expanded with NBA2K-level depth: 20+ new fields covering
+// granular body proportions, hair detail, layered outfit slots, accessories.
 export interface AiBuildSpec {
+  // Identity
   gender: 'masc' | 'fem' | 'androgynous'
+  ageGroup: 'teen' | 'young' | 'adult' | 'mature' | 'elder'
+  pose: 'standing' | 'lean' | 'rapper' | 'athletic' | 'royalty' | 'cyberpunk' | 'heroic' | 'walking' | 'dance'
+  // Body proportions
   build: 'slim' | 'athletic' | 'muscular' | 'bulky'
+  heightLabel: 'short' | 'average' | 'tall' | 'towering'  // 5'2" / 5'8" / 6'2" / 6'8"
+  shoulders: 'narrow' | 'average' | 'broad'
+  waist: 'slim' | 'average' | 'thick'
+  // Skin
   skinTone: 'fair' | 'light' | 'medium' | 'tan' | 'brown' | 'dark'
-  hairLength: 'bald' | 'buzz' | 'short' | 'medium' | 'long'
-  hairStyle: 'natural' | 'wavy' | 'curly' | 'coily' | 'dreads' | 'braids' | 'cornrows' | 'mohawk'
-  hairColor: 'black' | 'brown' | 'blonde' | 'red' | 'silver' | 'cyan' | 'pink' | 'purple'
-  facialHair: 'clean' | 'stubble' | 'goatee' | 'beard' | 'mustache'
-  vibe: 'streetwear' | 'cyberpunk' | 'athletic' | 'formal' | 'casual' | 'artist' | 'royal' | 'tactical' | 'punk'
-  topPiece: 'hoodie' | 'tshirt' | 'jersey' | 'tank' | 'jacket' | 'buttonup' | 'sweater' | 'crop'
-  bottomPiece: 'jeans' | 'joggers' | 'shorts' | 'cargo' | 'dresspants' | 'skirt' | 'leggings'
-  shoes: 'sneakers' | 'boots' | 'dressshoes' | 'sandals' | 'cleats' | 'heels'
-  topColor: string  // hex
-  accentColor: string  // hex (used for shoes / chains / accents)
+  skinHex?: string  // optional override — any hex for full custom tone
+  skinSheen: 'matte' | 'natural' | 'glossy' | 'metallic'
+  tattoos: 'none' | 'minimal' | 'half-sleeve' | 'full-sleeve' | 'chest-piece' | 'full-body'
+  scars: 'none' | 'subtle' | 'battle-worn'
+  // Hair
+  hairLength: 'bald' | 'buzz' | 'short' | 'medium' | 'long' | 'extra-long'
+  hairStyle: 'natural' | 'wavy' | 'curly' | 'coily' | 'dreads' | 'braids' | 'cornrows' | 'mohawk' | 'fauxhawk' | 'pompadour' | 'undercut' | 'fade-design' | 'twists' | 'locs' | 'side-shave' | 'buzz-design'
+  hairColor: 'black' | 'brown' | 'blonde' | 'red' | 'silver' | 'cyan' | 'pink' | 'purple' | 'rainbow' | 'platinum' | 'ginger' | 'two-tone'
+  hairHighlights: 'none' | 'subtle' | 'ombre' | 'balayage' | 'dip-dye' | 'streaks'
+  facialHair: 'clean' | 'stubble' | 'goatee' | 'beard' | 'mustache' | 'fu-manchu' | 'mutton-chops' | 'soul-patch' | 'full-bushy'
+  // Vibe + outfit
+  vibe: 'streetwear' | 'cyberpunk' | 'athletic' | 'formal' | 'casual' | 'artist' | 'royal' | 'tactical' | 'punk' | 'festival' | 'business' | 'goth' | 'gorpcore' | 'y2k' | 'western' | 'avant-garde'
+  topPiece: 'hoodie' | 'tshirt' | 'jersey' | 'tank' | 'jacket' | 'buttonup' | 'sweater' | 'crop' | 'turtleneck' | 'bandana-shirt' | 'kimono' | 'corset' | 'mesh' | 'graphic-tee' | 'puffer' | 'denim-jacket'
+  bottomPiece: 'jeans' | 'joggers' | 'shorts' | 'cargo' | 'dresspants' | 'skirt' | 'leggings' | 'tactical' | 'parachute' | 'wide-leg' | 'flare' | 'rip-stop' | 'cargo-shorts'
+  shoes: 'sneakers' | 'boots' | 'dressshoes' | 'sandals' | 'cleats' | 'heels' | 'high-tops' | 'low-tops' | 'jordans' | 'vans' | 'doc-martens' | 'cowboy-boots' | 'platform' | 'tabi' | 'crocs'
+  // Layered outerwear (Phase 16.19 — over the topPiece)
+  jacket: 'none' | 'denim' | 'leather-biker' | 'bomber' | 'puffer' | 'trench' | 'duster' | 'varsity' | 'windbreaker' | 'fur' | 'kimono-coat' | 'cape' | 'cargo-vest' | 'fishing-vest'
+  // Accessories
+  headwear: 'none' | 'snapback' | 'fitted-cap' | 'beanie' | 'bucket-hat' | 'cowboy' | 'fedora' | 'headband' | 'durag' | 'visor' | 'wide-brim' | 'top-hat' | 'crown' | 'helmet' | 'turban' | 'hood'
+  eyewear: 'none' | 'aviator' | 'wayfarer' | 'rectangle' | 'round' | 'cat-eye' | 'oversized' | 'sport' | 'cyber-visor' | 'monocle' | 'reading-glasses' | 'shield'
+  jewelry: 'none' | 'gold-chain' | 'silver-chain' | 'cuban-link' | 'pearls' | 'grillz' | 'rings' | 'watch' | 'bracelet-stack' | 'choker' | 'pendant' | 'all-jewelry'
+  piercings: 'none' | 'ear-single' | 'ear-multi' | 'nose-stud' | 'septum' | 'eyebrow' | 'lip' | 'industrial' | 'multi-facial'
+  // Colors — every color-bearing field has both a named-preset enum (above)
+  // AND an optional hex override (below). Hex wins when set; a "🎨 Custom"
+  // button beside each preset row opens a color picker. Empty = use the
+  // named preset's default color.
+  topColor: string  // hex (required — top is the foundation)
+  accentColor: string  // hex (required — accents on shoes/chains/etc)
+  hairColorHex?: string  // override for hairColor enum
+  jacketColor?: string  // hex override for jacket — defaults to topColor mix
+  bottomColor?: string  // hex override for bottomPiece — defaults to neutral
+  shoeColor?: string  // hex override for shoes — defaults to accentColor
+  eyewearColor?: string  // hex tint override for eyewear lenses
+  jewelryMetal?: 'gold' | 'silver' | 'rose-gold' | 'platinum' | 'iridium' | 'custom'
+  jewelryColor?: string  // hex override when jewelryMetal === 'custom'
+  // Misc
   extraDetails: string  // freeform additional prompt tuning
 }
 
@@ -1395,17 +1449,31 @@ function OpenSourceAvatarBrowser({ selectedId, currentName, config, onUpdate, on
 
 const DEFAULT_BUILD_SPEC: AiBuildSpec = {
   gender: 'masc',
+  ageGroup: 'adult',
+  pose: 'standing',
   build: 'athletic',
+  heightLabel: 'average',
+  shoulders: 'average',
+  waist: 'average',
   skinTone: 'medium',
+  skinSheen: 'natural',
+  tattoos: 'none',
+  scars: 'none',
   hairLength: 'short',
   hairStyle: 'natural',
   hairColor: 'black',
+  hairHighlights: 'none',
   facialHair: 'clean',
   vibe: 'streetwear',
   topPiece: 'hoodie',
   bottomPiece: 'jeans',
   shoes: 'sneakers',
-  topColor: '#1e3a8a',  // deep blue
+  jacket: 'none',
+  headwear: 'none',
+  eyewear: 'none',
+  jewelry: 'none',
+  piercings: 'none',
+  topColor: '#1e3a8a',
   accentColor: '#ffffff',
   extraDetails: '',
 }
@@ -1414,6 +1482,18 @@ const DEFAULT_FACE_SPEC: AiFaceSpec = {
   jawWidth: 0, jawLength: 0, noseSize: 0, noseWidth: 0,
   cheekbones: 0, brow: 0, browThickness: 0, eyeSize: 0,
   lipThickness: 0, chinTip: 0, symmetry: true,
+  faceShape: 'oval',
+  eyeShape: 'almond',
+  eyeColor: 'brown',
+  eyebrowShape: 'arched',
+  lipShape: 'full',
+  lipColor: 'natural',
+  freckles: 0,
+  dimples: 'none',
+  moles: 'none',
+  makeup: 'none',
+  glasses: 'none',
+  earrings: 'none',
 }
 
 // Each preset is a partial BuildSpec — merged on top of current spec so the
@@ -1456,6 +1536,7 @@ const TOKEN_HAIR_LEN: Record<AiBuildSpec['hairLength'], string> = {
   short: 'short hair',
   medium: 'medium-length hair',
   long: 'long hair',
+  'extra-long': 'extra-long flowing hair',
 }
 const TOKEN_HAIR_STYLE: Record<AiBuildSpec['hairStyle'], string> = {
   natural: 'natural texture',
@@ -1466,6 +1547,14 @@ const TOKEN_HAIR_STYLE: Record<AiBuildSpec['hairStyle'], string> = {
   braids: 'braided',
   cornrows: 'cornrows',
   mohawk: 'mohawk',
+  fauxhawk: 'fauxhawk',
+  pompadour: 'pompadour',
+  undercut: 'undercut',
+  'fade-design': 'fade with detailed design',
+  twists: 'twists',
+  locs: 'locs',
+  'side-shave': 'side-shaved with long top',
+  'buzz-design': 'buzz cut with shaved design',
 }
 const TOKEN_HAIR_COLOR: Record<AiBuildSpec['hairColor'], string> = {
   black: 'black hair',
@@ -1476,6 +1565,10 @@ const TOKEN_HAIR_COLOR: Record<AiBuildSpec['hairColor'], string> = {
   cyan: 'cyan-dyed hair',
   pink: 'pink-dyed hair',
   purple: 'purple-dyed hair',
+  rainbow: 'rainbow-dyed hair',
+  platinum: 'platinum blonde hair',
+  ginger: 'ginger hair',
+  'two-tone': 'two-tone hair',
 }
 const TOKEN_FACIAL_HAIR: Record<AiBuildSpec['facialHair'], string> = {
   clean: 'clean-shaven',
@@ -1483,6 +1576,10 @@ const TOKEN_FACIAL_HAIR: Record<AiBuildSpec['facialHair'], string> = {
   goatee: 'goatee',
   beard: 'full beard',
   mustache: 'mustache',
+  'fu-manchu': 'fu manchu mustache',
+  'mutton-chops': 'mutton chops',
+  'soul-patch': 'soul patch',
+  'full-bushy': 'full bushy beard',
 }
 const TOKEN_VIBE: Record<AiBuildSpec['vibe'], string> = {
   streetwear: 'urban streetwear aesthetic',
@@ -1494,6 +1591,13 @@ const TOKEN_VIBE: Record<AiBuildSpec['vibe'], string> = {
   royal: 'regal luxury aesthetic',
   tactical: 'tactical military aesthetic',
   punk: 'punk rock aesthetic',
+  festival: 'festival rave aesthetic',
+  business: 'business professional',
+  goth: 'gothic aesthetic',
+  gorpcore: 'gorpcore outdoor aesthetic',
+  y2k: 'Y2K early-2000s aesthetic',
+  western: 'western frontier aesthetic',
+  'avant-garde': 'avant-garde experimental fashion',
 }
 const TOKEN_TOP: Record<AiBuildSpec['topPiece'], string> = {
   hoodie: 'hoodie',
@@ -1504,6 +1608,14 @@ const TOKEN_TOP: Record<AiBuildSpec['topPiece'], string> = {
   buttonup: 'button-up shirt',
   sweater: 'sweater',
   crop: 'cropped top',
+  turtleneck: 'turtleneck',
+  'bandana-shirt': 'bandana-print shirt',
+  kimono: 'kimono top',
+  corset: 'corset top',
+  mesh: 'mesh top',
+  'graphic-tee': 'graphic tee',
+  puffer: 'puffer top',
+  'denim-jacket': 'denim jacket as top',
 }
 const TOKEN_BOTTOM: Record<AiBuildSpec['bottomPiece'], string> = {
   jeans: 'jeans',
@@ -1513,6 +1625,12 @@ const TOKEN_BOTTOM: Record<AiBuildSpec['bottomPiece'], string> = {
   dresspants: 'dress pants',
   skirt: 'skirt',
   leggings: 'leggings',
+  tactical: 'tactical pants',
+  parachute: 'parachute pants',
+  'wide-leg': 'wide-leg pants',
+  flare: 'flare pants',
+  'rip-stop': 'rip-stop trousers',
+  'cargo-shorts': 'cargo shorts',
 }
 const TOKEN_SHOES: Record<AiBuildSpec['shoes'], string> = {
   sneakers: 'sneakers',
@@ -1521,27 +1639,152 @@ const TOKEN_SHOES: Record<AiBuildSpec['shoes'], string> = {
   sandals: 'sandals',
   cleats: 'cleats',
   heels: 'heels',
+  'high-tops': 'high-top sneakers',
+  'low-tops': 'low-top sneakers',
+  jordans: 'Jordan-style sneakers',
+  vans: 'Vans skate shoes',
+  'doc-martens': 'Doc Martens boots',
+  'cowboy-boots': 'cowboy boots',
+  platform: 'platform shoes',
+  tabi: 'tabi split-toe shoes',
+  crocs: 'crocs',
 }
 
 // Composer — turn BuildSpec into the SDXL prompt
+// Phase 16.19 — token tables for all new fields
+const TOKEN_AGE: Record<AiBuildSpec['ageGroup'], string> = {
+  teen: 'late-teens', young: 'young adult', adult: 'adult',
+  mature: 'mature middle-aged', elder: 'elderly',
+}
+const TOKEN_POSE: Record<AiBuildSpec['pose'], string> = {
+  standing: 'confident standing pose', lean: 'cocky lean against wall',
+  rapper: 'hip-hop rapper pose with hands up', athletic: 'athletic ready stance',
+  royalty: 'regal commanding stance', cyberpunk: 'cyberpunk crouched ready',
+  heroic: 'heroic action pose', walking: 'mid-stride walking pose', dance: 'mid-dance move',
+}
+const TOKEN_HEIGHT: Record<AiBuildSpec['heightLabel'], string> = {
+  short: 'short stature', average: 'average height',
+  tall: 'tall stature', towering: 'towering height',
+}
+const TOKEN_SHOULDERS: Record<AiBuildSpec['shoulders'], string> = {
+  narrow: 'narrow shoulders', average: '', broad: 'broad shoulders',
+}
+const TOKEN_WAIST: Record<AiBuildSpec['waist'], string> = {
+  slim: 'slim waist', average: '', thick: 'thick waist',
+}
+const TOKEN_SHEEN: Record<AiBuildSpec['skinSheen'], string> = {
+  matte: 'matte skin', natural: '', glossy: 'glossy radiant skin', metallic: 'metallic chrome skin',
+}
+const TOKEN_TATTOOS: Record<AiBuildSpec['tattoos'], string> = {
+  none: '', minimal: 'minimalist tattoos', 'half-sleeve': 'half-sleeve arm tattoos',
+  'full-sleeve': 'full-sleeve tattoos', 'chest-piece': 'chest piece tattoo', 'full-body': 'extensive body tattoos',
+}
+const TOKEN_SCARS: Record<AiBuildSpec['scars'], string> = {
+  none: '', subtle: 'subtle scar across face', 'battle-worn': 'battle-worn scars',
+}
+const TOKEN_HIGHLIGHTS: Record<AiBuildSpec['hairHighlights'], string> = {
+  none: '', subtle: 'subtle highlights', ombre: 'ombre fade',
+  balayage: 'balayage highlights', 'dip-dye': 'dip-dye tips', streaks: 'colored streaks',
+}
+const TOKEN_JACKET: Record<AiBuildSpec['jacket'], string> = {
+  none: '', denim: 'denim jacket', 'leather-biker': 'leather biker jacket',
+  bomber: 'bomber jacket', puffer: 'puffer jacket', trench: 'trench coat',
+  duster: 'duster coat', varsity: 'varsity letterman jacket', windbreaker: 'windbreaker',
+  fur: 'fur coat', 'kimono-coat': 'kimono-style coat', cape: 'flowing cape',
+  'cargo-vest': 'cargo utility vest', 'fishing-vest': 'multi-pocket fishing vest',
+}
+const TOKEN_HEADWEAR: Record<AiBuildSpec['headwear'], string> = {
+  none: '', snapback: 'snapback cap', 'fitted-cap': 'fitted ballcap', beanie: 'beanie',
+  'bucket-hat': 'bucket hat', cowboy: 'cowboy hat', fedora: 'fedora',
+  headband: 'sweatband headband', durag: 'silk durag', visor: 'sport visor',
+  'wide-brim': 'wide-brim hat', 'top-hat': 'top hat', crown: 'jeweled crown',
+  helmet: 'tactical helmet', turban: 'wrapped turban', hood: 'pulled-up hood',
+}
+const TOKEN_EYEWEAR: Record<AiBuildSpec['eyewear'], string> = {
+  none: '', aviator: 'aviator sunglasses', wayfarer: 'wayfarer sunglasses',
+  rectangle: 'rectangular glasses', round: 'round glasses', 'cat-eye': 'cat-eye frames',
+  oversized: 'oversized sunglasses', sport: 'sport wraparound shades',
+  'cyber-visor': 'cyber visor with HUD', monocle: 'monocle', 'reading-glasses': 'reading glasses', shield: 'shield wrap shades',
+}
+const TOKEN_JEWELRY: Record<AiBuildSpec['jewelry'], string> = {
+  none: '', 'gold-chain': 'gold chain', 'silver-chain': 'silver chain',
+  'cuban-link': 'thick cuban link chain', pearls: 'pearl necklace', grillz: 'iced grillz',
+  rings: 'stacked rings', watch: 'designer watch', 'bracelet-stack': 'stacked bracelets',
+  choker: 'choker', pendant: 'statement pendant', 'all-jewelry': 'full jewelry stack — chains, rings, watch',
+}
+const TOKEN_PIERCINGS: Record<AiBuildSpec['piercings'], string> = {
+  none: '', 'ear-single': 'single ear stud', 'ear-multi': 'multiple ear piercings',
+  'nose-stud': 'nose stud', septum: 'septum ring', eyebrow: 'eyebrow piercing',
+  lip: 'lip piercing', industrial: 'industrial bar', 'multi-facial': 'multiple facial piercings',
+}
+
 function composePrompt(spec: AiBuildSpec): string {
   const parts: string[] = []
-  parts.push(`${TOKEN_GENDER[spec.gender]} character`)
-  parts.push(TOKEN_BUILD[spec.build])
-  parts.push(TOKEN_SKIN[spec.skinTone])
+  // Identity
+  parts.push(`${TOKEN_AGE[spec.ageGroup]} ${TOKEN_GENDER[spec.gender]} character`)
+  // Body
+  const bodyBits = [TOKEN_BUILD[spec.build], TOKEN_HEIGHT[spec.heightLabel], TOKEN_SHOULDERS[spec.shoulders], TOKEN_WAIST[spec.waist]].filter(Boolean)
+  if (bodyBits.length) parts.push(bodyBits.join(', '))
+  // Skin
+  const skinColor = spec.skinHex ? `skin tone ${spec.skinHex}` : TOKEN_SKIN[spec.skinTone]
+  parts.push(skinColor)
+  if (TOKEN_SHEEN[spec.skinSheen]) parts.push(TOKEN_SHEEN[spec.skinSheen])
+  if (TOKEN_TATTOOS[spec.tattoos]) parts.push(TOKEN_TATTOOS[spec.tattoos])
+  if (TOKEN_SCARS[spec.scars]) parts.push(TOKEN_SCARS[spec.scars])
+  // Hair
   if (spec.hairLength !== 'bald') {
-    parts.push(`${TOKEN_HAIR_LEN[spec.hairLength]} ${TOKEN_HAIR_STYLE[spec.hairStyle]} ${TOKEN_HAIR_COLOR[spec.hairColor]}`)
+    const hairColorStr = spec.hairColorHex ? `hair colored ${spec.hairColorHex}` : TOKEN_HAIR_COLOR[spec.hairColor as keyof typeof TOKEN_HAIR_COLOR] || `${spec.hairColor} hair`
+    parts.push(`${TOKEN_HAIR_LEN[spec.hairLength]} ${TOKEN_HAIR_STYLE[spec.hairStyle as keyof typeof TOKEN_HAIR_STYLE] || spec.hairStyle} ${hairColorStr}`)
+    if (TOKEN_HIGHLIGHTS[spec.hairHighlights]) parts.push(TOKEN_HIGHLIGHTS[spec.hairHighlights])
   } else {
     parts.push(TOKEN_HAIR_LEN.bald)
   }
-  if (spec.facialHair !== 'clean') parts.push(TOKEN_FACIAL_HAIR[spec.facialHair])
-  parts.push(`wearing ${TOKEN_TOP[spec.topPiece]} in ${spec.topColor}`)
-  parts.push(TOKEN_BOTTOM[spec.bottomPiece])
-  parts.push(`${TOKEN_SHOES[spec.shoes]} accented with ${spec.accentColor}`)
-  parts.push(TOKEN_VIBE[spec.vibe])
-  parts.push('confident pose, clean background')
+  if (spec.facialHair !== 'clean') parts.push(TOKEN_FACIAL_HAIR[spec.facialHair as keyof typeof TOKEN_FACIAL_HAIR] || spec.facialHair)
+  // Outfit — layered: top → jacket overlay → bottom → shoes
+  parts.push(`wearing ${TOKEN_TOP[spec.topPiece as keyof typeof TOKEN_TOP] || spec.topPiece} in ${spec.topColor}`)
+  if (TOKEN_JACKET[spec.jacket]) {
+    const jc = spec.jacketColor ? ` in ${spec.jacketColor}` : ''
+    parts.push(`layered with ${TOKEN_JACKET[spec.jacket]}${jc}`)
+  }
+  const bc = spec.bottomColor ? ` in ${spec.bottomColor}` : ''
+  parts.push(`${TOKEN_BOTTOM[spec.bottomPiece as keyof typeof TOKEN_BOTTOM] || spec.bottomPiece}${bc}`)
+  const sc = spec.shoeColor || spec.accentColor
+  parts.push(`${TOKEN_SHOES[spec.shoes as keyof typeof TOKEN_SHOES] || spec.shoes} in ${sc}`)
+  // Accessories
+  if (TOKEN_HEADWEAR[spec.headwear]) parts.push(TOKEN_HEADWEAR[spec.headwear])
+  if (TOKEN_EYEWEAR[spec.eyewear]) {
+    const ec = spec.eyewearColor ? ` tinted ${spec.eyewearColor}` : ''
+    parts.push(`${TOKEN_EYEWEAR[spec.eyewear]}${ec}`)
+  }
+  if (TOKEN_JEWELRY[spec.jewelry]) {
+    const metal = spec.jewelryMetal && spec.jewelryMetal !== 'custom' ? ` (${spec.jewelryMetal})` : spec.jewelryMetal === 'custom' && spec.jewelryColor ? ` colored ${spec.jewelryColor}` : ''
+    parts.push(`${TOKEN_JEWELRY[spec.jewelry]}${metal}`)
+  }
+  if (TOKEN_PIERCINGS[spec.piercings]) parts.push(TOKEN_PIERCINGS[spec.piercings])
+  // Vibe + pose
+  parts.push(TOKEN_VIBE[spec.vibe as keyof typeof TOKEN_VIBE] || spec.vibe)
+  parts.push(`${TOKEN_POSE[spec.pose]}, clean background, hyper-detailed`)
   if (spec.extraDetails.trim()) parts.push(spec.extraDetails.trim())
   return parts.join(', ')
+}
+
+// Phase 16.19 — face spec prompt fragments (face-tab additions)
+function composeFaceTokens(face: AiFaceSpec): string[] {
+  const parts: string[] = []
+  if (face.faceShape !== 'oval') parts.push(`${face.faceShape}-shaped face`)
+  parts.push(`${face.eyeShape} ${face.eyeColorHex ? `${face.eyeColorHex} eyes` : `${face.eyeColor} eyes`}`)
+  if (face.eyebrowShape !== 'arched') parts.push(`${face.eyebrowShape} eyebrows`)
+  if (face.lipShape !== 'full' || face.lipColor !== 'natural') {
+    const lc = face.lipColorHex ? face.lipColorHex : face.lipColor
+    parts.push(`${face.lipShape} lips${face.lipColor !== 'natural' ? ` in ${lc}` : ''}`)
+  }
+  if (face.freckles > 0.2) parts.push(face.freckles > 0.6 ? 'heavy freckles' : 'light freckles across nose')
+  if (face.dimples !== 'none') parts.push(`${face.dimples === 'both' ? 'cheek and chin' : face.dimples} dimples`)
+  if (face.moles !== 'none') parts.push(face.moles === 'beauty-mark' ? 'beauty mark' : `${face.moles.replace('-', ' ')} mole`)
+  if (face.makeup !== 'none') parts.push(`${face.makeup} makeup`)
+  if (face.glasses !== 'none') parts.push(face.glasses.replace('-', ' '))
+  if (face.earrings !== 'none') parts.push(`${face.earrings} earrings`)
+  return parts
 }
 
 function AiBuildPanel({
@@ -1565,7 +1808,13 @@ function AiBuildPanel({
   // Phase 16.6 — InZOI-style tab strip
   const [activeTab, setActiveTab] = useState<'face' | 'body' | 'outfit' | 'accessories' | 'render'>('body')
 
-  const composedPrompt = composePrompt(spec)
+  // Phase 16.19 — fold face tokens into the prompt too (face-shape, eye color,
+  // makeup, freckles, etc all flow into SDXL alongside body+outfit tokens).
+  const composedPrompt = (() => {
+    const base = composePrompt(spec)
+    const faceTokens = composeFaceTokens(face).join(', ')
+    return faceTokens ? `${base}, ${faceTokens}` : base
+  })()
   const tweak = (patch: Partial<AiBuildSpec>) => setSpec((s) => ({ ...s, ...patch }))
   const applyPreset = (preset: Partial<AiBuildSpec>) => setSpec((s) => ({ ...s, ...preset }))
   const newCharacter = () => setSeed(Math.floor(Math.random() * 1_000_000))
@@ -1709,24 +1958,50 @@ function AiBuildPanel({
             <PickerSection label="Identity">
               <ChipRow value={spec.gender} options={[['masc', '♂ Masc'], ['fem', '♀ Fem'], ['androgynous', '◐ Andro']]} onPick={(v) => tweak({ gender: v as any })} />
             </PickerSection>
+            <PickerSection label="Age group">
+              <ChipRow value={spec.ageGroup} options={[['teen', 'Teen'], ['young', 'Young'], ['adult', 'Adult'], ['mature', 'Mature'], ['elder', 'Elder']]} onPick={(v) => tweak({ ageGroup: v as any })} />
+            </PickerSection>
+            <PickerSection label="Pose">
+              <ChipRow value={spec.pose} options={[['standing', 'Standing'], ['lean', 'Lean'], ['rapper', 'Rapper'], ['athletic', 'Athletic'], ['royalty', 'Royal'], ['cyberpunk', 'Cyber'], ['heroic', 'Heroic'], ['walking', 'Walking'], ['dance', 'Dance']]} onPick={(v) => tweak({ pose: v as any })} />
+            </PickerSection>
             <PickerSection label="Build">
               <ChipRow value={spec.build} options={[['slim', 'Slim'], ['athletic', 'Athletic'], ['muscular', 'Muscular'], ['bulky', 'Bulky']]} onPick={(v) => tweak({ build: v as any })} />
             </PickerSection>
+            <PickerSection label="Height">
+              <ChipRow value={spec.heightLabel} options={[['short', '5\'2" Short'], ['average', '5\'8" Avg'], ['tall', '6\'2" Tall'], ['towering', '6\'8" Tower']]} onPick={(v) => tweak({ heightLabel: v as any })} />
+            </PickerSection>
+            <PickerSection label="Shoulders">
+              <ChipRow value={spec.shoulders} options={[['narrow', 'Narrow'], ['average', 'Average'], ['broad', 'Broad']]} onPick={(v) => tweak({ shoulders: v as any })} />
+            </PickerSection>
+            <PickerSection label="Waist">
+              <ChipRow value={spec.waist} options={[['slim', 'Slim'], ['average', 'Average'], ['thick', 'Thick']]} onPick={(v) => tweak({ waist: v as any })} />
+            </PickerSection>
             <PickerSection label="Skin tone">
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-wrap items-center gap-1.5">
                 {(['fair', 'light', 'medium', 'tan', 'brown', 'dark'] as const).map((t, i) => {
                   const swatches = ['#f3d5b5', '#e0b48d', '#c08a5e', '#a16641', '#7a4a2b', '#4a2e1a']
-                  const active = spec.skinTone === t
+                  const active = spec.skinTone === t && !spec.skinHex
                   return (
-                    <button key={t} onClick={() => tweak({ skinTone: t })} title={t}
+                    <button key={t} onClick={() => tweak({ skinTone: t, skinHex: undefined })} title={t}
                       className={`w-7 h-7 rounded-full border-2 transition ${active ? 'border-pink-400 scale-110' : 'border-white/10 hover:border-white/30'}`}
                       style={{ backgroundColor: swatches[i] }} />
                   )
                 })}
+                {/* Phase 16.19 — custom hex color picker for any skin tone */}
+                <CustomColorBtn value={spec.skinHex} onChange={(hex) => tweak({ skinHex: hex })} fallback="#c08a5e" />
               </div>
             </PickerSection>
+            <PickerSection label="Skin sheen">
+              <ChipRow value={spec.skinSheen} options={[['matte', 'Matte'], ['natural', 'Natural'], ['glossy', 'Glossy'], ['metallic', 'Metal']]} onPick={(v) => tweak({ skinSheen: v as any })} />
+            </PickerSection>
+            <PickerSection label="Tattoos">
+              <ChipRow value={spec.tattoos} options={[['none', 'None'], ['minimal', 'Minimal'], ['half-sleeve', '½ Sleeve'], ['full-sleeve', 'Sleeve'], ['chest-piece', 'Chest'], ['full-body', 'Full body']]} onPick={(v) => tweak({ tattoos: v as any })} />
+            </PickerSection>
+            <PickerSection label="Scars">
+              <ChipRow value={spec.scars} options={[['none', 'None'], ['subtle', 'Subtle'], ['battle-worn', 'Battle-worn']]} onPick={(v) => tweak({ scars: v as any })} />
+            </PickerSection>
             <PickerSection label="Vibe / aesthetic">
-              <ChipRow value={spec.vibe} options={[['streetwear', 'Streetwear'], ['cyberpunk', 'Cyberpunk'], ['athletic', 'Athletic'], ['formal', 'Formal'], ['casual', 'Casual'], ['artist', 'Artist'], ['royal', 'Royal'], ['tactical', 'Tactical'], ['punk', 'Punk']]} onPick={(v) => tweak({ vibe: v as any })} />
+              <ChipRow value={spec.vibe} options={[['streetwear', 'Streetwear'], ['cyberpunk', 'Cyberpunk'], ['athletic', 'Athletic'], ['formal', 'Formal'], ['casual', 'Casual'], ['artist', 'Artist'], ['royal', 'Royal'], ['tactical', 'Tactical'], ['punk', 'Punk'], ['festival', 'Festival'], ['business', 'Business'], ['goth', 'Goth'], ['gorpcore', 'Gorpcore'], ['y2k', 'Y2K'], ['western', 'Western'], ['avant-garde', 'Avant-Garde']]} onPick={(v) => tweak({ vibe: v as any })} />
             </PickerSection>
           </>
         )}
@@ -1737,24 +2012,90 @@ function AiBuildPanel({
             <div className="text-[10px] font-mono text-pink-300/70 bg-pink-500/5 p-2 rounded border border-pink-500/10 leading-relaxed">
               🧬 Precision face sliders — each slider morphs the live 3D face on the left in real-time via 52 ARkit blendshapes (jawOpen, browInnerUp, cheekPuff, eyeWide_L/R, mouthSmile_L/R, etc). Values also persist + flow into your SDXL prompt.
             </div>
-            <div className="text-[10px] font-mono text-pink-300/70 bg-pink-500/5 p-2 rounded border border-pink-500/10 leading-relaxed">
-              💇 Hair piece library (CC0 GLBs swapped on the head bone) lands in Phase 16.8. For now these pickers flow into the SDXL prompt — hair renders when you tap Generate.
-            </div>
+            <PickerSection label="Face shape">
+              <ChipRow value={face.faceShape} options={[['oval', 'Oval'], ['round', 'Round'], ['square', 'Square'], ['heart', 'Heart'], ['diamond', 'Diamond'], ['oblong', 'Oblong'], ['triangle', 'Triangle']]} onPick={(v) => setFace(f => ({ ...f, faceShape: v as any }))} />
+            </PickerSection>
+            <PickerSection label="Eye shape">
+              <ChipRow value={face.eyeShape} options={[['almond', 'Almond'], ['round', 'Round'], ['hooded', 'Hooded'], ['upturned', 'Upturned'], ['downturned', 'Downturned'], ['monolid', 'Monolid'], ['wide-set', 'Wide-set'], ['close-set', 'Close-set']]} onPick={(v) => setFace(f => ({ ...f, eyeShape: v as any }))} />
+            </PickerSection>
+            <PickerSection label="Eye color">
+              <div className="flex flex-wrap items-center gap-1.5">
+                {([['brown', '#5a3a20'], ['blue', '#3d7bb8'], ['green', '#3a7a4a'], ['hazel', '#a07a3a'], ['grey', '#7a7a7a'], ['amber', '#c08c2a'], ['violet', '#9a4ac0'], ['heterochromia', 'linear-gradient(90deg,#5a3a20 50%,#3d7bb8 50%)']] as const).map(([name, hex]) => {
+                  const active = face.eyeColor === name && !face.eyeColorHex
+                  return (
+                    <button key={name} onClick={() => setFace(f => ({ ...f, eyeColor: name as any, eyeColorHex: undefined }))} title={name}
+                      className={`w-7 h-7 rounded-full border-2 transition ${active ? 'border-pink-400 scale-110' : 'border-white/10 hover:border-white/30'}`}
+                      style={{ background: hex }} />
+                  )
+                })}
+                <CustomColorBtn value={face.eyeColorHex} onChange={(hex) => setFace(f => ({ ...f, eyeColorHex: hex }))} fallback="#3d7bb8" />
+              </div>
+            </PickerSection>
+            <PickerSection label="Eyebrow shape">
+              <ChipRow value={face.eyebrowShape} options={[['arched', 'Arched'], ['straight', 'Straight'], ['rounded', 'Rounded'], ['angled', 'Angled'], ['soft', 'Soft'], ['feathered', 'Feathered'], ['thin-line', 'Thin'], ['bold', 'Bold']]} onPick={(v) => setFace(f => ({ ...f, eyebrowShape: v as any }))} />
+            </PickerSection>
+            <PickerSection label="Lip shape">
+              <ChipRow value={face.lipShape} options={[['full', 'Full'], ['thin', 'Thin'], ['heart', 'Heart'], ['wide', 'Wide'], ['bow', 'Cupid bow'], ['asymmetric', 'Asym'], ['pouty', 'Pouty']]} onPick={(v) => setFace(f => ({ ...f, lipShape: v as any }))} />
+            </PickerSection>
+            <PickerSection label="Lip color">
+              <div className="flex flex-wrap items-center gap-1.5">
+                {([['natural', '#c08070'], ['red', '#c93838'], ['dark', '#5a2030'], ['glossy', '#d89090'], ['matte', '#a06060'], ['nude', '#c8a08a'], ['berry', '#8a2a4a'], ['black', '#1a0a0a']] as const).map(([name, hex]) => {
+                  const active = face.lipColor === name && !face.lipColorHex
+                  return (
+                    <button key={name} onClick={() => setFace(f => ({ ...f, lipColor: name as any, lipColorHex: undefined }))} title={name}
+                      className={`w-7 h-7 rounded-full border-2 transition ${active ? 'border-pink-400 scale-110' : 'border-white/10 hover:border-white/30'}`}
+                      style={{ backgroundColor: hex }} />
+                  )
+                })}
+                <CustomColorBtn value={face.lipColorHex} onChange={(hex) => setFace(f => ({ ...f, lipColorHex: hex }))} fallback="#c93838" />
+              </div>
+            </PickerSection>
             <PickerSection label="Hair length">
-              <ChipRow value={spec.hairLength} options={[['bald', 'Bald'], ['buzz', 'Buzz'], ['short', 'Short'], ['medium', 'Medium'], ['long', 'Long']]} onPick={(v) => tweak({ hairLength: v as any })} />
+              <ChipRow value={spec.hairLength} options={[['bald', 'Bald'], ['buzz', 'Buzz'], ['short', 'Short'], ['medium', 'Medium'], ['long', 'Long'], ['extra-long', 'XLong']]} onPick={(v) => tweak({ hairLength: v as any })} />
             </PickerSection>
             {spec.hairLength !== 'bald' && (
               <>
                 <PickerSection label="Hair style">
-                  <ChipRow value={spec.hairStyle} options={[['natural', 'Natural'], ['wavy', 'Wavy'], ['curly', 'Curly'], ['coily', 'Coily'], ['dreads', 'Dreads'], ['braids', 'Braids'], ['cornrows', 'Cornrows'], ['mohawk', 'Mohawk']]} onPick={(v) => tweak({ hairStyle: v as any })} />
+                  <ChipRow value={spec.hairStyle} options={[['natural', 'Natural'], ['wavy', 'Wavy'], ['curly', 'Curly'], ['coily', 'Coily'], ['dreads', 'Dreads'], ['braids', 'Braids'], ['cornrows', 'Cornrows'], ['mohawk', 'Mohawk'], ['fauxhawk', 'Fauxhawk'], ['pompadour', 'Pompadour'], ['undercut', 'Undercut'], ['fade-design', 'Fade-Art'], ['twists', 'Twists'], ['locs', 'Locs'], ['side-shave', 'Side-shave'], ['buzz-design', 'Buzz-Art']]} onPick={(v) => tweak({ hairStyle: v as any })} />
                 </PickerSection>
                 <PickerSection label="Hair color">
-                  <ChipRow value={spec.hairColor} options={[['black', 'Black'], ['brown', 'Brown'], ['blonde', 'Blonde'], ['red', 'Red'], ['silver', 'Silver'], ['cyan', 'Cyan'], ['pink', 'Pink'], ['purple', 'Purple']]} onPick={(v) => tweak({ hairColor: v as any })} />
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {([['black', '#1a1a1a'], ['brown', '#5a3520'], ['blonde', '#d4a86c'], ['red', '#a03838'], ['silver', '#c0c0c0'], ['cyan', '#22d3ee'], ['pink', '#f472b6'], ['purple', '#9333ea'], ['rainbow', 'linear-gradient(90deg,#ef4444,#f59e0b,#eab308,#22c55e,#3b82f6,#a855f7)'], ['platinum', '#e8e8d4'], ['ginger', '#c05828'], ['two-tone', 'linear-gradient(180deg,#1a1a1a 50%,#d4a86c 50%)']] as const).map(([name, hex]) => {
+                      const active = spec.hairColor === name && !spec.hairColorHex
+                      return (
+                        <button key={name} onClick={() => tweak({ hairColor: name as any, hairColorHex: undefined })} title={name}
+                          className={`w-7 h-7 rounded-full border-2 transition ${active ? 'border-pink-400 scale-110' : 'border-white/10 hover:border-white/30'}`}
+                          style={{ background: hex }} />
+                      )
+                    })}
+                    <CustomColorBtn value={spec.hairColorHex} onChange={(hex) => tweak({ hairColorHex: hex })} fallback="#1a1a1a" />
+                  </div>
+                </PickerSection>
+                <PickerSection label="Hair highlights">
+                  <ChipRow value={spec.hairHighlights} options={[['none', 'None'], ['subtle', 'Subtle'], ['ombre', 'Ombre'], ['balayage', 'Balayage'], ['dip-dye', 'Dip-dye'], ['streaks', 'Streaks']]} onPick={(v) => tweak({ hairHighlights: v as any })} />
                 </PickerSection>
               </>
             )}
             <PickerSection label="Facial hair">
-              <ChipRow value={spec.facialHair} options={[['clean', 'Clean'], ['stubble', 'Stubble'], ['goatee', 'Goatee'], ['beard', 'Beard'], ['mustache', '\'Stache']]} onPick={(v) => tweak({ facialHair: v as any })} />
+              <ChipRow value={spec.facialHair} options={[['clean', 'Clean'], ['stubble', 'Stubble'], ['goatee', 'Goatee'], ['beard', 'Beard'], ['mustache', '\'Stache'], ['fu-manchu', 'Fu Manchu'], ['mutton-chops', 'Muttons'], ['soul-patch', 'Soul-patch'], ['full-bushy', 'Bushy']]} onPick={(v) => tweak({ facialHair: v as any })} />
+            </PickerSection>
+            <PickerSection label="Freckles intensity">
+              <FaceSlider label="" value={face.freckles * 2 - 1} onChange={(v) => setFace(f => ({ ...f, freckles: Math.max(0, Math.min(1, (v + 1) / 2)) }))} />
+            </PickerSection>
+            <PickerSection label="Dimples">
+              <ChipRow value={face.dimples} options={[['none', 'None'], ['cheek', 'Cheek'], ['chin', 'Chin'], ['both', 'Both']]} onPick={(v) => setFace(f => ({ ...f, dimples: v as any }))} />
+            </PickerSection>
+            <PickerSection label="Moles / beauty marks">
+              <ChipRow value={face.moles} options={[['none', 'None'], ['single-cheek', 'Cheek mole'], ['lip-corner', 'Lip corner'], ['scattered', 'Scattered'], ['beauty-mark', 'Beauty mark']]} onPick={(v) => setFace(f => ({ ...f, moles: v as any }))} />
+            </PickerSection>
+            <PickerSection label="Makeup style">
+              <ChipRow value={face.makeup} options={[['none', 'None'], ['natural', 'Natural'], ['glam', 'Glam'], ['dramatic', 'Dramatic'], ['cyber', 'Cyber'], ['festival', 'Festival'], ['gothic', 'Gothic'], ['minimalist', 'Minimal']]} onPick={(v) => setFace(f => ({ ...f, makeup: v as any }))} />
+            </PickerSection>
+            <PickerSection label="Glasses">
+              <ChipRow value={face.glasses} options={[['none', 'None'], ['reading', 'Reading'], ['sunglasses-aviator', 'Aviator'], ['sunglasses-round', 'Round'], ['cyber-visor', 'Visor'], ['monocle', 'Monocle']]} onPick={(v) => setFace(f => ({ ...f, glasses: v as any }))} />
+            </PickerSection>
+            <PickerSection label="Earrings">
+              <ChipRow value={face.earrings} options={[['none', 'None'], ['studs', 'Studs'], ['hoops', 'Hoops'], ['dangling', 'Dangling'], ['cuffs', 'Cuffs'], ['gauges', 'Gauges']]} onPick={(v) => setFace(f => ({ ...f, earrings: v as any }))} />
             </PickerSection>
             {/* Symmetry toggle — matches InZOI "Symmetry Mode" */}
             <div className="flex items-center gap-2">
@@ -1784,41 +2125,91 @@ function AiBuildPanel({
         {/* ─── OUTFIT TAB ─── */}
         {activeTab === 'outfit' && (
           <>
-            <div className="text-[10px] font-mono text-pink-300/70 bg-pink-500/5 p-2 rounded border border-pink-500/10 leading-relaxed">
-              👕 Outfit slot system (top/bottom/shoes as swappable 3D GLBs that snap to the rig) lands in Phase 16.9. For now these pickers flow into the SDXL prompt — your character gets dressed when you tap Generate.
-            </div>
             <PickerSection label="Top">
-              <ChipRow value={spec.topPiece} options={[['hoodie', 'Hoodie'], ['tshirt', 'T-shirt'], ['jersey', 'Jersey'], ['tank', 'Tank'], ['jacket', 'Jacket'], ['buttonup', 'Button-up'], ['sweater', 'Sweater'], ['crop', 'Crop']]} onPick={(v) => tweak({ topPiece: v as any })} />
-            </PickerSection>
-            <PickerSection label="Bottom">
-              <ChipRow value={spec.bottomPiece} options={[['jeans', 'Jeans'], ['joggers', 'Joggers'], ['shorts', 'Shorts'], ['cargo', 'Cargo'], ['dresspants', 'Dress pants'], ['skirt', 'Skirt'], ['leggings', 'Leggings']]} onPick={(v) => tweak({ bottomPiece: v as any })} />
-            </PickerSection>
-            <PickerSection label="Shoes">
-              <ChipRow value={spec.shoes} options={[['sneakers', 'Sneakers'], ['boots', 'Boots'], ['dressshoes', 'Dress'], ['sandals', 'Sandals'], ['cleats', 'Cleats'], ['heels', 'Heels']]} onPick={(v) => tweak({ shoes: v as any })} />
+              <ChipRow value={spec.topPiece} options={[['hoodie', 'Hoodie'], ['tshirt', 'T-shirt'], ['jersey', 'Jersey'], ['tank', 'Tank'], ['jacket', 'Jacket'], ['buttonup', 'Button-up'], ['sweater', 'Sweater'], ['crop', 'Crop'], ['turtleneck', 'Turtleneck'], ['bandana-shirt', 'Bandana'], ['kimono', 'Kimono'], ['corset', 'Corset'], ['mesh', 'Mesh'], ['graphic-tee', 'Graphic-T'], ['puffer', 'Puffer'], ['denim-jacket', 'Denim-J']]} onPick={(v) => tweak({ topPiece: v as any })} />
             </PickerSection>
             <PickerSection label="Top color">
+              <input type="color" value={spec.topColor} onChange={(e) => tweak({ topColor: e.target.value })} className="w-12 h-8 rounded border border-white/10 bg-transparent cursor-pointer" />
+              <span className="ml-2 font-mono text-[10px] text-gray-500">{spec.topColor}</span>
+            </PickerSection>
+            <PickerSection label="Jacket / outerwear">
+              <ChipRow value={spec.jacket} options={[['none', 'None'], ['denim', 'Denim'], ['leather-biker', 'Leather'], ['bomber', 'Bomber'], ['puffer', 'Puffer'], ['trench', 'Trench'], ['duster', 'Duster'], ['varsity', 'Varsity'], ['windbreaker', 'Windbreaker'], ['fur', 'Fur'], ['kimono-coat', 'Kimono-coat'], ['cape', 'Cape'], ['cargo-vest', 'Cargo-vest'], ['fishing-vest', 'Fishing-vest']]} onPick={(v) => tweak({ jacket: v as any })} />
+            </PickerSection>
+            {spec.jacket !== 'none' && (
+              <PickerSection label="Jacket color">
+                <div className="flex items-center gap-2">
+                  <input type="color" value={spec.jacketColor || spec.topColor} onChange={(e) => tweak({ jacketColor: e.target.value })} className="w-12 h-8 rounded border border-white/10 bg-transparent cursor-pointer" />
+                  <span className="font-mono text-[10px] text-gray-500">{spec.jacketColor || '(matches top)'}</span>
+                  {spec.jacketColor && <button onClick={() => tweak({ jacketColor: undefined })} className="text-[9px] font-mono text-gray-500 hover:text-pink-300 underline">reset</button>}
+                </div>
+              </PickerSection>
+            )}
+            <PickerSection label="Bottom">
+              <ChipRow value={spec.bottomPiece} options={[['jeans', 'Jeans'], ['joggers', 'Joggers'], ['shorts', 'Shorts'], ['cargo', 'Cargo'], ['dresspants', 'Dress pants'], ['skirt', 'Skirt'], ['leggings', 'Leggings'], ['tactical', 'Tactical'], ['parachute', 'Parachute'], ['wide-leg', 'Wide-leg'], ['flare', 'Flare'], ['rip-stop', 'Rip-stop'], ['cargo-shorts', 'Cargo-shorts']]} onPick={(v) => tweak({ bottomPiece: v as any })} />
+            </PickerSection>
+            <PickerSection label="Bottom color">
               <div className="flex items-center gap-2">
-                <input type="color" value={spec.topColor} onChange={(e) => tweak({ topColor: e.target.value })} className="w-10 h-7 rounded border border-white/10 bg-transparent cursor-pointer" />
-                <span className="font-mono text-[10px] text-gray-500">{spec.topColor}</span>
+                <input type="color" value={spec.bottomColor || '#1f2937'} onChange={(e) => tweak({ bottomColor: e.target.value })} className="w-12 h-8 rounded border border-white/10 bg-transparent cursor-pointer" />
+                <span className="font-mono text-[10px] text-gray-500">{spec.bottomColor || '(neutral)'}</span>
+                {spec.bottomColor && <button onClick={() => tweak({ bottomColor: undefined })} className="text-[9px] font-mono text-gray-500 hover:text-pink-300 underline">reset</button>}
+              </div>
+            </PickerSection>
+            <PickerSection label="Shoes">
+              <ChipRow value={spec.shoes} options={[['sneakers', 'Sneakers'], ['boots', 'Boots'], ['dressshoes', 'Dress'], ['sandals', 'Sandals'], ['cleats', 'Cleats'], ['heels', 'Heels'], ['high-tops', 'High-tops'], ['low-tops', 'Low-tops'], ['jordans', 'Jordans'], ['vans', 'Vans'], ['doc-martens', 'Docs'], ['cowboy-boots', 'Cowboy'], ['platform', 'Platform'], ['tabi', 'Tabi'], ['crocs', 'Crocs']]} onPick={(v) => tweak({ shoes: v as any })} />
+            </PickerSection>
+            <PickerSection label="Shoe color">
+              <div className="flex items-center gap-2">
+                <input type="color" value={spec.shoeColor || spec.accentColor} onChange={(e) => tweak({ shoeColor: e.target.value })} className="w-12 h-8 rounded border border-white/10 bg-transparent cursor-pointer" />
+                <span className="font-mono text-[10px] text-gray-500">{spec.shoeColor || '(matches accent)'}</span>
+                {spec.shoeColor && <button onClick={() => tweak({ shoeColor: undefined })} className="text-[9px] font-mono text-gray-500 hover:text-pink-300 underline">reset</button>}
               </div>
             </PickerSection>
             <PickerSection label="Accent color">
-              <div className="flex items-center gap-2">
-                <input type="color" value={spec.accentColor} onChange={(e) => tweak({ accentColor: e.target.value })} className="w-10 h-7 rounded border border-white/10 bg-transparent cursor-pointer" />
-                <span className="font-mono text-[10px] text-gray-500">{spec.accentColor}</span>
-              </div>
+              <input type="color" value={spec.accentColor} onChange={(e) => tweak({ accentColor: e.target.value })} className="w-12 h-8 rounded border border-white/10 bg-transparent cursor-pointer" />
+              <span className="ml-2 font-mono text-[10px] text-gray-500">{spec.accentColor}</span>
             </PickerSection>
           </>
         )}
 
-        {/* ─── EXTRAS TAB ─── */}
+        {/* ─── EXTRAS TAB — accessories + free-form ─── */}
         {activeTab === 'accessories' && (
           <>
-            <div className="text-[10px] font-mono text-pink-300/70 bg-pink-500/5 p-2 rounded border border-pink-500/10 leading-relaxed">
-              💎 Accessory library coming in Phase 16.8 (hats, glasses, chains, watches as swappable GLBs). For now, drop accessory ideas into the freeform field below and SDXL will paint them.
-            </div>
-            <PickerSection label="Free-form details">
-              <textarea value={spec.extraDetails} onChange={(e) => tweak({ extraDetails: e.target.value })} placeholder="tattoos, jewelry, scars, glasses, hats, watch, sunglasses, headphones…" rows={3}
+            <PickerSection label="Headwear">
+              <ChipRow value={spec.headwear} options={[['none', 'None'], ['snapback', 'Snapback'], ['fitted-cap', 'Fitted'], ['beanie', 'Beanie'], ['bucket-hat', 'Bucket'], ['cowboy', 'Cowboy'], ['fedora', 'Fedora'], ['headband', 'Headband'], ['durag', 'Durag'], ['visor', 'Visor'], ['wide-brim', 'Wide-brim'], ['top-hat', 'Top hat'], ['crown', 'Crown'], ['helmet', 'Helmet'], ['turban', 'Turban'], ['hood', 'Hood']]} onPick={(v) => tweak({ headwear: v as any })} />
+            </PickerSection>
+            <PickerSection label="Eyewear (body-tab; face-tab has separate glasses)">
+              <ChipRow value={spec.eyewear} options={[['none', 'None'], ['aviator', 'Aviator'], ['wayfarer', 'Wayfarer'], ['rectangle', 'Rectangle'], ['round', 'Round'], ['cat-eye', 'Cat-eye'], ['oversized', 'Oversized'], ['sport', 'Sport'], ['cyber-visor', 'Cyber visor'], ['monocle', 'Monocle'], ['reading-glasses', 'Reading'], ['shield', 'Shield']]} onPick={(v) => tweak({ eyewear: v as any })} />
+            </PickerSection>
+            {spec.eyewear !== 'none' && (
+              <PickerSection label="Eyewear lens tint">
+                <div className="flex items-center gap-2">
+                  <input type="color" value={spec.eyewearColor || '#000000'} onChange={(e) => tweak({ eyewearColor: e.target.value })} className="w-12 h-8 rounded border border-white/10 bg-transparent cursor-pointer" />
+                  <span className="font-mono text-[10px] text-gray-500">{spec.eyewearColor || '(default)'}</span>
+                  {spec.eyewearColor && <button onClick={() => tweak({ eyewearColor: undefined })} className="text-[9px] font-mono text-gray-500 hover:text-pink-300 underline">reset</button>}
+                </div>
+              </PickerSection>
+            )}
+            <PickerSection label="Jewelry">
+              <ChipRow value={spec.jewelry} options={[['none', 'None'], ['gold-chain', 'Gold chain'], ['silver-chain', 'Silver chain'], ['cuban-link', 'Cuban link'], ['pearls', 'Pearls'], ['grillz', 'Grillz'], ['rings', 'Rings'], ['watch', 'Watch'], ['bracelet-stack', 'Bracelets'], ['choker', 'Choker'], ['pendant', 'Pendant'], ['all-jewelry', 'ALL STACK']]} onPick={(v) => tweak({ jewelry: v as any })} />
+            </PickerSection>
+            {spec.jewelry !== 'none' && (
+              <>
+                <PickerSection label="Jewelry metal">
+                  <ChipRow value={spec.jewelryMetal || 'gold'} options={[['gold', 'Gold'], ['silver', 'Silver'], ['rose-gold', 'Rose Gold'], ['platinum', 'Platinum'], ['iridium', 'Iridium'], ['custom', 'Custom']]} onPick={(v) => tweak({ jewelryMetal: v as any })} />
+                </PickerSection>
+                {spec.jewelryMetal === 'custom' && (
+                  <PickerSection label="Jewelry color">
+                    <input type="color" value={spec.jewelryColor || '#facc15'} onChange={(e) => tweak({ jewelryColor: e.target.value })} className="w-12 h-8 rounded border border-white/10 bg-transparent cursor-pointer" />
+                    <span className="ml-2 font-mono text-[10px] text-gray-500">{spec.jewelryColor || '#facc15'}</span>
+                  </PickerSection>
+                )}
+              </>
+            )}
+            <PickerSection label="Piercings">
+              <ChipRow value={spec.piercings} options={[['none', 'None'], ['ear-single', 'Ear single'], ['ear-multi', 'Ear multi'], ['nose-stud', 'Nose stud'], ['septum', 'Septum'], ['eyebrow', 'Eyebrow'], ['lip', 'Lip'], ['industrial', 'Industrial'], ['multi-facial', 'Multi-facial']]} onPick={(v) => tweak({ piercings: v as any })} />
+            </PickerSection>
+            <PickerSection label="Free-form extras">
+              <textarea value={spec.extraDetails} onChange={(e) => tweak({ extraDetails: e.target.value })} placeholder="anything not covered above: phone in hand, microphone, instrument, ball, custom logos, accessories…" rows={3}
                 className="w-full bg-white/[0.02] border border-white/10 rounded px-3 py-2 text-xs text-white placeholder:text-gray-600 resize-none focus:outline-none focus:border-pink-500/40" />
             </PickerSection>
           </>
@@ -2601,6 +2992,40 @@ function PickerSection({ label, children }: { label: string; children: React.Rea
     <div className="space-y-1">
       <div className="text-[9px] font-mono text-gray-500 uppercase tracking-wider">{label}</div>
       {children}
+    </div>
+  )
+}
+
+// Phase 16.19 — CustomColorBtn — a circular swatch that opens the browser's
+// native color picker. Use alongside named-color swatches to give users the
+// full color spectrum for any color-bearing field (hair, lips, eyes, clothing,
+// shoes, jewelry, etc). Clicking the gradient ring opens picker; clearing
+// resets to the named preset.
+function CustomColorBtn({ value, onChange, fallback }: { value?: string; onChange: (hex: string | undefined) => void; fallback: string }) {
+  const active = !!value
+  return (
+    <div className="relative inline-flex items-center">
+      <input
+        type="color"
+        value={value || fallback}
+        onChange={(e) => onChange(e.target.value)}
+        className="absolute inset-0 w-7 h-7 opacity-0 cursor-pointer"
+        title="custom color picker"
+      />
+      <div
+        className={`w-7 h-7 rounded-full border-2 transition pointer-events-none ${active ? 'border-pink-400 scale-110' : 'border-white/30 hover:border-pink-300'}`}
+        style={{
+          background: 'conic-gradient(from 0deg, #ef4444, #f59e0b, #eab308, #22c55e, #06b6d4, #3b82f6, #a855f7, #ec4899, #ef4444)',
+        }}
+        aria-label="custom color"
+      />
+      {active && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onChange(undefined) }}
+          className="ml-1 text-[8px] font-mono text-gray-500 hover:text-pink-300"
+          title="reset to named preset"
+        >×</button>
+      )}
     </div>
   )
 }
