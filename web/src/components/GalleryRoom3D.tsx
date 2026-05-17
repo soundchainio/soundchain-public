@@ -915,12 +915,52 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
             ♪ {nowPlaying}
           </div>
         )}
+        {/* Phase 16.17 — gamepad connection indicator */}
+        {gamepadConnected && (
+          <div className="px-2 py-1 rounded bg-emerald-500/15 backdrop-blur border border-emerald-500/40 text-[9px] font-mono text-emerald-300">
+            🎮 GAMEPAD CONNECTED · L-stick to move
+          </div>
+        )}
+        {/* Phase 16.16 — city-mode address search (OSM Nominatim, free, no key) */}
+        {theme === 'city' && (
+          <form
+            className="flex items-center gap-1 pointer-events-auto"
+            onSubmit={async (e) => {
+              e.preventDefault()
+              const input = (e.currentTarget.elements.namedItem('q') as HTMLInputElement)
+              const q = input?.value?.trim()
+              if (!q) return
+              try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(q)}`, {
+                  headers: { 'Accept': 'application/json' },
+                })
+                const data = await res.json()
+                if (Array.isArray(data) && data[0]) {
+                  toast.success(`📍 ${data[0].display_name.slice(0, 60)}`)
+                  // Future: load 3D building tiles for these coords
+                  console.log('[city-search]', data[0])
+                } else {
+                  toast.info('Address not found')
+                }
+              } catch (err: any) {
+                toast.error(`Search failed: ${err?.message || 'network error'}`)
+              }
+            }}
+          >
+            <input
+              name="q"
+              placeholder="🌍 search city / address…"
+              className="bg-black/70 backdrop-blur border border-yellow-500/30 rounded px-2 py-1 text-[10px] font-mono text-yellow-300 placeholder:text-yellow-500/40 outline-none focus:border-yellow-500/60 w-44"
+            />
+            <button type="submit" className="px-2 py-1 rounded bg-yellow-500/20 border border-yellow-500/40 text-[9px] font-mono text-yellow-300 hover:bg-yellow-500/30">GO</button>
+          </form>
+        )}
       </div>
 
       {/* Controls hint */}
       <div className="absolute bottom-3 left-3 pointer-events-none hidden sm:block">
         <div className="px-2 py-1 rounded bg-black/60 backdrop-blur border border-white/10 text-[8px] font-mono text-gray-500">
-          WASD walk · click frame for details · approach to hear audio
+          WASD or 🎮 left-stick walk · click frame for details · approach to hear audio
         </div>
       </div>
 
