@@ -50,6 +50,24 @@ export interface CharacterConfig {
   aiPortraitSeed?: number   // Deterministic seed (same seed + prompt → same portrait)
   aiBuildSpec?: AiBuildSpec // Phase 16.2 — NBA2K slider config that composed the prompt
   aiGlbUrl?: string         // Phase 16.3 — TripoSR-generated 3D mesh (data URL or anvil URL)
+  aiFaceSpec?: AiFaceSpec   // Phase 16.6 — InZOI-style precision face morph weights (0-1)
+}
+
+// Phase 16.6 — face precision sliders. Maps 1:1 to ARkit-style face blendshapes
+// when the rigged mannequin has them. UI is live now; morph application kicks
+// in the moment Phase 16.7 swaps in a humanoid GLB with these blendshapes.
+export interface AiFaceSpec {
+  jawWidth: number       // -1 (narrow) .. 1 (wide)
+  jawLength: number      // -1 (short) .. 1 (long)
+  noseSize: number       // -1 (small) .. 1 (large)
+  noseWidth: number      // -1 (narrow) .. 1 (wide)
+  cheekbones: number     // -1 (flat) .. 1 (high+pronounced)
+  brow: number           // -1 (low) .. 1 (high)
+  browThickness: number  // -1 (thin) .. 1 (thick)
+  eyeSize: number        // -1 (narrow) .. 1 (wide)
+  lipThickness: number   // -1 (thin) .. 1 (full)
+  chinTip: number        // -1 (receding) .. 1 (pronounced)
+  symmetry: boolean      // mirror left/right edits — matches InZOI "Symmetry Mode"
 }
 
 // Phase 16.2 — NBA2K-style structured character config.
@@ -1365,6 +1383,12 @@ const DEFAULT_BUILD_SPEC: AiBuildSpec = {
   extraDetails: '',
 }
 
+const DEFAULT_FACE_SPEC: AiFaceSpec = {
+  jawWidth: 0, jawLength: 0, noseSize: 0, noseWidth: 0,
+  cheekbones: 0, brow: 0, browThickness: 0, eyeSize: 0,
+  lipThickness: 0, chinTip: 0, symmetry: true,
+}
+
 // Each preset is a partial BuildSpec — merged on top of current spec so the
 // user can quick-flavor without losing their other tweaks.
 const AI_BUILD_PRESETS: Array<{ label: string; spec: Partial<AiBuildSpec> }> = [
@@ -1501,6 +1525,7 @@ function AiBuildPanel({
   update: (partial: Partial<CharacterConfig>) => void
 }) {
   const [spec, setSpec] = useState<AiBuildSpec>(config.aiBuildSpec || DEFAULT_BUILD_SPEC)
+  const [face, setFace] = useState<AiFaceSpec>(config.aiFaceSpec || DEFAULT_FACE_SPEC)
   const [seed, setSeed] = useState<number>(config.aiPortraitSeed || Math.floor(Math.random() * 1_000_000))
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -1510,6 +1535,8 @@ function AiBuildPanel({
   const [meshLoading, setMeshLoading] = useState(false)
   const [meshError, setMeshError] = useState<string | null>(null)
   const [viewer3DOpen, setViewer3DOpen] = useState(false)
+  // Phase 16.6 — InZOI-style tab strip
+  const [activeTab, setActiveTab] = useState<'face' | 'body' | 'outfit' | 'accessories' | 'render'>('body')
 
   const composedPrompt = composePrompt(spec)
   const tweak = (patch: Partial<AiBuildSpec>) => setSpec((s) => ({ ...s, ...patch }))
@@ -1541,6 +1568,7 @@ function AiBuildPanel({
         aiPortraitPrompt: composedPrompt,
         aiPortraitSeed: seed,
         aiBuildSpec: spec,
+        aiFaceSpec: face,
       })
     } catch (err: any) {
       setError(err?.message || 'Generation failed — anvil SDXL may not be reachable')
@@ -1597,122 +1625,179 @@ function AiBuildPanel({
         </p>
       </div>
 
-      {/* Phase 16.5 — LIVE 3D PREVIEW. Mannequin morphs in real-time as sliders change. */}
-      <LivePreview3D spec={spec} />
+      {/* Phase 16.5 — LIVE 3D PREVIEW. Bigger viewport, mannequin morphs in real-time. */}
+      <LivePreview3D spec={spec} face={face} bigMode={activeTab === 'face'} />
+
+      {/* Phase 16.6 — InZOI-style tab strip */}
+      <div className="flex items-center px-2 py-1.5 border-b border-pink-500/10 bg-black/60 backdrop-blur-md sticky top-[97px] z-[5] gap-1 overflow-x-auto">
+        {([
+          ['body', '👤 BODY'],
+          ['face', '😀 FACE'],
+          ['outfit', '👕 OUTFIT'],
+          ['accessories', '💎 EXTRAS'],
+          ['render', '✨ RENDER'],
+        ] as const).map(([key, label]) => (
+          <button key={key} onClick={() => setActiveTab(key)}
+            className={`flex-1 min-w-[68px] px-2 py-1.5 rounded text-[10px] font-mono font-bold transition whitespace-nowrap ${activeTab === key ? 'bg-pink-500/25 text-pink-300 border border-pink-500/40' : 'bg-white/[0.02] text-gray-500 border border-white/5 hover:text-white'}`}>
+            {label}
+          </button>
+        ))}
+      </div>
 
       <div className="p-4 space-y-3">
-        {/* Variant + Seed row */}
+        {/* Seed + new-character row — always visible */}
         <div className="flex items-center flex-wrap gap-2">
-          <span className="text-[9px] font-mono text-gray-500 uppercase">View:</span>
-          <button onClick={() => setVariant('portrait')} className={pillCls(variant === 'portrait')}>Full body</button>
-          <button onClick={() => setVariant('face')} className={pillCls(variant === 'face')}>Face only</button>
-          <div className="ml-auto flex items-center gap-2">
-            <span className="text-[9px] font-mono text-gray-500">seed: {seed}</span>
-            <button onClick={newCharacter} className="px-2 py-1 rounded text-[10px] font-mono bg-pink-500/15 text-pink-300 border border-pink-500/30 hover:bg-pink-500/25">🎲 New</button>
+          <span className="text-[9px] font-mono text-gray-500">seed: {seed}</span>
+          <button onClick={newCharacter} className="px-2 py-1 rounded text-[10px] font-mono bg-pink-500/15 text-pink-300 border border-pink-500/30 hover:bg-pink-500/25">🎲 New Character</button>
+          <div className="ml-auto flex items-center gap-1">
+            <button onClick={() => setVariant('portrait')} className={pillCls(variant === 'portrait')}>Full body</button>
+            <button onClick={() => setVariant('face')} className={pillCls(variant === 'face')}>Face</button>
           </div>
         </div>
 
-        {/* Quick-start preset chips — populate the BuildSpec, not freeform */}
-        <PickerSection label="Quick start preset">
-          <div className="flex flex-wrap gap-1">
-            {AI_BUILD_PRESETS.map((p) => (
-              <button key={p.label} onClick={() => applyPreset(p.spec)} className="px-2 py-1 rounded text-[10px] font-mono bg-white/[0.02] text-gray-300 border border-white/5 hover:bg-pink-500/10 hover:text-pink-300 hover:border-pink-500/20 transition">
-                {p.label}
-              </button>
-            ))}
-          </div>
-        </PickerSection>
-
-        {/* Identity */}
-        <PickerSection label="Identity">
-          <ChipRow value={spec.gender} options={[['masc', '♂ Masc'], ['fem', '♀ Fem'], ['androgynous', '◐ Andro']]} onPick={(v) => tweak({ gender: v as any })} />
-        </PickerSection>
-
-        {/* Body */}
-        <PickerSection label="Build">
-          <ChipRow value={spec.build} options={[['slim', 'Slim'], ['athletic', 'Athletic'], ['muscular', 'Muscular'], ['bulky', 'Bulky']]} onPick={(v) => tweak({ build: v as any })} />
-        </PickerSection>
-
-        {/* Skin tone — swatches */}
-        <PickerSection label="Skin tone">
-          <div className="flex flex-wrap gap-1.5">
-            {(['fair', 'light', 'medium', 'tan', 'brown', 'dark'] as const).map((t, i) => {
-              const swatches = ['#f3d5b5', '#e0b48d', '#c08a5e', '#a16641', '#7a4a2b', '#4a2e1a']
-              const active = spec.skinTone === t
-              return (
-                <button key={t} onClick={() => tweak({ skinTone: t })} title={t}
-                  className={`w-7 h-7 rounded-full border-2 transition ${active ? 'border-pink-400 scale-110' : 'border-white/10 hover:border-white/30'}`}
-                  style={{ backgroundColor: swatches[i] }} />
-              )
-            })}
-          </div>
-        </PickerSection>
-
-        {/* Hair */}
-        <PickerSection label="Hair length">
-          <ChipRow value={spec.hairLength} options={[['bald', 'Bald'], ['buzz', 'Buzz'], ['short', 'Short'], ['medium', 'Medium'], ['long', 'Long']]} onPick={(v) => tweak({ hairLength: v as any })} />
-        </PickerSection>
-        {spec.hairLength !== 'bald' && (
+        {/* ─── BODY TAB ─── */}
+        {activeTab === 'body' && (
           <>
-            <PickerSection label="Hair style">
-              <ChipRow value={spec.hairStyle} options={[['natural', 'Natural'], ['wavy', 'Wavy'], ['curly', 'Curly'], ['coily', 'Coily'], ['dreads', 'Dreads'], ['braids', 'Braids'], ['cornrows', 'Cornrows'], ['mohawk', 'Mohawk']]} onPick={(v) => tweak({ hairStyle: v as any })} />
+            {/* Quick-start presets stay on body — that's the "preset look" lane */}
+            <PickerSection label="Quick start preset">
+              <div className="flex flex-wrap gap-1">
+                {AI_BUILD_PRESETS.map((p) => (
+                  <button key={p.label} onClick={() => applyPreset(p.spec)} className="px-2 py-1 rounded text-[10px] font-mono bg-white/[0.02] text-gray-300 border border-white/5 hover:bg-pink-500/10 hover:text-pink-300 hover:border-pink-500/20 transition">
+                    {p.label}
+                  </button>
+                ))}
+              </div>
             </PickerSection>
-            <PickerSection label="Hair color">
-              <ChipRow value={spec.hairColor} options={[['black', 'Black'], ['brown', 'Brown'], ['blonde', 'Blonde'], ['red', 'Red'], ['silver', 'Silver'], ['cyan', 'Cyan'], ['pink', 'Pink'], ['purple', 'Purple']]} onPick={(v) => tweak({ hairColor: v as any })} />
+            <PickerSection label="Identity">
+              <ChipRow value={spec.gender} options={[['masc', '♂ Masc'], ['fem', '♀ Fem'], ['androgynous', '◐ Andro']]} onPick={(v) => tweak({ gender: v as any })} />
+            </PickerSection>
+            <PickerSection label="Build">
+              <ChipRow value={spec.build} options={[['slim', 'Slim'], ['athletic', 'Athletic'], ['muscular', 'Muscular'], ['bulky', 'Bulky']]} onPick={(v) => tweak({ build: v as any })} />
+            </PickerSection>
+            <PickerSection label="Skin tone">
+              <div className="flex flex-wrap gap-1.5">
+                {(['fair', 'light', 'medium', 'tan', 'brown', 'dark'] as const).map((t, i) => {
+                  const swatches = ['#f3d5b5', '#e0b48d', '#c08a5e', '#a16641', '#7a4a2b', '#4a2e1a']
+                  const active = spec.skinTone === t
+                  return (
+                    <button key={t} onClick={() => tweak({ skinTone: t })} title={t}
+                      className={`w-7 h-7 rounded-full border-2 transition ${active ? 'border-pink-400 scale-110' : 'border-white/10 hover:border-white/30'}`}
+                      style={{ backgroundColor: swatches[i] }} />
+                  )
+                })}
+              </div>
+            </PickerSection>
+            <PickerSection label="Vibe / aesthetic">
+              <ChipRow value={spec.vibe} options={[['streetwear', 'Streetwear'], ['cyberpunk', 'Cyberpunk'], ['athletic', 'Athletic'], ['formal', 'Formal'], ['casual', 'Casual'], ['artist', 'Artist'], ['royal', 'Royal'], ['tactical', 'Tactical'], ['punk', 'Punk']]} onPick={(v) => tweak({ vibe: v as any })} />
             </PickerSection>
           </>
         )}
 
-        {/* Facial hair */}
-        <PickerSection label="Facial hair">
-          <ChipRow value={spec.facialHair} options={[['clean', 'Clean'], ['stubble', 'Stubble'], ['goatee', 'Goatee'], ['beard', 'Beard'], ['mustache', '\'Stache']]} onPick={(v) => tweak({ facialHair: v as any })} />
-        </PickerSection>
-
-        {/* Vibe */}
-        <PickerSection label="Vibe / aesthetic">
-          <ChipRow value={spec.vibe} options={[['streetwear', 'Streetwear'], ['cyberpunk', 'Cyberpunk'], ['athletic', 'Athletic'], ['formal', 'Formal'], ['casual', 'Casual'], ['artist', 'Artist'], ['royal', 'Royal'], ['tactical', 'Tactical'], ['punk', 'Punk']]} onPick={(v) => tweak({ vibe: v as any })} />
-        </PickerSection>
-
-        {/* Outfit */}
-        <PickerSection label="Top">
-          <ChipRow value={spec.topPiece} options={[['hoodie', 'Hoodie'], ['tshirt', 'T-shirt'], ['jersey', 'Jersey'], ['tank', 'Tank'], ['jacket', 'Jacket'], ['buttonup', 'Button-up'], ['sweater', 'Sweater'], ['crop', 'Crop']]} onPick={(v) => tweak({ topPiece: v as any })} />
-        </PickerSection>
-        <PickerSection label="Bottom">
-          <ChipRow value={spec.bottomPiece} options={[['jeans', 'Jeans'], ['joggers', 'Joggers'], ['shorts', 'Shorts'], ['cargo', 'Cargo'], ['dresspants', 'Dress pants'], ['skirt', 'Skirt'], ['leggings', 'Leggings']]} onPick={(v) => tweak({ bottomPiece: v as any })} />
-        </PickerSection>
-        <PickerSection label="Shoes">
-          <ChipRow value={spec.shoes} options={[['sneakers', 'Sneakers'], ['boots', 'Boots'], ['dressshoes', 'Dress'], ['sandals', 'Sandals'], ['cleats', 'Cleats'], ['heels', 'Heels']]} onPick={(v) => tweak({ shoes: v as any })} />
-        </PickerSection>
-
-        {/* Colors */}
-        <PickerSection label="Top color">
-          <div className="flex items-center gap-2">
-            <input type="color" value={spec.topColor} onChange={(e) => tweak({ topColor: e.target.value })} className="w-10 h-7 rounded border border-white/10 bg-transparent cursor-pointer" />
-            <span className="font-mono text-[10px] text-gray-500">{spec.topColor}</span>
-          </div>
-        </PickerSection>
-        <PickerSection label="Accent color">
-          <div className="flex items-center gap-2">
-            <input type="color" value={spec.accentColor} onChange={(e) => tweak({ accentColor: e.target.value })} className="w-10 h-7 rounded border border-white/10 bg-transparent cursor-pointer" />
-            <span className="font-mono text-[10px] text-gray-500">{spec.accentColor}</span>
-          </div>
-        </PickerSection>
-
-        {/* Advanced — extra details */}
-        <button onClick={() => setShowAdvanced((s) => !s)} className="w-full text-left text-[10px] font-mono text-pink-300/70 hover:text-pink-300 transition">
-          {showAdvanced ? '▾' : '▸'} Advanced — extra prompt details
-        </button>
-        {showAdvanced && (
-          <div className="space-y-2">
-            <textarea value={spec.extraDetails} onChange={(e) => tweak({ extraDetails: e.target.value })} placeholder="extra details to layer on: tattoos, accessories, mood, lighting…" rows={2}
-              className="w-full bg-white/[0.02] border border-white/10 rounded px-3 py-2 text-xs text-white placeholder:text-gray-600 resize-none focus:outline-none focus:border-pink-500/40" />
-            <div className="text-[9px] font-mono text-gray-500 break-words leading-relaxed bg-black/40 p-2 rounded border border-white/5">
-              <span className="text-pink-400">SDXL prompt: </span>{composedPrompt}
+        {/* ─── FACE TAB — InZOI-style precision sliders ─── */}
+        {activeTab === 'face' && (
+          <>
+            <div className="text-[10px] font-mono text-pink-300/70 bg-pink-500/5 p-2 rounded border border-pink-500/10 leading-relaxed">
+              🧬 Precision face sliders. Will morph the 3D mannequin in real-time once Phase 16.7 swaps in a rigged GLB with face blendshapes (coming next). UI is live now — values save to your character config and flow into the SDXL prompt.
             </div>
-          </div>
+            <PickerSection label="Hair length">
+              <ChipRow value={spec.hairLength} options={[['bald', 'Bald'], ['buzz', 'Buzz'], ['short', 'Short'], ['medium', 'Medium'], ['long', 'Long']]} onPick={(v) => tweak({ hairLength: v as any })} />
+            </PickerSection>
+            {spec.hairLength !== 'bald' && (
+              <>
+                <PickerSection label="Hair style">
+                  <ChipRow value={spec.hairStyle} options={[['natural', 'Natural'], ['wavy', 'Wavy'], ['curly', 'Curly'], ['coily', 'Coily'], ['dreads', 'Dreads'], ['braids', 'Braids'], ['cornrows', 'Cornrows'], ['mohawk', 'Mohawk']]} onPick={(v) => tweak({ hairStyle: v as any })} />
+                </PickerSection>
+                <PickerSection label="Hair color">
+                  <ChipRow value={spec.hairColor} options={[['black', 'Black'], ['brown', 'Brown'], ['blonde', 'Blonde'], ['red', 'Red'], ['silver', 'Silver'], ['cyan', 'Cyan'], ['pink', 'Pink'], ['purple', 'Purple']]} onPick={(v) => tweak({ hairColor: v as any })} />
+                </PickerSection>
+              </>
+            )}
+            <PickerSection label="Facial hair">
+              <ChipRow value={spec.facialHair} options={[['clean', 'Clean'], ['stubble', 'Stubble'], ['goatee', 'Goatee'], ['beard', 'Beard'], ['mustache', '\'Stache']]} onPick={(v) => tweak({ facialHair: v as any })} />
+            </PickerSection>
+            {/* Symmetry toggle — matches InZOI "Symmetry Mode" */}
+            <div className="flex items-center gap-2">
+              <button onClick={() => setFace(f => ({ ...f, symmetry: !f.symmetry }))}
+                className={`px-3 py-1.5 rounded text-[10px] font-mono ${face.symmetry ? 'bg-pink-500/20 text-pink-300 border border-pink-500/40' : 'bg-white/[0.02] text-gray-500 border border-white/5'}`}>
+                {face.symmetry ? '◐ Symmetry ON' : '◑ Symmetry OFF'}
+              </button>
+              <button onClick={() => setFace(DEFAULT_FACE_SPEC)}
+                className="ml-auto text-[10px] font-mono text-gray-500 hover:text-pink-300 underline">
+                Reset face
+              </button>
+            </div>
+            {/* Precision sliders */}
+            <FaceSlider label="Jaw width" value={face.jawWidth} onChange={(v) => setFace(f => ({ ...f, jawWidth: v }))} />
+            <FaceSlider label="Jaw length" value={face.jawLength} onChange={(v) => setFace(f => ({ ...f, jawLength: v }))} />
+            <FaceSlider label="Nose size" value={face.noseSize} onChange={(v) => setFace(f => ({ ...f, noseSize: v }))} />
+            <FaceSlider label="Nose width" value={face.noseWidth} onChange={(v) => setFace(f => ({ ...f, noseWidth: v }))} />
+            <FaceSlider label="Cheekbones" value={face.cheekbones} onChange={(v) => setFace(f => ({ ...f, cheekbones: v }))} />
+            <FaceSlider label="Brow position" value={face.brow} onChange={(v) => setFace(f => ({ ...f, brow: v }))} />
+            <FaceSlider label="Brow thickness" value={face.browThickness} onChange={(v) => setFace(f => ({ ...f, browThickness: v }))} />
+            <FaceSlider label="Eye size" value={face.eyeSize} onChange={(v) => setFace(f => ({ ...f, eyeSize: v }))} />
+            <FaceSlider label="Lip thickness" value={face.lipThickness} onChange={(v) => setFace(f => ({ ...f, lipThickness: v }))} />
+            <FaceSlider label="Chin tip" value={face.chinTip} onChange={(v) => setFace(f => ({ ...f, chinTip: v }))} />
+          </>
         )}
 
-        {/* Generate */}
+        {/* ─── OUTFIT TAB ─── */}
+        {activeTab === 'outfit' && (
+          <>
+            <PickerSection label="Top">
+              <ChipRow value={spec.topPiece} options={[['hoodie', 'Hoodie'], ['tshirt', 'T-shirt'], ['jersey', 'Jersey'], ['tank', 'Tank'], ['jacket', 'Jacket'], ['buttonup', 'Button-up'], ['sweater', 'Sweater'], ['crop', 'Crop']]} onPick={(v) => tweak({ topPiece: v as any })} />
+            </PickerSection>
+            <PickerSection label="Bottom">
+              <ChipRow value={spec.bottomPiece} options={[['jeans', 'Jeans'], ['joggers', 'Joggers'], ['shorts', 'Shorts'], ['cargo', 'Cargo'], ['dresspants', 'Dress pants'], ['skirt', 'Skirt'], ['leggings', 'Leggings']]} onPick={(v) => tweak({ bottomPiece: v as any })} />
+            </PickerSection>
+            <PickerSection label="Shoes">
+              <ChipRow value={spec.shoes} options={[['sneakers', 'Sneakers'], ['boots', 'Boots'], ['dressshoes', 'Dress'], ['sandals', 'Sandals'], ['cleats', 'Cleats'], ['heels', 'Heels']]} onPick={(v) => tweak({ shoes: v as any })} />
+            </PickerSection>
+            <PickerSection label="Top color">
+              <div className="flex items-center gap-2">
+                <input type="color" value={spec.topColor} onChange={(e) => tweak({ topColor: e.target.value })} className="w-10 h-7 rounded border border-white/10 bg-transparent cursor-pointer" />
+                <span className="font-mono text-[10px] text-gray-500">{spec.topColor}</span>
+              </div>
+            </PickerSection>
+            <PickerSection label="Accent color">
+              <div className="flex items-center gap-2">
+                <input type="color" value={spec.accentColor} onChange={(e) => tweak({ accentColor: e.target.value })} className="w-10 h-7 rounded border border-white/10 bg-transparent cursor-pointer" />
+                <span className="font-mono text-[10px] text-gray-500">{spec.accentColor}</span>
+              </div>
+            </PickerSection>
+          </>
+        )}
+
+        {/* ─── EXTRAS TAB ─── */}
+        {activeTab === 'accessories' && (
+          <>
+            <div className="text-[10px] font-mono text-pink-300/70 bg-pink-500/5 p-2 rounded border border-pink-500/10 leading-relaxed">
+              💎 Accessory library coming in Phase 16.8 (hats, glasses, chains, watches as swappable GLBs). For now, drop accessory ideas into the freeform field below and SDXL will paint them.
+            </div>
+            <PickerSection label="Free-form details">
+              <textarea value={spec.extraDetails} onChange={(e) => tweak({ extraDetails: e.target.value })} placeholder="tattoos, jewelry, scars, glasses, hats, watch, sunglasses, headphones…" rows={3}
+                className="w-full bg-white/[0.02] border border-white/10 rounded px-3 py-2 text-xs text-white placeholder:text-gray-600 resize-none focus:outline-none focus:border-pink-500/40" />
+            </PickerSection>
+          </>
+        )}
+
+        {/* ─── RENDER TAB ─── */}
+        {activeTab === 'render' && (
+          <>
+            <div className="text-[10px] font-mono text-pink-300/70 bg-pink-500/5 p-2 rounded border border-pink-500/10 leading-relaxed">
+              ✨ Generate high-quality SDXL portrait of your build, then 🔮 lift it to a 3D mesh you can rotate + walk around with in Explore3D.
+            </div>
+            <button onClick={() => setShowAdvanced((s) => !s)} className="w-full text-left text-[10px] font-mono text-pink-300/70 hover:text-pink-300 transition">
+              {showAdvanced ? '▾' : '▸'} Composed SDXL prompt preview
+            </button>
+            {showAdvanced && (
+              <div className="text-[9px] font-mono text-gray-500 break-words leading-relaxed bg-black/40 p-2 rounded border border-white/5">
+                <span className="text-pink-400">SDXL prompt: </span>{composedPrompt}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Generate button — always visible across tabs */}
         <button onClick={generate} disabled={loading}
           className="w-full py-2.5 rounded text-xs font-mono font-bold bg-gradient-to-br from-pink-500/30 to-purple-500/30 text-pink-300 border border-pink-500/40 hover:from-pink-500/40 hover:to-purple-500/40 disabled:opacity-40 disabled:cursor-not-allowed transition">
           {loading ? '⚡ Generating on RTX 5000…' : config.aiPortraitDataUrl ? '🔁 Regenerate with these settings' : '✨ Generate Character'}
@@ -1832,15 +1917,21 @@ const SKIN_HEX: Record<AiBuildSpec['skinTone'], string> = {
   tan: '#a16641', brown: '#7a4a2b', dark: '#4a2e1a',
 }
 
-function LivePreview3D({ spec }: { spec: AiBuildSpec }) {
+function LivePreview3D({ spec, face, bigMode }: { spec: AiBuildSpec; face: AiFaceSpec; bigMode?: boolean }) {
   const containerRef = useRef<HTMLDivElement>(null)
   // Mutable refs to live Three.js objects — re-used across spec changes,
   // never re-mounted (would lose the camera angle the user dragged to).
   const modelRef = useRef<any>(null)
+  const cameraRef = useRef<any>(null)
+  const controlsRef = useRef<any>(null)
+  const headBoneRef = useRef<any>(null)
+  const morphMeshesRef = useRef<any[]>([])
   const skinMatsRef = useRef<any[]>([])
   const accentMatsRef = useRef<any[]>([])
   const [ready, setReady] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
+  // bigMode = face tab — viewport gets taller, camera zooms to head
+  const viewportHeight = bigMode ? 480 : 320
 
   // Mount the Three.js scene ONCE per panel mount.
   useEffect(() => {
@@ -1866,6 +1957,7 @@ function LivePreview3D({ spec }: { spec: AiBuildSpec }) {
 
       const camera = new THREE.PerspectiveCamera(35, width / height, 0.01, 100)
       camera.position.set(0, 1.3, 2.4)
+      cameraRef.current = camera
 
       const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false })
       renderer.setPixelRatio(window.devicePixelRatio)
@@ -1891,9 +1983,10 @@ function LivePreview3D({ spec }: { spec: AiBuildSpec }) {
       controls.enableDamping = true
       controls.dampingFactor = 0.1
       controls.target.set(0, 1, 0)
-      controls.minDistance = 1.0
+      controls.minDistance = 0.4
       controls.maxDistance = 5.0
       controls.maxPolarAngle = Math.PI * 0.9
+      controlsRef.current = controls
 
       const loader = new GLTFLoader()
       loader.load(
@@ -1905,7 +1998,15 @@ function LivePreview3D({ spec }: { spec: AiBuildSpec }) {
           // XBot has a head+body mesh structure; treat first mesh as skin,
           // rest as accent (clothing/accessories) for v1.
           const meshes: any[] = []
-          model.traverse((obj: any) => { if (obj.isMesh) meshes.push(obj) })
+          model.traverse((obj: any) => {
+            if (obj.isMesh) meshes.push(obj)
+            // Cache head bone for face-mode camera tracking
+            if (obj.isBone && /head|neck/i.test(obj.name)) headBoneRef.current = obj
+            // Cache morph-capable meshes — face sliders write to these
+            if (obj.isMesh && obj.morphTargetInfluences && obj.morphTargetInfluences.length > 0) {
+              morphMeshesRef.current.push(obj)
+            }
+          })
           if (meshes.length > 0) {
             // Clone materials so mutations don't bleed into the GLB cache
             meshes.forEach((m, i) => {
@@ -2006,8 +2107,64 @@ function LivePreview3D({ spec }: { spec: AiBuildSpec }) {
     })
   }, [ready, spec.build, spec.gender, spec.skinTone, spec.topColor, spec.accentColor])
 
+  // Face morph effect — writes the precision-slider values to morphTargetInfluences
+  // on any meshes that have them. No-op when current mannequin (XBot) lacks
+  // face blendshapes; lights up live the moment a rigged GLB with morphs lands
+  // in Phase 16.7.
+  useEffect(() => {
+    if (!ready) return
+    const meshes = morphMeshesRef.current
+    if (meshes.length === 0) return
+    // ARkit-style blendshape names that our face spec maps to. If the GLB's
+    // morph target dictionary contains these keys, we write the slider value
+    // to the corresponding influence. Range: face spec is -1..1, blendshapes
+    // are 0..1 — so we map negative half to one shape, positive half to its
+    // mirror counterpart when present.
+    const mappings: Array<{ key: keyof AiFaceSpec; pos: string[]; neg?: string[] }> = [
+      { key: 'jawWidth',     pos: ['jawOpen', 'jaw_width_up', 'JawWide'],            neg: ['jaw_width_dn', 'JawNarrow'] },
+      { key: 'jawLength',    pos: ['jaw_length_up', 'JawForward'],                    neg: ['jaw_length_dn', 'JawShort'] },
+      { key: 'noseSize',     pos: ['noseSneerLeft', 'nose_size_up', 'NoseBig'] },
+      { key: 'noseWidth',    pos: ['nose_width_up', 'NoseWide'],                       neg: ['NoseNarrow'] },
+      { key: 'cheekbones',   pos: ['cheekPuff', 'CheekUp', 'cheekbone_up'],            neg: ['cheekbone_dn'] },
+      { key: 'brow',         pos: ['browInnerUp', 'BrowUp'],                            neg: ['browDown_L', 'BrowDown'] },
+      { key: 'browThickness',pos: ['brow_thick_up', 'BrowThick'] },
+      { key: 'eyeSize',      pos: ['eyeWideLeft', 'EyeWide', 'eye_size_up'],            neg: ['eyeSquintLeft', 'EyeSmall'] },
+      { key: 'lipThickness', pos: ['lip_thickness_up', 'MouthFat'],                    neg: ['lip_thickness_dn', 'MouthThin'] },
+      { key: 'chinTip',      pos: ['chin_tip_up', 'ChinForward'],                       neg: ['chin_tip_dn', 'ChinBack'] },
+    ]
+    meshes.forEach((mesh: any) => {
+      const dict = mesh.morphTargetDictionary || {}
+      mappings.forEach(({ key, pos, neg }) => {
+        const v = face[key] as number
+        if (typeof v !== 'number') return
+        const posIdx = pos.map((n) => dict[n]).find((i) => typeof i === 'number')
+        const negIdx = neg?.map((n) => dict[n]).find((i) => typeof i === 'number')
+        if (typeof posIdx === 'number') mesh.morphTargetInfluences[posIdx] = Math.max(0, v)
+        if (typeof negIdx === 'number') mesh.morphTargetInfluences[negIdx] = Math.max(0, -v)
+      })
+    })
+  }, [ready, face])
+
+  // Camera-zoom effect — when face tab is active, smoothly zoom camera to head.
+  // When body tab returns, zoom back out to full body.
+  useEffect(() => {
+    if (!ready || !cameraRef.current || !controlsRef.current) return
+    const camera = cameraRef.current
+    const controls = controlsRef.current
+    if (bigMode) {
+      // Face mode: camera tracks head bone or upper-third of model
+      const headY = headBoneRef.current?.getWorldPosition?.(new (window as any).THREE_VEC3 || { set() {} })?.y || 1.6
+      camera.position.set(0, 1.6, 1.0)
+      controls.target.set(0, headY || 1.6, 0)
+    } else {
+      camera.position.set(0, 1.3, 2.4)
+      controls.target.set(0, 1, 0)
+    }
+    controls.update()
+  }, [ready, bigMode])
+
   return (
-    <div className="relative bg-black border-b border-pink-500/10" style={{ height: 280 }}>
+    <div className="relative bg-black border-b border-pink-500/10 transition-all duration-300" style={{ height: viewportHeight }}>
       <div ref={containerRef} className="absolute inset-0" />
       {!ready && !loadError && (
         <div className="absolute inset-0 flex items-center justify-center text-pink-300/60 font-mono text-[10px]">
@@ -2023,11 +2180,38 @@ function LivePreview3D({ spec }: { spec: AiBuildSpec }) {
         </div>
       )}
       {ready && (
-        <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between text-[8px] font-mono text-pink-400/50 pointer-events-none">
-          <span>🎮 LIVE 3D · drag to rotate · {spec.build} · {spec.skinTone}</span>
+        <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between text-[8px] font-mono text-pink-400/60 pointer-events-none">
+          <span>{bigMode ? '😀 FACE BUILDER' : '🎮 LIVE 3D'} · drag to rotate · {spec.build} · {spec.skinTone}</span>
           <span>scroll to zoom</span>
         </div>
       )}
+    </div>
+  )
+}
+
+// FaceSlider — precision -1..1 slider matching InZOI's face customizer.
+// Snap to 0 when very close to center (forgiving UX).
+function FaceSlider({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) {
+  const display = Math.round(value * 100)
+  return (
+    <div className="space-y-0.5">
+      <div className="flex items-center justify-between text-[10px] font-mono">
+        <span className="text-gray-400">{label}</span>
+        <span className={display === 0 ? 'text-gray-600' : display > 0 ? 'text-pink-400' : 'text-cyan-400'}>{display > 0 ? `+${display}` : display}</span>
+      </div>
+      <input
+        type="range"
+        min={-100}
+        max={100}
+        step={1}
+        value={display}
+        onChange={(e) => {
+          const v = Number(e.target.value) / 100
+          onChange(Math.abs(v) < 0.05 ? 0 : v)
+        }}
+        className="w-full h-1 rounded appearance-none cursor-pointer bg-gradient-to-r from-cyan-500/30 via-gray-700 to-pink-500/30 accent-pink-400"
+        style={{ accentColor: '#f472b6' }}
+      />
     </div>
   )
 }
