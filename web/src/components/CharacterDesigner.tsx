@@ -1955,28 +1955,29 @@ function AiBuildPanel({
 // and outfit slot system.
 // ─────────────────────────────────────────────────────────────────────────
 
-// Phase 16.7 — fallback chain for the live mannequin. Try sources in order;
-// first one that loads (and has face morph targets when available) wins.
-//
-// CURRENT: only Xbot is reliably hosted publicly. Earlier attempt to use
-// Ready Player Me CDN (`models.readyplayer.me`) failed — RPM appears to
-// have decommissioned their public-CDN avatars (also `studio.readyplayer.me`
-// dead per Frank's May 16 probe — they've pivoted to enterprise-only).
-//
-// Future humanoid GLBs with face blendshapes (jawOpen, browInnerUp,
-// cheekPuff, etc — ARkit naming) can be added to the front of this array.
-// The face slider → morphTargetInfluences pipeline lights up automatically.
-//
-// Candidate sources to evaluate next session (need URL verification):
-//   - Mozilla Hubs CC0 avatars
-//   - VRoid Studio exported avatars (CC0)
-//   - Avaturn API (may need auth)
-//   - Self-hosted CC0 humanoid on Pinata/IPFS
-const MANNEQUIN_SOURCES = [
-  // Always-available fallback — rigged humanoid, no face morphs.
-  // Face sliders save to character config but don't morph the mannequin.
+// Phase 16.7 — body mannequin sources (full humanoid figure).
+// XBot from threejs.org examples — guaranteed CORS-open, MIT licensed,
+// rigged for animation. No face morph targets (body-only rig).
+const BODY_MANNEQUIN_SOURCES = [
   'https://threejs.org/examples/models/gltf/Xbot.glb',
 ]
+
+// Phase 16.7 — face mannequin sources (head with ARkit blendshapes).
+// facecap.glb — 333KB MIT-licensed head from three.js examples, ships with
+// all 52 ARkit face blendshapes (jawOpen, browInnerUp, cheekPuff, eyeWide_L/R,
+// mouthSmile_L/R, noseSneer_L/R, etc). CORS-open. Tested via Forge agent
+// research on 2026-05-16. Loaded in FACE tab so precision sliders actually
+// morph a real face in real-time.
+//
+// NOTE: facecap is HEAD ONLY. Body tab still uses XBot. Future ship can
+// layer a body GLB + facecap as parented meshes for unified rendering.
+const FACE_MANNEQUIN_SOURCES = [
+  'https://threejs.org/examples/models/gltf/facecap.glb',
+  'https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/models/gltf/facecap.glb',
+]
+
+// Backwards-compat alias for any code that still references the old name
+const MANNEQUIN_SOURCES = BODY_MANNEQUIN_SOURCES
 
 const BUILD_SCALE: Record<AiBuildSpec['build'], { x: number; z: number }> = {
   slim:      { x: 0.85, z: 0.85 },
@@ -1995,6 +1996,7 @@ function LivePreview3D({ spec, face, bigMode }: { spec: AiBuildSpec; face: AiFac
   // Mutable refs to live Three.js objects — re-used across spec changes,
   // never re-mounted (would lose the camera angle the user dragged to).
   const modelRef = useRef<any>(null)
+  const faceModelRef = useRef<any>(null)  // facecap.glb — head with 52 ARkit blendshapes
   const cameraRef = useRef<any>(null)
   const controlsRef = useRef<any>(null)
   const headBoneRef = useRef<any>(null)
@@ -2063,39 +2065,41 @@ function LivePreview3D({ spec, face, bigMode }: { spec: AiBuildSpec; face: AiFac
       controlsRef.current = controls
 
       const loader = new GLTFLoader()
-      // Try each source in turn until one loads. The first source that loads
-      // wins — RPM-hosted avatars with morphs preferred, Xbot as final fallback.
-      const tryLoad = (index: number) => {
+      // Load BODY mannequin (XBot) — visible by default, hidden in face mode.
+      const tryLoadBody = (index: number) => {
         if (disposed) return
-        if (index >= MANNEQUIN_SOURCES.length) {
-          setLoadError('all mannequin sources failed')
+        if (index >= BODY_MANNEQUIN_SOURCES.length) return
+        loader.load(
+          BODY_MANNEQUIN_SOURCES[index],
+          (gltf: any) => onBodyGltfLoaded(gltf, BODY_MANNEQUIN_SOURCES[index]),
+          undefined,
+          () => tryLoadBody(index + 1),
+        )
+      }
+      // Load FACE mannequin (facecap.glb — 52 ARkit blendshapes) — hidden by
+      // default, shown when face tab active. Sliders morph this in real-time.
+      const tryLoadFace = (index: number) => {
+        if (disposed) return
+        if (index >= FACE_MANNEQUIN_SOURCES.length) {
+          console.warn('[LivePreview3D] face mannequin all sources failed — face sliders save to config but no live morphing')
           return
         }
         loader.load(
-          MANNEQUIN_SOURCES[index],
-          (gltf: any) => onGltfLoaded(gltf, MANNEQUIN_SOURCES[index]),
+          FACE_MANNEQUIN_SOURCES[index],
+          (gltf: any) => onFaceGltfLoaded(gltf, FACE_MANNEQUIN_SOURCES[index]),
           undefined,
-          () => tryLoad(index + 1),
+          () => tryLoadFace(index + 1),
         )
       }
-      const onGltfLoaded = (gltf: any, sourceUrl: string) => {
+      const onBodyGltfLoaded = (gltf: any, sourceUrl: string) => {
           if (disposed) return
           const model = gltf.scene
-          // Pull all materials out — we mutate their color on spec changes.
-          // XBot has a head+body mesh structure; treat first mesh as skin,
-          // rest as accent (clothing/accessories) for v1.
           const meshes: any[] = []
           model.traverse((obj: any) => {
             if (obj.isMesh) meshes.push(obj)
-            // Cache head bone for face-mode camera tracking
             if (obj.isBone && /head|neck/i.test(obj.name)) headBoneRef.current = obj
-            // Cache morph-capable meshes — face sliders write to these
-            if (obj.isMesh && obj.morphTargetInfluences && obj.morphTargetInfluences.length > 0) {
-              morphMeshesRef.current.push(obj)
-            }
           })
           if (meshes.length > 0) {
-            // Clone materials so mutations don't bleed into the GLB cache
             meshes.forEach((m, i) => {
               m.material = m.material.clone()
               if (i === 0) skinMatsRef.current.push(m.material)
@@ -2103,18 +2107,14 @@ function LivePreview3D({ spec, face, bigMode }: { spec: AiBuildSpec; face: AiFac
               m.castShadow = true
               m.receiveShadow = true
             })
-            // Fallback if only ONE mesh: that material gets both skin + accent treatment
             if (accentMatsRef.current.length === 0) accentMatsRef.current.push(meshes[0].material)
           }
-          // Recenter the model so feet are on the grid and X/Z are centered.
-          // Then compute the ACTUAL height of the model so the camera can be
-          // auto-framed (XBot is ~2.0 units tall; older fallback code assumed
-          // ~1.7 and the head was clipping above the viewport).
           const preBox = new THREE.Box3().setFromObject(model)
           const preCenter = new THREE.Vector3(); preBox.getCenter(preCenter)
           model.position.x -= preCenter.x
           model.position.z -= preCenter.z
-          model.position.y -= preBox.min.y  // feet on grid
+          model.position.y -= preBox.min.y
+          model.visible = !bigMode  // hidden in face mode
           scene.add(model)
           modelRef.current = model
 
@@ -2132,12 +2132,52 @@ function LivePreview3D({ spec, face, bigMode }: { spec: AiBuildSpec; face: AiFac
           controls.target.set(0, bodyTargetY, 0)
           controls.update()
 
-          // Log which source won + whether face morphs are available
-          const hasMorphs = morphMeshesRef.current.length > 0
-          console.log(`[LivePreview3D] loaded ${sourceUrl} — model height ${modelHeight.toFixed(2)}u — ${hasMorphs ? 'WITH' : 'NO'} face morphs (${morphMeshesRef.current.length} morph-capable meshes)`)
+          console.log(`[LivePreview3D] body loaded ${sourceUrl} — height ${modelHeight.toFixed(2)}u`)
           setReady(true)
         }
-      tryLoad(0)
+
+      // Face mannequin handler — populates morphMeshesRef so face sliders
+      // drive real-time blendshape morphing (facecap has 52 ARkit shapes)
+      const onFaceGltfLoaded = (gltf: any, sourceUrl: string) => {
+        if (disposed) return
+        const faceModel = gltf.scene
+        faceModel.traverse((obj: any) => {
+          if (obj.isMesh) {
+            obj.castShadow = true
+            obj.receiveShadow = true
+            // facecap morph dictionary keys come prefixed "blendShape1.";
+            // strip + re-register on bare ARkit names so our mapping table hits.
+            if (obj.morphTargetDictionary && obj.morphTargetInfluences) {
+              const cleaned: Record<string, number> = {}
+              for (const [k, v] of Object.entries(obj.morphTargetDictionary)) {
+                const bare = k.replace(/^.*?\./, '')
+                cleaned[bare] = v as number
+                cleaned[k] = v as number  // keep original key too for safety
+              }
+              obj.morphTargetDictionary = cleaned
+              morphMeshesRef.current.push(obj)
+            }
+          }
+        })
+        // Center + scale face to roughly fill the face-mode camera framing
+        const fBox = new THREE.Box3().setFromObject(faceModel)
+        const fCenter = new THREE.Vector3(); fBox.getCenter(fCenter)
+        const fSize = new THREE.Vector3(); fBox.getSize(fSize)
+        const targetFaceHeight = 0.45  // ~head height in body-frame units
+        const fScale = targetFaceHeight / Math.max(fSize.y, 0.001)
+        faceModel.scale.setScalar(fScale)
+        faceModel.position.x -= fCenter.x * fScale
+        faceModel.position.y = 1.55 - fCenter.y * fScale  // head-level w/ XBot
+        faceModel.position.z -= fCenter.z * fScale
+        faceModel.visible = !!bigMode  // hidden in body mode
+        scene.add(faceModel)
+        faceModelRef.current = faceModel
+        const morphCount = morphMeshesRef.current.reduce((sum, m) => sum + (m.morphTargetInfluences?.length || 0), 0)
+        console.log(`[LivePreview3D] face loaded ${sourceUrl} — ${morphCount} blendshapes wired`)
+      }
+
+      tryLoadBody(0)
+      tryLoadFace(0)
 
       const onResize = () => {
         const w = container.clientWidth
@@ -2250,8 +2290,12 @@ function LivePreview3D({ spec, face, bigMode }: { spec: AiBuildSpec; face: AiFac
   // Camera-zoom effect — face mode zooms to head, body mode shows full figure.
   // All positions derive from the measured model height so it works regardless
   // of which mannequin source loaded (XBot ~1.7u, RPM avatars ~1.8u, etc).
+  // Also toggles visibility — body model hidden in face mode, face model
+  // hidden in body mode (so the right mesh is on stage for what's being edited).
   useEffect(() => {
     if (!ready || !cameraRef.current || !controlsRef.current) return
+    if (modelRef.current) modelRef.current.visible = !bigMode
+    if (faceModelRef.current) faceModelRef.current.visible = !!bigMode
     const camera = cameraRef.current
     const controls = controlsRef.current
     const h = modelHeightRef.current || 1.8
