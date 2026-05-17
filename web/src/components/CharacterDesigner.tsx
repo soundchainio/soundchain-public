@@ -1903,7 +1903,28 @@ function AiBuildPanel({
 // and outfit slot system.
 // ─────────────────────────────────────────────────────────────────────────
 
-const BASE_HUMANOID_GLB = 'https://threejs.org/examples/models/gltf/Xbot.glb'
+// Phase 16.7 — fallback chain for the live mannequin. Try sources in order;
+// first one that loads (and has face morph targets when available) wins.
+//
+// CURRENT: only Xbot is reliably hosted publicly. Earlier attempt to use
+// Ready Player Me CDN (`models.readyplayer.me`) failed — RPM appears to
+// have decommissioned their public-CDN avatars (also `studio.readyplayer.me`
+// dead per Frank's May 16 probe — they've pivoted to enterprise-only).
+//
+// Future humanoid GLBs with face blendshapes (jawOpen, browInnerUp,
+// cheekPuff, etc — ARkit naming) can be added to the front of this array.
+// The face slider → morphTargetInfluences pipeline lights up automatically.
+//
+// Candidate sources to evaluate next session (need URL verification):
+//   - Mozilla Hubs CC0 avatars
+//   - VRoid Studio exported avatars (CC0)
+//   - Avaturn API (may need auth)
+//   - Self-hosted CC0 humanoid on Pinata/IPFS
+const MANNEQUIN_SOURCES = [
+  // Always-available fallback — rigged humanoid, no face morphs.
+  // Face sliders save to character config but don't morph the mannequin.
+  'https://threejs.org/examples/models/gltf/Xbot.glb',
+]
 
 const BUILD_SCALE: Record<AiBuildSpec['build'], { x: number; z: number }> = {
   slim:      { x: 0.85, z: 0.85 },
@@ -1989,9 +2010,22 @@ function LivePreview3D({ spec, face, bigMode }: { spec: AiBuildSpec; face: AiFac
       controlsRef.current = controls
 
       const loader = new GLTFLoader()
-      loader.load(
-        BASE_HUMANOID_GLB,
-        (gltf: any) => {
+      // Try each source in turn until one loads. The first source that loads
+      // wins — RPM-hosted avatars with morphs preferred, Xbot as final fallback.
+      const tryLoad = (index: number) => {
+        if (disposed) return
+        if (index >= MANNEQUIN_SOURCES.length) {
+          setLoadError('all mannequin sources failed')
+          return
+        }
+        loader.load(
+          MANNEQUIN_SOURCES[index],
+          (gltf: any) => onGltfLoaded(gltf, MANNEQUIN_SOURCES[index]),
+          undefined,
+          () => tryLoad(index + 1),
+        )
+      }
+      const onGltfLoaded = (gltf: any, sourceUrl: string) => {
           if (disposed) return
           const model = gltf.scene
           // Pull all materials out — we mutate their color on spec changes.
@@ -2028,14 +2062,12 @@ function LivePreview3D({ spec, face, bigMode }: { spec: AiBuildSpec; face: AiFac
           model.position.y -= box.min.y  // feet on grid
           scene.add(model)
           modelRef.current = model
+          // Log which source won + whether face morphs are available
+          const hasMorphs = morphMeshesRef.current.length > 0
+          console.log(`[LivePreview3D] loaded ${sourceUrl} — ${hasMorphs ? 'WITH' : 'NO'} face morphs (${morphMeshesRef.current.length} morph-capable meshes)`)
           setReady(true)
-        },
-        undefined,
-        (err: any) => {
-          console.warn('[LivePreview3D] GLB load failed:', err)
-          setLoadError('mannequin failed to load')
         }
-      )
+      tryLoad(0)
 
       const onResize = () => {
         const w = container.clientWidth
@@ -2153,7 +2185,7 @@ function LivePreview3D({ spec, face, bigMode }: { spec: AiBuildSpec; face: AiFac
     const controls = controlsRef.current
     if (bigMode) {
       // Face mode: camera tracks head bone or upper-third of model
-      const headY = headBoneRef.current?.getWorldPosition?.(new (window as any).THREE_VEC3 || { set() {} })?.y || 1.6
+      const headY = headBoneRef.current?.getWorldPosition?.(new THREE.Vector3())?.y || 1.6
       camera.position.set(0, 1.6, 1.0)
       controls.target.set(0, headY || 1.6, 0)
     } else {
