@@ -106,7 +106,10 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
     // ─── Scene Setup ─────────────────────────────────────────
     const scene = new THREE.Scene()
     scene.background = new THREE.Color(themeCfg.floor).multiplyScalar(0.5)
-    scene.fog = new THREE.Fog(themeCfg.floor, 30, 80)
+    // City fog reaches MUCH farther for open-world feel; gallery rooms stay tight.
+    scene.fog = theme === 'city'
+      ? new THREE.Fog(0x1a0e08, 60, 220)
+      : new THREE.Fog(themeCfg.floor, 30, 80)
 
     const camera = new THREE.PerspectiveCamera(75, w / h, 0.1, 200)
     camera.position.set(0, 2.5, 8)
@@ -130,8 +133,10 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
     scene.add(accentLight)
 
     // ─── Floor ───────────────────────────────────────────────
-    // City theme gets asphalt + painted street lines instead of polished floor
-    const floorGeo = new THREE.PlaneGeometry(40, 40)
+    // Phase 16.25 — city theme gets a HUGE 200x200 asphalt floor (open world);
+    // gallery themes keep the original 40x40 enclosed room floor.
+    const floorSize = theme === 'city' ? 200 : 40
+    const floorGeo = new THREE.PlaneGeometry(floorSize, floorSize)
     let floorMat: THREE.MeshStandardMaterial
     if (theme === 'city') {
       floorMat = new THREE.MeshStandardMaterial({ color: themeCfg.floor, metalness: 0.05, roughness: 0.95 })
@@ -147,8 +152,9 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
     // alley gaps, billboards. Builds on top of the existing wall structure
     // so frames/tracks still work; just adds GTA/NBA2K-style city ambiance.
     if (theme === 'city') {
-      // Dashed center line down the street
-      for (let i = -18; i <= 18; i += 3) {
+      // Phase 16.25 — Dashed center line extended to FULL CITY LENGTH (95u
+      // each direction) so the street stretches across the open world.
+      for (let i = -94; i <= 94; i += 3) {
         const dash = new THREE.Mesh(
           new THREE.PlaneGeometry(0.3, 1.8),
           new THREE.MeshStandardMaterial({ color: 0xfacc15, emissive: 0xfacc15, emissiveIntensity: 0.15 })
@@ -157,14 +163,36 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         dash.position.set(0, 0.01, i)
         scene.add(dash)
       }
-      // Sidewalk strips along left/right walls
+      // CROSS STREETS — perpendicular dashed lines every 40u to break up the
+      // grid into city blocks and give intersections to walk through.
+      for (let cx = -80; cx <= 80; cx += 40) {
+        for (let i = -90; i <= 90; i += 3) {
+          if (Math.abs(i) < 5) continue  // gap at center intersection
+          const dash = new THREE.Mesh(
+            new THREE.PlaneGeometry(1.8, 0.3),
+            new THREE.MeshStandardMaterial({ color: 0xfacc15, emissive: 0xfacc15, emissiveIntensity: 0.15 })
+          )
+          dash.rotation.x = -Math.PI / 2
+          dash.position.set(i, 0.01, cx)
+          scene.add(dash)
+        }
+      }
+      // Sidewalk strips — full length, both sides
       const sidewalkMat = new THREE.MeshStandardMaterial({ color: 0x3a3a3a, roughness: 0.95 })
       ;[-16.5, 16.5].forEach((x) => {
-        const sw = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.15, 40), sidewalkMat)
+        const sw = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.15, 200), sidewalkMat)
         sw.position.set(x, 0.075, 0)
         sw.receiveShadow = true
         scene.add(sw)
       })
+      // Cross-street sidewalks
+      for (let cx = -80; cx <= 80; cx += 40) {
+        ;[-16.5, 16.5].forEach((z) => {
+          const sw = new THREE.Mesh(new THREE.BoxGeometry(200, 0.15, 2.5), sidewalkMat)
+          sw.position.set(0, 0.075, cx + (z > 0 ? -16.5 : 16.5))
+          scene.add(sw)
+        })
+      }
       // Procedural brick texture for the storefront walls
       const brickCanvas = document.createElement('canvas')
       brickCanvas.width = 256; brickCanvas.height = 256
@@ -188,20 +216,21 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
       brickTex.wrapS = brickTex.wrapT = THREE.RepeatWrapping
       brickTex.repeat.set(8, 2)
       const brickMat = new THREE.MeshStandardMaterial({ map: brickTex, roughness: 0.85, metalness: 0.05 })
-      // Storefront facades flat against side walls (brick texture overlay)
+      // Storefront facades extended to full street length (200u)
       ;[
         { x: -19.0, rot: Math.PI / 2 },
         { x: 19.0, rot: -Math.PI / 2 },
       ].forEach(({ x, rot }) => {
-        const facade = new THREE.Mesh(new THREE.PlaneGeometry(40, 8), brickMat)
+        const facade = new THREE.Mesh(new THREE.PlaneGeometry(200, 8), brickMat)
         facade.position.set(x, 4, 0)
         facade.rotation.y = rot
         scene.add(facade)
       })
-      // Storefront awnings — bright colored stripes along the walls
+      // Storefront awnings — bright colored stripes along the FULL street
+      // (was 6 awnings 0-40u; now 30 awnings spanning -90 to +90u)
       const awningColors = [0xdc2626, 0x16a34a, 0x2563eb, 0xfacc15, 0xa855f7]
-      for (let i = 0; i < 6; i++) {
-        const ax = -16 + i * 6.5
+      for (let i = 0; i < 30; i++) {
+        const ax = -94 + i * 6.5
         const acol = awningColors[i % awningColors.length]
         const aMat = new THREE.MeshStandardMaterial({ color: acol, emissive: acol, emissiveIntensity: 0.1, roughness: 0.5 })
         ;[-18.5, 18.5].forEach((wx) => {
@@ -355,8 +384,8 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
       comingSign.rotation.y = Math.PI / 6
       scene.add(comingSign)
 
-      // Streetlamps every 8 units on both sides
-      for (let lz = -16; lz <= 16; lz += 8) {
+      // Streetlamps every 12 units on both sides for the full city length
+      for (let lz = -90; lz <= 90; lz += 12) {
         ;[-15, 15].forEach((lx) => {
           const pole = new THREE.Mesh(
             new THREE.CylinderGeometry(0.1, 0.1, 5, 8),
@@ -391,42 +420,89 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
     scene.add(gridHelper)
 
     // ─── Walls (4 walls, frames mounted on them) ─────────────
+    // Phase 16.25 — city theme is OPEN WORLD: no enclosing walls/ceiling,
+    // skybox dome instead. Gallery themes (modern/cyberpunk/vinyl/vault) keep
+    // their 4 walls + ceiling because that's the gallery-room UX.
     const wallMat = new THREE.MeshStandardMaterial({ color: themeCfg.wall, metalness: 0.3, roughness: 0.7 })
     const wallHeight = 8
     const wallLength = 40
 
-    // Back wall
-    const backWall = new THREE.Mesh(new THREE.PlaneGeometry(wallLength, wallHeight), wallMat)
-    backWall.position.set(0, wallHeight / 2, -wallLength / 2)
-    backWall.receiveShadow = true
-    scene.add(backWall)
+    if (theme !== 'city') {
+      // Back wall
+      const backWall = new THREE.Mesh(new THREE.PlaneGeometry(wallLength, wallHeight), wallMat)
+      backWall.position.set(0, wallHeight / 2, -wallLength / 2)
+      backWall.receiveShadow = true
+      scene.add(backWall)
 
-    // Front wall (with door gap)
-    const frontWallLeft = new THREE.Mesh(new THREE.PlaneGeometry(15, wallHeight), wallMat)
-    frontWallLeft.position.set(-12.5, wallHeight / 2, wallLength / 2)
-    frontWallLeft.rotation.y = Math.PI
-    scene.add(frontWallLeft)
-    const frontWallRight = new THREE.Mesh(new THREE.PlaneGeometry(15, wallHeight), wallMat)
-    frontWallRight.position.set(12.5, wallHeight / 2, wallLength / 2)
-    frontWallRight.rotation.y = Math.PI
-    scene.add(frontWallRight)
+      // Front wall (with door gap)
+      const frontWallLeft = new THREE.Mesh(new THREE.PlaneGeometry(15, wallHeight), wallMat)
+      frontWallLeft.position.set(-12.5, wallHeight / 2, wallLength / 2)
+      frontWallLeft.rotation.y = Math.PI
+      scene.add(frontWallLeft)
+      const frontWallRight = new THREE.Mesh(new THREE.PlaneGeometry(15, wallHeight), wallMat)
+      frontWallRight.position.set(12.5, wallHeight / 2, wallLength / 2)
+      frontWallRight.rotation.y = Math.PI
+      scene.add(frontWallRight)
 
-    // Side walls
-    const leftWall = new THREE.Mesh(new THREE.PlaneGeometry(wallLength, wallHeight), wallMat)
-    leftWall.position.set(-wallLength / 2, wallHeight / 2, 0)
-    leftWall.rotation.y = Math.PI / 2
-    scene.add(leftWall)
-    const rightWall = new THREE.Mesh(new THREE.PlaneGeometry(wallLength, wallHeight), wallMat)
-    rightWall.position.set(wallLength / 2, wallHeight / 2, 0)
-    rightWall.rotation.y = -Math.PI / 2
-    scene.add(rightWall)
+      // Side walls
+      const leftWall = new THREE.Mesh(new THREE.PlaneGeometry(wallLength, wallHeight), wallMat)
+      leftWall.position.set(-wallLength / 2, wallHeight / 2, 0)
+      leftWall.rotation.y = Math.PI / 2
+      scene.add(leftWall)
+      const rightWall = new THREE.Mesh(new THREE.PlaneGeometry(wallLength, wallHeight), wallMat)
+      rightWall.position.set(wallLength / 2, wallHeight / 2, 0)
+      rightWall.rotation.y = -Math.PI / 2
+      scene.add(rightWall)
 
-    // Ceiling
-    const ceilingMat = new THREE.MeshStandardMaterial({ color: themeCfg.wall, metalness: 0.2, roughness: 0.8 })
-    const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(wallLength, wallLength), ceilingMat)
-    ceiling.position.y = wallHeight
-    ceiling.rotation.x = Math.PI / 2
-    scene.add(ceiling)
+      // Ceiling
+      const ceilingMat = new THREE.MeshStandardMaterial({ color: themeCfg.wall, metalness: 0.2, roughness: 0.8 })
+      const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(wallLength, wallLength), ceilingMat)
+      ceiling.position.y = wallHeight
+      ceiling.rotation.x = Math.PI / 2
+      scene.add(ceiling)
+    } else {
+      // CITY OPEN WORLD — dome skybox + atmospheric horizon, no walls/ceiling
+      const skyGeo = new THREE.SphereGeometry(280, 32, 16)
+      const skyMat = new THREE.ShaderMaterial({
+        side: THREE.BackSide,
+        depthWrite: false,
+        uniforms: {
+          topColor: { value: new THREE.Color(0x0a1228) },
+          bottomColor: { value: new THREE.Color(0x2a1a14) },
+          offset: { value: 33 },
+          exponent: { value: 0.7 },
+        },
+        vertexShader: `varying vec3 vWorldPosition; void main(){ vec4 wp = modelMatrix * vec4(position, 1.0); vWorldPosition = wp.xyz; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+        fragmentShader: `uniform vec3 topColor; uniform vec3 bottomColor; uniform float offset; uniform float exponent; varying vec3 vWorldPosition; void main(){ float h = normalize(vWorldPosition + offset).y; gl_FragColor = vec4(mix(bottomColor, topColor, max(pow(max(h,0.0), exponent), 0.0)), 1.0); }`,
+      })
+      const sky = new THREE.Mesh(skyGeo, skyMat)
+      scene.add(sky)
+      // Distant city silhouette — 24 dark building blocks ringing the horizon
+      // at ~150u radius. Adds depth + sense of "city extends beyond".
+      const bldgMat = new THREE.MeshStandardMaterial({ color: 0x0a0610, emissive: 0x1a0a20, emissiveIntensity: 0.08, roughness: 0.9 })
+      for (let i = 0; i < 24; i++) {
+        const angle = (i / 24) * Math.PI * 2
+        const r = 130 + Math.random() * 35
+        const w = 8 + Math.random() * 12
+        const h = 14 + Math.random() * 26
+        const d = 8 + Math.random() * 12
+        const bldg = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), bldgMat)
+        bldg.position.set(Math.sin(angle) * r, h / 2, Math.cos(angle) * r)
+        bldg.rotation.y = angle + Math.PI
+        scene.add(bldg)
+        // Window lights — 1-2 lit "windows" per building, simple emissive plane
+        if (Math.random() > 0.3) {
+          const winMat = new THREE.MeshBasicMaterial({ color: Math.random() > 0.5 ? 0xfacc15 : 0xeab308, transparent: true, opacity: 0.7 })
+          for (let wi = 0; wi < 2; wi++) {
+            const win = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 1.5), winMat)
+            const wy = 3 + Math.random() * (h - 6)
+            win.position.set(Math.sin(angle) * (r - d / 2 - 0.1), wy, Math.cos(angle) * (r - d / 2 - 0.1))
+            win.rotation.y = angle + Math.PI
+            scene.add(win)
+          }
+        }
+      }
+    }
 
     // ─── Frames (one per track, distributed around walls) ────
     const frameMeshes: Array<{ group: THREE.Group; track: Track; spotlight: THREE.SpotLight }> = []
@@ -839,8 +915,10 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
     // streetlamps, and basketball court grinding GPU). Old SPEED 0.18/frame
     // at 60fps = 10.8 u/sec — match that as the baseline, bump slightly for
     // a snappier feel since the gallery is large.
-    const SPEED = 12  // units per second (was 0.18 per frame)
-    const PLAYER_BOUNDS = 19
+    const SPEED = theme === 'city' ? 18 : 12  // city = bigger world, slightly faster sprint pace
+    // Phase 16.25 — city mode = open world, ~95u bounds (within 200u floor);
+    // gallery themes stay at 19u (inside the 40u walled room).
+    const PLAYER_BOUNDS = theme === 'city' ? 95 : 19
     let lastFrame = performance.now()
     let frameCount = 0
     let fpsLastUpdate = lastFrame
@@ -1052,10 +1130,13 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
             🎮 GAMEPAD CONNECTED · L-stick to move
           </div>
         )}
-        {/* Phase 16.16 — city-mode address search (OSM Nominatim, free, no key) */}
+        {/* Phase 16.16 — city-mode address search (OSM Nominatim, free, no key).
+            Phase 16.25 — bulletproof input fix: stop ALL pointer events from
+            bubbling to the canvas behind, set z-[20] above the canvas, and
+            keep keyboard-listener guard for WASD movement keys. */}
         {theme === 'city' && (
           <form
-            className="flex items-center gap-1 pointer-events-auto"
+            className="flex items-center gap-1 pointer-events-auto relative z-[20]"
             onSubmit={async (e) => {
               e.preventDefault()
               const input = (e.currentTarget.elements.namedItem('q') as HTMLInputElement)
@@ -1068,7 +1149,6 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
                 const data = await res.json()
                 if (Array.isArray(data) && data[0]) {
                   toast.success(`📍 ${data[0].display_name.slice(0, 60)}`)
-                  // Future: load 3D building tiles for these coords
                   console.log('[city-search]', data[0])
                 } else {
                   toast.info('Address not found')
@@ -1077,13 +1157,30 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
                 toast.error(`Search failed: ${err?.message || 'network error'}`)
               }
             }}
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
           >
             <input
               name="q"
+              type="text"
+              inputMode="text"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck={false}
               placeholder="🌍 search city / address…"
-              className="bg-black/70 backdrop-blur border border-yellow-500/30 rounded px-2 py-1 text-[10px] font-mono text-yellow-300 placeholder:text-yellow-500/40 outline-none focus:border-yellow-500/60 w-44"
+              onKeyDown={(e) => e.stopPropagation()}
+              onKeyUp={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => { e.stopPropagation(); (e.currentTarget as HTMLInputElement).focus() }}
+              className="bg-black/70 backdrop-blur border border-yellow-500/30 rounded px-2 py-1 text-[12px] font-mono text-yellow-300 placeholder:text-yellow-500/40 outline-none focus:border-yellow-500/60 w-44 sm:w-56"
             />
-            <button type="submit" className="px-2 py-1 rounded bg-yellow-500/20 border border-yellow-500/40 text-[9px] font-mono text-yellow-300 hover:bg-yellow-500/30">GO</button>
+            <button
+              type="submit"
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => e.stopPropagation()}
+              className="px-3 py-1 rounded bg-yellow-500/20 border border-yellow-500/40 text-[11px] font-mono text-yellow-300 hover:bg-yellow-500/30"
+            >GO</button>
           </form>
         )}
       </div>
