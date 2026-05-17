@@ -64,6 +64,9 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
   // Furniture state — declared before the scene-building useEffect that reads placedFurniture
   const [showCustomize, setShowCustomize] = useState(false)
   const [furnitureCategory, setFurnitureCategory] = useState<FurnitureCategory | 'all'>('all')
+  // Phase 16.13 — gamepad connection state (HUD indicator)
+  const [gamepadConnected, setGamepadConnected] = useState(false)
+  const gamepadConnectedRef = useRef(false)
   const [placedFurniture, setPlacedFurniture] = useState<PlacedFurniture[]>(() => getPlacedFurniture(ownerHandle))
   const [placingItem, setPlacingItem] = useState<string | null>(null)
   const [hideFurnitureCount, setHideFurnitureCount] = useState(false)
@@ -220,6 +223,112 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
           scene.add(win)
         })
       }
+      // Phase 16.14 — BASKETBALL HALF-COURT at the far end of the street.
+      // Painted asphalt + boundary lines + free-throw + three-point arc + hoop.
+      // No physics yet (Phase 16.15) but it's a real visual landmark to walk
+      // up to. Frank's vision: stumble across it during a gallery walk, see
+      // the hoop, eventually pick up a game.
+      const courtZ = -17  // back of street
+      // Court boundary paint (cyan-grey concrete)
+      const courtMat = new THREE.MeshStandardMaterial({ color: 0x3a3f44, roughness: 0.95 })
+      const court = new THREE.Mesh(new THREE.PlaneGeometry(10, 6), courtMat)
+      court.rotation.x = -Math.PI / 2
+      court.position.set(0, 0.02, courtZ)
+      court.receiveShadow = true
+      scene.add(court)
+      // White boundary lines (4 thin rectangles framing the court)
+      const lineMat = new THREE.MeshBasicMaterial({ color: 0xffffff })
+      const mkLine = (w: number, h: number, x: number, z: number) => {
+        const ln = new THREE.Mesh(new THREE.PlaneGeometry(w, h), lineMat)
+        ln.rotation.x = -Math.PI / 2
+        ln.position.set(x, 0.03, z)
+        scene.add(ln)
+      }
+      mkLine(10, 0.08, 0, courtZ - 3)  // top
+      mkLine(10, 0.08, 0, courtZ + 3)  // bottom
+      mkLine(0.08, 6, -5, courtZ)      // left
+      mkLine(0.08, 6, 5, courtZ)       // right
+      // Free-throw line + key paint
+      mkLine(4, 0.08, 0, courtZ - 0.5)
+      const keyPaint = new THREE.Mesh(
+        new THREE.PlaneGeometry(4, 3),
+        new THREE.MeshBasicMaterial({ color: 0xdc2626, transparent: true, opacity: 0.4 }),
+      )
+      keyPaint.rotation.x = -Math.PI / 2
+      keyPaint.position.set(0, 0.025, courtZ - 1.8)
+      scene.add(keyPaint)
+      // Three-point arc (segmented line)
+      for (let a = -Math.PI * 0.4; a <= Math.PI * 0.4; a += 0.05) {
+        const r = 4
+        const seg = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.08), lineMat)
+        seg.rotation.x = -Math.PI / 2
+        seg.rotation.z = a + Math.PI / 2
+        seg.position.set(Math.sin(a) * r, 0.03, courtZ - 2.8 - Math.cos(a) * r)
+        scene.add(seg)
+      }
+      // Hoop pole + backboard + rim
+      const pole = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.1, 0.15, 4, 12),
+        new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.7, roughness: 0.4 }),
+      )
+      pole.position.set(0, 2, courtZ - 3.5)
+      pole.castShadow = true
+      scene.add(pole)
+      const backboard = new THREE.Mesh(
+        new THREE.BoxGeometry(2, 1.3, 0.1),
+        new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.92 }),
+      )
+      backboard.position.set(0, 3.8, courtZ - 3.4)
+      backboard.castShadow = true
+      scene.add(backboard)
+      // Backboard square (target box)
+      const targetBox = new THREE.Mesh(
+        new THREE.PlaneGeometry(0.6, 0.45),
+        new THREE.MeshBasicMaterial({ color: 0xdc2626, transparent: true, opacity: 0 }),
+      )
+      ;[
+        [-0.3, 3.6], [0.3, 3.6], [-0.3, 4.05], [0.3, 4.05],
+      ].forEach(() => {})
+      // Just draw target square outline
+      const sqOutline = new THREE.LineSegments(
+        new THREE.EdgesGeometry(new THREE.PlaneGeometry(0.6, 0.45)),
+        new THREE.LineBasicMaterial({ color: 0xdc2626 }),
+      )
+      sqOutline.position.set(0, 3.7, courtZ - 3.35)
+      scene.add(sqOutline)
+      // Rim (orange ring)
+      const rim = new THREE.Mesh(
+        new THREE.TorusGeometry(0.35, 0.04, 8, 24),
+        new THREE.MeshStandardMaterial({ color: 0xea580c, emissive: 0xea580c, emissiveIntensity: 0.2, metalness: 0.7, roughness: 0.3 }),
+      )
+      rim.position.set(0, 3.3, courtZ - 3.0)
+      rim.rotation.x = Math.PI / 2
+      rim.castShadow = true
+      scene.add(rim)
+      // Net (10 small cylinders hanging from rim — visual approximation)
+      const netMat = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.8 })
+      for (let ni = 0; ni < 12; ni++) {
+        const a = (ni / 12) * Math.PI * 2
+        const seg = new THREE.Mesh(new THREE.CylinderGeometry(0.005, 0.005, 0.35, 4), netMat)
+        seg.position.set(Math.cos(a) * 0.32, 3.13, courtZ - 3.0 + Math.sin(a) * 0.32)
+        scene.add(seg)
+      }
+      // Court signage above the court — yellow "WELCOME TO THE COURT"
+      const signCanvas = document.createElement('canvas')
+      signCanvas.width = 1024; signCanvas.height = 128
+      const sctx = signCanvas.getContext('2d')!
+      sctx.fillStyle = '#000'; sctx.fillRect(0, 0, 1024, 128)
+      sctx.strokeStyle = '#facc15'; sctx.lineWidth = 4; sctx.strokeRect(8, 8, 1008, 112)
+      sctx.fillStyle = '#facc15'; sctx.font = 'bold 64px monospace'; sctx.textAlign = 'center'
+      sctx.fillText('🏀 THE COURT · 16.14', 512, 80)
+      const signTex = new THREE.CanvasTexture(signCanvas)
+      const sign = new THREE.Mesh(
+        new THREE.PlaneGeometry(6, 0.75),
+        new THREE.MeshStandardMaterial({ map: signTex, emissive: 0xfacc15, emissiveIntensity: 0.3, emissiveMap: signTex }),
+      )
+      sign.position.set(0, 5.0, courtZ - 3.6)
+      scene.add(sign)
+
       // Streetlamps every 8 units on both sides
       for (let lz = -16; lz <= 16; lz += 8) {
         ;[-15, 15].forEach((lx) => {
@@ -646,17 +755,51 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         fpsLastUpdate = now
       }
 
-      // Movement (with bounds)
+      // Movement (with bounds) — keyboard OR gamepad (Phase 16.13)
       const fwd = (keys['w'] || keys['arrowup']) ? 1 : 0
       const back = (keys['s'] || keys['arrowdown']) ? 1 : 0
       const left = (keys['a'] || keys['arrowleft']) ? 1 : 0
       const right = (keys['d'] || keys['arrowright']) ? 1 : 0
-      playerGroup.position.z -= (fwd - back) * SPEED
-      playerGroup.position.x += (right - left) * SPEED
+      // Gamepad input — left stick for movement, dpad as fallback.
+      // navigator.getGamepads() returns null entries for disconnected slots;
+      // poll the first connected pad. Deadzone 0.15 to ignore stick drift.
+      let gpX = 0, gpY = 0
+      try {
+        const pads = (typeof navigator !== 'undefined' && navigator.getGamepads) ? navigator.getGamepads() : []
+        for (let pi = 0; pi < pads.length; pi++) {
+          const p = pads[pi]
+          if (!p) continue
+          const sx = p.axes[0] || 0
+          const sy = p.axes[1] || 0
+          if (Math.abs(sx) > 0.15) gpX = sx
+          if (Math.abs(sy) > 0.15) gpY = sy
+          // D-pad buttons 12-15 (up/down/left/right) as fallback
+          if (p.buttons[12]?.pressed) gpY = -1
+          if (p.buttons[13]?.pressed) gpY = 1
+          if (p.buttons[14]?.pressed) gpX = -1
+          if (p.buttons[15]?.pressed) gpX = 1
+          if (gpX !== 0 || gpY !== 0) {
+            if (!gamepadConnectedRef.current) {
+              gamepadConnectedRef.current = true
+              setGamepadConnected(true)
+            }
+            break
+          }
+        }
+      } catch {}
+      // Combine keyboard + gamepad; gamepad axes are analog (-1..1) so they
+      // can express finer movement than binary keys.
+      const moveX = (right - left) + gpX
+      const moveZ = -(fwd - back) + gpY
+      const mag = Math.min(1, Math.hypot(moveX, moveZ))
+      const dirX = mag > 0.001 ? moveX / Math.hypot(moveX, moveZ) : 0
+      const dirZ = mag > 0.001 ? moveZ / Math.hypot(moveX, moveZ) : 0
+      playerGroup.position.x += dirX * SPEED * mag
+      playerGroup.position.z += dirZ * SPEED * mag
       playerGroup.position.x = Math.max(-PLAYER_BOUNDS, Math.min(PLAYER_BOUNDS, playerGroup.position.x))
       playerGroup.position.z = Math.max(-PLAYER_BOUNDS, Math.min(PLAYER_BOUNDS, playerGroup.position.z))
-      if (fwd || back || left || right) {
-        playerGroup.rotation.y = Math.atan2(right - left, -(fwd - back))
+      if (mag > 0.05) {
+        playerGroup.rotation.y = Math.atan2(dirX, -dirZ)
       }
 
       // Camera follow
