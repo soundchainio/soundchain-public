@@ -140,14 +140,17 @@ def generate_mesh(req: GenerateMeshRequest):
             except Exception:
                 pass  # graceful fallback to original image
 
-    # 3. Run TripoSR — single-image → scene code → marching-cubes mesh
+    # 3. Run TripoSR — single-image → scene code → marching-cubes mesh.
+    # has_vertex_color=True returns per-vertex RGB colors (TripoSR doesn't
+    # produce UV-mapped textures, so vertex colors are how we get colored
+    # output instead of gray meshes).
     pipe = _load_pipeline()
     try:
         import torch
         with torch.no_grad():
             scene_codes = pipe([img], device=DEVICE)
         resolution = max(128, min(512, req.resolution or DEFAULT_RESOLUTION))
-        meshes = pipe.extract_mesh(scene_codes, resolution=resolution)
+        meshes = pipe.extract_mesh(scene_codes, has_vertex_color=True, resolution=resolution)
     except Exception as e:
         raise HTTPException(500, f"mesh extraction failed: {e}")
 
