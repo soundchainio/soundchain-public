@@ -469,12 +469,15 @@ export function CharacterDesigner({ open, onClose, initialName }: CharacterDesig
 
   return (
     <div
-      className="fixed inset-0 z-[200] flex items-start sm:items-center justify-center bg-black/40 backdrop-blur-sm p-2 sm:p-4 overflow-y-auto overflow-x-hidden"
+      className="fixed inset-0 z-[200] flex items-start justify-center bg-black/40 backdrop-blur-sm p-2 sm:p-4 overflow-y-auto overflow-x-hidden"
       style={{
         // iOS Safari fixes:
         // 1. -webkit-overflow-scrolling enables momentum scrolling on legacy WebKit
         // 2. overscroll-behavior: contain stops body-page scroll bleed-through
         // 3. h-[100dvh] handles dynamic viewport (iOS Safari URL bar hide/show)
+        // items-start (not items-center) so tall modals start at the top
+        // of the viewport and scroll DOWN — items-center hides the top
+        // when the modal exceeds viewport height (Frank's "cropped at top" bug).
         WebkitOverflowScrolling: 'touch',
         overscrollBehavior: 'contain',
         height: '100dvh',
@@ -2302,8 +2305,6 @@ function LivePreview3D({ spec, face, bigMode, desktopMode }: { spec: AiBuildSpec
   }, [ready, face])
 
   // Camera-zoom effect — face mode zooms to head, body mode shows full figure.
-  // All positions derive from the measured model height so it works regardless
-  // of which mannequin source loaded (XBot ~1.7u, RPM avatars ~1.8u, etc).
   // Also toggles visibility — body model hidden in face mode, face model
   // hidden in body mode (so the right mesh is on stage for what's being edited).
   useEffect(() => {
@@ -2314,15 +2315,28 @@ function LivePreview3D({ spec, face, bigMode, desktopMode }: { spec: AiBuildSpec
     const controls = controlsRef.current
     const h = modelHeightRef.current || 1.8
     if (bigMode) {
-      // Face mode: track head bone if present, else top-92% of model
-      let headY = h * 0.92
-      if (headBoneRef.current) {
+      // Face mode — target the FACE model's actual bounding box center.
+      // (Earlier bug: was computing headY from BODY model height which put
+      // the camera target above where facecap.glb actually sits = face
+      // rendered off-screen / appeared as empty viewport.)
+      let targetY = 1.55  // facecap default position
+      let dist = 1.0
+      if (faceModelRef.current) {
+        const fBox = new THREE.Box3().setFromObject(faceModelRef.current)
+        const fCenter = new THREE.Vector3(); fBox.getCenter(fCenter)
+        const fSize = new THREE.Vector3(); fBox.getSize(fSize)
+        if (fSize.y > 0) {
+          targetY = fCenter.y
+          // Distance = ~3x the face height for portrait framing
+          dist = Math.max(fSize.y * 3, 0.8)
+        }
+      } else if (headBoneRef.current) {
         const v = new THREE.Vector3()
         headBoneRef.current.getWorldPosition(v)
-        if (v.y > 0) headY = v.y
+        if (v.y > 0) targetY = v.y
       }
-      camera.position.set(0, headY, h * 0.55)
-      controls.target.set(0, headY, 0)
+      camera.position.set(0, targetY, dist)
+      controls.target.set(0, targetY, 0)
     } else {
       // Body mode: frame the full figure with headroom
       const targetY = h * 0.5
