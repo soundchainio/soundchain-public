@@ -1735,7 +1735,7 @@ function AiBuildPanel({
         {activeTab === 'face' && (
           <>
             <div className="text-[10px] font-mono text-pink-300/70 bg-pink-500/5 p-2 rounded border border-pink-500/10 leading-relaxed">
-              🧬 Precision face sliders. Will morph the 3D mannequin in real-time once Phase 16.7 swaps in a rigged GLB with face blendshapes (coming next). UI is live now — values save to your character config and flow into the SDXL prompt.
+              🧬 Precision face sliders — each slider morphs the live 3D face on the left in real-time via 52 ARkit blendshapes (jawOpen, browInnerUp, cheekPuff, eyeWide_L/R, mouthSmile_L/R, etc). Values also persist + flow into your SDXL prompt.
             </div>
             <div className="text-[10px] font-mono text-pink-300/70 bg-pink-500/5 p-2 rounded border border-pink-500/10 leading-relaxed">
               💇 Hair piece library (CC0 GLBs swapped on the head bone) lands in Phase 16.8. For now these pickers flow into the SDXL prompt — hair renders when you tap Generate.
@@ -2021,6 +2021,7 @@ function LivePreview3D({ spec, face, bigMode }: { spec: AiBuildSpec; face: AiFac
   const skinMatsRef = useRef<any[]>([])
   const accentMatsRef = useRef<any[]>([])
   const [ready, setReady] = useState(false)
+  const [faceReady, setFaceReady] = useState(0)  // bumps when face GLB lands so camera re-frames
   const [loadError, setLoadError] = useState<string | null>(null)
   // bigMode = face tab — viewport gets taller on mobile, camera zooms to head.
   // Mobile heights via inline style; desktop overrides via Tailwind lg: classes
@@ -2193,6 +2194,12 @@ function LivePreview3D({ spec, face, bigMode }: { spec: AiBuildSpec; face: AiFac
         faceModelRef.current = faceModel
         const morphCount = morphMeshesRef.current.reduce((sum, m) => sum + (m.morphTargetInfluences?.length || 0), 0)
         console.log(`[LivePreview3D] face loaded ${sourceUrl} — ${morphCount} blendshapes wired`)
+        // If face tab is currently active, re-frame the camera now that the
+        // face model exists. Previously the camera-zoom effect ran when bigMode
+        // changed to true but faceModelRef was still null, so the camera
+        // pointed at the default (0, 1.55, 1.0) — close to the right spot but
+        // not perfectly framed. Re-trigger the effect by bumping a state.
+        if (bigMode) setFaceReady((n) => n + 1)
       }
 
       tryLoadBody(0)
@@ -2201,11 +2208,31 @@ function LivePreview3D({ spec, face, bigMode }: { spec: AiBuildSpec; face: AiFac
       const onResize = () => {
         const w = container.clientWidth
         const h = container.clientHeight
+        if (w === 0 || h === 0) return
         camera.aspect = w / h
         camera.updateProjectionMatrix()
         renderer.setSize(w, h)
       }
       window.addEventListener('resize', onResize)
+
+      // ResizeObserver catches container-size changes that DON'T fire window
+      // resize (CSS layout settling, lg:h-full kicking in after CSS computes,
+      // sticky positioning recalculating). Critical for the desktop side-by-
+      // side layout where the container is 0×0 at mount then grows when CSS
+      // finishes — without this, canvas was stuck at 0px and the whole left
+      // half rendered black. Works on Chrome, Firefox, Edge, Safari 13.1+.
+      let resizeObs: ResizeObserver | null = null
+      if (typeof ResizeObserver !== 'undefined') {
+        resizeObs = new ResizeObserver(() => onResize())
+        resizeObs.observe(container)
+      }
+      // Belt-and-suspenders: also schedule delayed onResize calls to cover
+      // the race between useEffect firing and the browser finishing layout.
+      const resizeTimers = [
+        setTimeout(onResize, 50),
+        setTimeout(onResize, 200),
+        setTimeout(onResize, 500),
+      ]
 
       const tick = () => {
         if (disposed) return
@@ -2217,6 +2244,8 @@ function LivePreview3D({ spec, face, bigMode }: { spec: AiBuildSpec; face: AiFac
 
       cleanup = () => {
         window.removeEventListener('resize', onResize)
+        if (resizeObs) resizeObs.disconnect()
+        resizeTimers.forEach(clearTimeout)
         controls.dispose()
         renderer.dispose()
         if (renderer.domElement.parentNode === container) {
@@ -2346,7 +2375,7 @@ function LivePreview3D({ spec, face, bigMode }: { spec: AiBuildSpec; face: AiFac
       controls.target.set(0, targetY, 0)
     }
     controls.update()
-  }, [ready, bigMode])
+  }, [ready, bigMode, faceReady])
 
   return (
     <div
