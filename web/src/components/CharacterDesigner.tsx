@@ -489,33 +489,50 @@ export function CharacterDesigner({ open, onClose, initialName }: CharacterDesig
                       <p className="text-[9px] font-mono text-gray-600 mt-1">(first load can take a few seconds)</p>
                     </div>
                   )}
-                  {/* Stalled fallback — RPM didn't respond within 6s. Offer the OPEN SOURCE escape hatch. */}
+                  {/* Stalled fallback — RPM didn't respond within 6s.
+                      Ready Player Me's iframe requires a registered subdomain at
+                      studio.readyplayer.me; without one, the bare URL redirects to
+                      login which X-Frame-Options blocks → black rectangle. Offer
+                      two escape hatches: AI BUILD (own pipeline, always works) +
+                      OPEN SOURCE (CC0 GLB library). */}
                   {rpmStatus === 'stalled' && (
                     <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black p-6 text-center">
                       <p className="text-[11px] font-mono text-purple-300 mb-2">⚠ Ready Player Me didn't load</p>
-                      <p className="text-[10px] font-mono text-gray-500 mb-4 max-w-xs">
-                        Third-party iframes sometimes fail on mobile / PWA / tunnel contexts.
-                        Use our OPEN SOURCE avatars instead — CC0-licensed, works on every device.
+                      <p className="text-[10px] font-mono text-gray-500 mb-4 max-w-xs leading-relaxed">
+                        RPM needs a registered subdomain (we don't have one yet).
+                        Use <span className="text-pink-300">AI BUILD</span> for NBA2K-style
+                        custom characters on our RTX 5000, or <span className="text-cyan-300">OPEN SOURCE</span> for CC0 avatars.
                       </p>
-                      <button
-                        onClick={() => update({ type: 'opensource', humanGlbUrl: undefined, humanAvatarPng: undefined })}
-                        className="px-4 py-2 rounded bg-cyan-500/20 border border-cyan-500/40 text-cyan-400 text-[10px] font-mono font-bold hover:bg-cyan-500/30 transition"
-                      >
-                        🎨 SWITCH TO OPEN SOURCE
-                      </button>
+                      <div className="flex flex-col sm:flex-row gap-2 w-full max-w-md">
+                        <button
+                          onClick={() => update({ type: 'ai' })}
+                          className="flex-1 px-4 py-2.5 rounded bg-gradient-to-br from-pink-500/30 to-purple-500/30 border border-pink-500/40 text-pink-200 text-[11px] font-mono font-bold hover:from-pink-500/40 hover:to-purple-500/40 transition shadow-[0_0_20px_rgba(236,72,153,0.2)]"
+                        >
+                          ✨ SWITCH TO AI BUILD
+                        </button>
+                        <button
+                          onClick={() => update({ type: 'opensource', humanGlbUrl: undefined, humanAvatarPng: undefined })}
+                          className="flex-1 px-4 py-2.5 rounded bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 text-[11px] font-mono font-bold hover:bg-cyan-500/25 transition"
+                        >
+                          🎨 SWITCH TO OPEN SOURCE
+                        </button>
+                      </div>
                       <button
                         onClick={() => setRpmStatus('loading')}
-                        className="mt-3 text-[9px] font-mono text-gray-500 hover:text-gray-300 underline"
+                        className="mt-4 text-[9px] font-mono text-gray-500 hover:text-gray-300 underline"
                       >
                         retry Ready Player Me
                       </button>
                     </div>
                   )}
                   <iframe
-                    src="https://readyplayer.me/avatar?frameApi&clearCache"
+                    src="https://demo.readyplayer.me/avatar?frameApi=true&clearCache=true&quickStart=true&bodyType=fullbody"
                     className="w-full h-full"
                     style={{ border: 'none', background: '#000' }}
-                    allow="camera *; microphone *; clipboard-write"
+                    allow="camera *; microphone *; clipboard-write; display-capture"
+                    sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
+                    referrerPolicy="strict-origin-when-cross-origin"
+                    loading="lazy"
                     title="Ready Player Me Avatar Editor"
                   />
                 </div>
