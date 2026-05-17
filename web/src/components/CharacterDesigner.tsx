@@ -1856,16 +1856,38 @@ function AiBuildPanel({
                 </div>
               )}
               {config.aiGlbUrl && (
-                <div className="flex gap-2">
-                  <button onClick={() => setViewer3DOpen(true)}
-                    className="flex-1 py-1.5 rounded text-[10px] font-mono bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 hover:bg-cyan-500/25 transition">
-                    🌀 Rotate 3D
-                  </button>
-                  <button onClick={() => update({ type: 'ai', humanGlbUrl: config.aiGlbUrl })}
-                    className="flex-1 py-1.5 rounded text-[10px] font-mono bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/25 transition">
-                    ✓ Use in Explore3D
-                  </button>
-                </div>
+                <>
+                  <div className="flex gap-2">
+                    <button onClick={() => setViewer3DOpen(true)}
+                      className="flex-1 py-1.5 rounded text-[10px] font-mono bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 hover:bg-cyan-500/25 transition">
+                      🌀 Rotate 3D
+                    </button>
+                    <button onClick={() => update({ type: 'ai', humanGlbUrl: config.aiGlbUrl })}
+                      className="flex-1 py-1.5 rounded text-[10px] font-mono bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/25 transition">
+                      ✓ Save as Avatar
+                    </button>
+                  </div>
+                  {/* Phase 16.10 — play your character in the worlds */}
+                  <div className="flex gap-2 pt-1">
+                    <button
+                      onClick={() => {
+                        update({ type: 'ai', humanGlbUrl: config.aiGlbUrl })
+                        // Brief delay so update commits to storage before nav
+                        setTimeout(() => { window.location.href = '/explore3d' }, 150)
+                      }}
+                      className="flex-1 py-2 rounded text-[10px] font-mono font-bold bg-gradient-to-br from-emerald-500/25 to-cyan-500/25 text-emerald-200 border border-emerald-500/40 hover:from-emerald-500/40 hover:to-cyan-500/40 transition shadow-[0_0_15px_rgba(16,185,129,0.2)]">
+                      🚀 PLAY IN EXPLORE3D
+                    </button>
+                    <button
+                      onClick={() => {
+                        update({ type: 'ai', humanGlbUrl: config.aiGlbUrl })
+                        setTimeout(() => { window.location.href = '/gallery3d' }, 150)
+                      }}
+                      className="flex-1 py-2 rounded text-[10px] font-mono font-bold bg-gradient-to-br from-purple-500/25 to-pink-500/25 text-purple-200 border border-purple-500/40 hover:from-purple-500/40 hover:to-pink-500/40 transition shadow-[0_0_15px_rgba(168,85,247,0.2)]">
+                      🎨 PLAY IN GALLERY3D
+                    </button>
+                  </div>
+                </>
               )}
             </div>
           </div>
@@ -1879,7 +1901,7 @@ function AiBuildPanel({
 
       <div className="px-4 py-2 border-t border-pink-500/10 bg-black/40 flex items-center justify-between text-[8px] font-mono text-gray-600">
         <span>Powered by Lucy SDXL + TripoSR on anvil · RTX 5000</span>
-        <span className="text-pink-500">🎨 Phase 16.3</span>
+        <span className="text-pink-500">🎨 Phase 16.10</span>
       </div>
     </div>
   )
