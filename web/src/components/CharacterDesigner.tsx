@@ -185,6 +185,20 @@ export function CharacterDesigner({ open, onClose, initialName }: CharacterDesig
     return () => { cancelled = true }
   }, [open, initialName])
 
+  // Lock body scroll while modal is open — prevents iOS Safari from
+  // hijacking modal scroll gestures as background page scrolling.
+  useEffect(() => {
+    if (!open) return
+    const prevOverflow = document.body.style.overflow
+    const prevTouchAction = document.body.style.touchAction
+    document.body.style.overflow = 'hidden'
+    document.body.style.touchAction = 'none'
+    return () => {
+      document.body.style.overflow = prevOverflow
+      document.body.style.touchAction = prevTouchAction
+    }
+  }, [open])
+
   // ─── Ready Player Me message handler ─────────────────────
   // Listens for avatar export from RPM iframe + any frame.ready / subscribe signal
   // so we can clear the "stalled" fallback if RPM is actually alive.
@@ -412,7 +426,18 @@ export function CharacterDesigner({ open, onClose, initialName }: CharacterDesig
   }
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-start sm:items-center justify-center bg-black/40 backdrop-blur-sm p-2 sm:p-4 overflow-y-auto">
+    <div
+      className="fixed inset-0 z-[200] flex items-start sm:items-center justify-center bg-black/40 backdrop-blur-sm p-2 sm:p-4 overflow-y-auto overflow-x-hidden"
+      style={{
+        // iOS Safari fixes:
+        // 1. -webkit-overflow-scrolling enables momentum scrolling on legacy WebKit
+        // 2. overscroll-behavior: contain stops body-page scroll bleed-through
+        // 3. h-[100dvh] handles dynamic viewport (iOS Safari URL bar hide/show)
+        WebkitOverflowScrolling: 'touch',
+        overscrollBehavior: 'contain',
+        height: '100dvh',
+      }}
+    >
       <div className="w-full max-w-3xl bg-[#0a0f1f] border border-cyan-500/30 rounded-xl shadow-2xl shadow-cyan-500/10 overflow-hidden my-2 sm:my-4">
         {/* Header — sticky on mobile so user always knows where they are */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-cyan-500/20 bg-black/80 sticky top-0 z-10 backdrop-blur-md">
