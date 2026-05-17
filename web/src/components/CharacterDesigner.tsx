@@ -480,7 +480,7 @@ export function CharacterDesigner({ open, onClose, initialName }: CharacterDesig
         height: '100dvh',
       }}
     >
-      <div className="w-full max-w-3xl bg-[#0a0f1f] border border-cyan-500/30 rounded-xl shadow-2xl shadow-cyan-500/10 overflow-hidden my-2 sm:my-4">
+      <div className="w-full max-w-3xl lg:max-w-6xl bg-[#0a0f1f] border border-cyan-500/30 rounded-xl shadow-2xl shadow-cyan-500/10 overflow-hidden my-2 sm:my-4">
         {/* Header — sticky on mobile so user always knows where they are */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-cyan-500/20 bg-black/80 sticky top-0 z-10 backdrop-blur-md">
           <div className="flex items-center gap-2">
@@ -1649,26 +1649,36 @@ function AiBuildPanel({
         </p>
       </div>
 
-      {/* Phase 16.5 — LIVE 3D PREVIEW. Bigger viewport, mannequin morphs in real-time. */}
-      <LivePreview3D spec={spec} face={face} bigMode={activeTab === 'face'} />
+      {/* Phase 16.18 — desktop side-by-side (InZOI layout):
+          - lg+: 3D preview LEFT half (sticky), sliders RIGHT half (scroll)
+          - mobile/sm: stacked (3D preview on top, sliders below)
+          Uses lg:flex so mobile keeps the column flow it already has. */}
+      <div className="lg:flex lg:items-start">
+        {/* LEFT: live 3D preview — sticky on desktop so it stays visible while
+            user scrolls through sliders on the right */}
+        <div className="lg:w-1/2 lg:sticky lg:top-[97px] lg:self-start lg:h-[calc(100vh-200px)] lg:max-h-[700px] lg:border-r lg:border-pink-500/10">
+          <LivePreview3D spec={spec} face={face} bigMode={activeTab === 'face'} desktopMode={true} />
+        </div>
 
-      {/* Phase 16.6 — InZOI-style tab strip */}
-      <div className="flex items-center px-2 py-1.5 border-b border-pink-500/10 bg-black/60 backdrop-blur-md sticky top-[97px] z-[5] gap-1 overflow-x-auto">
-        {([
-          ['body', '👤 BODY'],
-          ['face', '😀 FACE'],
-          ['outfit', '👕 OUTFIT'],
-          ['accessories', '💎 EXTRAS'],
-          ['render', '✨ RENDER'],
-        ] as const).map(([key, label]) => (
-          <button key={key} onClick={() => setActiveTab(key)}
-            className={`flex-1 min-w-[68px] px-2 py-1.5 rounded text-[10px] font-mono font-bold transition whitespace-nowrap ${activeTab === key ? 'bg-pink-500/25 text-pink-300 border border-pink-500/40' : 'bg-white/[0.02] text-gray-500 border border-white/5 hover:text-white'}`}>
-            {label}
-          </button>
-        ))}
-      </div>
+        {/* RIGHT: tabs + sliders — scrollable column on desktop */}
+        <div className="lg:w-1/2 lg:flex lg:flex-col lg:min-h-0">
+          {/* Phase 16.6 — InZOI-style tab strip */}
+          <div className="flex items-center px-2 py-1.5 border-b border-pink-500/10 bg-black/60 backdrop-blur-md sticky top-[97px] lg:top-0 z-[5] gap-1 overflow-x-auto">
+            {([
+              ['body', '👤 BODY'],
+              ['face', '😀 FACE'],
+              ['outfit', '👕 OUTFIT'],
+              ['accessories', '💎 EXTRAS'],
+              ['render', '✨ RENDER'],
+            ] as const).map(([key, label]) => (
+              <button key={key} onClick={() => setActiveTab(key)}
+                className={`flex-1 min-w-[68px] px-2 py-1.5 rounded text-[10px] font-mono font-bold transition whitespace-nowrap ${activeTab === key ? 'bg-pink-500/25 text-pink-300 border border-pink-500/40' : 'bg-white/[0.02] text-gray-500 border border-white/5 hover:text-white'}`}>
+                {label}
+              </button>
+            ))}
+          </div>
 
-      <div className="p-4 space-y-3">
+          <div className="p-4 space-y-3 lg:overflow-y-auto lg:flex-1">
         {/* Seed + new-character row — always visible */}
         <div className="flex items-center flex-wrap gap-2">
           <span className="text-[9px] font-mono text-gray-500">seed: {seed}</span>
@@ -1927,11 +1937,13 @@ function AiBuildPanel({
         {viewer3DOpen && config.aiGlbUrl && (
           <Mesh3DViewer glbUrl={config.aiGlbUrl} onClose={() => setViewer3DOpen(false)} />
         )}
+          </div>
+        </div>
       </div>
 
       <div className="px-4 py-2 border-t border-pink-500/10 bg-black/40 flex items-center justify-between text-[8px] font-mono text-gray-600">
         <span>Powered by Lucy SDXL + TripoSR on anvil · RTX 5000</span>
-        <span className="text-pink-500">🎨 Phase 16.10</span>
+        <span className="text-pink-500">🎨 Phase 16.18</span>
       </div>
     </div>
   )
@@ -1991,7 +2003,7 @@ const SKIN_HEX: Record<AiBuildSpec['skinTone'], string> = {
   tan: '#a16641', brown: '#7a4a2b', dark: '#4a2e1a',
 }
 
-function LivePreview3D({ spec, face, bigMode }: { spec: AiBuildSpec; face: AiFaceSpec; bigMode?: boolean }) {
+function LivePreview3D({ spec, face, bigMode, desktopMode }: { spec: AiBuildSpec; face: AiFaceSpec; bigMode?: boolean; desktopMode?: boolean }) {
   const containerRef = useRef<HTMLDivElement>(null)
   // Mutable refs to live Three.js objects — re-used across spec changes,
   // never re-mounted (would lose the camera angle the user dragged to).
@@ -2007,7 +2019,9 @@ function LivePreview3D({ spec, face, bigMode }: { spec: AiBuildSpec; face: AiFac
   const [ready, setReady] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
   // bigMode = face tab — viewport gets taller, camera zooms to head
-  const viewportHeight = bigMode ? 480 : 380
+  // desktopMode = lg+ side-by-side layout — viewport fills the left half
+  // of the modal (parent container's height), so no fixed height needed.
+  const viewportHeight = desktopMode ? '100%' : (bigMode ? 480 : 380)
 
   // Mount the Three.js scene ONCE per panel mount.
   useEffect(() => {
@@ -2319,7 +2333,7 @@ function LivePreview3D({ spec, face, bigMode }: { spec: AiBuildSpec; face: AiFac
   }, [ready, bigMode])
 
   return (
-    <div className="relative bg-black border-b border-pink-500/10 transition-all duration-300" style={{ height: viewportHeight }}>
+    <div className={`relative bg-black ${desktopMode ? 'h-full min-h-[400px]' : 'border-b border-pink-500/10'} transition-all duration-300`} style={{ height: viewportHeight }}>
       <div ref={containerRef} className="absolute inset-0" />
       {!ready && !loadError && (
         <div className="absolute inset-0 flex items-center justify-center text-pink-300/60 font-mono text-[10px]">
