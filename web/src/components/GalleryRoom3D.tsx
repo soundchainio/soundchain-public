@@ -73,6 +73,9 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
   // Scene ref so the cityLocation useEffect can paint the in-world sign
   // without rebuilding the whole 3D scene.
   const sceneRef = useRef<THREE.Scene | null>(null)
+  // Phase 16.27 — basketball mechanic state
+  const [hoopScore, setHoopScore] = useState({ makes: 0, attempts: 0, streak: 0 })
+  const shootRef = useRef<(() => void) | null>(null)
   const [placedFurniture, setPlacedFurniture] = useState<PlacedFurniture[]>(() => getPlacedFurniture(ownerHandle))
   const [placingItem, setPlacingItem] = useState<string | null>(null)
   const [hideFurnitureCount, setHideFurnitureCount] = useState(false)
@@ -364,6 +367,102 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
       )
       sign.position.set(0, 5.0, courtZ - 3.6)
       scene.add(sign)
+
+      // Phase 16.27 — BASKETBALL. Orange ball follows the character at hand
+      // height; press B (or tap SHOOT button) to launch it toward the hoop
+      // with a parabolic arc. Simple physics — gravity + initial velocity
+      // aimed at the rim's apex. Detect score by checking ball passes through
+      // the rim's 0.35u torus radius near rim Y on the way down.
+      const RIM_POS = new THREE.Vector3(0, 3.3, courtZ - 3.0)
+      const ballMat = new THREE.MeshStandardMaterial({
+        color: 0xea580c, emissive: 0xea580c, emissiveIntensity: 0.1, roughness: 0.6, metalness: 0.05,
+      })
+      const ball = new THREE.Mesh(new THREE.SphereGeometry(0.18, 16, 12), ballMat)
+      ball.castShadow = true
+      ball.position.set(0, 1.4, 5)  // initial spawn at player
+      scene.add(ball)
+      const ballState = {
+        held: true,
+        vel: new THREE.Vector3(),
+        scoredThisShot: false,
+        airborneFrames: 0,
+        returnTimer: 0,
+      }
+      ;(scene.userData as any).ball = { ball, ballState, RIM_POS }
+
+      // Shoot function — wired to keyboard B and the SHOOT button
+      shootRef.current = () => {
+        if (!ballState.held) return  // can't shoot while ball is mid-flight
+        // Aim apex slightly above rim. Compute initial velocity so ball
+        // travels from ball.position to RIM_POS following a 0.5s arc up + 0.6s fall.
+        const start = ball.position.clone()
+        const target = RIM_POS.clone()
+        const dx = target.x - start.x
+        const dz = target.z - start.z
+        const horizDist = Math.hypot(dx, dz)
+        if (horizDist < 0.1) return  // too close to shoot
+        const timeUp = 0.5
+        const timeDown = 0.6
+        const apexY = target.y + 2.5  // arc apex 2.5u above rim
+        // v_y up = (apexY - startY) / timeUp + 0.5 * g * timeUp (target apex)
+        const g = 9.8 * 1.5  // amplify gravity for snappy arcs
+        const vy = (apexY - start.y) / timeUp + 0.5 * g * timeUp
+        const totalTime = timeUp + timeDown
+        const vx = dx / totalTime
+        const vz = dz / totalTime
+        ballState.vel.set(vx, vy, vz)
+        ballState.held = false
+        ballState.scoredThisShot = false
+        ballState.airborneFrames = 0
+        setHoopScore((s) => ({ ...s, attempts: s.attempts + 1 }))
+      }
+      ;(scene.userData as any).gravity = (g: number) => {
+        const ballRef = (scene.userData as any).ball
+        if (!ballRef) return
+        const { ball, ballState, RIM_POS } = ballRef
+        if (ballState.held) return
+        ballState.airborneFrames++
+        ballState.vel.y -= 9.8 * 1.5 * g  // g here is dtSec
+        ball.position.x += ballState.vel.x * g
+        ball.position.y += ballState.vel.y * g
+        ball.position.z += ballState.vel.z * g
+        // Score detection: ball within rim radius + descending + near rim Y
+        if (!ballState.scoredThisShot && ballState.vel.y < 0) {
+          const dx = ball.position.x - RIM_POS.x
+          const dz = ball.position.z - RIM_POS.z
+          const horizDist = Math.hypot(dx, dz)
+          const dy = Math.abs(ball.position.y - RIM_POS.y)
+          if (horizDist < 0.34 && dy < 0.25) {
+            ballState.scoredThisShot = true
+            setHoopScore((s) => ({ makes: s.makes + 1, attempts: s.attempts, streak: s.streak + 1 }))
+          }
+        }
+        // Floor collision — bounce once, then settle
+        if (ball.position.y < 0.18) {
+          ball.position.y = 0.18
+          if (ballState.vel.y < -2) {
+            ballState.vel.y = -ballState.vel.y * 0.45  // bounce damping
+            ballState.vel.x *= 0.6
+            ballState.vel.z *= 0.6
+          } else {
+            ballState.vel.set(0, 0, 0)
+            ballState.returnTimer = 1.0  // return to hand after 1s
+          }
+          if (!ballState.scoredThisShot && ballState.airborneFrames > 5) {
+            // Missed shot — break streak
+            setHoopScore((s) => ({ ...s, streak: 0 }))
+            ballState.scoredThisShot = true  // prevent double-reset
+          }
+        }
+        // Return to hand after ball settles
+        if (ballState.returnTimer > 0) {
+          ballState.returnTimer -= g
+          if (ballState.returnTimer <= 0) {
+            ballState.held = true
+            ballState.vel.set(0, 0, 0)
+          }
+        }
+      }
 
       // Phase 16.15 — multiplayer pickup game sign (DEFERRED)
       // Until WebRTC/Socket.IO server infrastructure is online, the court is
@@ -963,6 +1062,9 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
       scene.add(mesh)
     })
 
+    // Track gamepad A-button "fired" edge so holding doesn't auto-spam shots
+    const ballState_aHeld = { fired: false }
+
     // ─── Animation Loop ──────────────────────────────────────
     // Phase 16.24 — SPEED is now in units PER SECOND, not per-frame. Frame-rate
     // independent movement so character walks the same pace at 60fps (empty
@@ -1052,6 +1154,48 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
       if (mag > 0.05) {
         playerGroup.rotation.y = Math.atan2(dirX, -dirZ)
       }
+
+      // Phase 16.27 — basketball follow + physics tick (city only)
+      const ballRef = (scene.userData as any).ball
+      if (ballRef) {
+        const { ball, ballState } = ballRef
+        if (ballState.held) {
+          // Ball hovers in front of character at hand height
+          const handOffset = new THREE.Vector3(
+            Math.sin(playerGroup.rotation.y) * 0.6,
+            1.3,
+            Math.cos(playerGroup.rotation.y) * 0.6,
+          )
+          ball.position.copy(playerGroup.position).add(handOffset)
+        } else {
+          // Physics tick (gravity + velocity integration + score detection)
+          ;(scene.userData as any).gravity(dtSec)
+        }
+        // Spin the ball based on velocity for visual juice
+        ball.rotation.x += ballState.vel.z * dtSec * 4
+        ball.rotation.z -= ballState.vel.x * dtSec * 4
+      }
+
+      // Keyboard shoot: B key triggers shot (also gamepad A button below)
+      if (keys['b'] && shootRef.current) {
+        keys['b'] = false  // single-fire
+        shootRef.current()
+      }
+      // Gamepad A button (button 0) — also triggers shot
+      try {
+        const pads = (typeof navigator !== 'undefined' && navigator.getGamepads) ? navigator.getGamepads() : []
+        for (const p of pads) {
+          if (p && p.buttons[0]?.pressed) {
+            if (shootRef.current && !ballState_aHeld.fired) {
+              shootRef.current()
+              ballState_aHeld.fired = true
+            }
+            break
+          } else if (p) {
+            ballState_aHeld.fired = false
+          }
+        }
+      } catch {}
 
       // Camera follow — Phase 16.21 — orbits character based on yaw/pitch.
       // Drag the canvas to look around 360°; character moves relative to
@@ -1180,6 +1324,17 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         </div>
       </div>
 
+      {/* Phase 16.27 — basketball SHOOT button (city theme only, all devices) */}
+      {theme === 'city' && (
+        <button
+          onPointerDown={(e) => { e.stopPropagation(); shootRef.current?.() }}
+          className="absolute bottom-16 right-3 z-20 w-20 h-20 rounded-full bg-gradient-to-br from-orange-500/30 to-orange-600/50 backdrop-blur border-2 border-orange-400/60 text-white text-3xl font-bold active:scale-95 active:from-orange-500/50 active:to-orange-700/70 transition shadow-[0_0_20px_rgba(234,88,12,0.4)] flex items-center justify-center"
+          aria-label="Shoot basketball"
+        >
+          🏀
+        </button>
+      )}
+
       {/* HUD */}
       <div className="absolute top-3 left-3 pointer-events-none space-y-1 max-w-[60vw]">
         <div className="px-2 py-1 rounded bg-black/70 backdrop-blur border border-yellow-500/30 text-[9px] font-mono text-yellow-400 truncate">
@@ -1203,6 +1358,13 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         {theme === 'city' && cityLocation && (
           <div className="px-2 py-1 rounded bg-yellow-500/15 backdrop-blur border border-yellow-500/40 text-[9px] font-mono text-yellow-300 max-w-[60vw] truncate">
             📍 {cityLocation.label}
+          </div>
+        )}
+        {/* Phase 16.27 — basketball score HUD (city theme only) */}
+        {theme === 'city' && (
+          <div className="px-2 py-1 rounded bg-orange-500/15 backdrop-blur border border-orange-500/40 text-[10px] font-mono text-orange-300 flex items-center gap-2">
+            🏀 <span className="font-bold">{hoopScore.makes}</span>/<span>{hoopScore.attempts}</span>
+            {hoopScore.streak >= 3 && <span className="ml-1 text-yellow-300">🔥 {hoopScore.streak}</span>}
           </div>
         )}
         {/* Phase 16.16 — city-mode address search (OSM Nominatim, free, no key).
