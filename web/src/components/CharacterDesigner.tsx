@@ -1680,12 +1680,34 @@ function AiBuildPanel({
           </div>
         )}
 
+        {/* Loading skeleton — shimmering placeholder during generation */}
+        {loading && !config.aiPortraitDataUrl && (
+          <div className="w-full max-w-[400px] mx-auto aspect-[3/4] rounded border border-pink-500/20 bg-gradient-to-br from-pink-500/5 via-purple-500/5 to-pink-500/5 animate-pulse flex flex-col items-center justify-center gap-2">
+            <div className="w-12 h-12 rounded-full border-2 border-pink-400/30 border-t-pink-400 animate-spin" />
+            <div className="text-[10px] font-mono text-pink-300/70 px-4 text-center">
+              SDXL rendering on RTX 5000<br />
+              <span className="text-[9px] text-pink-300/40">Cold-start ~30-60s · warm ~10-15s</span>
+            </div>
+          </div>
+        )}
+
+        {/* First-time placeholder — before any portrait exists */}
+        {!loading && !config.aiPortraitDataUrl && (
+          <div className="w-full max-w-[400px] mx-auto aspect-[3/4] rounded border-2 border-dashed border-pink-500/15 bg-pink-500/[0.02] flex flex-col items-center justify-center gap-2 text-pink-300/40">
+            <div className="text-3xl">🎨</div>
+            <div className="text-[10px] font-mono text-center px-4">Tweak the sliders above and tap<br /><span className="text-pink-300/70">✨ Generate Character</span><br />to see your build come to life</div>
+          </div>
+        )}
+
         {/* Portrait preview */}
         {config.aiPortraitDataUrl && (
           <div className="space-y-2">
             <div className="text-[9px] font-mono text-gray-500 uppercase">Your character:</div>
             <img src={config.aiPortraitDataUrl} alt="AI-generated character"
-              className="w-full max-w-[400px] mx-auto rounded border border-pink-500/20" />
+              className={`w-full max-w-[400px] mx-auto rounded border border-pink-500/20 ${loading ? 'opacity-40' : ''}`} />
+            {loading && (
+              <div className="text-[10px] font-mono text-pink-300 text-center animate-pulse">⚡ Regenerating with new settings…</div>
+            )}
             {config.aiPortraitSeed != null && (
               <div className="text-[9px] font-mono text-gray-500 italic text-center">
                 seed: {config.aiPortraitSeed} · tweak any slider + Regenerate to keep the same character
@@ -1694,9 +1716,10 @@ function AiBuildPanel({
 
             {/* Phase 16.3 — 3D mesh generation */}
             <div className="space-y-1 pt-2">
-              <button onClick={generate3DMesh} disabled={meshLoading}
-                className="w-full py-2 rounded text-xs font-mono font-bold bg-gradient-to-br from-cyan-500/30 to-blue-500/30 text-cyan-200 border border-cyan-500/40 hover:from-cyan-500/40 hover:to-blue-500/40 disabled:opacity-40 disabled:cursor-not-allowed transition">
-                {meshLoading ? '🔮 Lifting to 3D on RTX 5000 …' : config.aiGlbUrl ? '🔁 Regenerate 3D Mesh' : '🔮 Generate 3D Mesh (TripoSR)'}
+              <button onClick={generate3DMesh} disabled={meshLoading || loading}
+                className="w-full py-2 rounded text-xs font-mono font-bold bg-gradient-to-br from-cyan-500/30 to-blue-500/30 text-cyan-200 border border-cyan-500/40 hover:from-cyan-500/40 hover:to-blue-500/40 disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center justify-center gap-2">
+                {meshLoading && <span className="inline-block w-3 h-3 rounded-full border border-cyan-400/30 border-t-cyan-400 animate-spin" />}
+                {meshLoading ? 'Lifting to 3D on RTX 5000 — TripoSR ~25-40s' : config.aiGlbUrl ? '🔁 Regenerate 3D Mesh' : '🔮 Generate 3D Mesh (TripoSR)'}
               </button>
               {meshError && (
                 <div className="text-[10px] font-mono text-yellow-400 bg-yellow-500/10 border border-yellow-500/20 rounded px-3 py-2">
@@ -1740,6 +1763,18 @@ function AiBuildPanel({
 
 function Mesh3DViewer({ glbUrl, onClose }: { glbUrl: string; onClose: () => void }) {
   const containerRef = useRef<HTMLDivElement>(null)
+
+  // Esc-to-close + body-scroll lock while viewer open
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', onKey)
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      document.body.style.overflow = prevOverflow
+    }
+  }, [onClose])
 
   useEffect(() => {
     if (!containerRef.current) return
