@@ -1464,6 +1464,10 @@ function AiBuildPanel({
   const [error, setError] = useState<string | null>(null)
   const [variant, setVariant] = useState<'portrait' | 'face'>('portrait')
   const [showAdvanced, setShowAdvanced] = useState(false)
+  // Phase 16.3 — 3D mesh generation state
+  const [meshLoading, setMeshLoading] = useState(false)
+  const [meshError, setMeshError] = useState<string | null>(null)
+  const [viewer3DOpen, setViewer3DOpen] = useState(false)
 
   const composedPrompt = composePrompt(spec)
   const tweak = (patch: Partial<AiBuildSpec>) => setSpec((s) => ({ ...s, ...patch }))
@@ -1500,6 +1504,46 @@ function AiBuildPanel({
       setError(err?.message || 'Generation failed — anvil SDXL may not be reachable')
     } finally {
       setLoading(false)
+    }
+  }
+
+  // Phase 16.3 — Generate 3D mesh via TripoSR on anvil.
+  // Sends the SDXL portrait's raw base64 bytes to /api/character/portrait-to-mesh,
+  // which returns a binary GLB. Convert to data URL so it persists in character config
+  // across page refreshes (Blob URLs die on refresh).
+  async function generate3DMesh() {
+    if (!config.aiPortraitDataUrl) {
+      setMeshError('Generate a 2D portrait first, then we can lift it to 3D')
+      return
+    }
+    setMeshLoading(true)
+    setMeshError(null)
+    try {
+      // Strip data URL prefix to get raw base64
+      const b64 = config.aiPortraitDataUrl.replace(/^data:image\/[a-zA-Z]+;base64,/, '')
+      const res = await fetch('/api/character/portrait-to-mesh', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image_b64: b64, resolution: 256, remove_bg: true }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error || `HTTP ${res.status}`)
+      }
+      const blob = await res.blob()
+      // Convert GLB bytes → data URL for character config persistence
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onloadend = () => resolve(String(reader.result))
+        reader.onerror = () => reject(reader.error)
+        reader.readAsDataURL(blob)
+      })
+      update({ aiGlbUrl: dataUrl })
+      setViewer3DOpen(true)
+    } catch (err: any) {
+      setMeshError(err?.message || '3D mesh generation failed — TripoSR may not be live on anvil yet')
+    } finally {
+      setMeshLoading(false)
     }
   }
 
@@ -1647,13 +1691,194 @@ function AiBuildPanel({
                 seed: {config.aiPortraitSeed} · tweak any slider + Regenerate to keep the same character
               </div>
             )}
+
+            {/* Phase 16.3 — 3D mesh generation */}
+            <div className="space-y-1 pt-2">
+              <button onClick={generate3DMesh} disabled={meshLoading}
+                className="w-full py-2 rounded text-xs font-mono font-bold bg-gradient-to-br from-cyan-500/30 to-blue-500/30 text-cyan-200 border border-cyan-500/40 hover:from-cyan-500/40 hover:to-blue-500/40 disabled:opacity-40 disabled:cursor-not-allowed transition">
+                {meshLoading ? '🔮 Lifting to 3D on RTX 5000 …' : config.aiGlbUrl ? '🔁 Regenerate 3D Mesh' : '🔮 Generate 3D Mesh (TripoSR)'}
+              </button>
+              {meshError && (
+                <div className="text-[10px] font-mono text-yellow-400 bg-yellow-500/10 border border-yellow-500/20 rounded px-3 py-2">
+                  {meshError}
+                </div>
+              )}
+              {config.aiGlbUrl && (
+                <div className="flex gap-2">
+                  <button onClick={() => setViewer3DOpen(true)}
+                    className="flex-1 py-1.5 rounded text-[10px] font-mono bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 hover:bg-cyan-500/25 transition">
+                    🌀 Rotate 3D
+                  </button>
+                  <button onClick={() => update({ type: 'ai', humanGlbUrl: config.aiGlbUrl })}
+                    className="flex-1 py-1.5 rounded text-[10px] font-mono bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/25 transition">
+                    ✓ Use in Explore3D
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
+        )}
+
+        {/* 3D viewer modal */}
+        {viewer3DOpen && config.aiGlbUrl && (
+          <Mesh3DViewer glbUrl={config.aiGlbUrl} onClose={() => setViewer3DOpen(false)} />
         )}
       </div>
 
       <div className="px-4 py-2 border-t border-pink-500/10 bg-black/40 flex items-center justify-between text-[8px] font-mono text-gray-600">
-        <span>Powered by Lucy SDXL on anvil · RTX 5000 · stable-diffusion-xl</span>
-        <span className="text-pink-500">🎨 Phase 16.2</span>
+        <span>Powered by Lucy SDXL + TripoSR on anvil · RTX 5000</span>
+        <span className="text-pink-500">🎨 Phase 16.3</span>
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Mesh3DViewer — Three.js GLB viewer with OrbitControls.
+// Modal overlay. Loads from data URL or remote URL. Auto-frames the model.
+// ─────────────────────────────────────────────────────────────────────────
+
+function Mesh3DViewer({ glbUrl, onClose }: { glbUrl: string; onClose: () => void }) {
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!containerRef.current) return
+    const container = containerRef.current
+
+    let disposed = false
+    let rafId = 0
+    let cleanup: (() => void) | null = null
+
+    // Dynamic import keeps three.js out of the main bundle for users who never tap the viewer
+    void Promise.all([
+      import('three'),
+      import('three/examples/jsm/loaders/GLTFLoader.js'),
+      import('three/examples/jsm/controls/OrbitControls.js'),
+    ]).then(([THREE, { GLTFLoader }, { OrbitControls }]) => {
+      if (disposed) return
+
+      const width = container.clientWidth
+      const height = container.clientHeight
+
+      const scene = new THREE.Scene()
+      scene.background = new THREE.Color(0x0a0a0a)
+
+      const camera = new THREE.PerspectiveCamera(45, width / height, 0.01, 100)
+      camera.position.set(0, 0.5, 2.5)
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false })
+      renderer.setPixelRatio(window.devicePixelRatio)
+      renderer.setSize(width, height)
+      container.appendChild(renderer.domElement)
+
+      // Lighting — three-point setup for clean character display
+      const ambient = new THREE.AmbientLight(0xffffff, 0.45)
+      scene.add(ambient)
+      const key = new THREE.DirectionalLight(0xffffff, 1.0)
+      key.position.set(2, 3, 2)
+      scene.add(key)
+      const fill = new THREE.DirectionalLight(0x88ccff, 0.4)
+      fill.position.set(-2, 1, -2)
+      scene.add(fill)
+      const rim = new THREE.DirectionalLight(0xff66cc, 0.6)
+      rim.position.set(0, -1, -3)
+      scene.add(rim)
+
+      // Floor grid for spatial anchor
+      const grid = new THREE.GridHelper(4, 16, 0x222244, 0x111122)
+      ;(grid.material as THREE.Material).transparent = true
+      ;(grid.material as THREE.Material).opacity = 0.4
+      scene.add(grid)
+
+      const controls = new OrbitControls(camera, renderer.domElement)
+      controls.enableDamping = true
+      controls.dampingFactor = 0.1
+      controls.autoRotate = true
+      controls.autoRotateSpeed = 1.2
+      controls.target.set(0, 0.5, 0)
+
+      const loader = new GLTFLoader()
+      loader.load(
+        glbUrl,
+        (gltf: any) => {
+          if (disposed) return
+          const model = gltf.scene as any
+          // Auto-frame: compute bounding box, scale to fit ~1.5 units, recenter
+          const box = new THREE.Box3().setFromObject(model)
+          const size = new THREE.Vector3()
+          box.getSize(size)
+          const maxDim = Math.max(size.x, size.y, size.z)
+          if (maxDim > 0) {
+            const targetSize = 1.5
+            model.scale.setScalar(targetSize / maxDim)
+          }
+          const newBox = new THREE.Box3().setFromObject(model)
+          const center = new THREE.Vector3()
+          newBox.getCenter(center)
+          model.position.sub(center)  // center at origin
+          model.position.y += (newBox.max.y - newBox.min.y) / 2  // sit on grid plane
+          scene.add(model)
+        },
+        undefined,
+        (err: any) => {
+          console.error('[Mesh3DViewer] GLB load failed:', err)
+        }
+      )
+
+      const onResize = () => {
+        const w = container.clientWidth
+        const h = container.clientHeight
+        camera.aspect = w / h
+        camera.updateProjectionMatrix()
+        renderer.setSize(w, h)
+      }
+      window.addEventListener('resize', onResize)
+
+      const tick = () => {
+        if (disposed) return
+        controls.update()
+        renderer.render(scene, camera)
+        rafId = requestAnimationFrame(tick)
+      }
+      tick()
+
+      cleanup = () => {
+        window.removeEventListener('resize', onResize)
+        controls.dispose()
+        renderer.dispose()
+        if (renderer.domElement.parentNode === container) {
+          container.removeChild(renderer.domElement)
+        }
+        scene.traverse((obj: any) => {
+          if (obj.geometry) obj.geometry.dispose()
+          if (obj.material) {
+            const mat = obj.material as any
+            if (Array.isArray(mat)) mat.forEach((m: any) => m.dispose())
+            else mat.dispose()
+          }
+        })
+      }
+    })
+
+    return () => {
+      disposed = true
+      if (rafId) cancelAnimationFrame(rafId)
+      if (cleanup) cleanup()
+    }
+  }, [glbUrl])
+
+  return (
+    <div className="fixed inset-0 z-[300] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-black border border-cyan-500/30 rounded-xl shadow-[0_0_40px_rgba(34,211,238,0.3)] max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
+        <div className="px-4 py-2 border-b border-cyan-500/20 flex items-center justify-between">
+          <div className="font-mono text-xs text-cyan-300">🌀 3D Character — drag to rotate · scroll to zoom · auto-spinning</div>
+          <button onClick={onClose} className="text-gray-400 hover:text-white text-lg leading-none">×</button>
+        </div>
+        <div ref={containerRef} className="flex-1 min-h-[500px] bg-[#0a0a0a]" />
+        <div className="px-4 py-2 border-t border-cyan-500/20 bg-black/50 text-[10px] font-mono text-cyan-500/70 flex items-center justify-between">
+          <span>TripoSR · 550M params · RTX 5000 Turing</span>
+          <a href={glbUrl} download="character.glb" className="text-cyan-400 hover:text-cyan-300">⬇ Download GLB</a>
+        </div>
       </div>
     </div>
   )

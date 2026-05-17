@@ -357,14 +357,20 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
 
     // ─── Player Avatar — Humanoid GLB or Agent Pill ──────────
     const playerGroup = new THREE.Group()
-    // Both 'human' (RPM) and 'opensource' (CC0/MIT) modes load a GLB
-    const isGlbAvatar = (character.type === 'human' || character.type === 'opensource') && character.humanGlbUrl
+    // human (RPM) + opensource (CC0/MIT) + ai (TripoSR Phase 16.3) all load a GLB.
+    // For type='ai' the URL lives on aiGlbUrl; the Save-as-Avatar flow also
+    // copies it into humanGlbUrl so legacy paths keep working unchanged.
+    const glbUrl =
+      character.type === 'ai'
+        ? (character as any).aiGlbUrl || character.humanGlbUrl
+        : character.humanGlbUrl
+    const isGlbAvatar = (character.type === 'human' || character.type === 'opensource' || character.type === 'ai') && glbUrl
 
     if (isGlbAvatar) {
-      // GLB AVATAR — RPM or open-source CC0/MIT humanoid
+      // GLB AVATAR — RPM, open-source CC0/MIT humanoid, or AI-generated TripoSR mesh
       const loader = new GLTFLoader()
       loader.load(
-        character.humanGlbUrl!,
+        glbUrl!,
         (gltf) => {
           const model = gltf.scene
           // Open-source models vary wildly in scale (Horse=0.015, Duck=0.5, Soldier=1.0).
