@@ -1974,13 +1974,14 @@ function LivePreview3D({ spec, face, bigMode }: { spec: AiBuildSpec; face: AiFac
   const cameraRef = useRef<any>(null)
   const controlsRef = useRef<any>(null)
   const headBoneRef = useRef<any>(null)
+  const modelHeightRef = useRef<number>(1.8)  // measured at load time
   const morphMeshesRef = useRef<any[]>([])
   const skinMatsRef = useRef<any[]>([])
   const accentMatsRef = useRef<any[]>([])
   const [ready, setReady] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
   // bigMode = face tab — viewport gets taller, camera zooms to head
-  const viewportHeight = bigMode ? 480 : 320
+  const viewportHeight = bigMode ? 480 : 380
 
   // Mount the Three.js scene ONCE per panel mount.
   useEffect(() => {
@@ -2081,18 +2082,35 @@ function LivePreview3D({ spec, face, bigMode }: { spec: AiBuildSpec; face: AiFac
             // Fallback if only ONE mesh: that material gets both skin + accent treatment
             if (accentMatsRef.current.length === 0) accentMatsRef.current.push(meshes[0].material)
           }
-          // Auto-frame the model
-          const box = new THREE.Box3().setFromObject(model)
-          const size = new THREE.Vector3(); box.getSize(size)
-          const center = new THREE.Vector3(); box.getCenter(center)
-          model.position.x -= center.x
-          model.position.z -= center.z
-          model.position.y -= box.min.y  // feet on grid
+          // Recenter the model so feet are on the grid and X/Z are centered.
+          // Then compute the ACTUAL height of the model so the camera can be
+          // auto-framed (XBot is ~2.0 units tall; older fallback code assumed
+          // ~1.7 and the head was clipping above the viewport).
+          const preBox = new THREE.Box3().setFromObject(model)
+          const preCenter = new THREE.Vector3(); preBox.getCenter(preCenter)
+          model.position.x -= preCenter.x
+          model.position.z -= preCenter.z
+          model.position.y -= preBox.min.y  // feet on grid
           scene.add(model)
           modelRef.current = model
+
+          // Recompute bbox AFTER repositioning — use these dimensions to frame
+          // the camera so the whole character is in view with breathing room.
+          const box = new THREE.Box3().setFromObject(model)
+          const size = new THREE.Vector3(); box.getSize(size)
+          const modelHeight = size.y || 1.8
+          modelHeightRef.current = modelHeight
+          // Frame body: camera distance = ~1.8 * model height so the figure
+          // fills the vertical viewport with a little headroom.
+          const bodyDistance = modelHeight * 1.6
+          const bodyTargetY = modelHeight * 0.5
+          camera.position.set(0, bodyTargetY + modelHeight * 0.1, bodyDistance)
+          controls.target.set(0, bodyTargetY, 0)
+          controls.update()
+
           // Log which source won + whether face morphs are available
           const hasMorphs = morphMeshesRef.current.length > 0
-          console.log(`[LivePreview3D] loaded ${sourceUrl} — ${hasMorphs ? 'WITH' : 'NO'} face morphs (${morphMeshesRef.current.length} morph-capable meshes)`)
+          console.log(`[LivePreview3D] loaded ${sourceUrl} — model height ${modelHeight.toFixed(2)}u — ${hasMorphs ? 'WITH' : 'NO'} face morphs (${morphMeshesRef.current.length} morph-capable meshes)`)
           setReady(true)
         }
       tryLoad(0)
@@ -2205,20 +2223,29 @@ function LivePreview3D({ spec, face, bigMode }: { spec: AiBuildSpec; face: AiFac
     })
   }, [ready, face])
 
-  // Camera-zoom effect — when face tab is active, smoothly zoom camera to head.
-  // When body tab returns, zoom back out to full body.
+  // Camera-zoom effect — face mode zooms to head, body mode shows full figure.
+  // All positions derive from the measured model height so it works regardless
+  // of which mannequin source loaded (XBot ~1.7u, RPM avatars ~1.8u, etc).
   useEffect(() => {
     if (!ready || !cameraRef.current || !controlsRef.current) return
     const camera = cameraRef.current
     const controls = controlsRef.current
+    const h = modelHeightRef.current || 1.8
     if (bigMode) {
-      // Face mode: camera tracks head bone or upper-third of model
-      const headY = headBoneRef.current?.getWorldPosition?.(new THREE.Vector3())?.y || 1.6
-      camera.position.set(0, 1.6, 1.0)
-      controls.target.set(0, headY || 1.6, 0)
+      // Face mode: track head bone if present, else top-92% of model
+      let headY = h * 0.92
+      if (headBoneRef.current) {
+        const v = new THREE.Vector3()
+        headBoneRef.current.getWorldPosition(v)
+        if (v.y > 0) headY = v.y
+      }
+      camera.position.set(0, headY, h * 0.55)
+      controls.target.set(0, headY, 0)
     } else {
-      camera.position.set(0, 1.3, 2.4)
-      controls.target.set(0, 1, 0)
+      // Body mode: frame the full figure with headroom
+      const targetY = h * 0.5
+      camera.position.set(0, targetY + h * 0.1, h * 1.6)
+      controls.target.set(0, targetY, 0)
     }
     controls.update()
   }, [ready, bigMode])
