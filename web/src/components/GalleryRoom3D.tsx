@@ -14,11 +14,13 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react'
 import * as THREE from 'three'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { useRouter } from 'next/router'
 import { Music, X, Heart, Share2, Play, Pause, Volume2, Copy, Check, Paintbrush, Plus } from 'lucide-react'
 import { toast } from 'react-toastify'
 import { FURNITURE_CATALOG, FURNITURE_CATEGORIES, filterByCategory, getPlacedFurniture, savePlacedFurniture, getFurnitureById, type PlacedFurniture, type FurnitureCategory } from 'lib/nodeverse/galleryFurniture'
 import { AudioPlayer } from 'components/AudioPlayer'
+import { getStoredCharacter, type CharacterConfig } from 'components/CharacterDesigner'
 
 interface Track {
   id: string
@@ -293,16 +295,64 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
       }
     })
 
-    // ─── Player capsule (you, in the gallery) ────────────────
+    // ─── Player avatar — saved character (GLB if available, capsule fallback) ──
+    // Phase 16.11 — reads the same character config the user saves in
+    // CharacterDesigner. If type is 'human'/'opensource'/'ai' and a humanGlbUrl
+    // (or aiGlbUrl) is present, loads it; otherwise renders the legacy capsule.
     const playerGroup = new THREE.Group()
-    const playerGeo = new THREE.CapsuleGeometry(0.4, 1, 4, 8)
-    const playerMat = new THREE.MeshStandardMaterial({ color: themeCfg.accent, emissive: themeCfg.accent, emissiveIntensity: 0.3, metalness: 0.5, roughness: 0.3 })
-    const playerMesh = new THREE.Mesh(playerGeo, playerMat)
-    playerMesh.position.y = 1
-    playerMesh.castShadow = true
-    playerGroup.add(playerMesh)
     playerGroup.position.set(0, 0, 5)
     scene.add(playerGroup)
+
+    const character = getStoredCharacter()
+    const glbUrl = character.type === 'ai'
+      ? (character as any).aiGlbUrl || character.humanGlbUrl
+      : character.humanGlbUrl
+    const isGlbAvatar = (character.type === 'human' || character.type === 'opensource' || character.type === 'ai') && glbUrl
+
+    if (isGlbAvatar) {
+      const loader = new GLTFLoader()
+      loader.load(
+        glbUrl!,
+        (gltf) => {
+          const model = gltf.scene
+          const baseScale = character.humanScale ?? 1
+          const heightMul = character.height ?? 1
+          model.scale.setScalar(baseScale * heightMul)
+          model.position.y = character.humanYOffset ?? 0
+          model.traverse((obj: any) => {
+            if (obj.isMesh) {
+              obj.castShadow = true
+              obj.receiveShadow = true
+            }
+          })
+          playerGroup.add(model)
+        },
+        undefined,
+        (err) => {
+          console.error('[GalleryRoom3D] character GLB load failed, falling back to capsule:', err)
+          const fallbackGeo = new THREE.CapsuleGeometry(0.4, 1, 4, 8)
+          const fallbackMat = new THREE.MeshStandardMaterial({ color: themeCfg.accent, emissive: themeCfg.accent, emissiveIntensity: 0.3, metalness: 0.5, roughness: 0.3 })
+          const fallbackMesh = new THREE.Mesh(fallbackGeo, fallbackMat)
+          fallbackMesh.position.y = 1
+          fallbackMesh.castShadow = true
+          playerGroup.add(fallbackMesh)
+        }
+      )
+    } else {
+      // Legacy capsule for AGENT type or no saved character
+      const playerGeo = new THREE.CapsuleGeometry(0.4, 1, 4, 8)
+      const playerMat = new THREE.MeshStandardMaterial({
+        color: character.bodyColor || themeCfg.accent,
+        emissive: character.glowColor || themeCfg.accent,
+        emissiveIntensity: character.glowIntensity ?? 0.3,
+        metalness: 0.5,
+        roughness: 0.3,
+      })
+      const playerMesh = new THREE.Mesh(playerGeo, playerMat)
+      playerMesh.position.y = 1
+      playerMesh.castShadow = true
+      playerGroup.add(playerMesh)
+    }
 
     // ─── Movement ────────────────────────────────────────────
     const keys: Record<string, boolean> = {}
