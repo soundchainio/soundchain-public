@@ -51,6 +51,13 @@ export interface CharacterConfig {
   aiBuildSpec?: AiBuildSpec // Phase 16.2 — NBA2K slider config that composed the prompt
   aiGlbUrl?: string         // Phase 16.3 — TripoSR-generated 3D mesh (data URL or anvil URL)
   aiFaceSpec?: AiFaceSpec   // Phase 16.6 — InZOI-style precision face morph weights (0-1)
+  // Phase 16.20 — droid/agent customizer extensions
+  chassisType?: 'capsule' | 'mech' | 'quadruped' | 'sphere' | 'cyber-monk' | 'anime-mech' | 'biomech' | 'holosphere' | 'wireframe' | 'decay-bot'
+  chassisFinish?: 'chrome' | 'matte' | 'holographic' | 'translucent' | 'glowing' | 'decayed' | 'clean-industrial' | 'biomech-organic' | 'painted-tags' | 'rusted'
+  faction?: 'neutral' | 'military' | 'luxury' | 'scavenger' | 'holy' | 'glitch' | 'synthwave' | 'voidwalker'
+  modules?: Array<'visor' | 'antenna' | 'wings' | 'halo' | 'crown' | 'sensors' | 'aura' | 'runic-glyphs' | 'shoulder-mount' | 'back-pack' | 'tail-stinger'>
+  animProfile?: 'idle' | 'dance' | 'glitch' | 'combat' | 'hover' | 'patrol' | 'meditate'
+  hudGlow?: string  // hex tint for HUD overlay glow on chassis
 }
 
 // Phase 16.6 — face precision sliders. Maps 1:1 to ARkit-style face blendshapes
@@ -1025,7 +1032,7 @@ export function CharacterDesigner({ open, onClose, initialName }: CharacterDesig
 
             {/* Accessory */}
             <div>
-              <label className="text-[9px] font-mono text-gray-500 uppercase tracking-wider mb-1 block">Accessory</label>
+              <label className="text-[9px] font-mono text-gray-500 uppercase tracking-wider mb-1 block">Head Accessory</label>
               <div className="grid grid-cols-5 gap-1">
                 {(['none', 'crown', 'halo', 'antenna', 'visor'] as const).map(acc => (
                   <button
@@ -1036,6 +1043,86 @@ export function CharacterDesigner({ open, onClose, initialName }: CharacterDesig
                     {acc === 'none' ? '—' : acc}
                   </button>
                 ))}
+              </div>
+            </div>
+
+            {/* Phase 16.20 — DROID CHASSIS expansion. Adds 10 chassis types
+                + 10 finishes + 8 factions + modular add-ons + animation
+                profiles. Flows into the SDXL prompt when generating agent
+                NFTs and is documented for future 3D mesh swap. */}
+            <div className="pt-2 mt-2 border-t border-cyan-500/10">
+              <div className="text-[10px] font-mono text-cyan-300/70 bg-cyan-500/5 p-2 rounded border border-cyan-500/10 leading-relaxed mb-2">
+                🤖 DROID CHASSIS — Phase 16.20. The classic capsule still works (default). Pick a chassis type below to flavor the agent's silhouette. Modular accessories stack (multi-select).
+              </div>
+              <div className="space-y-2">
+                <div>
+                  <label className="text-[9px] font-mono text-gray-500 uppercase tracking-wider mb-1 block">Chassis Type</label>
+                  <div className="flex flex-wrap gap-1">
+                    {(['capsule', 'mech', 'quadruped', 'sphere', 'cyber-monk', 'anime-mech', 'biomech', 'holosphere', 'wireframe', 'decay-bot'] as const).map(c => (
+                      <button key={c} onClick={() => update({ chassisType: c })}
+                        className={`px-2 py-1 rounded text-[9px] font-mono transition ${(config.chassisType || 'capsule') === c ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40' : 'bg-white/[0.02] text-gray-500 border border-white/5 hover:text-white'}`}>
+                        {c}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[9px] font-mono text-gray-500 uppercase tracking-wider mb-1 block">Chassis Finish</label>
+                  <div className="flex flex-wrap gap-1">
+                    {(['chrome', 'matte', 'holographic', 'translucent', 'glowing', 'decayed', 'clean-industrial', 'biomech-organic', 'painted-tags', 'rusted'] as const).map(c => (
+                      <button key={c} onClick={() => update({ chassisFinish: c })}
+                        className={`px-2 py-1 rounded text-[9px] font-mono transition ${(config.chassisFinish || 'chrome') === c ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40' : 'bg-white/[0.02] text-gray-500 border border-white/5 hover:text-white'}`}>
+                        {c}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[9px] font-mono text-gray-500 uppercase tracking-wider mb-1 block">Faction</label>
+                  <div className="flex flex-wrap gap-1">
+                    {(['neutral', 'military', 'luxury', 'scavenger', 'holy', 'glitch', 'synthwave', 'voidwalker'] as const).map(f => (
+                      <button key={f} onClick={() => update({ faction: f })}
+                        className={`px-2 py-1 rounded text-[9px] font-mono transition ${(config.faction || 'neutral') === f ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40' : 'bg-white/[0.02] text-gray-500 border border-white/5 hover:text-white'}`}>
+                        {f}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[9px] font-mono text-gray-500 uppercase tracking-wider mb-1 block">Modular Add-ons (multi-select)</label>
+                  <div className="flex flex-wrap gap-1">
+                    {(['visor', 'antenna', 'wings', 'halo', 'crown', 'sensors', 'aura', 'runic-glyphs', 'shoulder-mount', 'back-pack', 'tail-stinger'] as const).map(m => {
+                      const active = (config.modules || []).includes(m)
+                      return (
+                        <button key={m} onClick={() => {
+                          const cur = config.modules || []
+                          update({ modules: active ? cur.filter(x => x !== m) : [...cur, m] })
+                        }} className={`px-2 py-1 rounded text-[9px] font-mono transition ${active ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/40' : 'bg-white/[0.02] text-gray-500 border border-white/5 hover:text-white'}`}>
+                          {active ? '✓ ' : ''}{m}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[9px] font-mono text-gray-500 uppercase tracking-wider mb-1 block">Animation Profile</label>
+                  <div className="flex flex-wrap gap-1">
+                    {(['idle', 'dance', 'glitch', 'combat', 'hover', 'patrol', 'meditate'] as const).map(a => (
+                      <button key={a} onClick={() => update({ animProfile: a })}
+                        className={`px-2 py-1 rounded text-[9px] font-mono transition ${(config.animProfile || 'idle') === a ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40' : 'bg-white/[0.02] text-gray-500 border border-white/5 hover:text-white'}`}>
+                        {a}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[9px] font-mono text-gray-500 uppercase tracking-wider mb-1 block">HUD Glow Color</label>
+                  <div className="flex items-center gap-2">
+                    <input type="color" value={config.hudGlow || config.glowColor || '#22d3ee'} onChange={e => update({ hudGlow: e.target.value })} className="w-10 h-7 rounded border border-white/10 bg-transparent cursor-pointer" />
+                    <span className="font-mono text-[10px] text-gray-500">{config.hudGlow || '(matches glow)'}</span>
+                    {config.hudGlow && <button onClick={() => update({ hudGlow: undefined })} className="text-[9px] font-mono text-gray-500 hover:text-cyan-300 underline">reset</button>}
+                  </div>
+                </div>
               </div>
             </div>
             </>)}{/* end body-panel controls */}
