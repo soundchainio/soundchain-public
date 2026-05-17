@@ -833,7 +833,13 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
     })
 
     // ─── Animation Loop ──────────────────────────────────────
-    const SPEED = 0.18
+    // Phase 16.24 — SPEED is now in units PER SECOND, not per-frame. Frame-rate
+    // independent movement so character walks the same pace at 60fps (empty
+    // room) vs 15fps (city theme with all the brick textures, billboards,
+    // streetlamps, and basketball court grinding GPU). Old SPEED 0.18/frame
+    // at 60fps = 10.8 u/sec — match that as the baseline, bump slightly for
+    // a snappier feel since the gallery is large.
+    const SPEED = 12  // units per second (was 0.18 per frame)
     const PLAYER_BOUNDS = 19
     let lastFrame = performance.now()
     let frameCount = 0
@@ -843,6 +849,7 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
     const animate = () => {
       rafId = requestAnimationFrame(animate)
       const now = performance.now()
+      const dtSec = Math.min(0.1, (now - lastFrame) / 1000)  // clamp 100ms to avoid huge jumps after tab-switch
       lastFrame = now
       frameCount++
       if (now - fpsLastUpdate > 1000) {
@@ -886,13 +893,27 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
       } catch {}
       // Combine keyboard + gamepad; gamepad axes are analog (-1..1) so they
       // can express finer movement than binary keys.
-      const moveX = (right - left) + gpX
-      const moveZ = -(fwd - back) + gpY
-      const mag = Math.min(1, Math.hypot(moveX, moveZ))
-      const dirX = mag > 0.001 ? moveX / Math.hypot(moveX, moveZ) : 0
-      const dirZ = mag > 0.001 ? moveZ / Math.hypot(moveX, moveZ) : 0
-      playerGroup.position.x += dirX * SPEED * mag
-      playerGroup.position.z += dirZ * SPEED * mag
+      // Phase 16.24 — input is now CAMERA-RELATIVE: W = forward in the
+      // direction the camera is looking (not world -Z). Press W with camera
+      // facing east, character walks east. Matches NBA2K/GTA player feel.
+      const rawX = (right - left) + gpX
+      const rawZ = -(fwd - back) + gpY
+      const mag = Math.min(1, Math.hypot(rawX, rawZ))
+      let dirX = 0, dirZ = 0
+      if (mag > 0.001) {
+        const norm = Math.hypot(rawX, rawZ)
+        // Local stick direction (in screen/camera space)
+        const localX = rawX / norm
+        const localZ = rawZ / norm
+        // Rotate by camera yaw to convert to world space
+        const cosY = Math.cos(cameraYaw)
+        const sinY = Math.sin(cameraYaw)
+        dirX = localX * cosY + localZ * sinY
+        dirZ = -localX * sinY + localZ * cosY
+      }
+      // Apply movement scaled by deltaTime (frame-rate independent)
+      playerGroup.position.x += dirX * SPEED * mag * dtSec
+      playerGroup.position.z += dirZ * SPEED * mag * dtSec
       playerGroup.position.x = Math.max(-PLAYER_BOUNDS, Math.min(PLAYER_BOUNDS, playerGroup.position.x))
       playerGroup.position.z = Math.max(-PLAYER_BOUNDS, Math.min(PLAYER_BOUNDS, playerGroup.position.z))
       if (mag > 0.05) {
