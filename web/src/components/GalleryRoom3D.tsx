@@ -320,7 +320,7 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
       sctx.fillStyle = '#000'; sctx.fillRect(0, 0, 1024, 128)
       sctx.strokeStyle = '#facc15'; sctx.lineWidth = 4; sctx.strokeRect(8, 8, 1008, 112)
       sctx.fillStyle = '#facc15'; sctx.font = 'bold 64px monospace'; sctx.textAlign = 'center'
-      sctx.fillText('🏀 THE COURT · 16.14', 512, 80)
+      sctx.fillText('🏀 THE COURT', 512, 80)
       const signTex = new THREE.CanvasTexture(signCanvas)
       const sign = new THREE.Mesh(
         new THREE.PlaneGeometry(6, 0.75),
@@ -328,6 +328,32 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
       )
       sign.position.set(0, 5.0, courtZ - 3.6)
       scene.add(sign)
+
+      // Phase 16.15 — multiplayer pickup game sign (DEFERRED)
+      // Until WebRTC/Socket.IO server infrastructure is online, the court is
+      // single-player visit-only. Sign tells visitors the multiplayer is
+      // coming + invites them to share the URL so friends can show up
+      // (today they'd see solo; future they'd see each other's avatars).
+      const comingSignCanvas = document.createElement('canvas')
+      comingSignCanvas.width = 1024; comingSignCanvas.height = 192
+      const cctx = comingSignCanvas.getContext('2d')!
+      cctx.fillStyle = 'rgba(0,0,0,0.85)'; cctx.fillRect(0, 0, 1024, 192)
+      cctx.strokeStyle = '#22d3ee'; cctx.lineWidth = 3
+      cctx.setLineDash([12, 12]); cctx.strokeRect(12, 12, 1000, 168)
+      cctx.setLineDash([])
+      cctx.fillStyle = '#22d3ee'; cctx.font = 'bold 38px monospace'; cctx.textAlign = 'center'
+      cctx.fillText('🚧 PICKUP GAMES — COMING SOON', 512, 65)
+      cctx.fillStyle = '#ffffff'; cctx.font = '24px monospace'
+      cctx.fillText('2v2 multiplayer · share this gallery URL', 512, 110)
+      cctx.fillText('to invite friends · play w/ controllers', 512, 145)
+      const comingSignTex = new THREE.CanvasTexture(comingSignCanvas)
+      const comingSign = new THREE.Mesh(
+        new THREE.PlaneGeometry(5, 0.95),
+        new THREE.MeshStandardMaterial({ map: comingSignTex, emissive: 0x22d3ee, emissiveIntensity: 0.15, emissiveMap: comingSignTex, transparent: true }),
+      )
+      comingSign.position.set(-7, 2.5, courtZ + 1)
+      comingSign.rotation.y = Math.PI / 6
+      scene.add(comingSign)
 
       // Streetlamps every 8 units on both sides
       for (let lz = -16; lz <= 16; lz += 8) {
