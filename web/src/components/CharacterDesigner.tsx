@@ -1568,10 +1568,12 @@ function AiBuildPanel({
     <div className="bg-black space-y-0">
       <div className="px-4 py-2 bg-pink-500/5 border-b border-pink-500/10">
         <p className="text-[10px] font-mono text-pink-300">
-          NBA2K-style player builder. Tweak sliders below → SDXL on anvil's RTX 5000 renders your character.
-          Same seed across tweaks = same character with the modified trait. Tap 🎲 New Character to roll fresh.
+          NBA2K-style player builder. Live 3D preview updates as you tweak. Tap ✨ Generate for high-quality SDXL render on RTX 5000.
         </p>
       </div>
+
+      {/* Phase 16.5 — LIVE 3D PREVIEW. Mannequin morphs in real-time as sliders change. */}
+      <LivePreview3D spec={spec} />
 
       <div className="p-4 space-y-3">
         {/* Variant + Seed row */}
@@ -1777,6 +1779,233 @@ function AiBuildPanel({
 // Mesh3DViewer — Three.js GLB viewer with OrbitControls.
 // Modal overlay. Loads from data URL or remote URL. Auto-frames the model.
 // ─────────────────────────────────────────────────────────────────────────
+
+// ─────────────────────────────────────────────────────────────────────────
+// LivePreview3D — Phase 16.5
+// Real-time 3D mannequin that morphs as the slider spec changes. The first
+// step toward our own Ready Player Me replacement: open-source rigged
+// humanoid GLB + per-spec material tints + per-spec body scale, all running
+// in the browser in pure Three.js.
+//
+// v1 covers: build scale (slim/athletic/muscular/bulky), skin tone tint,
+// top color tint (applied as a global accent). v2 will add face morph
+// targets (when we get a rigged GLB with blendshapes), hair piece swaps,
+// and outfit slot system.
+// ─────────────────────────────────────────────────────────────────────────
+
+const BASE_HUMANOID_GLB = 'https://threejs.org/examples/models/gltf/Xbot.glb'
+
+const BUILD_SCALE: Record<AiBuildSpec['build'], { x: number; z: number }> = {
+  slim:      { x: 0.85, z: 0.85 },
+  athletic:  { x: 1.00, z: 1.00 },
+  muscular:  { x: 1.15, z: 1.10 },
+  bulky:     { x: 1.30, z: 1.20 },
+}
+
+const SKIN_HEX: Record<AiBuildSpec['skinTone'], string> = {
+  fair: '#f3d5b5', light: '#e0b48d', medium: '#c08a5e',
+  tan: '#a16641', brown: '#7a4a2b', dark: '#4a2e1a',
+}
+
+function LivePreview3D({ spec }: { spec: AiBuildSpec }) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  // Mutable refs to live Three.js objects — re-used across spec changes,
+  // never re-mounted (would lose the camera angle the user dragged to).
+  const modelRef = useRef<any>(null)
+  const skinMatsRef = useRef<any[]>([])
+  const accentMatsRef = useRef<any[]>([])
+  const [ready, setReady] = useState(false)
+  const [loadError, setLoadError] = useState<string | null>(null)
+
+  // Mount the Three.js scene ONCE per panel mount.
+  useEffect(() => {
+    if (!containerRef.current) return
+    const container = containerRef.current
+
+    let disposed = false
+    let rafId = 0
+    let cleanup: (() => void) | null = null
+
+    void Promise.all([
+      import('three'),
+      import('three/examples/jsm/loaders/GLTFLoader.js'),
+      import('three/examples/jsm/controls/OrbitControls.js'),
+    ]).then(([THREE, { GLTFLoader }, { OrbitControls }]) => {
+      if (disposed) return
+
+      const width = container.clientWidth
+      const height = container.clientHeight
+
+      const scene = new THREE.Scene()
+      scene.background = new THREE.Color(0x0a0a0a)
+
+      const camera = new THREE.PerspectiveCamera(35, width / height, 0.01, 100)
+      camera.position.set(0, 1.3, 2.4)
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false })
+      renderer.setPixelRatio(window.devicePixelRatio)
+      renderer.setSize(width, height)
+      container.appendChild(renderer.domElement)
+
+      // Three-point lighting for clean character display
+      scene.add(new THREE.AmbientLight(0xffffff, 0.45))
+      const key = new THREE.DirectionalLight(0xffffff, 1.0)
+      key.position.set(2, 3, 2); scene.add(key)
+      const fill = new THREE.DirectionalLight(0x88ccff, 0.4)
+      fill.position.set(-2, 1, -2); scene.add(fill)
+      const rim = new THREE.DirectionalLight(0xff66cc, 0.5)
+      rim.position.set(0, -1, -3); scene.add(rim)
+
+      // Floor grid for spatial anchor
+      const grid = new THREE.GridHelper(4, 12, 0x444466, 0x222244)
+      ;(grid.material as any).transparent = true
+      ;(grid.material as any).opacity = 0.35
+      scene.add(grid)
+
+      const controls = new OrbitControls(camera, renderer.domElement)
+      controls.enableDamping = true
+      controls.dampingFactor = 0.1
+      controls.target.set(0, 1, 0)
+      controls.minDistance = 1.0
+      controls.maxDistance = 5.0
+      controls.maxPolarAngle = Math.PI * 0.9
+
+      const loader = new GLTFLoader()
+      loader.load(
+        BASE_HUMANOID_GLB,
+        (gltf: any) => {
+          if (disposed) return
+          const model = gltf.scene
+          // Pull all materials out — we mutate their color on spec changes.
+          // XBot has a head+body mesh structure; treat first mesh as skin,
+          // rest as accent (clothing/accessories) for v1.
+          const meshes: any[] = []
+          model.traverse((obj: any) => { if (obj.isMesh) meshes.push(obj) })
+          if (meshes.length > 0) {
+            // Clone materials so mutations don't bleed into the GLB cache
+            meshes.forEach((m, i) => {
+              m.material = m.material.clone()
+              if (i === 0) skinMatsRef.current.push(m.material)
+              else accentMatsRef.current.push(m.material)
+              m.castShadow = true
+              m.receiveShadow = true
+            })
+            // Fallback if only ONE mesh: that material gets both skin + accent treatment
+            if (accentMatsRef.current.length === 0) accentMatsRef.current.push(meshes[0].material)
+          }
+          // Auto-frame the model
+          const box = new THREE.Box3().setFromObject(model)
+          const size = new THREE.Vector3(); box.getSize(size)
+          const center = new THREE.Vector3(); box.getCenter(center)
+          model.position.x -= center.x
+          model.position.z -= center.z
+          model.position.y -= box.min.y  // feet on grid
+          scene.add(model)
+          modelRef.current = model
+          setReady(true)
+        },
+        undefined,
+        (err: any) => {
+          console.warn('[LivePreview3D] GLB load failed:', err)
+          setLoadError('mannequin failed to load')
+        }
+      )
+
+      const onResize = () => {
+        const w = container.clientWidth
+        const h = container.clientHeight
+        camera.aspect = w / h
+        camera.updateProjectionMatrix()
+        renderer.setSize(w, h)
+      }
+      window.addEventListener('resize', onResize)
+
+      const tick = () => {
+        if (disposed) return
+        controls.update()
+        renderer.render(scene, camera)
+        rafId = requestAnimationFrame(tick)
+      }
+      tick()
+
+      cleanup = () => {
+        window.removeEventListener('resize', onResize)
+        controls.dispose()
+        renderer.dispose()
+        if (renderer.domElement.parentNode === container) {
+          container.removeChild(renderer.domElement)
+        }
+        scene.traverse((obj: any) => {
+          if (obj.geometry) obj.geometry.dispose()
+          if (obj.material) {
+            const mat = obj.material as any
+            if (Array.isArray(mat)) mat.forEach((m: any) => m.dispose())
+            else mat.dispose()
+          }
+        })
+      }
+    })
+
+    return () => {
+      disposed = true
+      if (rafId) cancelAnimationFrame(rafId)
+      if (cleanup) cleanup()
+    }
+    // Run ONCE per mount — don't include spec, we mutate the live scene
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Per-spec MUTATION effect — runs on every spec change, never re-mounts.
+  // This is what makes the preview feel instant.
+  useEffect(() => {
+    if (!ready || !modelRef.current) return
+    void Promise.all([import('three')]).then(([THREE]) => {
+      const model = modelRef.current
+      // Build scale — slim/athletic/muscular/bulky changes x/z
+      const buildScale = BUILD_SCALE[spec.build]
+      // Gender height modifier (purely cosmetic — fem slightly shorter)
+      const heightMul = spec.gender === 'fem' ? 0.96 : spec.gender === 'masc' ? 1.0 : 0.98
+      model.scale.set(buildScale.x, heightMul, buildScale.z)
+
+      // Skin tone tint — apply to skin materials
+      const skinColor = new THREE.Color(SKIN_HEX[spec.skinTone])
+      skinMatsRef.current.forEach((mat: any) => {
+        if (mat?.color) mat.color.copy(skinColor)
+      })
+
+      // Top color → accent materials (clothing on XBot)
+      const topColor = new THREE.Color(spec.topColor)
+      accentMatsRef.current.forEach((mat: any) => {
+        if (mat?.color) mat.color.copy(topColor)
+      })
+    })
+  }, [ready, spec.build, spec.gender, spec.skinTone, spec.topColor, spec.accentColor])
+
+  return (
+    <div className="relative bg-black border-b border-pink-500/10" style={{ height: 280 }}>
+      <div ref={containerRef} className="absolute inset-0" />
+      {!ready && !loadError && (
+        <div className="absolute inset-0 flex items-center justify-center text-pink-300/60 font-mono text-[10px]">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full border border-pink-400/30 border-t-pink-400 animate-spin" />
+            Loading live mannequin…
+          </div>
+        </div>
+      )}
+      {loadError && (
+        <div className="absolute inset-0 flex items-center justify-center text-yellow-400/70 font-mono text-[10px] text-center px-4">
+          {loadError} · sliders still work, just no 3D preview
+        </div>
+      )}
+      {ready && (
+        <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between text-[8px] font-mono text-pink-400/50 pointer-events-none">
+          <span>🎮 LIVE 3D · drag to rotate · {spec.build} · {spec.skinTone}</span>
+          <span>scroll to zoom</span>
+        </div>
+      )}
+    </div>
+  )
+}
 
 function Mesh3DViewer({ glbUrl, onClose }: { glbUrl: string; onClose: () => void }) {
   const containerRef = useRef<HTMLDivElement>(null)
