@@ -1658,9 +1658,10 @@ function AiBuildPanel({
           Uses lg:flex so mobile keeps the column flow it already has. */}
       <div className="lg:flex lg:items-start">
         {/* LEFT: live 3D preview — sticky on desktop so it stays visible while
-            user scrolls through sliders on the right */}
+            user scrolls through sliders on the right. On mobile this is a
+            normal block element above the sliders (no sticky, no flex). */}
         <div className="lg:w-1/2 lg:sticky lg:top-[97px] lg:self-start lg:h-[calc(100vh-200px)] lg:max-h-[700px] lg:border-r lg:border-pink-500/10">
-          <LivePreview3D spec={spec} face={face} bigMode={activeTab === 'face'} desktopMode={true} />
+          <LivePreview3D spec={spec} face={face} bigMode={activeTab === 'face'} />
         </div>
 
         {/* RIGHT: tabs + sliders — scrollable column on desktop */}
@@ -2006,7 +2007,7 @@ const SKIN_HEX: Record<AiBuildSpec['skinTone'], string> = {
   tan: '#a16641', brown: '#7a4a2b', dark: '#4a2e1a',
 }
 
-function LivePreview3D({ spec, face, bigMode, desktopMode }: { spec: AiBuildSpec; face: AiFaceSpec; bigMode?: boolean; desktopMode?: boolean }) {
+function LivePreview3D({ spec, face, bigMode }: { spec: AiBuildSpec; face: AiFaceSpec; bigMode?: boolean }) {
   const containerRef = useRef<HTMLDivElement>(null)
   // Mutable refs to live Three.js objects — re-used across spec changes,
   // never re-mounted (would lose the camera angle the user dragged to).
@@ -2021,10 +2022,11 @@ function LivePreview3D({ spec, face, bigMode, desktopMode }: { spec: AiBuildSpec
   const accentMatsRef = useRef<any[]>([])
   const [ready, setReady] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
-  // bigMode = face tab — viewport gets taller, camera zooms to head
-  // desktopMode = lg+ side-by-side layout — viewport fills the left half
-  // of the modal (parent container's height), so no fixed height needed.
-  const viewportHeight = desktopMode ? '100%' : (bigMode ? 480 : 380)
+  // bigMode = face tab — viewport gets taller on mobile, camera zooms to head.
+  // Mobile heights via inline style; desktop overrides via Tailwind lg: classes
+  // (lg:!h-full lg:!min-h-0) so on lg+ the viewport fills the sticky left
+  // half of the parent's defined height (lg:h-[calc(100vh-200px)]).
+  const mobileViewportHeight = bigMode ? 480 : 380
 
   // Mount the Three.js scene ONCE per panel mount.
   useEffect(() => {
@@ -2347,7 +2349,10 @@ function LivePreview3D({ spec, face, bigMode, desktopMode }: { spec: AiBuildSpec
   }, [ready, bigMode])
 
   return (
-    <div className={`relative bg-black ${desktopMode ? 'h-full min-h-[400px]' : 'border-b border-pink-500/10'} transition-all duration-300`} style={{ height: viewportHeight }}>
+    <div
+      className="relative bg-black border-b border-pink-500/10 lg:border-b-0 transition-all duration-300 lg:!h-full lg:!min-h-0"
+      style={{ height: mobileViewportHeight }}
+    >
       <div ref={containerRef} className="absolute inset-0" />
       {!ready && !loadError && (
         <div className="absolute inset-0 flex items-center justify-center text-pink-300/60 font-mono text-[10px]">
