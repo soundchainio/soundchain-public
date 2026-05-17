@@ -29,7 +29,7 @@ export { DEFAULT_FACE } from 'lib/nodeverse/characterMesh'
 export type { FaceConfig } from 'lib/nodeverse/characterMesh'
 
 export interface CharacterConfig {
-  type: 'agent' | 'human' | 'opensource' | 'ai'  // pill / RPM GLB / CC0 GLB / AI-generated portrait
+  type: 'agent' | 'opensource' | 'ai'  // pill / CC0 GLB / AI-generated portrait (Phase 16.23 removed 'human' — RPM dead)
   bodyColor: string         // hex (agent only)
   headShape: 'capsule' | 'sphere' | 'cube' | 'cone'
   height: number            // 0.6 - 1.4 multiplier
@@ -267,20 +267,21 @@ export function CharacterDesigner({ open, onClose, initialName }: CharacterDesig
   const [activePanel, setActivePanel] = useState<'body' | 'face' | 'fit'>('body')
   const showFace = activePanel === 'face'
   const showFit = activePanel === 'fit'
-  // Ready Player Me iframe loads in 3rd-party context and frequently fails silently on
-  // mobile PWA / tunnel origins (black rectangle, no error event). Track whether it
-  // sends any signal within 6s; if not, surface a fallback CTA to OPEN SOURCE.
-  const [rpmStatus, setRpmStatus] = useState<'loading' | 'ready' | 'stalled'>('loading')
-
   // On open, pull the authoritative character from Mongo (if logged in).
   // Merges into local state + localStorage so the designer opens with the
-  // latest look, regardless of which device last saved.
+  // latest look, regardless of which device last saved. Phase 16.23: also
+  // auto-migrates legacy type='human' configs to 'opensource' (or 'ai' if
+  // they have aiGlbUrl) since HUMAN/RPM tab was removed.
   useEffect(() => {
     if (!open) return
     let cancelled = false
     loadRemoteCharacter().then(remote => {
       if (cancelled || !remote) return
       const merged = { ...DEFAULT_CHARACTER, ...remote, name: remote.name || initialName || '' }
+      // Auto-migrate: 'human' is no longer a valid type
+      if ((merged as any).type === 'human') {
+        merged.type = (merged as any).aiGlbUrl ? 'ai' : 'opensource'
+      }
       setConfig(merged)
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(merged)) } catch {}
       window.dispatchEvent(new CustomEvent('character-updated', { detail: merged }))
@@ -302,45 +303,7 @@ export function CharacterDesigner({ open, onClose, initialName }: CharacterDesig
     }
   }, [open])
 
-  // ─── Ready Player Me message handler ─────────────────────
-  // Listens for avatar export from RPM iframe + any frame.ready / subscribe signal
-  // so we can clear the "stalled" fallback if RPM is actually alive.
-  useEffect(() => {
-    if (!open || config.type !== 'human') return
-    // Reset status every time the user re-enters HUMAN mode
-    setRpmStatus('loading')
-    const stallTimer = setTimeout(() => {
-      setRpmStatus(prev => (prev === 'loading' ? 'stalled' : prev))
-    }, 6000)
-
-    const handler = (event: MessageEvent) => {
-      // Validate origin (Ready Player Me sends from readyplayer.me)
-      if (typeof event.data !== 'string' && (!event.data || typeof event.data !== 'object')) return
-      let data = event.data
-      // RPM sends JSON strings sometimes
-      if (typeof data === 'string') {
-        try { data = JSON.parse(data) } catch { return }
-      }
-      // Any RPM postMessage counts as "iframe is alive" — kill the stall timer
-      if (data?.source === 'readyplayerme' || data?.eventName?.startsWith?.('v1.')) {
-        setRpmStatus('ready')
-      }
-      // Avatar exported event
-      if (data?.eventName === 'v1.avatar.exported' || data?.source === 'readyplayerme') {
-        const url = data.data?.url || data.url
-        if (url && typeof url === 'string' && url.endsWith('.glb')) {
-          // Generate 2D preview URL from GLB url (RPM provides .png too)
-          const pngUrl = url.replace('.glb', '.png')
-          setConfig(prev => ({ ...prev, humanGlbUrl: url, humanAvatarPng: pngUrl }))
-        }
-      }
-    }
-    window.addEventListener('message', handler)
-    return () => {
-      clearTimeout(stallTimer)
-      window.removeEventListener('message', handler)
-    }
-  }, [open, config.type])
+  // RPM message handler removed in Phase 16.23 (HUMAN tab gone).
 
   // ─── Live 3D Preview (agent pill only) ───────────────────
   useEffect(() => {
@@ -557,7 +520,13 @@ export function CharacterDesigner({ open, onClose, initialName }: CharacterDesig
           </button>
         </div>
 
-        {/* Type Toggle: 3 modes — AGENT pill | HUMAN (RPM) | OPEN SOURCE (CC0) */}
+        {/* Type Toggle: 3 modes — AGENT pill | OPEN SOURCE (CC0) | AI BUILD (SDXL).
+            HUMAN (RPM) tab removed in Phase 16.23 — Ready Player Me's iframe
+            is dead for our use case (no subdomain registration, blocked by
+            X-Frame-Options). AI BUILD covers the same use case (custom human
+            characters) but works on our own RTX 5000 with zero third-party
+            dependencies. Pre-removal users with type='human' get auto-migrated
+            to 'ai' on character load (see DEFAULT_CHARACTER merge below). */}
         <div className="flex items-center gap-1 px-4 py-2 border-b border-cyan-500/10 bg-black/60 backdrop-blur-md flex-wrap sticky top-[49px] z-10">
           <span className="text-[8px] font-mono text-gray-500 uppercase tracking-wider mr-2 w-full sm:w-auto">CITIZEN CLASS:</span>
           <button
@@ -565,19 +534,6 @@ export function CharacterDesigner({ open, onClose, initialName }: CharacterDesig
             className={`flex-1 sm:flex-none px-3 py-1.5 rounded text-[10px] font-mono font-bold transition ${config.type === 'agent' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'bg-white/[0.02] text-gray-500 border border-white/5 hover:text-white'}`}
           >
             🤖 AGENT
-          </button>
-          <button
-            onClick={() => {
-              // Clear open-source GLB data so RPM iframe shows fresh
-              if (config.openSourceId) {
-                update({ type: 'human', humanGlbUrl: undefined, humanAvatarPng: undefined, openSourceId: undefined, humanScale: undefined, humanYOffset: undefined })
-              } else {
-                update({ type: 'human' })
-              }
-            }}
-            className={`flex-1 sm:flex-none px-3 py-1.5 rounded text-[10px] font-mono font-bold transition ${config.type === 'human' ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' : 'bg-white/[0.02] text-gray-500 border border-white/5 hover:text-white'}`}
-          >
-            👤 HUMAN <span className="opacity-60 text-[8px]">(RPM)</span>
           </button>
           <button
             onClick={() => update({ type: 'opensource' })}
@@ -600,108 +556,10 @@ export function CharacterDesigner({ open, onClose, initialName }: CharacterDesig
           <AiBuildPanel config={config} update={update} />
         )}
 
-        {/* HUMAN MODE — Ready Player Me iframe */}
-        {config.type === 'human' && (
-          <div className="bg-black">
-            {!config.humanGlbUrl ? (
-              <div className="space-y-0">
-                <div className="px-4 py-2 bg-purple-500/5 border-b border-purple-500/10">
-                  <p className="text-[10px] font-mono text-purple-300">
-                    Build your humanoid avatar with face, hair, body, clothes — full Ready Player Me editor below.
-                    Click ✓ when done to save.
-                  </p>
-                </div>
-                <div className="relative" style={{ height: '500px' }}>
-                  {/* Loading overlay — visible until RPM iframe posts its first message */}
-                  {rpmStatus === 'loading' && (
-                    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black pointer-events-none">
-                      <div className="w-8 h-8 border-2 border-purple-500/30 border-t-purple-400 rounded-full animate-spin mb-3" />
-                      <p className="text-[10px] font-mono text-purple-300">Loading Ready Player Me…</p>
-                      <p className="text-[9px] font-mono text-gray-600 mt-1">(first load can take a few seconds)</p>
-                    </div>
-                  )}
-                  {/* Stalled fallback — RPM didn't respond within 6s.
-                      Ready Player Me's iframe requires a registered subdomain at
-                      studio.readyplayer.me; without one, the bare URL redirects to
-                      login which X-Frame-Options blocks → black rectangle. Offer
-                      two escape hatches: AI BUILD (own pipeline, always works) +
-                      OPEN SOURCE (CC0 GLB library). */}
-                  {rpmStatus === 'stalled' && (
-                    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black p-6 text-center">
-                      <p className="text-[11px] font-mono text-purple-300 mb-2">⚠ Ready Player Me didn't load</p>
-                      <p className="text-[10px] font-mono text-gray-500 mb-4 max-w-xs leading-relaxed">
-                        RPM needs a registered subdomain (we don't have one yet).
-                        Use <span className="text-pink-300">AI BUILD</span> for NBA2K-style
-                        custom characters on our RTX 5000, or <span className="text-cyan-300">OPEN SOURCE</span> for CC0 avatars.
-                      </p>
-                      <div className="flex flex-col sm:flex-row gap-2 w-full max-w-md">
-                        <button
-                          onClick={() => update({ type: 'ai' })}
-                          className="flex-1 px-4 py-2.5 rounded bg-gradient-to-br from-pink-500/30 to-purple-500/30 border border-pink-500/40 text-pink-200 text-[11px] font-mono font-bold hover:from-pink-500/40 hover:to-purple-500/40 transition shadow-[0_0_20px_rgba(236,72,153,0.2)]"
-                        >
-                          ✨ SWITCH TO AI BUILD
-                        </button>
-                        <button
-                          onClick={() => update({ type: 'opensource', humanGlbUrl: undefined, humanAvatarPng: undefined })}
-                          className="flex-1 px-4 py-2.5 rounded bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 text-[11px] font-mono font-bold hover:bg-cyan-500/25 transition"
-                        >
-                          🎨 SWITCH TO OPEN SOURCE
-                        </button>
-                      </div>
-                      <button
-                        onClick={() => setRpmStatus('loading')}
-                        className="mt-4 text-[9px] font-mono text-gray-500 hover:text-gray-300 underline"
-                      >
-                        retry Ready Player Me
-                      </button>
-                    </div>
-                  )}
-                  <iframe
-                    src="https://demo.readyplayer.me/avatar?frameApi=true&clearCache=true&quickStart=true&bodyType=fullbody"
-                    className="w-full h-full"
-                    style={{ border: 'none', background: '#000' }}
-                    allow="camera *; microphone *; clipboard-write; display-capture"
-                    sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
-                    referrerPolicy="strict-origin-when-cross-origin"
-                    loading="lazy"
-                    title="Ready Player Me Avatar Editor"
-                  />
-                </div>
-              </div>
-            ) : (
-              <div className="p-4 space-y-3">
-                <div className="aspect-square max-w-xs mx-auto bg-gradient-to-br from-purple-900/30 to-cyan-900/30 rounded-lg overflow-hidden border border-purple-500/20">
-                  {config.humanAvatarPng ? (
-                    <img src={config.humanAvatarPng} alt="Your avatar" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-purple-400 font-mono text-xs">Humanoid loaded · {config.humanGlbUrl.slice(-12)}</div>
-                  )}
-                </div>
-                <div className="text-center space-y-2">
-                  <p className="text-[10px] font-mono text-green-400">✓ Humanoid avatar saved</p>
-                  <p className="text-[9px] font-mono text-gray-500 break-all px-4">{config.humanGlbUrl}</p>
-                  <button
-                    onClick={() => update({ humanGlbUrl: undefined, humanAvatarPng: undefined })}
-                    className="text-[9px] font-mono text-purple-400 hover:text-purple-300 underline"
-                  >
-                    Edit avatar
-                  </button>
-                </div>
-              </div>
-            )}
-            <div className="px-4 py-2 border-t border-cyan-500/10 bg-black/40 flex items-center justify-between">
-              <span className="text-[8px] font-mono text-gray-600">Powered by Ready Player Me · 100% free</span>
-              <input
-                type="text"
-                value={config.name}
-                onChange={e => update({ name: e.target.value })}
-                placeholder="Display name (max 16)"
-                className="bg-black/60 border border-white/10 rounded px-2 py-1 text-[10px] font-mono text-white outline-none focus:border-purple-500/50 w-44"
-                maxLength={16}
-              />
-            </div>
-          </div>
-        )}
+        {/* HUMAN MODE removed in Phase 16.23 — Ready Player Me is dead for
+            our use case (no working subdomain registration, X-Frame-Options
+            blocks bare URLs). AI BUILD does the same job on our own RTX 5000
+            with zero third-party dependencies. */}
 
         {/* OPEN SOURCE MODE — curated CC0/MIT GLB avatars (NO third-party deps) */}
         {config.type === 'opensource' && (

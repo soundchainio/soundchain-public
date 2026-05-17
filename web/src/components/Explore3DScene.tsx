@@ -364,7 +364,11 @@ export default function Explore3DScene({ myHandle, myAvatar }: Explore3DScenePro
       character.type === 'ai'
         ? (character as any).aiGlbUrl || character.humanGlbUrl
         : character.humanGlbUrl
-    const isGlbAvatar = (character.type === 'human' || character.type === 'opensource' || character.type === 'ai') && glbUrl
+    // Phase 16.23 — 'human' type removed (RPM tab dead). Legacy saved configs
+    // with type='human' still load their GLB via the OR with humanGlbUrl above;
+    // the auto-migration in CharacterDesigner converts type='human' → 'ai' or
+    // 'opensource' on next designer open.
+    const isGlbAvatar = ((character.type as string) === 'human' || character.type === 'opensource' || character.type === 'ai') && glbUrl
 
     if (isGlbAvatar) {
       // GLB AVATAR — RPM, open-source CC0/MIT humanoid, or AI-generated TripoSR mesh
