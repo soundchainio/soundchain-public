@@ -1856,21 +1856,26 @@ function composePrompt(spec: AiBuildSpec): string {
 }
 
 // Phase 16.19 — face spec prompt fragments (face-tab additions)
+// Defensive about missing fields — pre-16.19 saved configs may not have them,
+// callers should always backfill via DEFAULT_FACE_SPEC but this guards anyway.
 function composeFaceTokens(face: AiFaceSpec): string[] {
+  if (!face) return []
   const parts: string[] = []
-  if (face.faceShape !== 'oval') parts.push(`${face.faceShape}-shaped face`)
-  parts.push(`${face.eyeShape} ${face.eyeColorHex ? `${face.eyeColorHex} eyes` : `${face.eyeColor} eyes`}`)
-  if (face.eyebrowShape !== 'arched') parts.push(`${face.eyebrowShape} eyebrows`)
-  if (face.lipShape !== 'full' || face.lipColor !== 'natural') {
+  if (face.faceShape && face.faceShape !== 'oval') parts.push(`${face.faceShape}-shaped face`)
+  if (face.eyeShape || face.eyeColor || face.eyeColorHex) {
+    parts.push(`${face.eyeShape || 'almond'} ${face.eyeColorHex ? `${face.eyeColorHex} eyes` : `${face.eyeColor || 'brown'} eyes`}`)
+  }
+  if (face.eyebrowShape && face.eyebrowShape !== 'arched') parts.push(`${face.eyebrowShape} eyebrows`)
+  if (face.lipShape && face.lipColor && (face.lipShape !== 'full' || face.lipColor !== 'natural')) {
     const lc = face.lipColorHex ? face.lipColorHex : face.lipColor
     parts.push(`${face.lipShape} lips${face.lipColor !== 'natural' ? ` in ${lc}` : ''}`)
   }
-  if (face.freckles > 0.2) parts.push(face.freckles > 0.6 ? 'heavy freckles' : 'light freckles across nose')
-  if (face.dimples !== 'none') parts.push(`${face.dimples === 'both' ? 'cheek and chin' : face.dimples} dimples`)
-  if (face.moles !== 'none') parts.push(face.moles === 'beauty-mark' ? 'beauty mark' : `${face.moles.replace('-', ' ')} mole`)
-  if (face.makeup !== 'none') parts.push(`${face.makeup} makeup`)
-  if (face.glasses !== 'none') parts.push(face.glasses.replace('-', ' '))
-  if (face.earrings !== 'none') parts.push(`${face.earrings} earrings`)
+  if (typeof face.freckles === 'number' && face.freckles > 0.2) parts.push(face.freckles > 0.6 ? 'heavy freckles' : 'light freckles across nose')
+  if (face.dimples && face.dimples !== 'none') parts.push(`${face.dimples === 'both' ? 'cheek and chin' : face.dimples} dimples`)
+  if (face.moles && face.moles !== 'none') parts.push(face.moles === 'beauty-mark' ? 'beauty mark' : `${String(face.moles).replace(/-/g, ' ')} mole`)
+  if (face.makeup && face.makeup !== 'none') parts.push(`${face.makeup} makeup`)
+  if (face.glasses && face.glasses !== 'none') parts.push(String(face.glasses).replace(/-/g, ' '))
+  if (face.earrings && face.earrings !== 'none') parts.push(`${face.earrings} earrings`)
   return parts
 }
 
@@ -1881,8 +1886,14 @@ function AiBuildPanel({
   config: CharacterConfig
   update: (partial: Partial<CharacterConfig>) => void
 }) {
-  const [spec, setSpec] = useState<AiBuildSpec>(config.aiBuildSpec || DEFAULT_BUILD_SPEC)
-  const [face, setFace] = useState<AiFaceSpec>(config.aiFaceSpec || DEFAULT_FACE_SPEC)
+  // Phase 16.19 — merge defaults so pre-16.19 saved configs get backfilled
+  // with new fields (ageGroup, pose, heightLabel, shoulders, waist, skinSheen,
+  // tattoos, scars, hairHighlights, jacket, headwear, eyewear, jewelry,
+  // piercings, faceShape, eyeShape, eyeColor, eyebrowShape, lipShape,
+  // lipColor, freckles, dimples, moles, makeup, glasses, earrings). Without
+  // this, composers crashed on `e.moles.replace(...)` etc. for old characters.
+  const [spec, setSpec] = useState<AiBuildSpec>({ ...DEFAULT_BUILD_SPEC, ...(config.aiBuildSpec || {}) })
+  const [face, setFace] = useState<AiFaceSpec>({ ...DEFAULT_FACE_SPEC, ...(config.aiFaceSpec || {}) })
   const [seed, setSeed] = useState<number>(config.aiPortraitSeed || Math.floor(Math.random() * 1_000_000))
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
