@@ -673,10 +673,58 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
 
     // ─── Movement ────────────────────────────────────────────
     const keys: Record<string, boolean> = {}
-    const onKeyDown = (e: KeyboardEvent) => { keys[e.key.toLowerCase()] = true }
-    const onKeyUp = (e: KeyboardEvent) => { keys[e.key.toLowerCase()] = false }
+    // Ignore key events when a form field is focused — fixes city search input
+    // that couldn't accept typing because WASD was triggering movement instead
+    // of letting characters land in the input.
+    const isTypingInForm = (target: EventTarget | null) => {
+      if (!target || !(target as HTMLElement).tagName) return false
+      const tag = (target as HTMLElement).tagName
+      const editable = (target as HTMLElement).isContentEditable
+      return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || editable
+    }
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (isTypingInForm(e.target)) return
+      keys[e.key.toLowerCase()] = true
+    }
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (isTypingInForm(e.target)) return
+      keys[e.key.toLowerCase()] = false
+    }
     window.addEventListener('keydown', onKeyDown)
     window.addEventListener('keyup', onKeyUp)
+
+    // ─── 360° Camera Yaw — mouse/touch drag rotates the view ──
+    // Phase 16.21 — Frank wants "full panoramic view 360". Drag horizontally
+    // on the canvas to rotate the camera around the character. Vertical drag
+    // tilts (pitch) within sensible bounds. Works on desktop + touch.
+    let cameraYaw = 0  // radians around Y axis
+    let cameraPitch = 0.05  // small upward tilt by default
+    let dragging = false
+    let lastX = 0, lastY = 0
+    const onPointerDown = (e: PointerEvent) => {
+      // Only start drag on the canvas itself, not HUD elements above it
+      if (e.target !== renderer.domElement) return
+      dragging = true
+      lastX = e.clientX
+      lastY = e.clientY
+      try { renderer.domElement.setPointerCapture(e.pointerId) } catch {}
+    }
+    const onPointerMove = (e: PointerEvent) => {
+      if (!dragging) return
+      const dx = e.clientX - lastX
+      const dy = e.clientY - lastY
+      lastX = e.clientX
+      lastY = e.clientY
+      cameraYaw -= dx * 0.008
+      cameraPitch = Math.max(-0.3, Math.min(0.6, cameraPitch + dy * 0.005))
+    }
+    const onPointerUp = (e: PointerEvent) => {
+      dragging = false
+      try { renderer.domElement.releasePointerCapture(e.pointerId) } catch {}
+    }
+    renderer.domElement.addEventListener('pointerdown', onPointerDown)
+    window.addEventListener('pointermove', onPointerMove)
+    window.addEventListener('pointerup', onPointerUp)
 
     // ─── Click frame → open detail modal ─────────────────────
     const raycaster = new THREE.Raycaster()
@@ -828,9 +876,19 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         playerGroup.rotation.y = Math.atan2(dirX, -dirZ)
       }
 
-      // Camera follow
-      const camTarget = new THREE.Vector3(playerGroup.position.x, playerGroup.position.y + 3, playerGroup.position.z + 6)
-      camera.position.lerp(camTarget, 0.1)
+      // Camera follow — Phase 16.21 — orbits character based on yaw/pitch.
+      // Drag the canvas to look around 360°; character moves relative to
+      // camera direction so WASD always feels intuitive from the user's view.
+      const camDist = 6
+      const camHeight = 3 + Math.sin(cameraPitch) * 4
+      const offsetX = Math.sin(cameraYaw) * camDist
+      const offsetZ = Math.cos(cameraYaw) * camDist
+      const camTarget = new THREE.Vector3(
+        playerGroup.position.x + offsetX,
+        playerGroup.position.y + camHeight,
+        playerGroup.position.z + offsetZ,
+      )
+      camera.position.lerp(camTarget, 0.15)
       camera.lookAt(playerGroup.position.x, playerGroup.position.y + 1, playerGroup.position.z)
 
       // Proximity audio — fade in/out based on distance
@@ -868,6 +926,9 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
       window.removeEventListener('keydown', onKeyDown)
       window.removeEventListener('keyup', onKeyUp)
       window.removeEventListener('resize', onResize)
+      window.removeEventListener('pointermove', onPointerMove)
+      window.removeEventListener('pointerup', onPointerUp)
+      renderer.domElement.removeEventListener('pointerdown', onPointerDown)
       renderer.domElement.removeEventListener('click', onClick)
       renderer.domElement.removeEventListener('touchend', onClick as any)
       // Stop all audio

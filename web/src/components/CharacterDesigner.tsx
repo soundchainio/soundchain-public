@@ -2511,6 +2511,7 @@ function LivePreview3D({ spec, face, bigMode }: { spec: AiBuildSpec; face: AiFac
   const accentMatsRef = useRef<any[]>([])
   const [ready, setReady] = useState(false)
   const [faceReady, setFaceReady] = useState(0)  // bumps when face GLB lands so camera re-frames
+  const [faceLoadStatus, setFaceLoadStatus] = useState<'pending' | 'loaded' | 'failed'>('pending')
   const [loadError, setLoadError] = useState<string | null>(null)
   // bigMode = face tab — viewport gets taller on mobile, camera zooms to head.
   // Mobile heights via inline style; desktop overrides via Tailwind lg: classes
@@ -2590,14 +2591,18 @@ function LivePreview3D({ spec, face, bigMode }: { spec: AiBuildSpec; face: AiFac
       const tryLoadFace = (index: number) => {
         if (disposed) return
         if (index >= FACE_MANNEQUIN_SOURCES.length) {
-          console.warn('[LivePreview3D] face mannequin all sources failed — face sliders save to config but no live morphing')
+          console.warn('[LivePreview3D] face mannequin all sources failed — falling back to body head zoom in face tab')
+          setFaceLoadStatus('failed')
           return
         }
         loader.load(
           FACE_MANNEQUIN_SOURCES[index],
           (gltf: any) => onFaceGltfLoaded(gltf, FACE_MANNEQUIN_SOURCES[index]),
           undefined,
-          () => tryLoadFace(index + 1),
+          (err: any) => {
+            console.warn(`[LivePreview3D] face source ${FACE_MANNEQUIN_SOURCES[index]} failed:`, err?.message || err)
+            tryLoadFace(index + 1)
+          },
         )
       }
       const onBodyGltfLoaded = (gltf: any, sourceUrl: string) => {
@@ -2681,14 +2686,11 @@ function LivePreview3D({ spec, face, bigMode }: { spec: AiBuildSpec; face: AiFac
         faceModel.visible = !!bigMode  // hidden in body mode
         scene.add(faceModel)
         faceModelRef.current = faceModel
+        setFaceLoadStatus('loaded')
         const morphCount = morphMeshesRef.current.reduce((sum, m) => sum + (m.morphTargetInfluences?.length || 0), 0)
         console.log(`[LivePreview3D] face loaded ${sourceUrl} — ${morphCount} blendshapes wired`)
-        // If face tab is currently active, re-frame the camera now that the
-        // face model exists. Previously the camera-zoom effect ran when bigMode
-        // changed to true but faceModelRef was still null, so the camera
-        // pointed at the default (0, 1.55, 1.0) — close to the right spot but
-        // not perfectly framed. Re-trigger the effect by bumping a state.
-        if (bigMode) setFaceReady((n) => n + 1)
+        // Re-trigger camera framing once face exists (camera effect re-runs)
+        setFaceReady((n) => n + 1)
       }
 
       tryLoadBody(0)
@@ -2825,38 +2827,41 @@ function LivePreview3D({ spec, face, bigMode }: { spec: AiBuildSpec; face: AiFac
   }, [ready, face])
 
   // Camera-zoom effect — face mode zooms to head, body mode shows full figure.
-  // Also toggles visibility — body model hidden in face mode, face model
-  // hidden in body mode (so the right mesh is on stage for what's being edited).
+  // Visibility toggle: when face GLB loaded, hide body + show face. If face
+  // GLB FAILED to load (network/CORS/etc), keep body visible and zoom to
+  // body's head — user always sees SOMETHING instead of black void.
   useEffect(() => {
     if (!ready || !cameraRef.current || !controlsRef.current) return
-    if (modelRef.current) modelRef.current.visible = !bigMode
-    if (faceModelRef.current) faceModelRef.current.visible = !!bigMode
     const camera = cameraRef.current
     const controls = controlsRef.current
     const h = modelHeightRef.current || 1.8
+    const hasFaceModel = !!faceModelRef.current
+    // Visibility — body shown by default. Only hide in face mode IF we have
+    // a working face model to show in its place.
+    if (modelRef.current) modelRef.current.visible = !bigMode || !hasFaceModel
+    if (faceModelRef.current) faceModelRef.current.visible = !!bigMode
     if (bigMode) {
-      // Face mode — target the FACE model's actual bounding box center.
-      // (Earlier bug: was computing headY from BODY model height which put
-      // the camera target above where facecap.glb actually sits = face
-      // rendered off-screen / appeared as empty viewport.)
-      let targetY = 1.55  // facecap default position
-      let dist = 1.0
-      if (faceModelRef.current) {
+      if (hasFaceModel) {
+        // Face GLB loaded — target the FACE model's actual bounding box center.
         const fBox = new THREE.Box3().setFromObject(faceModelRef.current)
         const fCenter = new THREE.Vector3(); fBox.getCenter(fCenter)
         const fSize = new THREE.Vector3(); fBox.getSize(fSize)
-        if (fSize.y > 0) {
-          targetY = fCenter.y
-          // Distance = ~3x the face height for portrait framing
-          dist = Math.max(fSize.y * 3, 0.8)
+        const targetY = fSize.y > 0 ? fCenter.y : 1.55
+        const dist = fSize.y > 0 ? Math.max(fSize.y * 3, 0.8) : 1.0
+        camera.position.set(0, targetY, dist)
+        controls.target.set(0, targetY, 0)
+      } else {
+        // No face GLB — fall back to body's head area so something is visible.
+        // Use head bone if rigged, else top 88% of model height.
+        let headY = h * 0.88
+        if (headBoneRef.current) {
+          const v = new THREE.Vector3()
+          headBoneRef.current.getWorldPosition(v)
+          if (v.y > 0) headY = v.y
         }
-      } else if (headBoneRef.current) {
-        const v = new THREE.Vector3()
-        headBoneRef.current.getWorldPosition(v)
-        if (v.y > 0) targetY = v.y
+        camera.position.set(0, headY, h * 0.7)
+        controls.target.set(0, headY, 0)
       }
-      camera.position.set(0, targetY, dist)
-      controls.target.set(0, targetY, 0)
     } else {
       // Body mode: frame the full figure with headroom
       const targetY = h * 0.5
@@ -2887,7 +2892,11 @@ function LivePreview3D({ spec, face, bigMode }: { spec: AiBuildSpec; face: AiFac
       )}
       {ready && (
         <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between text-[8px] font-mono text-pink-400/60 pointer-events-none">
-          <span>{bigMode ? '😀 FACE BUILDER' : '🎮 LIVE 3D'} · drag to rotate · {spec.build} · {spec.skinTone}</span>
+          <span>
+            {bigMode ? '😀 FACE BUILDER' : '🎮 LIVE 3D'} · drag to rotate · {spec.build} · {spec.skinTone}
+            {bigMode && faceLoadStatus === 'failed' && <span className="ml-2 text-yellow-400">⚠ face GLB unreachable — showing body head zoom</span>}
+            {bigMode && faceLoadStatus === 'pending' && <span className="ml-2 text-cyan-400">↻ loading face mesh…</span>}
+          </span>
           <span>scroll to zoom</span>
         </div>
       )}
