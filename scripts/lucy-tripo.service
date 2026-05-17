@@ -1,0 +1,25 @@
+[Unit]
+Description=Lucy TripoSR — anvil-side single-image to 3D mesh server (port 11439)
+After=network-online.target lucy-sdxl.service
+Wants=network-online.target
+
+[Service]
+User=soundchain
+Environment=LUCY_TRIPO_MODEL=stabilityai/TripoSR
+Environment=LUCY_TRIPO_DEVICE=cuda:0
+# HuggingFace cache lives in the soundchain user's home so weights persist
+# across service restarts. ~1.5GB for TripoSR, downloaded on first request.
+Environment=HF_HOME=/home/soundchain/.cache/huggingface
+# Marching-cubes resolution — 256 is the sweet spot (256^3 voxel grid).
+# Bump to 512 for smoother meshes at ~4x VRAM cost.
+Environment=LUCY_TRIPO_RESOLUTION=256
+ExecStart=/home/soundchain/piper-venv/bin/python -m uvicorn lucy-tripo-server:app --host 127.0.0.1 --port 11439
+WorkingDirectory=/home/soundchain
+Restart=always
+RestartSec=10
+# TripoSR loads to ~4-6GB VRAM; with SDXL also loaded (8GB) we're at ~12-14GB
+# on the RTX 5000 — tight but fits in 16GB. Bump MemoryMax if needed.
+MemoryMax=12G
+
+[Install]
+WantedBy=multi-user.target
