@@ -48,6 +48,29 @@ export interface CharacterConfig {
   aiPortraitDataUrl?: string // Phase 16.1 — AI BUILD tab: SDXL-generated portrait (data: URL)
   aiPortraitPrompt?: string // The prompt used to generate aiPortraitDataUrl (for regen)
   aiPortraitSeed?: number   // Deterministic seed (same seed + prompt → same portrait)
+  aiBuildSpec?: AiBuildSpec // Phase 16.2 — NBA2K slider config that composed the prompt
+  aiGlbUrl?: string         // Phase 16.3 — TripoSR-generated 3D mesh (data URL or anvil URL)
+}
+
+// Phase 16.2 — NBA2K-style structured character config.
+// Each field composes into a fragment of the SDXL prompt; the BuildSpec lets
+// users tweak one trait (e.g. swap hair style) and regenerate with the same
+// seed so the rest of the character stays largely consistent.
+export interface AiBuildSpec {
+  gender: 'masc' | 'fem' | 'androgynous'
+  build: 'slim' | 'athletic' | 'muscular' | 'bulky'
+  skinTone: 'fair' | 'light' | 'medium' | 'tan' | 'brown' | 'dark'
+  hairLength: 'bald' | 'buzz' | 'short' | 'medium' | 'long'
+  hairStyle: 'natural' | 'wavy' | 'curly' | 'coily' | 'dreads' | 'braids' | 'cornrows' | 'mohawk'
+  hairColor: 'black' | 'brown' | 'blonde' | 'red' | 'silver' | 'cyan' | 'pink' | 'purple'
+  facialHair: 'clean' | 'stubble' | 'goatee' | 'beard' | 'mustache'
+  vibe: 'streetwear' | 'cyberpunk' | 'athletic' | 'formal' | 'casual' | 'artist' | 'royal' | 'tactical' | 'punk'
+  topPiece: 'hoodie' | 'tshirt' | 'jersey' | 'tank' | 'jacket' | 'buttonup' | 'sweater' | 'crop'
+  bottomPiece: 'jeans' | 'joggers' | 'shorts' | 'cargo' | 'dresspants' | 'skirt' | 'leggings'
+  shoes: 'sneakers' | 'boots' | 'dressshoes' | 'sandals' | 'cleats' | 'heels'
+  topColor: string  // hex
+  accentColor: string  // hex (used for shoes / chains / accents)
+  extraDetails: string  // freeform additional prompt tuning
 }
 
 // FaceConfig + DEFAULT_FACE moved to lib/nodeverse/characterMesh.ts (shared
@@ -1281,14 +1304,152 @@ function OpenSourceAvatarBrowser({ selectedId, currentName, config, onUpdate, on
 // Free-form text prompt → SDXL portrait → save as character avatar.
 // ─────────────────────────────────────────────────────────────────────────
 
-const AI_BUILD_PRESETS: Array<{ label: string; prompt: string }> = [
-  { label: '🏀 Baller', prompt: 'athletic basketball player, 6\'4 tall, cornrows, basketball jersey, shorts, sneakers' },
-  { label: '🎤 MC', prompt: 'hip-hop artist, chains, hoodie, snapback hat, jeans, sneakers, confident stance' },
-  { label: '🤖 Cyberpunk', prompt: 'cyberpunk hacker, neon-lit, leather jacket, glowing visor, tactical pants, boots' },
-  { label: '🌿 Skater', prompt: 'skateboarder, slim build, beanie, oversized hoodie, baggy jeans, vans sneakers' },
-  { label: '🎨 Artist', prompt: 'creative artist, paint-stained jacket, beret, ripped jeans, boots' },
-  { label: '👑 Royal', prompt: 'regal noble in modern streetwear, gold accents, designer sneakers, confident' },
+// ─── BuildSpec defaults + presets ───────────────────────────────────────
+
+const DEFAULT_BUILD_SPEC: AiBuildSpec = {
+  gender: 'masc',
+  build: 'athletic',
+  skinTone: 'medium',
+  hairLength: 'short',
+  hairStyle: 'natural',
+  hairColor: 'black',
+  facialHair: 'clean',
+  vibe: 'streetwear',
+  topPiece: 'hoodie',
+  bottomPiece: 'jeans',
+  shoes: 'sneakers',
+  topColor: '#1e3a8a',  // deep blue
+  accentColor: '#ffffff',
+  extraDetails: '',
+}
+
+// Each preset is a partial BuildSpec — merged on top of current spec so the
+// user can quick-flavor without losing their other tweaks.
+const AI_BUILD_PRESETS: Array<{ label: string; spec: Partial<AiBuildSpec> }> = [
+  { label: '🏀 Baller', spec: { build: 'athletic', vibe: 'athletic', topPiece: 'jersey', bottomPiece: 'shorts', shoes: 'sneakers', hairStyle: 'cornrows', topColor: '#dc2626', accentColor: '#ffffff' } },
+  { label: '🎤 MC', spec: { build: 'athletic', vibe: 'streetwear', topPiece: 'hoodie', bottomPiece: 'jeans', shoes: 'sneakers', hairStyle: 'dreads', accentColor: '#fbbf24' } },
+  { label: '🤖 Cyberpunk', spec: { build: 'athletic', vibe: 'cyberpunk', topPiece: 'jacket', bottomPiece: 'cargo', shoes: 'boots', hairColor: 'cyan', topColor: '#000000', accentColor: '#22d3ee' } },
+  { label: '🌿 Skater', spec: { build: 'slim', vibe: 'streetwear', topPiece: 'hoodie', bottomPiece: 'jeans', shoes: 'sneakers', topColor: '#84cc16' } },
+  { label: '🎨 Artist', spec: { build: 'slim', vibe: 'artist', topPiece: 'jacket', bottomPiece: 'jeans', shoes: 'boots', hairLength: 'medium', topColor: '#7c2d12' } },
+  { label: '👑 Royal', spec: { build: 'muscular', vibe: 'royal', topPiece: 'jacket', bottomPiece: 'dresspants', shoes: 'dressshoes', topColor: '#4c1d95', accentColor: '#fbbf24' } },
+  { label: '⚔️ Tactical', spec: { build: 'muscular', vibe: 'tactical', topPiece: 'jacket', bottomPiece: 'cargo', shoes: 'boots', hairLength: 'buzz', topColor: '#1f2937', accentColor: '#000000' } },
+  { label: '🎸 Punk', spec: { build: 'slim', vibe: 'punk', topPiece: 'jacket', bottomPiece: 'jeans', shoes: 'boots', hairStyle: 'mohawk', hairColor: 'pink', topColor: '#000000' } },
 ]
+
+// ─── Token tables — map enum value → prompt fragment ────────────────────
+
+const TOKEN_GENDER: Record<AiBuildSpec['gender'], string> = {
+  masc: 'masculine',
+  fem: 'feminine',
+  androgynous: 'androgynous',
+}
+const TOKEN_BUILD: Record<AiBuildSpec['build'], string> = {
+  slim: 'slim build',
+  athletic: 'athletic build, toned',
+  muscular: 'muscular build, broad shoulders',
+  bulky: 'bulky build, heavyset',
+}
+const TOKEN_SKIN: Record<AiBuildSpec['skinTone'], string> = {
+  fair: 'fair skin',
+  light: 'light skin',
+  medium: 'medium skin tone',
+  tan: 'tan skin',
+  brown: 'brown skin',
+  dark: 'dark skin',
+}
+const TOKEN_HAIR_LEN: Record<AiBuildSpec['hairLength'], string> = {
+  bald: 'bald head',
+  buzz: 'buzz cut',
+  short: 'short hair',
+  medium: 'medium-length hair',
+  long: 'long hair',
+}
+const TOKEN_HAIR_STYLE: Record<AiBuildSpec['hairStyle'], string> = {
+  natural: 'natural texture',
+  wavy: 'wavy',
+  curly: 'curly',
+  coily: 'coily',
+  dreads: 'dreadlocks',
+  braids: 'braided',
+  cornrows: 'cornrows',
+  mohawk: 'mohawk',
+}
+const TOKEN_HAIR_COLOR: Record<AiBuildSpec['hairColor'], string> = {
+  black: 'black hair',
+  brown: 'brown hair',
+  blonde: 'blonde hair',
+  red: 'red hair',
+  silver: 'silver hair',
+  cyan: 'cyan-dyed hair',
+  pink: 'pink-dyed hair',
+  purple: 'purple-dyed hair',
+}
+const TOKEN_FACIAL_HAIR: Record<AiBuildSpec['facialHair'], string> = {
+  clean: 'clean-shaven',
+  stubble: 'light stubble',
+  goatee: 'goatee',
+  beard: 'full beard',
+  mustache: 'mustache',
+}
+const TOKEN_VIBE: Record<AiBuildSpec['vibe'], string> = {
+  streetwear: 'urban streetwear aesthetic',
+  cyberpunk: 'cyberpunk neon aesthetic',
+  athletic: 'athletic sportswear aesthetic',
+  formal: 'formal business aesthetic',
+  casual: 'casual everyday aesthetic',
+  artist: 'bohemian artist aesthetic',
+  royal: 'regal luxury aesthetic',
+  tactical: 'tactical military aesthetic',
+  punk: 'punk rock aesthetic',
+}
+const TOKEN_TOP: Record<AiBuildSpec['topPiece'], string> = {
+  hoodie: 'hoodie',
+  tshirt: 't-shirt',
+  jersey: 'sports jersey',
+  tank: 'tank top',
+  jacket: 'jacket',
+  buttonup: 'button-up shirt',
+  sweater: 'sweater',
+  crop: 'cropped top',
+}
+const TOKEN_BOTTOM: Record<AiBuildSpec['bottomPiece'], string> = {
+  jeans: 'jeans',
+  joggers: 'joggers',
+  shorts: 'shorts',
+  cargo: 'cargo pants',
+  dresspants: 'dress pants',
+  skirt: 'skirt',
+  leggings: 'leggings',
+}
+const TOKEN_SHOES: Record<AiBuildSpec['shoes'], string> = {
+  sneakers: 'sneakers',
+  boots: 'boots',
+  dressshoes: 'dress shoes',
+  sandals: 'sandals',
+  cleats: 'cleats',
+  heels: 'heels',
+}
+
+// Composer — turn BuildSpec into the SDXL prompt
+function composePrompt(spec: AiBuildSpec): string {
+  const parts: string[] = []
+  parts.push(`${TOKEN_GENDER[spec.gender]} character`)
+  parts.push(TOKEN_BUILD[spec.build])
+  parts.push(TOKEN_SKIN[spec.skinTone])
+  if (spec.hairLength !== 'bald') {
+    parts.push(`${TOKEN_HAIR_LEN[spec.hairLength]} ${TOKEN_HAIR_STYLE[spec.hairStyle]} ${TOKEN_HAIR_COLOR[spec.hairColor]}`)
+  } else {
+    parts.push(TOKEN_HAIR_LEN.bald)
+  }
+  if (spec.facialHair !== 'clean') parts.push(TOKEN_FACIAL_HAIR[spec.facialHair])
+  parts.push(`wearing ${TOKEN_TOP[spec.topPiece]} in ${spec.topColor}`)
+  parts.push(TOKEN_BOTTOM[spec.bottomPiece])
+  parts.push(`${TOKEN_SHOES[spec.shoes]} accented with ${spec.accentColor}`)
+  parts.push(TOKEN_VIBE[spec.vibe])
+  parts.push('confident pose, clean background')
+  if (spec.extraDetails.trim()) parts.push(spec.extraDetails.trim())
+  return parts.join(', ')
+}
 
 function AiBuildPanel({
   config,
@@ -1297,30 +1458,26 @@ function AiBuildPanel({
   config: CharacterConfig
   update: (partial: Partial<CharacterConfig>) => void
 }) {
-  const [prompt, setPrompt] = useState<string>(config.aiPortraitPrompt || '')
+  const [spec, setSpec] = useState<AiBuildSpec>(config.aiBuildSpec || DEFAULT_BUILD_SPEC)
+  const [seed, setSeed] = useState<number>(config.aiPortraitSeed || Math.floor(Math.random() * 1_000_000))
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [variant, setVariant] = useState<'portrait' | 'face'>('portrait')
+  const [showAdvanced, setShowAdvanced] = useState(false)
+
+  const composedPrompt = composePrompt(spec)
+  const tweak = (patch: Partial<AiBuildSpec>) => setSpec((s) => ({ ...s, ...patch }))
+  const applyPreset = (preset: Partial<AiBuildSpec>) => setSpec((s) => ({ ...s, ...preset }))
+  const newCharacter = () => setSeed(Math.floor(Math.random() * 1_000_000))
 
   async function generate() {
-    const text = prompt.trim()
-    if (text.length < 5) {
-      setError('Describe your character — at least 5 characters')
-      return
-    }
     setLoading(true)
     setError(null)
     try {
-      // Deterministic seed from prompt — same description → same portrait
-      let seedHash = 0
-      for (let i = 0; i < text.length; i++) {
-        seedHash = ((seedHash << 5) + seedHash + text.charCodeAt(i)) & 0xffffffff
-      }
-      const seed = Math.abs(seedHash) || 1
       const res = await fetch('/api/character/generate-portrait', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: text, variant, seed }),
+        body: JSON.stringify({ prompt: composedPrompt, variant, seed }),
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
@@ -1335,11 +1492,12 @@ function AiBuildPanel({
       })
       update({
         aiPortraitDataUrl: dataUrl,
-        aiPortraitPrompt: text,
+        aiPortraitPrompt: composedPrompt,
         aiPortraitSeed: seed,
+        aiBuildSpec: spec,
       })
     } catch (err: any) {
-      setError(err?.message || 'Generation failed — is anvil SDXL live?')
+      setError(err?.message || 'Generation failed — anvil SDXL may not be reachable')
     } finally {
       setLoading(false)
     }
@@ -1349,67 +1507,127 @@ function AiBuildPanel({
     <div className="bg-black space-y-0">
       <div className="px-4 py-2 bg-pink-500/5 border-b border-pink-500/10">
         <p className="text-[10px] font-mono text-pink-300">
-          NBA2K-style player builder. Describe your character — SDXL on anvil's RTX 5000 generates the portrait.
-          Cold first call ~30-60s · subsequent calls ~10-15s · same prompt always gives the same character.
+          NBA2K-style player builder. Tweak sliders below → SDXL on anvil's RTX 5000 renders your character.
+          Same seed across tweaks = same character with the modified trait. Tap 🎲 New Character to roll fresh.
         </p>
       </div>
 
       <div className="p-4 space-y-3">
-        {/* Variant toggle */}
-        <div className="flex items-center gap-2">
+        {/* Variant + Seed row */}
+        <div className="flex items-center flex-wrap gap-2">
           <span className="text-[9px] font-mono text-gray-500 uppercase">View:</span>
-          <button
-            onClick={() => setVariant('portrait')}
-            className={`px-3 py-1 rounded text-[10px] font-mono ${variant === 'portrait' ? 'bg-pink-500/20 text-pink-400 border border-pink-500/30' : 'bg-white/[0.02] text-gray-500 border border-white/5'}`}
-          >
-            Full body
-          </button>
-          <button
-            onClick={() => setVariant('face')}
-            className={`px-3 py-1 rounded text-[10px] font-mono ${variant === 'face' ? 'bg-pink-500/20 text-pink-400 border border-pink-500/30' : 'bg-white/[0.02] text-gray-500 border border-white/5'}`}
-          >
-            Face only
-          </button>
+          <button onClick={() => setVariant('portrait')} className={pillCls(variant === 'portrait')}>Full body</button>
+          <button onClick={() => setVariant('face')} className={pillCls(variant === 'face')}>Face only</button>
+          <div className="ml-auto flex items-center gap-2">
+            <span className="text-[9px] font-mono text-gray-500">seed: {seed}</span>
+            <button onClick={newCharacter} className="px-2 py-1 rounded text-[10px] font-mono bg-pink-500/15 text-pink-300 border border-pink-500/30 hover:bg-pink-500/25">🎲 New</button>
+          </div>
         </div>
 
-        {/* Quick-start preset chips */}
-        <div className="space-y-1">
-          <div className="text-[9px] font-mono text-gray-500 uppercase">Quick start:</div>
+        {/* Quick-start preset chips — populate the BuildSpec, not freeform */}
+        <PickerSection label="Quick start preset">
           <div className="flex flex-wrap gap-1">
             {AI_BUILD_PRESETS.map((p) => (
-              <button
-                key={p.label}
-                onClick={() => setPrompt(p.prompt)}
-                className="px-2 py-1 rounded text-[10px] font-mono bg-white/[0.02] text-gray-300 border border-white/5 hover:bg-pink-500/10 hover:text-pink-300 hover:border-pink-500/20 transition"
-              >
+              <button key={p.label} onClick={() => applyPreset(p.spec)} className="px-2 py-1 rounded text-[10px] font-mono bg-white/[0.02] text-gray-300 border border-white/5 hover:bg-pink-500/10 hover:text-pink-300 hover:border-pink-500/20 transition">
                 {p.label}
               </button>
             ))}
           </div>
-        </div>
+        </PickerSection>
 
-        {/* Free-form prompt */}
-        <div>
-          <label className="text-[9px] font-mono text-gray-500 uppercase tracking-wider mb-1 block">
-            Describe your character
-          </label>
-          <textarea
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            placeholder="athletic 6'2 male with short dreads, blue hoodie, ripped jeans, white sneakers, confident pose"
-            rows={3}
-            className="w-full bg-white/[0.02] border border-white/10 rounded px-3 py-2 text-xs text-white placeholder:text-gray-600 resize-none focus:outline-none focus:border-pink-500/40"
-            disabled={loading}
-          />
-        </div>
+        {/* Identity */}
+        <PickerSection label="Identity">
+          <ChipRow value={spec.gender} options={[['masc', '♂ Masc'], ['fem', '♀ Fem'], ['androgynous', '◐ Andro']]} onPick={(v) => tweak({ gender: v as any })} />
+        </PickerSection>
 
-        {/* Generate button */}
-        <button
-          onClick={generate}
-          disabled={loading || prompt.trim().length < 5}
-          className="w-full py-2 rounded text-xs font-mono font-bold bg-gradient-to-br from-pink-500/30 to-purple-500/30 text-pink-300 border border-pink-500/40 hover:from-pink-500/40 hover:to-purple-500/40 disabled:opacity-40 disabled:cursor-not-allowed transition"
-        >
-          {loading ? '⚡ Generating on RTX 5000…' : config.aiPortraitDataUrl ? '🔁 Regenerate Portrait' : '✨ Generate Portrait'}
+        {/* Body */}
+        <PickerSection label="Build">
+          <ChipRow value={spec.build} options={[['slim', 'Slim'], ['athletic', 'Athletic'], ['muscular', 'Muscular'], ['bulky', 'Bulky']]} onPick={(v) => tweak({ build: v as any })} />
+        </PickerSection>
+
+        {/* Skin tone — swatches */}
+        <PickerSection label="Skin tone">
+          <div className="flex flex-wrap gap-1.5">
+            {(['fair', 'light', 'medium', 'tan', 'brown', 'dark'] as const).map((t, i) => {
+              const swatches = ['#f3d5b5', '#e0b48d', '#c08a5e', '#a16641', '#7a4a2b', '#4a2e1a']
+              const active = spec.skinTone === t
+              return (
+                <button key={t} onClick={() => tweak({ skinTone: t })} title={t}
+                  className={`w-7 h-7 rounded-full border-2 transition ${active ? 'border-pink-400 scale-110' : 'border-white/10 hover:border-white/30'}`}
+                  style={{ backgroundColor: swatches[i] }} />
+              )
+            })}
+          </div>
+        </PickerSection>
+
+        {/* Hair */}
+        <PickerSection label="Hair length">
+          <ChipRow value={spec.hairLength} options={[['bald', 'Bald'], ['buzz', 'Buzz'], ['short', 'Short'], ['medium', 'Medium'], ['long', 'Long']]} onPick={(v) => tweak({ hairLength: v as any })} />
+        </PickerSection>
+        {spec.hairLength !== 'bald' && (
+          <>
+            <PickerSection label="Hair style">
+              <ChipRow value={spec.hairStyle} options={[['natural', 'Natural'], ['wavy', 'Wavy'], ['curly', 'Curly'], ['coily', 'Coily'], ['dreads', 'Dreads'], ['braids', 'Braids'], ['cornrows', 'Cornrows'], ['mohawk', 'Mohawk']]} onPick={(v) => tweak({ hairStyle: v as any })} />
+            </PickerSection>
+            <PickerSection label="Hair color">
+              <ChipRow value={spec.hairColor} options={[['black', 'Black'], ['brown', 'Brown'], ['blonde', 'Blonde'], ['red', 'Red'], ['silver', 'Silver'], ['cyan', 'Cyan'], ['pink', 'Pink'], ['purple', 'Purple']]} onPick={(v) => tweak({ hairColor: v as any })} />
+            </PickerSection>
+          </>
+        )}
+
+        {/* Facial hair */}
+        <PickerSection label="Facial hair">
+          <ChipRow value={spec.facialHair} options={[['clean', 'Clean'], ['stubble', 'Stubble'], ['goatee', 'Goatee'], ['beard', 'Beard'], ['mustache', '\'Stache']]} onPick={(v) => tweak({ facialHair: v as any })} />
+        </PickerSection>
+
+        {/* Vibe */}
+        <PickerSection label="Vibe / aesthetic">
+          <ChipRow value={spec.vibe} options={[['streetwear', 'Streetwear'], ['cyberpunk', 'Cyberpunk'], ['athletic', 'Athletic'], ['formal', 'Formal'], ['casual', 'Casual'], ['artist', 'Artist'], ['royal', 'Royal'], ['tactical', 'Tactical'], ['punk', 'Punk']]} onPick={(v) => tweak({ vibe: v as any })} />
+        </PickerSection>
+
+        {/* Outfit */}
+        <PickerSection label="Top">
+          <ChipRow value={spec.topPiece} options={[['hoodie', 'Hoodie'], ['tshirt', 'T-shirt'], ['jersey', 'Jersey'], ['tank', 'Tank'], ['jacket', 'Jacket'], ['buttonup', 'Button-up'], ['sweater', 'Sweater'], ['crop', 'Crop']]} onPick={(v) => tweak({ topPiece: v as any })} />
+        </PickerSection>
+        <PickerSection label="Bottom">
+          <ChipRow value={spec.bottomPiece} options={[['jeans', 'Jeans'], ['joggers', 'Joggers'], ['shorts', 'Shorts'], ['cargo', 'Cargo'], ['dresspants', 'Dress pants'], ['skirt', 'Skirt'], ['leggings', 'Leggings']]} onPick={(v) => tweak({ bottomPiece: v as any })} />
+        </PickerSection>
+        <PickerSection label="Shoes">
+          <ChipRow value={spec.shoes} options={[['sneakers', 'Sneakers'], ['boots', 'Boots'], ['dressshoes', 'Dress'], ['sandals', 'Sandals'], ['cleats', 'Cleats'], ['heels', 'Heels']]} onPick={(v) => tweak({ shoes: v as any })} />
+        </PickerSection>
+
+        {/* Colors */}
+        <PickerSection label="Top color">
+          <div className="flex items-center gap-2">
+            <input type="color" value={spec.topColor} onChange={(e) => tweak({ topColor: e.target.value })} className="w-10 h-7 rounded border border-white/10 bg-transparent cursor-pointer" />
+            <span className="font-mono text-[10px] text-gray-500">{spec.topColor}</span>
+          </div>
+        </PickerSection>
+        <PickerSection label="Accent color">
+          <div className="flex items-center gap-2">
+            <input type="color" value={spec.accentColor} onChange={(e) => tweak({ accentColor: e.target.value })} className="w-10 h-7 rounded border border-white/10 bg-transparent cursor-pointer" />
+            <span className="font-mono text-[10px] text-gray-500">{spec.accentColor}</span>
+          </div>
+        </PickerSection>
+
+        {/* Advanced — extra details */}
+        <button onClick={() => setShowAdvanced((s) => !s)} className="w-full text-left text-[10px] font-mono text-pink-300/70 hover:text-pink-300 transition">
+          {showAdvanced ? '▾' : '▸'} Advanced — extra prompt details
+        </button>
+        {showAdvanced && (
+          <div className="space-y-2">
+            <textarea value={spec.extraDetails} onChange={(e) => tweak({ extraDetails: e.target.value })} placeholder="extra details to layer on: tattoos, accessories, mood, lighting…" rows={2}
+              className="w-full bg-white/[0.02] border border-white/10 rounded px-3 py-2 text-xs text-white placeholder:text-gray-600 resize-none focus:outline-none focus:border-pink-500/40" />
+            <div className="text-[9px] font-mono text-gray-500 break-words leading-relaxed bg-black/40 p-2 rounded border border-white/5">
+              <span className="text-pink-400">SDXL prompt: </span>{composedPrompt}
+            </div>
+          </div>
+        )}
+
+        {/* Generate */}
+        <button onClick={generate} disabled={loading}
+          className="w-full py-2.5 rounded text-xs font-mono font-bold bg-gradient-to-br from-pink-500/30 to-purple-500/30 text-pink-300 border border-pink-500/40 hover:from-pink-500/40 hover:to-purple-500/40 disabled:opacity-40 disabled:cursor-not-allowed transition">
+          {loading ? '⚡ Generating on RTX 5000…' : config.aiPortraitDataUrl ? '🔁 Regenerate with these settings' : '✨ Generate Character'}
         </button>
 
         {error && (
@@ -1421,16 +1639,12 @@ function AiBuildPanel({
         {/* Portrait preview */}
         {config.aiPortraitDataUrl && (
           <div className="space-y-2">
-            <div className="text-[9px] font-mono text-gray-500 uppercase">Generated portrait:</div>
-            <img
-              src={config.aiPortraitDataUrl}
-              alt="AI-generated character"
-              className="w-full max-w-[400px] mx-auto rounded border border-pink-500/20"
-            />
-            {config.aiPortraitPrompt && (
-              <div className="text-[9px] font-mono text-gray-500 italic">
-                Prompt: "{config.aiPortraitPrompt}"
-                {config.aiPortraitSeed != null ? ` · seed: ${config.aiPortraitSeed}` : ''}
+            <div className="text-[9px] font-mono text-gray-500 uppercase">Your character:</div>
+            <img src={config.aiPortraitDataUrl} alt="AI-generated character"
+              className="w-full max-w-[400px] mx-auto rounded border border-pink-500/20" />
+            {config.aiPortraitSeed != null && (
+              <div className="text-[9px] font-mono text-gray-500 italic text-center">
+                seed: {config.aiPortraitSeed} · tweak any slider + Regenerate to keep the same character
               </div>
             )}
           </div>
@@ -1439,8 +1653,38 @@ function AiBuildPanel({
 
       <div className="px-4 py-2 border-t border-pink-500/10 bg-black/40 flex items-center justify-between text-[8px] font-mono text-gray-600">
         <span>Powered by Lucy SDXL on anvil · RTX 5000 · stable-diffusion-xl</span>
-        <span className="text-pink-500">🎨 Phase 16.1</span>
+        <span className="text-pink-500">🎨 Phase 16.2</span>
       </div>
+    </div>
+  )
+}
+
+// Small helper components for the slider UI
+function pillCls(active: boolean): string {
+  return `px-3 py-1 rounded text-[10px] font-mono ${active ? 'bg-pink-500/20 text-pink-400 border border-pink-500/30' : 'bg-white/[0.02] text-gray-500 border border-white/5 hover:text-white'}`
+}
+
+function PickerSection({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-1">
+      <div className="text-[9px] font-mono text-gray-500 uppercase tracking-wider">{label}</div>
+      {children}
+    </div>
+  )
+}
+
+function ChipRow({ value, options, onPick }: { value: string; options: Array<[string, string]>; onPick: (v: string) => void }) {
+  return (
+    <div className="flex flex-wrap gap-1">
+      {options.map(([v, label]) => {
+        const active = value === v
+        return (
+          <button key={v} onClick={() => onPick(v)}
+            className={`px-2 py-1 rounded text-[10px] font-mono transition ${active ? 'bg-pink-500/20 text-pink-300 border border-pink-500/40' : 'bg-white/[0.02] text-gray-400 border border-white/5 hover:bg-white/[0.05] hover:text-white'}`}>
+            {label}
+          </button>
+        )
+      })}
     </div>
   )
 }
