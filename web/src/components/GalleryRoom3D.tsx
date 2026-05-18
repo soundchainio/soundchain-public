@@ -38,7 +38,7 @@ interface Track {
 interface GalleryRoom3DProps {
   ownerHandle: string
   ownerProfileId?: string
-  theme?: 'modern' | 'cyberpunk' | 'vinyl' | 'vault' | 'city'
+  theme?: 'modern' | 'cyberpunk' | 'vinyl' | 'vault' | 'city' | 'gym' | 'blacktop'
 }
 
 const THEME_CONFIG = {
@@ -50,6 +50,13 @@ const THEME_CONFIG = {
   // walls, alley gaps, billboards on building facades displaying user's NFTs.
   // Walk through the "block" like a player-one mode game.
   city: { wall: 0x3a2520, floor: 0x222428, accent: 0xfacc15, ambient: 0x5a4a3a, name: 'CITY STREETS' },
+  // Phase 16.39 — SoundChain Shootaround. Two basketball-focused themes:
+  // GYM = indoor open gym with wood floor, NBA-style markings, two hoops,
+  //       bleachers, gym lights. Full-court basketball.
+  // BLACKTOP = outdoor street court, asphalt + chain-link fence + graffiti,
+  //            single hoop, urban vibe.
+  gym:      { wall: 0xede2c8, floor: 0xc8a060, accent: 0xdc2626, ambient: 0xfff0e0, name: 'OPEN GYM' },
+  blacktop: { wall: 0x1a1a1a, floor: 0x2a2a2a, accent: 0xfacc15, ambient: 0x6a5a4a, name: 'BLACKTOP' },
 }
 
 export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cyberpunk' }: GalleryRoom3DProps) {
@@ -178,11 +185,38 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
     // ─── Floor ───────────────────────────────────────────────
     // Phase 16.25 — city theme gets a HUGE 200x200 asphalt floor (open world);
     // gallery themes keep the original 40x40 enclosed room floor.
-    const floorSize = theme === 'city' ? 200 : 40
+    // Theme flags — hoisted so basketball + walls blocks can both use them
+    const isOutdoor = theme === 'city' || theme === 'blacktop'
+    const isGymCourt = theme === 'gym'
+    const isBlacktopCourt = theme === 'blacktop'
+    const isBasketballGallery = isGymCourt || isBlacktopCourt
+    const floorSize = theme === 'city' ? 200 : (theme === 'gym' ? 60 : theme === 'blacktop' ? 50 : 40)
     const floorGeo = new THREE.PlaneGeometry(floorSize, floorSize)
     let floorMat: THREE.MeshStandardMaterial
     if (theme === 'city') {
       floorMat = new THREE.MeshStandardMaterial({ color: themeCfg.floor, metalness: 0.05, roughness: 0.95 })
+    } else if (theme === 'gym') {
+      // Wood floor with plank grain via canvas texture
+      const woodCanvas = document.createElement('canvas')
+      woodCanvas.width = 512; woodCanvas.height = 512
+      const wctx = woodCanvas.getContext('2d')!
+      wctx.fillStyle = '#c8a060'; wctx.fillRect(0, 0, 512, 512)
+      // Plank lines
+      wctx.strokeStyle = '#8a6a3a'; wctx.lineWidth = 1
+      for (let y = 0; y < 512; y += 32) {
+        wctx.beginPath(); wctx.moveTo(0, y); wctx.lineTo(512, y); wctx.stroke()
+      }
+      // Grain variation
+      for (let i = 0; i < 200; i++) {
+        wctx.fillStyle = `rgba(120,80,40,${0.05 + Math.random() * 0.15})`
+        wctx.fillRect(Math.random() * 512, Math.random() * 512, Math.random() * 80, 2)
+      }
+      const woodTex = new THREE.CanvasTexture(woodCanvas)
+      woodTex.wrapS = woodTex.wrapT = THREE.RepeatWrapping
+      woodTex.repeat.set(6, 6)
+      floorMat = new THREE.MeshStandardMaterial({ map: woodTex, metalness: 0.1, roughness: 0.6 })
+    } else if (theme === 'blacktop') {
+      floorMat = new THREE.MeshStandardMaterial({ color: 0x1f1f1f, metalness: 0.02, roughness: 0.95 })
     } else {
       floorMat = new THREE.MeshStandardMaterial({ color: themeCfg.floor, metalness: 0.6, roughness: 0.3 })
     }
@@ -194,6 +228,199 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
     // Phase 16.12 — CITY THEME: street markings, brick storefronts, awnings,
     // alley gaps, billboards. Builds on top of the existing wall structure
     // so frames/tracks still work; just adds GTA/NBA2K-style city ambiance.
+    if (isBasketballGallery) {
+      // Phase 16.39 — SoundChain Shootaround basketball court setup.
+      // Both gym (indoor) and blacktop (outdoor) get a real NBA-style court.
+      // gym = full-court with 2 hoops + bleachers
+      // blacktop = half-court with 1 hoop + chain-link fence
+      const courtZ = 0           // center of court
+      const courtSpan = isGymCourt ? 28 : 14   // full court vs half-court
+      const courtWidth = 15
+
+      // Court boundary paint
+      const courtMat = new THREE.MeshStandardMaterial({
+        color: isGymCourt ? 0xb8893c : 0x3a3f44,
+        roughness: 0.5,
+        metalness: 0.1,
+      })
+      const court = new THREE.Mesh(new THREE.PlaneGeometry(courtWidth, courtSpan), courtMat)
+      court.rotation.x = -Math.PI / 2
+      court.position.set(0, 0.02, courtZ)
+      court.receiveShadow = true
+      scene.add(court)
+      // White boundary
+      const lineMat = new THREE.MeshBasicMaterial({ color: 0xffffff })
+      const mkLine = (w: number, h: number, x: number, z: number) => {
+        const ln = new THREE.Mesh(new THREE.PlaneGeometry(w, h), lineMat)
+        ln.rotation.x = -Math.PI / 2
+        ln.position.set(x, 0.03, z)
+        scene.add(ln)
+      }
+      mkLine(courtWidth, 0.1, 0, courtZ - courtSpan / 2)  // baseline
+      mkLine(courtWidth, 0.1, 0, courtZ + courtSpan / 2)  // baseline
+      mkLine(0.1, courtSpan, -courtWidth / 2, courtZ)     // sideline L
+      mkLine(0.1, courtSpan, courtWidth / 2, courtZ)      // sideline R
+      // Build hoops + key paint per court type
+      const hoopPositions: Array<{ z: number; flip: boolean }> = []
+      if (isGymCourt) {
+        // Full court: half-court line + 2 keys + 2 hoops
+        mkLine(courtWidth, 0.1, 0, courtZ)  // half-court line
+        const center = new THREE.Mesh(new THREE.RingGeometry(1.7, 1.8, 32), lineMat)
+        center.rotation.x = -Math.PI / 2
+        center.position.set(0, 0.03, courtZ)
+        scene.add(center)
+        hoopPositions.push({ z: courtZ - courtSpan / 2 + 1.5, flip: false })
+        hoopPositions.push({ z: courtZ + courtSpan / 2 - 1.5, flip: true })
+      } else {
+        hoopPositions.push({ z: courtZ - courtSpan / 2 + 1.5, flip: false })
+      }
+
+      const hoopList: Array<{ rimPos: THREE.Vector3 }> = []
+      hoopPositions.forEach(({ z, flip }) => {
+        const dir = flip ? -1 : 1
+        const baseZ = z
+        // Free-throw line + key
+        mkLine(4, 0.1, 0, baseZ + 5.5 * dir)
+        const keyPaint = new THREE.Mesh(
+          new THREE.PlaneGeometry(4, 5),
+          new THREE.MeshBasicMaterial({ color: 0xdc2626, transparent: true, opacity: 0.4 }),
+        )
+        keyPaint.rotation.x = -Math.PI / 2
+        keyPaint.position.set(0, 0.025, baseZ + 2.8 * dir)
+        scene.add(keyPaint)
+        // Three-point arc
+        for (let a = -Math.PI * 0.4; a <= Math.PI * 0.4; a += 0.05) {
+          const r = 4.5
+          const seg = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.08), lineMat)
+          seg.rotation.x = -Math.PI / 2
+          seg.rotation.z = a + Math.PI / 2
+          seg.position.set(Math.sin(a) * r, 0.03, baseZ + (5.5 - Math.cos(a) * r) * dir)
+          scene.add(seg)
+        }
+        // Hoop pole + backboard + rim
+        const pole = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.1, 0.15, 4, 12),
+          new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.7, roughness: 0.4 }),
+        )
+        pole.position.set(0, 2, baseZ - 0.8 * dir)
+        pole.castShadow = true
+        scene.add(pole)
+        const backboard = new THREE.Mesh(
+          new THREE.BoxGeometry(2, 1.3, 0.1),
+          new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.92 }),
+        )
+        backboard.position.set(0, 3.8, baseZ - 0.7 * dir)
+        backboard.castShadow = true
+        scene.add(backboard)
+        const sqOutline = new THREE.LineSegments(
+          new THREE.EdgesGeometry(new THREE.PlaneGeometry(0.6, 0.45)),
+          new THREE.LineBasicMaterial({ color: 0xdc2626 }),
+        )
+        sqOutline.position.set(0, 3.7, baseZ - 0.65 * dir)
+        scene.add(sqOutline)
+        const rim = new THREE.Mesh(
+          new THREE.TorusGeometry(0.35, 0.04, 8, 24),
+          new THREE.MeshStandardMaterial({ color: 0xea580c, emissive: 0xea580c, emissiveIntensity: 0.2, metalness: 0.7, roughness: 0.3 }),
+        )
+        const rimPos = new THREE.Vector3(0, 3.3, baseZ - 0.3 * dir)
+        rim.position.copy(rimPos)
+        rim.rotation.x = Math.PI / 2
+        rim.castShadow = true
+        scene.add(rim)
+        hoopList.push({ rimPos })
+        // Net (12 segments)
+        const netMat = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.8 })
+        for (let ni = 0; ni < 12; ni++) {
+          const a = (ni / 12) * Math.PI * 2
+          const seg = new THREE.Mesh(new THREE.CylinderGeometry(0.005, 0.005, 0.35, 4), netMat)
+          seg.position.set(Math.cos(a) * 0.32, 3.13, rimPos.z + Math.sin(a) * 0.32)
+          scene.add(seg)
+        }
+      })
+      // Store ALL hoop positions in scene.userData so basketball mechanic
+      // can target the NEAREST one (full court has 2 hoops).
+      ;(scene.userData as any).hoops = hoopList
+
+      // Blacktop-specific: chain-link fence around court
+      if (isBlacktopCourt) {
+        const fenceMat = new THREE.MeshStandardMaterial({ color: 0x4a4a4a, metalness: 0.6, roughness: 0.5, transparent: true, opacity: 0.55, wireframe: true })
+        const fenceH = 4.5
+        const fenceGeo = new THREE.PlaneGeometry(courtWidth + 2, fenceH, 24, 6)
+        ;[{ z: courtZ + courtSpan / 2 + 1, rot: 0 }, { z: courtZ - courtSpan / 2 - 1, rot: 0 }].forEach(({ z, rot }) => {
+          const fence = new THREE.Mesh(fenceGeo, fenceMat)
+          fence.position.set(0, fenceH / 2, z)
+          fence.rotation.y = rot
+          scene.add(fence)
+        })
+        ;[-courtWidth / 2 - 1, courtWidth / 2 + 1].forEach((x) => {
+          const sideFenceGeo = new THREE.PlaneGeometry(courtSpan + 2, fenceH, 24, 6)
+          const fence = new THREE.Mesh(sideFenceGeo, fenceMat)
+          fence.position.set(x, fenceH / 2, courtZ)
+          fence.rotation.y = Math.PI / 2
+          scene.add(fence)
+        })
+        // Streetlight
+        const lampPole = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.1, 0.1, 8, 8),
+          new THREE.MeshStandardMaterial({ color: 0x222222 }),
+        )
+        lampPole.position.set(courtWidth / 2 + 2, 4, courtZ - 3)
+        scene.add(lampPole)
+        const lampBulb = new THREE.Mesh(
+          new THREE.SphereGeometry(0.25, 12, 12),
+          new THREE.MeshStandardMaterial({ color: 0xfff7c2, emissive: 0xfff7c2, emissiveIntensity: 0.8 }),
+        )
+        lampBulb.position.set(courtWidth / 2 + 1.5, 7.5, courtZ - 3)
+        scene.add(lampBulb)
+        const courtLight = new THREE.PointLight(0xfff7c2, 1.2, 30)
+        courtLight.position.copy(lampBulb.position)
+        scene.add(courtLight)
+      }
+
+      // Gym-specific: bleachers along both long sides
+      if (isGymCourt) {
+        const bleacherMat = new THREE.MeshStandardMaterial({ color: 0x6a4a2a, roughness: 0.7 })
+        ;[-courtWidth / 2 - 3, courtWidth / 2 + 3].forEach((x) => {
+          for (let row = 0; row < 4; row++) {
+            const bench = new THREE.Mesh(new THREE.BoxGeometry(2, 0.4, courtSpan), bleacherMat)
+            bench.position.set(x + (x > 0 ? row * 1.5 : -row * 1.5), 0.4 + row * 0.7, 0)
+            bench.castShadow = true
+            scene.add(bench)
+          }
+        })
+        // Gym overhead lights (4 panels of fluorescent)
+        for (let lx = -8; lx <= 8; lx += 8) {
+          for (let lz = -8; lz <= 8; lz += 8) {
+            const panel = new THREE.Mesh(
+              new THREE.BoxGeometry(3, 0.1, 1),
+              new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xfff8e0, emissiveIntensity: 0.9 }),
+            )
+            panel.position.set(lx, 21.5, lz)
+            scene.add(panel)
+            const gymLight = new THREE.PointLight(0xfff8e0, 1.5, 40)
+            gymLight.position.set(lx, 19, lz)
+            scene.add(gymLight)
+          }
+        }
+        // Scoreboard above mid-court
+        const scoreCanvas = document.createElement('canvas')
+        scoreCanvas.width = 512; scoreCanvas.height = 128
+        const scx = scoreCanvas.getContext('2d')!
+        scx.fillStyle = '#0a0a0a'; scx.fillRect(0, 0, 512, 128)
+        scx.strokeStyle = '#dc2626'; scx.lineWidth = 6; scx.strokeRect(8, 8, 496, 112)
+        scx.fillStyle = '#dc2626'; scx.font = 'bold 60px monospace'; scx.textAlign = 'center'
+        scx.fillText('🏀 OPEN GYM', 256, 80)
+        const scoreTex = new THREE.CanvasTexture(scoreCanvas)
+        const scoreboard = new THREE.Mesh(
+          new THREE.PlaneGeometry(8, 2),
+          new THREE.MeshStandardMaterial({ map: scoreTex, emissive: 0xdc2626, emissiveIntensity: 0.3, emissiveMap: scoreTex }),
+        )
+        scoreboard.position.set(0, 18, 0)
+        scoreboard.rotation.y = Math.PI
+        scene.add(scoreboard)
+      }
+    }
+
     if (theme === 'city') {
       // Phase 16.25 — Dashed center line extended to FULL CITY LENGTH (95u
       // each direction) so the street stretches across the open world.
@@ -677,39 +904,63 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
     const wallHeight = 8
     const wallLength = 40
 
-    if (theme !== 'city') {
+    if (!isOutdoor) {
+      // For gym, walls are bigger (30u high gym ceiling) and longer
+      const gymExpand = isGymCourt ? 1.5 : 1
+      const gymHeight = isGymCourt ? 22 : wallHeight
+      const useLen = wallLength * gymExpand
       // Back wall
-      const backWall = new THREE.Mesh(new THREE.PlaneGeometry(wallLength, wallHeight), wallMat)
-      backWall.position.set(0, wallHeight / 2, -wallLength / 2)
+      const backWall = new THREE.Mesh(new THREE.PlaneGeometry(useLen, gymHeight), wallMat)
+      backWall.position.set(0, gymHeight / 2, -useLen / 2)
       backWall.receiveShadow = true
       scene.add(backWall)
 
-      // Front wall (with door gap)
-      const frontWallLeft = new THREE.Mesh(new THREE.PlaneGeometry(15, wallHeight), wallMat)
-      frontWallLeft.position.set(-12.5, wallHeight / 2, wallLength / 2)
-      frontWallLeft.rotation.y = Math.PI
-      scene.add(frontWallLeft)
-      const frontWallRight = new THREE.Mesh(new THREE.PlaneGeometry(15, wallHeight), wallMat)
-      frontWallRight.position.set(12.5, wallHeight / 2, wallLength / 2)
-      frontWallRight.rotation.y = Math.PI
-      scene.add(frontWallRight)
-
-      // Side walls
-      const leftWall = new THREE.Mesh(new THREE.PlaneGeometry(wallLength, wallHeight), wallMat)
-      leftWall.position.set(-wallLength / 2, wallHeight / 2, 0)
-      leftWall.rotation.y = Math.PI / 2
-      scene.add(leftWall)
-      const rightWall = new THREE.Mesh(new THREE.PlaneGeometry(wallLength, wallHeight), wallMat)
-      rightWall.position.set(wallLength / 2, wallHeight / 2, 0)
-      rightWall.rotation.y = -Math.PI / 2
-      scene.add(rightWall)
-
-      // Ceiling
-      const ceilingMat = new THREE.MeshStandardMaterial({ color: themeCfg.wall, metalness: 0.2, roughness: 0.8 })
-      const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(wallLength, wallLength), ceilingMat)
-      ceiling.position.y = wallHeight
-      ceiling.rotation.x = Math.PI / 2
-      scene.add(ceiling)
+      // Front + side walls + ceiling
+      if (isGymCourt) {
+        // Gym: closed box, all 4 walls + ceiling, no door gap
+        const fw = new THREE.Mesh(new THREE.PlaneGeometry(useLen, gymHeight), wallMat)
+        fw.position.set(0, gymHeight / 2, useLen / 2)
+        fw.rotation.y = Math.PI
+        scene.add(fw)
+        const lw = new THREE.Mesh(new THREE.PlaneGeometry(useLen, gymHeight), wallMat)
+        lw.position.set(-useLen / 2, gymHeight / 2, 0)
+        lw.rotation.y = Math.PI / 2
+        scene.add(lw)
+        const rw = new THREE.Mesh(new THREE.PlaneGeometry(useLen, gymHeight), wallMat)
+        rw.position.set(useLen / 2, gymHeight / 2, 0)
+        rw.rotation.y = -Math.PI / 2
+        scene.add(rw)
+        const ceilingMat = new THREE.MeshStandardMaterial({ color: 0xf5e8c8, metalness: 0.1, roughness: 0.9 })
+        const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(useLen, useLen), ceilingMat)
+        ceiling.position.y = gymHeight
+        ceiling.rotation.x = Math.PI / 2
+        scene.add(ceiling)
+      } else {
+        // Front wall (with door gap)
+        const frontWallLeft = new THREE.Mesh(new THREE.PlaneGeometry(15, wallHeight), wallMat)
+        frontWallLeft.position.set(-12.5, wallHeight / 2, wallLength / 2)
+        frontWallLeft.rotation.y = Math.PI
+        scene.add(frontWallLeft)
+        const frontWallRight = new THREE.Mesh(new THREE.PlaneGeometry(15, wallHeight), wallMat)
+        frontWallRight.position.set(12.5, wallHeight / 2, wallLength / 2)
+        frontWallRight.rotation.y = Math.PI
+        scene.add(frontWallRight)
+        // Side walls
+        const leftWall = new THREE.Mesh(new THREE.PlaneGeometry(wallLength, wallHeight), wallMat)
+        leftWall.position.set(-wallLength / 2, wallHeight / 2, 0)
+        leftWall.rotation.y = Math.PI / 2
+        scene.add(leftWall)
+        const rightWall = new THREE.Mesh(new THREE.PlaneGeometry(wallLength, wallHeight), wallMat)
+        rightWall.position.set(wallLength / 2, wallHeight / 2, 0)
+        rightWall.rotation.y = -Math.PI / 2
+        scene.add(rightWall)
+        // Ceiling
+        const ceilingMat = new THREE.MeshStandardMaterial({ color: themeCfg.wall, metalness: 0.2, roughness: 0.8 })
+        const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(wallLength, wallLength), ceilingMat)
+        ceiling.position.y = wallHeight
+        ceiling.rotation.x = Math.PI / 2
+        scene.add(ceiling)
+      }
     } else {
       // CITY OPEN WORLD — dome skybox + atmospheric horizon, no walls/ceiling
       const skyGeo = new THREE.SphereGeometry(280, 32, 16)

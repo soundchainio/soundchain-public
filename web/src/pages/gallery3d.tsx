@@ -21,7 +21,7 @@ const GalleryRoom3D = dynamic(() => import('components/GalleryRoom3D'), {
   ),
 })
 
-const THEMES = ['cyberpunk', 'modern', 'vinyl', 'vault', 'city'] as const
+const THEMES = ['cyberpunk', 'modern', 'vinyl', 'vault', 'city', 'gym', 'blacktop'] as const
 type Theme = typeof THEMES[number]
 
 export default function Gallery3DPage() {
