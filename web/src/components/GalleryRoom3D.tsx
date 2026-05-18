@@ -843,73 +843,82 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
     })
 
     // ─── Player avatar — saved character (GLB if available, capsule fallback) ──
-    // Phase 16.11 — reads the same character config the user saves in
-    // CharacterDesigner. If type is 'human'/'opensource'/'ai' and a humanGlbUrl
-    // (or aiGlbUrl) is present, loads it; otherwise renders the legacy capsule.
+    // Phase 16.11 + 16.28 — reads the same character config the user saves in
+    // CharacterDesigner. Loads GLB if any URL is present. ALSO listens for
+    // 'character-updated' events so when user generates a new character in
+    // a different tab / via Save as Avatar without leaving the page, the
+    // gallery swaps the avatar in-place (no full scene rebuild).
     const playerGroup = new THREE.Group()
     playerGroup.position.set(0, 0, 5)
     scene.add(playerGroup)
 
-    const character = getStoredCharacter()
-    // Phase 16.11 — find ANY GLB URL on the saved character, not just the one
-    // matching type. This way a user who saved their AI BUILD mesh but kept
-    // their type as 'agent' still sees their custom mesh in the gallery.
-    const glbUrl = (character as any).aiGlbUrl || character.humanGlbUrl
-    const isGlbAvatar = !!glbUrl
-    console.log('[GalleryRoom3D] character', {
-      type: character.type,
-      hasAiGlb: !!(character as any).aiGlbUrl,
-      hasHumanGlb: !!character.humanGlbUrl,
-      willLoadGlb: isGlbAvatar,
-    })
+    // The avatar mesh is held in a sub-group so we can clear + rebuild on
+    // character-updated events without touching playerGroup's position/rotation.
+    const avatarHolder = new THREE.Group()
+    playerGroup.add(avatarHolder)
 
-    if (isGlbAvatar) {
-      const loader = new GLTFLoader()
-      loader.load(
-        glbUrl!,
-        (gltf) => {
-          const model = gltf.scene
-          const baseScale = character.humanScale ?? 1
-          const heightMul = character.height ?? 1
-          // Auto-frame the model to character bounds. TripoSR meshes come out
-          // at varying scales — without re-fitting they'd be tiny or massive.
-          const preBox = new THREE.Box3().setFromObject(model)
-          const preSize = new THREE.Vector3(); preBox.getSize(preSize)
-          if (preSize.y > 0 && (preSize.y < 0.5 || preSize.y > 4)) {
-            // Mesh is wildly off from human-scale (1.8u); auto-rescale to 1.8u
-            const autoScale = 1.8 / preSize.y
-            model.scale.setScalar(autoScale * heightMul)
-          } else {
-            model.scale.setScalar(baseScale * heightMul)
-          }
-          // Recompute bbox + center on feet
-          const box = new THREE.Box3().setFromObject(model)
-          const center = new THREE.Vector3(); box.getCenter(center)
-          model.position.x -= center.x
-          model.position.z -= center.z
-          model.position.y = (character.humanYOffset ?? 0) - box.min.y
-          model.traverse((obj: any) => {
-            if (obj.isMesh) {
-              obj.castShadow = true
-              obj.receiveShadow = true
-            }
-          })
-          playerGroup.add(model)
-          console.log('[GalleryRoom3D] GLB loaded + auto-scaled')
-        },
-        undefined,
-        (err) => {
-          console.error('[GalleryRoom3D] character GLB load failed, falling back to capsule:', err)
-          const fallbackGeo = new THREE.CapsuleGeometry(0.4, 1, 4, 8)
-          const fallbackMat = new THREE.MeshStandardMaterial({ color: themeCfg.accent, emissive: themeCfg.accent, emissiveIntensity: 0.3, metalness: 0.5, roughness: 0.3 })
-          const fallbackMesh = new THREE.Mesh(fallbackGeo, fallbackMat)
-          fallbackMesh.position.y = 1
-          fallbackMesh.castShadow = true
-          playerGroup.add(fallbackMesh)
+    const buildAvatar = (character: CharacterConfig) => {
+      // Tear down old meshes first
+      while (avatarHolder.children.length > 0) {
+        const child = avatarHolder.children[0]
+        avatarHolder.remove(child)
+        if ((child as any).geometry) (child as any).geometry.dispose()
+        if ((child as any).material) {
+          const mat = (child as any).material
+          if (Array.isArray(mat)) mat.forEach((m: any) => m.dispose())
+          else mat.dispose()
         }
-      )
-    } else {
-      // Legacy capsule for AGENT type or no saved character
+      }
+      const glbUrl = (character as any).aiGlbUrl || character.humanGlbUrl
+      const isGlbAvatar = !!glbUrl
+      console.log('[GalleryRoom3D] character', {
+        type: character.type,
+        hasAiGlb: !!(character as any).aiGlbUrl,
+        hasHumanGlb: !!character.humanGlbUrl,
+        willLoadGlb: isGlbAvatar,
+      })
+      if (isGlbAvatar) {
+        const loader = new GLTFLoader()
+        loader.load(
+          glbUrl!,
+          (gltf) => {
+            const model = gltf.scene
+            const baseScale = character.humanScale ?? 1
+            const heightMul = character.height ?? 1
+            const preBox = new THREE.Box3().setFromObject(model)
+            const preSize = new THREE.Vector3(); preBox.getSize(preSize)
+            if (preSize.y > 0 && (preSize.y < 0.5 || preSize.y > 4)) {
+              const autoScale = 1.8 / preSize.y
+              model.scale.setScalar(autoScale * heightMul)
+            } else {
+              model.scale.setScalar(baseScale * heightMul)
+            }
+            const box = new THREE.Box3().setFromObject(model)
+            const center = new THREE.Vector3(); box.getCenter(center)
+            model.position.x -= center.x
+            model.position.z -= center.z
+            model.position.y = (character.humanYOffset ?? 0) - box.min.y
+            model.traverse((obj: any) => {
+              if (obj.isMesh) {
+                obj.castShadow = true
+                obj.receiveShadow = true
+              }
+            })
+            avatarHolder.add(model)
+            console.log('[GalleryRoom3D] GLB loaded + auto-scaled')
+          },
+          undefined,
+          (err) => {
+            console.error('[GalleryRoom3D] character GLB load failed, falling back to capsule:', err)
+            buildCapsule(character)
+          }
+        )
+      } else {
+        buildCapsule(character)
+      }
+    }
+
+    const buildCapsule = (character: CharacterConfig) => {
       const playerGeo = new THREE.CapsuleGeometry(0.4, 1, 4, 8)
       const playerMat = new THREE.MeshStandardMaterial({
         color: character.bodyColor || themeCfg.accent,
@@ -921,8 +930,26 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
       const playerMesh = new THREE.Mesh(playerGeo, playerMat)
       playerMesh.position.y = 1
       playerMesh.castShadow = true
-      playerGroup.add(playerMesh)
+      avatarHolder.add(playerMesh)
     }
+
+    // Initial avatar build from saved character
+    buildAvatar(getStoredCharacter())
+
+    // Phase 16.28 — listen for character-updated events fired by
+    // CharacterDesigner.saveCharacter(). Lets users design + save in another
+    // tab (or the designer modal) and see the gallery3d avatar swap live.
+    const onCharacterUpdated = (e: Event) => {
+      const detail = (e as CustomEvent).detail as CharacterConfig | undefined
+      if (detail) buildAvatar(detail)
+      else buildAvatar(getStoredCharacter())
+    }
+    window.addEventListener('character-updated', onCharacterUpdated)
+    // Cross-tab updates via storage event
+    const onStorageChange = (e: StorageEvent) => {
+      if (e.key === 'soundchain_character') buildAvatar(getStoredCharacter())
+    }
+    window.addEventListener('storage', onStorageChange)
 
     // ─── Movement ────────────────────────────────────────────
     const keys: Record<string, boolean> = {}
@@ -1249,6 +1276,8 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
       window.removeEventListener('resize', onResize)
       window.removeEventListener('pointermove', onPointerMove)
       window.removeEventListener('pointerup', onPointerUp)
+      window.removeEventListener('character-updated', onCharacterUpdated)
+      window.removeEventListener('storage', onStorageChange)
       renderer.domElement.removeEventListener('pointerdown', onPointerDown)
       renderer.domElement.removeEventListener('click', onClick)
       renderer.domElement.removeEventListener('touchend', onClick as any)
