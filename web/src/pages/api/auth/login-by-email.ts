@@ -57,6 +57,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       { algorithm: 'HS256', subject: user._id.toString(), expiresIn: '30d' }
     )
 
+    // Set cookie at HTTP layer — client-side js-cookie writes are flaky on
+    // Safari/Chrome iOS when followed by window.location navigation. Setting
+    // it server-side means it survives the redirect deterministically.
+    // Non-httpOnly so Apollo's authLink can read it for cross-origin /graphql.
+    const isProd = process.env.NODE_ENV === 'production'
+    const cookieParts = [
+      `token=${token}`,
+      'Path=/',
+      `Max-Age=${30 * 24 * 60 * 60}`,
+      'SameSite=Lax',
+    ]
+    if (isProd) cookieParts.push('Secure')
+    res.setHeader('Set-Cookie', cookieParts.join('; '))
+
     return res.status(200).json({ data: { loginByEmail: { jwt: token } } })
   } catch (err: any) {
     return res.status(500).json({ error: err.message })
