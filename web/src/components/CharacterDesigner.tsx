@@ -2957,9 +2957,12 @@ function LivePreview3D({ spec, face, bigMode }: { spec: AiBuildSpec; face: AiFac
         controls.target.set(0, headY, 0)
       }
     } else {
-      // Body mode: frame the full figure with headroom
-      const targetY = h * 0.5
-      camera.position.set(0, targetY + h * 0.1, h * 1.6)
+      // Body mode: frame the full figure INCLUDING the head + hair primitives
+      // above it. Old framing cut off the head; pull camera back + raise
+      // target so the whole figure is visible plus ~30% headroom above for
+      // hats/hair primitive accessories.
+      const targetY = h * 0.55  // slightly above body center
+      camera.position.set(0, targetY + h * 0.2, h * 1.9)
       controls.target.set(0, targetY, 0)
     }
     controls.update()
@@ -2985,14 +2988,74 @@ function LivePreview3D({ spec, face, bigMode }: { spec: AiBuildSpec; face: AiFac
         </div>
       )}
       {ready && (
-        <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between text-[8px] font-mono text-pink-400/60 pointer-events-none">
-          <span>
-            {bigMode ? '😀 FACE BUILDER' : '🎮 LIVE 3D'} · drag to rotate · {spec.build} · {spec.skinTone}
-            {bigMode && faceLoadStatus === 'failed' && <span className="ml-2 text-yellow-400">⚠ face GLB unreachable — showing body head zoom</span>}
-            {bigMode && faceLoadStatus === 'pending' && <span className="ml-2 text-cyan-400">↻ loading face mesh…</span>}
-          </span>
-          <span>scroll to zoom</span>
-        </div>
+        <>
+          {/* Phase 16.31 — ALWAYS-VISIBLE SPEC SUMMARY STRIP. Guarantees the
+              user sees text feedback for every pick even if a 3D primitive
+              isn't visible against the mannequin (e.g. black hair on dark
+              XBot). Updates instantly on every spec/face change. */}
+          <div className="absolute top-2 left-2 right-2 flex flex-wrap items-center gap-1 pointer-events-none text-[9px] font-mono">
+            <span className="px-1.5 py-0.5 rounded bg-black/70 backdrop-blur border border-pink-500/40 text-pink-300">
+              {spec.gender === 'masc' ? '♂' : spec.gender === 'fem' ? '♀' : '◐'} {spec.ageGroup} {spec.build}
+            </span>
+            <span className="px-1.5 py-0.5 rounded bg-black/70 backdrop-blur border border-amber-500/40 text-amber-300">
+              {spec.heightLabel} · {spec.skinTone}
+            </span>
+            {spec.hairLength !== 'bald' && (
+              <span className="px-1.5 py-0.5 rounded bg-black/70 backdrop-blur border border-fuchsia-500/40 text-fuchsia-300">
+                {spec.hairLength} {spec.hairStyle} {spec.hairColor}
+              </span>
+            )}
+            {spec.facialHair !== 'clean' && (
+              <span className="px-1.5 py-0.5 rounded bg-black/70 backdrop-blur border border-orange-500/40 text-orange-300">
+                {spec.facialHair}
+              </span>
+            )}
+            {spec.headwear !== 'none' && (
+              <span className="px-1.5 py-0.5 rounded bg-black/70 backdrop-blur border border-cyan-500/40 text-cyan-300">
+                🎩 {spec.headwear}
+              </span>
+            )}
+            {spec.eyewear !== 'none' && (
+              <span className="px-1.5 py-0.5 rounded bg-black/70 backdrop-blur border border-cyan-500/40 text-cyan-300">
+                🕶 {spec.eyewear}
+              </span>
+            )}
+            {spec.jewelry !== 'none' && (
+              <span className="px-1.5 py-0.5 rounded bg-black/70 backdrop-blur border border-yellow-500/40 text-yellow-300">
+                💎 {spec.jewelry}
+              </span>
+            )}
+            {spec.tattoos !== 'none' && (
+              <span className="px-1.5 py-0.5 rounded bg-black/70 backdrop-blur border border-purple-500/40 text-purple-300">
+                tat: {spec.tattoos}
+              </span>
+            )}
+            <span className="px-1.5 py-0.5 rounded bg-black/70 backdrop-blur border border-emerald-500/40 text-emerald-300">
+              👕 {spec.topPiece}{spec.jacket !== 'none' ? ` + ${spec.jacket}` : ''}
+            </span>
+            <span className="px-1.5 py-0.5 rounded bg-black/70 backdrop-blur border border-emerald-500/40 text-emerald-300">
+              {spec.bottomPiece} · {spec.shoes}
+            </span>
+            <span className="px-1.5 py-0.5 rounded bg-black/70 backdrop-blur border border-rose-500/40 text-rose-300">
+              ✨ {spec.vibe}
+            </span>
+            {bigMode && (face.faceShape !== 'oval' || face.eyeColor !== 'brown' || face.makeup !== 'none') && (
+              <span className="px-1.5 py-0.5 rounded bg-black/70 backdrop-blur border border-pink-500/40 text-pink-300">
+                😀 {face.faceShape} · {face.eyeShape} {face.eyeColor}
+                {face.makeup !== 'none' && ` · ${face.makeup}`}
+              </span>
+            )}
+          </div>
+          <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between text-[8px] font-mono text-pink-400/60 pointer-events-none">
+            <span>
+              {bigMode ? '😀 FACE BUILDER' : '🎮 LIVE 3D'} · drag to rotate
+              {bigMode && faceLoadStatus === 'failed' && <span className="ml-2 text-yellow-400">⚠ face GLB unreachable</span>}
+              {bigMode && faceLoadStatus === 'pending' && <span className="ml-2 text-cyan-400">↻ loading face mesh…</span>}
+              {!bigMode && <span className="ml-2 text-pink-300/80">tap ✨ Generate for full character</span>}
+            </span>
+            <span>scroll to zoom</span>
+          </div>
+        </>
       )}
     </div>
   )
