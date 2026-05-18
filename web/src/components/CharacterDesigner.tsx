@@ -2318,7 +2318,7 @@ function AiBuildPanel({
 
       <div className="px-4 py-2 border-t border-pink-500/10 bg-black/40 flex items-center justify-between text-[8px] font-mono text-gray-600">
         <span>Powered by Lucy SDXL + TripoSR on anvil · RTX 5000</span>
-        <span className="text-pink-500">🎨 Phase 16.18</span>
+        <span className="text-pink-500">🎨 Phase 16.37</span>
       </div>
     </div>
   )
@@ -2349,19 +2349,15 @@ const BODY_MANNEQUIN_SOURCES = [
   'https://threejs.org/examples/models/gltf/Xbot.glb',
 ]
 
-// Phase 16.7 — face mannequin sources (head with ARkit blendshapes).
-// facecap.glb — 333KB MIT-licensed head from three.js examples, ships with
-// all 52 ARkit face blendshapes (jawOpen, browInnerUp, cheekPuff, eyeWide_L/R,
-// mouthSmile_L/R, noseSneer_L/R, etc). Loaded in FACE tab so precision
-// sliders morph a real face in real-time.
+// Phase 16.7 — face mannequin source. facecap.glb is MIT-licensed (three.js
+// repo-wide LICENSE) so no user-visible attribution is needed — only the
+// LICENSE in source-tree is required by MIT, which we already comply with
+// via the build process. Frank's rule: NO PAID SERVICES, NO CREDIT LINES.
 //
-// Phase 16.29 — threejs.org/examples + raw.githubusercontent.com keep failing
-// in production (CORS / network / GitHub Pages cache). Added jsDelivr's
-// GitHub-mirror CDN as primary — it has cache-friendly CORS and is more
-// reliable in production. Falls back to the original sources.
-//
-// NOTE: facecap is HEAD ONLY. Body tab still uses XBot. Future ship can
-// layer a body GLB + facecap as parented meshes for unified rendering.
+// Photoreal alternatives (Lee Perry-Smith, etc) require CC-BY attribution
+// — explicitly off-limits per Frank. SDXL-generated portraits are our
+// ONLY photoreal path: we self-host the generation pipeline on anvil's
+// RTX 5000, the output is ours, zero attribution needed.
 const FACE_MANNEQUIN_SOURCES = [
   'https://cdn.jsdelivr.net/gh/mrdoob/three.js@dev/examples/models/gltf/facecap.glb',
   'https://threejs.org/examples/models/gltf/facecap.glb',
@@ -2848,55 +2844,15 @@ function LivePreview3D({ spec, face, bigMode, portraitUrl }: { spec: AiBuildSpec
       matte: '#a06060', nude: '#c8a08a', berry: '#8a2a4a', black: '#1a0a0a',
     }
 
-    // Phase 16.36 — HONEST face rendering.
-    // If user has an SDXL portrait → render BIG as the face plane (real human).
-    // If not → render a clear placeholder card "tap ✨ Generate" instead of
-    // ugly primitive shapes. Primitive boxes/spheres on XBot will never look
-    // human, so we stop pretending they do.
-    if (portraitUrl) {
-      const loader = new THREE.TextureLoader()
-      const tex = loader.load(portraitUrl)
-      tex.colorSpace = THREE.SRGBColorSpace
-      const portraitMat = new THREE.MeshBasicMaterial({ map: tex, transparent: true })
-      // Bigger plane so the photo dominates the head area
-      const portrait = new THREE.Mesh(new THREE.PlaneGeometry(0.55, 0.72), portraitMat)
-      portrait.position.set(0, headY - 0.04, headR + 0.03)
-      group.add(portrait)
-      // Real face renders — skip every primitive face feature below.
-      return
-    } else {
-      // No portrait — render a clear "Generate to see face" placeholder card.
-      const canvas = document.createElement('canvas')
-      canvas.width = 256; canvas.height = 320
-      const cx = canvas.getContext('2d')!
-      cx.fillStyle = 'rgba(15,10,20,0.85)'; cx.fillRect(0, 0, 256, 320)
-      cx.strokeStyle = '#ec4899'; cx.lineWidth = 4
-      cx.setLineDash([10, 8])
-      cx.strokeRect(8, 8, 240, 304)
-      cx.setLineDash([])
-      cx.fillStyle = '#ec4899'; cx.font = 'bold 26px monospace'; cx.textAlign = 'center'
-      cx.fillText('👤', 128, 110)
-      cx.font = 'bold 20px monospace'
-      cx.fillText('NO FACE YET', 128, 165)
-      cx.font = '14px monospace'; cx.fillStyle = '#ffffff'
-      cx.fillText('Tap ✨ Generate Character', 128, 200)
-      cx.fillText('to render your face here', 128, 220)
-      cx.font = '12px monospace'; cx.fillStyle = '#ec4899aa'
-      cx.fillText('SDXL on RTX 5000', 128, 260)
-      const placeholderTex = new THREE.CanvasTexture(canvas)
-      placeholderTex.colorSpace = THREE.SRGBColorSpace
-      const placeholderMat = new THREE.MeshBasicMaterial({ map: placeholderTex, transparent: true, opacity: 0.9 })
-      const placeholder = new THREE.Mesh(new THREE.PlaneGeometry(0.55, 0.72), placeholderMat)
-      placeholder.position.set(0, headY - 0.04, headR + 0.03)
-      group.add(placeholder)
-      // Stop here — no primitive face overlays. Body morphs / hair / hat /
-      // jewelry / outfit-color overlays already rendered above and still
-      // visible. Just no fake geometric face.
-      return
-    }
+    // Phase 16.38 — Designer preview is a low-fi 3D mock. The REAL
+    // photoreal character is the TripoSR mesh (full 3D model) shown
+    // via 🌀 Rotate 3D viewer + walking around in Gallery3D / Explore3D.
+    // Per Frank: no 2D portraits stuck on 3D bodies. So the designer
+    // preview just shows the body silhouette + primitive accessories.
+    // Skip all the face primitive overlays below — they looked too robotic.
+    return
 
-    // [Phase 16.36 — primitive face overlay code below is now unreachable.
-    // Kept here as reference for potential future "stylized" mode toggle.]
+    // [Unreachable: primitive face overlay code below.]
     // FACE SHAPE — head ellipsoid scaled to match face shape preset
     const faceShapeScale: Record<string, [number, number, number]> = {
       oval:     [1.0,  1.0,  1.0],
@@ -3146,7 +3102,7 @@ function LivePreview3D({ spec, face, bigMode, portraitUrl }: { spec: AiBuildSpec
         color: highlightColors[spec.hairHighlights] || 0xd4a86c,
         roughness: 0.8, transparent: true, opacity: 0.7,
       })
-      const lenY = { buzz: 0.02, short: 0.05, medium: 0.12, long: 0.22, 'extra-long': 0.32 }[spec.hairLength] || 0.05
+      const lenY: number = ({ bald: 0, buzz: 0.02, short: 0.05, medium: 0.12, long: 0.22, 'extra-long': 0.32 } as Record<string, number>)[spec.hairLength] ?? 0.05
       // Three vertical streaks
       ;[-1, 0, 1].forEach((side) => {
         const streak = new THREE.Mesh(new THREE.BoxGeometry(0.02, lenY + 0.08, 0.04), hMat)

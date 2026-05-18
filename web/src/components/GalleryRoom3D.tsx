@@ -431,10 +431,12 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
       //   >7u → THREE-POINTER (longer arc, less jump)
       const jumpState = { active: false, t: 0, duration: 0, peakY: 0, ballRelease: 0, isDunk: false, baseY: 0 }
       ;(scene.userData as any).jumpState = jumpState
-      ;(scene.userData as any).playerGroupRef = playerGroup
+      // playerGroup is declared further below — store ref lazily via scene.userData
 
       shootRef.current = () => {
         if (!ballState.held || jumpState.active) return  // can't shoot while mid-jump
+        const playerGroup = (scene.userData as any).playerGroupRef
+        if (!playerGroup) return
         const start = ball.position.clone()
         const target = RIM_POS.clone()
         const dx = target.x - start.x
@@ -462,6 +464,8 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
       }
       ;(scene.userData as any).updateJump = (dt: number) => {
         if (!jumpState.active) return
+        const playerGroup = (scene.userData as any).playerGroupRef
+        if (!playerGroup) return
         jumpState.t += dt
         const progress = jumpState.t / jumpState.duration
         // Squat-jump-land curve: smooth parabola for vertical leap
@@ -984,6 +988,7 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
     // a different tab / via Save as Avatar without leaving the page, the
     // gallery swaps the avatar in-place (no full scene rebuild).
     const playerGroup = new THREE.Group()
+    ;(scene.userData as any).playerGroupRef = playerGroup
     playerGroup.position.set(0, 0, 5)
     scene.add(playerGroup)
 
