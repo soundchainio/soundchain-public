@@ -628,6 +628,7 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
           ;(ballStateBG as any).rimHitThisShot = false
           ;(ballStateBG as any).bbHitThisShot = false
           ;(ballStateBG as any).airTime = 0
+          ;(ballStateBG as any).bounces = 0
           ballStateBG.returnTimer = 0
           setHoopScore((s) => ({ ...s, attempts: s.attempts + 1 }))
           ;(jumpStateBG as any).pendingShot = null
@@ -672,37 +673,37 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
             }
           }
         }
+        // Track bounces — after 2 floor contacts force settle so the bounce
+        // loop can't keep ball "alive" with vel.y < -2 forever.
         if (ballBG.position.y < 0.18) {
           ballBG.position.y = 0.18
-          if (ballStateBG.vel.y < -2) {
-            ballStateBG.vel.y = -ballStateBG.vel.y * 0.45
-            ballStateBG.vel.x *= 0.6
-            ballStateBG.vel.z *= 0.6
+          ;(ballStateBG as any).bounces = ((ballStateBG as any).bounces || 0) + 1
+          if (ballStateBG.vel.y < -2 && (ballStateBG as any).bounces < 2) {
+            ballStateBG.vel.y = -ballStateBG.vel.y * 0.4
+            ballStateBG.vel.x *= 0.55
+            ballStateBG.vel.z *= 0.55
           } else {
             ballStateBG.vel.set(0, 0, 0)
-            ballStateBG.returnTimer = 1.2
+            if (ballStateBG.returnTimer <= 0) ballStateBG.returnTimer = 0.6
           }
           if (!ballStateBG.scoredThisShot && ballStateBG.airborneFrames > 5) {
             setHoopScore((s) => ({ ...s, streak: 0 }))
             ballStateBG.scoredThisShot = true
           }
         }
-        // Phase 16.39 — out-of-bounds rescue: if ball leaves the court area
-        // (over the fence on blacktop, against a wall in gym, or stalls in
-        // mid-air), force a return so the player isn't stuck without a ball.
+        // Phase 16.39 — HARD watchdog. Every shot returns within 2.5s no
+        // matter what state the ball is in (over the fence, wedged on the
+        // backboard top, bouncing endlessly). Player never gets stuck.
+        ;(ballStateBG as any).airTime = ((ballStateBG as any).airTime || 0) + g
         const courtBound = theme === 'gym' ? 16 : 10
         const outOfBounds = Math.abs(ballBG.position.x) > courtBound ||
                             Math.abs(ballBG.position.z) > courtBound ||
                             ballBG.position.y > 25
         if (outOfBounds && ballStateBG.returnTimer <= 0) {
-          ballStateBG.returnTimer = 0.4
+          ballStateBG.returnTimer = 0.3
         }
-        // Watchdog: any shot in flight for more than 4 seconds without scoring
-        // or settling gets force-returned (catches edge cases like ball wedged
-        // on backboard top).
-        ;(ballStateBG as any).airTime = ((ballStateBG as any).airTime || 0) + g
-        if ((ballStateBG as any).airTime > 4 && ballStateBG.returnTimer <= 0) {
-          ballStateBG.returnTimer = 0.1
+        if ((ballStateBG as any).airTime > 2.5 && ballStateBG.returnTimer <= 0) {
+          ballStateBG.returnTimer = 0.05
         }
         if (ballStateBG.returnTimer > 0) {
           ballStateBG.returnTimer -= g
@@ -710,6 +711,7 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
             ballStateBG.held = true
             ballStateBG.vel.set(0, 0, 0)
             ;(ballStateBG as any).airTime = 0
+            ;(ballStateBG as any).bounces = 0
             ;(ballStateBG as any).rimHitThisShot = false
             ;(ballStateBG as any).bbHitThisShot = false
           }
@@ -1030,6 +1032,7 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
           ;(ballState as any).rimHitThisShot = false
           ;(ballState as any).bbHitThisShot = false
           ;(ballState as any).airTime = 0
+          ;(ballState as any).bounces = 0
           ballState.returnTimer = 0
           setHoopScore((s) => ({ ...s, attempts: s.attempts + 1 }))
           ;(jumpState as any).pendingShot = null
@@ -1069,34 +1072,33 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
             playBackboard()
           }
         }
-        // Floor collision — bounce once, then settle
+        // Floor collision — max 2 bounces then force settle
         if (ball.position.y < 0.18) {
           ball.position.y = 0.18
-          if (ballState.vel.y < -2) {
-            ballState.vel.y = -ballState.vel.y * 0.45  // bounce damping
-            ballState.vel.x *= 0.6
-            ballState.vel.z *= 0.6
+          ;(ballState as any).bounces = ((ballState as any).bounces || 0) + 1
+          if (ballState.vel.y < -2 && (ballState as any).bounces < 2) {
+            ballState.vel.y = -ballState.vel.y * 0.4
+            ballState.vel.x *= 0.55
+            ballState.vel.z *= 0.55
           } else {
             ballState.vel.set(0, 0, 0)
-            ballState.returnTimer = 1.2  // return to hand after 1.2s
+            if (ballState.returnTimer <= 0) ballState.returnTimer = 0.6
           }
           if (!ballState.scoredThisShot && ballState.airborneFrames > 5) {
-            // Missed shot — break streak
             setHoopScore((s) => ({ ...s, streak: 0 }))
-            ballState.scoredThisShot = true  // prevent double-reset
+            ballState.scoredThisShot = true
           }
         }
-        // Phase 16.39 — out-of-bounds rescue + 4s watchdog so ball never
-        // gets stuck off-court or wedged on geometry
+        // Phase 16.39 — HARD 2.5s watchdog + OOB rescue
+        ;(ballState as any).airTime = ((ballState as any).airTime || 0) + g
         const outOfBoundsCity = Math.abs(ball.position.x) > 12 ||
                                 Math.abs(ball.position.z - RIM_POS.z) > 14 ||
                                 ball.position.y > 25
         if (outOfBoundsCity && ballState.returnTimer <= 0) {
-          ballState.returnTimer = 0.4
+          ballState.returnTimer = 0.3
         }
-        ;(ballState as any).airTime = ((ballState as any).airTime || 0) + g
-        if ((ballState as any).airTime > 4 && ballState.returnTimer <= 0) {
-          ballState.returnTimer = 0.1
+        if ((ballState as any).airTime > 2.5 && ballState.returnTimer <= 0) {
+          ballState.returnTimer = 0.05
         }
         // Return to hand after ball settles
         if (ballState.returnTimer > 0) {
@@ -1105,6 +1107,7 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
             ballState.held = true
             ballState.vel.set(0, 0, 0)
             ;(ballState as any).airTime = 0
+            ;(ballState as any).bounces = 0
             ;(ballState as any).rimHitThisShot = false
             ;(ballState as any).bbHitThisShot = false
           }
@@ -1640,77 +1643,81 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
     }
 
     const buildCapsule = (character: CharacterConfig) => {
-      // Phase 16.39 — default avatar is now a basketball-ready humanoid built
-      // from primitives instead of a featureless pill. Head + jersey + shorts
-      // + sneakers so visitors look like a player in the gym/blacktop scenes.
+      // Phase 16.39 — humanoid built from primitives WITH joint groups so the
+      // animate loop can rotate each limb around hip/shoulder for a walk cycle.
+      // Each leg/arm is a Group at the joint; the limb meshes hang underneath
+      // so rotation.x on the group swings the whole limb from the joint.
       const skinTone = (character as any).skinColor || 0xd4a373
-      const skin = new THREE.MeshStandardMaterial({
-        color: skinTone, roughness: 0.7, metalness: 0.05,
-      })
+      const skin = new THREE.MeshStandardMaterial({ color: skinTone, roughness: 0.7, metalness: 0.05 })
       const jersey = new THREE.MeshStandardMaterial({
         color: character.bodyColor || themeCfg.accent,
         emissive: character.glowColor || themeCfg.accent,
         emissiveIntensity: (character.glowIntensity ?? 0.2) * 0.4,
         roughness: 0.6, metalness: 0.1,
       })
-      const shortsMat = new THREE.MeshStandardMaterial({
-        color: 0x1a1a1a, roughness: 0.7, metalness: 0.05,
-      })
-      const sneakerMat = new THREE.MeshStandardMaterial({
-        color: 0xffffff, roughness: 0.4, metalness: 0.1,
-      })
-      const hairMat = new THREE.MeshStandardMaterial({
-        color: 0x222222, roughness: 0.8,
-      })
+      const shortsMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.7, metalness: 0.05 })
+      const sneakerMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4, metalness: 0.1 })
+      const hairMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.8 })
 
-      // Head (sphere) + simple hair cap (smaller sphere on top)
+      // Head + hair
       const head = new THREE.Mesh(new THREE.SphereGeometry(0.16, 16, 12), skin)
-      head.position.set(0, 1.86, 0)
-      head.castShadow = true
+      head.position.set(0, 1.86, 0); head.castShadow = true
       avatarHolder.add(head)
       const hair = new THREE.Mesh(new THREE.SphereGeometry(0.165, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2.2), hairMat)
-      hair.position.set(0, 1.88, 0)
-      hair.castShadow = true
+      hair.position.set(0, 1.88, 0); hair.castShadow = true
       avatarHolder.add(hair)
 
       // Torso (jersey)
       const torso = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.55, 0.28), jersey)
-      torso.position.set(0, 1.4, 0)
-      torso.castShadow = true
+      torso.position.set(0, 1.4, 0); torso.castShadow = true
       avatarHolder.add(torso)
 
       // Hips / shorts
       const hips = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.3, 0.3), shortsMat)
-      hips.position.set(0, 1.0, 0)
-      hips.castShadow = true
+      hips.position.set(0, 1.0, 0); hips.castShadow = true
       avatarHolder.add(hips)
 
-      // Arms — upper + forearm per side
+      // Arms — wrapped in shoulder Groups so they can swing
+      const armGroups: THREE.Group[] = []
       for (const xSign of [-1, 1]) {
-        const upperArm = new THREE.Mesh(new THREE.CapsuleGeometry(0.07, 0.32, 4, 8), skin)
-        upperArm.position.set(xSign * 0.32, 1.42, 0)
-        upperArm.castShadow = true
-        avatarHolder.add(upperArm)
-        const forearm = new THREE.Mesh(new THREE.CapsuleGeometry(0.06, 0.3, 4, 8), skin)
-        forearm.position.set(xSign * 0.32, 1.02, 0)
-        forearm.castShadow = true
-        avatarHolder.add(forearm)
+        const shoulderGroup = new THREE.Group()
+        shoulderGroup.position.set(xSign * 0.32, 1.6, 0)
+        const upperArm = new THREE.Mesh(new THREE.CapsuleGeometry(0.07, 0.3, 4, 8), skin)
+        upperArm.position.set(0, -0.18, 0); upperArm.castShadow = true
+        shoulderGroup.add(upperArm)
+        const forearm = new THREE.Mesh(new THREE.CapsuleGeometry(0.06, 0.28, 4, 8), skin)
+        forearm.position.set(0, -0.5, 0); forearm.castShadow = true
+        shoulderGroup.add(forearm)
+        const hand = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 6), skin)
+        hand.position.set(0, -0.72, 0); hand.castShadow = true
+        shoulderGroup.add(hand)
+        avatarHolder.add(shoulderGroup)
+        armGroups.push(shoulderGroup)
       }
 
-      // Legs — upper + lower + sneaker per side
+      // Legs — wrapped in hip Groups so they can swing
+      const legGroups: THREE.Group[] = []
       for (const xSign of [-1, 1]) {
+        const hipGroup = new THREE.Group()
+        hipGroup.position.set(xSign * 0.12, 1.0, 0)
         const upperLeg = new THREE.Mesh(new THREE.CapsuleGeometry(0.09, 0.36, 4, 8), skin)
-        upperLeg.position.set(xSign * 0.12, 0.68, 0)
-        upperLeg.castShadow = true
-        avatarHolder.add(upperLeg)
+        upperLeg.position.set(0, -0.32, 0); upperLeg.castShadow = true
+        hipGroup.add(upperLeg)
         const lowerLeg = new THREE.Mesh(new THREE.CapsuleGeometry(0.08, 0.36, 4, 8), skin)
-        lowerLeg.position.set(xSign * 0.12, 0.24, 0)
-        lowerLeg.castShadow = true
-        avatarHolder.add(lowerLeg)
+        lowerLeg.position.set(0, -0.76, 0); lowerLeg.castShadow = true
+        hipGroup.add(lowerLeg)
         const shoe = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.09, 0.32), sneakerMat)
-        shoe.position.set(xSign * 0.12, 0.045, 0.04)
-        shoe.castShadow = true
-        avatarHolder.add(shoe)
+        shoe.position.set(0, -0.96, 0.04); shoe.castShadow = true
+        hipGroup.add(shoe)
+        avatarHolder.add(hipGroup)
+        legGroups.push(hipGroup)
+      }
+
+      // Expose limbs to the animate loop for walk-cycle animation
+      ;(avatarHolder.userData as any).limbs = {
+        legL: legGroups[0], legR: legGroups[1],
+        armL: armGroups[0], armR: armGroups[1],
+        head, hair, torso, hips,
       }
     }
 
@@ -2043,6 +2050,33 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         }
       }
 
+      // Phase 16.39 — Walk-cycle animation. Swings hip/shoulder groups when
+      // moving; idle pose otherwise. Plus a subtle dribble bob when ball is
+      // held and moving so the body reads "in motion with ball."
+      const limbs = (avatarHolder.userData as any).limbs as {
+        legL: THREE.Group; legR: THREE.Group; armL: THREE.Group; armR: THREE.Group;
+        torso: THREE.Mesh; head: THREE.Mesh; hair: THREE.Mesh; hips: THREE.Mesh;
+      } | undefined
+      if (limbs) {
+        const moving = mag > 0.1
+        if (moving) {
+          const phase = now * 0.014
+          const swing = Math.sin(phase) * 0.55
+          limbs.legL.rotation.x = swing
+          limbs.legR.rotation.x = -swing
+          limbs.armL.rotation.x = -swing * 0.7
+          limbs.armR.rotation.x = swing * 0.7
+          avatarHolder.position.y = Math.abs(Math.cos(phase)) * 0.05
+        } else {
+          // Idle: ease limbs back to neutral
+          limbs.legL.rotation.x *= 0.85
+          limbs.legR.rotation.x *= 0.85
+          limbs.armL.rotation.x *= 0.85
+          limbs.armR.rotation.x *= 0.85
+          avatarHolder.position.y *= 0.85
+        }
+      }
+
       // Phase 16.27 + 16.35 — basketball follow + physics + jump animation
       const ballRef = (scene.userData as any).ball
       if (ballRef) {
@@ -2281,13 +2315,37 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
           global SC chrome pills (search / brain / Invite / Customize) on
           the right side. Big circular tap target visible on all devices. */}
       {(theme === 'city' || theme === 'gym' || theme === 'blacktop') && (
-        <button
-          onPointerDown={(e) => { e.stopPropagation(); shootRef.current?.() }}
-          className="absolute bottom-40 left-3 sm:bottom-32 sm:left-5 z-30 w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-orange-500/40 to-orange-700/60 backdrop-blur border-2 border-orange-400/70 text-white text-2xl sm:text-3xl font-bold active:scale-95 active:from-orange-500/60 active:to-orange-700/80 transition shadow-[0_0_20px_rgba(234,88,12,0.5)] flex items-center justify-center pointer-events-auto"
-          aria-label="Shoot basketball"
-        >
-          🏀
-        </button>
+        <>
+          <button
+            onPointerDown={(e) => { e.stopPropagation(); shootRef.current?.() }}
+            className="absolute bottom-40 left-3 sm:bottom-32 sm:left-5 z-30 w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-orange-500/40 to-orange-700/60 backdrop-blur border-2 border-orange-400/70 text-white text-2xl sm:text-3xl font-bold active:scale-95 active:from-orange-500/60 active:to-orange-700/80 transition shadow-[0_0_20px_rgba(234,88,12,0.5)] flex items-center justify-center pointer-events-auto"
+            aria-label="Shoot basketball"
+          >
+            🏀
+          </button>
+          <button
+            onPointerDown={(e) => {
+              e.stopPropagation()
+              const sc = sceneRef.current as any
+              const ballRef = sc?.userData?.ball
+              if (ballRef) {
+                ballRef.ballState.held = true
+                ballRef.ballState.vel.set(0, 0, 0)
+                ballRef.ballState.returnTimer = 0
+                ballRef.ballState.airborneFrames = 0
+                ballRef.ballState.scoredThisShot = false
+                ballRef.ballState.airTime = 0
+                ballRef.ballState.bounces = 0
+                ballRef.ballState.rimHitThisShot = false
+                ballRef.ballState.bbHitThisShot = false
+              }
+            }}
+            className="absolute bottom-24 left-3 sm:bottom-12 sm:left-5 z-30 w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-cyan-500/40 to-cyan-700/60 backdrop-blur border-2 border-cyan-400/70 text-white text-lg sm:text-xl font-bold active:scale-95 transition shadow-[0_0_15px_rgba(6,182,212,0.5)] flex items-center justify-center pointer-events-auto"
+            aria-label="Recall ball to hand"
+          >
+            ↺
+          </button>
+        </>
       )}
 
       {/* Phase 16.33 — modal rendered via React PORTAL to document.body so
