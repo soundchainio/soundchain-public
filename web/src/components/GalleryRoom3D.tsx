@@ -13,6 +13,7 @@
  */
 
 import { useEffect, useRef, useState, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { useRouter } from 'next/router'
@@ -1399,22 +1400,17 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         </button>
       )}
 
-      {/* Phase 16.29 + 16.32 — CITY SEARCH MODAL.
-          - z-[200] above EVERYTHING (was 100, but SC chrome has stuff at 100+)
-          - Outer backdrop closes on mousedown of itself ONLY (not touch — iOS
-            was triggering close before the input got the tap)
-          - Input ref + multi-attempt focus + body touchAction reset
-          - font-size 16px+ to prevent iOS zoom-on-focus
-          - autoFocus + iOS touch shenanigans handled by the useEffect above */}
-      {citySearchOpen && (
+      {/* Phase 16.33 — modal rendered via React PORTAL to document.body so
+          it's outside any parent CSS / event-delegation context. No ancestor
+          can intercept keystrokes or pointer events. Click-outside-to-close
+          REMOVED — × button is the only close trigger now (was causing event
+          handling races on Chrome that prevented input from getting focus). */}
+      {citySearchOpen && typeof document !== 'undefined' && createPortal(
         <div
-          className="fixed inset-0 z-[200] bg-black/70 backdrop-blur-sm flex items-start sm:items-center justify-center p-4"
-          onMouseDown={(e) => { if (e.target === e.currentTarget) setCitySearchOpen(false) }}
+          className="fixed inset-0 z-[9999] bg-black/70 backdrop-blur-sm flex items-start sm:items-center justify-center p-4"
         >
           <div
             className="w-full max-w-md bg-[#0a0a0a] border-2 border-yellow-500/40 rounded-xl shadow-2xl shadow-yellow-500/20 overflow-hidden mt-12 sm:mt-0"
-            onMouseDown={(e) => e.stopPropagation()}
-            onTouchStart={(e) => e.stopPropagation()}
           >
             <div className="px-4 py-3 border-b border-yellow-500/20 flex items-center justify-between">
               <div className="font-mono text-sm text-yellow-300 font-bold">🌍 SEARCH CITY / STREET</div>
@@ -1502,7 +1498,8 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
               </button>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
 
       {/* HUD */}
