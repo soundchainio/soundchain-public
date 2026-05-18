@@ -2389,6 +2389,7 @@ function LivePreview3D({ spec, face, bigMode }: { spec: AiBuildSpec; face: AiFac
   // never re-mounted (would lose the camera angle the user dragged to).
   const modelRef = useRef<any>(null)
   const faceModelRef = useRef<any>(null)  // facecap.glb — head with 52 ARkit blendshapes
+  const overlayGroupRef = useRef<any>(null)  // Phase 16.30 — primitive accessory overlays (hair/hat/glasses/beard/chain)
   const cameraRef = useRef<any>(null)
   const controlsRef = useRef<any>(null)
   const headBoneRef = useRef<any>(null)
@@ -2451,6 +2452,13 @@ function LivePreview3D({ spec, face, bigMode }: { spec: AiBuildSpec; face: AiFac
       ;(grid.material as any).transparent = true
       ;(grid.material as any).opacity = 0.35
       scene.add(grid)
+
+      // Phase 16.30 — overlay group for primitive accessories (hair/hat/
+      // glasses/beard/chain/etc). Sits in world space, repositioned in the
+      // mutation effect to follow the body model's head height.
+      const overlayGroup = new THREE.Group()
+      scene.add(overlayGroup)
+      overlayGroupRef.current = overlayGroup
 
       const controls = new OrbitControls(camera, renderer.domElement)
       controls.enableDamping = true
@@ -2648,6 +2656,192 @@ function LivePreview3D({ spec, face, bigMode }: { spec: AiBuildSpec; face: AiFac
     // Run ONCE per mount — don't include spec, we mutate the live scene
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Phase 16.30 — accessory overlay rebuild. Fires on EVERY spec/face change
+  // so users see immediate visual feedback for hair / hat / glasses / beard /
+  // jewelry / outfit selections that XBot's body-only mesh can't show.
+  // Primitives: hair sphere on head, hat on top, glasses band over eyes,
+  // beard patch on chin, chain torus at neck, shirt band on torso.
+  useEffect(() => {
+    if (!ready || !overlayGroupRef.current) return
+    const group = overlayGroupRef.current as any
+    // Tear down old primitives
+    while (group.children.length > 0) {
+      const c = group.children[0]
+      group.remove(c)
+      if (c.geometry) c.geometry.dispose()
+      if (c.material) { Array.isArray(c.material) ? c.material.forEach((m: any) => m.dispose()) : c.material.dispose() }
+    }
+    const h = modelHeightRef.current || 1.8
+    // Approximate head center on XBot — about 92% of model height
+    const headY = h * 0.92
+    const headR = 0.16
+
+    // Named-color hex map for accessories (subset of the full hair palette)
+    const HAIR_HEX: Record<string, string> = {
+      black: '#1a1a1a', brown: '#5a3520', blonde: '#d4a86c', red: '#a03838',
+      silver: '#c0c0c0', cyan: '#22d3ee', pink: '#f472b6', purple: '#9333ea',
+      rainbow: '#a855f7', platinum: '#e8e8d4', ginger: '#c05828', 'two-tone': '#5a3520',
+    }
+    const hairCol = new THREE.Color(spec.hairColorHex || HAIR_HEX[spec.hairColor] || '#1a1a1a')
+
+    // HAIR — dome on top of head, sized by hairLength
+    if (spec.hairLength !== 'bald') {
+      const lenMap: Record<string, { r: number; y: number; t: number }> = {
+        buzz:        { r: 0.17, y: 0.02, t: 0.4 },
+        short:       { r: 0.19, y: 0.05, t: 0.6 },
+        medium:      { r: 0.22, y: 0.12, t: 1.0 },
+        long:        { r: 0.24, y: 0.22, t: 1.4 },
+        'extra-long':{ r: 0.26, y: 0.32, t: 1.8 },
+      }
+      const conf = lenMap[spec.hairLength] || lenMap.short
+      const hairMat = new THREE.MeshStandardMaterial({ color: hairCol, roughness: 0.85, metalness: 0.05 })
+      // Cap dome
+      const cap = new THREE.Mesh(new THREE.SphereGeometry(conf.r, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2), hairMat)
+      cap.position.set(0, headY + conf.y, 0)
+      group.add(cap)
+      // Trailing hair for medium/long/extra-long — cylinders dropping behind head
+      if (conf.t > 0.5) {
+        const trail = new THREE.Mesh(new THREE.CylinderGeometry(conf.r * 0.85, conf.r * 0.65, conf.t, 12), hairMat)
+        trail.position.set(0, headY - conf.t * 0.4, -0.04)
+        group.add(trail)
+      }
+      // Style accent — mohawk strip on top, dreads as small spheres
+      if (spec.hairStyle === 'mohawk' || spec.hairStyle === 'fauxhawk') {
+        const ridge = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.16, 0.32), hairMat)
+        ridge.position.set(0, headY + 0.18, 0)
+        group.add(ridge)
+      }
+      if (spec.hairStyle === 'dreads' || spec.hairStyle === 'locs' || spec.hairStyle === 'twists' || spec.hairStyle === 'braids' || spec.hairStyle === 'cornrows') {
+        for (let i = -2; i <= 2; i++) {
+          const strand = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.012, conf.t * 0.9, 8), hairMat)
+          strand.position.set(i * 0.06, headY - conf.t * 0.3, -0.06)
+          group.add(strand)
+        }
+      }
+    }
+
+    // HEADWEAR — colored cap above the head
+    if (spec.headwear !== 'none') {
+      const hatColors: Record<string, number> = {
+        snapback: 0x1a1a1a, 'fitted-cap': 0x1a1a1a, beanie: 0xa03838, 'bucket-hat': 0x1a3a1a,
+        cowboy: 0x5a3520, fedora: 0x2a1810, headband: 0xfacc15, durag: 0x1a1a1a, visor: 0x22d3ee,
+        'wide-brim': 0x2a1810, 'top-hat': 0x0a0a0a, crown: 0xfacc15, helmet: 0x4a4a4a, turban: 0xfafafa, hood: 0x1a1a1a,
+      }
+      const hatMat = new THREE.MeshStandardMaterial({ color: hatColors[spec.headwear] || 0x1a1a1a, metalness: 0.2, roughness: 0.7 })
+      let hatMesh: any
+      if (spec.headwear === 'top-hat' || spec.headwear === 'fedora') {
+        const top = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, spec.headwear === 'top-hat' ? 0.32 : 0.16, 16), hatMat)
+        top.position.set(0, headY + (spec.headwear === 'top-hat' ? 0.27 : 0.20), 0)
+        group.add(top)
+        const brim = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 0.025, 24), hatMat)
+        brim.position.set(0, headY + 0.13, 0)
+        group.add(brim)
+      } else if (spec.headwear === 'crown') {
+        hatMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.20, 0.10, 8), hatMat)
+        hatMesh.position.set(0, headY + 0.18, 0)
+        group.add(hatMesh)
+      } else if (spec.headwear === 'beanie' || spec.headwear === 'helmet' || spec.headwear === 'hood' || spec.headwear === 'turban' || spec.headwear === 'durag') {
+        hatMesh = new THREE.Mesh(new THREE.SphereGeometry(headR + 0.04, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.6), hatMat)
+        hatMesh.position.set(0, headY + 0.05, 0)
+        group.add(hatMesh)
+      } else if (spec.headwear === 'headband' || spec.headwear === 'visor') {
+        hatMesh = new THREE.Mesh(new THREE.TorusGeometry(headR + 0.01, 0.02, 8, 24), hatMat)
+        hatMesh.position.set(0, headY + 0.02, 0)
+        hatMesh.rotation.x = Math.PI / 2
+        group.add(hatMesh)
+      } else {
+        // Generic cap (snapback / fitted / bucket / cowboy / wide-brim)
+        hatMesh = new THREE.Mesh(new THREE.SphereGeometry(headR + 0.03, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2), hatMat)
+        hatMesh.position.set(0, headY + 0.10, 0)
+        group.add(hatMesh)
+        const brim = new THREE.Mesh(new THREE.PlaneGeometry(0.35, 0.18), hatMat)
+        brim.position.set(0, headY + 0.10, 0.12)
+        brim.rotation.x = -Math.PI / 2
+        group.add(brim)
+      }
+    }
+
+    // EYEWEAR — black band over eye area
+    if (spec.eyewear !== 'none') {
+      const tint = spec.eyewearColor ? new THREE.Color(spec.eyewearColor) : new THREE.Color(0x0a0a0a)
+      const lensMat = new THREE.MeshStandardMaterial({ color: tint, metalness: 0.8, roughness: 0.15, transparent: true, opacity: 0.85 })
+      const lens = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.05, 0.04), lensMat)
+      lens.position.set(0, headY - 0.02, headR - 0.01)
+      group.add(lens)
+    }
+
+    // FACE-TAB GLASSES (separate from outfit eyewear above — face tab adds its own)
+    if (face.glasses && face.glasses !== 'none') {
+      const lensMat = new THREE.MeshStandardMaterial({ color: 0x0a0a0a, metalness: 0.8, roughness: 0.15, transparent: true, opacity: 0.7 })
+      const lens = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.05, 0.04), lensMat)
+      lens.position.set(0, headY - 0.02, headR - 0.01)
+      group.add(lens)
+    }
+
+    // BEARD — dark patch on lower face if facialHair ≠ clean
+    if (spec.facialHair !== 'clean') {
+      const beardMat = new THREE.MeshStandardMaterial({ color: hairCol, roughness: 0.95 })
+      const beardSize: Record<string, [number, number]> = {
+        stubble:      [0.18, 0.04],
+        goatee:       [0.10, 0.08],
+        beard:        [0.20, 0.14],
+        mustache:     [0.10, 0.03],
+        'fu-manchu':  [0.10, 0.10],
+        'mutton-chops':[0.22, 0.12],
+        'soul-patch': [0.04, 0.05],
+        'full-bushy': [0.24, 0.18],
+      }
+      const [w, hh] = beardSize[spec.facialHair] || [0.18, 0.10]
+      const beard = new THREE.Mesh(new THREE.BoxGeometry(w, hh, 0.04), beardMat)
+      beard.position.set(0, headY - 0.08, headR - 0.02)
+      group.add(beard)
+    }
+
+    // JEWELRY — chain torus at neck
+    if (spec.jewelry && spec.jewelry !== 'none') {
+      const metalColor: Record<string, number> = {
+        gold: 0xfacc15, silver: 0xc0c0c0, 'rose-gold': 0xb76e79,
+        platinum: 0xe5e4e2, iridium: 0x9090a0, custom: 0xfacc15,
+      }
+      const baseCol = spec.jewelryColor && spec.jewelryMetal === 'custom'
+        ? new THREE.Color(spec.jewelryColor)
+        : new THREE.Color(metalColor[spec.jewelryMetal || 'gold'] || 0xfacc15)
+      const chainMat = new THREE.MeshStandardMaterial({ color: baseCol, metalness: 0.9, roughness: 0.2, emissive: baseCol, emissiveIntensity: 0.05 })
+      const chain = new THREE.Mesh(new THREE.TorusGeometry(0.14, 0.014, 8, 24), chainMat)
+      chain.position.set(0, headY - 0.22, 0)
+      chain.rotation.x = Math.PI / 2
+      group.add(chain)
+      // Pendant for some jewelry types
+      if (spec.jewelry === 'pendant' || spec.jewelry === 'cuban-link' || spec.jewelry === 'all-jewelry') {
+        const pendant = new THREE.Mesh(new THREE.OctahedronGeometry(0.04), chainMat)
+        pendant.position.set(0, headY - 0.30, 0.07)
+        group.add(pendant)
+      }
+    }
+
+    // OUTFIT TOP COLOR INDICATOR — colored band on torso so user sees top color change
+    const torsoMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(spec.topColor), metalness: 0.1, roughness: 0.7, transparent: true, opacity: 0.65 })
+    const torsoBand = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.30, 0.55, 16, 1, true), torsoMat)
+    torsoBand.position.set(0, headY * 0.62, 0)
+    group.add(torsoBand)
+
+    // JACKET — additional band over the torso
+    if (spec.jacket && spec.jacket !== 'none') {
+      const jacketCol = new THREE.Color(spec.jacketColor || spec.topColor).offsetHSL(0, 0, -0.1)
+      const jacketMat = new THREE.MeshStandardMaterial({ color: jacketCol, metalness: 0.15, roughness: 0.6, transparent: true, opacity: 0.5 })
+      const jacket = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.34, 0.65, 16, 1, true), jacketMat)
+      jacket.position.set(0, headY * 0.6, 0)
+      group.add(jacket)
+    }
+  }, [
+    ready,
+    spec.hairLength, spec.hairStyle, spec.hairColor, spec.hairColorHex,
+    spec.facialHair, spec.headwear, spec.eyewear, spec.eyewearColor,
+    spec.jewelry, spec.jewelryMetal, spec.jewelryColor,
+    spec.topColor, spec.jacket, spec.jacketColor,
+    face.glasses,
+  ])
 
   // Per-spec MUTATION effect — runs on every spec change, never re-mounts.
   // Phase 16.29 — expanded to honor heightLabel, shoulders, waist, skinHex
