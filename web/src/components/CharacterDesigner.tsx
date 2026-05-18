@@ -2996,17 +2996,171 @@ function LivePreview3D({ spec, face, bigMode }: { spec: AiBuildSpec; face: AiFac
       mk.position.set(0, headY + 0.018, headR - 0.001)
       group.add(mk)
     }
+
+    // EARRINGS — tiny spheres at ear positions
+    if (face.earrings !== 'none') {
+      const earMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, metalness: 0.9, roughness: 0.2, emissive: 0xfacc15, emissiveIntensity: 0.2 })
+      const earSize: Record<string, [number, number]> = {
+        studs: [0.012, 0.0],
+        hoops: [0.022, 0.018],
+        dangling: [0.012, 0.04],
+        cuffs: [0.018, 0.0],
+        gauges: [0.022, 0.005],
+      }
+      const [er, edrop] = earSize[face.earrings] || [0.012, 0]
+      ;[-1, 1].forEach((side) => {
+        if (face.earrings === 'hoops') {
+          const hoop = new THREE.Mesh(new THREE.TorusGeometry(er, 0.003, 6, 16), earMat)
+          hoop.position.set(side * (headR + 0.005), headY - 0.04, 0)
+          hoop.rotation.y = Math.PI / 2
+          group.add(hoop)
+        } else if (edrop > 0) {
+          const drop = new THREE.Mesh(new THREE.CylinderGeometry(er * 0.4, er * 0.4, edrop, 6), earMat)
+          drop.position.set(side * (headR + 0.005), headY - 0.04 - edrop / 2, 0)
+          group.add(drop)
+        } else {
+          const stud = new THREE.Mesh(new THREE.SphereGeometry(er, 8, 6), earMat)
+          stud.position.set(side * (headR + 0.005), headY - 0.03, 0)
+          group.add(stud)
+        }
+      })
+    }
+
+    // PIERCINGS — small bright dots at piercing position
+    if (spec.piercings !== 'none') {
+      const pMat = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, metalness: 0.95, roughness: 0.1, emissive: 0xffffff, emissiveIntensity: 0.15 })
+      const piercingPositions: Record<string, Array<[number, number, number]>> = {
+        'ear-single':  [[-headR - 0.003, headY - 0.04, 0]],
+        'ear-multi':   [[-headR - 0.003, headY - 0.04, 0], [-headR - 0.003, headY - 0.025, 0], [headR + 0.003, headY - 0.04, 0]],
+        'nose-stud':   [[0.018, headY - 0.04, headR - 0.001]],
+        'septum':      [[0, headY - 0.06, headR + 0.005]],
+        'eyebrow':     [[-0.05, headY + 0.035, headR - 0.001]],
+        'lip':         [[0.025, headY - 0.08, headR - 0.001]],
+        'industrial':  [[-headR - 0.003, headY - 0.02, 0], [-headR - 0.003, headY - 0.05, 0]],
+        'multi-facial': [[0.018, headY - 0.04, headR - 0.001], [-0.05, headY + 0.035, headR - 0.001], [0.025, headY - 0.08, headR - 0.001], [0, headY - 0.06, headR + 0.005]],
+      }
+      const positions = piercingPositions[spec.piercings] || []
+      positions.forEach(([x, y, z]) => {
+        const p = new THREE.Mesh(new THREE.SphereGeometry(0.006, 8, 6), pMat)
+        p.position.set(x, y, z)
+        group.add(p)
+      })
+    }
+
+    // TATTOOS — dark patches on arms/chest
+    if (spec.tattoos !== 'none') {
+      const tatMat = new THREE.MeshStandardMaterial({ color: 0x0a0810, transparent: true, opacity: 0.7, roughness: 0.95 })
+      const tatRegions: Record<string, Array<{ size: [number, number]; pos: [number, number, number] }>> = {
+        'minimal':     [{ size: [0.06, 0.06], pos: [0.15, headY * 0.65, 0.18] }],
+        'half-sleeve': [{ size: [0.15, 0.18], pos: [0.22, headY * 0.62, 0] }],
+        'full-sleeve': [{ size: [0.15, 0.35], pos: [0.22, headY * 0.62, 0] }, { size: [0.15, 0.35], pos: [-0.22, headY * 0.62, 0] }],
+        'chest-piece': [{ size: [0.28, 0.16], pos: [0, headY * 0.72, 0.18] }],
+        'full-body':   [{ size: [0.32, 0.55], pos: [0, headY * 0.62, 0.18] }, { size: [0.15, 0.35], pos: [0.22, headY * 0.62, 0] }, { size: [0.15, 0.35], pos: [-0.22, headY * 0.62, 0] }],
+      }
+      const regions = tatRegions[spec.tattoos] || []
+      regions.forEach((r) => {
+        const tat = new THREE.Mesh(new THREE.PlaneGeometry(r.size[0], r.size[1]), tatMat)
+        tat.position.set(...r.pos)
+        group.add(tat)
+      })
+    }
+
+    // SCARS — thin red/dark lines on face
+    if (spec.scars !== 'none') {
+      const scarMat = new THREE.MeshStandardMaterial({ color: 0x8a3a2a, roughness: 0.7 })
+      if (spec.scars === 'subtle') {
+        const scar = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.005, 0.004), scarMat)
+        scar.position.set(0.04, headY + 0.01, headR - 0.001)
+        scar.rotation.z = -0.3
+        group.add(scar)
+      } else if (spec.scars === 'battle-worn') {
+        ;[
+          { x: 0.04, y: headY + 0.01, rot: -0.3, w: 0.06 },
+          { x: -0.05, y: headY - 0.04, rot: 0.4, w: 0.04 },
+          { x: 0.02, y: headY - 0.07, rot: 0.2, w: 0.03 },
+        ].forEach((s) => {
+          const scar = new THREE.Mesh(new THREE.BoxGeometry(s.w, 0.005, 0.004), scarMat)
+          scar.position.set(s.x, s.y, headR - 0.001)
+          scar.rotation.z = s.rot
+          group.add(scar)
+        })
+      }
+    }
+
+    // HAIR HIGHLIGHTS — secondary color streak overlaid on hair
+    if (spec.hairLength !== 'bald' && spec.hairHighlights !== 'none') {
+      const highlightColors: Record<string, number> = {
+        subtle: 0xc0a070, ombre: 0xd4a86c, balayage: 0xd4a86c,
+        'dip-dye': 0xf472b6, streaks: 0xfacc15,
+      }
+      const hMat = new THREE.MeshStandardMaterial({
+        color: highlightColors[spec.hairHighlights] || 0xd4a86c,
+        roughness: 0.8, transparent: true, opacity: 0.7,
+      })
+      const lenY = { buzz: 0.02, short: 0.05, medium: 0.12, long: 0.22, 'extra-long': 0.32 }[spec.hairLength] || 0.05
+      // Three vertical streaks
+      ;[-1, 0, 1].forEach((side) => {
+        const streak = new THREE.Mesh(new THREE.BoxGeometry(0.02, lenY + 0.08, 0.04), hMat)
+        streak.position.set(side * 0.07, headY + 0.05, -0.05)
+        group.add(streak)
+      })
+    }
+
+    // BOTTOM — colored cylinder for legs region (below torsoBand)
+    const bottomCol = spec.bottomColor ? new THREE.Color(spec.bottomColor) : new THREE.Color('#1f2937')
+    const bottomMat = new THREE.MeshStandardMaterial({ color: bottomCol, roughness: 0.7, transparent: true, opacity: 0.7 })
+    const bottomBand = new THREE.Mesh(new THREE.CylinderGeometry(0.30, 0.26, 0.7, 16, 1, true), bottomMat)
+    bottomBand.position.set(0, headY * 0.28, 0)
+    group.add(bottomBand)
+
+    // SHOES — two small flat boxes at the feet
+    const shoeCol = spec.shoeColor ? new THREE.Color(spec.shoeColor) : new THREE.Color(spec.accentColor)
+    const shoeMat = new THREE.MeshStandardMaterial({ color: shoeCol, roughness: 0.6, metalness: 0.1 })
+    ;[-1, 1].forEach((side) => {
+      const shoe = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.06, 0.22), shoeMat)
+      shoe.position.set(side * 0.12, 0.03, 0.05)
+      group.add(shoe)
+    })
+
+    // SKIN SHEEN — emissive glow ring around body for non-matte sheens
+    if (spec.skinSheen === 'glossy' || spec.skinSheen === 'metallic') {
+      const ringColor = spec.skinSheen === 'metallic' ? 0xc0c0c0 : 0xfaeacc
+      const ringMat = new THREE.MeshBasicMaterial({ color: ringColor, transparent: true, opacity: 0.15, side: THREE.BackSide })
+      const ring = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.32, 1.5, 16, 1, true), ringMat)
+      ring.position.set(0, headY * 0.5, 0)
+      group.add(ring)
+    }
+
+    // POSE — tilt the entire avatarHolder based on pose (visual cue only)
+    if (modelRef.current) {
+      const poseRot: Record<string, [number, number, number]> = {
+        standing:   [0, 0, 0],
+        lean:       [0, 0, -0.12],
+        rapper:     [0, 0.15, 0],
+        athletic:   [0, 0, 0],
+        royalty:    [0, 0, 0],
+        cyberpunk:  [0, -0.15, 0.05],
+        heroic:     [0, 0, 0],
+        walking:    [0, 0.1, 0],
+        dance:      [0, 0.3, 0.1],
+      }
+      const r = poseRot[spec.pose] || [0, 0, 0]
+      modelRef.current.rotation.set(r[0], r[1], r[2])
+      // Vibe glow color on rim light direction (subtle)
+    }
   }, [
     ready,
-    spec.hairLength, spec.hairStyle, spec.hairColor, spec.hairColorHex,
+    spec.hairLength, spec.hairStyle, spec.hairColor, spec.hairColorHex, spec.hairHighlights,
     spec.facialHair, spec.headwear, spec.eyewear, spec.eyewearColor,
     spec.jewelry, spec.jewelryMetal, spec.jewelryColor,
     spec.topColor, spec.jacket, spec.jacketColor,
-    spec.skinTone, spec.skinHex,
+    spec.bottomColor, spec.shoeColor, spec.accentColor,
+    spec.skinTone, spec.skinHex, spec.skinSheen,
+    spec.tattoos, spec.scars, spec.piercings, spec.pose,
     face.faceShape, face.eyeShape, face.eyeColor, face.eyeColorHex,
     face.eyebrowShape, face.lipShape, face.lipColor, face.lipColorHex,
     face.freckles, face.dimples, face.moles, face.makeup,
-    face.glasses,
+    face.glasses, face.earrings,
   ])
 
   // Per-spec MUTATION effect — runs on every spec change, never re-mounts.
