@@ -2352,13 +2352,18 @@ const BODY_MANNEQUIN_SOURCES = [
 // Phase 16.7 — face mannequin sources (head with ARkit blendshapes).
 // facecap.glb — 333KB MIT-licensed head from three.js examples, ships with
 // all 52 ARkit face blendshapes (jawOpen, browInnerUp, cheekPuff, eyeWide_L/R,
-// mouthSmile_L/R, noseSneer_L/R, etc). CORS-open. Tested via Forge agent
-// research on 2026-05-16. Loaded in FACE tab so precision sliders actually
-// morph a real face in real-time.
+// mouthSmile_L/R, noseSneer_L/R, etc). Loaded in FACE tab so precision
+// sliders morph a real face in real-time.
+//
+// Phase 16.29 — threejs.org/examples + raw.githubusercontent.com keep failing
+// in production (CORS / network / GitHub Pages cache). Added jsDelivr's
+// GitHub-mirror CDN as primary — it has cache-friendly CORS and is more
+// reliable in production. Falls back to the original sources.
 //
 // NOTE: facecap is HEAD ONLY. Body tab still uses XBot. Future ship can
 // layer a body GLB + facecap as parented meshes for unified rendering.
 const FACE_MANNEQUIN_SOURCES = [
+  'https://cdn.jsdelivr.net/gh/mrdoob/three.js@dev/examples/models/gltf/facecap.glb',
   'https://threejs.org/examples/models/gltf/facecap.glb',
   'https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/models/gltf/facecap.glb',
 ]
@@ -2645,30 +2650,43 @@ function LivePreview3D({ spec, face, bigMode }: { spec: AiBuildSpec; face: AiFac
   }, [])
 
   // Per-spec MUTATION effect — runs on every spec change, never re-mounts.
-  // This is what makes the preview feel instant.
+  // Phase 16.29 — expanded to honor heightLabel, shoulders, waist, skinHex
+  // so more slider changes have a visible live-preview effect.
   useEffect(() => {
     if (!ready || !modelRef.current) return
-    void Promise.all([import('three')]).then(([THREE]) => {
-      const model = modelRef.current
-      // Build scale — slim/athletic/muscular/bulky changes x/z
-      const buildScale = BUILD_SCALE[spec.build]
-      // Gender height modifier (purely cosmetic — fem slightly shorter)
-      const heightMul = spec.gender === 'fem' ? 0.96 : spec.gender === 'masc' ? 1.0 : 0.98
-      model.scale.set(buildScale.x, heightMul, buildScale.z)
+    const model = modelRef.current
+    // Build scale — slim/athletic/muscular/bulky changes x/z
+    const buildScale = BUILD_SCALE[spec.build]
+    // Gender height modifier (purely cosmetic — fem slightly shorter)
+    const genderMul = spec.gender === 'fem' ? 0.96 : spec.gender === 'masc' ? 1.0 : 0.98
+    // Phase 16.29 — heightLabel multiplies y scale (short→towering)
+    const heightMulMap: Record<string, number> = { short: 0.85, average: 1.0, tall: 1.15, towering: 1.3 }
+    const heightMul = heightMulMap[spec.heightLabel] || 1.0
+    // Shoulders + waist nudge x scale on top of build
+    const shouldersBonus = spec.shoulders === 'broad' ? 1.1 : spec.shoulders === 'narrow' ? 0.92 : 1.0
+    const waistBonus = spec.waist === 'thick' ? 1.08 : spec.waist === 'slim' ? 0.94 : 1.0
+    model.scale.set(
+      buildScale.x * shouldersBonus * waistBonus,
+      genderMul * heightMul,
+      buildScale.z * shouldersBonus,
+    )
 
-      // Skin tone tint — apply to skin materials
-      const skinColor = new THREE.Color(SKIN_HEX[spec.skinTone])
-      skinMatsRef.current.forEach((mat: any) => {
-        if (mat?.color) mat.color.copy(skinColor)
-      })
-
-      // Top color → accent materials (clothing on XBot)
-      const topColor = new THREE.Color(spec.topColor)
-      accentMatsRef.current.forEach((mat: any) => {
-        if (mat?.color) mat.color.copy(topColor)
-      })
+    // Skin tone tint — apply to skin materials (skinHex overrides preset)
+    const skinHex = spec.skinHex || SKIN_HEX[spec.skinTone]
+    const skinColor = new THREE.Color(skinHex)
+    skinMatsRef.current.forEach((mat: any) => {
+      if (mat?.color) mat.color.copy(skinColor)
     })
-  }, [ready, spec.build, spec.gender, spec.skinTone, spec.topColor, spec.accentColor])
+
+    // Top color → accent materials (clothing on XBot)
+    const topColor = new THREE.Color(spec.topColor)
+    accentMatsRef.current.forEach((mat: any) => {
+      if (mat?.color) mat.color.copy(topColor)
+    })
+  }, [
+    ready, spec.build, spec.gender, spec.skinTone, spec.skinHex,
+    spec.topColor, spec.accentColor, spec.heightLabel, spec.shoulders, spec.waist,
+  ])
 
   // Face morph effect — writes the precision-slider values to morphTargetInfluences
   // on any meshes that have them. No-op when current mannequin (XBot) lacks

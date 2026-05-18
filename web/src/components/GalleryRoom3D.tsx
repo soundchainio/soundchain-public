@@ -76,6 +76,11 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
   // Phase 16.27 — basketball mechanic state
   const [hoopScore, setHoopScore] = useState({ makes: 0, attempts: 0, streak: 0 })
   const shootRef = useRef<(() => void) | null>(null)
+  // Phase 16.29 — city search now opens as a full modal dialog so typing
+  // isn't gated by any z-index / pointer-event conflicts with the canvas.
+  const [citySearchOpen, setCitySearchOpen] = useState(false)
+  const [citySearchValue, setCitySearchValue] = useState('')
+  const [citySearchLoading, setCitySearchLoading] = useState(false)
   const [placedFurniture, setPlacedFurniture] = useState<PlacedFurniture[]>(() => getPlacedFurniture(ownerHandle))
   const [placingItem, setPlacingItem] = useState<string | null>(null)
   const [hideFurnitureCount, setHideFurnitureCount] = useState(false)
@@ -1353,15 +1358,95 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         </div>
       </div>
 
-      {/* Phase 16.27 — basketball SHOOT button (city theme only, all devices) */}
+      {/* Phase 16.27 + 16.29 — basketball SHOOT button.
+          Moved to LEFT side (above D-pad) so it doesn't collide with the
+          global SC chrome pills (search / brain / Invite / Customize) on
+          the right side. Big circular tap target visible on all devices. */}
       {theme === 'city' && (
         <button
           onPointerDown={(e) => { e.stopPropagation(); shootRef.current?.() }}
-          className="absolute bottom-16 right-3 z-20 w-20 h-20 rounded-full bg-gradient-to-br from-orange-500/30 to-orange-600/50 backdrop-blur border-2 border-orange-400/60 text-white text-3xl font-bold active:scale-95 active:from-orange-500/50 active:to-orange-700/70 transition shadow-[0_0_20px_rgba(234,88,12,0.4)] flex items-center justify-center"
+          className="absolute bottom-40 left-3 sm:bottom-32 sm:left-5 z-30 w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-orange-500/40 to-orange-700/60 backdrop-blur border-2 border-orange-400/70 text-white text-2xl sm:text-3xl font-bold active:scale-95 active:from-orange-500/60 active:to-orange-700/80 transition shadow-[0_0_20px_rgba(234,88,12,0.5)] flex items-center justify-center pointer-events-auto"
           aria-label="Shoot basketball"
         >
           🏀
         </button>
+      )}
+
+      {/* Phase 16.29 — CITY SEARCH MODAL (full-screen overlay, bulletproof typing) */}
+      {citySearchOpen && (
+        <div
+          className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm flex items-start sm:items-center justify-center p-4"
+          onClick={() => setCitySearchOpen(false)}
+        >
+          <div
+            className="w-full max-w-md bg-[#0a0a0a] border-2 border-yellow-500/40 rounded-xl shadow-2xl shadow-yellow-500/20 overflow-hidden mt-12 sm:mt-0"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-4 py-3 border-b border-yellow-500/20 flex items-center justify-between">
+              <div className="font-mono text-sm text-yellow-300 font-bold">🌍 SEARCH CITY / STREET</div>
+              <button onClick={() => setCitySearchOpen(false)} className="text-gray-400 hover:text-white text-lg leading-none px-2">×</button>
+            </div>
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault()
+                const q = citySearchValue.trim()
+                if (!q || citySearchLoading) return
+                setCitySearchLoading(true)
+                try {
+                  const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(q)}`, {
+                    headers: { 'Accept': 'application/json' },
+                  })
+                  const data = await res.json()
+                  if (Array.isArray(data) && data[0]) {
+                    const loc = {
+                      label: data[0].display_name.split(',').slice(0, 3).join(',').trim(),
+                      lat: parseFloat(data[0].lat),
+                      lng: parseFloat(data[0].lon),
+                    }
+                    setCityLocation(loc)
+                    cityLocationRef.current = loc
+                    toast.success(`📍 ${loc.label}`)
+                    setCitySearchOpen(false)
+                    setCitySearchValue('')
+                  } else {
+                    toast.info('Address not found')
+                  }
+                } catch (err: any) {
+                  toast.error(`Search failed: ${err?.message || 'network error'}`)
+                } finally {
+                  setCitySearchLoading(false)
+                }
+              }}
+              className="p-4 space-y-3"
+            >
+              <input
+                type="text"
+                inputMode="text"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="words"
+                spellCheck={false}
+                autoFocus
+                value={citySearchValue}
+                onChange={(e) => setCitySearchValue(e.target.value)}
+                placeholder="e.g. Times Square Manhattan"
+                className="w-full bg-black border-2 border-yellow-500/30 rounded-lg px-3 py-3 text-base font-mono text-yellow-200 placeholder:text-yellow-500/30 outline-none focus:border-yellow-500/70"
+              />
+              <div className="text-[10px] font-mono text-yellow-500/50 px-1">
+                Try: <button type="button" onClick={() => setCitySearchValue('Times Square Manhattan')} className="underline hover:text-yellow-400">Times Square Manhattan</button> ·{' '}
+                <button type="button" onClick={() => setCitySearchValue('Shibuya Crossing Tokyo')} className="underline hover:text-yellow-400">Shibuya Crossing Tokyo</button> ·{' '}
+                <button type="button" onClick={() => setCitySearchValue('Sunset Boulevard Los Angeles')} className="underline hover:text-yellow-400">Sunset Blvd LA</button>
+              </div>
+              <button
+                type="submit"
+                disabled={!citySearchValue.trim() || citySearchLoading}
+                className="w-full py-3 rounded-lg bg-gradient-to-br from-yellow-500/30 to-orange-500/40 border-2 border-yellow-500/50 text-yellow-200 text-sm font-mono font-bold hover:from-yellow-500/40 hover:to-orange-500/50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+              >
+                {citySearchLoading ? '🔍 SEARCHING…' : '🚀 TELEPORT HERE'}
+              </button>
+            </form>
+          </div>
+        </div>
       )}
 
       {/* HUD */}
@@ -1396,65 +1481,18 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
             {hoopScore.streak >= 3 && <span className="ml-1 text-yellow-300">🔥 {hoopScore.streak}</span>}
           </div>
         )}
-        {/* Phase 16.16 — city-mode address search (OSM Nominatim, free, no key).
-            Phase 16.25 — bulletproof input fix: stop ALL pointer events from
-            bubbling to the canvas behind, set z-[20] above the canvas, and
-            keep keyboard-listener guard for WASD movement keys. */}
+        {/* Phase 16.29 — city search is now a TAP-TO-OPEN MODAL.
+            Inline-input approach kept getting blocked by canvas z-index +
+            pointer-event quirks on mobile Safari. Modal sidesteps it. */}
         {theme === 'city' && (
-          <form
-            className="flex items-center gap-1 pointer-events-auto relative z-[20]"
-            onSubmit={async (e) => {
-              e.preventDefault()
-              const input = (e.currentTarget.elements.namedItem('q') as HTMLInputElement)
-              const q = input?.value?.trim()
-              if (!q) return
-              try {
-                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(q)}`, {
-                  headers: { 'Accept': 'application/json' },
-                })
-                const data = await res.json()
-                if (Array.isArray(data) && data[0]) {
-                  const loc = {
-                    label: data[0].display_name.split(',').slice(0, 3).join(',').trim(),
-                    lat: parseFloat(data[0].lat),
-                    lng: parseFloat(data[0].lon),
-                  }
-                  setCityLocation(loc)
-                  cityLocationRef.current = loc
-                  toast.success(`📍 ${loc.label}`)
-                  console.log('[city-search]', data[0])
-                } else {
-                  toast.info('Address not found')
-                }
-              } catch (err: any) {
-                toast.error(`Search failed: ${err?.message || 'network error'}`)
-              }
-            }}
+          <button
+            type="button"
             onPointerDown={(e) => e.stopPropagation()}
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => { e.stopPropagation(); setCitySearchOpen(true) }}
+            className="pointer-events-auto px-3 py-1.5 rounded bg-yellow-500/15 backdrop-blur border border-yellow-500/40 text-[11px] font-mono text-yellow-300 hover:bg-yellow-500/25 flex items-center gap-1.5"
           >
-            <input
-              name="q"
-              type="text"
-              inputMode="text"
-              autoComplete="off"
-              autoCorrect="off"
-              autoCapitalize="off"
-              spellCheck={false}
-              placeholder="🌍 city, street, or full address…"
-              onKeyDown={(e) => e.stopPropagation()}
-              onKeyUp={(e) => e.stopPropagation()}
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={(e) => { e.stopPropagation(); (e.currentTarget as HTMLInputElement).focus() }}
-              className="bg-black/70 backdrop-blur border border-yellow-500/30 rounded px-2 py-1 text-[12px] font-mono text-yellow-300 placeholder:text-yellow-500/40 outline-none focus:border-yellow-500/60 w-44 sm:w-56"
-            />
-            <button
-              type="submit"
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={(e) => e.stopPropagation()}
-              className="px-3 py-1 rounded bg-yellow-500/20 border border-yellow-500/40 text-[11px] font-mono text-yellow-300 hover:bg-yellow-500/30"
-            >GO</button>
-          </form>
+            🌍 SEARCH CITY / STREET
+          </button>
         )}
       </div>
 
