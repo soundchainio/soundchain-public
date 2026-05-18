@@ -26,7 +26,9 @@ function positionIframe(iframe: HTMLIFrameElement, mode: string, targetRect: { x
     iframe.style.right = 'auto'
     iframe.style.bottom = 'auto'
     iframe.style.width = '100vw'
-    iframe.style.height = '100vh'
+    // 100vh on iOS Safari extends behind the collapsing URL bar + home indicator,
+    // cropping the xterm input row. 100dvh follows the actually-visible viewport.
+    iframe.style.height = '100dvh'
     iframe.style.borderRadius = '0'
     iframe.style.boxShadow = 'none'
     iframe.style.zIndex = String(FULLSCREEN_Z)
