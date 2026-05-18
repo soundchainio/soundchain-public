@@ -94,24 +94,25 @@ export default function Gallery3DPage() {
 
       {/* Header */}
       <div className="border-b border-yellow-500/20 bg-black/80 backdrop-blur-md">
-        <div className="max-w-[1400px] mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button onClick={() => router.push('/explore3d')} className="p-1.5 rounded hover:bg-white/10 transition">
+        <div className="max-w-[1400px] mx-auto px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div className="flex items-center gap-3 min-w-0">
+            <button onClick={() => router.push('/explore3d')} className="p-1.5 rounded hover:bg-white/10 transition shrink-0">
               <ArrowLeft className="w-4 h-4 text-gray-400" />
             </button>
-            <div>
-              <h1 className="text-sm font-mono font-bold text-yellow-400 tracking-wider">GALLERY 3D · @{handleParam || 'visitor'}</h1>
-              <p className="text-[9px] font-mono text-gray-600">NODEVERSE · personal art collection · walk through, listen, collect</p>
+            <div className="min-w-0">
+              <h1 className="text-sm font-mono font-bold text-yellow-400 tracking-wider truncate">GALLERY 3D · @{handleParam || 'visitor'}</h1>
+              <p className="text-[9px] font-mono text-gray-600 truncate">NODEVERSE · personal art collection · walk through, listen, collect</p>
             </div>
           </div>
-          {/* Theme switcher */}
-          <div className="flex items-center gap-1">
-            <Palette className="w-3 h-3 text-gray-500" />
+          {/* Theme switcher — scrollable on narrow screens so GYM + BLACKTOP
+              don't get cropped off-screen on mobile. */}
+          <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 sm:max-w-[60%]">
+            <Palette className="w-3 h-3 text-gray-500 shrink-0" />
             {THEMES.map(t => (
               <button
                 key={t}
                 onClick={() => setTheme(t)}
-                className={`px-2 py-1 rounded text-[9px] font-mono uppercase transition ${theme === t ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' : 'bg-white/[0.02] text-gray-500 border border-white/5 hover:text-white'}`}
+                className={`px-2 py-1 rounded text-[9px] font-mono uppercase transition shrink-0 ${theme === t ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' : 'bg-white/[0.02] text-gray-500 border border-white/5 hover:text-white'}`}
               >
                 {t}
               </button>
