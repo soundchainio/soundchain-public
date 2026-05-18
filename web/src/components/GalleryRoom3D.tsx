@@ -1798,14 +1798,37 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
             moveLockUntil: 0,
             defenseHeld: false,
           }
+          // Phase 16.41 — Mixamo Xbot ships with 13 stock clips that are
+          // already polished retargets: Idle, Walking, Running, Dance,
+          // Death, Sitting, Standing, Jump, Yes, No, Wave, Punch, ThumbsUp.
+          // Hand-rolled QuaternionKeyframeTrack pose authoring missed bone
+          // axis conventions and rendered as frozen / broken poses. Now
+          // every move routes to the closest stock clip — fluid motion
+          // guaranteed because Mixamo authored them. Position state
+          // machines (jumpState / moveState) still differentiate trajectory.
+          const moveToStockClip: Record<string, string> = {
+            'jumpshot':  'jump',
+            'dunk':      'jump',
+            'layup':     'jump',
+            'fadeaway':  'jump',
+            'rebound':   'jump',
+            'block':     'jump',
+            'pass':      'punch',
+            'pumpfake':  'wave',
+            'crossover': 'wave',
+            'jabstep':   'walking',
+            'defense':   'sitting',
+          }
           xbotState.play = (clipName: string, durationMs: number) => {
             const key = clipName.toLowerCase()
-            const newAction = clipMap[key]
+            const stockKey = moveToStockClip[key]
+            const actionKey = (stockKey && clipMap[stockKey]) ? stockKey : key
+            const newAction = clipMap[actionKey]
             if (!newAction) return
             const oldAction = clipMap[xbotState.currentClip]
-            newAction.reset().setEffectiveWeight(1).fadeIn(0.1).play()
-            if (oldAction && oldAction !== newAction) oldAction.fadeOut(0.1)
-            xbotState.currentClip = key
+            newAction.reset().setEffectiveWeight(1).fadeIn(0.12).play()
+            if (oldAction && oldAction !== newAction) oldAction.fadeOut(0.12)
+            xbotState.currentClip = actionKey
             xbotState.moveLockUntil = performance.now() + durationMs
           }
           ;(avatarHolder.userData as any).xbot = xbotState
@@ -2329,15 +2352,23 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         // Only auto-switch locomotion when no move clip is locking the avatar.
         if (now > xbot.moveLockUntil) {
           const speed = Math.hypot(dirX, dirZ) * mag
-          let wantClip = 'idle'
-          if (xbot.defenseHeld) {
-            wantClip = xbot.clips['defense'] ? 'defense' : 'idle'
-          } else if (speed > 0.6) {
-            wantClip = xbot.clips['running'] ? 'running' : (xbot.clips['walking'] ? 'walking' : 'idle')
-          } else if (speed > 0.1) {
-            wantClip = xbot.clips['walking'] ? 'walking' : (xbot.clips['running'] ? 'running' : 'idle')
+          // Resolve clip name from any of several common Mixamo naming
+          // variants (Walking/Walk, Running/Run, Sitting/Squat, etc.)
+          const resolve = (...keys: string[]) => {
+            for (const k of keys) if (xbot.clips[k]) return k
+            return null
           }
-          if (wantClip !== xbot.currentClip) {
+          let wantClip: string | null = 'idle'
+          if (xbot.defenseHeld) {
+            wantClip = resolve('sitting', 'standing', 'idle')
+          } else if (speed > 0.6) {
+            wantClip = resolve('running', 'run', 'walking', 'walk', 'idle')
+          } else if (speed > 0.1) {
+            wantClip = resolve('walking', 'walk', 'running', 'run', 'idle')
+          } else {
+            wantClip = resolve('idle')
+          }
+          if (wantClip && wantClip !== xbot.currentClip) {
             const from = xbot.clips[xbot.currentClip]
             const to = xbot.clips[wantClip]
             if (to) {
