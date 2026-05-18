@@ -2834,12 +2834,178 @@ function LivePreview3D({ spec, face, bigMode }: { spec: AiBuildSpec; face: AiFac
       jacket.position.set(0, headY * 0.6, 0)
       group.add(jacket)
     }
+
+    // Phase 16.33 — FACE-TAB PRIMITIVE OVERLAYS. Without facecap.glb,
+    // face-shape / eye-color / lip / brow / freckle picks couldn't morph
+    // anything. These primitives sit at the face plane (z = headR + 0.01)
+    // and visibly change with every face-tab click.
+    const EYE_HEX: Record<string, string> = {
+      brown: '#5a3a20', blue: '#3d7bb8', green: '#3a7a4a', hazel: '#a07a3a',
+      grey: '#7a7a7a', amber: '#c08c2a', violet: '#9a4ac0', heterochromia: '#5a3a20',
+    }
+    const LIP_HEX: Record<string, string> = {
+      natural: '#c08070', red: '#c93838', dark: '#5a2030', glossy: '#d89090',
+      matte: '#a06060', nude: '#c8a08a', berry: '#8a2a4a', black: '#1a0a0a',
+    }
+
+    // FACE SHAPE — head ellipsoid scaled to match face shape preset
+    const faceShapeScale: Record<string, [number, number, number]> = {
+      oval:     [1.0,  1.0,  1.0],
+      round:    [1.15, 0.95, 1.0],
+      square:   [1.15, 1.0,  1.0],
+      heart:    [1.1,  1.0,  1.0],  // wide top
+      diamond:  [0.95, 1.05, 1.0],
+      oblong:   [0.95, 1.15, 1.0],
+      triangle: [1.05, 1.0,  1.0],
+    }
+    const fs = faceShapeScale[face.faceShape] || [1, 1, 1]
+    const faceMat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(spec.skinHex || SKIN_HEX[spec.skinTone]),
+      roughness: 0.85, metalness: 0.05,
+      transparent: true, opacity: 0.55,
+    })
+    const faceShape = new THREE.Mesh(new THREE.SphereGeometry(headR * 0.95, 24, 18), faceMat)
+    faceShape.scale.set(fs[0], fs[1], fs[2])
+    faceShape.position.set(0, headY - 0.02, 0.02)
+    group.add(faceShape)
+
+    // EYES — left + right small spheres on the face plane
+    const eyeColor = face.eyeColorHex ? new THREE.Color(face.eyeColorHex) : new THREE.Color(EYE_HEX[face.eyeColor] || '#5a3a20')
+    const eyeShapeScale: Record<string, [number, number]> = {
+      almond:     [1.4, 0.8],
+      round:      [1.0, 1.0],
+      hooded:     [1.2, 0.6],
+      upturned:   [1.3, 0.7],
+      downturned: [1.3, 0.7],
+      monolid:    [1.3, 0.5],
+      'wide-set': [1.0, 0.9],
+      'close-set':[1.0, 0.9],
+    }
+    const es = eyeShapeScale[face.eyeShape] || [1.2, 0.8]
+    const eyeSep = face.eyeShape === 'wide-set' ? 0.075 : face.eyeShape === 'close-set' ? 0.045 : 0.06
+    ;[-1, 1].forEach((side) => {
+      // For heterochromia: right eye gets a different color
+      const thisEyeColor = (face.eyeColor === 'heterochromia' && side === 1)
+        ? new THREE.Color('#3d7bb8')
+        : eyeColor
+      const eyeMat = new THREE.MeshStandardMaterial({
+        color: thisEyeColor,
+        emissive: thisEyeColor,
+        emissiveIntensity: 0.15,
+        metalness: 0.4, roughness: 0.3,
+      })
+      const eyeGeo = new THREE.SphereGeometry(0.022, 10, 8)
+      const eye = new THREE.Mesh(eyeGeo, eyeMat)
+      eye.scale.set(es[0], es[1], 1)
+      const tiltY = face.eyeShape === 'upturned' ? 0.005 : face.eyeShape === 'downturned' ? -0.005 : 0
+      eye.position.set(side * eyeSep, headY + 0.005 + tiltY * side, headR - 0.005)
+      group.add(eye)
+    })
+
+    // EYEBROWS — thin horizontal bar above each eye
+    const browColor = new THREE.Color(spec.hairColorHex || HAIR_HEX[spec.hairColor] || '#1a1a1a')
+    const browMat = new THREE.MeshStandardMaterial({ color: browColor, roughness: 0.95 })
+    const browThickness: Record<string, number> = {
+      arched: 0.008, straight: 0.008, rounded: 0.009, angled: 0.008,
+      soft: 0.007, feathered: 0.008, 'thin-line': 0.004, bold: 0.014,
+    }
+    const browH = browThickness[face.eyebrowShape] || 0.008
+    ;[-1, 1].forEach((side) => {
+      const brow = new THREE.Mesh(new THREE.BoxGeometry(0.05, browH, 0.012), browMat)
+      const tilt = face.eyebrowShape === 'arched' ? -0.15 * side
+                 : face.eyebrowShape === 'angled' ? -0.25 * side
+                 : 0
+      brow.position.set(side * eyeSep, headY + 0.035, headR - 0.002)
+      brow.rotation.z = tilt
+      group.add(brow)
+    })
+
+    // LIPS — colored box at the mouth line
+    const lipColor = face.lipColorHex ? new THREE.Color(face.lipColorHex) : new THREE.Color(LIP_HEX[face.lipColor] || '#c08070')
+    const lipMat = new THREE.MeshStandardMaterial({ color: lipColor, roughness: 0.6 })
+    const lipDims: Record<string, [number, number]> = {
+      full:      [0.06, 0.020],
+      thin:      [0.05, 0.008],
+      heart:     [0.05, 0.018],
+      wide:      [0.08, 0.014],
+      bow:       [0.05, 0.018],
+      asymmetric:[0.06, 0.015],
+      pouty:     [0.05, 0.025],
+    }
+    const [lw, lh] = lipDims[face.lipShape] || [0.06, 0.018]
+    const lips = new THREE.Mesh(new THREE.BoxGeometry(lw, lh, 0.015), lipMat)
+    lips.position.set(0, headY - 0.07, headR - 0.005)
+    group.add(lips)
+
+    // FRECKLES — sprinkle of small dots on cheeks if intensity > 0.2
+    if (face.freckles > 0.2) {
+      const freckleMat = new THREE.MeshBasicMaterial({ color: 0x8a5a3a, transparent: true, opacity: face.freckles })
+      const freckleCount = Math.round(face.freckles * 14)
+      for (let i = 0; i < freckleCount; i++) {
+        const angle = (i / freckleCount) * Math.PI * 2
+        const dot = new THREE.Mesh(new THREE.SphereGeometry(0.005, 6, 4), freckleMat)
+        const r = 0.04 + Math.random() * 0.04
+        dot.position.set(Math.cos(angle) * r, headY - 0.01 + (Math.random() - 0.5) * 0.03, headR - 0.001)
+        group.add(dot)
+      }
+    }
+
+    // DIMPLES — small indents (rendered as darker dots) on cheek/chin
+    if (face.dimples !== 'none') {
+      const dimpleMat = new THREE.MeshBasicMaterial({ color: 0x5a3a20, transparent: true, opacity: 0.5 })
+      if (face.dimples === 'cheek' || face.dimples === 'both') {
+        ;[-1, 1].forEach((side) => {
+          const d = new THREE.Mesh(new THREE.SphereGeometry(0.008, 8, 6), dimpleMat)
+          d.position.set(side * 0.07, headY - 0.05, headR - 0.001)
+          group.add(d)
+        })
+      }
+      if (face.dimples === 'chin' || face.dimples === 'both') {
+        const d = new THREE.Mesh(new THREE.SphereGeometry(0.008, 8, 6), dimpleMat)
+        d.position.set(0, headY - 0.11, headR - 0.001)
+        group.add(d)
+      }
+    }
+
+    // MOLES / beauty marks — single dot at a specific position
+    if (face.moles !== 'none') {
+      const moleMat = new THREE.MeshBasicMaterial({ color: 0x2a1810 })
+      const mole = new THREE.Mesh(new THREE.SphereGeometry(0.006, 8, 6), moleMat)
+      if (face.moles === 'single-cheek') mole.position.set(0.05, headY - 0.03, headR - 0.001)
+      else if (face.moles === 'lip-corner') mole.position.set(0.04, headY - 0.07, headR - 0.001)
+      else if (face.moles === 'beauty-mark') mole.position.set(0.025, headY - 0.04, headR - 0.001)
+      else if (face.moles === 'scattered') {
+        for (let i = 0; i < 3; i++) {
+          const m = new THREE.Mesh(new THREE.SphereGeometry(0.005, 6, 4), moleMat)
+          m.position.set((Math.random() - 0.5) * 0.12, headY - 0.04 + (Math.random() - 0.5) * 0.04, headR - 0.001)
+          group.add(m)
+        }
+        return
+      }
+      group.add(mole)
+    }
+
+    // MAKEUP — colored tint band across upper face if non-natural
+    if (face.makeup !== 'none' && face.makeup !== 'natural') {
+      const makeupColor: Record<string, number> = {
+        glam: 0xc73a8a, dramatic: 0x4a0a0a, cyber: 0x22d3ee,
+        festival: 0xfacc15, gothic: 0x1a0a1a, minimalist: 0xb8a890,
+      }
+      const mkMat = new THREE.MeshBasicMaterial({ color: makeupColor[face.makeup] || 0xc73a8a, transparent: true, opacity: 0.35 })
+      const mk = new THREE.Mesh(new THREE.PlaneGeometry(0.18, 0.04), mkMat)
+      mk.position.set(0, headY + 0.018, headR - 0.001)
+      group.add(mk)
+    }
   }, [
     ready,
     spec.hairLength, spec.hairStyle, spec.hairColor, spec.hairColorHex,
     spec.facialHair, spec.headwear, spec.eyewear, spec.eyewearColor,
     spec.jewelry, spec.jewelryMetal, spec.jewelryColor,
     spec.topColor, spec.jacket, spec.jacketColor,
+    spec.skinTone, spec.skinHex,
+    face.faceShape, face.eyeShape, face.eyeColor, face.eyeColorHex,
+    face.eyebrowShape, face.lipShape, face.lipColor, face.lipColorHex,
+    face.freckles, face.dimples, face.moles, face.makeup,
     face.glasses,
   ])
 
