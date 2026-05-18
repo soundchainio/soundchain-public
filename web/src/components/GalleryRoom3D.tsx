@@ -423,31 +423,90 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
       }
       ;(scene.userData as any).ball = { ball, ballState, RIM_POS }
 
-      // Shoot function — wired to keyboard B and the SHOOT button
+      // Phase 16.35 — NBA2K-style shot mechanic with jump animation and
+      // automatic slam dunk when close to rim. Player crouches → leaps →
+      // ball releases at apex. Distance from rim determines shot type:
+      //   <2.5u → SLAM DUNK (vertical leap, ball pushed straight through)
+      //   2.5-7u → JUMP SHOT (arc with player jump)
+      //   >7u → THREE-POINTER (longer arc, less jump)
+      const jumpState = { active: false, t: 0, duration: 0, peakY: 0, ballRelease: 0, isDunk: false, baseY: 0 }
+      ;(scene.userData as any).jumpState = jumpState
+      ;(scene.userData as any).playerGroupRef = playerGroup
+
       shootRef.current = () => {
-        if (!ballState.held) return  // can't shoot while ball is mid-flight
-        // Aim apex slightly above rim. Compute initial velocity so ball
-        // travels from ball.position to RIM_POS following a 0.5s arc up + 0.6s fall.
+        if (!ballState.held || jumpState.active) return  // can't shoot while mid-jump
         const start = ball.position.clone()
         const target = RIM_POS.clone()
         const dx = target.x - start.x
         const dz = target.z - start.z
         const horizDist = Math.hypot(dx, dz)
-        if (horizDist < 0.1) return  // too close to shoot
-        const timeUp = 0.5
-        const timeDown = 0.6
-        const apexY = target.y + 2.5  // arc apex 2.5u above rim
-        // v_y up = (apexY - startY) / timeUp + 0.5 * g * timeUp (target apex)
-        const g = 9.8 * 1.5  // amplify gravity for snappy arcs
-        const vy = (apexY - start.y) / timeUp + 0.5 * g * timeUp
-        const totalTime = timeUp + timeDown
-        const vx = dx / totalTime
-        const vz = dz / totalTime
-        ballState.vel.set(vx, vy, vz)
-        ballState.held = false
-        ballState.scoredThisShot = false
-        ballState.airborneFrames = 0
-        setHoopScore((s) => ({ ...s, attempts: s.attempts + 1 }))
+        if (horizDist < 0.1) return
+
+        // Face the hoop (rotate player to look at it)
+        playerGroup.rotation.y = Math.atan2(dx, dz)
+
+        const isDunk = horizDist < 2.5
+        const isThree = horizDist > 7
+
+        // Jump animation parameters
+        jumpState.active = true
+        jumpState.t = 0
+        jumpState.baseY = playerGroup.position.y
+        jumpState.duration = isDunk ? 0.6 : isThree ? 0.5 : 0.55
+        jumpState.peakY = isDunk ? 1.8 : isThree ? 0.6 : 1.2  // dunk = highest jump
+        jumpState.ballRelease = isDunk ? 0.5 : 0.35  // release at peak of jump for dunk
+        jumpState.isDunk = isDunk
+
+        // Pre-set ball trajectory parameters but only release at peak of jump
+        ;(jumpState as any).pendingShot = { start, target, dx, dz, horizDist, isDunk, isThree }
+      }
+      ;(scene.userData as any).updateJump = (dt: number) => {
+        if (!jumpState.active) return
+        jumpState.t += dt
+        const progress = jumpState.t / jumpState.duration
+        // Squat-jump-land curve: smooth parabola for vertical leap
+        let jumpY = 0
+        if (progress < 0.15) {
+          // Squat: dip slightly
+          jumpY = -0.1 * (progress / 0.15)
+        } else if (progress < 1) {
+          // Jump arc — parabola peaking at jumpState.peakY
+          const u = (progress - 0.15) / 0.85
+          jumpY = jumpState.peakY * 4 * u * (1 - u) - 0.1 + 0.1 * u
+        }
+        playerGroup.position.y = jumpState.baseY + jumpY
+        // Release ball at the apex
+        const shot = (jumpState as any).pendingShot
+        if (shot && progress >= jumpState.ballRelease) {
+          const { start, target, dx, dz, horizDist, isDunk, isThree } = shot
+          if (isDunk) {
+            // SLAM DUNK — push ball straight through rim from above
+            ball.position.set(target.x, target.y + 0.5, target.z)
+            ballState.vel.set(0, -8, 0)
+          } else {
+            // Jump shot / three — release from peak position
+            const releaseY = jumpState.baseY + jumpState.peakY + 1.4
+            ball.position.set(start.x, releaseY, start.z)
+            const apexY = target.y + (isThree ? 3.5 : 2.0)
+            const g = 9.8 * 1.5
+            const timeUp = isThree ? 0.45 : 0.4
+            const timeDown = isThree ? 0.7 : 0.55
+            const vy = (apexY - releaseY) / timeUp + 0.5 * g * timeUp
+            const totalTime = timeUp + timeDown
+            const vx = dx / totalTime
+            const vz = dz / totalTime
+            ballState.vel.set(vx, vy, vz)
+          }
+          ballState.held = false
+          ballState.scoredThisShot = false
+          ballState.airborneFrames = 0
+          setHoopScore((s) => ({ ...s, attempts: s.attempts + 1 }))
+          ;(jumpState as any).pendingShot = null
+        }
+        if (jumpState.t >= jumpState.duration) {
+          jumpState.active = false
+          playerGroup.position.y = jumpState.baseY
+        }
       }
       ;(scene.userData as any).gravity = (g: number) => {
         const ballRef = (scene.userData as any).ball
@@ -664,30 +723,73 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
       })
       const sky = new THREE.Mesh(skyGeo, skyMat)
       scene.add(sky)
-      // Distant city silhouette — 24 dark building blocks ringing the horizon
-      // at ~150u radius. Adds depth + sense of "city extends beyond".
-      const bldgMat = new THREE.MeshStandardMaterial({ color: 0x0a0610, emissive: 0x1a0a20, emissiveIntensity: 0.08, roughness: 0.9 })
-      for (let i = 0; i < 24; i++) {
-        const angle = (i / 24) * Math.PI * 2
-        const r = 130 + Math.random() * 35
-        const w = 8 + Math.random() * 12
-        const h = 14 + Math.random() * 26
-        const d = 8 + Math.random() * 12
+      // Phase 16.35 — distant city silhouette varies PER SEARCHED LOCATION.
+      // Hash the city label (or default "Open World") into a seed → drives
+      // building count, height range, density, palette tint, fog hue, window
+      // brightness. Different city searches now produce visually distinct
+      // skylines instead of the same generic horizon.
+      const seedSource = cityLocationRef.current?.label || 'Open World'
+      let seed = 0
+      for (let i = 0; i < seedSource.length; i++) seed = (seed * 31 + seedSource.charCodeAt(i)) >>> 0
+      const seededRandom = () => {
+        seed = (seed * 1103515245 + 12345) >>> 0
+        return (seed >>> 16) / 65535
+      }
+      // Per-city derived parameters
+      const cityHueShift = seededRandom() * 360       // base palette hue
+      const cityBldgCount = 22 + Math.floor(seededRandom() * 16)  // 22-38
+      const cityMaxHeight = 18 + seededRandom() * 32  // 18-50 — Tokyo skyscrapers vs Brooklyn lowrise
+      const cityDensity = 0.55 + seededRandom() * 0.4 // window lit ratio
+      const cityWindowHue = Math.floor(seededRandom() * 60) - 30  // 30° shift around warm yellow
+      // Update fog tint from city seed
+      const fogR = 0.10 + (seededRandom() * 0.15)
+      const fogG = 0.06 + (seededRandom() * 0.12)
+      const fogB = 0.03 + (seededRandom() * 0.20)
+      if (scene.fog && (scene.fog as any).color) (scene.fog as any).color.setRGB(fogR, fogG, fogB)
+      // Update sky shader bottom color from fog (atmospheric horizon match)
+      if ((skyMat as any).uniforms?.bottomColor) {
+        (skyMat as any).uniforms.bottomColor.value.setRGB(fogR * 1.5, fogG * 1.4, fogB * 1.3)
+      }
+      // Build the horizon
+      for (let i = 0; i < cityBldgCount; i++) {
+        const angle = (i / cityBldgCount) * Math.PI * 2
+        const r = 130 + seededRandom() * 35
+        const w = 8 + seededRandom() * 12
+        const h = 12 + seededRandom() * cityMaxHeight
+        const d = 8 + seededRandom() * 12
+        // Hue rotates around the seed's base shift so all buildings feel
+        // like the same "city palette"
+        const localHue = ((cityHueShift + (seededRandom() - 0.5) * 40) % 360 + 360) % 360
+        const bldgColor = new THREE.Color().setHSL(localHue / 360, 0.35, 0.08)
+        const bldgEmissive = new THREE.Color().setHSL(localHue / 360, 0.45, 0.15)
+        const bldgMat = new THREE.MeshStandardMaterial({ color: bldgColor, emissive: bldgEmissive, emissiveIntensity: 0.06, roughness: 0.9 })
         const bldg = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), bldgMat)
         bldg.position.set(Math.sin(angle) * r, h / 2, Math.cos(angle) * r)
         bldg.rotation.y = angle + Math.PI
         scene.add(bldg)
-        // Window lights — 1-2 lit "windows" per building, simple emissive plane
-        if (Math.random() > 0.3) {
-          const winMat = new THREE.MeshBasicMaterial({ color: Math.random() > 0.5 ? 0xfacc15 : 0xeab308, transparent: true, opacity: 0.7 })
-          for (let wi = 0; wi < 2; wi++) {
+        // Lit windows — count + color from city seed
+        if (seededRandom() < cityDensity) {
+          const winHue = ((50 + cityWindowHue) % 360 + 360) % 360  // ~yellow base shifted per-city
+          const winColor = new THREE.Color().setHSL(winHue / 360, 0.8, 0.55)
+          const winMat = new THREE.MeshBasicMaterial({ color: winColor, transparent: true, opacity: 0.7 })
+          const winRows = 2 + Math.floor(seededRandom() * 3)
+          for (let wi = 0; wi < winRows; wi++) {
             const win = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 1.5), winMat)
-            const wy = 3 + Math.random() * (h - 6)
-            win.position.set(Math.sin(angle) * (r - d / 2 - 0.1), wy, Math.cos(angle) * (r - d / 2 - 0.1))
+            const wy = 3 + seededRandom() * (h - 6)
+            const wx = (seededRandom() - 0.5) * (w - 2)
+            win.position.set(Math.sin(angle) * (r - d / 2 - 0.1) + Math.cos(angle) * wx, wy, Math.cos(angle) * (r - d / 2 - 0.1) - Math.sin(angle) * wx)
             win.rotation.y = angle + Math.PI
             scene.add(win)
           }
         }
+      }
+      // Store seed/params on scene so the location-search useEffect can
+      // rebuild the horizon when a new city is searched without re-mounting.
+      ;(scene.userData as any).citySeed = seed
+      ;(scene.userData as any).rebuildHorizon = () => {
+        // For future ship — currently a full scene rebuild is needed for new
+        // city. Saved here as a hook for the next iteration to swap horizon
+        // without re-mounting the whole gallery.
       }
     }
 
@@ -1215,12 +1317,16 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         playerGroup.rotation.y = Math.atan2(dirX, -dirZ)
       }
 
-      // Phase 16.27 — basketball follow + physics tick (city only)
+      // Phase 16.27 + 16.35 — basketball follow + physics + jump animation
       const ballRef = (scene.userData as any).ball
       if (ballRef) {
         const { ball, ballState } = ballRef
+        // NBA2K jump-shot animation tick
+        const updateJump = (scene.userData as any).updateJump
+        if (updateJump) updateJump(dtSec)
+
         if (ballState.held) {
-          // Ball hovers in front of character at hand height
+          // Ball hovers in front of character at hand height (follows jump)
           const handOffset = new THREE.Vector3(
             Math.sin(playerGroup.rotation.y) * 0.6,
             1.3,
@@ -1358,9 +1464,9 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
     if (containerRef.current) containerRef.current.focus()
   }, [loading])
 
-  // Phase 16.26 — repaint in-world location sign when cityLocation changes.
-  // Scene's userData stores the sign's canvas + paint fn so we can mutate
-  // the existing texture without rebuilding the whole 3D scene.
+  // Phase 16.26 + 16.35 — repaint location sign + force horizon rebuild
+  // when cityLocation changes so different searched cities actually look
+  // different (different building palette/density/heights/window colors).
   useEffect(() => {
     cityLocationRef.current = cityLocation
     const scene = sceneRef.current
@@ -1369,6 +1475,13 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
     if (ls) {
       ls.paint(cityLocation)
       ls.texture.needsUpdate = true
+    }
+    // For now, bump the scene-rebuild trigger via toggling loading. Heavy
+    // but reliable — different cities now produce different horizons.
+    if (cityLocation) {
+      setLoading(true)
+      const t = setTimeout(() => setLoading(false), 100)
+      return () => clearTimeout(t)
     }
   }, [cityLocation])
 

@@ -1888,7 +1888,7 @@ function AiBuildPanel({
               below the tabs (z-[6]) so they layer correctly. bg-black so
               scrolling sliders don't bleed through. */}
         <div className="lg:w-1/2 sticky top-[137px] lg:top-[97px] z-[5] bg-black lg:self-start lg:h-[calc(100vh-200px)] lg:max-h-[700px] lg:border-r lg:border-pink-500/10">
-          <LivePreview3D spec={spec} face={face} bigMode={activeTab === 'face'} />
+          <LivePreview3D spec={spec} face={face} bigMode={activeTab === 'face'} portraitUrl={config.aiPortraitDataUrl} />
         </div>
 
         {/* RIGHT: sliders. On lg+ this column also contains the tab strip
@@ -2383,7 +2383,7 @@ const SKIN_HEX: Record<AiBuildSpec['skinTone'], string> = {
   tan: '#a16641', brown: '#7a4a2b', dark: '#4a2e1a',
 }
 
-function LivePreview3D({ spec, face, bigMode }: { spec: AiBuildSpec; face: AiFaceSpec; bigMode?: boolean }) {
+function LivePreview3D({ spec, face, bigMode, portraitUrl }: { spec: AiBuildSpec; face: AiFaceSpec; bigMode?: boolean; portraitUrl?: string }) {
   const containerRef = useRef<HTMLDivElement>(null)
   // Mutable refs to live Three.js objects — re-used across spec changes,
   // never re-mounted (would lose the camera angle the user dragged to).
@@ -2848,6 +2848,23 @@ function LivePreview3D({ spec, face, bigMode }: { spec: AiBuildSpec; face: AiFac
       matte: '#a06060', nude: '#c8a08a', berry: '#8a2a4a', black: '#1a0a0a',
     }
 
+    // Phase 16.35 — SDXL PORTRAIT BILLBOARD as the actual face. When user
+    // generates a portrait via ✨ Generate, that real photo becomes the
+    // character's face. Overrides all the primitive face overlays below
+    // (no point drawing geometric eyes when we have a real photo).
+    if (portraitUrl) {
+      const loader = new THREE.TextureLoader()
+      const tex = loader.load(portraitUrl)
+      tex.colorSpace = THREE.SRGBColorSpace
+      const portraitMat = new THREE.MeshBasicMaterial({ map: tex, transparent: true })
+      const portrait = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.55), portraitMat)
+      portrait.position.set(0, headY - 0.04, headR + 0.02)
+      group.add(portrait)
+      // Skip drawing primitive face features when portrait is showing
+      // (they'd just clutter the photo). Hair/hat/jewelry/torso still render.
+      return
+    }
+
     // FACE SHAPE — head ellipsoid scaled to match face shape preset
     const faceShapeScale: Record<string, [number, number, number]> = {
       oval:     [1.0,  1.0,  1.0],
@@ -3149,7 +3166,7 @@ function LivePreview3D({ spec, face, bigMode }: { spec: AiBuildSpec; face: AiFac
       // Vibe glow color on rim light direction (subtle)
     }
   }, [
-    ready,
+    ready, portraitUrl,
     spec.hairLength, spec.hairStyle, spec.hairColor, spec.hairColorHex, spec.hairHighlights,
     spec.facialHair, spec.headwear, spec.eyewear, spec.eyewearColor,
     spec.jewelry, spec.jewelryMetal, spec.jewelryColor,
