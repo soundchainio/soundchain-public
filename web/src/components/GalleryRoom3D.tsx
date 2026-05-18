@@ -578,15 +578,25 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         if (horizDist < 0.1) return
         playerGroup.rotation.y = Math.atan2(dx, dz)
         const isDunk = horizDist < 2.5
+        const isLayup = !isDunk && horizDist < 4.0
         const isThree = horizDist > 7
+        const wantFadeaway = !!(keys && (keys['shift'] || keys['f']))
         jumpStateBG.active = true
         jumpStateBG.t = 0
         jumpStateBG.baseY = playerGroup.position.y
-        jumpStateBG.duration = isDunk ? 0.6 : isThree ? 0.5 : 0.55
-        jumpStateBG.peakY = isDunk ? 1.8 : isThree ? 0.6 : 1.2
-        jumpStateBG.ballRelease = isDunk ? 0.5 : 0.35
+        jumpStateBG.duration = isDunk ? 0.6 : isLayup ? 0.7 : isThree ? 0.5 : 0.55
+        jumpStateBG.peakY = isDunk ? 1.8 : isLayup ? 1.0 : isThree ? 0.6 : 1.2
+        jumpStateBG.ballRelease = isDunk ? 0.5 : isLayup ? 0.55 : 0.35
         jumpStateBG.isDunk = isDunk
         ;(jumpStateBG as any).pendingShot = { start, target, dx, dz, horizDist, isDunk, isThree }
+        // Phase 16.41 — play the matching XBot body clip
+        const xb = (avatarHolder.userData as any).xbot
+        if (xb?.play) {
+          if (isDunk) xb.play('dunk', 1000)
+          else if (isLayup) xb.play('layup', 1000)
+          else if (wantFadeaway) xb.play('fadeaway', 1000)
+          else xb.play('jumpshot', 800)
+        }
       }
 
       ;(scene.userData as any).updateJump = (dt: number) => {
@@ -1575,9 +1585,8 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
     const avatarHolder = new THREE.Group()
     playerGroup.add(avatarHolder)
 
-    // Phase 16.40 — XBot rigged avatar w/ AnimationMixer for sports themes.
-    // Store the active mixer + clips on avatarHolder.userData so the animate
-    // loop can drive mixer.update(dt) + cross-fade clips based on speed.
+    // Phase 16.40/16.41 — XBot rigged avatar w/ AnimationMixer + full 2K
+    // move-set authored as custom AnimationClips via QuaternionKeyframeTrack.
     const buildXBotPlayer = () => {
       const loader = new GLTFLoader()
       loader.load(
@@ -1586,7 +1595,6 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
           const model = gltf.scene
           const preBox = new THREE.Box3().setFromObject(model)
           const preSize = new THREE.Vector3(); preBox.getSize(preSize)
-          // XBot ships at ~1.8u tall; scale to match if it's off
           if (preSize.y > 0 && (preSize.y < 0.5 || preSize.y > 4)) {
             model.scale.setScalar(1.8 / preSize.y)
           }
@@ -1597,29 +1605,214 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
             }
           })
           avatarHolder.add(model)
-          // AnimationMixer — XBot bundles Idle / Walking / Running clips
-          if (gltf.animations && gltf.animations.length > 0) {
-            const mixer = new THREE.AnimationMixer(model)
-            const clipMap: Record<string, THREE.AnimationAction> = {}
-            for (const clip of gltf.animations) {
-              const key = clip.name.toLowerCase()
-              const action = mixer.clipAction(clip)
-              clipMap[key] = action
-            }
-            // Start with Idle if available
-            const idleClip = clipMap['idle'] || gltf.animations[0]
-            if (idleClip instanceof THREE.AnimationAction) {
-              idleClip.play()
-            } else {
-              mixer.clipAction(idleClip).play()
-            }
-            ;(avatarHolder.userData as any).xbot = {
-              mixer,
-              clips: clipMap,
-              currentClip: 'idle',
-            }
+
+          if (!gltf.animations || gltf.animations.length === 0) return
+          const mixer = new THREE.AnimationMixer(model)
+          const clipMap: Record<string, THREE.AnimationAction> = {}
+          for (const clip of gltf.animations) {
+            clipMap[clip.name.toLowerCase()] = mixer.clipAction(clip)
           }
-          console.log('[GalleryRoom3D] XBot loaded', { clips: gltf.animations.map(c => c.name) })
+
+          // ─── Phase 16.41 — Author custom 2K move clips ───
+          // Collect bone names by scanning the skeleton; Mixamo prefix is the
+          // standard for threejs.org/Xbot but we resolve dynamically so any
+          // rig variant still wires up the clips that match its bone naming.
+          const boneByName: Record<string, THREE.Bone> = {}
+          model.traverse((obj: any) => {
+            if (obj.isBone) boneByName[obj.name] = obj
+          })
+          const findBone = (...candidates: string[]) => {
+            for (const c of candidates) {
+              if (boneByName[c]) return boneByName[c].name
+              const found = Object.keys(boneByName).find(n => n.toLowerCase().endsWith(c.toLowerCase()))
+              if (found) return found
+            }
+            return null
+          }
+          const B = {
+            hips:   findBone('mixamorigHips', 'Hips'),
+            spine:  findBone('mixamorigSpine1', 'Spine1', 'mixamorigSpine', 'Spine'),
+            head:   findBone('mixamorigHead', 'Head'),
+            armL:   findBone('mixamorigLeftArm', 'LeftArm'),
+            armR:   findBone('mixamorigRightArm', 'RightArm'),
+            forearmL: findBone('mixamorigLeftForeArm', 'LeftForeArm'),
+            forearmR: findBone('mixamorigRightForeArm', 'RightForeArm'),
+            upLegL: findBone('mixamorigLeftUpLeg', 'LeftUpLeg'),
+            upLegR: findBone('mixamorigRightUpLeg', 'RightUpLeg'),
+            legL:   findBone('mixamorigLeftLeg', 'LeftLeg'),
+            legR:   findBone('mixamorigRightLeg', 'RightLeg'),
+          }
+          console.log('[GalleryRoom3D] XBot bones resolved:', B)
+
+          // Helper: build a QuaternionKeyframeTrack from euler keyframes
+          const _q = new THREE.Quaternion()
+          const _e = new THREE.Euler()
+          const quatTrack = (bonePath: string | null, times: number[], eulers: number[][]) => {
+            if (!bonePath) return null
+            const flat = new Float32Array(times.length * 4)
+            for (let i = 0; i < eulers.length; i++) {
+              _e.set(eulers[i][0] || 0, eulers[i][1] || 0, eulers[i][2] || 0)
+              _q.setFromEuler(_e)
+              flat[i * 4]     = _q.x
+              flat[i * 4 + 1] = _q.y
+              flat[i * 4 + 2] = _q.z
+              flat[i * 4 + 3] = _q.w
+            }
+            return new THREE.QuaternionKeyframeTrack(`${bonePath}.quaternion`, times, flat)
+          }
+          const buildClip = (
+            name: string,
+            duration: number,
+            tracks: Array<ReturnType<typeof quatTrack>>,
+          ) => {
+            const valid = tracks.filter((t): t is THREE.QuaternionKeyframeTrack => t !== null)
+            return new THREE.AnimationClip(name, duration, valid)
+          }
+
+          // DUNK — deep squat + explosive leap + arm slam
+          const dunkClip = buildClip('dunk', 1.0, [
+            quatTrack(B.upLegL, [0, 0.25, 0.5, 1.0], [[0,0,0], [-0.9,0,0], [0.1,0,0], [0,0,0]]),
+            quatTrack(B.upLegR, [0, 0.25, 0.5, 1.0], [[0,0,0], [-0.9,0,0], [0.1,0,0], [0,0,0]]),
+            quatTrack(B.legL,   [0, 0.25, 0.5, 1.0], [[0,0,0], [1.4,0,0],  [0.1,0,0], [0,0,0]]),
+            quatTrack(B.legR,   [0, 0.25, 0.5, 1.0], [[0,0,0], [1.4,0,0],  [0.1,0,0], [0,0,0]]),
+            quatTrack(B.armL,   [0, 0.25, 0.5, 0.7, 1.0], [[0,0,0], [0,0,0.5], [-2.6,0,0], [-1.5,0,0], [0,0,0]]),
+            quatTrack(B.armR,   [0, 0.25, 0.5, 0.7, 1.0], [[0,0,0], [0,0,-0.5], [-2.6,0,0], [-1.5,0,0], [0,0,0]]),
+            quatTrack(B.spine,  [0, 0.25, 0.5, 1.0], [[0,0,0], [0.2,0,0], [-0.2,0,0], [0,0,0]]),
+          ])
+
+          // LAYUP — one-leg knee lift + extended right arm scoop
+          const layupClip = buildClip('layup', 1.0, [
+            quatTrack(B.upLegR, [0, 0.3, 0.6, 1.0], [[0,0,0], [-1.4,0,0], [-0.5,0,0], [0,0,0]]),
+            quatTrack(B.legR,   [0, 0.3, 0.6, 1.0], [[0,0,0], [1.2,0,0],  [0.3,0,0],  [0,0,0]]),
+            quatTrack(B.armR,   [0, 0.3, 0.6, 0.8, 1.0], [[0,0,0], [-1.0,0,0], [-2.4,0,0], [-1.8,0,0], [0,0,0]]),
+            quatTrack(B.forearmR, [0, 0.3, 0.6, 1.0], [[0,0,0], [-0.4,0,0], [-0.1,0,0], [0,0,0]]),
+            quatTrack(B.armL,   [0, 0.3, 0.6, 1.0], [[0,0,0], [0,0,0.4], [0,0,0.2], [0,0,0]]),
+            quatTrack(B.spine,  [0, 0.5, 1.0], [[0,0,0], [-0.15,0,0.1], [0,0,0]]),
+          ])
+
+          // FADEAWAY — back-leaning jump shot
+          const fadeawayClip = buildClip('fadeaway', 1.0, [
+            quatTrack(B.upLegL, [0, 0.3, 0.6, 1.0], [[0,0,0], [-0.6,0,0], [-0.2,0,0], [0,0,0]]),
+            quatTrack(B.upLegR, [0, 0.3, 0.6, 1.0], [[0,0,0], [-0.6,0,0], [-0.2,0,0], [0,0,0]]),
+            quatTrack(B.legL,   [0, 0.3, 0.6, 1.0], [[0,0,0], [0.9,0,0],  [0.2,0,0],  [0,0,0]]),
+            quatTrack(B.legR,   [0, 0.3, 0.6, 1.0], [[0,0,0], [0.9,0,0],  [0.2,0,0],  [0,0,0]]),
+            quatTrack(B.armR,   [0, 0.4, 0.7, 1.0], [[0,0,0], [-1.5,0,0], [-2.4,0,0], [0,0,0]]),
+            quatTrack(B.forearmR, [0, 0.4, 0.7, 1.0], [[0,0,0], [-0.6,0,0], [-1.4,0,0], [0,0,0]]),
+            quatTrack(B.spine,  [0, 0.3, 0.7, 1.0], [[0,0,0], [-0.5,0,0], [-0.7,0,0], [0,0,0]]),
+            quatTrack(B.head,   [0, 0.5, 1.0], [[0,0,0], [-0.3,0,0], [0,0,0]]),
+          ])
+
+          // REBOUND — both arms straight up, two-leg leap
+          const reboundClip = buildClip('rebound', 0.8, [
+            quatTrack(B.upLegL, [0, 0.2, 0.5, 0.8], [[0,0,0], [-0.7,0,0], [0,0,0], [0,0,0]]),
+            quatTrack(B.upLegR, [0, 0.2, 0.5, 0.8], [[0,0,0], [-0.7,0,0], [0,0,0], [0,0,0]]),
+            quatTrack(B.legL,   [0, 0.2, 0.5, 0.8], [[0,0,0], [1.1,0,0],  [0,0,0], [0,0,0]]),
+            quatTrack(B.legR,   [0, 0.2, 0.5, 0.8], [[0,0,0], [1.1,0,0],  [0,0,0], [0,0,0]]),
+            quatTrack(B.armL,   [0, 0.3, 0.5, 0.8], [[0,0,0], [-2.8,0,0.2], [-2.8,0,0.2], [0,0,0]]),
+            quatTrack(B.armR,   [0, 0.3, 0.5, 0.8], [[0,0,0], [-2.8,0,-0.2], [-2.8,0,-0.2], [0,0,0]]),
+            quatTrack(B.spine,  [0, 0.4, 0.8], [[0,0,0], [-0.1,0,0], [0,0,0]]),
+          ])
+
+          // DEFENSIVE STANCE — held pose, knees bent, arms out wide (loop)
+          const defenseClip = buildClip('defense', 0.5, [
+            quatTrack(B.upLegL, [0, 0.25, 0.5], [[-0.6,0,-0.25], [-0.65,0,-0.25], [-0.6,0,-0.25]]),
+            quatTrack(B.upLegR, [0, 0.25, 0.5], [[-0.6,0,0.25],  [-0.65,0,0.25],  [-0.6,0,0.25]]),
+            quatTrack(B.legL,   [0, 0.5], [[1.0,0,0], [1.0,0,0]]),
+            quatTrack(B.legR,   [0, 0.5], [[1.0,0,0], [1.0,0,0]]),
+            quatTrack(B.armL,   [0, 0.25, 0.5], [[0,0,1.0], [0.1,0,1.05], [0,0,1.0]]),
+            quatTrack(B.armR,   [0, 0.25, 0.5], [[0,0,-1.0], [0.1,0,-1.05], [0,0,-1.0]]),
+            quatTrack(B.spine,  [0, 0.5], [[0.2,0,0], [0.2,0,0]]),
+          ])
+
+          // BLOCK — vertical leap + right arm straight up
+          const blockClip = buildClip('block', 0.7, [
+            quatTrack(B.upLegL, [0, 0.2, 0.7], [[0,0,0], [-0.55,0,0], [0,0,0]]),
+            quatTrack(B.upLegR, [0, 0.2, 0.7], [[0,0,0], [-0.55,0,0], [0,0,0]]),
+            quatTrack(B.legL,   [0, 0.2, 0.7], [[0,0,0], [0.9,0,0], [0,0,0]]),
+            quatTrack(B.legR,   [0, 0.2, 0.7], [[0,0,0], [0.9,0,0], [0,0,0]]),
+            quatTrack(B.armR,   [0, 0.25, 0.5, 0.7], [[0,0,0], [-2.5,0,-0.1], [-2.8,0,-0.1], [0,0,0]]),
+            quatTrack(B.armL,   [0, 0.25, 0.5, 0.7], [[0,0,0], [-0.5,0,0.3], [-0.6,0,0.3], [0,0,0]]),
+          ])
+
+          // PASS — chest pass: both forearms extend forward
+          const passClip = buildClip('pass', 0.5, [
+            quatTrack(B.armL,   [0, 0.15, 0.3, 0.5], [[0,0,0], [-0.4,0,0.4], [-0.9,0,0.3], [0,0,0]]),
+            quatTrack(B.armR,   [0, 0.15, 0.3, 0.5], [[0,0,0], [-0.4,0,-0.4], [-0.9,0,-0.3], [0,0,0]]),
+            quatTrack(B.forearmL, [0, 0.15, 0.3, 0.5], [[0,0,0], [-1.2,0,0], [-0.2,0,0], [0,0,0]]),
+            quatTrack(B.forearmR, [0, 0.15, 0.3, 0.5], [[0,0,0], [-1.2,0,0], [-0.2,0,0], [0,0,0]]),
+          ])
+
+          // CROSSOVER — lateral lean + arms swap
+          const crossoverClip = buildClip('crossover', 0.4, [
+            quatTrack(B.spine,  [0, 0.2, 0.4], [[0,0,0], [0,0,0.35], [0,0,0]]),
+            quatTrack(B.armL,   [0, 0.2, 0.4], [[0,0,0], [-0.4,0.4,0.3], [0,0,0]]),
+            quatTrack(B.armR,   [0, 0.2, 0.4], [[0,0,0], [-0.4,-0.4,-0.3], [0,0,0]]),
+          ])
+
+          // PUMP FAKE — quick arm raise without ball release
+          const pumpFakeClip = buildClip('pumpFake', 0.35, [
+            quatTrack(B.armR,   [0, 0.15, 0.35], [[0,0,0], [-1.4,0,0], [0,0,0]]),
+            quatTrack(B.forearmR, [0, 0.15, 0.35], [[0,0,0], [-0.6,0,0], [0,0,0]]),
+            quatTrack(B.armL,   [0, 0.15, 0.35], [[0,0,0], [-0.3,0,0.2], [0,0,0]]),
+          ])
+
+          // JAB STEP — quick forward leg jab
+          const jabStepClip = buildClip('jabStep', 0.28, [
+            quatTrack(B.upLegR, [0, 0.14, 0.28], [[0,0,0], [-0.5,0,0], [0,0,0]]),
+            quatTrack(B.legR,   [0, 0.14, 0.28], [[0,0,0], [0.3,0,0], [0,0,0]]),
+            quatTrack(B.spine,  [0, 0.14, 0.28], [[0,0,0], [-0.15,0,0], [0,0,0]]),
+          ])
+
+          // JUMP SHOT — standard mid-range / three-point shooting form
+          const jumpShotClip = buildClip('jumpshot', 0.8, [
+            quatTrack(B.upLegL, [0, 0.25, 0.5, 0.8], [[0,0,0], [-0.55,0,0], [-0.1,0,0], [0,0,0]]),
+            quatTrack(B.upLegR, [0, 0.25, 0.5, 0.8], [[0,0,0], [-0.55,0,0], [-0.1,0,0], [0,0,0]]),
+            quatTrack(B.legL,   [0, 0.25, 0.5, 0.8], [[0,0,0], [0.9,0,0], [0.2,0,0], [0,0,0]]),
+            quatTrack(B.legR,   [0, 0.25, 0.5, 0.8], [[0,0,0], [0.9,0,0], [0.2,0,0], [0,0,0]]),
+            quatTrack(B.armR,   [0, 0.3, 0.55, 0.8], [[0,0,0], [-1.7,0,0], [-2.6,0,0], [0,0,0]]),
+            quatTrack(B.forearmR, [0, 0.3, 0.55, 0.8], [[0,0,0], [-0.8,0,0], [-0.2,0,0], [0,0,0]]),
+            quatTrack(B.armL,   [0, 0.3, 0.55, 0.8], [[0,0,0], [-0.5,0,0.3], [-0.5,0,0.3], [0,0,0]]),
+          ])
+
+          // Wire all custom clips into the clipMap. LoopOnce + clampWhenFinished
+          // means the clip stops on its last frame (we manually fade back).
+          const oneShotClips = [dunkClip, layupClip, fadeawayClip, reboundClip, blockClip, passClip, crossoverClip, pumpFakeClip, jabStepClip, jumpShotClip]
+          for (const clip of oneShotClips) {
+            const action = mixer.clipAction(clip)
+            action.setLoop(THREE.LoopOnce, 1)
+            action.clampWhenFinished = true
+            clipMap[clip.name.toLowerCase()] = action
+          }
+          // Defense loops while held
+          const defenseAction = mixer.clipAction(defenseClip)
+          defenseAction.setLoop(THREE.LoopRepeat, Infinity)
+          clipMap[defenseClip.name.toLowerCase()] = defenseAction
+
+          // Start Idle
+          const idleAction = clipMap['idle']
+          if (idleAction) idleAction.play()
+          const xbotState: any = {
+            mixer,
+            clips: clipMap,
+            currentClip: 'idle',
+            moveLockUntil: 0,
+            defenseHeld: false,
+          }
+          xbotState.play = (clipName: string, durationMs: number) => {
+            const key = clipName.toLowerCase()
+            const newAction = clipMap[key]
+            if (!newAction) return
+            const oldAction = clipMap[xbotState.currentClip]
+            newAction.reset().setEffectiveWeight(1).fadeIn(0.1).play()
+            if (oldAction && oldAction !== newAction) oldAction.fadeOut(0.1)
+            xbotState.currentClip = key
+            xbotState.moveLockUntil = performance.now() + durationMs
+          }
+          ;(avatarHolder.userData as any).xbot = xbotState
+          console.log('[GalleryRoom3D] XBot loaded w/ 2K clips', {
+            stock: gltf.animations.map(c => c.name),
+            authored: oneShotClips.map(c => c.name).concat([defenseClip.name]),
+          })
         },
         undefined,
         (err) => {
@@ -1984,6 +2177,14 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
       } else if (type === 'jabStep') {
         moveState.duration = 0.28
       }
+      // Phase 16.41 — play matching XBot body clip if rigged avatar is loaded
+      const xb2 = (avatarHolder.userData as any).xbot
+      if (xb2?.play) {
+        if (type === 'crossover') xb2.play('crossover', 400)
+        else if (type === 'pumpFake') xb2.play('pumpFake', 350)
+        else if (type === 'jabStep') xb2.play('jabStep', 280)
+        // 'spin' uses playerGroup.rotation.y so no clip needed
+      }
     }
     ;(scene.userData as any).triggerMove = triggerMove
 
@@ -2119,20 +2320,31 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         mixer: THREE.AnimationMixer
         clips: Record<string, THREE.AnimationAction>
         currentClip: string
+        moveLockUntil: number
+        defenseHeld: boolean
+        play: (clipName: string, durationMs: number) => void
       } | null
       if (xbot?.mixer) {
         xbot.mixer.update(dtSec)
-        const speed = Math.hypot(dirX, dirZ) * mag
-        let wantClip = 'idle'
-        if (speed > 0.6) wantClip = xbot.clips['running'] ? 'running' : (xbot.clips['walking'] ? 'walking' : 'idle')
-        else if (speed > 0.1) wantClip = xbot.clips['walking'] ? 'walking' : (xbot.clips['running'] ? 'running' : 'idle')
-        if (wantClip !== xbot.currentClip) {
-          const from = xbot.clips[xbot.currentClip]
-          const to = xbot.clips[wantClip]
-          if (to) {
-            to.reset().fadeIn(0.2).play()
-            if (from) from.fadeOut(0.2)
-            xbot.currentClip = wantClip
+        // Only auto-switch locomotion when no move clip is locking the avatar.
+        if (now > xbot.moveLockUntil) {
+          const speed = Math.hypot(dirX, dirZ) * mag
+          let wantClip = 'idle'
+          if (xbot.defenseHeld) {
+            wantClip = xbot.clips['defense'] ? 'defense' : 'idle'
+          } else if (speed > 0.6) {
+            wantClip = xbot.clips['running'] ? 'running' : (xbot.clips['walking'] ? 'walking' : 'idle')
+          } else if (speed > 0.1) {
+            wantClip = xbot.clips['walking'] ? 'walking' : (xbot.clips['running'] ? 'running' : 'idle')
+          }
+          if (wantClip !== xbot.currentClip) {
+            const from = xbot.clips[xbot.currentClip]
+            const to = xbot.clips[wantClip]
+            if (to) {
+              to.reset().fadeIn(0.2).play()
+              if (from) from.fadeOut(0.2)
+              xbot.currentClip = wantClip
+            }
           }
         }
       }
@@ -2241,6 +2453,59 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
           ;(ballRef2.ballState as any).airTime = 0
           ;(ballRef2.ballState as any).rimHitThisShot = false
           ;(ballRef2.ballState as any).bbHitThisShot = false
+        }
+      }
+      // Phase 16.41 — full 2K move keys (XBot rigged-avatar only):
+      // F = fadeaway shot, X = rebound grab, Z = block, T = pass
+      // G held = defensive stance
+      const xbotRef = (avatarHolder.userData as any).xbot
+      if (keys['f']) {
+        // shootRef reads keys['f'] internally to detect fadeaway — clear AFTER
+        if (shootRef.current) shootRef.current()
+        keys['f'] = false
+      }
+      if (keys['x']) {
+        keys['x'] = false
+        if (xbotRef?.play) xbotRef.play('rebound', 800)
+        // Add a quick vertical leap so the rebound visibly jumps
+        const pg = (scene.userData as any).playerGroupRef
+        const js = (scene.userData as any).jumpState
+        if (pg && js && !js.active) {
+          js.active = true
+          js.t = 0
+          js.baseY = pg.position.y
+          js.duration = 0.7
+          js.peakY = 1.6
+          js.ballRelease = 99  // never releases the ball during a rebound
+          js.isDunk = false
+          ;(js as any).pendingShot = null
+        }
+      }
+      if (keys['z']) {
+        keys['z'] = false
+        if (xbotRef?.play) xbotRef.play('block', 700)
+        const pg = (scene.userData as any).playerGroupRef
+        const js = (scene.userData as any).jumpState
+        if (pg && js && !js.active) {
+          js.active = true
+          js.t = 0
+          js.baseY = pg.position.y
+          js.duration = 0.6
+          js.peakY = 1.4
+          js.ballRelease = 99
+          js.isDunk = false
+          ;(js as any).pendingShot = null
+        }
+      }
+      if (keys['t']) {
+        keys['t'] = false
+        if (xbotRef?.play) xbotRef.play('pass', 500)
+      }
+      // Defense is hold-to-engage so we read keys['g'] every frame
+      if (xbotRef) {
+        const wantsDefense = !!keys['g']
+        if (wantsDefense !== xbotRef.defenseHeld) {
+          xbotRef.defenseHeld = wantsDefense
         }
       }
       // Gamepad A button (button 0) — also triggers shot
