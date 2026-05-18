@@ -35,15 +35,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const client = await clientPromise
     const db = client.db('soundchain')
 
-    // Fetch user + profile in parallel
-    const [user, profiles] = await Promise.all([
-      db.collection('users').findOne({ _id: new ObjectId(userId) }),
-      db.collection('profiles').find({ userId: new ObjectId(userId) }).limit(1).toArray(),
-    ])
-
+    // Fetch user first, then profile via user.profileId. Users reference
+    // profiles, not the reverse — there is no `userId` field on profiles.
+    // (Earlier version looked up `profiles.userId` and got null for every
+    // user; that broke top-nav avatar render + norman gate render.)
+    const user = await db.collection('users').findOne({ _id: new ObjectId(userId) })
     if (!user) return res.status(200).json({ me: null })
 
-    const profile = profiles[0] || null
+    const profile = user.profileId
+      ? await db.collection('profiles').findOne({ _id: new ObjectId(user.profileId) })
+      : null
 
     const me = {
       id: user._id.toString(),

@@ -133,7 +133,9 @@ export default function NormanPage() {
   // banked until the 3-headed-triangle phase (Piper + WebRTC + RTX 5000).
   useEffect(() => {
     if (!me) return
-    const handle = String(me.profile?.userHandle || '').toLowerCase()
+    // Fall back to user.handle when profile lookup is null (defense against
+    // /api/me transient profile:null states — gate must read both).
+    const handle = String(me.profile?.userHandle || me.handle || '').toLowerCase()
     if (handle && handle !== 'furda1') {
       router.replace('/')
     }
@@ -604,7 +606,11 @@ export default function NormanPage() {
     }
   }
 
-  if (me && String(me.profile?.userHandle || '').toLowerCase() !== 'furda1') {
+  // Gate the render only when we have a definitive non-furda1 handle.
+  // Reading both profile.userHandle AND user.handle so a transient
+  // profile:null doesn't blank the page mid-fetch (was the May-18 bug).
+  const resolvedHandle = String(me?.profile?.userHandle || me?.handle || '').toLowerCase()
+  if (me && resolvedHandle && resolvedHandle !== 'furda1') {
     return null
   }
 

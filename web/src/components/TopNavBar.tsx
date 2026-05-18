@@ -348,7 +348,7 @@ export const TopNavBar = ({
                 onClick={() => setSideMenuOpen && setSideMenuOpen(true)}
                 className="flex items-center p-1 rounded-full hover:bg-white/10 transition-all"
               >
-                <Avatar linkToProfile={false} profile={{ profilePicture: me?.profile.profilePicture }} />
+                <Avatar linkToProfile={false} profile={{ profilePicture: me?.profile?.profilePicture }} />
               </button>
             </>
           )}

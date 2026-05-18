@@ -769,7 +769,7 @@ export function DexNavBar() {
                   className="p-0.5 rounded-full hover:bg-white/10 hover:ring-2 hover:ring-cyan-400 transition"
                   aria-label="Account menu"
                 >
-                  <Avatar linkToProfile={false} profile={{ profilePicture: me.profile.profilePicture }} pixels={28} />
+                  <Avatar linkToProfile={false} profile={{ profilePicture: me.profile?.profilePicture }} pixels={28} />
                 </button>
 
                 {openPanel === 'avatar' && (
@@ -780,12 +780,12 @@ export function DexNavBar() {
                   >
                     {/* Header */}
                     <div className="flex items-center gap-3 p-3 border-b border-cyan-500/30 bg-cyan-950">
-                      <Avatar linkToProfile={false} profile={{ profilePicture: me.profile.profilePicture }} pixels={48} />
+                      <Avatar linkToProfile={false} profile={{ profilePicture: me.profile?.profilePicture }} pixels={48} />
                       <div className="flex-1 min-w-0">
                         <div className="text-sm font-bold text-white truncate">
-                          {me.profile.displayName || me.profile.userHandle || 'User'}
+                          {me.profile?.displayName || me.profile?.userHandle || me.handle || 'User'}
                         </div>
-                        <div className="text-[11px] text-cyan-400 truncate">@{me.profile.userHandle}</div>
+                        <div className="text-[11px] text-cyan-400 truncate">@{me.profile?.userHandle || me.handle}</div>
                       </div>
                       <button onClick={close} className="w-6 h-6 flex items-center justify-center rounded hover:bg-white/10" aria-label="Close">
                         <X className="w-4 h-4 text-gray-400" />
