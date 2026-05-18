@@ -75,26 +75,23 @@ export default function UnifiedCreateAccountPage() {
   }, [setTopNavBarProps, setIsAuthLayout, setHideBottomNavBar])
 
   useEffect(() => {
-    async function isLoggedInMagic() {
-      if (magic) {
-        const user = magic.user
-        const isLoggedIn = await user?.isLoggedIn()
-
-        if (user && isLoggedIn) {
-          const token = await user.getIdToken()
-          const metaData = await magic.user.getInfo()
-          const email = metaData?.email
-          setToken(token)
-          email && setEmail(email)
-          if (metaData?.publicAddress) setMagicWalletAddress(metaData.publicAddress)
-          if ((metaData as any)?.oauthProvider) setOauthProvider((metaData as any).oauthProvider)
-        } else {
-          router.push('/login')
-        }
+    async function hydrateMagicSessionIfPresent() {
+      if (!magic) return
+      try {
+        const isLoggedIn = await magic.user?.isLoggedIn()
+        if (!isLoggedIn) return
+        const idToken = await magic.user.getIdToken()
+        const metaData = await magic.user.getInfo()
+        setToken(idToken)
+        if (metaData?.email) setEmail(metaData.email)
+        if (metaData?.publicAddress) setMagicWalletAddress(metaData.publicAddress)
+        if ((metaData as any)?.oauthProvider) setOauthProvider((metaData as any).oauthProvider)
+      } catch {
+        // No Magic session — non-Magic flow handles auth via cookie/localStorage JWT
       }
     }
-    isLoggedInMagic()
-  }, [magic, router])
+    hydrateMagicSessionIfPresent()
+  }, [magic])
 
   const toggleTerms = () => {
     setTermsAccepted(!termsAccepted)
@@ -182,7 +179,12 @@ export default function UnifiedCreateAccountPage() {
   }
 
   const handleFinalSubmit = () => {
-    router.push(config.redirectUrlPostLogin)
+    // Hard reload so Apollo picks up the freshly-set JWT and lands the user signed in.
+    if (typeof window !== 'undefined') {
+      window.location.assign(config.redirectUrlPostLogin)
+    } else {
+      router.push(config.redirectUrlPostLogin)
+    }
   }
 
   const validationSchema: yup.Schema<FormValues> = yup.object().shape({
@@ -312,6 +314,9 @@ export default function UnifiedCreateAccountPage() {
                                     type="text"
                                     name="displayName"
                                     placeholder="Your name"
+                                    autoCapitalize="words"
+                                    autoCorrect="off"
+                                    spellCheck={false}
                                     value={formikProps.values.displayName}
                                     onChange={formikProps.handleChange}
                                     onBlur={formikProps.handleBlur}

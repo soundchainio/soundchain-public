@@ -282,7 +282,13 @@ export default function LoginPage() {
 
     const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
     console.log('[FaceID Gate] Redirecting to:', redirectUrl);
-    router.push(redirectUrl);
+    // Hard reload so Apollo re-initializes with the freshly-set JWT.
+    // router.push keeps the stale (logged-out) me cache and lands user on a logged-out page.
+    if (typeof window !== 'undefined') {
+      window.location.assign(redirectUrl);
+    } else {
+      router.push(redirectUrl);
+    }
   }
 
   useEffect(() => {
