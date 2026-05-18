@@ -81,6 +81,33 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
   const [citySearchOpen, setCitySearchOpen] = useState(false)
   const [citySearchValue, setCitySearchValue] = useState('')
   const [citySearchLoading, setCitySearchLoading] = useState(false)
+  const citySearchInputRef = useRef<HTMLInputElement>(null)
+  // Phase 16.32 — aggressive focus + iOS-keyboard-summon when modal opens
+  useEffect(() => {
+    if (!citySearchOpen) return
+    // Restore body touchAction in case anything else set it to 'none' (e.g.
+    // an earlier CharacterDesigner modal cleanup race). iOS Safari refuses
+    // to show the keyboard when body has touchAction: none on it.
+    const prevTouchAction = document.body.style.touchAction
+    document.body.style.touchAction = 'auto'
+    // Multiple focus attempts — first immediate, then after iOS finishes
+    // the modal mount animation. autoFocus alone doesn't reliably open the
+    // iOS soft keyboard for programmatically-opened modals.
+    const tries = [10, 100, 300, 600].map((delay) =>
+      setTimeout(() => {
+        const el = citySearchInputRef.current
+        if (el) {
+          el.focus()
+          // Trigger iOS keyboard via click on focused element
+          try { el.click() } catch {}
+        }
+      }, delay),
+    )
+    return () => {
+      tries.forEach(clearTimeout)
+      document.body.style.touchAction = prevTouchAction
+    }
+  }, [citySearchOpen])
   const [placedFurniture, setPlacedFurniture] = useState<PlacedFurniture[]>(() => getPlacedFurniture(ownerHandle))
   const [placingItem, setPlacingItem] = useState<string | null>(null)
   const [hideFurnitureCount, setHideFurnitureCount] = useState(false)
@@ -1372,19 +1399,30 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         </button>
       )}
 
-      {/* Phase 16.29 — CITY SEARCH MODAL (full-screen overlay, bulletproof typing) */}
+      {/* Phase 16.29 + 16.32 — CITY SEARCH MODAL.
+          - z-[200] above EVERYTHING (was 100, but SC chrome has stuff at 100+)
+          - Outer backdrop closes on mousedown of itself ONLY (not touch — iOS
+            was triggering close before the input got the tap)
+          - Input ref + multi-attempt focus + body touchAction reset
+          - font-size 16px+ to prevent iOS zoom-on-focus
+          - autoFocus + iOS touch shenanigans handled by the useEffect above */}
       {citySearchOpen && (
         <div
-          className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm flex items-start sm:items-center justify-center p-4"
-          onClick={() => setCitySearchOpen(false)}
+          className="fixed inset-0 z-[200] bg-black/70 backdrop-blur-sm flex items-start sm:items-center justify-center p-4"
+          onMouseDown={(e) => { if (e.target === e.currentTarget) setCitySearchOpen(false) }}
         >
           <div
             className="w-full max-w-md bg-[#0a0a0a] border-2 border-yellow-500/40 rounded-xl shadow-2xl shadow-yellow-500/20 overflow-hidden mt-12 sm:mt-0"
-            onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
           >
             <div className="px-4 py-3 border-b border-yellow-500/20 flex items-center justify-between">
               <div className="font-mono text-sm text-yellow-300 font-bold">🌍 SEARCH CITY / STREET</div>
-              <button onClick={() => setCitySearchOpen(false)} className="text-gray-400 hover:text-white text-lg leading-none px-2">×</button>
+              <button
+                type="button"
+                onClick={() => setCitySearchOpen(false)}
+                className="text-gray-400 hover:text-white text-2xl leading-none px-3 py-1"
+              >×</button>
             </div>
             <form
               onSubmit={async (e) => {
@@ -1419,28 +1457,46 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
               }}
               className="p-4 space-y-3"
             >
-              <input
-                type="text"
-                inputMode="text"
-                autoComplete="off"
-                autoCorrect="off"
-                autoCapitalize="words"
-                spellCheck={false}
-                autoFocus
-                value={citySearchValue}
-                onChange={(e) => setCitySearchValue(e.target.value)}
-                placeholder="e.g. Times Square Manhattan"
-                className="w-full bg-black border-2 border-yellow-500/30 rounded-lg px-3 py-3 text-base font-mono text-yellow-200 placeholder:text-yellow-500/30 outline-none focus:border-yellow-500/70"
-              />
-              <div className="text-[10px] font-mono text-yellow-500/50 px-1">
-                Try: <button type="button" onClick={() => setCitySearchValue('Times Square Manhattan')} className="underline hover:text-yellow-400">Times Square Manhattan</button> ·{' '}
-                <button type="button" onClick={() => setCitySearchValue('Shibuya Crossing Tokyo')} className="underline hover:text-yellow-400">Shibuya Crossing Tokyo</button> ·{' '}
-                <button type="button" onClick={() => setCitySearchValue('Sunset Boulevard Los Angeles')} className="underline hover:text-yellow-400">Sunset Blvd LA</button>
+              {/* Tap-to-focus label so iOS users have a clear interaction target */}
+              <label className="block">
+                <span className="text-[10px] font-mono text-yellow-500/70 uppercase tracking-wider block mb-1">Tap below to type</span>
+                <input
+                  ref={citySearchInputRef}
+                  type="text"
+                  inputMode="search"
+                  enterKeyHint="search"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="words"
+                  spellCheck={false}
+                  tabIndex={0}
+                  value={citySearchValue}
+                  onChange={(e) => setCitySearchValue(e.target.value)}
+                  onFocus={(e) => e.currentTarget.scrollIntoView?.({ block: 'center', behavior: 'smooth' })}
+                  placeholder="e.g. Times Square Manhattan"
+                  // font-size: 16px is critical on iOS Safari — anything smaller
+                  // triggers auto-zoom + can prevent keyboard from showing.
+                  style={{ fontSize: '16px', WebkitAppearance: 'none', WebkitUserSelect: 'text', userSelect: 'text' }}
+                  className="w-full bg-black border-2 border-yellow-500/40 rounded-lg px-4 py-4 font-mono text-yellow-100 placeholder:text-yellow-500/30 outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-500/30"
+                />
+              </label>
+              <div className="text-[11px] font-mono text-yellow-500/60 px-1 leading-relaxed">
+                Try tapping one to fill the field:
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {['Times Square Manhattan', 'Shibuya Crossing Tokyo', 'Sunset Blvd LA', 'Brooklyn', 'Downtown Miami'].map((q) => (
+                    <button key={q} type="button" onClick={() => {
+                      setCitySearchValue(q)
+                      citySearchInputRef.current?.focus()
+                    }} className="px-2 py-1 rounded bg-yellow-500/10 border border-yellow-500/30 text-yellow-300 hover:bg-yellow-500/20">
+                      {q}
+                    </button>
+                  ))}
+                </div>
               </div>
               <button
                 type="submit"
                 disabled={!citySearchValue.trim() || citySearchLoading}
-                className="w-full py-3 rounded-lg bg-gradient-to-br from-yellow-500/30 to-orange-500/40 border-2 border-yellow-500/50 text-yellow-200 text-sm font-mono font-bold hover:from-yellow-500/40 hover:to-orange-500/50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                className="w-full py-3 rounded-lg bg-gradient-to-br from-yellow-500/30 to-orange-500/40 border-2 border-yellow-500/50 text-yellow-200 text-base font-mono font-bold hover:from-yellow-500/40 hover:to-orange-500/50 disabled:opacity-40 disabled:cursor-not-allowed transition"
               >
                 {citySearchLoading ? '🔍 SEARCHING…' : '🚀 TELEPORT HERE'}
               </button>
