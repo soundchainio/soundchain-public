@@ -1575,8 +1575,68 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
     const avatarHolder = new THREE.Group()
     playerGroup.add(avatarHolder)
 
+    // Phase 16.40 — XBot rigged avatar w/ AnimationMixer for sports themes.
+    // Store the active mixer + clips on avatarHolder.userData so the animate
+    // loop can drive mixer.update(dt) + cross-fade clips based on speed.
+    const buildXBotPlayer = () => {
+      const loader = new GLTFLoader()
+      loader.load(
+        'https://threejs.org/examples/models/gltf/Xbot.glb',
+        (gltf) => {
+          const model = gltf.scene
+          const preBox = new THREE.Box3().setFromObject(model)
+          const preSize = new THREE.Vector3(); preBox.getSize(preSize)
+          // XBot ships at ~1.8u tall; scale to match if it's off
+          if (preSize.y > 0 && (preSize.y < 0.5 || preSize.y > 4)) {
+            model.scale.setScalar(1.8 / preSize.y)
+          }
+          model.traverse((obj: any) => {
+            if (obj.isMesh) {
+              obj.castShadow = true
+              obj.receiveShadow = true
+            }
+          })
+          avatarHolder.add(model)
+          // AnimationMixer — XBot bundles Idle / Walking / Running clips
+          if (gltf.animations && gltf.animations.length > 0) {
+            const mixer = new THREE.AnimationMixer(model)
+            const clipMap: Record<string, THREE.AnimationAction> = {}
+            for (const clip of gltf.animations) {
+              const key = clip.name.toLowerCase()
+              const action = mixer.clipAction(clip)
+              clipMap[key] = action
+            }
+            // Start with Idle if available
+            const idleClip = clipMap['idle'] || gltf.animations[0]
+            if (idleClip instanceof THREE.AnimationAction) {
+              idleClip.play()
+            } else {
+              mixer.clipAction(idleClip).play()
+            }
+            ;(avatarHolder.userData as any).xbot = {
+              mixer,
+              clips: clipMap,
+              currentClip: 'idle',
+            }
+          }
+          console.log('[GalleryRoom3D] XBot loaded', { clips: gltf.animations.map(c => c.name) })
+        },
+        undefined,
+        (err) => {
+          console.error('[GalleryRoom3D] XBot load failed, falling back to humanoid:', err)
+          buildCapsule({ bodyColor: '#dc2626' } as CharacterConfig)
+        },
+      )
+    }
+
     const buildAvatar = (character: CharacterConfig) => {
-      // Tear down old meshes first
+      // Tear down old meshes first + stop any animation mixer
+      const oldXbot = (avatarHolder.userData as any).xbot
+      if (oldXbot?.mixer) {
+        oldXbot.mixer.stopAllAction()
+      }
+      ;(avatarHolder.userData as any).xbot = null
+      ;(avatarHolder.userData as any).limbs = null
       while (avatarHolder.children.length > 0) {
         const child = avatarHolder.children[0]
         avatarHolder.remove(child)
@@ -1588,11 +1648,13 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         }
       }
       const glbUrl = (character as any).aiGlbUrl || character.humanGlbUrl
-      // Phase 16.39 — sports themes (gym + blacktop) force the humanoid build.
-      // TripoSR-generated aiGlbUrl meshes are typically untextured single-color
-      // blobs that render as a yellow pill at gallery distance; gameplay needs
-      // a known anthropomorphic figure to feel like a basketball player.
+      // Phase 16.40 — sports themes (gym + blacktop) load XBot with bundled
+      // walk/run/idle animations. Other themes still honor saved character GLBs.
       const isSportsTheme = theme === 'gym' || theme === 'blacktop'
+      if (isSportsTheme) {
+        buildXBotPlayer()
+        return
+      }
       const isGlbAvatar = !!glbUrl && !isSportsTheme
       console.log('[GalleryRoom3D] character', {
         type: character.type,
@@ -2050,9 +2112,32 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         }
       }
 
-      // Phase 16.39 — Walk-cycle animation. Swings hip/shoulder groups when
-      // moving; idle pose otherwise. Plus a subtle dribble bob when ball is
-      // held and moving so the body reads "in motion with ball."
+      // Phase 16.40 — XBot AnimationMixer tick + clip cross-fade by speed.
+      // Rigged avatar handles walk/run/idle natively; primitive limb swing
+      // (below) only runs as fallback when the XBot fetch failed.
+      const xbot = (avatarHolder.userData as any).xbot as {
+        mixer: THREE.AnimationMixer
+        clips: Record<string, THREE.AnimationAction>
+        currentClip: string
+      } | null
+      if (xbot?.mixer) {
+        xbot.mixer.update(dtSec)
+        const speed = Math.hypot(dirX, dirZ) * mag
+        let wantClip = 'idle'
+        if (speed > 0.6) wantClip = xbot.clips['running'] ? 'running' : (xbot.clips['walking'] ? 'walking' : 'idle')
+        else if (speed > 0.1) wantClip = xbot.clips['walking'] ? 'walking' : (xbot.clips['running'] ? 'running' : 'idle')
+        if (wantClip !== xbot.currentClip) {
+          const from = xbot.clips[xbot.currentClip]
+          const to = xbot.clips[wantClip]
+          if (to) {
+            to.reset().fadeIn(0.2).play()
+            if (from) from.fadeOut(0.2)
+            xbot.currentClip = wantClip
+          }
+        }
+      }
+
+      // Phase 16.39 — Walk-cycle animation (primitive humanoid fallback only).
       const limbs = (avatarHolder.userData as any).limbs as {
         legL: THREE.Group; legR: THREE.Group; armL: THREE.Group; armR: THREE.Group;
         torso: THREE.Mesh; head: THREE.Mesh; hair: THREE.Mesh; hips: THREE.Mesh;
