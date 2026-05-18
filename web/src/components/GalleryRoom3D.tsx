@@ -627,6 +627,8 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
           ballStateBG.airborneFrames = 0
           ;(ballStateBG as any).rimHitThisShot = false
           ;(ballStateBG as any).bbHitThisShot = false
+          ;(ballStateBG as any).airTime = 0
+          ballStateBG.returnTimer = 0
           setHoopScore((s) => ({ ...s, attempts: s.attempts + 1 }))
           ;(jumpStateBG as any).pendingShot = null
         }
@@ -678,18 +680,38 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
             ballStateBG.vel.z *= 0.6
           } else {
             ballStateBG.vel.set(0, 0, 0)
-            ballStateBG.returnTimer = 1.0
+            ballStateBG.returnTimer = 1.2
           }
           if (!ballStateBG.scoredThisShot && ballStateBG.airborneFrames > 5) {
             setHoopScore((s) => ({ ...s, streak: 0 }))
             ballStateBG.scoredThisShot = true
           }
         }
+        // Phase 16.39 — out-of-bounds rescue: if ball leaves the court area
+        // (over the fence on blacktop, against a wall in gym, or stalls in
+        // mid-air), force a return so the player isn't stuck without a ball.
+        const courtBound = theme === 'gym' ? 16 : 10
+        const outOfBounds = Math.abs(ballBG.position.x) > courtBound ||
+                            Math.abs(ballBG.position.z) > courtBound ||
+                            ballBG.position.y > 25
+        if (outOfBounds && ballStateBG.returnTimer <= 0) {
+          ballStateBG.returnTimer = 0.4
+        }
+        // Watchdog: any shot in flight for more than 4 seconds without scoring
+        // or settling gets force-returned (catches edge cases like ball wedged
+        // on backboard top).
+        ;(ballStateBG as any).airTime = ((ballStateBG as any).airTime || 0) + g
+        if ((ballStateBG as any).airTime > 4 && ballStateBG.returnTimer <= 0) {
+          ballStateBG.returnTimer = 0.1
+        }
         if (ballStateBG.returnTimer > 0) {
           ballStateBG.returnTimer -= g
           if (ballStateBG.returnTimer <= 0) {
             ballStateBG.held = true
             ballStateBG.vel.set(0, 0, 0)
+            ;(ballStateBG as any).airTime = 0
+            ;(ballStateBG as any).rimHitThisShot = false
+            ;(ballStateBG as any).bbHitThisShot = false
           }
         }
       }
@@ -1007,6 +1029,8 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
           ballState.airborneFrames = 0
           ;(ballState as any).rimHitThisShot = false
           ;(ballState as any).bbHitThisShot = false
+          ;(ballState as any).airTime = 0
+          ballState.returnTimer = 0
           setHoopScore((s) => ({ ...s, attempts: s.attempts + 1 }))
           ;(jumpState as any).pendingShot = null
         }
@@ -1054,7 +1078,7 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
             ballState.vel.z *= 0.6
           } else {
             ballState.vel.set(0, 0, 0)
-            ballState.returnTimer = 1.0  // return to hand after 1s
+            ballState.returnTimer = 1.2  // return to hand after 1.2s
           }
           if (!ballState.scoredThisShot && ballState.airborneFrames > 5) {
             // Missed shot — break streak
@@ -1062,12 +1086,27 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
             ballState.scoredThisShot = true  // prevent double-reset
           }
         }
+        // Phase 16.39 — out-of-bounds rescue + 4s watchdog so ball never
+        // gets stuck off-court or wedged on geometry
+        const outOfBoundsCity = Math.abs(ball.position.x) > 12 ||
+                                Math.abs(ball.position.z - RIM_POS.z) > 14 ||
+                                ball.position.y > 25
+        if (outOfBoundsCity && ballState.returnTimer <= 0) {
+          ballState.returnTimer = 0.4
+        }
+        ;(ballState as any).airTime = ((ballState as any).airTime || 0) + g
+        if ((ballState as any).airTime > 4 && ballState.returnTimer <= 0) {
+          ballState.returnTimer = 0.1
+        }
         // Return to hand after ball settles
         if (ballState.returnTimer > 0) {
           ballState.returnTimer -= g
           if (ballState.returnTimer <= 0) {
             ballState.held = true
             ballState.vel.set(0, 0, 0)
+            ;(ballState as any).airTime = 0
+            ;(ballState as any).rimHitThisShot = false
+            ;(ballState as any).bbHitThisShot = false
           }
         }
       }
@@ -1546,11 +1585,17 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         }
       }
       const glbUrl = (character as any).aiGlbUrl || character.humanGlbUrl
-      const isGlbAvatar = !!glbUrl
+      // Phase 16.39 — sports themes (gym + blacktop) force the humanoid build.
+      // TripoSR-generated aiGlbUrl meshes are typically untextured single-color
+      // blobs that render as a yellow pill at gallery distance; gameplay needs
+      // a known anthropomorphic figure to feel like a basketball player.
+      const isSportsTheme = theme === 'gym' || theme === 'blacktop'
+      const isGlbAvatar = !!glbUrl && !isSportsTheme
       console.log('[GalleryRoom3D] character', {
         type: character.type,
         hasAiGlb: !!(character as any).aiGlbUrl,
         hasHumanGlb: !!character.humanGlbUrl,
+        sportsTheme: isSportsTheme,
         willLoadGlb: isGlbAvatar,
       })
       if (isGlbAvatar) {
@@ -2064,6 +2109,21 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
       if (keys['v']) { keys['v'] = false; triggerMove('spin') }
       if (keys['p']) { keys['p'] = false; triggerMove('pumpFake') }
       if (keys['j']) { keys['j'] = false; triggerMove('jabStep') }
+      // R = recall ball to hand (emergency rescue if ball is lost)
+      if (keys['r']) {
+        keys['r'] = false
+        const ballRef2 = (scene.userData as any).ball
+        if (ballRef2) {
+          ballRef2.ballState.held = true
+          ballRef2.ballState.vel.set(0, 0, 0)
+          ballRef2.ballState.scoredThisShot = false
+          ballRef2.ballState.airborneFrames = 0
+          ballRef2.ballState.returnTimer = 0
+          ;(ballRef2.ballState as any).airTime = 0
+          ;(ballRef2.ballState as any).rimHitThisShot = false
+          ;(ballRef2.ballState as any).bbHitThisShot = false
+        }
+      }
       // Gamepad A button (button 0) — also triggers shot
       try {
         const pads = (typeof navigator !== 'undefined' && navigator.getGamepads) ? navigator.getGamepads() : []
