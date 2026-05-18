@@ -2650,6 +2650,59 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
     <div className="relative w-full h-full" tabIndex={0} onFocus={() => containerRef.current?.focus()}>
       <div ref={containerRef} className="absolute inset-0" tabIndex={0} style={{ cursor: 'grab', outline: 'none' }} onClick={() => containerRef.current?.focus()} />
 
+      {/* Phase 16.41 — mobile action grid for full NBA2K move-set. Each
+          button dispatches the matching keyboard event so the same animate-
+          loop handlers fire on touch + keyboard alike. Hold-to-engage on
+          DEFENSE: keydown on pointerDown, keyup on pointerUp/Leave/Cancel. */}
+      {(theme === 'gym' || theme === 'blacktop' || theme === 'city') && (() => {
+        const tap = (k: string) => (e: React.PointerEvent) => {
+          e.stopPropagation()
+          window.dispatchEvent(new KeyboardEvent('keydown', { key: k }))
+        }
+        const press = (k: string, down: boolean) => (e: React.PointerEvent) => {
+          e.stopPropagation()
+          window.dispatchEvent(new KeyboardEvent(down ? 'keydown' : 'keyup', { key: k }))
+        }
+        type Btn = { label: string; emoji: string; key: string; color: string }
+        const moves: Btn[] = [
+          { label: 'REB',  emoji: '⬆️', key: 'x', color: 'from-cyan-500/40 to-cyan-700/60 border-cyan-400/70' },
+          { label: 'BLK',  emoji: '🛡️', key: 'z', color: 'from-cyan-500/40 to-cyan-700/60 border-cyan-400/70' },
+          { label: 'PASS', emoji: '🤲', key: 't', color: 'from-emerald-500/40 to-emerald-700/60 border-emerald-400/70' },
+          { label: 'FADE', emoji: '🎯', key: 'f', color: 'from-orange-500/40 to-orange-700/60 border-orange-400/70' },
+          { label: 'X-O',  emoji: '🔄', key: 'c', color: 'from-purple-500/40 to-purple-700/60 border-purple-400/70' },
+          { label: 'SPIN', emoji: '💫', key: 'v', color: 'from-purple-500/40 to-purple-700/60 border-purple-400/70' },
+          { label: 'PMP',  emoji: '👆', key: 'p', color: 'from-purple-500/40 to-purple-700/60 border-purple-400/70' },
+          { label: 'JAB',  emoji: '➡️', key: 'j', color: 'from-purple-500/40 to-purple-700/60 border-purple-400/70' },
+        ]
+        return (
+          <div className="absolute bottom-3 right-3 z-30 flex flex-col gap-1.5 sm:hidden pointer-events-auto">
+            <div className="grid grid-cols-2 gap-1.5">
+              {moves.map(m => (
+                <button
+                  key={m.key}
+                  onPointerDown={tap(m.key)}
+                  className={`w-12 h-12 rounded-lg bg-gradient-to-br ${m.color} backdrop-blur border-2 text-white text-[10px] font-mono font-bold active:scale-95 transition flex flex-col items-center justify-center gap-0.5 shadow-md`}
+                  aria-label={m.label}
+                >
+                  <span className="text-base leading-none">{m.emoji}</span>
+                  <span className="leading-none">{m.label}</span>
+                </button>
+              ))}
+            </div>
+            <button
+              onPointerDown={press('g', true)}
+              onPointerUp={press('g', false)}
+              onPointerLeave={press('g', false)}
+              onPointerCancel={press('g', false)}
+              className="w-full h-9 rounded-lg bg-gradient-to-br from-red-500/40 to-red-700/60 backdrop-blur border-2 border-red-400/70 text-white text-[10px] font-mono font-bold active:scale-95 transition flex items-center justify-center gap-1 shadow-md"
+              aria-label="Defensive stance (hold)"
+            >
+              🛡️ DEF (hold)
+            </button>
+          </div>
+        )
+      })()}
+
       {/* Mobile touch controls — D-pad overlay */}
       <div className="absolute bottom-16 left-3 z-10 sm:hidden flex flex-col items-center gap-1">
         <button onTouchStart={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'w' }))} onTouchEnd={() => window.dispatchEvent(new KeyboardEvent('keyup', { key: 'w' }))} className="w-10 h-10 rounded bg-white/10 backdrop-blur border border-white/20 flex items-center justify-center text-white text-lg active:bg-white/20">↑</button>
