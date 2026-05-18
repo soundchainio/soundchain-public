@@ -1,4 +1,4 @@
-import fetch from 'cross-fetch'
+import baseFetch from 'cross-fetch'
 import { useMemo } from 'react'
 
 import { config } from 'config'
@@ -29,7 +29,27 @@ let jwt = (isBrowser && Cookies.get(jwtKey)) || undefined
 
 const apiUrl = config.apiUrl ?? 'http://localhost:4000/graphql'
 console.log('🔗 Apollo API URL:', apiUrl, '| env:', config.apiUrl)
-const httpLink = createHttpLink({ uri: apiUrl, fetch })
+
+// HOTFIX 2026-05-18: api.soundchain.io custom-domain TLS bridge is DOWN.
+// Default fetch keeps sockets open ~8s+ on TLS timeout. With 10-30 Apollo
+// queries per page, mobile radios stay awake tens of seconds per nav and
+// the battery cooks. Wrap fetch with a 2.5s AbortController so failed
+// queries fail fast and the radio can sleep. When api.soundchain.io is
+// repaired and responding sub-500ms, this timeout is a no-op for healthy
+// queries. Phase 7e Apollo strip is the long-term fix.
+const APOLLO_FETCH_TIMEOUT_MS = 2500
+const timeoutFetch: typeof baseFetch = (input: any, init?: any) => {
+  const controller = typeof AbortController !== 'undefined' ? new AbortController() : null
+  const timeoutId = controller
+    ? setTimeout(() => controller.abort(), APOLLO_FETCH_TIMEOUT_MS)
+    : null
+  const mergedInit = controller ? { ...(init || {}), signal: controller.signal } : init
+  return (baseFetch as any)(input, mergedInit).finally(() => {
+    if (timeoutId !== null) clearTimeout(timeoutId)
+  })
+}
+
+const httpLink = createHttpLink({ uri: apiUrl, fetch: timeoutFetch })
 
 export function createApolloClient(context?: GetServerSidePropsContext) {
   const authLink = setContext((_, { headers }) => {
@@ -109,7 +129,7 @@ export const apolloClient = createApolloClient()
 // This ensures SSR always hits the correct API endpoint
 export function initializeApollo() {
   const ssrApiUrl = config.apiUrl ?? 'https://api.soundchain.io/graphql'
-  const ssrHttpLink = createHttpLink({ uri: ssrApiUrl, fetch })
+  const ssrHttpLink = createHttpLink({ uri: ssrApiUrl, fetch: timeoutFetch })
 
   const errorLink = onError(({ graphQLErrors, networkError }) => {
     if (graphQLErrors) {
