@@ -152,6 +152,94 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
     const h = container.clientHeight || window.innerHeight - 200
     const themeCfg = THEME_CONFIG[theme]
 
+    // ─── Phase 16.39 — Basketball SFX synthesized via Web Audio API ──
+    // Zero external files, no licensing, no bundle weight. Each sound is
+    // an oscillator/noise burst shaped via envelope to match its role.
+    // Lazy-init the AudioContext on first user gesture (Chrome autoplay
+    // policy) — the SHOOT button or any keypress is enough.
+    let audioCtx: AudioContext | null = null
+    const ensureAudioCtx = (): AudioContext | null => {
+      if (audioCtx) return audioCtx
+      try {
+        const AC = (window as any).AudioContext || (window as any).webkitAudioContext
+        if (!AC) return null
+        audioCtx = new AC()
+      } catch { audioCtx = null }
+      return audioCtx
+    }
+    const playDribble = () => {
+      const ctx = ensureAudioCtx(); if (!ctx) return
+      const now = ctx.currentTime
+      const osc = ctx.createOscillator()
+      osc.type = 'sine'
+      osc.frequency.setValueAtTime(95, now)
+      osc.frequency.exponentialRampToValueAtTime(45, now + 0.08)
+      const gain = ctx.createGain()
+      gain.gain.setValueAtTime(0.22, now)
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.09)
+      osc.connect(gain).connect(ctx.destination)
+      osc.start(now); osc.stop(now + 0.1)
+    }
+    const playSwish = () => {
+      const ctx = ensureAudioCtx(); if (!ctx) return
+      const now = ctx.currentTime
+      const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.45), ctx.sampleRate)
+      const data = buf.getChannelData(0)
+      for (let i = 0; i < data.length; i++) {
+        const env = Math.pow(1 - i / data.length, 1.8)
+        data[i] = (Math.random() * 2 - 1) * env
+      }
+      const noise = ctx.createBufferSource()
+      noise.buffer = buf
+      const filter = ctx.createBiquadFilter()
+      filter.type = 'bandpass'
+      filter.frequency.value = 2400
+      filter.Q.value = 1.2
+      const gain = ctx.createGain()
+      gain.gain.value = 0.28
+      noise.connect(filter).connect(gain).connect(ctx.destination)
+      noise.start(now); noise.stop(now + 0.45)
+    }
+    const playRim = () => {
+      const ctx = ensureAudioCtx(); if (!ctx) return
+      const now = ctx.currentTime
+      const osc = ctx.createOscillator()
+      osc.type = 'triangle'
+      osc.frequency.setValueAtTime(2200, now)
+      osc.frequency.exponentialRampToValueAtTime(1100, now + 0.18)
+      const gain = ctx.createGain()
+      gain.gain.setValueAtTime(0.18, now)
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2)
+      osc.connect(gain).connect(ctx.destination)
+      osc.start(now); osc.stop(now + 0.22)
+    }
+    const playBackboard = () => {
+      const ctx = ensureAudioCtx(); if (!ctx) return
+      const now = ctx.currentTime
+      const osc = ctx.createOscillator()
+      osc.type = 'square'
+      osc.frequency.setValueAtTime(180, now)
+      osc.frequency.exponentialRampToValueAtTime(65, now + 0.14)
+      const gain = ctx.createGain()
+      gain.gain.setValueAtTime(0.3, now)
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.16)
+      osc.connect(gain).connect(ctx.destination)
+      osc.start(now); osc.stop(now + 0.18)
+    }
+    const playSqueak = () => {
+      const ctx = ensureAudioCtx(); if (!ctx) return
+      const now = ctx.currentTime
+      const osc = ctx.createOscillator()
+      osc.type = 'sawtooth'
+      osc.frequency.setValueAtTime(1500 + Math.random() * 500, now)
+      osc.frequency.exponentialRampToValueAtTime(700, now + 0.1)
+      const gain = ctx.createGain()
+      gain.gain.setValueAtTime(0.07, now)
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12)
+      osc.connect(gain).connect(ctx.destination)
+      osc.start(now); osc.stop(now + 0.13)
+    }
+
     // ─── Scene Setup ─────────────────────────────────────────
     const scene = new THREE.Scene()
     sceneRef.current = scene
@@ -288,13 +376,33 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         keyPaint.rotation.x = -Math.PI / 2
         keyPaint.position.set(0, 0.025, baseZ + 2.8 * dir)
         scene.add(keyPaint)
-        // Three-point arc
-        for (let a = -Math.PI * 0.4; a <= Math.PI * 0.4; a += 0.05) {
-          const r = 4.5
-          const seg = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.08), lineMat)
+        // Three-point line — basket-centered arc + corner-3 straight segments
+        // NBA: 23.75ft (7.24m) radius from basket center. In our 15u-wide
+        // court scale, ~6.5u radius keeps the arc inside the sidelines, and
+        // corner-3 lines run straight from baseline to where the arc begins
+        // (mirrors how NBA courts handle the sideline cutoff).
+        const arc3R = 6.5
+        const basketZ = baseZ - 0.3 * dir
+        // Corner-3 straight lines (parallel to sideline, at x = ±arc3R)
+        const corner3StartZ = baseZ - 1.5 * dir  // at baseline
+        const corner3EndZ = basketZ              // where arc starts
+        const corner3MidZ = (corner3StartZ + corner3EndZ) / 2
+        const corner3Len = Math.abs(corner3EndZ - corner3StartZ)
+        for (const xSign of [-1, 1]) {
+          const corner3Line = new THREE.Mesh(
+            new THREE.PlaneGeometry(0.1, corner3Len),
+            lineMat,
+          )
+          corner3Line.rotation.x = -Math.PI / 2
+          corner3Line.position.set(xSign * arc3R, 0.03, corner3MidZ)
+          scene.add(corner3Line)
+        }
+        // Arc — dashed segments from one corner-3 end around to the other
+        for (let a = -Math.PI / 2 + 0.05; a <= Math.PI / 2 - 0.05; a += 0.05) {
+          const seg = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.08), lineMat)
           seg.rotation.x = -Math.PI / 2
           seg.rotation.z = a + Math.PI / 2
-          seg.position.set(Math.sin(a) * r, 0.03, baseZ + (5.5 - Math.cos(a) * r) * dir)
+          seg.position.set(Math.sin(a) * arc3R, 0.03, basketZ + Math.cos(a) * arc3R * dir)
           scene.add(seg)
         }
         // Hoop pole + backboard + rim
@@ -517,6 +625,8 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
           ballStateBG.held = false
           ballStateBG.scoredThisShot = false
           ballStateBG.airborneFrames = 0
+          ;(ballStateBG as any).rimHitThisShot = false
+          ;(ballStateBG as any).bbHitThisShot = false
           setHoopScore((s) => ({ ...s, attempts: s.attempts + 1 }))
           ;(jumpStateBG as any).pendingShot = null
         }
@@ -529,10 +639,13 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
       ;(scene.userData as any).gravity = (g: number) => {
         if (ballStateBG.held) return
         ballStateBG.airborneFrames++
+        const prevY = ballBG.position.y
+        const prevVelY = ballStateBG.vel.y
         ballStateBG.vel.y -= 9.8 * 1.5 * g
         ballBG.position.x += ballStateBG.vel.x * g
         ballBG.position.y += ballStateBG.vel.y * g
         ballBG.position.z += ballStateBG.vel.z * g
+        // Sound detection: SWISH on score, RIM on near-miss, BACKBOARD on plane hit
         if (!ballStateBG.scoredThisShot && ballStateBG.vel.y < 0) {
           for (const hoop of hoopList) {
             const dxh = ballBG.position.x - hoop.rimPos.x
@@ -542,7 +655,18 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
             if (horizDist < 0.34 && dyh < 0.25) {
               ballStateBG.scoredThisShot = true
               setHoopScore((s) => ({ makes: s.makes + 1, attempts: s.attempts, streak: s.streak + 1 }))
+              playSwish()
               break
+            }
+            // Rim chirp on close miss (ball passes near rim, slightly outside)
+            if (!(ballStateBG as any).rimHitThisShot && horizDist > 0.34 && horizDist < 0.6 && dyh < 0.3) {
+              ;(ballStateBG as any).rimHitThisShot = true
+              playRim()
+            }
+            // Backboard thud (ball within backboard plane radius)
+            if (!(ballStateBG as any).bbHitThisShot && Math.abs(ballBG.position.z - (hoop.rimPos.z - 0.4)) < 0.15 && Math.abs(ballBG.position.x) < 1.0 && ballBG.position.y > 3.2 && ballBG.position.y < 4.3) {
+              ;(ballStateBG as any).bbHitThisShot = true
+              playBackboard()
             }
           }
         }
@@ -881,6 +1005,8 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
           ballState.held = false
           ballState.scoredThisShot = false
           ballState.airborneFrames = 0
+          ;(ballState as any).rimHitThisShot = false
+          ;(ballState as any).bbHitThisShot = false
           setHoopScore((s) => ({ ...s, attempts: s.attempts + 1 }))
           ;(jumpState as any).pendingShot = null
         }
@@ -899,7 +1025,7 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         ball.position.x += ballState.vel.x * g
         ball.position.y += ballState.vel.y * g
         ball.position.z += ballState.vel.z * g
-        // Score detection: ball within rim radius + descending + near rim Y
+        // Score + SFX detection
         if (!ballState.scoredThisShot && ballState.vel.y < 0) {
           const dx = ball.position.x - RIM_POS.x
           const dz = ball.position.z - RIM_POS.z
@@ -908,6 +1034,15 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
           if (horizDist < 0.34 && dy < 0.25) {
             ballState.scoredThisShot = true
             setHoopScore((s) => ({ makes: s.makes + 1, attempts: s.attempts, streak: s.streak + 1 }))
+            playSwish()
+          }
+          if (!(ballState as any).rimHitThisShot && horizDist > 0.34 && horizDist < 0.6 && dy < 0.3) {
+            ;(ballState as any).rimHitThisShot = true
+            playRim()
+          }
+          if (!(ballState as any).bbHitThisShot && Math.abs(ball.position.z - (RIM_POS.z - 0.4)) < 0.15 && Math.abs(ball.position.x) < 1.0 && ball.position.y > 3.2 && ball.position.y < 4.3) {
+            ;(ballState as any).bbHitThisShot = true
+            playBackboard()
           }
         }
         // Floor collision — bounce once, then settle
@@ -1460,18 +1595,78 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
     }
 
     const buildCapsule = (character: CharacterConfig) => {
-      const playerGeo = new THREE.CapsuleGeometry(0.4, 1, 4, 8)
-      const playerMat = new THREE.MeshStandardMaterial({
+      // Phase 16.39 — default avatar is now a basketball-ready humanoid built
+      // from primitives instead of a featureless pill. Head + jersey + shorts
+      // + sneakers so visitors look like a player in the gym/blacktop scenes.
+      const skinTone = (character as any).skinColor || 0xd4a373
+      const skin = new THREE.MeshStandardMaterial({
+        color: skinTone, roughness: 0.7, metalness: 0.05,
+      })
+      const jersey = new THREE.MeshStandardMaterial({
         color: character.bodyColor || themeCfg.accent,
         emissive: character.glowColor || themeCfg.accent,
-        emissiveIntensity: character.glowIntensity ?? 0.3,
-        metalness: 0.5,
-        roughness: 0.3,
+        emissiveIntensity: (character.glowIntensity ?? 0.2) * 0.4,
+        roughness: 0.6, metalness: 0.1,
       })
-      const playerMesh = new THREE.Mesh(playerGeo, playerMat)
-      playerMesh.position.y = 1
-      playerMesh.castShadow = true
-      avatarHolder.add(playerMesh)
+      const shortsMat = new THREE.MeshStandardMaterial({
+        color: 0x1a1a1a, roughness: 0.7, metalness: 0.05,
+      })
+      const sneakerMat = new THREE.MeshStandardMaterial({
+        color: 0xffffff, roughness: 0.4, metalness: 0.1,
+      })
+      const hairMat = new THREE.MeshStandardMaterial({
+        color: 0x222222, roughness: 0.8,
+      })
+
+      // Head (sphere) + simple hair cap (smaller sphere on top)
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.16, 16, 12), skin)
+      head.position.set(0, 1.86, 0)
+      head.castShadow = true
+      avatarHolder.add(head)
+      const hair = new THREE.Mesh(new THREE.SphereGeometry(0.165, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2.2), hairMat)
+      hair.position.set(0, 1.88, 0)
+      hair.castShadow = true
+      avatarHolder.add(hair)
+
+      // Torso (jersey)
+      const torso = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.55, 0.28), jersey)
+      torso.position.set(0, 1.4, 0)
+      torso.castShadow = true
+      avatarHolder.add(torso)
+
+      // Hips / shorts
+      const hips = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.3, 0.3), shortsMat)
+      hips.position.set(0, 1.0, 0)
+      hips.castShadow = true
+      avatarHolder.add(hips)
+
+      // Arms — upper + forearm per side
+      for (const xSign of [-1, 1]) {
+        const upperArm = new THREE.Mesh(new THREE.CapsuleGeometry(0.07, 0.32, 4, 8), skin)
+        upperArm.position.set(xSign * 0.32, 1.42, 0)
+        upperArm.castShadow = true
+        avatarHolder.add(upperArm)
+        const forearm = new THREE.Mesh(new THREE.CapsuleGeometry(0.06, 0.3, 4, 8), skin)
+        forearm.position.set(xSign * 0.32, 1.02, 0)
+        forearm.castShadow = true
+        avatarHolder.add(forearm)
+      }
+
+      // Legs — upper + lower + sneaker per side
+      for (const xSign of [-1, 1]) {
+        const upperLeg = new THREE.Mesh(new THREE.CapsuleGeometry(0.09, 0.36, 4, 8), skin)
+        upperLeg.position.set(xSign * 0.12, 0.68, 0)
+        upperLeg.castShadow = true
+        avatarHolder.add(upperLeg)
+        const lowerLeg = new THREE.Mesh(new THREE.CapsuleGeometry(0.08, 0.36, 4, 8), skin)
+        lowerLeg.position.set(xSign * 0.12, 0.24, 0)
+        lowerLeg.castShadow = true
+        avatarHolder.add(lowerLeg)
+        const shoe = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.09, 0.32), sneakerMat)
+        shoe.position.set(xSign * 0.12, 0.045, 0.04)
+        shoe.castShadow = true
+        avatarHolder.add(shoe)
+      }
     }
 
     // Initial avatar build from saved character
@@ -1633,6 +1828,51 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
     // Track gamepad A-button "fired" edge so holding doesn't auto-spam shots
     const ballState_aHeld = { fired: false }
 
+    // Phase 16.39 — NBA2K-style move state machine.
+    // While a move is active, it OWNS player position/rotation (WASD is gated
+    // off below). Each move ticks dt forward from t=0 until duration, then
+    // releases the player back to normal control.
+    type MoveKind = 'crossover' | 'spin' | 'pumpFake' | 'jabStep'
+    const moveState = {
+      type: null as null | MoveKind,
+      t: 0,
+      duration: 0,
+      startX: 0, startZ: 0, startY: 0, startRotY: 0,
+      facingX: 0, facingZ: 0,
+      sideX: 0, sideZ: 0,
+      crossDir: 1,
+    }
+    const triggerMove = (type: MoveKind) => {
+      if (moveState.type) return
+      const ballRef = (scene.userData as any).ball
+      // Don't allow moves while a shot is in flight or mid-jump
+      const jumpState = (scene.userData as any).jumpState
+      if (jumpState?.active) return
+      if (ballRef && !ballRef.ballState.held) return
+      const rot = playerGroup.rotation.y
+      moveState.type = type
+      moveState.t = 0
+      moveState.startX = playerGroup.position.x
+      moveState.startZ = playerGroup.position.z
+      moveState.startY = playerGroup.position.y
+      moveState.startRotY = rot
+      moveState.facingX = Math.sin(rot)
+      moveState.facingZ = Math.cos(rot)
+      moveState.sideX = Math.cos(rot)
+      moveState.sideZ = -Math.sin(rot)
+      if (type === 'crossover') {
+        moveState.duration = 0.4
+        moveState.crossDir = Math.random() < 0.5 ? -1 : 1
+      } else if (type === 'spin') {
+        moveState.duration = 0.55
+      } else if (type === 'pumpFake') {
+        moveState.duration = 0.35
+      } else if (type === 'jabStep') {
+        moveState.duration = 0.28
+      }
+    }
+    ;(scene.userData as any).triggerMove = triggerMove
+
     // ─── Animation Loop ──────────────────────────────────────
     // Phase 16.24 — SPEED is now in units PER SECOND, not per-frame. Frame-rate
     // independent movement so character walks the same pace at 60fps (empty
@@ -1714,13 +1954,48 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         dirX = localX * cosY + localZ * sinY
         dirZ = -localX * sinY + localZ * cosY
       }
-      // Apply movement scaled by deltaTime (frame-rate independent)
-      playerGroup.position.x += dirX * SPEED * mag * dtSec
-      playerGroup.position.z += dirZ * SPEED * mag * dtSec
-      playerGroup.position.x = Math.max(-PLAYER_BOUNDS, Math.min(PLAYER_BOUNDS, playerGroup.position.x))
-      playerGroup.position.z = Math.max(-PLAYER_BOUNDS, Math.min(PLAYER_BOUNDS, playerGroup.position.z))
-      if (mag > 0.05) {
-        playerGroup.rotation.y = Math.atan2(dirX, -dirZ)
+      // Phase 16.39 — Move tick. If a NBA2K-style move is active, it OWNS
+      // position/rotation for its duration; WASD is gated below.
+      if (moveState.type) {
+        moveState.t += dtSec
+        const u = Math.min(1, moveState.t / moveState.duration)
+        if (moveState.type === 'crossover') {
+          const lateral = Math.sin(u * Math.PI) * 1.5 * moveState.crossDir
+          playerGroup.position.x = moveState.startX + moveState.sideX * lateral
+          playerGroup.position.z = moveState.startZ + moveState.sideZ * lateral
+        } else if (moveState.type === 'spin') {
+          playerGroup.rotation.y = moveState.startRotY + u * Math.PI * 2
+          const fwd = u * 1.4
+          playerGroup.position.x = moveState.startX + moveState.facingX * fwd
+          playerGroup.position.z = moveState.startZ + moveState.facingZ * fwd
+        } else if (moveState.type === 'pumpFake') {
+          const bounce = Math.sin(u * Math.PI) * 0.22
+          playerGroup.position.y = moveState.startY + bounce
+        } else if (moveState.type === 'jabStep') {
+          const fwd = Math.sin(u * Math.PI) * 0.5
+          playerGroup.position.x = moveState.startX + moveState.facingX * fwd
+          playerGroup.position.z = moveState.startZ + moveState.facingZ * fwd
+        }
+        if (u >= 1) {
+          if (moveState.type === 'pumpFake') playerGroup.position.y = moveState.startY
+          if (moveState.type === 'spin') playerGroup.rotation.y = moveState.startRotY
+          if (moveState.type === 'crossover' || moveState.type === 'jabStep') {
+            playerGroup.position.x = moveState.startX
+            playerGroup.position.z = moveState.startZ
+          }
+          moveState.type = null
+        }
+        playerGroup.position.x = Math.max(-PLAYER_BOUNDS, Math.min(PLAYER_BOUNDS, playerGroup.position.x))
+        playerGroup.position.z = Math.max(-PLAYER_BOUNDS, Math.min(PLAYER_BOUNDS, playerGroup.position.z))
+      } else {
+        // Normal WASD/gamepad movement (only when no move is active)
+        playerGroup.position.x += dirX * SPEED * mag * dtSec
+        playerGroup.position.z += dirZ * SPEED * mag * dtSec
+        playerGroup.position.x = Math.max(-PLAYER_BOUNDS, Math.min(PLAYER_BOUNDS, playerGroup.position.x))
+        playerGroup.position.z = Math.max(-PLAYER_BOUNDS, Math.min(PLAYER_BOUNDS, playerGroup.position.z))
+        if (mag > 0.05) {
+          playerGroup.rotation.y = Math.atan2(dirX, -dirZ)
+        }
       }
 
       // Phase 16.27 + 16.35 — basketball follow + physics + jump animation
@@ -1735,10 +2010,22 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
           // Ball hovers in front of character at hand height (follows jump)
           const handOffset = new THREE.Vector3(
             Math.sin(playerGroup.rotation.y) * 0.6,
-            1.3,
+            1.3 + Math.sin(now * 0.012) * 0.18,  // bounce visual
             Math.cos(playerGroup.rotation.y) * 0.6,
           )
           ball.position.copy(playerGroup.position).add(handOffset)
+          // Phase 16.39 — Dribble SFX: every ~0.42s when moving with ball held
+          const moving = Math.hypot(rawX, rawZ) > 0.1
+          if (moving) {
+            if (!(ballRef as any).lastDribble) (ballRef as any).lastDribble = 0
+            ;(ballRef as any).lastDribble += dtSec
+            if ((ballRef as any).lastDribble > 0.42) {
+              playDribble()
+              ;(ballRef as any).lastDribble = 0
+            }
+          } else {
+            ;(ballRef as any).lastDribble = 0
+          }
         } else {
           // Physics tick (gravity + velocity integration + score detection)
           ;(scene.userData as any).gravity(dtSec)
@@ -1748,11 +2035,35 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         ball.rotation.z -= ballState.vel.x * dtSec * 4
       }
 
+      // Phase 16.39 — Sneaker squeak on hard direction changes (gym floor only)
+      if (theme === 'gym') {
+        if (!(scene.userData as any).lastDir) (scene.userData as any).lastDir = { x: 0, z: 0 }
+        const lastDir = (scene.userData as any).lastDir as { x: number; z: number }
+        const dirMag = Math.hypot(dirX, dirZ)
+        const prevMag = Math.hypot(lastDir.x, lastDir.z)
+        if (dirMag > 0.5 && prevMag > 0.5) {
+          const dot = (lastDir.x * dirX + lastDir.z * dirZ) / (dirMag * prevMag)
+          if (dot < 0.3) {  // angle change > ~70°
+            if (!(scene.userData as any).lastSqueak || now - (scene.userData as any).lastSqueak > 220) {
+              playSqueak()
+              ;(scene.userData as any).lastSqueak = now
+            }
+          }
+        }
+        lastDir.x = dirX
+        lastDir.z = dirZ
+      }
+
       // Keyboard shoot: B key triggers shot (also gamepad A button below)
       if (keys['b'] && shootRef.current) {
         keys['b'] = false  // single-fire
         shootRef.current()
       }
+      // Phase 16.39 — NBA2K move keys: C=crossover, V=spin, P=pump-fake, J=jab-step
+      if (keys['c']) { keys['c'] = false; triggerMove('crossover') }
+      if (keys['v']) { keys['v'] = false; triggerMove('spin') }
+      if (keys['p']) { keys['p'] = false; triggerMove('pumpFake') }
+      if (keys['j']) { keys['j'] = false; triggerMove('jabStep') }
       // Gamepad A button (button 0) — also triggers shot
       try {
         const pads = (typeof navigator !== 'undefined' && navigator.getGamepads) ? navigator.getGamepads() : []
