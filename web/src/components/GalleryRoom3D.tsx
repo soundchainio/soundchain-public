@@ -419,6 +419,156 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         scoreboard.rotation.y = Math.PI
         scene.add(scoreboard)
       }
+
+      // Phase 16.39 — Basketball ball + NBA2K-style jump shot for gym + blacktop.
+      // Mirrors the city basketball mechanic at line ~631 but routes every shot
+      // through findNearestHoop() so full-court gym (2 hoops) auto-targets the
+      // closest one based on player position. Scoring checks ALL hoops on the
+      // floor so dunks/threes at either end count.
+      const ballMatBG = new THREE.MeshStandardMaterial({
+        color: 0xea580c, emissive: 0xea580c, emissiveIntensity: 0.1, roughness: 0.6, metalness: 0.05,
+      })
+      const ballBG = new THREE.Mesh(new THREE.SphereGeometry(0.18, 16, 12), ballMatBG)
+      ballBG.castShadow = true
+      ballBG.position.set(0, 1.4, 0)
+      scene.add(ballBG)
+      const lastTargetBG = new THREE.Vector3()
+      if (hoopList[0]) lastTargetBG.copy(hoopList[0].rimPos)
+      const ballStateBG = {
+        held: true,
+        vel: new THREE.Vector3(),
+        scoredThisShot: false,
+        airborneFrames: 0,
+        returnTimer: 0,
+      }
+      ;(scene.userData as any).ball = { ball: ballBG, ballState: ballStateBG, RIM_POS: lastTargetBG }
+
+      const jumpStateBG = { active: false, t: 0, duration: 0, peakY: 0, ballRelease: 0, isDunk: false, baseY: 0 }
+      ;(scene.userData as any).jumpState = jumpStateBG
+
+      const findNearestHoop = (pos: THREE.Vector3): THREE.Vector3 => {
+        if (hoopList.length === 0) return new THREE.Vector3(0, 3.3, 0)
+        let nearest = hoopList[0].rimPos
+        let minDist = pos.distanceTo(nearest)
+        for (let i = 1; i < hoopList.length; i++) {
+          const d = pos.distanceTo(hoopList[i].rimPos)
+          if (d < minDist) { minDist = d; nearest = hoopList[i].rimPos }
+        }
+        return nearest
+      }
+
+      shootRef.current = () => {
+        if (!ballStateBG.held || jumpStateBG.active) return
+        const playerGroup = (scene.userData as any).playerGroupRef
+        if (!playerGroup) return
+        const start = ballBG.position.clone()
+        const target = findNearestHoop(playerGroup.position).clone()
+        lastTargetBG.copy(target)
+        const dx = target.x - start.x
+        const dz = target.z - start.z
+        const horizDist = Math.hypot(dx, dz)
+        if (horizDist < 0.1) return
+        playerGroup.rotation.y = Math.atan2(dx, dz)
+        const isDunk = horizDist < 2.5
+        const isThree = horizDist > 7
+        jumpStateBG.active = true
+        jumpStateBG.t = 0
+        jumpStateBG.baseY = playerGroup.position.y
+        jumpStateBG.duration = isDunk ? 0.6 : isThree ? 0.5 : 0.55
+        jumpStateBG.peakY = isDunk ? 1.8 : isThree ? 0.6 : 1.2
+        jumpStateBG.ballRelease = isDunk ? 0.5 : 0.35
+        jumpStateBG.isDunk = isDunk
+        ;(jumpStateBG as any).pendingShot = { start, target, dx, dz, horizDist, isDunk, isThree }
+      }
+
+      ;(scene.userData as any).updateJump = (dt: number) => {
+        if (!jumpStateBG.active) return
+        const playerGroup = (scene.userData as any).playerGroupRef
+        if (!playerGroup) return
+        jumpStateBG.t += dt
+        const progress = jumpStateBG.t / jumpStateBG.duration
+        let jumpY = 0
+        if (progress < 0.15) {
+          jumpY = -0.1 * (progress / 0.15)
+        } else if (progress < 1) {
+          const u = (progress - 0.15) / 0.85
+          jumpY = jumpStateBG.peakY * 4 * u * (1 - u) - 0.1 + 0.1 * u
+        }
+        playerGroup.position.y = jumpStateBG.baseY + jumpY
+        const shot = (jumpStateBG as any).pendingShot
+        if (shot && progress >= jumpStateBG.ballRelease) {
+          const { start, target, dx, dz, isDunk, isThree } = shot
+          if (isDunk) {
+            ballBG.position.set(target.x, target.y + 0.5, target.z)
+            ballStateBG.vel.set(0, -8, 0)
+          } else {
+            const releaseY = jumpStateBG.baseY + jumpStateBG.peakY + 1.4
+            ballBG.position.set(start.x, releaseY, start.z)
+            const apexY = target.y + (isThree ? 3.5 : 2.0)
+            const g = 9.8 * 1.5
+            const timeUp = isThree ? 0.45 : 0.4
+            const timeDown = isThree ? 0.7 : 0.55
+            const vy = (apexY - releaseY) / timeUp + 0.5 * g * timeUp
+            const totalTime = timeUp + timeDown
+            const vx = dx / totalTime
+            const vz = dz / totalTime
+            ballStateBG.vel.set(vx, vy, vz)
+          }
+          ballStateBG.held = false
+          ballStateBG.scoredThisShot = false
+          ballStateBG.airborneFrames = 0
+          setHoopScore((s) => ({ ...s, attempts: s.attempts + 1 }))
+          ;(jumpStateBG as any).pendingShot = null
+        }
+        if (jumpStateBG.t >= jumpStateBG.duration) {
+          jumpStateBG.active = false
+          playerGroup.position.y = jumpStateBG.baseY
+        }
+      }
+
+      ;(scene.userData as any).gravity = (g: number) => {
+        if (ballStateBG.held) return
+        ballStateBG.airborneFrames++
+        ballStateBG.vel.y -= 9.8 * 1.5 * g
+        ballBG.position.x += ballStateBG.vel.x * g
+        ballBG.position.y += ballStateBG.vel.y * g
+        ballBG.position.z += ballStateBG.vel.z * g
+        if (!ballStateBG.scoredThisShot && ballStateBG.vel.y < 0) {
+          for (const hoop of hoopList) {
+            const dxh = ballBG.position.x - hoop.rimPos.x
+            const dzh = ballBG.position.z - hoop.rimPos.z
+            const horizDist = Math.hypot(dxh, dzh)
+            const dyh = Math.abs(ballBG.position.y - hoop.rimPos.y)
+            if (horizDist < 0.34 && dyh < 0.25) {
+              ballStateBG.scoredThisShot = true
+              setHoopScore((s) => ({ makes: s.makes + 1, attempts: s.attempts, streak: s.streak + 1 }))
+              break
+            }
+          }
+        }
+        if (ballBG.position.y < 0.18) {
+          ballBG.position.y = 0.18
+          if (ballStateBG.vel.y < -2) {
+            ballStateBG.vel.y = -ballStateBG.vel.y * 0.45
+            ballStateBG.vel.x *= 0.6
+            ballStateBG.vel.z *= 0.6
+          } else {
+            ballStateBG.vel.set(0, 0, 0)
+            ballStateBG.returnTimer = 1.0
+          }
+          if (!ballStateBG.scoredThisShot && ballStateBG.airborneFrames > 5) {
+            setHoopScore((s) => ({ ...s, streak: 0 }))
+            ballStateBG.scoredThisShot = true
+          }
+        }
+        if (ballStateBG.returnTimer > 0) {
+          ballStateBG.returnTimer -= g
+          if (ballStateBG.returnTimer <= 0) {
+            ballStateBG.held = true
+            ballStateBG.vel.set(0, 0, 0)
+          }
+        }
+      }
     }
 
     if (theme === 'city') {
@@ -1490,10 +1640,10 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
     // streetlamps, and basketball court grinding GPU). Old SPEED 0.18/frame
     // at 60fps = 10.8 u/sec — match that as the baseline, bump slightly for
     // a snappier feel since the gallery is large.
-    const SPEED = theme === 'city' ? 18 : 12  // city = bigger world, slightly faster sprint pace
-    // Phase 16.25 — city mode = open world, ~95u bounds (within 200u floor);
-    // gallery themes stay at 19u (inside the 40u walled room).
-    const PLAYER_BOUNDS = theme === 'city' ? 95 : 19
+    // Phase 16.39 — sports courts get NBA2K-like sprint feel; bounds stay
+    // inside the court geometry so dunks register and player can't run off.
+    const SPEED = theme === 'city' ? 18 : (theme === 'gym' || theme === 'blacktop') ? 14 : 12
+    const PLAYER_BOUNDS = theme === 'city' ? 95 : theme === 'gym' ? 14 : theme === 'blacktop' ? 8 : 19
     let lastFrame = performance.now()
     let frameCount = 0
     let fpsLastUpdate = lastFrame
@@ -1759,7 +1909,7 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
           Moved to LEFT side (above D-pad) so it doesn't collide with the
           global SC chrome pills (search / brain / Invite / Customize) on
           the right side. Big circular tap target visible on all devices. */}
-      {theme === 'city' && (
+      {(theme === 'city' || theme === 'gym' || theme === 'blacktop') && (
         <button
           onPointerDown={(e) => { e.stopPropagation(); shootRef.current?.() }}
           className="absolute bottom-40 left-3 sm:bottom-32 sm:left-5 z-30 w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-orange-500/40 to-orange-700/60 backdrop-blur border-2 border-orange-400/70 text-white text-2xl sm:text-3xl font-bold active:scale-95 active:from-orange-500/60 active:to-orange-700/80 transition shadow-[0_0_20px_rgba(234,88,12,0.5)] flex items-center justify-center pointer-events-auto"
