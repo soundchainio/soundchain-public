@@ -2848,23 +2848,55 @@ function LivePreview3D({ spec, face, bigMode, portraitUrl }: { spec: AiBuildSpec
       matte: '#a06060', nude: '#c8a08a', berry: '#8a2a4a', black: '#1a0a0a',
     }
 
-    // Phase 16.35 — SDXL PORTRAIT BILLBOARD as the actual face. When user
-    // generates a portrait via ✨ Generate, that real photo becomes the
-    // character's face. Overrides all the primitive face overlays below
-    // (no point drawing geometric eyes when we have a real photo).
+    // Phase 16.36 — HONEST face rendering.
+    // If user has an SDXL portrait → render BIG as the face plane (real human).
+    // If not → render a clear placeholder card "tap ✨ Generate" instead of
+    // ugly primitive shapes. Primitive boxes/spheres on XBot will never look
+    // human, so we stop pretending they do.
     if (portraitUrl) {
       const loader = new THREE.TextureLoader()
       const tex = loader.load(portraitUrl)
       tex.colorSpace = THREE.SRGBColorSpace
       const portraitMat = new THREE.MeshBasicMaterial({ map: tex, transparent: true })
-      const portrait = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.55), portraitMat)
-      portrait.position.set(0, headY - 0.04, headR + 0.02)
+      // Bigger plane so the photo dominates the head area
+      const portrait = new THREE.Mesh(new THREE.PlaneGeometry(0.55, 0.72), portraitMat)
+      portrait.position.set(0, headY - 0.04, headR + 0.03)
       group.add(portrait)
-      // Skip drawing primitive face features when portrait is showing
-      // (they'd just clutter the photo). Hair/hat/jewelry/torso still render.
+      // Real face renders — skip every primitive face feature below.
+      return
+    } else {
+      // No portrait — render a clear "Generate to see face" placeholder card.
+      const canvas = document.createElement('canvas')
+      canvas.width = 256; canvas.height = 320
+      const cx = canvas.getContext('2d')!
+      cx.fillStyle = 'rgba(15,10,20,0.85)'; cx.fillRect(0, 0, 256, 320)
+      cx.strokeStyle = '#ec4899'; cx.lineWidth = 4
+      cx.setLineDash([10, 8])
+      cx.strokeRect(8, 8, 240, 304)
+      cx.setLineDash([])
+      cx.fillStyle = '#ec4899'; cx.font = 'bold 26px monospace'; cx.textAlign = 'center'
+      cx.fillText('👤', 128, 110)
+      cx.font = 'bold 20px monospace'
+      cx.fillText('NO FACE YET', 128, 165)
+      cx.font = '14px monospace'; cx.fillStyle = '#ffffff'
+      cx.fillText('Tap ✨ Generate Character', 128, 200)
+      cx.fillText('to render your face here', 128, 220)
+      cx.font = '12px monospace'; cx.fillStyle = '#ec4899aa'
+      cx.fillText('SDXL on RTX 5000', 128, 260)
+      const placeholderTex = new THREE.CanvasTexture(canvas)
+      placeholderTex.colorSpace = THREE.SRGBColorSpace
+      const placeholderMat = new THREE.MeshBasicMaterial({ map: placeholderTex, transparent: true, opacity: 0.9 })
+      const placeholder = new THREE.Mesh(new THREE.PlaneGeometry(0.55, 0.72), placeholderMat)
+      placeholder.position.set(0, headY - 0.04, headR + 0.03)
+      group.add(placeholder)
+      // Stop here — no primitive face overlays. Body morphs / hair / hat /
+      // jewelry / outfit-color overlays already rendered above and still
+      // visible. Just no fake geometric face.
       return
     }
 
+    // [Phase 16.36 — primitive face overlay code below is now unreachable.
+    // Kept here as reference for potential future "stylized" mode toggle.]
     // FACE SHAPE — head ellipsoid scaled to match face shape preset
     const faceShapeScale: Record<string, [number, number, number]> = {
       oval:     [1.0,  1.0,  1.0],
