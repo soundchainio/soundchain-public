@@ -113,6 +113,10 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
   const shotClockRef = useRef(24)
   const sessionTimeRef = useRef(0)
   const clocksRunningRef = useRef(false)
+  // Phase 16.56 — real point scoring + win condition (first to 21)
+  const [pointScore, setPointScore] = useState({ player: 0, defender: 0 })
+  const [gameOver, setGameOver] = useState<null | 'player' | 'defender'>(null)
+  const POINTS_TO_WIN = 21
   // Phase 16.29 — city search now opens as a full modal dialog so typing
   // isn't gated by any z-index / pointer-event conflicts with the canvas.
   const [citySearchOpen, setCitySearchOpen] = useState(false)
@@ -1133,6 +1137,17 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
             const dyh = Math.abs(ballBG.position.y - hoop.rimPos.y)
             if (horizDist < 0.34 && dyh < 0.25) {
               ballStateBG.scoredThisShot = true
+              // Phase 16.56 — POINTS: 3pt for three, 2pt for everything else
+              const shotTypeForPoints = (ballStateBG as any).shotType || 'jumpshot'
+              const pts = shotTypeForPoints === 'three' ? 3 : 2
+              setPointScore((ps) => {
+                const newPlayer = ps.player + pts
+                if (newPlayer >= POINTS_TO_WIN && !gameOver) {
+                  setGameOver('player')
+                  speak("GAME! YOU WIN!", { pitch: 1.05, rate: 1.15 })
+                }
+                return { ...ps, player: newPlayer }
+              })
               setHoopScore((s) => {
                 const nextStreak = s.streak + 1
                 // Phase 16.51 — play-by-play announcer fires inside the
@@ -3834,6 +3849,43 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
     <div className="relative w-full h-full" tabIndex={0} onFocus={() => containerRef.current?.focus()}>
       <div ref={containerRef} className="absolute inset-0" tabIndex={0} style={{ cursor: 'grab', outline: 'none' }} onClick={() => containerRef.current?.focus()} />
 
+      {/* Phase 16.56 — GAME OVER overlay (first to 21) */}
+      {gameOver && (theme === 'gym' || theme === 'blacktop') && (
+        <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/75 backdrop-blur-sm pointer-events-auto">
+          <div className="bg-gradient-to-br from-orange-500/30 to-red-600/40 border-4 border-yellow-400 rounded-2xl px-8 py-6 text-center shadow-[0_0_60px_rgba(250,204,21,0.6)] max-w-md">
+            <div className="text-yellow-300 font-mono text-xs mb-2 tracking-widest">FINAL</div>
+            <div className="text-white font-bold text-4xl sm:text-5xl mb-3">
+              {gameOver === 'player' ? '🏆 YOU WIN' : '😞 GAME OVER'}
+            </div>
+            <div className="text-white font-mono text-2xl mb-5">
+              <span className="text-cyan-300">YOU {pointScore.player}</span>
+              <span className="text-gray-500 mx-3">—</span>
+              <span className="text-red-400">DEF {pointScore.defender}</span>
+            </div>
+            <button
+              onClick={() => {
+                setGameOver(null)
+                setPointScore({ player: 0, defender: 0 })
+                setHoopScore({ makes: 0, attempts: 0, streak: 0 })
+                shotClockRef.current = 24
+                setShotClock(24)
+                sessionTimeRef.current = 0
+                setSessionTime(0)
+                hotZoneRef.current.clear()
+                const hm = (sceneRef.current as any)?.userData?.heatmap
+                if (hm) {
+                  hm.ctx.clearRect(0, 0, hm.canvas.width, hm.canvas.height)
+                  hm.texture.needsUpdate = true
+                }
+              }}
+              className="px-6 py-3 rounded-lg bg-gradient-to-br from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white font-bold font-mono text-sm transition active:scale-95"
+            >
+              ▶ RUN IT BACK
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Phase 16.51 — Score popups (+2 / +3 / SLAM!) float up over the make
           location, fading out in 1.4s. Pure DOM overlay so canvas perf is
           untouched. CSS animation handles the float + fade. */}
@@ -4279,6 +4331,15 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
                 <span className="font-bold">⏱ {shotClock}s</span>
                 <span className="text-gray-500">·</span>
                 <span className="text-gray-400">{Math.floor(sessionTime / 60)}:{String(sessionTime % 60).padStart(2, '0')}</span>
+              </div>
+            )}
+            {/* Phase 16.56 — points scoreboard: first to 21 */}
+            {(theme === 'gym' || theme === 'blacktop') && (
+              <div className="px-2 py-1 rounded backdrop-blur text-[10px] font-mono flex items-center gap-1.5 bg-black/50 border border-white/20">
+                <span className="text-cyan-300 font-bold">YOU {pointScore.player}</span>
+                <span className="text-gray-600">—</span>
+                <span className="text-red-400 font-bold">DEF {pointScore.defender}</span>
+                <span className="text-gray-500 text-[8px] ml-1">to {POINTS_TO_WIN}</span>
               </div>
             )}
           </>
