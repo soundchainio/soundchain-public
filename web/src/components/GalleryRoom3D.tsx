@@ -16,6 +16,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
+import { clone as cloneSkinnedMesh } from 'three/examples/jsm/utils/SkeletonUtils.js'
 import { useRouter } from 'next/router'
 import { Music, X, Heart, Share2, Play, Pause, Volume2, Copy, Check, Paintbrush, Plus } from 'lucide-react'
 import { toast } from 'react-toastify'
@@ -395,7 +396,7 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
       if (streak >= 5) { speak(["HE'S ON FIRE!", "THIS GUY CAN'T MISS!", "ABSOLUTELY COOKING!"][streak % 3], { pitch: 1.08, rate: 1.2 }); return }
       if (streak >= 3) { speak(["HE'S HEATING UP!", "STARTING TO COOK!", "STAY HOT!"][streak % 3], { pitch: 1.05, rate: 1.15 }); return }
       // Per shot-type calls
-      if (shotType === 'dunk')     return speak(["BOOM! SLAM DUNK!", "POSTERIZED!", "THROW IT DOWN!"][Math.floor(Math.random()*3)], { pitch: 0.92, rate: 1.2 })
+      if (shotType === 'dunk')     return speak(["HE FLEW! GORILLA DUNK!", "POSTERIZED THE WHOLE FAMILY!", "ZION-MODE THROW DOWN!", "TOO STRONG! POSTERIZED!", "BOOM! WINDMILL!"][Math.floor(Math.random()*5)], { pitch: 0.88, rate: 1.25 })
       if (shotType === 'three')    return speak(["BANG! THREE!", "FROM DOWNTOWN!", "TRIPLE!"][Math.floor(Math.random()*3)], { pitch: 1.0, rate: 1.18 })
       if (shotType === 'layup')    return speak(["EASY BUCKET!", "GOT THE LAY!", "AT THE RIM!"][Math.floor(Math.random()*3)], { rate: 1.15 })
       if (shotType === 'fadeaway') return speak(["FADEAWAY... GOOD!", "MAMBA RANGE!", "NOTHIN' BUT NET!"][Math.floor(Math.random()*3)], { rate: 1.12 })
@@ -1131,19 +1132,24 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         jumpStateBG.active = true
         jumpStateBG.t = 0
         jumpStateBG.baseY = playerGroup.position.y
-        jumpStateBG.duration = isDunk ? 0.6 : isLayup ? 0.7 : isThree ? 0.5 : 0.55
-        jumpStateBG.peakY = isDunk ? 1.8 : isLayup ? 1.0 : isThree ? 0.6 : 1.2
-        jumpStateBG.ballRelease = isDunk ? 0.5 : isLayup ? 0.55 : 0.35
+        // Phase 16.60 — ZION-STYLE GORILLA DUNK. Big airtime, big leap, big
+        // hangtime. Player rises 3.5u (was 1.8u) and stays airborne 0.95s
+        // so the dunk reads as a real flight, not a hop.
+        jumpStateBG.duration = isDunk ? 0.95 : isLayup ? 0.7 : isThree ? 0.5 : 0.55
+        jumpStateBG.peakY = isDunk ? 3.5 : isLayup ? 1.0 : isThree ? 0.6 : 1.2
+        jumpStateBG.ballRelease = isDunk ? 0.55 : isLayup ? 0.55 : 0.35
         jumpStateBG.isDunk = isDunk
         ;(jumpStateBG as any).pendingShot = { start, target, dx, dz, horizDist, isDunk, isThree, isLayup, isFadeaway: wantFadeaway }
         // Phase 16.53 — every shot starts game clocks + resets shot clock
         clocksRunningRef.current = true
         shotClockRef.current = 24
-        // Phase 16.41 — play the matching XBot body clip
+        // Phase 16.41 — play the matching XBot body clip (durations match
+        // jumpStateBG.duration so the body anim and the trajectory line up;
+        // dunk = 950ms hangtime now matches Mixamo Jump clip cleanly)
         const xb = (avatarHolder.userData as any).xbot
         if (xb?.play) {
-          if (isDunk) xb.play('dunk', 1000)
-          else if (isLayup) xb.play('layup', 1000)
+          if (isDunk) xb.play('dunk', 950)
+          else if (isLayup) xb.play('layup', 700)
           else if (wantFadeaway) xb.play('fadeaway', 1000)
           else xb.play('jumpshot', 800)
         }
@@ -1294,7 +1300,7 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
                   worldZ: (ballStateBG as any).shotOriginZ ?? 0,
                   color: shotType === 'dunk' ? '#fb923c' : shotType === 'three' ? '#facc15' : '#22c55e',
                 })
-                if (shotType === 'dunk') triggerCameraShake(0.4, 0.35)
+                if (shotType === 'dunk') triggerCameraShake(0.75, 0.5)  // Phase 16.60 — gorilla-dunk earthshake
                 else if (nextStreak >= 3) triggerCameraShake(0.18, 0.2)
                 // Phase 16.52 — hot zone register
                 registerMakeAt(
@@ -1304,7 +1310,8 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
                 // Phase 16.58 — record make stats + Big Play Cam
                 recordMake(shotType)
                 if (shotType === 'dunk') {
-                  triggerBigPlay('POSTERIZED!', '#fb923c', '💥')
+                  const dunkBanners = ['POSTERIZED!', 'HE FLEW!', 'GORILLA DUNK!', 'TOO STRONG!']
+                  triggerBigPlay(dunkBanners[Math.floor(Math.random() * dunkBanners.length)], '#fb923c', '💥')
                 } else if (nextStreak === 5) {
                   triggerBigPlay('ON FIRE!', '#ef4444', '🔥')
                 } else if (nextStreak === 7) {
@@ -2345,6 +2352,13 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
           const heightMul = charForXBot.height ?? 1
           if (heightMul !== 1 && heightMul > 0) model.scale.multiplyScalar(heightMul)
 
+          // Phase 16.60 — Mixamo XBot bind pose faces +Z; Three.js convention
+          // is models face -Z. Without this rotation, pressing W (move in -Z)
+          // walks the player BACKWARDS visually because the avatar faces the
+          // opposite direction of motion. 180° flip aligns model facing with
+          // movement direction set by Math.atan2(dirX, -dirZ).
+          model.rotation.y = Math.PI
+
           avatarHolder.add(model)
 
           if (!gltf.animations || gltf.animations.length === 0) return
@@ -2725,13 +2739,98 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
             newAction.blendMode = THREE.NormalAnimationBlendMode
             const oldAction = clipMap[xbotState.currentClip]
             newAction.reset().setEffectiveWeight(1).setLoop(THREE.LoopOnce, 1).fadeIn(0.12).play()
-            newAction.clampWhenFinished = false  // snap back so locomotion resumes clean
+            newAction.clampWhenFinished = true  // Phase 16.60 — hold last frame instead of bind-pose T
             if (oldAction && oldAction !== newAction) oldAction.fadeOut(0.12)
             xbotState.currentClip = actionKey
             xbotState.moveLockUntil = performance.now() + durationMs
             if (SQUEAK_MOVES.has(key)) playSqueak()
           }
+          // Phase 16.60 — when any LoopOnce move clip ends, crossfade back to
+          // Idle so the avatar never sits at bind pose between moves. Three.js
+          // fires 'finished' on the mixer when a clamped action reaches its end.
+          mixer.addEventListener('finished', (ev: any) => {
+            const finishedAction = ev.action as THREE.AnimationAction | undefined
+            if (!finishedAction) return
+            const idleAction = clipMap['idle']
+            if (!idleAction || finishedAction === idleAction) return
+            idleAction.reset().setEffectiveWeight(1).fadeIn(0.18).play()
+            finishedAction.fadeOut(0.18)
+            xbotState.currentClip = 'idle'
+            xbotState.moveLockUntil = 0
+          })
           ;(avatarHolder.userData as any).xbot = xbotState
+
+          // Phase 16.60 — CLONE XBOT FOR DEFENDER. The primitive-humanoid
+          // defender from Phase 16.55 was visually static (no walk cycle, no
+          // limb motion). Cloning the rigged XBot gives the defender real
+          // Mixamo locomotion. SkeletonUtils.clone() shares geometry but
+          // forks the skeleton so each model has independent bone state.
+          const defRef = (scene.userData as any).defender
+          if (defRef?.group && isBasketballGallery) {
+            // Tear down primitive defender meshes
+            while (defRef.group.children.length > 0) {
+              const c = defRef.group.children[0]
+              defRef.group.remove(c)
+              if ((c as any).geometry) (c as any).geometry.dispose()
+              if ((c as any).material) {
+                const m = (c as any).material
+                if (Array.isArray(m)) m.forEach((mm: any) => mm.dispose())
+                else m.dispose()
+              }
+            }
+            // Clone the rigged XBot
+            const defModel: THREE.Object3D = cloneSkinnedMesh(model)
+            defModel.scale.copy(model.scale)
+            defModel.rotation.y = Math.PI  // match player facing convention
+            // Tint to red jersey + dark skin for visual contrast
+            defModel.traverse((obj: any) => {
+              if (obj.isMesh) {
+                obj.castShadow = true
+                obj.receiveShadow = true
+                if (obj.material) {
+                  const mat = Array.isArray(obj.material) ? obj.material[0] : obj.material
+                  const mClone = mat.clone()
+                  const name = (obj.name || '').toLowerCase()
+                  if (name.includes('beta_surface') || name.includes('beta_joints') || name.includes('body')) {
+                    // Jersey areas → red
+                    mClone.color = new THREE.Color('#dc2626')
+                  } else {
+                    // Skin / hair / shoes → darker default
+                    if (mClone.color) mClone.color.multiplyScalar(0.85)
+                  }
+                  obj.material = mClone
+                }
+              }
+            })
+            defRef.group.add(defModel)
+            // Defender mixer + clip map
+            const defMixer = new THREE.AnimationMixer(defModel)
+            const defClips: Record<string, THREE.AnimationAction> = {}
+            for (const clip of gltf.animations) {
+              defClips[clip.name.toLowerCase()] = defMixer.clipAction(clip)
+            }
+            const defIdle = defClips['idle']
+            if (defIdle) defIdle.play()
+            defRef.mixer = defMixer
+            defRef.clips = defClips
+            defRef.currentClip = 'idle'
+            // 'D' badge above the defender's head so player can still tell
+            // them apart at a glance after the model swap
+            const badgeCanvas = document.createElement('canvas')
+            badgeCanvas.width = 128; badgeCanvas.height = 128
+            const bctx = badgeCanvas.getContext('2d')!
+            bctx.fillStyle = 'rgba(0,0,0,0.7)'
+            bctx.beginPath(); bctx.arc(64, 64, 56, 0, Math.PI * 2); bctx.fill()
+            bctx.fillStyle = '#dc2626'
+            bctx.font = 'bold 90px monospace'
+            bctx.textAlign = 'center'
+            bctx.fillText('D', 64, 96)
+            const badgeTex = new THREE.CanvasTexture(badgeCanvas)
+            const badgeSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: badgeTex, transparent: true, depthTest: false }))
+            badgeSprite.scale.set(0.5, 0.5, 0.5)
+            badgeSprite.position.set(0, 2.4, 0)
+            defRef.group.add(badgeSprite)
+          }
           console.log('[GalleryRoom3D] XBot loaded w/ 2K clips', {
             stock: gltf.animations.map(c => c.name),
             authored: oneShotClips.map(c => c.name).concat([defenseClip.name]),
@@ -3823,6 +3922,11 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         const dg: THREE.Group = defenderRef.group
         const hoops = (scene.userData as any).hoops || []
         const diffAI = getDiff()
+        // Phase 16.60 — tick defender mixer + remember previous position so
+        // we can detect motion and switch idle ↔ walking ↔ running clips
+        if (defenderRef.mixer) defenderRef.mixer.update(dtSec)
+        const prevDefX = (defenderRef as any).prevX ?? dg.position.x
+        const prevDefZ = (defenderRef as any).prevZ ?? dg.position.z
         if (defenderRef.mode === 'drive') {
           // Walk toward nearest rim, shoot after timer or proximity
           let driveTarget: THREE.Vector3 | null = null
@@ -3874,6 +3978,24 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
             const fdz = playerPos.z - dg.position.z
             dg.rotation.y = Math.atan2(fdx, fdz)
           }
+        }
+        // Phase 16.60 — defender idle/walking/running based on travel
+        if (defenderRef.clips) {
+          const moved = Math.hypot(dg.position.x - prevDefX, dg.position.z - prevDefZ) / Math.max(dtSec, 1e-4)
+          let wantDef = 'idle'
+          if (moved > 5) wantDef = defenderRef.clips['running'] ? 'running' : (defenderRef.clips['walking'] ? 'walking' : 'idle')
+          else if (moved > 0.2) wantDef = defenderRef.clips['walking'] ? 'walking' : 'idle'
+          if (wantDef !== defenderRef.currentClip) {
+            const from = defenderRef.clips[defenderRef.currentClip]
+            const to = defenderRef.clips[wantDef]
+            if (to) {
+              to.reset().fadeIn(0.2).play()
+              if (from) from.fadeOut(0.2)
+              defenderRef.currentClip = wantDef
+            }
+          }
+          ;(defenderRef as any).prevX = dg.position.x
+          ;(defenderRef as any).prevZ = dg.position.z
         }
       }
 
