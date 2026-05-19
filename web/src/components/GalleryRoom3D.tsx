@@ -107,6 +107,12 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
   const cameraShakeRef = useRef<{ intensity: number; t: number; duration: number }>({ intensity: 0, t: 0, duration: 0 })
   // Phase 16.52 — hot zones: court tile grid tracking makes per cell
   const hotZoneRef = useRef<Map<string, { makes: number; lastMakeAt: number }>>(new Map())
+  // Phase 16.53 — game clocks: shot clock (24s, resets on shot) + session timer
+  const [shotClock, setShotClock] = useState(24)
+  const [sessionTime, setSessionTime] = useState(0)  // seconds played
+  const shotClockRef = useRef(24)
+  const sessionTimeRef = useRef(0)
+  const clocksRunningRef = useRef(false)
   // Phase 16.29 — city search now opens as a full modal dialog so typing
   // isn't gated by any z-index / pointer-event conflicts with the canvas.
   const [citySearchOpen, setCitySearchOpen] = useState(false)
@@ -413,12 +419,42 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
       cameraShakeRef.current = { intensity, t: 0, duration: durationSec }
     }
     // Phase 16.52 — hot zones. Court divided into 4u × 4u grid cells.
-    // Cells with 2+ makes glow orange; cells with 4+ makes glow red.
+    // Cells with 2+ makes glow orange; cells with 4+ makes glow red. The
+    // visual heatmap is a CanvasTexture overlay set up in the basketball
+    // gallery block; here we just paint it.
     const zoneKey = (x: number, z: number) => `${Math.floor(x / 4)}_${Math.floor(z / 4)}`
+    const repaintHeatmap = () => {
+      const hm = (scene as any).userData?.heatmap
+      if (!hm) return
+      const { ctx, canvas, texture, courtWidth, courtSpan, courtZ } = hm
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      hotZoneRef.current.forEach((data, k) => {
+        const parts = k.split('_').map(Number)
+        const ix = parts[0]
+        const iz = parts[1]
+        const worldX = ix * 4 + 2  // cell center
+        const worldZ = iz * 4 + 2
+        const canvasX = ((worldX + courtWidth / 2) / courtWidth) * canvas.width
+        const canvasY = ((worldZ - courtZ + courtSpan / 2) / courtSpan) * canvas.height
+        const heat = Math.min(1, data.makes / 5)
+        const radius = 50 + data.makes * 10
+        const color = data.makes >= 4 ? '255,40,40' : data.makes >= 2 ? '255,140,40' : '255,200,60'
+        const grad = ctx.createRadialGradient(canvasX, canvasY, 0, canvasX, canvasY, radius)
+        grad.addColorStop(0, `rgba(${color},${0.7 * heat})`)
+        grad.addColorStop(0.6, `rgba(${color},${0.35 * heat})`)
+        grad.addColorStop(1, `rgba(${color},0)`)
+        ctx.fillStyle = grad
+        ctx.beginPath()
+        ctx.arc(canvasX, canvasY, radius, 0, Math.PI * 2)
+        ctx.fill()
+      })
+      texture.needsUpdate = true
+    }
     const registerMakeAt = (x: number, z: number) => {
       const k = zoneKey(x, z)
       const cur = hotZoneRef.current.get(k) || { makes: 0, lastMakeAt: 0 }
       hotZoneRef.current.set(k, { makes: cur.makes + 1, lastMakeAt: performance.now() })
+      repaintHeatmap()
     }
 
     // ─── Scene Setup ─────────────────────────────────────────
@@ -629,6 +665,34 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
       // Store ALL hoop positions in scene.userData so basketball mechanic
       // can target the NEAREST one (full court has 2 hoops).
       ;(scene.userData as any).hoops = hoopList
+
+      // Phase 16.52 — HOT ZONE heatmap overlay. CanvasTexture painted at
+      // game spawn; updated each frame (or on score events) from
+      // hotZoneRef. Mounted as a thin transparent plane just above the
+      // court so makes from "money spots" visibly burn the floor orange/
+      // red. Same trick NBA broadcasts use for shot chart overlays.
+      const heatCanvas = document.createElement('canvas')
+      heatCanvas.width = 256
+      heatCanvas.height = 512
+      const heatCtx = heatCanvas.getContext('2d')!
+      const heatTexture = new THREE.CanvasTexture(heatCanvas)
+      heatTexture.needsUpdate = true
+      const heatPlane = new THREE.Mesh(
+        new THREE.PlaneGeometry(courtWidth, courtSpan),
+        new THREE.MeshBasicMaterial({ map: heatTexture, transparent: true, opacity: 0.65, depthWrite: false }),
+      )
+      heatPlane.rotation.x = -Math.PI / 2
+      heatPlane.position.set(0, 0.05, courtZ)  // just above court line markings
+      heatPlane.renderOrder = 1
+      scene.add(heatPlane)
+      ;(scene.userData as any).heatmap = {
+        canvas: heatCanvas,
+        ctx: heatCtx,
+        texture: heatTexture,
+        courtWidth,
+        courtSpan,
+        courtZ,
+      }
 
       // Blacktop-specific: chain-link fence around court
       if (isBlacktopCourt) {
@@ -861,6 +925,9 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         jumpStateBG.ballRelease = isDunk ? 0.5 : isLayup ? 0.55 : 0.35
         jumpStateBG.isDunk = isDunk
         ;(jumpStateBG as any).pendingShot = { start, target, dx, dz, horizDist, isDunk, isThree, isLayup, isFadeaway: wantFadeaway }
+        // Phase 16.53 — every shot starts game clocks + resets shot clock
+        clocksRunningRef.current = true
+        shotClockRef.current = 24
         // Phase 16.41 — play the matching XBot body clip
         const xb = (avatarHolder.userData as any).xbot
         if (xb?.play) {
@@ -3457,6 +3524,37 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         }
       } catch {}
 
+      // Phase 16.53 — game clocks tick. Shot clock decrements while
+      // running; session timer counts up. Sync to React state every 0.25s
+      // (not every frame) to keep React renders quiet. Shot clock
+      // violation = ball returns, announcer call.
+      if (clocksRunningRef.current) {
+        shotClockRef.current = Math.max(0, shotClockRef.current - dtSec)
+        sessionTimeRef.current += dtSec
+        ;(scene.userData as any).__clockSyncT = ((scene.userData as any).__clockSyncT || 0) + dtSec
+        if ((scene.userData as any).__clockSyncT > 0.25) {
+          ;(scene.userData as any).__clockSyncT = 0
+          setShotClock(Math.ceil(shotClockRef.current))
+          setSessionTime(Math.floor(sessionTimeRef.current))
+        }
+        if (shotClockRef.current <= 0 && !(scene.userData as any).__shotClockBuzzed) {
+          ;(scene.userData as any).__shotClockBuzzed = true
+          speak("SHOT CLOCK VIOLATION!", { pitch: 0.92, rate: 1.15 })
+          // Reset shot clock + return ball so player keeps shooting
+          const ballRefSC = (scene.userData as any).ball
+          if (ballRefSC) {
+            ballRefSC.ballState.held = true
+            ballRefSC.ballState.vel.set(0, 0, 0)
+            ballRefSC.ballState.scoredThisShot = false
+            ;(ballRefSC.ballState as any).airTime = 0
+          }
+          shotClockRef.current = 24
+          setShotClock(24)
+          setTimeout(() => { (scene.userData as any).__shotClockBuzzed = false }, 1500)
+          setHoopScore((s) => ({ ...s, streak: 0 }))
+        }
+      }
+
       // Camera follow — Phase 16.21 — orbits character based on yaw/pitch.
       // Drag the canvas to look around 360°; character moves relative to
       // camera direction so WASD always feels intuitive from the user's view.
@@ -4022,17 +4120,27 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         )}
         {/* Phase 16.51 — basketball score HUD (now city + gym + blacktop) */}
         {(theme === 'city' || theme === 'gym' || theme === 'blacktop') && (
-          <div className="px-2 py-1 rounded bg-orange-500/15 backdrop-blur border border-orange-500/40 text-[10px] font-mono text-orange-300 flex items-center gap-2">
-            🏀 <span className="font-bold">{hoopScore.makes}</span>/<span>{hoopScore.attempts}</span>
-            {hoopScore.streak >= 3 && (
-              <span className={`ml-1 ${hoopScore.streak >= 7 ? 'text-red-400 animate-pulse' : hoopScore.streak >= 5 ? 'text-orange-400' : 'text-yellow-300'}`}>
-                🔥 {hoopScore.streak}{hoopScore.streak >= 7 ? ' UNCONSCIOUS' : hoopScore.streak >= 5 ? ' ON FIRE' : ' HEATING UP'}
-              </span>
+          <>
+            <div className="px-2 py-1 rounded bg-orange-500/15 backdrop-blur border border-orange-500/40 text-[10px] font-mono text-orange-300 flex items-center gap-2">
+              🏀 <span className="font-bold">{hoopScore.makes}</span>/<span>{hoopScore.attempts}</span>
+              {hoopScore.streak >= 3 && (
+                <span className={`ml-1 ${hoopScore.streak >= 7 ? 'text-red-400 animate-pulse' : hoopScore.streak >= 5 ? 'text-orange-400' : 'text-yellow-300'}`}>
+                  🔥 {hoopScore.streak}{hoopScore.streak >= 7 ? ' UNCONSCIOUS' : hoopScore.streak >= 5 ? ' ON FIRE' : ' HEATING UP'}
+                </span>
+              )}
+              {hoopScore.attempts > 0 && (
+                <span className="ml-1 text-gray-400 text-[9px]">{Math.round((hoopScore.makes / hoopScore.attempts) * 100)}%</span>
+              )}
+            </div>
+            {/* Phase 16.53 — shot clock + session timer */}
+            {(theme === 'gym' || theme === 'blacktop') && (
+              <div className={`px-2 py-1 rounded backdrop-blur text-[10px] font-mono flex items-center gap-2 ${shotClock <= 5 ? 'bg-red-500/25 border border-red-500/50 text-red-300 animate-pulse' : 'bg-black/40 border border-white/15 text-gray-300'}`}>
+                <span className="font-bold">⏱ {shotClock}s</span>
+                <span className="text-gray-500">·</span>
+                <span className="text-gray-400">{Math.floor(sessionTime / 60)}:{String(sessionTime % 60).padStart(2, '0')}</span>
+              </div>
             )}
-            {hoopScore.attempts > 0 && (
-              <span className="ml-1 text-gray-400 text-[9px]">{Math.round((hoopScore.makes / hoopScore.attempts) * 100)}%</span>
-            )}
-          </div>
+          </>
         )}
         {/* Phase 16.29 — city search is now a TAP-TO-OPEN MODAL.
             Inline-input approach kept getting blocked by canvas z-index +
