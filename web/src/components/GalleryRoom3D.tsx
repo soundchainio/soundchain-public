@@ -177,6 +177,23 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
   const [paused, setPaused] = useState(false)
   const pausedRef = useRef(false)
   useEffect(() => { pausedRef.current = paused }, [paused])
+  // Phase 16.64 — NBA 2K-style camera presets. Cycle with Tab (keyboard) or
+  // D-pad Up (gamepad button 12). Tab not 'C' so the binding doesn't collide
+  // with crossover ('c' / RB). Each preset has its own distance / height /
+  // look-at formula. 2K cam is the default and is the only one that responds
+  // to mouse drag for yaw/pitch.
+  type CameraPreset = '2K' | 'BROADCAST' | 'SIDE' | 'HIGH' | 'PLAYER LOCK' | 'SKYBOX'
+  const CAMERA_PRESETS: CameraPreset[] = ['2K', 'BROADCAST', 'SIDE', 'HIGH', 'PLAYER LOCK', 'SKYBOX']
+  const [cameraPreset, setCameraPreset] = useState<CameraPreset>('2K')
+  const cameraPresetRef = useRef<CameraPreset>('2K')
+  useEffect(() => { cameraPresetRef.current = cameraPreset }, [cameraPreset])
+  // Phase 16.64 — MISS / MAKE callout banner (separate from score popups)
+  const [shotResult, setShotResult] = useState<{ text: string; color: string; bornAt: number } | null>(null)
+  useEffect(() => {
+    if (!shotResult) return
+    const id = window.setTimeout(() => setShotResult(null), 1200)
+    return () => window.clearTimeout(id)
+  }, [shotResult])
   // Phase 16.29 — city search now opens as a full modal dialog so typing
   // isn't gated by any z-index / pointer-event conflicts with the canvas.
   const [citySearchOpen, setCitySearchOpen] = useState(false)
@@ -1790,25 +1807,79 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         ball.position.x += ballState.vel.x * g
         ball.position.y += ballState.vel.y * g
         ball.position.z += ballState.vel.z * g
-        // Score + SFX detection
+        // Phase 16.64 — REAL rim + backboard collision with velocity bounce.
+        // Previously these blocks only triggered SFX; ball passed through both
+        // like ghosts. Now: rim ring (torus major-radius 0.35, tube 0.04)
+        // reflects ball off its outer ring using the radial normal in XZ;
+        // backboard plane reflects Z-velocity. Restitution tuned to feel like
+        // 2K — rim bounces are soft (0.5), backboard is harder (0.7).
+        const dx = ball.position.x - RIM_POS.x
+        const dz = ball.position.z - RIM_POS.z
+        const horizDist = Math.hypot(dx, dz)
+        const dy = Math.abs(ball.position.y - RIM_POS.y)
+        // Made-shot detection (only while moving downward through inner radius)
         if (!ballState.scoredThisShot && ballState.vel.y < 0) {
-          const dx = ball.position.x - RIM_POS.x
-          const dz = ball.position.z - RIM_POS.z
-          const horizDist = Math.hypot(dx, dz)
-          const dy = Math.abs(ball.position.y - RIM_POS.y)
-          if (horizDist < 0.34 && dy < 0.25) {
+          if (horizDist < 0.30 && dy < 0.18) {
             ballState.scoredThisShot = true
             setHoopScore((s) => ({ makes: s.makes + 1, attempts: s.attempts, streak: s.streak + 1 }))
             playSwish()
+            // Net drag — kill horizontal vel, slow descent for realism
+            ballState.vel.x *= 0.2
+            ballState.vel.z *= 0.2
+            ballState.vel.y = Math.max(ballState.vel.y, -2.5)
           }
-          if (!(ballState as any).rimHitThisShot && horizDist > 0.34 && horizDist < 0.6 && dy < 0.3) {
+        }
+        // Rim bounce — ball is on the torus ring (between inner 0.30 and outer 0.42)
+        // at rim height. Reflect velocity radially outward in XZ plane.
+        if (!ballState.scoredThisShot && horizDist > 0.30 && horizDist < 0.42 && dy < 0.12) {
+          const rimCooldown = ((ballState as any).rimBounceCooldown || 0)
+          if (rimCooldown <= 0) {
+            ;(ballState as any).rimBounceCooldown = 0.12
+            const nx = dx / (horizDist || 1)
+            const nz = dz / (horizDist || 1)
+            const vDotN = ballState.vel.x * nx + ballState.vel.z * nz
+            if (vDotN < 0) {
+              // Reflect horizontal component off rim normal, dampen
+              ballState.vel.x -= 2 * vDotN * nx * 0.5
+              ballState.vel.z -= 2 * vDotN * nz * 0.5
+              ballState.vel.x *= 0.55
+              ballState.vel.z *= 0.55
+              ballState.vel.y *= 0.6
+              // Nudge ball just outside rim ring so it doesn't re-collide
+              ball.position.x = RIM_POS.x + nx * 0.43
+              ball.position.z = RIM_POS.z + nz * 0.43
+            }
             ;(ballState as any).rimHitThisShot = true
             playRim()
           }
-          if (!(ballState as any).bbHitThisShot && Math.abs(ball.position.z - (RIM_POS.z - 0.4)) < 0.15 && Math.abs(ball.position.x) < 1.0 && ball.position.y > 3.2 && ball.position.y < 4.3) {
+        }
+        if ((ballState as any).rimBounceCooldown > 0) {
+          ;(ballState as any).rimBounceCooldown -= g
+        }
+        // Backboard bounce — plane at Z = RIM_POS.z - 0.4, normal +Z (toward court).
+        // Ball must be coming AT the board (vel.z opposite of normal sign).
+        // direction-aware: rim sits at (-0.3 * dir) from baseZ, board at (-0.7 * dir).
+        // Normal points back toward court — same sign as -dir.
+        const boardZ = RIM_POS.z - 0.4  // approximation; baseZ is hoisted out of scope here
+        const boardNormalZ = Math.sign(ball.position.z - boardZ) || 1
+        if (!ballState.scoredThisShot &&
+            Math.abs(ball.position.z - boardZ) < 0.12 &&
+            Math.abs(ball.position.x) < 1.0 &&
+            ball.position.y > 3.2 && ball.position.y < 4.4) {
+          const bbCooldown = ((ballState as any).bbBounceCooldown || 0)
+          if (bbCooldown <= 0 && (ballState.vel.z * boardNormalZ) < 0) {
+            ;(ballState as any).bbBounceCooldown = 0.15
+            ballState.vel.z = -ballState.vel.z * 0.7
+            ballState.vel.x *= 0.85
+            ballState.vel.y *= 0.92
+            // Push ball off the board so it doesn't re-trigger
+            ball.position.z = boardZ + boardNormalZ * 0.14
             ;(ballState as any).bbHitThisShot = true
             playBackboard()
           }
+        }
+        if ((ballState as any).bbBounceCooldown > 0) {
+          ;(ballState as any).bbBounceCooldown -= g
         }
         // Floor collision — max 2 bounces then force settle
         if (ball.position.y < 0.18) {
@@ -1825,6 +1896,13 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
           if (!ballState.scoredThisShot && ballState.airborneFrames > 5) {
             setHoopScore((s) => ({ ...s, streak: 0 }))
             ballState.scoredThisShot = true
+            // Phase 16.64 — MISS callout so player has visual feedback that
+            // the shot didn't drop. Pairs with rim/backboard SFX + bounce.
+            const hitRim = !!(ballState as any).rimHitThisShot
+            const hitBoard = !!(ballState as any).bbHitThisShot
+            const missText = hitRim ? 'RIM OUT' : hitBoard ? 'OFF BOARD' : 'AIRBALL'
+            const missColor = hitRim ? '#fb923c' : hitBoard ? '#f87171' : '#9ca3af'
+            setShotResult({ text: missText, color: missColor, bornAt: performance.now() })
           }
         }
         // Phase 16.39 — HARD 2.5s watchdog + OOB rescue
@@ -2769,40 +2847,55 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
           ])
           xbotState.play = (clipName: string, durationMs: number) => {
             const key = clipName.toLowerCase()
-            // Phase 16.50 — KILL THE AUTHORED-CLIP PATH ENTIRELY.
-            // Hand-rolled QuaternionKeyframeTrack poses (16.41 → 16.49) kept
-            // T-posing across SIX fix attempts because each attempt validated
-            // the math but never the per-bone euler axis values against
-            // Mixamo's actual local frames. Mixamo's stock clips (Jump, Punch,
-            // Wave, Sitting) are already polished retargets — fluid motion
-            // guaranteed. We let trajectory state machines (jumpState.peakY,
-            // moveState lateral/forward) do the differentiation: dunk leaps
-            // 1.8u and 3pt leaps 0.6u even though both play Jump for body.
+            // Phase 16.64 — ADDITIVE-SAFE ROUTING (real T-pose fix).
+            // Phase 16.50 forced NormalAnimationBlendMode on every play to
+            // route to Mixamo stock clips — but threejs.org/Xbot.glb ships
+            // with ONLY 'idle' baked in. So 'wave', 'jump', 'punch' lookups
+            // missed and fell back to the authored clips, which had been
+            // makeClipAdditive-converted (frame 0 = identity). Played in
+            // REPLACE mode, bone.quaternion = identity = T-pose.
+            // Fix: authored clips play ADDITIVELY (delta on top of idle).
+            // Stock clips (only 'idle' here) crossfade in REPLACE mode.
+            // Idle must stay running as the base layer for additive math.
             const stockKey = moveToStockClip[key]
             const actionKey = (stockKey && clipMap[stockKey]) ? stockKey : (clipMap[key] ? key : 'idle')
             const newAction = clipMap[actionKey]
             if (!newAction) return
-            // Force REPLACE mode every time — additive on top of an already-
-            // additive authored clip is what made Phase 16.48 T-pose.
-            newAction.blendMode = THREE.NormalAnimationBlendMode
+            const isAuthored = authoredKeys.has(actionKey)
+            newAction.blendMode = isAuthored ? THREE.AdditiveAnimationBlendMode : THREE.NormalAnimationBlendMode
             const oldAction = clipMap[xbotState.currentClip]
             newAction.reset().setEffectiveWeight(1).setLoop(THREE.LoopOnce, 1).fadeIn(0.12).play()
-            newAction.clampWhenFinished = true  // Phase 16.60 — hold last frame instead of bind-pose T
-            if (oldAction && oldAction !== newAction) oldAction.fadeOut(0.12)
+            newAction.clampWhenFinished = true
+            // Authored = additive overlay; idle keeps running as the base
+            // layer so q_final = q_idle × q_delta gives the real pose.
+            // Stock = REPLACE; crossfade out whatever was running.
+            if (isAuthored) {
+              const idleAction = clipMap['idle']
+              if (idleAction && !idleAction.isRunning()) {
+                idleAction.reset().setEffectiveWeight(1).play()
+              }
+            } else if (oldAction && oldAction !== newAction) {
+              oldAction.fadeOut(0.12)
+            }
             xbotState.currentClip = actionKey
             xbotState.moveLockUntil = performance.now() + durationMs
             if (SQUEAK_MOVES.has(key)) playSqueak()
           }
-          // Phase 16.60 — when any LoopOnce move clip ends, crossfade back to
-          // Idle so the avatar never sits at bind pose between moves. Three.js
-          // fires 'finished' on the mixer when a clamped action reaches its end.
+          // Phase 16.64 — clean handoff back to idle when any LoopOnce move
+          // clip ends. Additive clips just fade out (idle is still the base).
+          // Replace clips need an idle crossfade-in alongside their fade-out.
           mixer.addEventListener('finished', (ev: any) => {
             const finishedAction = ev.action as THREE.AnimationAction | undefined
             if (!finishedAction) return
             const idleAction = clipMap['idle']
             if (!idleAction || finishedAction === idleAction) return
-            idleAction.reset().setEffectiveWeight(1).fadeIn(0.18).play()
-            finishedAction.fadeOut(0.18)
+            if (finishedAction.blendMode === THREE.AdditiveAnimationBlendMode) {
+              finishedAction.fadeOut(0.18)
+              if (!idleAction.isRunning()) idleAction.reset().setEffectiveWeight(1).play()
+            } else {
+              idleAction.reset().setEffectiveWeight(1).fadeIn(0.18).play()
+              finishedAction.fadeOut(0.18)
+            }
             xbotState.currentClip = 'idle'
             xbotState.moveLockUntil = 0
           })
@@ -3163,7 +3256,18 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
     }
     const onKeyDown = (e: KeyboardEvent) => {
       if (isTypingInForm(e.target)) return
-      keys[e.key.toLowerCase()] = true
+      // Phase 16.64 — Tab cycles NBA 2K-style camera presets. Tab (not 'C')
+      // so the binding doesn't collide with crossover ('c'). preventDefault
+      // keeps Tab from blurring focus to the next form element.
+      if (e.key === 'Tab') {
+        e.preventDefault()
+        const idx = CAMERA_PRESETS.indexOf(cameraPresetRef.current)
+        const next = CAMERA_PRESETS[(idx + 1) % CAMERA_PRESETS.length]
+        setCameraPreset(next)
+        return
+      }
+      const k = e.key.toLowerCase()
+      keys[k] = true
     }
     const onKeyUp = (e: KeyboardEvent) => {
       if (isTypingInForm(e.target)) return
@@ -3921,6 +4025,7 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
       //   Str(9) → 'p'  pump fake
       //   L3(10) → 'r'  recall ball
       //   R3(11) → 'b'  alt shoot
+      //   DU(12) → Tab  camera preset cycle (Phase 16.64)
       const PAD_MAP: Array<{ btn: number; key: string; hold: boolean }> = [
         { btn: 0,  key: 'b', hold: false },
         { btn: 1,  key: 'z', hold: false },
@@ -3934,6 +4039,7 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         { btn: 9,  key: 'p', hold: false },
         { btn: 10, key: 'r', hold: false },
         { btn: 11, key: 'b', hold: false },
+        { btn: 12, key: 'Tab', hold: false },  // Phase 16.64 — D-pad Up cycles camera
       ]
       try {
         const pads = (typeof navigator !== 'undefined' && navigator.getGamepads) ? navigator.getGamepads() : []
@@ -4078,19 +4184,62 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         }
       }
 
-      // Camera follow — Phase 16.21 — orbits character based on yaw/pitch.
-      // Drag the canvas to look around 360°; character moves relative to
-      // camera direction so WASD always feels intuitive from the user's view.
-      const camDist = 6
-      const camHeight = 3 + Math.sin(cameraPitch) * 4
-      const offsetX = Math.sin(cameraYaw) * camDist
-      const offsetZ = Math.cos(cameraYaw) * camDist
-      const camTarget = new THREE.Vector3(
-        playerGroup.position.x + offsetX,
-        playerGroup.position.y + camHeight,
-        playerGroup.position.z + offsetZ,
-      )
-      camera.position.lerp(camTarget, 0.15)
+      // Phase 16.64 — NBA 2K-style camera presets. Each preset computes its
+      // own camTarget, lookAt, and lerp speed. 2K is the default drag-orbit
+      // cam (Phase 16.21 behavior preserved). Other presets are fixed-angle
+      // views that mimic NBA 2K's broadcast / side / high / lock / skybox
+      // options. Cycle with Tab (keyboard) or D-pad Up (gamepad).
+      const preset = cameraPresetRef.current
+      let camTarget: THREE.Vector3
+      let lookAtX = playerGroup.position.x
+      let lookAtY = playerGroup.position.y + 1
+      let lookAtZ = playerGroup.position.z
+      let lerpSpeed = 0.15
+      const hoopsArr = ((scene.userData as any).hoops || []) as Array<{ rimPos: THREE.Vector3 }>
+      const courtMidZ = hoopsArr[0] ? hoopsArr[0].rimPos.z * 0.5 : 0
+      if (preset === '2K') {
+        const d = 8
+        const ch = 3.4 + Math.sin(cameraPitch) * 4
+        camTarget = new THREE.Vector3(
+          playerGroup.position.x + Math.sin(cameraYaw) * d,
+          playerGroup.position.y + ch,
+          playerGroup.position.z + Math.cos(cameraYaw) * d,
+        )
+      } else if (preset === 'BROADCAST') {
+        camTarget = new THREE.Vector3(16, 10, courtMidZ)
+        lookAtX = playerGroup.position.x * 0.25
+        lookAtY = 2.2
+        lookAtZ = courtMidZ * 0.7 + playerGroup.position.z * 0.3
+        lerpSpeed = 0.08
+      } else if (preset === 'SIDE') {
+        camTarget = new THREE.Vector3(20, 5.5, courtMidZ)
+        lookAtX = 0
+        lookAtY = 2.5
+        lookAtZ = courtMidZ
+        lerpSpeed = 0.08
+      } else if (preset === 'HIGH') {
+        const d = 13
+        camTarget = new THREE.Vector3(
+          playerGroup.position.x + Math.sin(cameraYaw) * d * 0.5,
+          playerGroup.position.y + 10,
+          playerGroup.position.z + Math.cos(cameraYaw) * d,
+        )
+        lookAtY = playerGroup.position.y - 0.5
+      } else if (preset === 'PLAYER LOCK') {
+        const d = 3.4
+        camTarget = new THREE.Vector3(
+          playerGroup.position.x + Math.sin(cameraYaw) * d,
+          playerGroup.position.y + 2.2,
+          playerGroup.position.z + Math.cos(cameraYaw) * d,
+        )
+        lookAtY = playerGroup.position.y + 1.5
+        lerpSpeed = 0.28
+      } else {
+        camTarget = new THREE.Vector3(playerGroup.position.x, 24, playerGroup.position.z + 0.1)
+        lookAtY = 0
+        lerpSpeed = 0.1
+      }
+      camera.position.lerp(camTarget, lerpSpeed)
       // Phase 16.51 — camera shake (dunks, hot streaks). Decays linearly
       // over duration; applies random offset to camera each frame so the
       // image jitters without the character moving.
@@ -4103,7 +4252,7 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         camera.position.y += (Math.random() - 0.5) * amp
         camera.position.z += (Math.random() - 0.5) * amp
       }
-      camera.lookAt(playerGroup.position.x, playerGroup.position.y + 1, playerGroup.position.z)
+      camera.lookAt(lookAtX, lookAtY, lookAtZ)
 
       // Proximity audio — fade in/out based on distance
       let closestPlaying: string | null = null
@@ -4226,6 +4375,34 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         </div>
       )}
 
+      {/* Phase 16.64 — MISS / RIM OUT / OFF BOARD / AIRBALL callout. Sits
+          above scorePopups but below bigPlay. Auto-clears after 1200ms. */}
+      {shotResult && (
+        <div className="absolute inset-x-0 top-1/3 z-20 flex items-center justify-center pointer-events-none">
+          <div
+            className="font-mono font-black px-5 py-2 rounded backdrop-blur"
+            style={{
+              fontSize: 'clamp(1.4rem, 5vw, 2.6rem)',
+              color: shotResult.color,
+              textShadow: `0 0 18px ${shotResult.color}, 0 2px 6px rgba(0,0,0,0.9)`,
+              animation: 'sc-shotmiss 1.2s ease-out forwards',
+              letterSpacing: '0.08em',
+              background: 'rgba(0,0,0,0.35)',
+              border: `1px solid ${shotResult.color}`,
+            }}
+          >
+            {shotResult.text}
+          </div>
+        </div>
+      )}
+      <style jsx>{`
+        @keyframes sc-shotmiss {
+          0%   { opacity: 0; transform: scale(0.7) translateY(-6px); }
+          18%  { opacity: 1; transform: scale(1.1) translateY(0); }
+          70%  { opacity: 1; transform: scale(1) translateY(0); }
+          100% { opacity: 0; transform: scale(0.95) translateY(8px); }
+        }
+      `}</style>
       {/* Phase 16.58 — BIG PLAY CAM banner: full-screen flash on signature
           moments. Different colors per play type. CSS keyframe handles
           entrance burst + hold + exit. */}
@@ -4813,6 +4990,23 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
                 <span className="font-bold uppercase">{platformInfo.label}</span>
                 {platformInfo.inputMode === 'gamepad' && <span className="ml-0.5 text-emerald-400">·🎮</span>}
               </div>
+            )}
+            {/* Phase 16.64 — NBA 2K-style camera preset cycle. Tap to cycle,
+                or press Tab (keyboard) / D-pad Up (gamepad). */}
+            {(theme === 'gym' || theme === 'blacktop') && (
+              <button
+                type="button"
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  const idx = CAMERA_PRESETS.indexOf(cameraPreset)
+                  setCameraPreset(CAMERA_PRESETS[(idx + 1) % CAMERA_PRESETS.length])
+                }}
+                className="pointer-events-auto px-2 py-1 rounded backdrop-blur text-[9px] font-mono flex items-center gap-1 bg-cyan-500/15 border border-cyan-400/40 text-cyan-200 hover:bg-cyan-500/25 transition"
+                aria-label="Cycle camera view"
+              >
+                🎥 <span className="font-bold uppercase">{cameraPreset}</span> <span className="text-cyan-400/60 text-[8px]">[TAB]</span>
+              </button>
             )}
             {/* Phase 16.59 — difficulty pills + pause */}
             {(theme === 'gym' || theme === 'blacktop') && (
