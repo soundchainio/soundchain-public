@@ -22,6 +22,7 @@ import { toast } from 'react-toastify'
 import { FURNITURE_CATALOG, FURNITURE_CATEGORIES, filterByCategory, getPlacedFurniture, savePlacedFurniture, getFurnitureById, type PlacedFurniture, type FurnitureCategory } from 'lib/nodeverse/galleryFurniture'
 import { AudioPlayer } from 'components/AudioPlayer'
 import { getStoredCharacter, type CharacterConfig } from 'components/CharacterDesigner'
+import { connectAsHost, connectAsGuest, type GymPeer, type GymStateMsg, type GymEventMsg } from 'lib/gym/multiplayer'
 
 interface Track {
   id: string
@@ -77,6 +78,19 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
   const gamepadConnectedRef = useRef(false)
   // Phase 16.46 — edge-trigger state per button so holding doesn't auto-spam
   const gamepadButtonStateRef = useRef<Record<number, boolean>>({})
+  // Phase 16.47 — WebRTC 1-on-1 multiplayer state
+  const peerRef = useRef<GymPeer | null>(null)
+  const remoteAvatarRef = useRef<{
+    holder: THREE.Group
+    state: { mixer?: THREE.AnimationMixer; clips?: Record<string, THREE.AnimationAction>; currentClip?: string }
+    lastState?: GymStateMsg
+    nameLabel?: THREE.Sprite
+  } | null>(null)
+  const [mpMode, setMpMode] = useState<'solo' | 'lobby' | 'host-waiting' | 'guest-joining' | 'connected'>('solo')
+  const [mpRoomCode, setMpRoomCode] = useState('')
+  const [mpJoinInput, setMpJoinInput] = useState('')
+  const [mpRemoteHandle, setMpRemoteHandle] = useState('Player 2')
+  const [mpError, setMpError] = useState('')
   // Phase 16.26 — city location state (street search result)
   const [cityLocation, setCityLocation] = useState<{ label: string; lat: number; lng: number } | null>(null)
   const cityLocationRef = useRef<{ label: string; lat: number; lng: number } | null>(null)
@@ -853,6 +867,12 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
               // Phase 16.44 — crowd erupts on every make
               const crowdRef = (scene.userData as any).crowd
               if (crowdRef?.cheer) crowdRef.cheer()
+              // Phase 16.47 — broadcast score to remote peer so their crowd
+              // cheers too. Sent on reliable event channel.
+              const mpPeer = peerRef.current
+              if (mpPeer) {
+                try { mpPeer.sendEvent({ type: 'score', player: 'me' }) } catch {}
+              }
               break
             }
             // Rim chirp on close miss (ball passes near rim, slightly outside)
@@ -2370,6 +2390,93 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
     // Initial avatar build from saved character
     buildAvatar(getStoredCharacter())
 
+    // Phase 16.47 — WebRTC 1-on-1 multiplayer setup. Remote player renders
+    // as a tinted capsule humanoid (XBot + animation sync deferred to v2).
+    // State sync at 15Hz drives remote position/rotation. Events (shot,
+    // score, cheer) flow via the reliable event channel.
+    if (isSportsTheme) {
+      const remoteAvatarHolder = new THREE.Group()
+      remoteAvatarHolder.visible = false
+      scene.add(remoteAvatarHolder)
+
+      const buildRemoteCapsule = (profile: CharacterConfig | null | undefined, handle: string) => {
+        // Clear old
+        while (remoteAvatarHolder.children.length > 0) {
+          const c = remoteAvatarHolder.children[0]
+          remoteAvatarHolder.remove(c)
+          if ((c as any).geometry) (c as any).geometry.dispose()
+          if ((c as any).material) {
+            const m = (c as any).material
+            if (Array.isArray(m)) m.forEach((x: any) => x.dispose()); else m.dispose()
+          }
+        }
+        const p = profile || ({} as CharacterConfig)
+        const skinHex = (p as any).face?.skinTone || (p as any).skinColor || '#d4a373'
+        const bodyHex = p.bodyColor || '#3b82f6'
+        const skin = new THREE.MeshStandardMaterial({ color: skinHex, roughness: 0.7 })
+        const jersey = new THREE.MeshStandardMaterial({
+          color: bodyHex,
+          emissive: new THREE.Color(bodyHex),
+          emissiveIntensity: 0.08,
+          roughness: 0.6,
+        })
+        const shorts = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.7 })
+        const shoes = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4 })
+        // Head + crude hair
+        const head = new THREE.Mesh(new THREE.SphereGeometry(0.16, 16, 12), skin)
+        head.position.set(0, 1.86, 0); head.castShadow = true
+        remoteAvatarHolder.add(head)
+        const hairColor = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.8 })
+        const hair = new THREE.Mesh(
+          new THREE.SphereGeometry(0.165, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2.2),
+          hairColor,
+        )
+        hair.position.set(0, 1.88, 0); hair.castShadow = true
+        remoteAvatarHolder.add(hair)
+        // Torso
+        const torso = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.55, 0.28), jersey)
+        torso.position.set(0, 1.4, 0); torso.castShadow = true
+        remoteAvatarHolder.add(torso)
+        // Hips
+        const hips = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.3, 0.3), shorts)
+        hips.position.set(0, 1.0, 0); hips.castShadow = true
+        remoteAvatarHolder.add(hips)
+        // Arms (static, no animation in v1)
+        for (const xs of [-1, 1]) {
+          const arm = new THREE.Mesh(new THREE.CapsuleGeometry(0.07, 0.6, 4, 8), skin)
+          arm.position.set(xs * 0.32, 1.3, 0); arm.castShadow = true
+          remoteAvatarHolder.add(arm)
+        }
+        // Legs
+        for (const xs of [-1, 1]) {
+          const leg = new THREE.Mesh(new THREE.CapsuleGeometry(0.08, 0.7, 4, 8), skin)
+          leg.position.set(xs * 0.12, 0.45, 0); leg.castShadow = true
+          remoteAvatarHolder.add(leg)
+          const shoe = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.09, 0.32), shoes)
+          shoe.position.set(xs * 0.12, 0.0, 0.04); shoe.castShadow = true
+          remoteAvatarHolder.add(shoe)
+        }
+        // Handle label above head (sprite from canvas)
+        const labelCanvas = document.createElement('canvas')
+        labelCanvas.width = 256; labelCanvas.height = 64
+        const lctx = labelCanvas.getContext('2d')!
+        lctx.fillStyle = 'rgba(0,0,0,0.7)'; lctx.fillRect(0, 0, 256, 64)
+        lctx.strokeStyle = bodyHex; lctx.lineWidth = 4; lctx.strokeRect(2, 2, 252, 60)
+        lctx.fillStyle = '#ffffff'; lctx.font = 'bold 32px monospace'; lctx.textAlign = 'center'
+        lctx.fillText(handle.slice(0, 12), 128, 42)
+        const labelTex = new THREE.CanvasTexture(labelCanvas)
+        const labelMat = new THREE.SpriteMaterial({ map: labelTex, transparent: true })
+        const label = new THREE.Sprite(labelMat)
+        label.scale.set(1.2, 0.3, 1)
+        label.position.set(0, 2.3, 0)
+        remoteAvatarHolder.add(label)
+        remoteAvatarHolder.visible = true
+      }
+
+      ;(scene.userData as any).buildRemoteCapsule = buildRemoteCapsule
+      ;(scene.userData as any).remoteAvatarHolder = remoteAvatarHolder
+    }
+
     // Phase 16.28 — listen for character-updated events fired by
     // CharacterDesigner.saveCharacter(). Lets users design + save in another
     // tab (or the designer modal) and see the gallery3d avatar swap live.
@@ -2579,6 +2686,129 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
     }
     ;(scene.userData as any).triggerMove = triggerMove
 
+    // Phase 16.47 — multiplayer connection setup. Exposed via scene.userData
+    // so the lobby UI (React JSX) can call into the 3D scene to start a
+    // host or guest connection. Closing the peer cleans up the remote
+    // avatar holder and resets to solo mode.
+    const teardownPeer = () => {
+      const cur = peerRef.current
+      if (cur) {
+        try { cur.close() } catch {}
+        peerRef.current = null
+      }
+      const rh = (scene.userData as any).remoteAvatarHolder as THREE.Group | undefined
+      if (rh) rh.visible = false
+      remoteAvatarRef.current = null
+      setMpMode('solo')
+      setMpRoomCode('')
+      setMpRemoteHandle('Player 2')
+    }
+    ;(scene.userData as any).teardownPeer = teardownPeer
+
+    const onRemoteState = (msg: GymStateMsg) => {
+      const rh = (scene.userData as any).remoteAvatarHolder as THREE.Group | undefined
+      if (!rh) return
+      rh.position.set(msg.pos[0], msg.pos[1], msg.pos[2])
+      rh.rotation.y = msg.rot
+      if (remoteAvatarRef.current) {
+        remoteAvatarRef.current.lastState = msg
+      }
+    }
+
+    const onRemoteEvent = (msg: GymEventMsg) => {
+      if (msg.type === 'hello') {
+        // Remote sent profile + handle → build their avatar
+        const profile = msg.profile as CharacterConfig
+        const handle = msg.handle || 'Player 2'
+        const buildFn = (scene.userData as any).buildRemoteCapsule as
+          | ((p: CharacterConfig | null, h: string) => void) | undefined
+        if (buildFn) buildFn(profile, handle)
+        setMpRemoteHandle(handle)
+        if (remoteAvatarRef.current) {
+          // already exists, just rebuild
+        } else {
+          const rh = (scene.userData as any).remoteAvatarHolder as THREE.Group
+          remoteAvatarRef.current = { holder: rh, state: {}, lastState: undefined }
+        }
+      } else if (msg.type === 'score') {
+        // Remote scored → crowd cheers on our side too
+        const crowd = (scene.userData as any).crowd
+        if (crowd?.cheer) crowd.cheer()
+      } else if (msg.type === 'crowdCheer') {
+        const crowd = (scene.userData as any).crowd
+        if (crowd?.cheer) crowd.cheer()
+      } else if (msg.type === 'bye') {
+        teardownPeer()
+        try { toast.info('Opponent disconnected — back to solo') } catch {}
+      }
+    }
+
+    const wirePeerHooks = (peer: GymPeer) => {
+      peerRef.current = peer
+      setMpRoomCode(peer.code)
+      setMpRemoteHandle(peer.remoteHandle || 'Player 2')
+      // Immediately fire hello so remote builds our avatar
+      const me = getStoredCharacter()
+      const myHandle = (me as any).name || 'Player 1'
+      peer.sendEvent({ type: 'hello', profile: me, handle: myHandle })
+      // If remote profile is already known (guest case via join response),
+      // build their avatar right away
+      if (peer.remoteProfile) {
+        const buildFn = (scene.userData as any).buildRemoteCapsule as
+          | ((p: CharacterConfig | null, h: string) => void) | undefined
+        if (buildFn) buildFn(peer.remoteProfile as CharacterConfig, peer.remoteHandle || 'Player 2')
+        const rh = (scene.userData as any).remoteAvatarHolder as THREE.Group
+        remoteAvatarRef.current = { holder: rh, state: {}, lastState: undefined }
+      }
+    }
+
+    ;(scene.userData as any).startMultiplayerHost = async () => {
+      try {
+        setMpError('')
+        setMpMode('host-waiting')
+        const me = getStoredCharacter()
+        const myHandle = (me as any).name || 'Player 1'
+        const peer = await connectAsHost(
+          {
+            onStateMsg: onRemoteState,
+            onEventMsg: onRemoteEvent,
+            onOpen: () => { setMpMode('connected'); try { toast.success('Player 2 connected!') } catch {} },
+            onClose: () => { teardownPeer(); try { toast.info('Connection lost') } catch {} },
+          },
+          { profile: me, handle: myHandle },
+        )
+        wirePeerHooks(peer)
+      } catch (err) {
+        const msg = (err as Error).message || 'Connection failed'
+        setMpError(msg)
+        setMpMode('lobby')
+      }
+    }
+
+    ;(scene.userData as any).startMultiplayerGuest = async (code: string) => {
+      try {
+        setMpError('')
+        setMpMode('guest-joining')
+        const me = getStoredCharacter()
+        const myHandle = (me as any).name || 'Player 2'
+        const peer = await connectAsGuest(
+          code,
+          {
+            onStateMsg: onRemoteState,
+            onEventMsg: onRemoteEvent,
+            onOpen: () => { setMpMode('connected'); try { toast.success(`Joined ${peer.remoteHandle}!`) } catch {} },
+            onClose: () => { teardownPeer(); try { toast.info('Connection lost') } catch {} },
+          },
+          { profile: me, handle: myHandle },
+        )
+        wirePeerHooks(peer)
+      } catch (err) {
+        const msg = (err as Error).message || 'Join failed'
+        setMpError(msg)
+        setMpMode('lobby')
+      }
+    }
+
     // ─── Animation Loop ──────────────────────────────────────
     // Phase 16.24 — SPEED is now in units PER SECOND, not per-frame. Frame-rate
     // independent movement so character walks the same pace at 60fps (empty
@@ -2749,6 +2979,29 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         }
         crowd.torsoMesh.instanceMatrix.needsUpdate = true
         crowd.headMesh.instanceMatrix.needsUpdate = true
+      }
+
+      // Phase 16.47 — multiplayer broadcast tick. 15Hz cap so we don't
+      // flood the data channel. Position + rotation + current animation
+      // clip + ball-held flag = enough to drive remote avatar visualization.
+      const peer = peerRef.current
+      if (peer) {
+        const mpLast = (scene.userData as any)._mpLastBroadcast || 0
+        if (now - mpLast > 66) {
+          ;(scene.userData as any)._mpLastBroadcast = now
+          const pg = (scene.userData as any).playerGroupRef as THREE.Group | undefined
+          const ballRef = (scene.userData as any).ball
+          const xbotState = (avatarHolder.userData as any).xbot as { currentClip?: string } | undefined
+          if (pg) {
+            peer.sendState({
+              pos: [pg.position.x, pg.position.y, pg.position.z],
+              rot: pg.rotation.y,
+              clip: xbotState?.currentClip || 'idle',
+              ballHeld: !!ballRef?.ballState?.held,
+              t: now,
+            })
+          }
+        }
       }
 
       if (xbot?.mixer) {
@@ -3166,6 +3419,132 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
   return (
     <div className="relative w-full h-full" tabIndex={0} onFocus={() => containerRef.current?.focus()}>
       <div ref={containerRef} className="absolute inset-0" tabIndex={0} style={{ cursor: 'grab', outline: 'none' }} onClick={() => containerRef.current?.focus()} />
+
+      {/* Phase 16.47 — multiplayer lobby UI. Shows a "VS" pill in solo mode;
+          opens a panel with Create/Join when tapped. While connected,
+          shows a small connected-status pill with disconnect button. */}
+      {(theme === 'gym' || theme === 'blacktop') && (
+        <div className="absolute top-20 right-3 z-30 flex flex-col gap-2 items-end pointer-events-auto">
+          {mpMode === 'solo' && (
+            <button
+              onClick={() => setMpMode('lobby')}
+              className="px-3 py-1.5 rounded-full text-xs font-mono font-extrabold tracking-widest text-white bg-red-600 border-2 border-red-300 shadow-lg shadow-red-500/40 active:scale-95 transition"
+              style={{ boxShadow: '0 0 16px rgba(220,38,38,0.5), inset 0 -2px 4px rgba(0,0,0,0.3)' }}
+            >
+              ⚔️ VS · 1-ON-1
+            </button>
+          )}
+          {mpMode === 'lobby' && (
+            <div
+              className="rounded-xl p-3 w-72 max-w-[90vw]"
+              style={{
+                background: 'rgba(0,0,0,0.92)',
+                border: '2px solid #dc2626',
+                boxShadow: '0 0 24px rgba(220,38,38,0.4), inset 0 0 12px rgba(220,38,38,0.08)',
+              }}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-mono font-bold tracking-widest text-red-400 uppercase">⚔️ 1-on-1 Lobby</span>
+                <button onClick={() => { setMpMode('solo'); setMpError('') }} className="text-white/70 text-xs">✕</button>
+              </div>
+              <button
+                onClick={() => {
+                  const fn = (sceneRef.current as any)?.userData?.startMultiplayerHost
+                  if (fn) fn()
+                }}
+                className="w-full mb-2 px-3 py-2 rounded-lg text-xs font-mono font-bold text-white bg-red-600 border-2 border-red-300 active:scale-95 transition"
+              >
+                🏀 CREATE ROOM
+              </button>
+              <div className="text-[9px] font-mono text-white/50 mb-1 mt-2 uppercase tracking-wider">or join with code</div>
+              <div className="flex gap-1.5">
+                <input
+                  value={mpJoinInput}
+                  onChange={(e) => setMpJoinInput(e.target.value.toUpperCase())}
+                  maxLength={6}
+                  placeholder="6-CHAR CODE"
+                  className="flex-1 px-2 py-1.5 rounded text-white text-sm font-mono tracking-widest text-center bg-zinc-900 border-2 border-zinc-700 focus:border-red-400 outline-none"
+                  style={{ letterSpacing: '0.15em' }}
+                />
+                <button
+                  onClick={() => {
+                    if (mpJoinInput.length !== 6) { setMpError('Code must be 6 chars'); return }
+                    const fn = (sceneRef.current as any)?.userData?.startMultiplayerGuest
+                    if (fn) fn(mpJoinInput)
+                  }}
+                  className="px-3 py-1.5 rounded text-xs font-mono font-bold text-white bg-emerald-600 border-2 border-emerald-300 active:scale-95 transition"
+                >
+                  JOIN
+                </button>
+              </div>
+              {mpError && <div className="mt-2 text-[10px] font-mono text-red-400">{mpError}</div>}
+            </div>
+          )}
+          {mpMode === 'host-waiting' && (
+            <div
+              className="rounded-xl p-3 w-72 max-w-[90vw]"
+              style={{
+                background: 'rgba(0,0,0,0.92)',
+                border: '2px solid #dc2626',
+                boxShadow: '0 0 24px rgba(220,38,38,0.4)',
+              }}
+            >
+              <div className="text-[10px] font-mono font-bold tracking-widest text-red-400 uppercase mb-2">⏳ Waiting for Player 2…</div>
+              <div className="text-xs font-mono text-white/70 mb-1">Share this code:</div>
+              <div className="flex items-center gap-2">
+                <div className="flex-1 px-3 py-2 rounded bg-zinc-900 border-2 border-red-400 text-white text-2xl font-mono font-extrabold tracking-[0.3em] text-center">
+                  {mpRoomCode || '...'}
+                </div>
+                <button
+                  onClick={() => { if (mpRoomCode) { navigator.clipboard?.writeText(mpRoomCode).catch(() => {}); toast.success('Copied!') } }}
+                  className="px-3 py-2 rounded text-xs font-mono font-bold text-white bg-zinc-700 border-2 border-zinc-500 active:scale-95"
+                >
+                  📋
+                </button>
+              </div>
+              <button
+                onClick={() => {
+                  const fn = (sceneRef.current as any)?.userData?.teardownPeer
+                  if (fn) fn()
+                }}
+                className="w-full mt-3 px-3 py-1.5 rounded text-[10px] font-mono font-bold text-white bg-zinc-700 border-2 border-zinc-500 active:scale-95"
+              >
+                CANCEL
+              </button>
+            </div>
+          )}
+          {mpMode === 'guest-joining' && (
+            <div
+              className="rounded-xl p-3 w-72 max-w-[90vw]"
+              style={{ background: 'rgba(0,0,0,0.92)', border: '2px solid #10b981' }}
+            >
+              <div className="text-[10px] font-mono font-bold tracking-widest text-emerald-400 uppercase">🤝 Connecting…</div>
+            </div>
+          )}
+          {mpMode === 'connected' && (
+            <div
+              className="rounded-full px-3 py-1.5 flex items-center gap-2"
+              style={{
+                background: 'rgba(0,0,0,0.92)',
+                border: '2px solid #10b981',
+                boxShadow: '0 0 16px rgba(16,185,129,0.4)',
+              }}
+            >
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-[10px] font-mono font-bold text-white">VS · {mpRemoteHandle}</span>
+              <button
+                onClick={() => {
+                  const fn = (sceneRef.current as any)?.userData?.teardownPeer
+                  if (fn) fn()
+                }}
+                className="ml-1 text-xs text-white/70 hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Phase 16.45 — basketball CONTROLS PANEL. Pre-fix the action pills
           were translucent /40-/60 gradients that blended into every other
