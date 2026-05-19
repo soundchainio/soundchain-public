@@ -694,6 +694,75 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         courtZ,
       }
 
+      // Phase 16.55 — AI DEFENDER. Primitive humanoid in red jersey + dark
+      // skin tone for visual contrast against player's XBot. Lives in
+      // scene.userData.defender so animate loop can tick AI behavior.
+      const defGroup = new THREE.Group()
+      defGroup.position.set(0, 0, hoopList[0] ? hoopList[0].rimPos.z + 4 : -8)
+      // Head + hair
+      const defSkin = new THREE.MeshStandardMaterial({ color: 0x8b5e3c, roughness: 0.7 })
+      const defJersey = new THREE.MeshStandardMaterial({ color: 0xdc2626, emissive: 0xdc2626, emissiveIntensity: 0.15, roughness: 0.6 })
+      const defShorts = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.7 })
+      const defShoe = new THREE.MeshStandardMaterial({ color: 0xfff5dd, roughness: 0.4 })
+      const defHair = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.85 })
+      const dHead = new THREE.Mesh(new THREE.SphereGeometry(0.16, 16, 12), defSkin)
+      dHead.position.set(0, 1.86, 0); dHead.castShadow = true; defGroup.add(dHead)
+      const dHair = new THREE.Mesh(new THREE.SphereGeometry(0.165, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2.2), defHair)
+      dHair.position.set(0, 1.88, 0); dHair.castShadow = true; defGroup.add(dHair)
+      const dTorso = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.55, 0.28), defJersey)
+      dTorso.position.set(0, 1.4, 0); dTorso.castShadow = true; defGroup.add(dTorso)
+      const dHips = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.3, 0.3), defShorts)
+      dHips.position.set(0, 1.0, 0); dHips.castShadow = true; defGroup.add(dHips)
+      // Arms (capsules, no swing — defender just slides for v1)
+      for (const xSign of [-1, 1]) {
+        const upperArm = new THREE.Mesh(new THREE.CapsuleGeometry(0.07, 0.3, 4, 8), defSkin)
+        upperArm.position.set(xSign * 0.32, 1.42, 0)
+        upperArm.castShadow = true
+        defGroup.add(upperArm)
+        const forearm = new THREE.Mesh(new THREE.CapsuleGeometry(0.06, 0.28, 4, 8), defSkin)
+        forearm.position.set(xSign * 0.32, 1.02, 0)
+        forearm.castShadow = true
+        defGroup.add(forearm)
+        const hand = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 6), defSkin)
+        hand.position.set(xSign * 0.32, 0.74, 0)
+        hand.castShadow = true
+        defGroup.add(hand)
+      }
+      // Legs
+      for (const xSign of [-1, 1]) {
+        const upperLeg = new THREE.Mesh(new THREE.CapsuleGeometry(0.09, 0.36, 4, 8), defSkin)
+        upperLeg.position.set(xSign * 0.12, 0.68, 0); upperLeg.castShadow = true
+        defGroup.add(upperLeg)
+        const lowerLeg = new THREE.Mesh(new THREE.CapsuleGeometry(0.08, 0.36, 4, 8), defSkin)
+        lowerLeg.position.set(xSign * 0.12, 0.24, 0); lowerLeg.castShadow = true
+        defGroup.add(lowerLeg)
+        const shoe = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.09, 0.32), defShoe)
+        shoe.position.set(xSign * 0.12, 0.045, 0.04); shoe.castShadow = true
+        defGroup.add(shoe)
+      }
+      // Number "1" badge on jersey
+      const numCanvas = document.createElement('canvas')
+      numCanvas.width = 64; numCanvas.height = 64
+      const nctx = numCanvas.getContext('2d')!
+      nctx.fillStyle = 'white'
+      nctx.font = 'bold 50px monospace'
+      nctx.textAlign = 'center'
+      nctx.fillText('D', 32, 50)
+      const numTex = new THREE.CanvasTexture(numCanvas)
+      const numPlane = new THREE.Mesh(
+        new THREE.PlaneGeometry(0.25, 0.25),
+        new THREE.MeshBasicMaterial({ map: numTex, transparent: true }),
+      )
+      numPlane.position.set(0, 1.45, 0.15)
+      defGroup.add(numPlane)
+      scene.add(defGroup)
+      ;(scene.userData as any).defender = {
+        group: defGroup,
+        // Per-frame state
+        targetX: 0, targetZ: 0,
+        speed: 0,
+      }
+
       // Blacktop-specific: chain-link fence around court
       if (isBlacktopCourt) {
         const fenceMat = new THREE.MeshStandardMaterial({ color: 0x4a4a4a, metalness: 0.6, roughness: 0.5, transparent: true, opacity: 0.55, wireframe: true })
@@ -917,6 +986,37 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         const isLayup = !isDunk && horizDist < 4.0
         const isThree = horizDist > 7
         const wantFadeaway = !!(keys && (keys['shift'] || keys['f']))
+        // Phase 16.55 — defender contests shots. If defender is within 2u
+        // of shooter, jitter the target so the shot is less accurate.
+        // Within 1.2u (right on top), 30% chance to BLOCK outright.
+        const defRef = (scene.userData as any).defender
+        let blocked = false
+        if (defRef?.group) {
+          const ddx = playerGroup.position.x - defRef.group.position.x
+          const ddz = playerGroup.position.z - defRef.group.position.z
+          const defDist = Math.hypot(ddx, ddz)
+          if (defDist < 1.2 && Math.random() < 0.30) {
+            blocked = true
+            speak("DENIED!", { pitch: 0.92, rate: 1.2 })
+            triggerCameraShake(0.2, 0.2)
+            const crowdRef2 = (scene.userData as any).crowd
+            if (crowdRef2?.cheer) crowdRef2.cheer()
+          } else if (defDist < 2.0) {
+            // Contested — jitter target by random offset
+            const jitter = (2.0 - defDist) * 0.5  // closer = more jitter
+            target.x += (Math.random() - 0.5) * jitter
+            target.z += (Math.random() - 0.5) * jitter
+            target.y -= Math.random() * 0.3  // arc cut, ball comes up short
+          }
+        }
+        if (blocked) {
+          // Ball pops up out of player's hand + falls straight down
+          ballStateBG.held = false
+          ballStateBG.vel.set(0, 5, 0)
+          ;(ballStateBG as any).shotType = 'blocked'
+          setHoopScore((s) => ({ ...s, attempts: s.attempts + 1, streak: 0 }))
+          return
+        }
         jumpStateBG.active = true
         jumpStateBG.t = 0
         jumpStateBG.baseY = playerGroup.position.y
@@ -3523,6 +3623,47 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
           break  // only first connected pad drives input
         }
       } catch {}
+
+      // Phase 16.55 — AI DEFENDER. Hovers between the shooter and the
+      // nearest hoop. Slides toward player at 80% of player speed, faces
+      // the player. When defender is right on the player + shooter
+      // releases, shot is contested (jitter) or blocked outright (see
+      // shootRef). Defender keeps a small offset toward the hoop so it
+      // can't just glue to the player and trivially deny everything.
+      const defenderRef = (scene.userData as any).defender
+      if (defenderRef?.group) {
+        const dg: THREE.Group = defenderRef.group
+        const hoops = (scene.userData as any).hoops || []
+        const playerPos = playerGroup.position
+        // Pick nearest hoop to player as the rim defender is protecting
+        let nearestRim: THREE.Vector3 | null = null
+        let nearestDist = Infinity
+        for (const h of hoops) {
+          const d = playerPos.distanceTo(h.rimPos)
+          if (d < nearestDist) { nearestDist = d; nearestRim = h.rimPos }
+        }
+        if (nearestRim) {
+          // Stand between player and rim, offset 1.5u toward player
+          const ldx = nearestRim.x - playerPos.x
+          const ldz = nearestRim.z - playerPos.z
+          const linedist = Math.hypot(ldx, ldz) || 1
+          const tx = playerPos.x + (ldx / linedist) * 1.5
+          const tz = playerPos.z + (ldz / linedist) * 1.5
+          // Slide defender toward target position
+          const cdx = tx - dg.position.x
+          const cdz = tz - dg.position.z
+          const cdist = Math.hypot(cdx, cdz)
+          const defSpeed = SPEED * 0.85 * dtSec
+          if (cdist > 0.05) {
+            dg.position.x += (cdx / cdist) * Math.min(defSpeed, cdist)
+            dg.position.z += (cdz / cdist) * Math.min(defSpeed, cdist)
+          }
+          // Face the player
+          const fdx = playerPos.x - dg.position.x
+          const fdz = playerPos.z - dg.position.z
+          dg.rotation.y = Math.atan2(fdx, fdz)
+        }
+      }
 
       // Phase 16.53 — game clocks tick. Shot clock decrements while
       // running; session timer counts up. Sync to React state every 0.25s
