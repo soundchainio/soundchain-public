@@ -2227,25 +2227,25 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
           ])
           xbotState.play = (clipName: string, durationMs: number) => {
             const key = clipName.toLowerCase()
-            // Phase 16.48 — authored clips are now ADDITIVE; play them on top
-            // of the running base (idle/walk/run) without fading the base out.
-            // Stock clips (jump, walk, etc.) still use REPLACE mode.
-            if (authoredKeys.has(key)) {
-              const action = clipMap[key]
-              if (!action) return
-              action.reset().setEffectiveWeight(1).fadeIn(0.12).play()
-              // Don't touch currentClip — base layer keeps driving locomotion
-              xbotState.moveLockUntil = performance.now() + durationMs
-              if (SQUEAK_MOVES.has(key)) playSqueak()
-              return
-            }
-            // Stock-clip path (fallback for any move without an authored clip)
-            const fallback = moveToStockClip[key]
-            const actionKey = clipMap[key] ? key : (fallback && clipMap[fallback]) ? fallback : key
+            // Phase 16.50 — KILL THE AUTHORED-CLIP PATH ENTIRELY.
+            // Hand-rolled QuaternionKeyframeTrack poses (16.41 → 16.49) kept
+            // T-posing across SIX fix attempts because each attempt validated
+            // the math but never the per-bone euler axis values against
+            // Mixamo's actual local frames. Mixamo's stock clips (Jump, Punch,
+            // Wave, Sitting) are already polished retargets — fluid motion
+            // guaranteed. We let trajectory state machines (jumpState.peakY,
+            // moveState lateral/forward) do the differentiation: dunk leaps
+            // 1.8u and 3pt leaps 0.6u even though both play Jump for body.
+            const stockKey = moveToStockClip[key]
+            const actionKey = (stockKey && clipMap[stockKey]) ? stockKey : (clipMap[key] ? key : 'idle')
             const newAction = clipMap[actionKey]
             if (!newAction) return
+            // Force REPLACE mode every time — additive on top of an already-
+            // additive authored clip is what made Phase 16.48 T-pose.
+            newAction.blendMode = THREE.NormalAnimationBlendMode
             const oldAction = clipMap[xbotState.currentClip]
-            newAction.reset().setEffectiveWeight(1).fadeIn(0.12).play()
+            newAction.reset().setEffectiveWeight(1).setLoop(THREE.LoopOnce, 1).fadeIn(0.12).play()
+            newAction.clampWhenFinished = false  // snap back so locomotion resumes clean
             if (oldAction && oldAction !== newAction) oldAction.fadeOut(0.12)
             xbotState.currentClip = actionKey
             xbotState.moveLockUntil = performance.now() + durationMs
