@@ -2151,17 +2151,38 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
               [[0,0,0], [-0.1,0,0], [-0.18,0,0], [-0.12,0,0], [0,0,0]]),
           ])
 
+          // Phase 16.48 — convert authored clips to ADDITIVE blend mode so
+          // they layer on top of the running base clip (idle/walk/run) rather
+          // than replacing it. Previous bind*delta approach was mathematically
+          // correct, but at clip start frame 0 = bindQuat = T-pose, so arms
+          // SNAPPED to T-pose then stayed there if the deltas never visibly
+          // applied. With makeClipAdditive: frame 0 becomes the reference
+          // (identity contribution = base pose drives), middle frames are
+          // deltas added on top. Played with AdditiveAnimationBlendMode, the
+          // base layer (idle) keeps the arm in its natural sway position and
+          // the authored shoot clip adds rotation on top — exactly what NBA2K
+          // does and what every Mixamo retarget pipeline relies on.
+          const authoredClips = [dunkClip, layupClip, fadeawayClip, reboundClip, blockClip, passClip, crossoverClip, pumpFakeClip, jabStepClip, jumpShotClip, defenseClip]
+          for (const clip of authoredClips) {
+            THREE.AnimationUtils.makeClipAdditive(clip)
+          }
+          const authoredKeys = new Set<string>(authoredClips.map(c => c.name.toLowerCase()))
+
           // Wire all custom clips into the clipMap. LoopOnce + clampWhenFinished
-          // means the clip stops on its last frame (we manually fade back).
+          // means the clip stops on its last frame (which is now identity-delta
+          // = no contribution, so bone returns cleanly to base pose).
           const oneShotClips = [dunkClip, layupClip, fadeawayClip, reboundClip, blockClip, passClip, crossoverClip, pumpFakeClip, jabStepClip, jumpShotClip]
           for (const clip of oneShotClips) {
             const action = mixer.clipAction(clip)
+            action.blendMode = THREE.AdditiveAnimationBlendMode
             action.setLoop(THREE.LoopOnce, 1)
             action.clampWhenFinished = true
             clipMap[clip.name.toLowerCase()] = action
           }
-          // Defense loops while held
+          // Defense loops while held — also additive so arms-wide stance lays
+          // on top of idle without killing the locomotion base.
           const defenseAction = mixer.clipAction(defenseClip)
+          defenseAction.blendMode = THREE.AdditiveAnimationBlendMode
           defenseAction.setLoop(THREE.LoopRepeat, Infinity)
           clipMap[defenseClip.name.toLowerCase()] = defenseAction
 
@@ -2205,9 +2226,19 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
           ])
           xbotState.play = (clipName: string, durationMs: number) => {
             const key = clipName.toLowerCase()
-            // Phase 16.42 — authored 2K clips now bind-pose-correct. Prefer
-            // the authored basketball clip; fall through to stock Mixamo
-            // only when an authored clip is genuinely missing.
+            // Phase 16.48 — authored clips are now ADDITIVE; play them on top
+            // of the running base (idle/walk/run) without fading the base out.
+            // Stock clips (jump, walk, etc.) still use REPLACE mode.
+            if (authoredKeys.has(key)) {
+              const action = clipMap[key]
+              if (!action) return
+              action.reset().setEffectiveWeight(1).fadeIn(0.12).play()
+              // Don't touch currentClip — base layer keeps driving locomotion
+              xbotState.moveLockUntil = performance.now() + durationMs
+              if (SQUEAK_MOVES.has(key)) playSqueak()
+              return
+            }
+            // Stock-clip path (fallback for any move without an authored clip)
             const fallback = moveToStockClip[key]
             const actionKey = clipMap[key] ? key : (fallback && clipMap[fallback]) ? fallback : key
             const newAction = clipMap[actionKey]
@@ -2217,7 +2248,6 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
             if (oldAction && oldAction !== newAction) oldAction.fadeOut(0.12)
             xbotState.currentClip = actionKey
             xbotState.moveLockUntil = performance.now() + durationMs
-            // Phase 16.43 — sneaker squeak on triggered moves
             if (SQUEAK_MOVES.has(key)) playSqueak()
           }
           ;(avatarHolder.userData as any).xbot = xbotState
