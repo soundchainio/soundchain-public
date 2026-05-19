@@ -1888,7 +1888,7 @@ function AiBuildPanel({
               below the tabs (z-[6]) so they layer correctly. bg-black so
               scrolling sliders don't bleed through. */}
         <div className="lg:w-1/2 sticky top-[137px] lg:top-[97px] z-[5] bg-black lg:self-start lg:h-[calc(100vh-200px)] lg:max-h-[700px] lg:border-r lg:border-pink-500/10">
-          <LivePreview3D spec={spec} face={face} bigMode={activeTab === 'face'} portraitUrl={config.aiPortraitDataUrl} />
+          <LivePreview3D spec={spec} face={face} bigMode={activeTab === 'face'} portraitUrl={config.aiPortraitDataUrl} aiGlbUrl={config.aiGlbUrl} />
         </div>
 
         {/* RIGHT: sliders. On lg+ this column also contains the tab strip
@@ -2379,7 +2379,7 @@ const SKIN_HEX: Record<AiBuildSpec['skinTone'], string> = {
   tan: '#a16641', brown: '#7a4a2b', dark: '#4a2e1a',
 }
 
-function LivePreview3D({ spec, face, bigMode, portraitUrl }: { spec: AiBuildSpec; face: AiFaceSpec; bigMode?: boolean; portraitUrl?: string }) {
+function LivePreview3D({ spec, face, bigMode, portraitUrl, aiGlbUrl }: { spec: AiBuildSpec; face: AiFaceSpec; bigMode?: boolean; portraitUrl?: string; aiGlbUrl?: string }) {
   const containerRef = useRef<HTMLDivElement>(null)
   // Mutable refs to live Three.js objects — re-used across spec changes,
   // never re-mounted (would lose the camera angle the user dragged to).
@@ -2466,13 +2466,20 @@ function LivePreview3D({ spec, face, bigMode, portraitUrl }: { spec: AiBuildSpec
       controlsRef.current = controls
 
       const loader = new GLTFLoader()
+      // Phase 16.61b — if user has GENERATED a TripoSR mesh (aiGlbUrl), load
+      // THAT into the designer preview so what they see matches what gets
+      // saved + shown in Gallery3D. Falls back to XBot if no aiGlbUrl OR
+      // if the TripoSR URL fails to load (CORS / network).
+      const BODY_SOURCES_TO_TRY = aiGlbUrl
+        ? [aiGlbUrl, ...BODY_MANNEQUIN_SOURCES]
+        : BODY_MANNEQUIN_SOURCES
       // Load BODY mannequin (XBot) — visible by default, hidden in face mode.
       const tryLoadBody = (index: number) => {
         if (disposed) return
-        if (index >= BODY_MANNEQUIN_SOURCES.length) return
+        if (index >= BODY_SOURCES_TO_TRY.length) return
         loader.load(
-          BODY_MANNEQUIN_SOURCES[index],
-          (gltf: any) => onBodyGltfLoaded(gltf, BODY_MANNEQUIN_SOURCES[index]),
+          BODY_SOURCES_TO_TRY[index],
+          (gltf: any) => onBodyGltfLoaded(gltf, BODY_SOURCES_TO_TRY[index]),
           undefined,
           () => tryLoadBody(index + 1),
         )
@@ -2649,9 +2656,11 @@ function LivePreview3D({ spec, face, bigMode, portraitUrl }: { spec: AiBuildSpec
       if (rafId) cancelAnimationFrame(rafId)
       if (cleanup) cleanup()
     }
-    // Run ONCE per mount — don't include spec, we mutate the live scene
+    // Phase 16.61b — rebuild scene when aiGlbUrl changes (user generates a
+    // new TripoSR mesh). Spec/face still mutate the live scene, but a
+    // different GLB needs a full reload + re-tint pass.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [aiGlbUrl])
 
   // Phase 16.30 — accessory overlay rebuild. Fires on EVERY spec/face change
   // so users see immediate visual feedback for hair / hat / glasses / beard /
