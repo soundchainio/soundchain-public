@@ -762,10 +762,61 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
       scene.add(defGroup)
       ;(scene.userData as any).defender = {
         group: defGroup,
-        // Per-frame state
         targetX: 0, targetZ: 0,
         speed: 0,
+        mode: 'guard',         // 'guard' | 'drive'
+        shootTimer: 0,         // seconds until defender shoots while in drive
       }
+
+      // Phase 16.57 — DEFENDER OFFENSE. Picks up rebounds, drives to rim,
+      // shoots. Score detection in gravity() reads ballState.owner to
+      // decide which side gets points.
+      const defenderShoot = () => {
+        const defState = (scene.userData as any).defender
+        if (!defState?.group || !hoopList[0]) return
+        // Find rim defender is closest to
+        let target: THREE.Vector3 | null = null
+        let nearest = Infinity
+        for (const h of hoopList) {
+          const d = defState.group.position.distanceTo(h.rimPos)
+          if (d < nearest) { nearest = d; target = h.rimPos.clone() }
+        }
+        if (!target) return
+        const start = ballBG.position.clone()
+        const dx = target.x - start.x
+        const dz = target.z - start.z
+        const horizDist = Math.hypot(dx, dz)
+        // ~55% accuracy: jitter target on miss
+        if (Math.random() > 0.55) {
+          target.x += (Math.random() - 0.5) * 0.5
+          target.z += (Math.random() - 0.5) * 0.4
+          target.y -= 0.25
+        }
+        const apexY = target.y + 2.0
+        const g = 9.8 * 1.5
+        const timeUp = 0.4
+        const timeDown = 0.55
+        const releaseY = 2.5
+        const vy = (apexY - releaseY) / timeUp + 0.5 * g * timeUp
+        const totalTime = timeUp + timeDown
+        ballBG.position.set(start.x, releaseY, start.z)
+        ballStateBG.vel.set(dx / totalTime, vy, dz / totalTime)
+        ballStateBG.held = false
+        ballStateBG.scoredThisShot = false
+        ballStateBG.airborneFrames = 0
+        ;(ballStateBG as any).rimHitThisShot = false
+        ;(ballStateBG as any).bbHitThisShot = false
+        ;(ballStateBG as any).airTime = 0
+        ;(ballStateBG as any).bounces = 0
+        ballStateBG.returnTimer = 0
+        ;(ballStateBG as any).owner = 'defender'
+        ;(ballStateBG as any).shotType = horizDist > 7 ? 'three' : (horizDist < 2.5 ? 'dunk' : 'jumpshot')
+        defState.mode = 'guard'
+        defState.shootTimer = 0
+        speak(["DEFENDER PULLS UP!", "OPPONENT JUMPER!", "BIG MAN SHOOTS!"][Math.floor(Math.random()*3)], { pitch: 0.95, rate: 1.18 })
+        setHoopScore((s) => ({ ...s, attempts: s.attempts + 1 }))
+      }
+      ;(scene.userData as any).defenderShoot = defenderShoot
 
       // Blacktop-specific: chain-link fence around court
       if (isBlacktopCourt) {
@@ -1137,9 +1188,26 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
             const dyh = Math.abs(ballBG.position.y - hoop.rimPos.y)
             if (horizDist < 0.34 && dyh < 0.25) {
               ballStateBG.scoredThisShot = true
-              // Phase 16.56 — POINTS: 3pt for three, 2pt for everything else
+              // Phase 16.57 — score side depends on who shot the ball
+              const ballOwner = (ballStateBG as any).owner || 'player'
               const shotTypeForPoints = (ballStateBG as any).shotType || 'jumpshot'
               const pts = shotTypeForPoints === 'three' ? 3 : 2
+              if (ballOwner === 'defender') {
+                setPointScore((ps) => {
+                  const newDef = ps.defender + pts
+                  if (newDef >= POINTS_TO_WIN && !gameOver) {
+                    setGameOver('defender')
+                    speak("GAME! DEFENDER WINS!", { pitch: 0.92, rate: 1.15 })
+                  }
+                  return { ...ps, defender: newDef }
+                })
+                speak(["DEFENDER SCORES!", "BUCKET FOR THE OPPONENT!"][Math.floor(Math.random()*2)], { pitch: 0.95, rate: 1.18 })
+                playSwish()
+                // After defender make, ball goes back to player
+                ;(ballStateBG as any).owner = 'player'
+                break
+              }
+              // Phase 16.56 — player POINTS: 3pt for three, 2pt for everything else
               setPointScore((ps) => {
                 const newPlayer = ps.player + pts
                 if (newPlayer >= POINTS_TO_WIN && !gameOver) {
@@ -1213,6 +1281,25 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
             ballStateBG.scoredThisShot = true
             // Phase 16.51 — occasional miss commentary
             announceMiss((ballStateBG as any).shotType || 'jumpshot')
+            // Phase 16.57 — defender rebound on player miss
+            const wasPlayerShot = ((ballStateBG as any).owner || 'player') === 'player'
+            const defGrp = (scene.userData as any).defender?.group
+            if (wasPlayerShot && defGrp) {
+              const rdx = ballBG.position.x - defGrp.position.x
+              const rdz = ballBG.position.z - defGrp.position.z
+              if (Math.hypot(rdx, rdz) < 3.5) {
+                // Defender picks up
+                ;(ballStateBG as any).owner = 'defender'
+                ballStateBG.held = true
+                ballStateBG.vel.set(0, 0, 0)
+                ballStateBG.returnTimer = 0
+                ;(ballStateBG as any).airTime = 0
+                ;(ballStateBG as any).bounces = 0
+                const ds = (scene.userData as any).defender
+                if (ds) { ds.mode = 'drive'; ds.shootTimer = 2.0 }
+                speak(["REBOUND DEFENSE!", "BOARDS!", "DEF GRABS IT!"][Math.floor(Math.random()*3)], { pitch: 0.95, rate: 1.15 })
+              }
+            }
           }
         }
         // Phase 16.39 — HARD watchdog. Every shot returns within 2.5s no
@@ -1238,6 +1325,11 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
             ;(ballStateBG as any).bounces = 0
             ;(ballStateBG as any).rimHitThisShot = false
             ;(ballStateBG as any).bbHitThisShot = false
+            // Phase 16.57 — possession reverts to player after any return
+            // (street rules: loser-of-possession or defender miss → player)
+            ;(ballStateBG as any).owner = 'player'
+            const ds = (scene.userData as any).defender
+            if (ds) { ds.mode = 'guard'; ds.shootTimer = 0 }
           }
         }
       }
@@ -3451,13 +3543,18 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         if (updateJump) updateJump(dtSec)
 
         if (ballState.held) {
-          // Ball hovers in front of character at hand height (follows jump)
+          // Phase 16.57 — branch on ball owner. Defender attaches the ball
+          // to their own hand during their offensive possession.
+          const owner = (ballState as any).owner || 'player'
+          const carrier = (owner === 'defender' && (scene.userData as any).defender?.group)
+            ? (scene.userData as any).defender.group
+            : playerGroup
           const handOffset = new THREE.Vector3(
-            Math.sin(playerGroup.rotation.y) * 0.6,
+            Math.sin(carrier.rotation.y) * 0.6,
             1.3 + Math.sin(now * 0.012) * 0.18,  // bounce visual
-            Math.cos(playerGroup.rotation.y) * 0.6,
+            Math.cos(carrier.rotation.y) * 0.6,
           )
-          ball.position.copy(playerGroup.position).add(handOffset)
+          ball.position.copy(carrier.position).add(handOffset)
           // Phase 16.39 — Dribble SFX: every ~0.42s when moving with ball held
           const moving = Math.hypot(rawX, rawZ) > 0.1
           if (moving) {
@@ -3639,44 +3736,64 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         }
       } catch {}
 
-      // Phase 16.55 — AI DEFENDER. Hovers between the shooter and the
-      // nearest hoop. Slides toward player at 80% of player speed, faces
-      // the player. When defender is right on the player + shooter
-      // releases, shot is contested (jitter) or blocked outright (see
-      // shootRef). Defender keeps a small offset toward the hoop so it
-      // can't just glue to the player and trivially deny everything.
+      // Phase 16.55/57 — AI DEFENDER state machine.
+      //   GUARD mode: hovers between shooter and nearest rim, contests
+      //   DRIVE mode: defender has the ball, walks to rim, shoots after timer
       const defenderRef = (scene.userData as any).defender
-      if (defenderRef?.group) {
+      if (defenderRef?.group && !gameOver) {
         const dg: THREE.Group = defenderRef.group
         const hoops = (scene.userData as any).hoops || []
-        const playerPos = playerGroup.position
-        // Pick nearest hoop to player as the rim defender is protecting
-        let nearestRim: THREE.Vector3 | null = null
-        let nearestDist = Infinity
-        for (const h of hoops) {
-          const d = playerPos.distanceTo(h.rimPos)
-          if (d < nearestDist) { nearestDist = d; nearestRim = h.rimPos }
-        }
-        if (nearestRim) {
-          // Stand between player and rim, offset 1.5u toward player
-          const ldx = nearestRim.x - playerPos.x
-          const ldz = nearestRim.z - playerPos.z
-          const linedist = Math.hypot(ldx, ldz) || 1
-          const tx = playerPos.x + (ldx / linedist) * 1.5
-          const tz = playerPos.z + (ldz / linedist) * 1.5
-          // Slide defender toward target position
-          const cdx = tx - dg.position.x
-          const cdz = tz - dg.position.z
-          const cdist = Math.hypot(cdx, cdz)
-          const defSpeed = SPEED * 0.85 * dtSec
-          if (cdist > 0.05) {
-            dg.position.x += (cdx / cdist) * Math.min(defSpeed, cdist)
-            dg.position.z += (cdz / cdist) * Math.min(defSpeed, cdist)
+        if (defenderRef.mode === 'drive') {
+          // Walk toward nearest rim, shoot after timer or proximity
+          let driveTarget: THREE.Vector3 | null = null
+          let nearestD = Infinity
+          for (const h of hoops) {
+            const d = dg.position.distanceTo(h.rimPos)
+            if (d < nearestD) { nearestD = d; driveTarget = h.rimPos }
           }
-          // Face the player
-          const fdx = playerPos.x - dg.position.x
-          const fdz = playerPos.z - dg.position.z
-          dg.rotation.y = Math.atan2(fdx, fdz)
+          if (driveTarget) {
+            const tdx = driveTarget.x - dg.position.x
+            const tdz = driveTarget.z - dg.position.z
+            const tdist = Math.hypot(tdx, tdz)
+            const driveSpeed = SPEED * 0.7 * dtSec
+            if (tdist > 4.0) {
+              dg.position.x += (tdx / tdist) * Math.min(driveSpeed, tdist - 4.0)
+              dg.position.z += (tdz / tdist) * Math.min(driveSpeed, tdist - 4.0)
+            }
+            dg.rotation.y = Math.atan2(tdx, tdz)
+            defenderRef.shootTimer -= dtSec
+            if (defenderRef.shootTimer <= 0 || tdist < 4.2) {
+              const ds = (scene.userData as any).defenderShoot
+              if (ds) ds()
+            }
+          }
+        } else {
+          // GUARD mode: stay between player and player's nearest rim
+          const playerPos = playerGroup.position
+          let nearestRim: THREE.Vector3 | null = null
+          let nearestDist = Infinity
+          for (const h of hoops) {
+            const d = playerPos.distanceTo(h.rimPos)
+            if (d < nearestDist) { nearestDist = d; nearestRim = h.rimPos }
+          }
+          if (nearestRim) {
+            const ldx = nearestRim.x - playerPos.x
+            const ldz = nearestRim.z - playerPos.z
+            const linedist = Math.hypot(ldx, ldz) || 1
+            const tx = playerPos.x + (ldx / linedist) * 1.5
+            const tz = playerPos.z + (ldz / linedist) * 1.5
+            const cdx = tx - dg.position.x
+            const cdz = tz - dg.position.z
+            const cdist = Math.hypot(cdx, cdz)
+            const defSpeed = SPEED * 0.85 * dtSec
+            if (cdist > 0.05) {
+              dg.position.x += (cdx / cdist) * Math.min(defSpeed, cdist)
+              dg.position.z += (cdz / cdist) * Math.min(defSpeed, cdist)
+            }
+            const fdx = playerPos.x - dg.position.x
+            const fdz = playerPos.z - dg.position.z
+            dg.rotation.y = Math.atan2(fdx, fdz)
+          }
         }
       }
 
