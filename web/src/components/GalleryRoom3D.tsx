@@ -1604,6 +1604,62 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
               obj.receiveShadow = true
             }
           })
+
+          // Phase 16.42 — apply user's CharacterConfig to XBot materials so
+          // the player on the court LOOKS LIKE THE CHARACTER THEY DESIGNED
+          // in CharacterDesigner. XBot ships w/ multiple meshes (Beta_*,
+          // head, hair); tint each by name heuristic. Skin tone tints face
+          // /limb meshes, body color tints jersey/torso, hair color tints
+          // hair mesh. Materials are cloned so the cache copy stays clean
+          // for the next theme switch. character-updated event listener
+          // already tears down + rebuilds, so live designer edits propagate
+          // to the court in real time (same flow as buildCapsule themes).
+          const charForXBot = getStoredCharacter()
+          const bodyColor = new THREE.Color(charForXBot.bodyColor || '#22d3ee')
+          const skinHex = (charForXBot as any).face?.skinTone || (charForXBot as any).skinColor || '#d4a373'
+          const skinColor = new THREE.Color(skinHex)
+          const HAIR_COLOR_HEX: Record<string, string> = {
+            black: '#1a1a1a', brown: '#5a3a1a', blonde: '#e6c98a', red: '#a02020',
+            silver: '#c0c0c0', cyan: '#22d3ee', pink: '#ec4899', purple: '#a855f7',
+            rainbow: '#ec4899', platinum: '#e5e4e2', ginger: '#c4602f', 'two-tone': '#5a3a1a',
+          }
+          const hairHex = (charForXBot as any).hairColorHex
+            || HAIR_COLOR_HEX[charForXBot.hairColor as string]
+            || '#1a1a1a'
+          const hairColor = new THREE.Color(hairHex)
+          const accentHex = (charForXBot as any).accentColor || (charForXBot as any).glowColor
+          model.traverse((obj: any) => {
+            if (!obj.isMesh || !obj.material) return
+            const materials = Array.isArray(obj.material) ? obj.material : [obj.material]
+            const cloned = materials.map((mat: any) => {
+              const m = mat.clone()
+              const key = `${(obj.name || '').toLowerCase()} ${(mat.name || '').toLowerCase()}`
+              if (/face|head|skin|joint|eye/.test(key)) {
+                m.color = skinColor.clone()
+              } else if (/hair/.test(key)) {
+                m.color = hairColor.clone()
+              } else if (/short|pant|leg|sneaker|shoe/.test(key) && accentHex) {
+                m.color = new THREE.Color(accentHex)
+              } else {
+                // Default: jersey / body / clothing → user's bodyColor
+                m.color = bodyColor.clone()
+              }
+              // Slight emissive lift on jersey tint so it reads on dark
+              // courts (matches buildCapsule's jersey emissive treatment).
+              if (m.emissive && !/face|head|skin|hair/.test(key)) {
+                m.emissive = bodyColor.clone().multiplyScalar(0.08)
+              }
+              return m
+            })
+            obj.material = Array.isArray(obj.material) ? cloned : cloned[0]
+          })
+
+          // Honor user's height multiplier — buildCapsule themes already
+          // do this, but the sports-theme branch skipped buildAvatar's
+          // scaling math (line ~1888-1889). 1.0 default = no change.
+          const heightMul = charForXBot.height ?? 1
+          if (heightMul !== 1 && heightMul > 0) model.scale.multiplyScalar(heightMul)
+
           avatarHolder.add(model)
 
           if (!gltf.animations || gltf.animations.length === 0) return
@@ -1644,15 +1700,27 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
           }
           console.log('[GalleryRoom3D] XBot bones resolved:', B)
 
-          // Helper: build a QuaternionKeyframeTrack from euler keyframes
+          // Phase 16.42 — build a QuaternionKeyframeTrack from euler keyframes
+          // APPLIED ON TOP of the bone's bind-pose quaternion. Mixamo XBot's
+          // bind pose has arms at sides (NOT identity rotation), so writing
+          // identity at keyframe 0 forces arms into world-aligned T-pose.
+          // Composing bindQuat * delta means [0,0,0] keyframes = bind pose
+          // (arms at sides) and middle keyframes apply rotation deltas on top.
+          // This is what made the previous hand-rolled clips look "frozen /
+          // broken" — they were correct rotations but on the wrong base.
           const _q = new THREE.Quaternion()
           const _e = new THREE.Euler()
+          const _qBind = new THREE.Quaternion()
+          const _qDelta = new THREE.Quaternion()
           const quatTrack = (bonePath: string | null, times: number[], eulers: number[][]) => {
             if (!bonePath) return null
+            const bone = boneByName[bonePath]
+            if (bone) _qBind.copy(bone.quaternion); else _qBind.identity()
             const flat = new Float32Array(times.length * 4)
             for (let i = 0; i < eulers.length; i++) {
               _e.set(eulers[i][0] || 0, eulers[i][1] || 0, eulers[i][2] || 0)
-              _q.setFromEuler(_e)
+              _qDelta.setFromEuler(_e)
+              _q.copy(_qBind).multiply(_qDelta)
               flat[i * 4]     = _q.x
               flat[i * 4 + 1] = _q.y
               flat[i * 4 + 2] = _q.z
@@ -1821,8 +1889,15 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
           }
           xbotState.play = (clipName: string, durationMs: number) => {
             const key = clipName.toLowerCase()
-            const stockKey = moveToStockClip[key]
-            const actionKey = (stockKey && clipMap[stockKey]) ? stockKey : key
+            // Phase 16.42 — authored 2K clips now bind-pose-correct. Prefer
+            // the authored basketball clip; fall through to stock Mixamo
+            // only when an authored clip is genuinely missing. Means
+            // jumpshot/dunk/layup/fadeaway/rebound/block/pass/pumpfake/
+            // crossover/jabstep/defense all play real basketball motion
+            // instead of the stock 'jump' (which was a generic vertical
+            // leap with arms drifting outward = T-pose silhouette).
+            const fallback = moveToStockClip[key]
+            const actionKey = clipMap[key] ? key : (fallback && clipMap[fallback]) ? fallback : key
             const newAction = clipMap[actionKey]
             if (!newAction) return
             const oldAction = clipMap[xbotState.currentClip]

@@ -1,5 +1,107 @@
 # CLAUDE.md - SoundChain Development Guide
 
+## 🚨 OPEN FOLLOW-UP (Frank-tasked, May 17, 2026) — `api.soundchain.io` custom-domain bridge DOWN
+
+**Frank's hands needed (AWS Console).** Lambda + API Gateway are healthy — DNS resolves to `d-bb15gwni7a.execute-api.us-east-1.amazonaws.com` and the underlying API GW URL responds in 154ms — but TLS connections to `api.soundchain.io` time out after 8s. Custom-domain → API Gateway mapping is broken at the TLS layer (likely ACM cert detached / custom domain mapping removed / wrong stage binding). Check API Gateway → Custom domain names → `api.soundchain.io`, verify ACM cert `d802632a-515a-44a2-984d-371741e03d71` is attached, re-map to `production-soundchain-api` stage `production` if missing. Playbook in CLAUDE.md "AWS INFRASTRUCTURE" section. **NOT blocking auth post `9ccf9bf` (useMe now reads /api/me direct → Atlas)** — but every remaining Apollo query in the app (posts, comments, feed enrichment, reactions, marketplace metadata) is silently failing while this is down. Phase 7e Apollo strip is the proper long-term fix; api.soundchain.io repair is the short-term unblock.
+
+---
+
+## 🏀 SESSION: May 18, 2026 (Frank → Sarg) — GYM SHOOTAROUND: HANDS NOW SHOOT THE BALL + USER'S CHARACTER ON COURT (Phase 16.42 unified ship)
+
+Frank on Sarg: *"claude tye player on gym playing basketball shootaraound dose t use his hands to shoot tye ball in the hoop. theres no basketball mecahnics at all. tye player hopds his arms out in a T when shooying ball"*. Two stacked bugs collapsing the shootaround into a T-pose silhouette + bigger ask: *"then i need to see my character look like how im designing it to look on the court"*.
+
+### Root cause (two bugs, one symptom)
+
+**Bug A — every shot routed to stock Mixamo `jump`.** `moveToStockClip` at `GalleryRoom3D.tsx:1809-1821` overrode every authored basketball clip (`jumpshot`, `dunk`, `layup`, `fadeaway`, `rebound`, `block`) and played the stock `jump` clip instead. Stock `jump` is a generic vertical leap with no arm-on-ball motion — arms drift outward for balance = the T-pose silhouette Frank saw.
+
+**Bug B — why the previous session retreated to stock `jump`.** The authored `jumpShotClip` at lines 1767-1775 has correct arm-raise tracks (`B.armR` rotates -2.6 rad = arm overhead, `B.forearmR` flicks to release), but `quatTrack` built keyframes from `[0,0,0]` Euler = identity quaternion. Mixamo XBot's bind pose for `RightArm`/`LeftArm` is **not** identity — bind quats already lay the arms at the sides. Writing identity at frame 0 forced arms into the world-X-aligned T-pose, then the middle keyframe rotated *from* T-pose. Apr 14 session diagnosed it as "bone axis conventions" and retreated to stock; the real fix is to multiply each delta by the bind quat so `[0,0,0]` keyframes mean "stay at rest pose" not "force identity."
+
+### What shipped (`<COMMIT>`, +83/-11, 1 file)
+
+| Change | Lines | What |
+|---|---|---|
+| **`quatTrack` bind-pose math** | 1647-1675 | Capture `bone.quaternion` at clip-author time (bones are at bind pose since no actions playing yet). Compose `bindQuat * delta(euler)` for every keyframe. `[0,0,0]` start/end = bind pose (arms at sides); middle keyframes apply rotation deltas on top. All 11 authored clips (dunk/layup/fadeaway/rebound/defense/block/pass/crossover/pumpFake/jabStep/jumpShot) immediately render correctly. |
+| **`xbotState.play` routing** | 1822-1840 | Prefer authored clip if present; fall through to `moveToStockClip` ONLY when an authored clip is missing. All 11 basketball moves have authored clips → all 11 now play their real motion. Map kept as fallback so future moves added without authored clips still degrade gracefully. |
+| **XBot material tint from `CharacterConfig`** | 1611-1664 | After model loads, traverse meshes and per-material name-heuristic tint: face/head/skin/joint/eye → user's `face.skinTone`; hair → `hairColorHex` or named-color map (12 named colors); shorts/pants/legs/sneaker/shoe → `accentColor`/`glowColor`; everything else (jersey/body) → `bodyColor`. Materials cloned so mesh cache stays clean. Slight emissive lift on jersey-class mats so the color reads on dark courts. |
+| **User's height multiplier on XBot** | 1666-1671 | `model.scale.multiplyScalar(character.height)` so the 1.0-default doesn't change anything but designed-tall (1.15) or designed-short (0.85) characters scale accordingly. `buildCapsule` themes already did this; sports themes had been skipping it. |
+
+### Live-update pipeline (already wired, now actually visible)
+
+`buildAvatar()` listens for `character-updated` window events from `CharacterDesigner.saveCharacter()` + cross-tab `storage` events. When config changes, `buildAvatar` tears down old children + calls `buildXBotPlayer()` fresh on sports themes. `buildXBotPlayer` now reads `getStoredCharacter()` and applies appearance during XBot load → designer edits propagate to the court in real time same as `buildCapsule` themes do for `/explore3d`.
+
+### Architecture notes (load-bearing)
+
+1. **Mixamo bind quats are NEVER identity at the shoulders.** XBot's `RightArm` rest pose has the arm laid down — quaternion w≈0.7 with non-zero z. Identity quat (w=1, xyz=0) puts the arm horizontal. Any animation system that writes identity-at-keyframe-0 will visibly snap the arms to T-pose at clip start AND clip end. This isn't a Mixamo bug — it's a bind-pose composition pattern that every Mixamo-rigged char needs.
+2. **Capture bind quats at GLTF-load time, before any action plays.** `bone.quaternion` returns the rest pose only while no mixer action is driving the bone. Once `idleAction.play()` runs at line 1793, bones are at *current animated rotation*, not rest. The fix captures bind quats inside `quatTrack` which is called during `buildClip()` (before any `.play()`), so bind values are accurate.
+3. **`moveToStockClip` is now a fallback, not an override.** Authored clip wins if it exists in `clipMap`. Stock Mixamo wins only when authored is missing. New basketball moves added without authored clips degrade to stock — they won't crash.
+4. **Material tinting via name heuristic, not strict matching.** XBot's mesh + material names vary by export (different Mixamo versions, different rigify configs). Regex matching against the concatenated mesh-name + material-name string survives renaming as long as one of skin/hair/jersey/shorts substrings appear. Logs to console for debugging if a future mesh slips through.
+5. **`character.height` applied via multiply.** `model.scale.multiplyScalar(heightMul)` so the model's auto-scale-to-1.8m step at line 1599 (still required to normalize raw GLB units) AND the user's height multiplier compose cleanly. Order matters — auto-scale first, user-mul after.
+6. **Hair color named-map is 12 entries.** Matches CharacterDesigner's enum exactly: black/brown/blonde/red/silver/cyan/pink/purple/rainbow/platinum/ginger/two-tone. `hairColorHex` overrides the named value for advanced users picking custom colors.
+
+### Verify path (Frank → Sarg post-deploy)
+
+1. Hard-refresh `https://soundchain.io/gallery3d?theme=gym` (or `theme=blacktop` for outdoor half-court)
+2. Player loads as XBot. **Now tinted to Frank's CharacterConfig** — jersey is `bodyColor`, hair is `hairColor`, skin is `face.skinTone`
+3. Tap SHOOT button (mobile D-pad) or press B (desktop) → player jumps, arm raises overhead, forearm flicks to release → ball travels toward hoop. **Not a T-pose anymore.**
+4. Tap DUNK / LAYUP / FADEAWAY / REBOUND from the 2×4 grid → each plays its authored animation (deep squat + leap for dunk, one-leg knee lift + scoop for layup, back-lean for fadeaway, two-leg leap + both arms up for rebound)
+5. Hold DEF bar → defensive stance loops (knees bent, arms wide). Release → return to idle.
+6. Edit character in CharacterDesigner → save → court avatar re-tints live (storage event + character-updated listener still wired)
+
+### Lessons
+
+1. **A previous session's "axis convention" hand-off was the wrong diagnosis.** The previous session correctly identified that authored clips looked broken — but mis-attributed it to wrong rotation axes. The actual issue was the *base pose* (identity vs bind quat). Same symptom, different root. Always test the math hypothesis BEFORE adding a workaround that hides the bug.
+2. **Stock Mixamo `jump` is a leap, not a shot.** Shooting a basketball needs arm-overhead + forearm-flick motion. Any stock animation library will have a generic jump but probably won't have a shooting-form animation unless you import a sports-specific pack. Authored deltas on top of bind pose is the right path until proper rigged shooting anims are generated (anvil RTX 5000 + Mixamo retarget per `[[project_gym_blacktop_2k_reference]]`).
+3. **`bone.quaternion` is the cleanest API for bind pose.** Better than parsing `skeleton.bindMatrices` and inverting transforms by hand. Three.js exposes bind quats directly on the bone object as long as you read them before any action plays.
+4. **Name-heuristic regex > strict mesh-name matching for material tinting.** `/face|head|skin|joint|eye/.test(key)` survives Mixamo renaming and works across different rig variants. Strict matching breaks the moment someone exports with different mesh names.
+5. **CharacterConfig was already wired end-to-end via storage events.** The buildAvatar tear-down + rebuild pattern + `character-updated` listener at `line 2007-2018` is gold — it means appearance updates propagate to ANY active scene without explicit re-render plumbing. Worth keeping that pattern when adding more designer surfaces.
+
+### Open follow-ups (next ship targets)
+
+1. **Proper rigged shooting anims via anvil RTX 5000 + Mixamo retarget** — per `[[project_gym_blacktop_2k_reference]]`. Hand-rolled keyframe deltas are good enough for tonight, but anvil-generated retargets of real NBA-style shot mechanics is the polish ship. Blocked on `api.soundchain.io` repair + Lucy/norman live before Generate→anvil queue opens.
+2. **TripoSR character mesh on court** — Frank's CharacterDesigner generates a 3D mesh from his SDXL portrait. Currently mesh is unrigged so it can't drive Mixamo animations. Path: auto-rig TripoSR mesh to XBot skeleton via Mixamo Auto-Rigger API (or local rigify) → swap visuals while keeping XBot bone structure. Phase 16.43 scope.
+3. **WebRTC peer-sync for 1-on-1 arena matchups** — once single-player feels right, two users on the same court via WebRTC + state sync per `[[project_gym_blacktop_2k_reference]]`. Standalone ship.
+4. **`api.soundchain.io` custom-domain TLS bridge repair** — Frank's hands needed (AWS Console). Pinned at top of CLAUDE.md. Not blocking gym/court work but blocking every other Apollo query.
+
+---
+
+## 🔓 SESSION: May 17, 2026 (Frank + coworker Chris at desk → Sarg) — NEW-SIGNUP FUNNEL UNBLOCKED (4 commits: `67d24ee` + `8e4e956` + `36a071d` + `9ccf9bf`)
+
+Frank brought his coworker Chris over: *"chris coear histroy and try onsafari and chrome and arill loads on nodes after typing his email and entrenon llgin oages"*. Chris (millercmedia@gmail.com) had created an account on Safari (handle `chris` in Mongo, no wallet, no passkey) but every login attempt landed him on `/nodes` rendering as logged-out — top nav showed "Login" pill instead of his avatar. **Four stacked bugs all surfaced by one user, all stemming from the same architectural debt: the Magic→Atlas migration left load-bearing client paths still wired to Magic SDK + Lambda.**
+
+### Bugs found & shipped (in causal order)
+
+| # | Commit | Bug | Root cause | Fix |
+|---|---|---|---|---|
+| 1 | `67d24ee` | `/create-account/unified.tsx` bounced non-Magic registrants to `/login` after a successful `POST /api/auth/register`. Account was created in Mongo but user never reached it. | Stale Magic SDK gate effect (lines 77-97 pre-fix) that called `router.push('/login')` whenever `magic.user.isLoggedIn()` returned false. Non-Magic registrants always returned false. Effect re-fired on `router` dep change after the register-success redirect. | Removed the gate. Effect now only HYDRATES Magic session data if a Magic session exists (legacy users), never redirects. |
+| 2 | `67d24ee` | Same file — final-submit redirect kept stale Apollo `me: null` cache, landing users on logged-out feed even after `setJwt` succeeded. Same Apollo-cache footgun on `login.tsx` post-login redirect to `/nodes`. | `router.push(redirectUrl)` is client-side nav. Apollo client persists across the navigation, `me` query was cached as `null` from the unauthenticated /login page render. Cache was never invalidated by `setJwt`. | Switched both redirects to `window.location.assign(redirectUrl)` so the JS module re-evaluates and Apollo cache starts fresh. Plus `autoCapitalize="words"` on the Display Name field for iOS Safari (default for `type=text` is no autocapitalize). |
+| 3 | `8e4e956` | Sarg-side: xterm fullscreen mode cropped the input prompt at the iOS Safari home indicator / collapsing URL bar. Frank couldn't see what he was typing. | `iframe.style.height = '100vh'` in `FurlTerminalHost.positionIframe()` fullscreen branch. `100vh` on iOS Safari measures the viewport as if URL bar were collapsed AND ignores home indicator safe area. | Switched to `100dvh` (dynamic viewport height). Follows actually-visible area. Supported iOS Safari 15.4+ (Mar 2022) so no fallback needed. |
+| 4 | `36a071d` | `/api/auth/login-by-email` and `/api/auth/register` returned the JWT in JSON body ONLY — no Set-Cookie header. Client-side `js-cookie` write in `setJwt()` raced the immediately-following `window.location` redirect on iOS Safari/Chrome, dropping the cookie before unload. JWT never persisted → next page render had no auth. | The Vercel-direct endpoints (Phase 4d port from Lambda, Apr 2026) copied the GraphQL mutation response shape verbatim. That shape was meant for Apollo's in-memory cache, where Magic SDK handled session persistence. When Magic was bypassed, persistence was entirely dropped on client-side `js-cookie` + `localStorage`, both flaky on iOS Safari with immediate navigation. | Added server-side `Set-Cookie` response header on both endpoints (`token=<jwt>; Path=/; Max-Age=2592000; SameSite=Lax; Secure`). Non-httpOnly so Apollo's authLink can still read it as Bearer for the cross-origin `/graphql` call. Verified live via curl. |
+| 5 | `9ccf9bf` | **The real root cause.** Even with cookie persisting cleanly, `useMe()` still rendered as `undefined` on every authed page. Top nav stayed logged-out everywhere. | `hooks/useMe.ts` was still calling `useMeQuery` (Apollo → `api.soundchain.io/graphql`). Phase 7 Lambda Eviction plan called for swap to `/api/me` (Vercel-direct → Atlas, already deployed at `api/me.ts`) but Phase 7e (frontend swap + Apollo strip) was scoped + marked pending + never completed. With `api.soundchain.io` currently unreachable at the TLS layer (custom-domain → API Gateway bridge broken), useMe returned undefined for every user across the entire app. **Suppressed every signup since the Vercel-direct cutover.** | Rewrote `useMe()` to fetch `/api/me` directly via plain `fetch` + module-level cache. Same return shape (the `me` object, unwrapped from Apollo's data envelope) so all 114 consumers keep working without edits. 60s staleness window + fetch dedup so rapid page nav doesn't thrash the route. `credentials: 'include'` so the token cookie travels same-origin. Exported `invalidateMe()` escape hatch for explicit refetch after auth changes. |
+
+### Architecture lessons (load-bearing)
+
+1. **A migration is incomplete the moment one consumer is left on the old path.** Phase 4d (Lambda → Vercel-direct for /api/auth/*) shipped without auditing the client-side `setJwt` persistence pattern. Phase 7e (Apollo strip) shipped server-side `/api/me` but never swapped the hook. Both gaps were invisible until `api.soundchain.io` flaked. When migrating, hunt EVERY consumer of the old path before declaring the migration done; otherwise the gap surfaces only under infra failure.
+2. **Server-side `Set-Cookie` > client-side `js-cookie` for any auth flow followed by navigation.** The browser persists Set-Cookie at the HTTP layer before JS even runs. `js-cookie` writes happen in JS after the response, race the unload of the next navigation. iOS Safari/Chrome lose the write ~50% of the time. Pattern is hostile and we missed it.
+3. **`router.push` after auth state changes is a stale-Apollo footgun.** Apollo's in-memory cache survives client-side nav. Any cached `me: null` (from an unauthed page render) sticks until you `apolloClient.resetStore()` OR hard-reload. Default to `window.location.assign` on post-login redirect; the cost of a full reload is small, the cost of a stale cache is "user thinks signup failed."
+4. **Funnel telemetry would have caught all 5 bugs months ago.** No instrumentation tracks "submitted email → reached authed feed." We never saw the drop-off. Adding even basic "[Auth] login-success" → "[Auth] me-resolved" → "[Auth] landing-rendered" events with success rates per browser would have flagged this within the first dozen new signups.
+5. **`useMe()` being called by 114 consumers means its failure mode is "the whole app appears logged out."** It's the single most load-bearing hook in the codebase. Should be the LAST thing on the old path during any migration, not the first thing forgotten.
+
+### Verified live (post-promote)
+
+- `_app-3f7821eb4b61c3c5.js` chunk hash matches between `soundchain.io` and the `jvc0ueiqy` deployment URL — no manual promote needed (Bug #27 fix from May 13 still holding on web/ webhook)
+- `curl -i POST /api/auth/login-by-email` → `Set-Cookie: token=...; Path=/; Max-Age=2592000; SameSite=Lax; Secure`
+- `curl /api/me` → HTTP 200 (without cookie → `{me: null}`, with cookie → user object)
+- Chris's `users` doc in Atlas: handle `chris`, no wallet, no passkey, created 2026-05-18 00:52 UTC (matches his attempt timeline)
+
+### Open follow-ups (Frank's hands)
+
+1. **`api.soundchain.io` custom-domain → API Gateway TLS bridge repair** — see "OPEN FOLLOW-UP" section pinned at top of this file. Lambda + API Gateway are fine, custom-domain mapping is broken at TLS. Until repaired, every Apollo query OTHER than `useMe` (posts, comments, reactions, feed enrichment, marketplace metadata, etc.) silently fails. Phase 7e Apollo strip is the proper long-term fix.
+2. **Backfill Chris's wallet** — registration's `deriveHd()` fell through to no-op because `HUMAN_WALLET_SEED` either wasn't reached or didn't produce a wallet for him. Mongo record has `hdWalletAddress: null` + `magicWalletAddress: null`. Separate ship: either fix the `deriveHd()` fall-through during register OR run a one-shot script to backfill wallets for all post-Phase-4d users in the same state.
+3. **Audit query suggested but not run** — `db.users.count({ createdAt: { $gte: <Phase 4d cutover date> }, hdWalletAddress: null, magicWalletAddress: null })` to measure how many incomplete signups this bug suppressed. Worth running once api.soundchain.io is back + we want a real metric.
+4. **Funnel telemetry** — instrument `/api/auth/login-by-email`, `/api/me`, `/nodes` mount with simple counter events so the next regression doesn't ship silently for weeks.
+
+---
+
 ## 🛒 SESSION: May 12, 2026 (User → Sarg, late — MetaMask browser test) — MINT MARKETPLACE FOR SALE/BROWSE GAPS CLOSED (`2e1797a`)
 
 User tested `mint.soundchain.io` via MetaMask browser on Sarg. Wallet connect OK. Bug report: FOR SALE filter renders "No active listings right now" despite 8178 NFTs minted. Then expanded scope: *"i need to see bith L1 aV1 and V2 in the marketplace and non listed for sale page its time to show it all again and do what ae devs couldnt do back in 2021-2022"*.
