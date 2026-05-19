@@ -131,6 +131,15 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
   type BigPlayBanner = { id: number; text: string; color: string; emoji: string; bornAt: number }
   const [bigPlay, setBigPlay] = useState<BigPlayBanner | null>(null)
   const bigPlayIdRef = useRef(0)
+  // Phase 16.59 — difficulty selector affects defender AI
+  type Difficulty = 'easy' | 'normal' | 'hard'
+  const [difficulty, setDifficulty] = useState<Difficulty>('normal')
+  const difficultyRef = useRef<Difficulty>('normal')
+  useEffect(() => { difficultyRef.current = difficulty }, [difficulty])
+  // Phase 16.59 — pause toggle (mid-game halt)
+  const [paused, setPaused] = useState(false)
+  const pausedRef = useRef(false)
+  useEffect(() => { pausedRef.current = paused }, [paused])
   // Phase 16.29 — city search now opens as a full modal dialog so typing
   // isn't gated by any z-index / pointer-event conflicts with the canvas.
   const [citySearchOpen, setCitySearchOpen] = useState(false)
@@ -403,6 +412,14 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
       if (move === 'rebound') return speak(["BOARDS!", "REBOUND!"][Math.floor(Math.random()*2)], { rate: 1.15 })
       if (move === 'crossover') return speak(["ANKLES!", "BROKE 'EM!", "TOO SMOOTH!"][Math.floor(Math.random()*3)], { rate: 1.18 })
       if (move === 'spin')    return speak(["SPIN MOVE!", "SHIFTY!"][Math.floor(Math.random()*2)], { rate: 1.15 })
+    }
+
+    // Phase 16.59 — difficulty-tuned AI values
+    const getDiff = () => {
+      const d = difficultyRef.current
+      if (d === 'easy')  return { speedMul: 0.65, blockChance: 0.15, contestRange: 1.6,  blockRange: 1.0, accuracy: 0.40, shootTimer: 3.0 }
+      if (d === 'hard')  return { speedMul: 0.95, blockChance: 0.50, contestRange: 2.5,  blockRange: 1.4, accuracy: 0.70, shootTimer: 1.2 }
+      return                  { speedMul: 0.85, blockChance: 0.30, contestRange: 2.0,  blockRange: 1.2, accuracy: 0.55, shootTimer: 2.0 }
     }
 
     // Phase 16.51 — score popup + camera shake helpers.
@@ -821,8 +838,9 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         const dx = target.x - start.x
         const dz = target.z - start.z
         const horizDist = Math.hypot(dx, dz)
-        // ~55% accuracy: jitter target on miss
-        if (Math.random() > 0.55) {
+        // Difficulty-tuned accuracy
+        const diffShoot = getDiff()
+        if (Math.random() > diffShoot.accuracy) {
           target.x += (Math.random() - 0.5) * 0.5
           target.z += (Math.random() - 0.5) * 0.4
           target.y -= 0.25
@@ -1085,18 +1103,19 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
           const ddx = playerGroup.position.x - defRef.group.position.x
           const ddz = playerGroup.position.z - defRef.group.position.z
           const defDist = Math.hypot(ddx, ddz)
-          if (defDist < 1.2 && Math.random() < 0.30) {
+          const diff = getDiff()
+          if (defDist < diff.blockRange && Math.random() < diff.blockChance) {
             blocked = true
             speak("DENIED!", { pitch: 0.92, rate: 1.2 })
             triggerCameraShake(0.2, 0.2)
             const crowdRef2 = (scene.userData as any).crowd
             if (crowdRef2?.cheer) crowdRef2.cheer()
-          } else if (defDist < 2.0) {
+          } else if (defDist < diff.contestRange) {
             // Contested — jitter target by random offset
-            const jitter = (2.0 - defDist) * 0.5  // closer = more jitter
+            const jitter = (diff.contestRange - defDist) * 0.5
             target.x += (Math.random() - 0.5) * jitter
             target.z += (Math.random() - 0.5) * jitter
-            target.y -= Math.random() * 0.3  // arc cut, ball comes up short
+            target.y -= Math.random() * 0.3
           }
         }
         if (blocked) {
@@ -1356,7 +1375,7 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
                 ;(ballStateBG as any).airTime = 0
                 ;(ballStateBG as any).bounces = 0
                 const ds = (scene.userData as any).defender
-                if (ds) { ds.mode = 'drive'; ds.shootTimer = 2.0 }
+                if (ds) { ds.mode = 'drive'; ds.shootTimer = getDiff().shootTimer }
                 speak(["REBOUND DEFENSE!", "BOARDS!", "DEF GRABS IT!"][Math.floor(Math.random()*3)], { pitch: 0.95, rate: 1.15 })
               }
             }
@@ -3800,9 +3819,10 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
       //   GUARD mode: hovers between shooter and nearest rim, contests
       //   DRIVE mode: defender has the ball, walks to rim, shoots after timer
       const defenderRef = (scene.userData as any).defender
-      if (defenderRef?.group && !gameOver) {
+      if (defenderRef?.group && !gameOver && !pausedRef.current) {
         const dg: THREE.Group = defenderRef.group
         const hoops = (scene.userData as any).hoops || []
+        const diffAI = getDiff()
         if (defenderRef.mode === 'drive') {
           // Walk toward nearest rim, shoot after timer or proximity
           let driveTarget: THREE.Vector3 | null = null
@@ -3815,7 +3835,7 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
             const tdx = driveTarget.x - dg.position.x
             const tdz = driveTarget.z - dg.position.z
             const tdist = Math.hypot(tdx, tdz)
-            const driveSpeed = SPEED * 0.7 * dtSec
+            const driveSpeed = SPEED * (diffAI.speedMul - 0.15) * dtSec
             if (tdist > 4.0) {
               dg.position.x += (tdx / tdist) * Math.min(driveSpeed, tdist - 4.0)
               dg.position.z += (tdz / tdist) * Math.min(driveSpeed, tdist - 4.0)
@@ -3845,7 +3865,7 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
             const cdx = tx - dg.position.x
             const cdz = tz - dg.position.z
             const cdist = Math.hypot(cdx, cdz)
-            const defSpeed = SPEED * 0.85 * dtSec
+            const defSpeed = SPEED * diffAI.speedMul * dtSec
             if (cdist > 0.05) {
               dg.position.x += (cdx / cdist) * Math.min(defSpeed, cdist)
               dg.position.z += (cdz / cdist) * Math.min(defSpeed, cdist)
@@ -3861,7 +3881,7 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
       // running; session timer counts up. Sync to React state every 0.25s
       // (not every frame) to keep React renders quiet. Shot clock
       // violation = ball returns, announcer call.
-      if (clocksRunningRef.current) {
+      if (clocksRunningRef.current && !pausedRef.current && !gameOver) {
         shotClockRef.current = Math.max(0, shotClockRef.current - dtSec)
         sessionTimeRef.current += dtSec
         ;(scene.userData as any).__clockSyncT = ((scene.userData as any).__clockSyncT || 0) + dtSec
@@ -4025,6 +4045,16 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
   return (
     <div className="relative w-full h-full" tabIndex={0} onFocus={() => containerRef.current?.focus()}>
       <div ref={containerRef} className="absolute inset-0" tabIndex={0} style={{ cursor: 'grab', outline: 'none' }} onClick={() => containerRef.current?.focus()} />
+
+      {/* Phase 16.59 — pause overlay */}
+      {paused && !gameOver && (theme === 'gym' || theme === 'blacktop') && (
+        <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/60 backdrop-blur-sm pointer-events-auto" onClick={() => setPaused(false)}>
+          <div className="text-white font-mono font-bold text-5xl sm:text-7xl tracking-widest drop-shadow-2xl select-none">
+            PAUSED
+            <div className="text-sm text-gray-400 mt-3 text-center tracking-normal">tap anywhere to resume</div>
+          </div>
+        </div>
+      )}
 
       {/* Phase 16.58 — BIG PLAY CAM banner: full-screen flash on signature
           moments. Different colors per play type. CSS keyframe handles
@@ -4581,6 +4611,28 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
                 <span className="text-gray-600">—</span>
                 <span className="text-red-400 font-bold">DEF {pointScore.defender}</span>
                 <span className="text-gray-500 text-[8px] ml-1">to {POINTS_TO_WIN}</span>
+              </div>
+            )}
+            {/* Phase 16.59 — difficulty pills + pause */}
+            {(theme === 'gym' || theme === 'blacktop') && (
+              <div className="flex items-center gap-1">
+                <span className="text-gray-500 text-[9px] font-mono mr-1">DIFF</span>
+                {(['easy', 'normal', 'hard'] as const).map((d) => (
+                  <button
+                    key={d}
+                    onClick={() => setDifficulty(d)}
+                    className={`px-1.5 py-0.5 rounded text-[9px] font-mono uppercase transition ${difficulty === d ? (d === 'easy' ? 'bg-green-500/30 text-green-300 border border-green-400/50' : d === 'hard' ? 'bg-red-500/30 text-red-300 border border-red-400/50' : 'bg-yellow-500/30 text-yellow-300 border border-yellow-400/50') : 'bg-white/[0.04] text-gray-500 border border-white/10 hover:text-white'}`}
+                  >
+                    {d[0]}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setPaused((p) => !p)}
+                  className={`ml-1 px-1.5 py-0.5 rounded text-[9px] font-mono transition ${paused ? 'bg-yellow-500/30 text-yellow-300 border border-yellow-400/50' : 'bg-white/[0.04] text-gray-400 border border-white/10 hover:text-white'}`}
+                  aria-label={paused ? 'Resume' : 'Pause'}
+                >
+                  {paused ? '▶' : '⏸'}
+                </button>
               </div>
             )}
           </>
