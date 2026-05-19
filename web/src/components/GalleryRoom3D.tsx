@@ -239,6 +239,78 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
       osc.connect(gain).connect(ctx.destination)
       osc.start(now); osc.stop(now + 0.13)
     }
+    // Phase 16.44 — CROWD CHEER on shot makes. Layered noise burst shaped
+    // like a roaring crowd: low rumble (sub 200Hz) + mid voice band (300-
+    // 1200Hz) + high airy spray (3-5kHz) all under one envelope. ~1.2s
+    // decay so it overlaps with the fan-jump animation.
+    const playCheer = () => {
+      const ctx = ensureAudioCtx(); if (!ctx) return
+      const now = ctx.currentTime
+      const dur = 1.4
+      const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * dur), ctx.sampleRate)
+      const data = buf.getChannelData(0)
+      for (let i = 0; i < data.length; i++) {
+        const t = i / data.length
+        const env = Math.min(1, t * 8) * Math.pow(1 - t, 1.4)  // fast attack + decay
+        data[i] = (Math.random() * 2 - 1) * env
+      }
+      const noise = ctx.createBufferSource()
+      noise.buffer = buf
+      // Mid-band: voice formant
+      const mid = ctx.createBiquadFilter()
+      mid.type = 'bandpass'
+      mid.frequency.value = 700
+      mid.Q.value = 0.6
+      const midGain = ctx.createGain()
+      midGain.gain.value = 0.32
+      // High: airy spray (whistles + scream tail)
+      const hi = ctx.createBiquadFilter()
+      hi.type = 'bandpass'
+      hi.frequency.value = 3400
+      hi.Q.value = 0.9
+      const hiGain = ctx.createGain()
+      hiGain.gain.value = 0.18
+      // Low: rumble
+      const lo = ctx.createBiquadFilter()
+      lo.type = 'lowpass'
+      lo.frequency.value = 180
+      const loGain = ctx.createGain()
+      loGain.gain.value = 0.22
+      noise.connect(mid).connect(midGain).connect(ctx.destination)
+      noise.connect(hi).connect(hiGain).connect(ctx.destination)
+      noise.connect(lo).connect(loGain).connect(ctx.destination)
+      noise.start(now); noise.stop(now + dur)
+    }
+    // Phase 16.44 — ambient CROWD MURMUR. Filtered pink-ish noise at very
+    // low volume that loops while the gym scene is alive. Adds presence
+    // without competing with shot SFX. Started on first user gesture.
+    const startCrowdMurmur = () => {
+      const ctx = ensureAudioCtx(); if (!ctx) return null
+      const dur = 8  // 8s looped buffer = no audible loop seam
+      const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * dur), ctx.sampleRate)
+      const data = buf.getChannelData(0)
+      // Pink-noise approximation via Paul Kellett's filter
+      let b0 = 0, b1 = 0, b2 = 0
+      for (let i = 0; i < data.length; i++) {
+        const white = Math.random() * 2 - 1
+        b0 = 0.99765 * b0 + white * 0.0990460
+        b1 = 0.96300 * b1 + white * 0.2965164
+        b2 = 0.57000 * b2 + white * 1.0526913
+        data[i] = (b0 + b1 + b2 + white * 0.1848) * 0.11
+      }
+      const noise = ctx.createBufferSource()
+      noise.buffer = buf
+      noise.loop = true
+      const bp = ctx.createBiquadFilter()
+      bp.type = 'bandpass'
+      bp.frequency.value = 500
+      bp.Q.value = 0.3
+      const gain = ctx.createGain()
+      gain.gain.value = 0.04  // VERY low — ambient bed only
+      noise.connect(bp).connect(gain).connect(ctx.destination)
+      noise.start()
+      return { noise, gain }
+    }
 
     // ─── Scene Setup ─────────────────────────────────────────
     const scene = new THREE.Scene()
@@ -496,6 +568,97 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
             scene.add(bench)
           }
         })
+
+        // Phase 16.44 — FANS IN THE STANDS. InstancedMesh for torso + head
+        // gives 2 draw calls for ALL fans no matter how many. Each fan has
+        // its own random shirt color (10 jersey palette), idle bounce phase
+        // offset, and excited-until timer. Cheer trigger (called from
+        // playSwish hook on every make) sets every fan to excited mode for
+        // 1.5-2.5s — instances jump up + slight rotation. Idle fans sway
+        // gently in their seats. Crowd murmur ambient loop starts on first
+        // user gesture.
+        const FAN_PALETTE = [
+          0xdc2626, 0xea580c, 0xf59e0b, 0xeab308,  // arena-red/orange/amber
+          0x16a34a, 0x059669, 0x0891b2, 0x0284c7,  // green/teal/cyan/blue
+          0x7c3aed, 0xa21caf, 0xdb2777, 0xe11d48,  // purple/fuchsia/pink/rose
+        ]
+        const ROWS = 4
+        const PER_BENCH = 14
+        const FAN_COUNT = ROWS * PER_BENCH * 2
+        const torsoMat = new THREE.MeshStandardMaterial({ roughness: 0.7, metalness: 0.05 })
+        const headMat = new THREE.MeshStandardMaterial({ color: 0xd4a373, roughness: 0.8 })
+        const torsoMesh = new THREE.InstancedMesh(
+          new THREE.BoxGeometry(0.42, 0.58, 0.3), torsoMat, FAN_COUNT,
+        )
+        const headMesh = new THREE.InstancedMesh(
+          new THREE.SphereGeometry(0.14, 8, 6), headMat, FAN_COUNT,
+        )
+        torsoMesh.castShadow = true
+        headMesh.castShadow = true
+        type FanState = {
+          baseX: number; baseY: number; baseZ: number
+          phase: number; armsUp: boolean
+          excitedUntil: number; jumpY: number; tilt: number
+        }
+        const fanArray: FanState[] = []
+        const fanMtx = new THREE.Matrix4()
+        const fanQuat = new THREE.Quaternion()
+        const fanPos = new THREE.Vector3()
+        const fanScale = new THREE.Vector3(1, 1, 1)
+        const tmpColor = new THREE.Color()
+        let fanIdx = 0
+        ;[-1, 1].forEach((sideSign) => {
+          const sideBaseX = sideSign * (courtWidth / 2 + 3)
+          for (let row = 0; row < ROWS; row++) {
+            const seatX = sideBaseX + sideSign * row * 1.5
+            const seatY = 0.4 + row * 0.7 + 0.55  // bench top + half torso
+            for (let s = 0; s < PER_BENCH; s++) {
+              const seatZ = -courtSpan / 2 + 1 + s * (courtSpan - 2) / (PER_BENCH - 1)
+              const armsUp = Math.random() < 0.18  // 18% have arms up at all times
+              fanArray.push({
+                baseX: seatX, baseY: seatY, baseZ: seatZ,
+                phase: Math.random() * Math.PI * 2,
+                armsUp,
+                excitedUntil: 0, jumpY: 0, tilt: 0,
+              })
+              fanPos.set(seatX, seatY, seatZ)
+              fanQuat.identity()
+              fanMtx.compose(fanPos, fanQuat, fanScale)
+              torsoMesh.setMatrixAt(fanIdx, fanMtx)
+              fanPos.set(seatX, seatY + 0.45, seatZ)
+              fanMtx.compose(fanPos, fanQuat, fanScale)
+              headMesh.setMatrixAt(fanIdx, fanMtx)
+              tmpColor.set(FAN_PALETTE[Math.floor(Math.random() * FAN_PALETTE.length)])
+              torsoMesh.setColorAt(fanIdx, tmpColor)
+              fanIdx++
+            }
+          }
+        })
+        torsoMesh.instanceMatrix.needsUpdate = true
+        if (torsoMesh.instanceColor) torsoMesh.instanceColor.needsUpdate = true
+        headMesh.instanceMatrix.needsUpdate = true
+        scene.add(torsoMesh, headMesh)
+        ;(scene.userData as any).crowd = {
+          fanArray, torsoMesh, headMesh,
+          fanMtx, fanQuat, fanPos, fanScale,
+          axisX: new THREE.Vector3(1, 0, 0),
+          cheer: () => {
+            const t = performance.now()
+            for (const f of fanArray) {
+              f.excitedUntil = t + 1500 + Math.random() * 900
+            }
+            playCheer()
+          },
+        }
+        // Ambient crowd murmur — starts on first user gesture (audio ctx
+        // policy). Cached on userData so we don't double-start.
+        const tryStartMurmur = () => {
+          if ((scene.userData as any).crowdMurmurStarted) return
+          const handle = startCrowdMurmur()
+          if (handle) (scene.userData as any).crowdMurmurStarted = true
+        }
+        window.addEventListener('pointerdown', tryStartMurmur, { once: true })
+        window.addEventListener('keydown', tryStartMurmur, { once: true })
         // Gym overhead lights (4 panels of fluorescent)
         for (let lx = -8; lx <= 8; lx += 8) {
           for (let lz = -8; lz <= 8; lz += 8) {
@@ -685,6 +848,9 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
               ballStateBG.scoredThisShot = true
               setHoopScore((s) => ({ makes: s.makes + 1, attempts: s.attempts, streak: s.streak + 1 }))
               playSwish()
+              // Phase 16.44 — crowd erupts on every make
+              const crowdRef = (scene.userData as any).crowd
+              if (crowdRef?.cheer) crowdRef.cheer()
               break
             }
             // Rim chirp on close miss (ball passes near rim, slightly outside)
@@ -2547,6 +2713,42 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         defenseHeld: boolean
         play: (clipName: string, durationMs: number) => void
       } | null
+      // Phase 16.44 — fan animation tick. Idle fans sway gently in place;
+      // excited fans jump up + tilt slightly. InstancedMesh matrix update
+      // per fan is cheap (just a Matrix4.compose). Total work: ~112 fans
+      // × small compose = sub-1ms even on Sarg.
+      const crowd = (scene.userData as any).crowd
+      if (crowd && crowd.fanArray) {
+        const t = now / 1000  // seconds for sin period
+        const axisX = crowd.axisX as THREE.Vector3
+        for (let i = 0; i < crowd.fanArray.length; i++) {
+          const f = crowd.fanArray[i]
+          const excited = now < f.excitedUntil
+          // Idle sway: gentle ~0.025u oscillation. Excited jump: |sin| up
+          // to 0.42u with phase-offset so the crowd doesn't move in lockstep.
+          const idleSway = Math.sin(t * 2.4 + f.phase) * 0.025
+          const excitedJump = excited
+            ? Math.abs(Math.sin((now - (f.excitedUntil - 1500)) * 0.008 + f.phase)) * 0.42
+            : 0
+          const targetY = idleSway + excitedJump
+          f.jumpY = f.jumpY * 0.78 + targetY * 0.22
+          const targetTilt = excited ? -0.18 + Math.sin(t * 8 + f.phase) * 0.06 : 0
+          f.tilt = f.tilt * 0.85 + targetTilt * 0.15
+          // Torso
+          crowd.fanPos.set(f.baseX, f.baseY + f.jumpY, f.baseZ)
+          crowd.fanQuat.setFromAxisAngle(axisX, f.tilt)
+          crowd.fanMtx.compose(crowd.fanPos, crowd.fanQuat, crowd.fanScale)
+          crowd.torsoMesh.setMatrixAt(i, crowd.fanMtx)
+          // Head — sits above torso, tilts slightly more for life
+          crowd.fanPos.set(f.baseX, f.baseY + 0.45 + f.jumpY, f.baseZ)
+          crowd.fanQuat.setFromAxisAngle(axisX, f.tilt * 1.4)
+          crowd.fanMtx.compose(crowd.fanPos, crowd.fanQuat, crowd.fanScale)
+          crowd.headMesh.setMatrixAt(i, crowd.fanMtx)
+        }
+        crowd.torsoMesh.instanceMatrix.needsUpdate = true
+        crowd.headMesh.instanceMatrix.needsUpdate = true
+      }
+
       if (xbot?.mixer) {
         xbot.mixer.update(dtSec)
         // Phase 16.43 — ambient DRIBBLE cycle while ball is held + player

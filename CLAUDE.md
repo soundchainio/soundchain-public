@@ -6,6 +6,79 @@
 
 ---
 
+## 🙌 SESSION: May 18, 2026 (Frank → Sarg, ship 3) — PHASE 16.44: FANS IN THE STANDS + CROWD CHEER + AMBIENT MURMUR
+
+Frank: *"and put some fans in the stands while we or solo shootaround lets go big or ho home bro!"*. Triple-ship sequence today: 16.42 (bind-pose math + character on court) → 16.43 (Kobe-grade keyframes + audio + dribble) → 16.44 (the arena fills up).
+
+### What shipped (`<COMMIT>`, +~180 net, 1 file)
+
+**112 instanced fans across 8 benches (4 rows × 2 sides × 14 seats):**
+- One `InstancedMesh` for all torsos (random color from 12-jersey palette via `setColorAt`) + one for all heads (skin-tone)
+- **2 draw calls total** for the entire crowd — InstancedMesh batches them
+- Per-fan state: `baseX/baseY/baseZ` (seat position), `phase` (animation offset so the crowd doesn't move in lockstep), `armsUp` (18% chance for permanent arms-up cheering pose — flag for future arm bone work), `excitedUntil`, `jumpY`, `tilt`
+
+**Idle behavior:**
+- Gentle Y sway via `sin(t * 2.4 + phaseOffset) * 0.025` — looks like a crowd murmuring/breathing in place
+- Per-fan phase offset means no two fans bob in sync = organic crowd feel
+
+**Excited behavior (triggered by every made shot):**
+- `crowd.cheer()` sets every fan's `excitedUntil = now + 1500 + random()*900ms`
+- Fans jump up to 0.42u with phase-offset `|sin|` curve (varied jump timing per fan = wave-like cheer instead of robotic synchronization)
+- Slight forward tilt (-0.18 rad) during cheer + small jitter (`sin(t*8 + phase) * 0.06`)
+- Smoothed Y + tilt via per-frame lerp (`f.jumpY * 0.78 + targetY * 0.22`) so transitions in/out of excitement read natural
+
+**Audio (3 new synthesized sounds):**
+- `playCheer()` — layered noise burst: low rumble (lowpass 180Hz, gain 0.22) + mid voice band (bandpass 700Hz Q=0.6, gain 0.32) + high airy spray (bandpass 3400Hz Q=0.9, gain 0.18). 1.4s fast-attack/slow-decay envelope. Fires on every make alongside `playSwish()` + visual cheer.
+- `startCrowdMurmur()` — looping pink-noise (Paul Kellett filter approximation) through bandpass 500Hz Q=0.3 at gain 0.04. Very quiet ambient bed so the gym always has presence. Started on first user gesture (pointerdown or keydown — `{once: true}` listener).
+- Existing Phase 16.39 audio (swish, rim, backboard) and Phase 16.43 audio (squeak, dribble) all stay wired.
+
+**Trigger wire-up:**
+- `playSwish()` call in gravity loop (gym ball mode) now also calls `(scene.userData as any).crowd.cheer()` immediately after — single source of truth for "shot made" = sound + visual + crowd reaction all fire together.
+
+### Architecture decisions (load-bearing)
+
+1. **InstancedMesh over per-fan Groups.** 112 individual Groups × 2 meshes each = 224 draw calls. InstancedMesh = 2 draws total (torso + head). Per-fan animation still works because `setMatrixAt(i, mtx)` updates a single instance; `instanceMatrix.needsUpdate = true` flushes once per frame. Tradeoff: no per-fan material customization beyond color (no different hairstyles, faces, etc.) but `setColorAt` gives us the jersey variety that matters at this distance.
+2. **Phase offset per fan = organic wave.** Without `phase: Math.random() * 2π`, every fan would bounce on identical sine wave = robotic lockstep. With phase, the crowd ripples — looks like 112 individual humans, not one humanoid duplicated 112 times.
+3. **Smooth lerp on jumpY + tilt.** Going from `excitedJump = 0` to `excitedJump = 0.42` on the frame `excitedUntil` flips would teleport. Lerp `f.jumpY = f.jumpY * 0.78 + targetY * 0.22` gives ~5-frame smoothing in/out of excited mode = natural settle.
+4. **Single shared `axisX = Vector3(1,0,0)` for tilt** instead of allocating per-frame. Three.js `setFromAxisAngle(axis, angle)` reads the axis directly, so pre-allocation in `crowd.axisX` lets us reuse the same Vector3 across all 112 fans every frame. Zero allocations in the animate hot path.
+5. **Ambient murmur starts on first gesture, not on scene load.** Chrome autoplay policy requires user interaction before AudioContext can play. Listener fires once (`{once: true}`) on either pointerdown OR keydown — covers mobile tap, desktop click, keyboard input.
+6. **Pink noise via Paul Kellett's filter.** 5-coefficient cascade approximation is the standard for indistinguishable-from-pink without DSP overhead. Pre-rendered into an 8s buffer that loops seamlessly (8s is long enough no audible loop seam at low gain).
+7. **Cheer trigger lives where score is recorded.** `playSwish()` site in gravity loop is the canonical "ball entered hoop" event — putting the crowd cheer right there means perfect sync with the audio cue and avoids any "did the cheer fire?" race conditions.
+
+### Build + deploy
+
+- `yarn build` 79.55s clean, 714 KB FLJ shared, all routes prerendered
+- Pushing to `main` → Vercel webhook auto-deploys
+
+### Verify path (Frank → Sarg post-deploy)
+
+1. Hard-refresh `https://soundchain.io/gallery3d?theme=gym`
+2. Tap any pill (or move with WASD) to trigger first user gesture → AMBIENT CROWD MURMUR starts (very low; you'll know it's there when the gym suddenly has "presence")
+3. Look at the bleachers: 112 fans visible (~14 per bench, 4 rows × 2 sides). Random jersey colors (red/orange/amber/green/teal/cyan/blue/purple/fuchsia/pink/rose). Each fan idle-swaying gently in their seat
+4. Make a shot (any move → swish) → CROWD CHEER audio + every fan jumps up at varied phase (wave-like) + slight forward tilt
+5. Cheer duration ~1.5-2.4s per fan (randomized); they settle back to idle sway smoothly
+6. Make another shot during cheer → cheer extends/re-triggers (excitedUntil resets)
+7. Miss a shot → no cheer (just rim/backboard SFX from Phase 16.39 if ball hits those)
+
+### Lessons
+
+1. **InstancedMesh + per-instance state in a plain array is the right pattern for crowds.** Don't reach for Groups + traverse for every crowd member — instances are designed for exactly this. State lives in `fanArray[]`; visual sync via `setMatrixAt` + `instanceMatrix.needsUpdate`.
+2. **Phase offset is the difference between "robotic" and "alive."** Any time you have N instances doing the same animation, randomize each instance's phase. Costs nothing, transforms the look completely.
+3. **Lerp smoothing on event-driven state transitions.** "Excited" is a boolean, but the visual transition shouldn't be — interpolate the target value toward zero/peak over a few frames so binary state changes feel smooth.
+4. **Synthesized crowd noise via 3-band noise stack > pre-recorded WAV.** No bundle weight (every sample is generated in WebAudio), no licensing, infinite variation. Layered low/mid/high gives the formant range a real crowd has.
+5. **Wire side-effects at the canonical event site.** Crowd cheer + swish audio + score increment all fire from the same `if (horizDist < 0.34 && dyh < 0.25)` block — when "ball entered hoop" becomes the trigger for everything that should react to a make, there's no possibility of drift.
+
+### Open follow-ups (still banked)
+
+1. **Anvil RTX 5000 + Mixamo retarget** — still banked behind AWS Console + NORMAN_URL.
+2. **TripoSR mesh on court (Phase 16.45)** — auto-rig user's CharacterDesigner output to XBot skeleton.
+3. **More basketball moves** — spin move, step-back, eurostep, hop-step, post hook.
+4. **WebRTC peer-sync for 1-on-1 arena matchups** — single-player feel + crowd are dialed in; 2-player is the next frontier.
+5. **Fan upgrades** — arm bones for explicit clap/wave/towel-twirl, per-fan ethnicity diversity via skin-tone color variation, hat instances (Yankees fitted, baseball caps), "MVP" chants on streak milestones.
+6. **`api.soundchain.io` custom-domain TLS bridge repair** — still Frank's hands.
+
+---
+
 ## 🏆 SESSION: May 18, 2026 (Frank → Sarg, ship 2) — PHASE 16.43: KOBE-GRADE BASKETBALL POLISH (denser keyframes + gooseneck + backspin + dribble + squeak)
 
 Frank greenlit polish ship after Phase 16.42 landed: *"please ship the best code possible you can deliver bro and lets play balll kobe bryant style"*. Anvil-Mixamo-retarget ship still blocked on AWS Console work + `NORMAN_URL` provisioning, so shipping the no-infra-needed polish that's pure code on top of `3b8f68d`'s bind-pose math.
