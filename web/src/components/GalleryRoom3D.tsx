@@ -75,6 +75,8 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
   // Phase 16.13 — gamepad connection state (HUD indicator)
   const [gamepadConnected, setGamepadConnected] = useState(false)
   const gamepadConnectedRef = useRef(false)
+  // Phase 16.46 — edge-trigger state per button so holding doesn't auto-spam
+  const gamepadButtonStateRef = useRef<Record<number, boolean>>({})
   // Phase 16.26 — city location state (street search result)
   const [cityLocation, setCityLocation] = useState<{ label: string; lat: number; lng: number } | null>(null)
   const cityLocationRef = useRef<{ label: string; lat: number; lng: number } | null>(null)
@@ -2979,19 +2981,63 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
           xbotRef.defenseHeld = wantsDefense
         }
       }
-      // Gamepad A button (button 0) — also triggers shot
+      // Phase 16.46 — FULL XBOX CONTROLLER MAPPING. Each gamepad button
+      // dispatches its corresponding keyboard event so the same animate-
+      // loop handlers fire whether the input came from keyboard / mobile
+      // pills / Xbox controller. Single source of truth = the keyboard
+      // handlers above. Edge-trigger detection per button so holding
+      // doesn't auto-spam (except LT/defense which IS hold-to-engage).
+      //
+      //   A (0)  → 'b'  jump shot  (auto-routes to jumpshot/layup/dunk)
+      //   B (1)  → 'z'  block
+      //   X (2)  → 't'  pass
+      //   Y (3)  → 'f'  fadeaway
+      //   LB (4) → 'x'  rebound
+      //   RB (5) → 'c'  crossover
+      //   LT (6) → 'g'  defense (HOLD)
+      //   RT (7) → 'v'  spin
+      //   Sel(8) → 'j'  jab step
+      //   Str(9) → 'p'  pump fake
+      //   L3(10) → 'r'  recall ball
+      //   R3(11) → 'b'  alt shoot
+      const PAD_MAP: Array<{ btn: number; key: string; hold: boolean }> = [
+        { btn: 0,  key: 'b', hold: false },
+        { btn: 1,  key: 'z', hold: false },
+        { btn: 2,  key: 't', hold: false },
+        { btn: 3,  key: 'f', hold: false },
+        { btn: 4,  key: 'x', hold: false },
+        { btn: 5,  key: 'c', hold: false },
+        { btn: 6,  key: 'g', hold: true  },  // defense — hold to engage
+        { btn: 7,  key: 'v', hold: false },
+        { btn: 8,  key: 'j', hold: false },
+        { btn: 9,  key: 'p', hold: false },
+        { btn: 10, key: 'r', hold: false },
+        { btn: 11, key: 'b', hold: false },
+      ]
       try {
         const pads = (typeof navigator !== 'undefined' && navigator.getGamepads) ? navigator.getGamepads() : []
         for (const p of pads) {
-          if (p && p.buttons[0]?.pressed) {
-            if (shootRef.current && !ballState_aHeld.fired) {
-              shootRef.current()
-              ballState_aHeld.fired = true
-            }
-            break
-          } else if (p) {
-            ballState_aHeld.fired = false
+          if (!p) continue
+          if (!gamepadConnectedRef.current) {
+            gamepadConnectedRef.current = true
+            setGamepadConnected(true)
           }
+          for (const m of PAD_MAP) {
+            const btn = p.buttons[m.btn]
+            if (!btn) continue
+            const wasPressed = !!gamepadButtonStateRef.current[m.btn]
+            const isPressed = !!btn.pressed || (btn.value && btn.value > 0.5)
+            if (isPressed && !wasPressed) {
+              // Rising edge — fire keydown (single tap for non-hold,
+              // start-of-hold for hold buttons)
+              window.dispatchEvent(new KeyboardEvent('keydown', { key: m.key }))
+            } else if (!isPressed && wasPressed && m.hold) {
+              // Falling edge on a hold button — fire keyup
+              window.dispatchEvent(new KeyboardEvent('keyup', { key: m.key }))
+            }
+            gamepadButtonStateRef.current[m.btn] = isPressed
+          }
+          break  // only first connected pad drives input
         }
       } catch {}
 
