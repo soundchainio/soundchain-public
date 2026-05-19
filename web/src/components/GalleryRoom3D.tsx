@@ -1905,27 +1905,28 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
           }
           console.log('[GalleryRoom3D] XBot bones resolved:', B)
 
-          // Phase 16.42 — build a QuaternionKeyframeTrack from euler keyframes
-          // APPLIED ON TOP of the bone's bind-pose quaternion. Mixamo XBot's
-          // bind pose has arms at sides (NOT identity rotation), so writing
-          // identity at keyframe 0 forces arms into world-aligned T-pose.
-          // Composing bindQuat * delta means [0,0,0] keyframes = bind pose
-          // (arms at sides) and middle keyframes apply rotation deltas on top.
-          // This is what made the previous hand-rolled clips look "frozen /
-          // broken" — they were correct rotations but on the wrong base.
+          // Phase 16.49 — emit RAW DELTA quats (no bindQuat composition).
+          // Mixamo XBot's GLB rest pose IS T-pose at the shoulders — every
+          // Mixamo character is authored with arms-out as the bind. Composing
+          // bindQuat * delta meant every authored clip STARTED at T-pose then
+          // added a tiny delta on top — exactly what Frank sees.
+          //
+          // With additive blending (Phase 16.48), frame 0 = identity quat means
+          // zero contribution at clip start → base layer (idle, arms at sides)
+          // drives the pose unchanged. Middle frames apply the rotation delta
+          // ON TOP of whatever the base layer is doing → arm rotates from the
+          // idle position through the shooting arc and back to idle. Three.js
+          // additive math: q_final = q_base * q_additive. With q_additive =
+          // q_delta (no bindQuat baked in), q_final = q_idle * q_delta = arm
+          // rotated from idle by delta. Which is what we actually want.
           const _q = new THREE.Quaternion()
           const _e = new THREE.Euler()
-          const _qBind = new THREE.Quaternion()
-          const _qDelta = new THREE.Quaternion()
           const quatTrack = (bonePath: string | null, times: number[], eulers: number[][]) => {
             if (!bonePath) return null
-            const bone = boneByName[bonePath]
-            if (bone) _qBind.copy(bone.quaternion); else _qBind.identity()
             const flat = new Float32Array(times.length * 4)
             for (let i = 0; i < eulers.length; i++) {
               _e.set(eulers[i][0] || 0, eulers[i][1] || 0, eulers[i][2] || 0)
-              _qDelta.setFromEuler(_e)
-              _q.copy(_qBind).multiply(_qDelta)
+              _q.setFromEuler(_e)
               flat[i * 4]     = _q.x
               flat[i * 4 + 1] = _q.y
               flat[i * 4 + 2] = _q.z
