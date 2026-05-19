@@ -24,6 +24,7 @@ import { FURNITURE_CATALOG, FURNITURE_CATEGORIES, filterByCategory, getPlacedFur
 import { AudioPlayer } from 'components/AudioPlayer'
 import { getStoredCharacter, type CharacterConfig } from 'components/CharacterDesigner'
 import { connectAsHost, connectAsGuest, type GymPeer, type GymStateMsg, type GymEventMsg } from 'lib/gym/multiplayer'
+import { detectPlatform, onGamepadChange, type PlatformInfo } from 'lib/platformDetect'
 
 interface Track {
   id: string
@@ -92,6 +93,41 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
   const [mpJoinInput, setMpJoinInput] = useState('')
   const [mpRemoteHandle, setMpRemoteHandle] = useState('Player 2')
   const [mpError, setMpError] = useState('')
+  // Phase 16.63 — platform + input mode detection (Xbox, PS, Switch, mobile,
+  // TV, desktop). Surfaces a HUD badge + control hints adapted to the device.
+  const [platformInfo, setPlatformInfo] = useState<PlatformInfo>(() => detectPlatform())
+  useEffect(() => {
+    const refresh = () => setPlatformInfo(detectPlatform())
+    refresh()
+    return onGamepadChange(refresh)
+  }, [])
+  // Phase 16.63 — deep-link auto-join. URL `?room=ABC123` (set after host
+  // copies share-link) auto-fires startMultiplayerGuest on mount. Lets a
+  // friend tap one link to be dropped straight into the lobby — no code
+  // typing required. Works across Xbox / PS / Switch / mobile / desktop.
+  const autoJoinedRef = useRef(false)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (autoJoinedRef.current) return
+    const params = new URLSearchParams(window.location.search)
+    const room = (params.get('room') || '').toUpperCase().replace(/[^A-Z0-9]/g, '')
+    if (room.length !== 6) return
+    // Wait for scene + multiplayer hooks to be available before joining
+    const tryJoin = () => {
+      const fn = (sceneRef.current as any)?.userData?.startMultiplayerGuest
+      if (fn) {
+        autoJoinedRef.current = true
+        setMpMode('guest-joining')
+        fn(room)
+        return true
+      }
+      return false
+    }
+    if (tryJoin()) return
+    const id = setInterval(() => { if (tryJoin()) clearInterval(id) }, 250)
+    const timeout = setTimeout(() => clearInterval(id), 8000)  // give up after 8s
+    return () => { clearInterval(id); clearTimeout(timeout) }
+  }, [theme])
   // Phase 16.26 — city location state (street search result)
   const [cityLocation, setCityLocation] = useState<{ label: string; lat: number; lng: number } | null>(null)
   const cityLocationRef = useRef<{ label: string; lat: number; lng: number } | null>(null)
@@ -4398,12 +4434,32 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
                   {mpRoomCode || '...'}
                 </div>
                 <button
-                  onClick={() => { if (mpRoomCode) { navigator.clipboard?.writeText(mpRoomCode).catch(() => {}); toast.success('Copied!') } }}
+                  onClick={() => { if (mpRoomCode) { navigator.clipboard?.writeText(mpRoomCode).catch(() => {}); toast.success('Code copied') } }}
                   className="px-3 py-2 rounded text-xs font-mono font-bold text-white bg-zinc-700 border-2 border-zinc-500 active:scale-95"
+                  aria-label="Copy code"
                 >
                   📋
                 </button>
               </div>
+              {/* Phase 16.63 — share LINK button (deep-link auto-join). Tap
+                  to copy a one-tap join URL friend can open on ANY device.
+                  navigator.share where supported (mobile) for native sheet. */}
+              <button
+                onClick={async () => {
+                  if (!mpRoomCode) return
+                  const url = `${window.location.origin}/gallery3d?theme=${theme}&room=${mpRoomCode}`
+                  if ((navigator as any).share) {
+                    try {
+                      await (navigator as any).share({ title: 'SoundChain Gym 1-on-1', text: `Join my SC gym game — code ${mpRoomCode}`, url })
+                      return
+                    } catch {}
+                  }
+                  try { await navigator.clipboard?.writeText(url); toast.success('Share link copied') } catch {}
+                }}
+                className="w-full mt-2 px-3 py-2 rounded text-[11px] font-mono font-bold text-white bg-cyan-600 border-2 border-cyan-300 active:scale-95"
+              >
+                🔗 SHARE LINK (auto-join)
+              </button>
               <button
                 onClick={() => {
                   const fn = (sceneRef.current as any)?.userData?.teardownPeer
@@ -4745,6 +4801,17 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
                 <span className="text-gray-600">—</span>
                 <span className="text-red-400 font-bold">DEF {pointScore.defender}</span>
                 <span className="text-gray-500 text-[8px] ml-1">to {POINTS_TO_WIN}</span>
+              </div>
+            )}
+            {/* Phase 16.63 — platform badge: shows device + input mode so
+                player knows which control hints apply. Also exposes that
+                cross-platform is real — Xbox can play Switch can play
+                iPhone all in the same WebRTC peer mesh. */}
+            {(theme === 'gym' || theme === 'blacktop') && (
+              <div className="px-2 py-1 rounded backdrop-blur text-[9px] font-mono flex items-center gap-1 bg-black/40 border border-white/15 text-gray-300">
+                <span>{platformInfo.emoji}</span>
+                <span className="font-bold uppercase">{platformInfo.label}</span>
+                {platformInfo.inputMode === 'gamepad' && <span className="ml-0.5 text-emerald-400">·🎮</span>}
               </div>
             )}
             {/* Phase 16.59 — difficulty pills + pause */}
