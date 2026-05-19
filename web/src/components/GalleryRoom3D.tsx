@@ -2174,7 +2174,12 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
       }
     }
 
+    // Phase 16.62 — gym + blacktop are basketball game scenes, NOT art
+    // galleries. Skip the NFT frame placement entirely so the court isn't
+    // cluttered with floating album art.
+    const skipFrames = isBasketballGallery
     tracks.forEach((track, i) => {
+      if (skipFrames) return
       if (i >= positions.length) return
       const { pos, rot } = positions[i]
       const group = new THREE.Group()
@@ -2699,16 +2704,23 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
           // every move routes to the closest stock clip — fluid motion
           // guaranteed because Mixamo authored them. Position state
           // machines (jumpState / moveState) still differentiate trajectory.
+          // Phase 16.62 — SHOOTING moves now route to 'wave' (right arm raises
+          // up to head height) instead of 'jump' (which raises the KNEE up
+          // toward the ball, looking like a soccer kick on every shot). Wave
+          // gives proper arm-up shooting form; the vertical leap still comes
+          // from jumpState.peakY. Dunk + rebound + block stay on 'jump' since
+          // they're vertical-leap-dominant gestures.
           const moveToStockClip: Record<string, string> = {
-            'jumpshot':  'jump',
+            'jumpshot':  'wave',
+            'three':     'wave',
+            'fadeaway':  'wave',
+            'layup':     'wave',
             'dunk':      'jump',
-            'layup':     'jump',
-            'fadeaway':  'jump',
             'rebound':   'jump',
-            'block':     'jump',
+            'block':     'wave',
             'pass':      'punch',
             'pumpfake':  'wave',
-            'crossover': 'wave',
+            'crossover': 'walking',
             'jabstep':   'walking',
             'defense':   'sitting',
           }

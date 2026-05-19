@@ -52,12 +52,25 @@ export default function Gallery3DPage() {
       .catch(() => {})
   }, [handleParam, me?.profile])
 
+  // Phase 16.62 — gym + blacktop are immersive basketball game modes,
+  // not gallery views. On mobile the global DexNavBar (Lucy brain pill,
+  // FURL search pill, top-nav chrome) collides with the game controls.
+  // Hide all top chrome on these themes — full-screen game experience.
+  const isGameTheme = theme === 'gym' || theme === 'blacktop'
+
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
-      <DexNavBar />
+      {/* Hide global chrome (DexNavBar + nav pills + header) on game themes
+          for mobile. Desktop keeps them since there's room. */}
+      {!isGameTheme && <DexNavBar />}
+      {isGameTheme && (
+        <div className="hidden sm:block">
+          <DexNavBar />
+        </div>
+      )}
 
-      {/* Lower nav pills */}
-      <div className="border-b border-yellow-500/10 bg-black/40 backdrop-blur-md">
+      {/* Lower nav pills — hidden on game themes for mobile */}
+      <div className={`border-b border-yellow-500/10 bg-black/40 backdrop-blur-md ${isGameTheme ? 'hidden sm:block' : ''}`}>
         <div className="flex items-center gap-1.5 px-3 pt-2 pb-2">
           <div className="flex-1 overflow-x-auto scrollbar-hide bg-black/60 backdrop-blur-md rounded-full px-2 py-1">
             <div className="flex items-center gap-1.5 min-w-max">
@@ -92,8 +105,8 @@ export default function Gallery3DPage() {
         </div>
       </div>
 
-      {/* Header */}
-      <div className="border-b border-yellow-500/20 bg-black/80 backdrop-blur-md">
+      {/* Header — hidden on game themes for mobile (full-screen game) */}
+      <div className={`border-b border-yellow-500/20 bg-black/80 backdrop-blur-md ${isGameTheme ? 'hidden sm:block' : ''}`}>
         <div className="max-w-[1400px] mx-auto px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div className="flex items-center gap-3 min-w-0">
             <button onClick={() => router.push('/explore3d')} className="p-1.5 rounded hover:bg-white/10 transition shrink-0">
@@ -121,8 +134,38 @@ export default function Gallery3DPage() {
         </div>
       </div>
 
-      {/* The Gallery */}
-      <div className="relative w-full" style={{ height: 'calc(100vh - 200px)', minHeight: '500px' }}>
+      {/* Phase 16.62 — minimal corner controls on game themes (mobile only)
+          since the full DexNavBar + nav pills + header are hidden. Gives
+          users a way to exit the game + switch themes without a refresh. */}
+      {isGameTheme && (
+        <div className="sm:hidden absolute top-2 left-2 z-50 flex items-center gap-1.5 pointer-events-auto">
+          <button
+            onClick={() => router.push('/explore3d')}
+            className="px-2 py-1.5 rounded bg-black/70 backdrop-blur border border-white/20 text-white text-[10px] font-mono flex items-center gap-1"
+            aria-label="Exit game"
+          >
+            <ArrowLeft className="w-3 h-3" /> EXIT
+          </button>
+          {THEMES.filter(t => t === 'gym' || t === 'blacktop').map(t => (
+            <button
+              key={t}
+              onClick={() => setTheme(t)}
+              className={`px-2 py-1.5 rounded text-[10px] font-mono uppercase transition ${theme === t ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/40' : 'bg-black/70 text-gray-400 border border-white/15'}`}
+            >
+              {t === 'gym' ? '🏀 GYM' : '🏙 BLACKTOP'}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* The Gallery — full viewport on mobile game themes, normal otherwise */}
+      <div
+        className={`relative w-full min-h-[400px] ${
+          isGameTheme
+            ? 'h-[100dvh] sm:h-[calc(100vh-200px)]'
+            : 'h-[calc(100vh-200px)]'
+        }`}
+      >
         {handleParam ? (
           <GalleryRoom3D ownerHandle={handleParam} ownerProfileId={ownerProfileId} theme={theme} />
         ) : (
