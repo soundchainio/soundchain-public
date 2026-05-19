@@ -2352,13 +2352,13 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
           const heightMul = charForXBot.height ?? 1
           if (heightMul !== 1 && heightMul > 0) model.scale.multiplyScalar(heightMul)
 
-          // Phase 16.60 — Mixamo XBot bind pose faces +Z; Three.js convention
-          // is models face -Z. Without this rotation, pressing W (move in -Z)
-          // walks the player BACKWARDS visually because the avatar faces the
-          // opposite direction of motion. 180° flip aligns model facing with
-          // movement direction set by Math.atan2(dirX, -dirZ).
-          model.rotation.y = Math.PI
-
+          // Phase 16.61 — DO NOT rotate the model. Mixamo XBot faces +Z by
+          // default. We canonicalize on +Z facing across the whole
+          // codebase: ball-hand offset uses (sin θ, cos θ) (+Z convention),
+          // shootRef uses atan2(dx, dz) (+Z convention), and WASD now uses
+          // atan2(dirX, dirZ) too (was atan2(dirX, -dirZ) which was the
+          // outlier -Z convention). One axis convention = everything aligns:
+          // model faces where it walks, ball sits in front of the model.
           avatarHolder.add(model)
 
           if (!gltf.animations || gltf.animations.length === 0) return
@@ -2781,7 +2781,7 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
             // Clone the rigged XBot
             const defModel: THREE.Object3D = cloneSkinnedMesh(model)
             defModel.scale.copy(model.scale)
-            defModel.rotation.y = Math.PI  // match player facing convention
+            // Phase 16.61 — Mixamo +Z convention, no flip needed
             // Tint to red jersey + dark skin for visual contrast
             defModel.traverse((obj: any) => {
               if (obj.isMesh) {
@@ -3542,7 +3542,7 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         playerGroup.position.x = Math.max(-PLAYER_BOUNDS, Math.min(PLAYER_BOUNDS, playerGroup.position.x))
         playerGroup.position.z = Math.max(-PLAYER_BOUNDS, Math.min(PLAYER_BOUNDS, playerGroup.position.z))
         if (mag > 0.05) {
-          playerGroup.rotation.y = Math.atan2(dirX, -dirZ)
+          playerGroup.rotation.y = Math.atan2(dirX, dirZ)  // Phase 16.61 — +Z convention
         }
       }
 
