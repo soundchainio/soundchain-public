@@ -167,6 +167,7 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
     const w = container.clientWidth || window.innerWidth
     const h = container.clientHeight || window.innerHeight - 200
     const themeCfg = THEME_CONFIG[theme]
+    const isSportsTheme = theme === 'gym' || theme === 'blacktop'
 
     // ─── Phase 16.39 — Basketball SFX synthesized via Web Audio API ──
     // Zero external files, no licensing, no bundle weight. Each sound is
@@ -2254,7 +2255,6 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
       const glbUrl = (character as any).aiGlbUrl || character.humanGlbUrl
       // Phase 16.40 — sports themes (gym + blacktop) load XBot with bundled
       // walk/run/idle animations. Other themes still honor saved character GLBs.
-      const isSportsTheme = theme === 'gym' || theme === 'blacktop'
       if (isSportsTheme) {
         buildXBotPlayer()
         return
