@@ -117,6 +117,20 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
   const [pointScore, setPointScore] = useState({ player: 0, defender: 0 })
   const [gameOver, setGameOver] = useState<null | 'player' | 'defender'>(null)
   const POINTS_TO_WIN = 21
+  // Phase 16.58 — per-shot stats tracking for end-of-game breakdown
+  type ShotStats = { makes: number; attempts: number }
+  const [gameStats, setGameStats] = useState<{ [k: string]: ShotStats }>({
+    jumpshot: { makes: 0, attempts: 0 },
+    three: { makes: 0, attempts: 0 },
+    dunk: { makes: 0, attempts: 0 },
+    layup: { makes: 0, attempts: 0 },
+    fadeaway: { makes: 0, attempts: 0 },
+  })
+  const [defenderBlocks, setDefenderBlocks] = useState(0)
+  // Phase 16.58 — Big Play Cam banner (POSTERIZED!, ON FIRE!, etc.)
+  type BigPlayBanner = { id: number; text: string; color: string; emoji: string; bornAt: number }
+  const [bigPlay, setBigPlay] = useState<BigPlayBanner | null>(null)
+  const bigPlayIdRef = useRef(0)
   // Phase 16.29 — city search now opens as a full modal dialog so typing
   // isn't gated by any z-index / pointer-event conflicts with the canvas.
   const [citySearchOpen, setCitySearchOpen] = useState(false)
@@ -421,6 +435,27 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
     }
     const triggerCameraShake = (intensity: number, durationSec: number) => {
       cameraShakeRef.current = { intensity, t: 0, duration: durationSec }
+    }
+    // Phase 16.58 — Big Play Cam: full-screen banner for signature moments
+    const triggerBigPlay = (text: string, color: string, emoji: string) => {
+      const id = bigPlayIdRef.current++
+      setBigPlay({ id, text, color, emoji, bornAt: performance.now() })
+      setTimeout(() => {
+        setBigPlay((cur) => (cur && cur.id === id ? null : cur))
+      }, 1600)
+    }
+    // Phase 16.58 — per-shot stats tracker
+    const recordAttempt = (shotType: string) => {
+      setGameStats((s) => {
+        const key = (s[shotType] ? shotType : 'jumpshot')
+        return { ...s, [key]: { ...s[key], attempts: s[key].attempts + 1 } }
+      })
+    }
+    const recordMake = (shotType: string) => {
+      setGameStats((s) => {
+        const key = (s[shotType] ? shotType : 'jumpshot')
+        return { ...s, [key]: { ...s[key], makes: s[key].makes + 1 } }
+      })
     }
     // Phase 16.52 — hot zones. Court divided into 4u × 4u grid cells.
     // Cells with 2+ makes glow orange; cells with 4+ makes glow red. The
@@ -1070,6 +1105,8 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
           ballStateBG.vel.set(0, 5, 0)
           ;(ballStateBG as any).shotType = 'blocked'
           setHoopScore((s) => ({ ...s, attempts: s.attempts + 1, streak: 0 }))
+          setDefenderBlocks((b) => b + 1)
+          triggerBigPlay('REJECTED!', '#ef4444', '🚫')
           return
         }
         jumpStateBG.active = true
@@ -1134,6 +1171,14 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
           ;(ballStateBG as any).airTime = 0
           ;(ballStateBG as any).bounces = 0
           ballStateBG.returnTimer = 0
+          // Phase 16.58 — track attempt by shot type
+          {
+            const _t = (jumpStateBG as any).isDunk ? 'dunk' :
+              ((shot as any).isThree ? 'three' :
+              ((shot as any).horizDist < 4 ? 'layup' :
+              ((shot as any).isFadeaway ? 'fadeaway' : 'jumpshot')))
+            recordAttempt(_t)
+          }
           // Phase 16.51 — stash shot type so the score/miss detect path can
           // dispatch the right play-by-play call
           const _isDunk = (jumpStateBG as any).isDunk
@@ -1237,6 +1282,21 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
                   (ballStateBG as any).shotOriginX ?? 0,
                   (ballStateBG as any).shotOriginZ ?? 0,
                 )
+                // Phase 16.58 — record make stats + Big Play Cam
+                recordMake(shotType)
+                if (shotType === 'dunk') {
+                  triggerBigPlay('POSTERIZED!', '#fb923c', '💥')
+                } else if (nextStreak === 5) {
+                  triggerBigPlay('ON FIRE!', '#ef4444', '🔥')
+                } else if (nextStreak === 7) {
+                  triggerBigPlay('UNCONSCIOUS!', '#dc2626', '👑')
+                } else if (shotType === 'three' && (ballStateBG as any).shotOriginZ !== undefined) {
+                  const sx = (ballStateBG as any).shotOriginX ?? 0
+                  const sz = (ballStateBG as any).shotOriginZ ?? 0
+                  if (Math.hypot(sx, sz) > 10) {  // Half-court range
+                    triggerBigPlay('FROM DOWNTOWN!', '#facc15', '🎯')
+                  }
+                }
                 return { makes: s.makes + 1, attempts: s.attempts, streak: nextStreak }
               })
               playSwish()
@@ -3966,24 +4026,86 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
     <div className="relative w-full h-full" tabIndex={0} onFocus={() => containerRef.current?.focus()}>
       <div ref={containerRef} className="absolute inset-0" tabIndex={0} style={{ cursor: 'grab', outline: 'none' }} onClick={() => containerRef.current?.focus()} />
 
+      {/* Phase 16.58 — BIG PLAY CAM banner: full-screen flash on signature
+          moments. Different colors per play type. CSS keyframe handles
+          entrance burst + hold + exit. */}
+      {bigPlay && (
+        <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none">
+          <div
+            className="font-mono font-black text-center px-8 py-4"
+            style={{
+              fontSize: 'clamp(2.5rem, 10vw, 6rem)',
+              color: bigPlay.color,
+              textShadow: `0 0 30px ${bigPlay.color}, 0 0 60px ${bigPlay.color}, 0 4px 12px rgba(0,0,0,0.95)`,
+              animation: 'sc-bigplay 1.6s ease-out forwards',
+              letterSpacing: '0.05em',
+            }}
+          >
+            <div className="text-7xl sm:text-8xl mb-1 drop-shadow-2xl">{bigPlay.emoji}</div>
+            {bigPlay.text}
+          </div>
+        </div>
+      )}
+      <style jsx>{`
+        @keyframes sc-bigplay {
+          0%   { opacity: 0; transform: scale(0.3) rotate(-8deg); }
+          15%  { opacity: 1; transform: scale(1.35) rotate(3deg); }
+          25%  { opacity: 1; transform: scale(1.0) rotate(0deg); }
+          75%  { opacity: 1; transform: scale(1.0) rotate(0deg); }
+          100% { opacity: 0; transform: scale(0.8) rotate(0deg); }
+        }
+      `}</style>
+
       {/* Phase 16.56 — GAME OVER overlay (first to 21) */}
       {gameOver && (theme === 'gym' || theme === 'blacktop') && (
-        <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/75 backdrop-blur-sm pointer-events-auto">
-          <div className="bg-gradient-to-br from-orange-500/30 to-red-600/40 border-4 border-yellow-400 rounded-2xl px-8 py-6 text-center shadow-[0_0_60px_rgba(250,204,21,0.6)] max-w-md">
+        <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/85 backdrop-blur-sm pointer-events-auto">
+          <div className="bg-gradient-to-br from-orange-500/30 to-red-600/40 border-4 border-yellow-400 rounded-2xl px-6 py-6 text-center shadow-[0_0_60px_rgba(250,204,21,0.6)] max-w-md w-[90vw]">
             <div className="text-yellow-300 font-mono text-xs mb-2 tracking-widest">FINAL</div>
-            <div className="text-white font-bold text-4xl sm:text-5xl mb-3">
-              {gameOver === 'player' ? '🏆 YOU WIN' : '😞 GAME OVER'}
+            <div className="text-white font-bold text-3xl sm:text-5xl mb-3">
+              {gameOver === 'player' ? '🏆 MVP — YOU WIN' : '😞 GAME OVER'}
             </div>
-            <div className="text-white font-mono text-2xl mb-5">
+            <div className="text-white font-mono text-2xl mb-4">
               <span className="text-cyan-300">YOU {pointScore.player}</span>
               <span className="text-gray-500 mx-3">—</span>
               <span className="text-red-400">DEF {pointScore.defender}</span>
+            </div>
+            {/* Phase 16.58 — final stat breakdown */}
+            <div className="bg-black/40 rounded-lg px-3 py-2 mb-4 text-left font-mono text-[11px] text-gray-300">
+              <div className="text-yellow-300 text-[10px] mb-1 font-bold tracking-wider">STATS</div>
+              {Object.entries(gameStats).map(([type, stats]) => {
+                if (stats.attempts === 0) return null
+                const pct = Math.round((stats.makes / stats.attempts) * 100)
+                return (
+                  <div key={type} className="flex justify-between">
+                    <span className="capitalize text-gray-400">{type === 'three' ? '3PT' : type}</span>
+                    <span><span className="text-white">{stats.makes}/{stats.attempts}</span> <span className="text-gray-500">({pct}%)</span></span>
+                  </div>
+                )
+              })}
+              {defenderBlocks > 0 && (
+                <div className="flex justify-between mt-1 pt-1 border-t border-white/10">
+                  <span className="text-red-400">REJECTED</span>
+                  <span className="text-white">{defenderBlocks}x</span>
+                </div>
+              )}
+              <div className="flex justify-between mt-1 pt-1 border-t border-white/10">
+                <span className="text-gray-400">GAME TIME</span>
+                <span className="text-white">{Math.floor(sessionTime / 60)}:{String(sessionTime % 60).padStart(2, '0')}</span>
+              </div>
             </div>
             <button
               onClick={() => {
                 setGameOver(null)
                 setPointScore({ player: 0, defender: 0 })
                 setHoopScore({ makes: 0, attempts: 0, streak: 0 })
+                setGameStats({
+                  jumpshot: { makes: 0, attempts: 0 },
+                  three: { makes: 0, attempts: 0 },
+                  dunk: { makes: 0, attempts: 0 },
+                  layup: { makes: 0, attempts: 0 },
+                  fadeaway: { makes: 0, attempts: 0 },
+                })
+                setDefenderBlocks(0)
                 shotClockRef.current = 24
                 setShotClock(24)
                 sessionTimeRef.current = 0
@@ -3994,6 +4116,8 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
                   hm.ctx.clearRect(0, 0, hm.canvas.width, hm.canvas.height)
                   hm.texture.needsUpdate = true
                 }
+                const ds = (sceneRef.current as any)?.userData?.defender
+                if (ds) { ds.mode = 'guard'; ds.shootTimer = 0 }
               }}
               className="px-6 py-3 rounded-lg bg-gradient-to-br from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white font-bold font-mono text-sm transition active:scale-95"
             >
