@@ -100,6 +100,13 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
   // Phase 16.27 — basketball mechanic state
   const [hoopScore, setHoopScore] = useState({ makes: 0, attempts: 0, streak: 0 })
   const shootRef = useRef<(() => void) | null>(null)
+  // Phase 16.51 — score popups (floating "+2 / +3 / SLAM!" text) + camera shake
+  type ScorePopup = { id: number; text: string; color: string; screenX: number; screenY: number; bornAt: number }
+  const [scorePopups, setScorePopups] = useState<ScorePopup[]>([])
+  const scorePopupIdRef = useRef(0)
+  const cameraShakeRef = useRef<{ intensity: number; t: number; duration: number }>({ intensity: 0, t: 0, duration: 0 })
+  // Phase 16.52 — hot zones: court tile grid tracking makes per cell
+  const hotZoneRef = useRef<Map<string, { makes: number; lastMakeAt: number }>>(new Map())
   // Phase 16.29 — city search now opens as a full modal dialog so typing
   // isn't gated by any z-index / pointer-event conflicts with the canvas.
   const [citySearchOpen, setCitySearchOpen] = useState(false)
@@ -327,6 +334,91 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
       noise.connect(bp).connect(gain).connect(ctx.destination)
       noise.start()
       return { noise, gain }
+    }
+
+    // Phase 16.51 — PLAY-BY-PLAY ANNOUNCER (Web Speech API).
+    // Synthesized voice over the speaker — no audio files needed, runs in
+    // the same browser that's rendering the game. Cancels prior utterances
+    // so back-to-back makes don't queue up. Volume kept lower than SFX so
+    // the announcer rides above the swish/cheer mix without crushing it.
+    let lastAnnounceAt = 0
+    const speak = (text: string, opts?: { rate?: number; pitch?: number; volume?: number; minGapMs?: number }) => {
+      if (typeof window === 'undefined' || !('speechSynthesis' in window)) return
+      const minGap = opts?.minGapMs ?? 250
+      const now = performance.now()
+      if (now - lastAnnounceAt < minGap) return  // throttle so we don't stutter
+      lastAnnounceAt = now
+      try { window.speechSynthesis.cancel() } catch {}
+      const u = new SpeechSynthesisUtterance(text)
+      u.rate = opts?.rate ?? 1.15
+      u.pitch = opts?.pitch ?? 0.95
+      u.volume = opts?.volume ?? 0.85
+      try { window.speechSynthesis.speak(u) } catch {}
+    }
+    // Pick a "hype" call for a make based on shot type + streak count
+    const announceMake = (shotType: string, streak: number) => {
+      // Streak overrides regular shot calls — these are signature crowd moments
+      if (streak >= 7) { speak(["UNCONSCIOUS!", "HE'S COOKING!", "MAMBA MENTALITY!"][streak % 3], { pitch: 1.1, rate: 1.25 }); return }
+      if (streak >= 5) { speak(["HE'S ON FIRE!", "THIS GUY CAN'T MISS!", "ABSOLUTELY COOKING!"][streak % 3], { pitch: 1.08, rate: 1.2 }); return }
+      if (streak >= 3) { speak(["HE'S HEATING UP!", "STARTING TO COOK!", "STAY HOT!"][streak % 3], { pitch: 1.05, rate: 1.15 }); return }
+      // Per shot-type calls
+      if (shotType === 'dunk')     return speak(["BOOM! SLAM DUNK!", "POSTERIZED!", "THROW IT DOWN!"][Math.floor(Math.random()*3)], { pitch: 0.92, rate: 1.2 })
+      if (shotType === 'three')    return speak(["BANG! THREE!", "FROM DOWNTOWN!", "TRIPLE!"][Math.floor(Math.random()*3)], { pitch: 1.0, rate: 1.18 })
+      if (shotType === 'layup')    return speak(["EASY BUCKET!", "GOT THE LAY!", "AT THE RIM!"][Math.floor(Math.random()*3)], { rate: 1.15 })
+      if (shotType === 'fadeaway') return speak(["FADEAWAY... GOOD!", "MAMBA RANGE!", "NOTHIN' BUT NET!"][Math.floor(Math.random()*3)], { rate: 1.12 })
+      return speak(["MONEY!", "BUCKET!", "GOT IT!", "SPLASH!"][Math.floor(Math.random()*4)], { rate: 1.15 })
+    }
+    const announceMiss = (shotType: string) => {
+      // 30% chance to comment on misses so it's not chatty
+      if (Math.random() > 0.30) return
+      if (shotType === 'dunk') return speak(["OH NO, OFF THE RIM!", "MISSED THE SLAM!"][Math.floor(Math.random()*2)], { pitch: 0.92 })
+      speak(["NO GOOD!", "RATTLES OUT!", "SHORT!", "OFF THE MARK"][Math.floor(Math.random()*4)], { rate: 1.05 })
+    }
+    const announceMove = (move: string) => {
+      if (move === 'block')   return speak(["DENIED!", "REJECTED!", "GET THAT OUTTA HERE!"][Math.floor(Math.random()*3)], { pitch: 0.92, rate: 1.2 })
+      if (move === 'rebound') return speak(["BOARDS!", "REBOUND!"][Math.floor(Math.random()*2)], { rate: 1.15 })
+      if (move === 'crossover') return speak(["ANKLES!", "BROKE 'EM!", "TOO SMOOTH!"][Math.floor(Math.random()*3)], { rate: 1.18 })
+      if (move === 'spin')    return speak(["SPIN MOVE!", "SHIFTY!"][Math.floor(Math.random()*2)], { rate: 1.15 })
+    }
+
+    // Phase 16.51 — score popup + camera shake helpers.
+    // Popups: project world position → screen coords once at spawn, render
+    // as absolute-positioned DOM div, CSS animates the float-up + fade.
+    const projectToScreen = (worldX: number, worldY: number, worldZ: number) => {
+      const v = new THREE.Vector3(worldX, worldY, worldZ).project(camera)
+      const canvasW = renderer.domElement.clientWidth
+      const canvasH = renderer.domElement.clientHeight
+      return {
+        x: (v.x * 0.5 + 0.5) * canvasW,
+        y: (-v.y * 0.5 + 0.5) * canvasH,
+      }
+    }
+    const spawnScorePopup = (p: { text: string; color: string; worldX: number; worldY: number; worldZ: number }) => {
+      const screen = projectToScreen(p.worldX, p.worldY, p.worldZ)
+      const id = scorePopupIdRef.current++
+      const popup: ScorePopup = {
+        id,
+        text: p.text,
+        color: p.color,
+        screenX: screen.x,
+        screenY: screen.y,
+        bornAt: performance.now(),
+      }
+      setScorePopups((prev) => [...prev, popup])
+      setTimeout(() => {
+        setScorePopups((prev) => prev.filter((sp) => sp.id !== id))
+      }, 1400)
+    }
+    const triggerCameraShake = (intensity: number, durationSec: number) => {
+      cameraShakeRef.current = { intensity, t: 0, duration: durationSec }
+    }
+    // Phase 16.52 — hot zones. Court divided into 4u × 4u grid cells.
+    // Cells with 2+ makes glow orange; cells with 4+ makes glow red.
+    const zoneKey = (x: number, z: number) => `${Math.floor(x / 4)}_${Math.floor(z / 4)}`
+    const registerMakeAt = (x: number, z: number) => {
+      const k = zoneKey(x, z)
+      const cur = hotZoneRef.current.get(k) || { makes: 0, lastMakeAt: 0 }
+      hotZoneRef.current.set(k, { makes: cur.makes + 1, lastMakeAt: performance.now() })
     }
 
     // ─── Scene Setup ─────────────────────────────────────────
@@ -768,7 +860,7 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         jumpStateBG.peakY = isDunk ? 1.8 : isLayup ? 1.0 : isThree ? 0.6 : 1.2
         jumpStateBG.ballRelease = isDunk ? 0.5 : isLayup ? 0.55 : 0.35
         jumpStateBG.isDunk = isDunk
-        ;(jumpStateBG as any).pendingShot = { start, target, dx, dz, horizDist, isDunk, isThree }
+        ;(jumpStateBG as any).pendingShot = { start, target, dx, dz, horizDist, isDunk, isThree, isLayup, isFadeaway: wantFadeaway }
         // Phase 16.41 — play the matching XBot body clip
         const xb = (avatarHolder.userData as any).xbot
         if (xb?.play) {
@@ -820,6 +912,17 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
           ;(ballStateBG as any).airTime = 0
           ;(ballStateBG as any).bounces = 0
           ballStateBG.returnTimer = 0
+          // Phase 16.51 — stash shot type so the score/miss detect path can
+          // dispatch the right play-by-play call
+          const _isDunk = (jumpStateBG as any).isDunk
+          const _isThree = (shot as any).isThree
+          const _horizDist = (shot as any).horizDist || 0
+          ;(ballStateBG as any).shotType = _isDunk ? 'dunk' :
+            _isThree ? 'three' :
+            (_horizDist < 4 ? 'layup' :
+            ((shot as any).isFadeaway ? 'fadeaway' : 'jumpshot'))
+          ;(ballStateBG as any).shotOriginX = (shot as any).start?.x ?? 0
+          ;(ballStateBG as any).shotOriginZ = (shot as any).start?.z ?? 0
           setHoopScore((s) => ({ ...s, attempts: s.attempts + 1 }))
           ;(jumpStateBG as any).pendingShot = null
         }
@@ -863,7 +966,29 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
             const dyh = Math.abs(ballBG.position.y - hoop.rimPos.y)
             if (horizDist < 0.34 && dyh < 0.25) {
               ballStateBG.scoredThisShot = true
-              setHoopScore((s) => ({ makes: s.makes + 1, attempts: s.attempts, streak: s.streak + 1 }))
+              setHoopScore((s) => {
+                const nextStreak = s.streak + 1
+                // Phase 16.51 — play-by-play announcer fires inside the
+                // setState callback so we have the FRESH streak value.
+                const shotType = (ballStateBG as any).shotType || 'jumpshot'
+                announceMake(shotType, nextStreak)
+                // Phase 16.51 — score popup + camera shake on big plays
+                spawnScorePopup({
+                  text: shotType === 'three' ? '+3' : shotType === 'dunk' ? 'SLAM!' : '+2',
+                  worldX: (ballStateBG as any).shotOriginX ?? 0,
+                  worldY: 2.5,
+                  worldZ: (ballStateBG as any).shotOriginZ ?? 0,
+                  color: shotType === 'dunk' ? '#fb923c' : shotType === 'three' ? '#facc15' : '#22c55e',
+                })
+                if (shotType === 'dunk') triggerCameraShake(0.4, 0.35)
+                else if (nextStreak >= 3) triggerCameraShake(0.18, 0.2)
+                // Phase 16.52 — hot zone register
+                registerMakeAt(
+                  (ballStateBG as any).shotOriginX ?? 0,
+                  (ballStateBG as any).shotOriginZ ?? 0,
+                )
+                return { makes: s.makes + 1, attempts: s.attempts, streak: nextStreak }
+              })
               playSwish()
               // Phase 16.44 — crowd erupts on every make
               const crowdRef = (scene.userData as any).crowd
@@ -904,6 +1029,8 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
           if (!ballStateBG.scoredThisShot && ballStateBG.airborneFrames > 5) {
             setHoopScore((s) => ({ ...s, streak: 0 }))
             ballStateBG.scoredThisShot = true
+            // Phase 16.51 — occasional miss commentary
+            announceMiss((ballStateBG as any).shotType || 'jumpshot')
           }
         }
         // Phase 16.39 — HARD watchdog. Every shot returns within 2.5s no
@@ -2714,6 +2841,8 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         else if (type === 'jabStep') xb2.play('jabStep', 280)
         // 'spin' uses playerGroup.rotation.y so no clip needed
       }
+      // Phase 16.51 — play-by-play call for signature moves
+      if (type === 'crossover' || type === 'spin') announceMove(type)
     }
     ;(scene.userData as any).triggerMove = triggerMove
 
@@ -3224,6 +3353,7 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
       if (keys['x']) {
         keys['x'] = false
         if (xbotRef?.play) xbotRef.play('rebound', 800)
+        announceMove('rebound')
         // Add a quick vertical leap so the rebound visibly jumps
         const pg = (scene.userData as any).playerGroupRef
         const js = (scene.userData as any).jumpState
@@ -3241,6 +3371,8 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
       if (keys['z']) {
         keys['z'] = false
         if (xbotRef?.play) xbotRef.play('block', 700)
+        announceMove('block')
+        triggerCameraShake(0.15, 0.18)
         const pg = (scene.userData as any).playerGroupRef
         const js = (scene.userData as any).jumpState
         if (pg && js && !js.active) {
@@ -3338,6 +3470,18 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         playerGroup.position.z + offsetZ,
       )
       camera.position.lerp(camTarget, 0.15)
+      // Phase 16.51 — camera shake (dunks, hot streaks). Decays linearly
+      // over duration; applies random offset to camera each frame so the
+      // image jitters without the character moving.
+      const shake = cameraShakeRef.current
+      if (shake.t < shake.duration) {
+        shake.t += dtSec
+        const remaining = Math.max(0, 1 - shake.t / shake.duration)
+        const amp = shake.intensity * remaining
+        camera.position.x += (Math.random() - 0.5) * amp
+        camera.position.y += (Math.random() - 0.5) * amp
+        camera.position.z += (Math.random() - 0.5) * amp
+      }
       camera.lookAt(playerGroup.position.x, playerGroup.position.y + 1, playerGroup.position.z)
 
       // Proximity audio — fade in/out based on distance
@@ -3450,6 +3594,37 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
   return (
     <div className="relative w-full h-full" tabIndex={0} onFocus={() => containerRef.current?.focus()}>
       <div ref={containerRef} className="absolute inset-0" tabIndex={0} style={{ cursor: 'grab', outline: 'none' }} onClick={() => containerRef.current?.focus()} />
+
+      {/* Phase 16.51 — Score popups (+2 / +3 / SLAM!) float up over the make
+          location, fading out in 1.4s. Pure DOM overlay so canvas perf is
+          untouched. CSS animation handles the float + fade. */}
+      <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden">
+        {scorePopups.map((p) => (
+          <div
+            key={p.id}
+            className="absolute font-bold font-mono text-2xl sm:text-3xl drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]"
+            style={{
+              left: `${p.screenX}px`,
+              top: `${p.screenY}px`,
+              transform: 'translate(-50%, -100%)',
+              color: p.color,
+              animation: 'sc-score-popup 1.4s ease-out forwards',
+              textShadow: `0 0 12px ${p.color}, 0 0 24px ${p.color}`,
+            }}
+          >
+            {p.text}
+          </div>
+        ))}
+      </div>
+      <style jsx>{`
+        @keyframes sc-score-popup {
+          0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+          15%  { opacity: 1; transform: translate(-50%, -100%) scale(1.3); }
+          30%  { opacity: 1; transform: translate(-50%, -110%) scale(1.0); }
+          80%  { opacity: 1; transform: translate(-50%, -180%) scale(1.0); }
+          100% { opacity: 0; transform: translate(-50%, -260%) scale(0.9); }
+        }
+      `}</style>
 
       {/* Phase 16.47 — multiplayer lobby UI. Shows a "VS" pill in solo mode;
           opens a panel with Create/Join when tapped. While connected,
@@ -3845,11 +4020,18 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
             📍 {cityLocation.label}
           </div>
         )}
-        {/* Phase 16.27 — basketball score HUD (city theme only) */}
-        {theme === 'city' && (
+        {/* Phase 16.51 — basketball score HUD (now city + gym + blacktop) */}
+        {(theme === 'city' || theme === 'gym' || theme === 'blacktop') && (
           <div className="px-2 py-1 rounded bg-orange-500/15 backdrop-blur border border-orange-500/40 text-[10px] font-mono text-orange-300 flex items-center gap-2">
             🏀 <span className="font-bold">{hoopScore.makes}</span>/<span>{hoopScore.attempts}</span>
-            {hoopScore.streak >= 3 && <span className="ml-1 text-yellow-300">🔥 {hoopScore.streak}</span>}
+            {hoopScore.streak >= 3 && (
+              <span className={`ml-1 ${hoopScore.streak >= 7 ? 'text-red-400 animate-pulse' : hoopScore.streak >= 5 ? 'text-orange-400' : 'text-yellow-300'}`}>
+                🔥 {hoopScore.streak}{hoopScore.streak >= 7 ? ' UNCONSCIOUS' : hoopScore.streak >= 5 ? ' ON FIRE' : ' HEATING UP'}
+              </span>
+            )}
+            {hoopScore.attempts > 0 && (
+              <span className="ml-1 text-gray-400 text-[9px]">{Math.round((hoopScore.makes / hoopScore.attempts) * 100)}%</span>
+            )}
           </div>
         )}
         {/* Phase 16.29 — city search is now a TAP-TO-OPEN MODAL.
