@@ -37,6 +37,21 @@ interface LucyLiveModeProps {
   captureIntervalMs?: number
 }
 
+// LLaVA/llama.cpp special tokens occasionally leak into the stream when the
+// model destabilizes (e.g. confusing visual input → fallback to CJK glyphs or
+// raw control tokens). Strip them before display + TTS so the bubble never
+// shows `<unk>`/`<s>`/`<|im_start|>` etc, and we don't speak garbage glyphs.
+const SPECIAL_TOKEN_RE = /<\/?s>|<unk>|<\|[^|]*?\|>|\[\/?INST\]|\[\/?SYS\]|<\|endoftext\|>/gi
+// CJK ideographs, Hangul, box-drawing, geometric shapes — Lucy speaks English.
+// A short run is benign; collapse longer corrupted runs to a single ellipsis.
+const GARBAGE_RUN_RE = /[　-鿿가-힯─-▟■-◿-]{3,}/g
+function sanitizeNarration(text: string): string {
+  return text
+    .replace(SPECIAL_TOKEN_RE, '')
+    .replace(GARBAGE_RUN_RE, '…')
+    .replace(/\s{3,}/g, ' ')
+}
+
 /**
  * iOS audio quirk: while SpeechRecognition runs continuously, the audio
  * session is locked in voice-chat mode and TTS playback gets attenuated
@@ -351,14 +366,14 @@ export default function LucyLiveMode({ onClose, captureIntervalMs = 6000 }: Lucy
             const token = obj?.message?.content || ''
             if (token) {
               accumulated += token
-              setLatestNarration(accumulated)
+              setLatestNarration(sanitizeNarration(accumulated))
               // Speak completed sentences as they arrive
               const tail = accumulated.slice(spokenIndex)
               const sentenceRe = /[^.!?\n]+[.!?\n]+/g
               let m: RegExpExecArray | null
               let consumed = 0
               while ((m = sentenceRe.exec(tail)) !== null) {
-                const s = m[0].trim()
+                const s = sanitizeNarration(m[0]).trim()
                 if (s.length > 1) {
                   ttsQueueRef.current.push(s)
                   speakNext()
@@ -372,12 +387,12 @@ export default function LucyLiveMode({ onClose, captureIntervalMs = 6000 }: Lucy
           }
         }
       }
-      const finalTail = accumulated.slice(spokenIndex).trim()
+      const finalTail = sanitizeNarration(accumulated.slice(spokenIndex)).trim()
       if (finalTail.length > 1) {
         ttsQueueRef.current.push(finalTail)
         speakNext()
       }
-      lastNarrationRef.current = accumulated
+      lastNarrationRef.current = sanitizeNarration(accumulated)
     } catch (err: any) {
       setError(err?.message || 'Lucy is unreachable')
     } finally {
@@ -454,7 +469,7 @@ export default function LucyLiveMode({ onClose, captureIntervalMs = 6000 }: Lucy
             </span>
           </div>
           <div className="text-[10px] text-white/60 font-mono">
-            anvil · M5000 · llava:7b
+            anvil · M5000 · minicpm-v
           </div>
         </div>
         <button

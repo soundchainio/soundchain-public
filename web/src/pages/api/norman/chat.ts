@@ -121,12 +121,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: 'messages required' })
   }
 
-  // Phase 11 — if any user message carries images, switch to a vision model
-  // (LLaVA on anvil). Ollama's /api/chat accepts an `images: [base64...]`
-  // array on each message; the model handles multimodal input. Falls back
-  // to chat-default if no images present.
+  // Phase 11 — if any user message carries images, switch to a vision model.
+  // Ollama's /api/chat accepts an `images: [base64...]` array on each message;
+  // the model handles multimodal input. Falls back to chat-default if no
+  // images present. Default flipped from `llava:7b` → `minicpm-v:latest` —
+  // llava:7b destabilizes on certain frames and leaks special tokens / CJK
+  // hallucinations into the stream (see LucyLiveMode.tsx sanitizer). MiniCPM-V
+  // is ~2x more accurate on visual reasoning at similar VRAM footprint
+  // (~5-6GB Q4 on M5000 8GB). Anvil must have it pulled: `ollama pull minicpm-v`.
   const hasImages = messages.some((m) => Array.isArray(m.images) && m.images.length > 0)
-  const targetModel = model || (hasImages ? (process.env.NORMAN_VISION_MODEL || 'llava:7b') : DEFAULT_MODEL)
+  const targetModel = model || (hasImages ? (process.env.NORMAN_VISION_MODEL || 'minicpm-v:latest') : DEFAULT_MODEL)
 
   // Pick the right system prompt for the modality. Vision-mode prompt
   // intentionally lacks hardware/identity context (avoids LLaVA hallucinating
