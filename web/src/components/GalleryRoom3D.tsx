@@ -3121,10 +3121,14 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
     <div className="relative w-full h-full" tabIndex={0} onFocus={() => containerRef.current?.focus()}>
       <div ref={containerRef} className="absolute inset-0" tabIndex={0} style={{ cursor: 'grab', outline: 'none' }} onClick={() => containerRef.current?.focus()} />
 
-      {/* Phase 16.41 — mobile action grid for full NBA2K move-set. Each
-          button dispatches the matching keyboard event so the same animate-
-          loop handlers fire on touch + keyboard alike. Hold-to-engage on
-          DEFENSE: keydown on pointerDown, keyup on pointerUp/Leave/Cancel. */}
+      {/* Phase 16.45 — basketball CONTROLS PANEL. Pre-fix the action pills
+          were translucent /40-/60 gradients that blended into every other
+          SC chrome pill on the right side. Now: solid dark panel with a
+          distinct arena-red frame + "🏀 PLAYBOOK" header so the controls
+          read as ONE control unit visually owned by the gym surface, not
+          a stack of pills competing with global chrome. Buttons themselves
+          are larger (w-14 h-14), more saturated colors, and use bg-black/90
+          for solid backgrounds (no /40 translucency). */}
       {(theme === 'gym' || theme === 'blacktop' || theme === 'city') && (() => {
         const tap = (k: string) => (e: React.PointerEvent) => {
           e.stopPropagation()
@@ -3135,28 +3139,46 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
           window.dispatchEvent(new KeyboardEvent(down ? 'keydown' : 'keyup', { key: k }))
         }
         type Btn = { label: string; emoji: string; key: string; color: string }
+        // Color-coded by category so each move reads at a glance:
+        //   CYAN   = rebound/block (defensive ball moves)
+        //   GREEN  = pass (ball distribution)
+        //   ORANGE = fadeaway (variant shot)
+        //   PURPLE = ball-handler moves (crossover/spin/pumpfake/jabstep)
         const moves: Btn[] = [
-          { label: 'REB',  emoji: '⬆️', key: 'x', color: 'from-cyan-500/40 to-cyan-700/60 border-cyan-400/70' },
-          { label: 'BLK',  emoji: '🛡️', key: 'z', color: 'from-cyan-500/40 to-cyan-700/60 border-cyan-400/70' },
-          { label: 'PASS', emoji: '🤲', key: 't', color: 'from-emerald-500/40 to-emerald-700/60 border-emerald-400/70' },
-          { label: 'FADE', emoji: '🎯', key: 'f', color: 'from-orange-500/40 to-orange-700/60 border-orange-400/70' },
-          { label: 'X-O',  emoji: '🔄', key: 'c', color: 'from-purple-500/40 to-purple-700/60 border-purple-400/70' },
-          { label: 'SPIN', emoji: '💫', key: 'v', color: 'from-purple-500/40 to-purple-700/60 border-purple-400/70' },
-          { label: 'PMP',  emoji: '👆', key: 'p', color: 'from-purple-500/40 to-purple-700/60 border-purple-400/70' },
-          { label: 'JAB',  emoji: '➡️', key: 'j', color: 'from-purple-500/40 to-purple-700/60 border-purple-400/70' },
+          { label: 'REB',  emoji: '⬆️', key: 'x', color: 'bg-cyan-600 border-cyan-300 shadow-cyan-500/50' },
+          { label: 'BLK',  emoji: '🛡️', key: 'z', color: 'bg-cyan-600 border-cyan-300 shadow-cyan-500/50' },
+          { label: 'PASS', emoji: '🤲', key: 't', color: 'bg-emerald-600 border-emerald-300 shadow-emerald-500/50' },
+          { label: 'FADE', emoji: '🎯', key: 'f', color: 'bg-orange-600 border-orange-300 shadow-orange-500/50' },
+          { label: 'X-O',  emoji: '🔄', key: 'c', color: 'bg-purple-600 border-purple-300 shadow-purple-500/50' },
+          { label: 'SPIN', emoji: '💫', key: 'v', color: 'bg-purple-600 border-purple-300 shadow-purple-500/50' },
+          { label: 'PMP',  emoji: '👆', key: 'p', color: 'bg-purple-600 border-purple-300 shadow-purple-500/50' },
+          { label: 'JAB',  emoji: '➡️', key: 'j', color: 'bg-purple-600 border-purple-300 shadow-purple-500/50' },
         ]
         return (
-          <div className="absolute bottom-3 right-3 z-30 flex flex-col gap-1.5 sm:hidden pointer-events-auto">
+          <div
+            className="absolute bottom-3 right-3 z-30 sm:hidden pointer-events-auto rounded-2xl"
+            style={{
+              background: 'rgba(0,0,0,0.88)',
+              border: '2px solid #dc2626',
+              boxShadow: '0 0 0 1px rgba(0,0,0,0.5), 0 0 24px rgba(220,38,38,0.35), inset 0 0 12px rgba(220,38,38,0.08)',
+              padding: '8px',
+            }}
+          >
+            {/* Panel header — labels the unit so it's clearly "the basketball controls" */}
+            <div className="flex items-center justify-between mb-1.5 px-1">
+              <span className="text-[9px] font-mono font-bold tracking-widest text-red-400 uppercase">🏀 Playbook</span>
+              <span className="text-[8px] font-mono text-red-300/70 uppercase tracking-wider">Tap</span>
+            </div>
             <div className="grid grid-cols-2 gap-1.5">
               {moves.map(m => (
                 <button
                   key={m.key}
                   onPointerDown={tap(m.key)}
-                  className={`w-12 h-12 rounded-lg bg-gradient-to-br ${m.color} backdrop-blur border-2 text-white text-[10px] font-mono font-bold active:scale-95 transition flex flex-col items-center justify-center gap-0.5 shadow-md`}
+                  className={`w-14 h-14 rounded-lg ${m.color} border-2 text-white text-[11px] font-mono font-extrabold active:scale-90 transition flex flex-col items-center justify-center gap-0.5 shadow-lg`}
                   aria-label={m.label}
                 >
-                  <span className="text-base leading-none">{m.emoji}</span>
-                  <span className="leading-none">{m.label}</span>
+                  <span className="text-lg leading-none drop-shadow-md">{m.emoji}</span>
+                  <span className="leading-none tracking-wide">{m.label}</span>
                 </button>
               ))}
             </div>
@@ -3165,22 +3187,34 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
               onPointerUp={press('g', false)}
               onPointerLeave={press('g', false)}
               onPointerCancel={press('g', false)}
-              className="w-full h-9 rounded-lg bg-gradient-to-br from-red-500/40 to-red-700/60 backdrop-blur border-2 border-red-400/70 text-white text-[10px] font-mono font-bold active:scale-95 transition flex items-center justify-center gap-1 shadow-md"
+              className="mt-1.5 w-full h-11 rounded-lg bg-red-600 border-2 border-red-300 text-white text-[11px] font-mono font-extrabold active:scale-95 transition flex items-center justify-center gap-1.5 shadow-lg shadow-red-500/40"
               aria-label="Defensive stance (hold)"
             >
-              🛡️ DEF (hold)
+              <span className="text-base">🛡️</span>
+              <span className="tracking-wider">DEF · HOLD</span>
             </button>
           </div>
         )
       })()}
 
-      {/* Mobile touch controls — D-pad overlay */}
-      <div className="absolute bottom-16 left-3 z-10 sm:hidden flex flex-col items-center gap-1">
-        <button onTouchStart={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'w' }))} onTouchEnd={() => window.dispatchEvent(new KeyboardEvent('keyup', { key: 'w' }))} className="w-10 h-10 rounded bg-white/10 backdrop-blur border border-white/20 flex items-center justify-center text-white text-lg active:bg-white/20">↑</button>
+      {/* Phase 16.45 — mobile D-pad framed as a control unit matching the
+          right-side playbook panel. Solid dark backing + arena-red border
+          so it reads as "movement controls" not random chrome pills. */}
+      <div
+        className="absolute bottom-16 left-3 z-10 sm:hidden flex flex-col items-center gap-1 rounded-2xl"
+        style={{
+          background: 'rgba(0,0,0,0.88)',
+          border: '2px solid #dc2626',
+          boxShadow: '0 0 0 1px rgba(0,0,0,0.5), 0 0 18px rgba(220,38,38,0.3), inset 0 0 10px rgba(220,38,38,0.06)',
+          padding: '6px 8px 8px',
+        }}
+      >
+        <div className="text-[9px] font-mono font-bold tracking-widest text-red-400 uppercase mb-1">🕹️ Move</div>
+        <button onTouchStart={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'w' }))} onTouchEnd={() => window.dispatchEvent(new KeyboardEvent('keyup', { key: 'w' }))} className="w-11 h-11 rounded-md bg-zinc-800 border-2 border-zinc-500 flex items-center justify-center text-white text-xl font-bold active:bg-red-700 active:border-red-300 transition shadow-md">↑</button>
         <div className="flex gap-1">
-          <button onTouchStart={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'a' }))} onTouchEnd={() => window.dispatchEvent(new KeyboardEvent('keyup', { key: 'a' }))} className="w-10 h-10 rounded bg-white/10 backdrop-blur border border-white/20 flex items-center justify-center text-white text-lg active:bg-white/20">←</button>
-          <button onTouchStart={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 's' }))} onTouchEnd={() => window.dispatchEvent(new KeyboardEvent('keyup', { key: 's' }))} className="w-10 h-10 rounded bg-white/10 backdrop-blur border border-white/20 flex items-center justify-center text-white text-lg active:bg-white/20">↓</button>
-          <button onTouchStart={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'd' }))} onTouchEnd={() => window.dispatchEvent(new KeyboardEvent('keyup', { key: 'd' }))} className="w-10 h-10 rounded bg-white/10 backdrop-blur border border-white/20 flex items-center justify-center text-white text-lg active:bg-white/20">→</button>
+          <button onTouchStart={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'a' }))} onTouchEnd={() => window.dispatchEvent(new KeyboardEvent('keyup', { key: 'a' }))} className="w-11 h-11 rounded-md bg-zinc-800 border-2 border-zinc-500 flex items-center justify-center text-white text-xl font-bold active:bg-red-700 active:border-red-300 transition shadow-md">←</button>
+          <button onTouchStart={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 's' }))} onTouchEnd={() => window.dispatchEvent(new KeyboardEvent('keyup', { key: 's' }))} className="w-11 h-11 rounded-md bg-zinc-800 border-2 border-zinc-500 flex items-center justify-center text-white text-xl font-bold active:bg-red-700 active:border-red-300 transition shadow-md">↓</button>
+          <button onTouchStart={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'd' }))} onTouchEnd={() => window.dispatchEvent(new KeyboardEvent('keyup', { key: 'd' }))} className="w-11 h-11 rounded-md bg-zinc-800 border-2 border-zinc-500 flex items-center justify-center text-white text-xl font-bold active:bg-red-700 active:border-red-300 transition shadow-md">→</button>
         </div>
       </div>
 
@@ -3190,9 +3224,15 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
           the right side. Big circular tap target visible on all devices. */}
       {(theme === 'city' || theme === 'gym' || theme === 'blacktop') && (
         <>
+          {/* Phase 16.45 — SHOOT button. Solid saturated orange (no /40-/60
+              translucency) + thick neon border + outer glow so it reads as
+              the PRIMARY ACTION pill, distinct from SC chrome. */}
           <button
             onPointerDown={(e) => { e.stopPropagation(); shootRef.current?.() }}
-            className="absolute bottom-40 left-3 sm:bottom-32 sm:left-5 z-30 w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-orange-500/40 to-orange-700/60 backdrop-blur border-2 border-orange-400/70 text-white text-2xl sm:text-3xl font-bold active:scale-95 active:from-orange-500/60 active:to-orange-700/80 transition shadow-[0_0_20px_rgba(234,88,12,0.5)] flex items-center justify-center pointer-events-auto"
+            className="absolute bottom-40 left-3 sm:bottom-32 sm:left-5 z-30 w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-orange-500 border-[3px] border-orange-200 text-white text-3xl sm:text-4xl font-bold active:scale-90 active:bg-orange-400 transition flex items-center justify-center pointer-events-auto"
+            style={{
+              boxShadow: '0 0 0 2px rgba(0,0,0,0.6), 0 0 28px rgba(249,115,22,0.7), inset 0 -4px 8px rgba(0,0,0,0.3), inset 0 4px 8px rgba(255,255,255,0.25)',
+            }}
             aria-label="Shoot basketball"
           >
             🏀
