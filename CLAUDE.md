@@ -6,6 +6,77 @@
 
 ---
 
+## 🏆 SESSION: May 18, 2026 (Frank → Sarg, ship 2) — PHASE 16.43: KOBE-GRADE BASKETBALL POLISH (denser keyframes + gooseneck + backspin + dribble + squeak)
+
+Frank greenlit polish ship after Phase 16.42 landed: *"please ship the best code possible you can deliver bro and lets play balll kobe bryant style"*. Anvil-Mixamo-retarget ship still blocked on AWS Console work + `NORMAN_URL` provisioning, so shipping the no-infra-needed polish that's pure code on top of `3b8f68d`'s bind-pose math.
+
+### What shipped (`<COMMIT>`, +~150 net, 1 file)
+
+| Polish | Why it matters |
+|---|---|
+| **Denser keyframes on 6 signature clips** | jumpShot/dunk/layup/fadeaway/rebound/block went from 3-4 keys each → 6-8 keys with proper biomechanics. Slerp between dense quaternions creates the natural ease-in-out curve that linear-interpolated sparse keyframes can't fake. |
+| **GOOSENECK wrist on jump shot** | Kobe's signature follow-through. New keyframe at 0.70 over-extends `B.forearmR` past straight (positive X rotation = wrist drops below the line of the arm). Held through 0.85 before relaxing. The pose every kid copies in their driveway. |
+| **Triple-threat → gather → drive → peak → release → gooseneck → land** | Full Kobe shooting form sequence: legs gather deep, ball lifts to chest, shooting elbow under ball at 90°, full extension at peak, wrist snap at release, gooseneck hold, soft knee landing. Shot duration extended 0.8s → 1.0s so the follow-through reads. |
+| **Dunk rim-hang frame** | New keyframe at 0.70 holds arms overhead post-slam before dropping. The "I'm not done" beat. |
+| **Layup ball-roll-off frame** | Forearm over-extends at 0.60 (`[0.2, 0, 0]`) simulating wrist roll that releases ball off fingertips. |
+| **Fadeaway back-arch + held follow-through** | Spine reaches -0.5 rad backward lean at release, held through 0.75 during back-fall, then knees absorb. Signature Kobe move. |
+| **Rebound cradle pull-down** | Both forearms bend inward at 0.65 (`B.forearmL = [-1.3, 0, -0.3]`, mirror for R) so the ball reads as SECURED after the catch, not just hands-up. Two-foot landing follows. |
+| **Block downward swat** | `B.armR` peaks at -2.85 then SWATS DOWN to -1.6 with forearm flick — the "get that outta here" motion. |
+| **Ball BACKSPIN during flight** | New code in gravity loop: spin rate scales with horizontal velocity; rotation axis is perpendicular to flight direction in XZ plane. Hard shots read as fast spin, soft layups spin gently. Free-fall ball gets gentle tumble so it doesn't look static. |
+| **Sneaker SQUEAK on triggered moves** | `SQUEAK_MOVES` set covers jumpshot/dunk/layup/fadeaway/rebound/block/crossover/jabstep/pumpfake. Calls `playSqueak()` on every `xbotState.play()` invocation for those moves. Phase 16.39 already had the SFX synth ready; just had to wire it. |
+| **Ambient DRIBBLE cycle** | When ball is held + player idle + no move clip locking → 0.55s dribble period. Ball oscillates between hip and floor (`pg.y + 0.2 + bounce`), follows player's facing direction (forward + side offset = dribbling hand zone), spins at 6 rad/s. `playDribble()` fires once per period at floor contact. Cuts out during shooting moves so audio doesn't compete. Visual + audio finally match what a real basketball court sounds like. |
+| **Ball X/Z tracking while held** | Pre-fix: held ball stayed wherever it last landed, so walking with the ball looked detached. Post-fix: ball follows player's facing direction in the dribble zone, attached to the player's "right hand" position. |
+
+### Architecture decisions (load-bearing)
+
+1. **Slerp between dense quaternions > InterpolateSmooth on sparse ones.** Three.js `QuaternionKeyframeTrack` doesn't natively support spline interpolation for rotations (slerp is the only valid path because quaternions need to stay on the unit sphere). Cubic splines would overshoot. Solution: add more keyframes near acceleration/deceleration points and let slerp do the curve. 8-key Kobe shot has natural ease-in-out built in.
+
+2. **Backspin axis math.** `ax = -vel.z / horizVel`, `az = vel.x / horizVel` — this is the cross product of horizontal velocity with world-up, normalized. Gives the canonical "backspin" axis (perpendicular to flight, in the horizontal plane). Spin rate `horizVel * 0.45 + |vel.y| * 0.05` scales with both forward speed and vertical component, so high-arc layups still get visible spin.
+
+3. **Dribble visual + audio sync via period accumulator.** Single `dribbleState.t` accumulator advances per-frame; modulo against period gives phase. `playDribble()` fires when `t >= period` (once per cycle). Phase drives a `|sin|`-based Y oscillation between hip and floor. State reset to 0 the moment any condition breaks (jump active, ball released, move clip locking) so re-entering dribble starts on a fresh cycle, not mid-air.
+
+4. **Squeak hook lives in `xbotState.play`, not at call sites.** Single source of truth — anywhere a basketball move triggers, the squeak fires automatically. New moves added later just need to be added to `SQUEAK_MOVES` set; no need to remember to call `playSqueak()` at every dispatch point.
+
+5. **Held-ball position update is in animate loop, not in gravity update.** Gravity is "ball is loose, apply physics" — wrong place to put follow logic. Dribble cycle is in the animate loop block right after `mixer.update()`, so it runs every frame the player has the ball regardless of whether they're idle or moving.
+
+6. **Phase 16.43 builds DIRECTLY on Phase 16.42's bind-pose math.** Every authored clip in this ship uses the `bindQuat * delta` composition from earlier today. Without that, denser keyframes would just create denser T-poses. The two ships are a unit.
+
+### Build + deploy
+
+- `yarn build` 81.65s clean, 714 KB FLJ shared, all routes prerendered
+- Pushing to `main` → Vercel webhook auto-deploys (Bug #27 fix from May 13 still holding)
+
+### Verify path (Frank → Sarg post-deploy)
+
+1. Hard-refresh `https://soundchain.io/gallery3d?theme=gym`
+2. Idle player: hear DRIBBLE cycle at ~0.55s cadence, ball bouncing between floor + hip in the player's right-hand zone, ball follows when walking
+3. Tap SHOOT (mobile D-pad) or press B → SQUEAK + jumpShot sequence: gather → drive → peak → release → **gooseneck hold** → soft landing → return to dribble cycle
+4. Tap DUNK → squat + leap + arms slam + **rim-hang frame** + 2-foot landing
+5. Tap LAYUP → knee lift + scoop + ball-roll-off-fingertips finish
+6. Tap FADEAWAY → back-arch + held follow-through during back-fall
+7. Tap REBOUND → two-foot leap + arms up + **CRADLE PULL-DOWN** + landing
+8. Tap BLOCK → leap + arm overhead + **DOWNWARD SWAT** = "get that outta here"
+9. Shot in flight → BACKSPIN visible on ball (spin axis perpendicular to flight)
+10. Made shot → SWISH; close miss → RIM chirp; backboard hit → BACKBOARD thud (all wired in Phase 16.39, still working)
+
+### Lessons
+
+1. **Sparse keyframes + linear slerp = robotic. Dense keyframes + slerp = natural.** Three's interpolation engine for quaternions is just slerp. The "feel" of an animation comes from how many keyframes you author near the acceleration/deceleration points, not from a fancy interpolation type. 4 keys per second is the floor for natural-looking motion; 7-8 keys for signature moves.
+2. **Gooseneck is a forearm OVER-EXTENSION, not a wrist bone rotation.** Without a separate `B.handR`/`B.wristR` in the Mixamo XBot bone map, the gooseneck effect comes from rotating the forearm past the natural straight position (positive X delta when arm is overhead). Reads as the wrist dropping below the line of the arm = visual gooseneck.
+3. **Ball follow during dribble is a single useState-free animate-loop block.** No state machine needed — just compute the dribble-zone offset from player rotation + period-phase Y oscillation. Cheap, deterministic, frame-accurate. Adding to scene.userData lets the dribble state survive React re-renders.
+4. **Wire SFX at the dispatcher, not at every call site.** Putting `playSqueak()` inside `xbotState.play` instead of at every spot that triggers a move means new moves automatically get the squeak as long as they're added to `SQUEAK_MOVES`. Same pattern in `gravity` for swish/rim/backboard — single source of truth.
+5. **Polish is composable on top of the right foundation.** Today's Phase 16.42 bind-pose math is what made Phase 16.43 possible. Without bind*delta composition, denser keyframes just multiply the bug. Always fix the math first; polish second.
+
+### Open follow-ups
+
+1. **Anvil RTX 5000 + Mixamo retarget** — still banked. Blocked on AWS Console + `NORMAN_URL`. Once unblocked, can generate even higher-fidelity NBA-rigged retargets to replace today's hand-keyframed clips. Today's polish is the floor; Mixamo retargets are the ceiling.
+2. **TripoSR mesh auto-rigged to XBot skeleton (Phase 16.44)** — Frank's TripoSR-generated character meshes are unrigged; drape them over XBot's skeleton via Mixamo Auto-Rigger API to get Frank's actual designed character on the court instead of just a tinted XBot.
+3. **More basketball moves** — spin move (already exists as physics-only), step-back, eurostep, hop-step, post hook. All would slot into the same authored-clip + `xbotState.play` pipeline.
+4. **WebRTC peer-sync for 1-on-1 arena matchups** — once the single-player feel is right (this ship hits the bar), wire two users to the same court.
+5. **`api.soundchain.io` custom-domain TLS bridge repair** — still Frank's hands (AWS Console). Pinned at top of CLAUDE.md.
+
+---
+
 ## 🏀 SESSION: May 18, 2026 (Frank → Sarg) — GYM SHOOTAROUND: HANDS NOW SHOOT THE BALL + USER'S CHARACTER ON COURT (Phase 16.42 unified ship)
 
 Frank on Sarg: *"claude tye player on gym playing basketball shootaraound dose t use his hands to shoot tye ball in the hoop. theres no basketball mecahnics at all. tye player hopds his arms out in a T when shooying ball"*. Two stacked bugs collapsing the shootaround into a T-pose silhouette + bigger ask: *"then i need to see my character look like how im designing it to look on the court"*.

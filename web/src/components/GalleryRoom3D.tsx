@@ -658,6 +658,22 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         ballBG.position.x += ballStateBG.vel.x * g
         ballBG.position.y += ballStateBG.vel.y * g
         ballBG.position.z += ballStateBG.vel.z * g
+        // Phase 16.43 — BACKSPIN during flight. Real shooters put backspin
+        // on the ball; rotation axis is perpendicular to the direction of
+        // horizontal travel. Spin rate scales with launch speed so a hard
+        // shot reads as fast spin and a soft layup spins gently.
+        const horizVel = Math.hypot(ballStateBG.vel.x, ballStateBG.vel.z)
+        if (horizVel > 0.05) {
+          const spinRate = (horizVel * 0.45 + Math.abs(ballStateBG.vel.y) * 0.05) * g
+          // Spin around axis perpendicular to horizontal velocity in XZ plane
+          const ax = -ballStateBG.vel.z / horizVel
+          const az = ballStateBG.vel.x / horizVel
+          ballBG.rotation.x += ax * spinRate
+          ballBG.rotation.z += az * spinRate
+        } else {
+          // Free-fall ball gets gentle tumble so it doesn't look static
+          ballBG.rotation.x += 2.0 * g
+        }
         // Sound detection: SWISH on score, RIM on near-miss, BACKBOARD on plane hit
         if (!ballStateBG.scoredThisShot && ballStateBG.vel.y < 0) {
           for (const hoop of hoopList) {
@@ -1737,48 +1753,107 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
             return new THREE.AnimationClip(name, duration, valid)
           }
 
-          // DUNK — deep squat + explosive leap + arm slam
-          const dunkClip = buildClip('dunk', 1.0, [
-            quatTrack(B.upLegL, [0, 0.25, 0.5, 1.0], [[0,0,0], [-0.9,0,0], [0.1,0,0], [0,0,0]]),
-            quatTrack(B.upLegR, [0, 0.25, 0.5, 1.0], [[0,0,0], [-0.9,0,0], [0.1,0,0], [0,0,0]]),
-            quatTrack(B.legL,   [0, 0.25, 0.5, 1.0], [[0,0,0], [1.4,0,0],  [0.1,0,0], [0,0,0]]),
-            quatTrack(B.legR,   [0, 0.25, 0.5, 1.0], [[0,0,0], [1.4,0,0],  [0.1,0,0], [0,0,0]]),
-            quatTrack(B.armL,   [0, 0.25, 0.5, 0.7, 1.0], [[0,0,0], [0,0,0.5], [-2.6,0,0], [-1.5,0,0], [0,0,0]]),
-            quatTrack(B.armR,   [0, 0.25, 0.5, 0.7, 1.0], [[0,0,0], [0,0,-0.5], [-2.6,0,0], [-1.5,0,0], [0,0,0]]),
-            quatTrack(B.spine,  [0, 0.25, 0.5, 1.0], [[0,0,0], [0.2,0,0], [-0.2,0,0], [0,0,0]]),
+          // Phase 16.43 — DUNK (Kobe baseline reverse vibe). 6-key sequence
+          // adds RIM HANG frame (arms still overhead post-slam) + soft 2-foot
+          // landing instead of snap-to-rest.
+          const dunkClip = buildClip('dunk', 1.2, [
+            quatTrack(B.upLegL, [0, 0.18, 0.40, 0.55, 0.85, 1.2],
+              [[0,0,0], [-1.05,0,0], [-0.1,0,0], [0.0,0,0], [-0.4,0,0], [0,0,0]]),
+            quatTrack(B.upLegR, [0, 0.18, 0.40, 0.55, 0.85, 1.2],
+              [[0,0,0], [-1.05,0,0], [-0.1,0,0], [0.0,0,0], [-0.4,0,0], [0,0,0]]),
+            quatTrack(B.legL,   [0, 0.18, 0.40, 0.55, 0.85, 1.2],
+              [[0,0,0], [1.55,0,0], [0.15,0,0], [0.0,0,0], [0.7,0,0], [0,0,0]]),
+            quatTrack(B.legR,   [0, 0.18, 0.40, 0.55, 0.85, 1.2],
+              [[0,0,0], [1.55,0,0], [0.15,0,0], [0.0,0,0], [0.7,0,0], [0,0,0]]),
+            // Both arms gather low → swing up overhead at peak → SLAM down
+            // → RIM HANG (arms held overhead briefly, slight bend through
+            // forearm) → drop to rest
+            quatTrack(B.armL,   [0, 0.18, 0.40, 0.55, 0.70, 1.0, 1.2],
+              [[0,0,0], [0.2,0,0.55], [-2.7,0,0.15], [-1.8,0,0.1], [-2.5,0,0.18], [-1.0,0,0.1], [0,0,0]]),
+            quatTrack(B.armR,   [0, 0.18, 0.40, 0.55, 0.70, 1.0, 1.2],
+              [[0,0,0], [0.2,0,-0.55], [-2.7,0,-0.15], [-1.8,0,-0.1], [-2.5,0,-0.18], [-1.0,0,-0.1], [0,0,0]]),
+            quatTrack(B.forearmL, [0, 0.40, 0.55, 0.70, 1.2],
+              [[0,0,0], [-0.5,0,0], [-0.2,0,0], [-0.3,0,0], [0,0,0]]),
+            quatTrack(B.forearmR, [0, 0.40, 0.55, 0.70, 1.2],
+              [[0,0,0], [-0.5,0,0], [-0.2,0,0], [-0.3,0,0], [0,0,0]]),
+            quatTrack(B.spine,  [0, 0.18, 0.40, 0.55, 0.85, 1.2],
+              [[0,0,0], [0.25,0,0], [-0.25,0,0], [-0.1,0,0], [0.15,0,0], [0,0,0]]),
+            quatTrack(B.head,   [0, 0.40, 0.55, 1.2], [[0,0,0], [-0.25,0,0], [-0.1,0,0], [0,0,0]]),
           ])
 
-          // LAYUP — one-leg knee lift + extended right arm scoop
-          const layupClip = buildClip('layup', 1.0, [
-            quatTrack(B.upLegR, [0, 0.3, 0.6, 1.0], [[0,0,0], [-1.4,0,0], [-0.5,0,0], [0,0,0]]),
-            quatTrack(B.legR,   [0, 0.3, 0.6, 1.0], [[0,0,0], [1.2,0,0],  [0.3,0,0],  [0,0,0]]),
-            quatTrack(B.armR,   [0, 0.3, 0.6, 0.8, 1.0], [[0,0,0], [-1.0,0,0], [-2.4,0,0], [-1.8,0,0], [0,0,0]]),
-            quatTrack(B.forearmR, [0, 0.3, 0.6, 1.0], [[0,0,0], [-0.4,0,0], [-0.1,0,0], [0,0,0]]),
-            quatTrack(B.armL,   [0, 0.3, 0.6, 1.0], [[0,0,0], [0,0,0.4], [0,0,0.2], [0,0,0]]),
-            quatTrack(B.spine,  [0, 0.5, 1.0], [[0,0,0], [-0.15,0,0.1], [0,0,0]]),
+          // Phase 16.43 — LAYUP. Drive leg knee lift + extended right arm
+          // scoop + BALL ROLL-OFF (wrist over-extension at finish releases
+          // ball off fingertips) + plant landing.
+          const layupClip = buildClip('layup', 1.1, [
+            quatTrack(B.upLegR, [0, 0.20, 0.45, 0.65, 0.90, 1.1],
+              [[0,0,0], [-1.45,0,0], [-0.5,0,0], [-0.2,0,0], [-0.35,0,0], [0,0,0]]),
+            quatTrack(B.legR,   [0, 0.20, 0.45, 0.65, 0.90, 1.1],
+              [[0,0,0], [1.25,0,0], [0.35,0,0], [0.15,0,0], [0.6,0,0], [0,0,0]]),
+            quatTrack(B.upLegL, [0, 0.45, 0.90, 1.1], [[0,0,0], [-0.15,0,0], [-0.25,0,0], [0,0,0]]),
+            quatTrack(B.legL,   [0, 0.45, 0.90, 1.1], [[0,0,0], [0.25,0,0], [0.45,0,0], [0,0,0]]),
+            quatTrack(B.armR,   [0, 0.20, 0.45, 0.60, 0.75, 1.1],
+              [[0,0,0], [-0.95,0,0.08], [-2.55,0,0.1], [-2.65,0,0.12], [-1.7,0,0.05], [0,0,0]]),
+            quatTrack(B.forearmR, [0, 0.20, 0.45, 0.60, 0.75, 1.1],
+              [[0,0,0], [-0.5,0,0], [-0.4,0,0], [0.2,0,0], [-0.15,0,0], [0,0,0]]),
+            // Guide hand swings in to cradle ball pre-release
+            quatTrack(B.armL,   [0, 0.20, 0.45, 0.60, 1.1],
+              [[0,0,0], [-0.45,0,0.3], [-1.05,0,0.25], [-0.5,0,0.2], [0,0,0]]),
+            quatTrack(B.forearmL, [0, 0.20, 0.45, 1.1], [[0,0,0], [-0.4,0,0], [-0.6,0,0], [0,0,0]]),
+            quatTrack(B.spine,  [0, 0.45, 0.65, 1.1], [[0,0,0], [-0.15,0,0.1], [-0.05,0,0.05], [0,0,0]]),
           ])
 
-          // FADEAWAY — back-leaning jump shot
-          const fadeawayClip = buildClip('fadeaway', 1.0, [
-            quatTrack(B.upLegL, [0, 0.3, 0.6, 1.0], [[0,0,0], [-0.6,0,0], [-0.2,0,0], [0,0,0]]),
-            quatTrack(B.upLegR, [0, 0.3, 0.6, 1.0], [[0,0,0], [-0.6,0,0], [-0.2,0,0], [0,0,0]]),
-            quatTrack(B.legL,   [0, 0.3, 0.6, 1.0], [[0,0,0], [0.9,0,0],  [0.2,0,0],  [0,0,0]]),
-            quatTrack(B.legR,   [0, 0.3, 0.6, 1.0], [[0,0,0], [0.9,0,0],  [0.2,0,0],  [0,0,0]]),
-            quatTrack(B.armR,   [0, 0.4, 0.7, 1.0], [[0,0,0], [-1.5,0,0], [-2.4,0,0], [0,0,0]]),
-            quatTrack(B.forearmR, [0, 0.4, 0.7, 1.0], [[0,0,0], [-0.6,0,0], [-1.4,0,0], [0,0,0]]),
-            quatTrack(B.spine,  [0, 0.3, 0.7, 1.0], [[0,0,0], [-0.5,0,0], [-0.7,0,0], [0,0,0]]),
-            quatTrack(B.head,   [0, 0.5, 1.0], [[0,0,0], [-0.3,0,0], [0,0,0]]),
+          // Phase 16.43 — FADEAWAY. Back-leaning jump shot signature: legs
+          // drift back during release, spine leans further past straight,
+          // shoulder rolls back to clear defender, FOLLOW THROUGH HELD during
+          // back-fall, knees absorb on landing.
+          const fadeawayClip = buildClip('fadeaway', 1.1, [
+            quatTrack(B.upLegL, [0, 0.20, 0.45, 0.70, 0.90, 1.1],
+              [[0,0,0], [-0.55,0,0], [-0.25,0,0], [-0.05,0,0], [-0.35,0,0], [0,0,0]]),
+            quatTrack(B.upLegR, [0, 0.20, 0.45, 0.70, 0.90, 1.1],
+              [[0,0,0], [-0.55,0,0], [-0.25,0,0], [-0.05,0,0], [-0.35,0,0], [0,0,0]]),
+            quatTrack(B.legL,   [0, 0.20, 0.45, 0.70, 0.90, 1.1],
+              [[0,0,0], [0.85,0,0], [0.35,0,0], [0.1,0,0], [0.55,0,0], [0,0,0]]),
+            quatTrack(B.legR,   [0, 0.20, 0.45, 0.70, 0.90, 1.1],
+              [[0,0,0], [0.85,0,0], [0.35,0,0], [0.1,0,0], [0.55,0,0], [0,0,0]]),
+            // Shooting arm — peak release at 0.55, gooseneck hold through 0.75
+            quatTrack(B.armR,   [0, 0.20, 0.40, 0.55, 0.75, 0.95, 1.1],
+              [[0,0,0], [-0.45,0,0.05], [-1.6,0,0.05], [-2.55,0,0.05], [-2.6,0,0.12], [-1.1,0,0.05], [0,0,0]]),
+            quatTrack(B.forearmR, [0, 0.20, 0.40, 0.55, 0.75, 1.1],
+              [[0,0,0], [-0.55,0,0], [-1.0,0,0], [-0.2,0,0], [0.3,0,0], [0,0,0]]),
+            // Guide hand
+            quatTrack(B.armL,   [0, 0.20, 0.40, 0.55, 1.1],
+              [[0,0,0], [-0.35,0,0.25], [-0.85,0,0.3], [-0.55,0,0.2], [0,0,0]]),
+            // Spine back-arch — the FADEAWAY signature
+            quatTrack(B.spine,  [0, 0.20, 0.40, 0.55, 0.75, 1.1],
+              [[0,0,0], [0.05,0,0], [-0.25,0,0], [-0.5,0,0], [-0.38,0,0], [0,0,0]]),
+            quatTrack(B.head,   [0, 0.40, 0.55, 0.75, 1.1],
+              [[0,0,0], [-0.2,0,0], [-0.35,0,0], [-0.22,0,0], [0,0,0]]),
           ])
 
-          // REBOUND — both arms straight up, two-leg leap
-          const reboundClip = buildClip('rebound', 0.8, [
-            quatTrack(B.upLegL, [0, 0.2, 0.5, 0.8], [[0,0,0], [-0.7,0,0], [0,0,0], [0,0,0]]),
-            quatTrack(B.upLegR, [0, 0.2, 0.5, 0.8], [[0,0,0], [-0.7,0,0], [0,0,0], [0,0,0]]),
-            quatTrack(B.legL,   [0, 0.2, 0.5, 0.8], [[0,0,0], [1.1,0,0],  [0,0,0], [0,0,0]]),
-            quatTrack(B.legR,   [0, 0.2, 0.5, 0.8], [[0,0,0], [1.1,0,0],  [0,0,0], [0,0,0]]),
-            quatTrack(B.armL,   [0, 0.3, 0.5, 0.8], [[0,0,0], [-2.8,0,0.2], [-2.8,0,0.2], [0,0,0]]),
-            quatTrack(B.armR,   [0, 0.3, 0.5, 0.8], [[0,0,0], [-2.8,0,-0.2], [-2.8,0,-0.2], [0,0,0]]),
-            quatTrack(B.spine,  [0, 0.4, 0.8], [[0,0,0], [-0.1,0,0], [0,0,0]]),
+          // Phase 16.43 — REBOUND. Two-leg explosive leap → both arms snap
+          // up overhead to attack ball → ARMS CRADLE PULL DOWN (forearms
+          // bend inward, ball secured to chest) → 2-foot landing.
+          const reboundClip = buildClip('rebound', 0.95, [
+            quatTrack(B.upLegL, [0, 0.18, 0.40, 0.65, 0.85, 0.95],
+              [[0,0,0], [-0.85,0,0], [-0.05,0,0], [-0.05,0,0], [-0.3,0,0], [0,0,0]]),
+            quatTrack(B.upLegR, [0, 0.18, 0.40, 0.65, 0.85, 0.95],
+              [[0,0,0], [-0.85,0,0], [-0.05,0,0], [-0.05,0,0], [-0.3,0,0], [0,0,0]]),
+            quatTrack(B.legL,   [0, 0.18, 0.40, 0.65, 0.85, 0.95],
+              [[0,0,0], [1.25,0,0], [0.1,0,0], [0.1,0,0], [0.5,0,0], [0,0,0]]),
+            quatTrack(B.legR,   [0, 0.18, 0.40, 0.65, 0.85, 0.95],
+              [[0,0,0], [1.25,0,0], [0.1,0,0], [0.1,0,0], [0.5,0,0], [0,0,0]]),
+            quatTrack(B.armL,   [0, 0.25, 0.45, 0.65, 0.95],
+              [[0,0,0], [-2.85,0,0.25], [-2.7,0,0.22], [-1.2,0,0.2], [0,0,0]]),
+            quatTrack(B.armR,   [0, 0.25, 0.45, 0.65, 0.95],
+              [[0,0,0], [-2.85,0,-0.25], [-2.7,0,-0.22], [-1.2,0,-0.2], [0,0,0]]),
+            // CRADLE PULL-DOWN — forearms bend inward, ball secured
+            quatTrack(B.forearmL, [0, 0.45, 0.65, 0.85, 0.95],
+              [[0,0,0], [-0.2,0,0], [-1.3,0,-0.3], [-1.0,0,-0.25], [0,0,0]]),
+            quatTrack(B.forearmR, [0, 0.45, 0.65, 0.85, 0.95],
+              [[0,0,0], [-0.2,0,0], [-1.3,0,0.3], [-1.0,0,0.25], [0,0,0]]),
+            quatTrack(B.spine,  [0, 0.40, 0.65, 0.85, 0.95],
+              [[0,0,0], [-0.15,0,0], [0.05,0,0], [0.1,0,0], [0,0,0]]),
+            quatTrack(B.head,   [0, 0.40, 0.95], [[0,0,0], [-0.3,0,0], [0,0,0]]),
           ])
 
           // DEFENSIVE STANCE — held pose, knees bent, arms out wide (loop)
@@ -1792,14 +1867,26 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
             quatTrack(B.spine,  [0, 0.5], [[0.2,0,0], [0.2,0,0]]),
           ])
 
-          // BLOCK — vertical leap + right arm straight up
-          const blockClip = buildClip('block', 0.7, [
-            quatTrack(B.upLegL, [0, 0.2, 0.7], [[0,0,0], [-0.55,0,0], [0,0,0]]),
-            quatTrack(B.upLegR, [0, 0.2, 0.7], [[0,0,0], [-0.55,0,0], [0,0,0]]),
-            quatTrack(B.legL,   [0, 0.2, 0.7], [[0,0,0], [0.9,0,0], [0,0,0]]),
-            quatTrack(B.legR,   [0, 0.2, 0.7], [[0,0,0], [0.9,0,0], [0,0,0]]),
-            quatTrack(B.armR,   [0, 0.25, 0.5, 0.7], [[0,0,0], [-2.5,0,-0.1], [-2.8,0,-0.1], [0,0,0]]),
-            quatTrack(B.armL,   [0, 0.25, 0.5, 0.7], [[0,0,0], [-0.5,0,0.3], [-0.6,0,0.3], [0,0,0]]),
+          // Phase 16.43 — BLOCK. Vertical leap + right arm straight up to
+          // swat → DOWNWARD SWAT (forearm whips down past peak = the
+          // "GET THAT OUTTA HERE" motion) → 2-foot landing.
+          const blockClip = buildClip('block', 0.85, [
+            quatTrack(B.upLegL, [0, 0.18, 0.45, 0.70, 0.85],
+              [[0,0,0], [-0.7,0,0], [-0.05,0,0], [-0.3,0,0], [0,0,0]]),
+            quatTrack(B.upLegR, [0, 0.18, 0.45, 0.70, 0.85],
+              [[0,0,0], [-0.7,0,0], [-0.05,0,0], [-0.3,0,0], [0,0,0]]),
+            quatTrack(B.legL,   [0, 0.18, 0.45, 0.70, 0.85],
+              [[0,0,0], [1.05,0,0], [0.1,0,0], [0.5,0,0], [0,0,0]]),
+            quatTrack(B.legR,   [0, 0.18, 0.45, 0.70, 0.85],
+              [[0,0,0], [1.05,0,0], [0.1,0,0], [0.5,0,0], [0,0,0]]),
+            // Right arm shoots straight up, then SWATS down past peak
+            quatTrack(B.armR,   [0, 0.18, 0.40, 0.55, 0.85],
+              [[0,0,0], [-1.5,0,-0.08], [-2.85,0,-0.05], [-1.6,0,-0.05], [0,0,0]]),
+            quatTrack(B.forearmR, [0, 0.40, 0.55, 0.85],
+              [[0,0,0], [-0.15,0,0], [0.35,0,0], [0,0,0]]),
+            quatTrack(B.armL,   [0, 0.25, 0.55, 0.85],
+              [[0,0,0], [-0.6,0,0.35], [-0.4,0,0.25], [0,0,0]]),
+            quatTrack(B.spine,  [0, 0.40, 0.85], [[0,0,0], [-0.08,0,-0.05], [0,0,0]]),
           ])
 
           // PASS — chest pass: both forearms extend forward
@@ -1831,15 +1918,48 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
             quatTrack(B.spine,  [0, 0.14, 0.28], [[0,0,0], [-0.15,0,0], [0,0,0]]),
           ])
 
-          // JUMP SHOT — standard mid-range / three-point shooting form
-          const jumpShotClip = buildClip('jumpshot', 0.8, [
-            quatTrack(B.upLegL, [0, 0.25, 0.5, 0.8], [[0,0,0], [-0.55,0,0], [-0.1,0,0], [0,0,0]]),
-            quatTrack(B.upLegR, [0, 0.25, 0.5, 0.8], [[0,0,0], [-0.55,0,0], [-0.1,0,0], [0,0,0]]),
-            quatTrack(B.legL,   [0, 0.25, 0.5, 0.8], [[0,0,0], [0.9,0,0], [0.2,0,0], [0,0,0]]),
-            quatTrack(B.legR,   [0, 0.25, 0.5, 0.8], [[0,0,0], [0.9,0,0], [0.2,0,0], [0,0,0]]),
-            quatTrack(B.armR,   [0, 0.3, 0.55, 0.8], [[0,0,0], [-1.7,0,0], [-2.6,0,0], [0,0,0]]),
-            quatTrack(B.forearmR, [0, 0.3, 0.55, 0.8], [[0,0,0], [-0.8,0,0], [-0.2,0,0], [0,0,0]]),
-            quatTrack(B.armL,   [0, 0.3, 0.55, 0.8], [[0,0,0], [-0.5,0,0.3], [-0.5,0,0.3], [0,0,0]]),
+          // Phase 16.43 — JUMP SHOT (Kobe form). 8-key sequence:
+          // 0.0  stance       — triple-threat, ball at hip
+          // 0.15 gather       — deep knee bend, both arms lift ball to chest
+          // 0.30 drive        — legs explode up, shooting elbow under ball (90°)
+          // 0.45 peak / lift  — full extension, elbow above forehead
+          // 0.55 RELEASE      — wrist begins snap (forearm extends past straight)
+          // 0.70 GOOSENECK    — wrist flicks DOWN, fingers point at floor,
+          //                     guide hand drops away (Kobe signature hold)
+          // 0.85 descent      — legs prep to absorb landing
+          // 1.0  landing      — soft knees, return to base
+          const jumpShotClip = buildClip('jumpshot', 1.0, [
+            quatTrack(B.upLegL, [0, 0.15, 0.30, 0.45, 0.70, 0.85, 1.0],
+              [[0,0,0], [-0.45,0,0], [-0.55,0,0], [-0.1,0,0], [-0.05,0,0], [-0.35,0,0], [0,0,0]]),
+            quatTrack(B.upLegR, [0, 0.15, 0.30, 0.45, 0.70, 0.85, 1.0],
+              [[0,0,0], [-0.45,0,0], [-0.55,0,0], [-0.1,0,0], [-0.05,0,0], [-0.35,0,0], [0,0,0]]),
+            quatTrack(B.legL,   [0, 0.15, 0.30, 0.45, 0.70, 0.85, 1.0],
+              [[0,0,0], [0.9,0,0], [0.7,0,0], [0.05,0,0], [0.05,0,0], [0.65,0,0], [0,0,0]]),
+            quatTrack(B.legR,   [0, 0.15, 0.30, 0.45, 0.70, 0.85, 1.0],
+              [[0,0,0], [0.9,0,0], [0.7,0,0], [0.05,0,0], [0.05,0,0], [0.65,0,0], [0,0,0]]),
+            // Shooting arm — upper arm sweeps up to full extension; subtle
+            // outward tilt during gooseneck hold so the arm doesn't read flat
+            quatTrack(B.armR,   [0, 0.15, 0.30, 0.45, 0.55, 0.70, 0.85, 1.0],
+              [[0,0,0], [-0.4,0,0.05], [-1.7,0,0], [-2.55,0,0.02], [-2.7,0,0.05], [-2.62,0,0.12], [-1.1,0,0.05], [0,0,0]]),
+            // Shooting forearm — 90° bend at gather (ball in pocket), unfolds
+            // through peak, then OVER-EXTENDS slightly (positive X = wrist
+            // drops below the line of the arm = gooseneck)
+            quatTrack(B.forearmR, [0, 0.15, 0.30, 0.45, 0.55, 0.70, 0.85, 1.0],
+              [[0,0,0], [-0.5,0,0], [-1.05,0,0], [-0.55,0,0], [-0.15,0,0], [0.35,0,0], [0.15,0,0], [0,0,0]]),
+            // Guide hand — supports ball on the way up, drops away at release
+            // (left hand falls to chest level + slightly outward)
+            quatTrack(B.armL,   [0, 0.15, 0.30, 0.45, 0.55, 0.70, 0.85, 1.0],
+              [[0,0,0], [-0.35,0,0.25], [-0.95,0,0.3], [-1.3,0,0.28], [-0.95,0,0.22], [-0.4,0,0.18], [-0.15,0,0.1], [0,0,0]]),
+            quatTrack(B.forearmL, [0, 0.15, 0.30, 0.45, 0.55, 0.70, 1.0],
+              [[0,0,0], [-0.3,0,0], [-0.7,0,0], [-0.5,0,0], [-0.25,0,0], [-0.1,0,0], [0,0,0]]),
+            // Spine — slight forward lean on gather, upright through release,
+            // tiny backward lean during gooseneck (back arch hold)
+            quatTrack(B.spine,  [0, 0.15, 0.30, 0.45, 0.55, 0.70, 1.0],
+              [[0,0,0], [0.08,0,0], [0.02,0,0], [-0.05,0,0], [-0.08,0,0], [-0.04,0,0], [0,0,0]]),
+            // Head — chin up at peak (eyes track ball through release), level
+            // through gooseneck
+            quatTrack(B.head,   [0, 0.30, 0.55, 0.70, 1.0],
+              [[0,0,0], [-0.1,0,0], [-0.18,0,0], [-0.12,0,0], [0,0,0]]),
           ])
 
           // Wire all custom clips into the clipMap. LoopOnce + clampWhenFinished
@@ -1887,15 +2007,18 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
             'jabstep':   'walking',
             'defense':   'sitting',
           }
+          // Phase 16.43 — moves that warrant a sneaker squeak on trigger
+          // (any ground-direction-change or push-off — basically anything
+          // that isn't a hold pose like defense)
+          const SQUEAK_MOVES = new Set([
+            'jumpshot', 'dunk', 'layup', 'fadeaway', 'rebound', 'block',
+            'crossover', 'jabstep', 'pumpfake',
+          ])
           xbotState.play = (clipName: string, durationMs: number) => {
             const key = clipName.toLowerCase()
             // Phase 16.42 — authored 2K clips now bind-pose-correct. Prefer
             // the authored basketball clip; fall through to stock Mixamo
-            // only when an authored clip is genuinely missing. Means
-            // jumpshot/dunk/layup/fadeaway/rebound/block/pass/pumpfake/
-            // crossover/jabstep/defense all play real basketball motion
-            // instead of the stock 'jump' (which was a generic vertical
-            // leap with arms drifting outward = T-pose silhouette).
+            // only when an authored clip is genuinely missing.
             const fallback = moveToStockClip[key]
             const actionKey = clipMap[key] ? key : (fallback && clipMap[fallback]) ? fallback : key
             const newAction = clipMap[actionKey]
@@ -1905,6 +2028,8 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
             if (oldAction && oldAction !== newAction) oldAction.fadeOut(0.12)
             xbotState.currentClip = actionKey
             xbotState.moveLockUntil = performance.now() + durationMs
+            // Phase 16.43 — sneaker squeak on triggered moves
+            if (SQUEAK_MOVES.has(key)) playSqueak()
           }
           ;(avatarHolder.userData as any).xbot = xbotState
           console.log('[GalleryRoom3D] XBot loaded w/ 2K clips', {
@@ -2424,6 +2549,44 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
       } | null
       if (xbot?.mixer) {
         xbot.mixer.update(dtSec)
+        // Phase 16.43 — ambient DRIBBLE cycle while ball is held + player
+        // not airborne. ~0.55s cadence (typical pro dribble rate). Cuts
+        // out during shooting moves so the audio doesn't compete with
+        // the shot mechanic. Also fires the ball-bounce visual at the
+        // same cadence so the ball reads as actively dribbled, not just
+        // floating in the hand.
+        const ballRef = (scene.userData as any).ball
+        const jumpRef = (scene.userData as any).jumpState
+        if (ballRef?.ballState?.held && !jumpRef?.active && now > xbot.moveLockUntil) {
+          const dribbleState = (scene.userData as any).dribbleState || { t: 0 }
+          ;(scene.userData as any).dribbleState = dribbleState
+          dribbleState.t += dtSec
+          // Visual bounce — ball oscillates between hip-height and floor-low
+          // following |sin|. SFX fires once per period at the floor contact.
+          const period = 0.55
+          const phase = (dribbleState.t % period) / period
+          const bounce = (1 - Math.abs(Math.sin(phase * Math.PI))) * 0.85  // 0.0 (floor) → 0.85 (hip)
+          if (ballRef.ball) {
+            const pg = (scene.userData as any).playerGroupRef
+            // Ball lives in player's right-hand dribble zone: offset forward
+            // + slightly to the right of player's facing direction.
+            if (pg && ballRef.ball.position.y < 2.0 && ballRef.ball.position.y > -0.3) {
+              const fwd = pg.rotation.y
+              const offFwd = 0.45
+              const offSide = 0.30
+              ballRef.ball.position.x = pg.position.x + Math.sin(fwd) * offFwd + Math.cos(fwd) * offSide
+              ballRef.ball.position.z = pg.position.z + Math.cos(fwd) * offFwd - Math.sin(fwd) * offSide
+              ballRef.ball.position.y = pg.position.y + 0.2 + bounce
+              ballRef.ball.rotation.x += dtSec * 6.0  // spinning while dribbled
+            }
+          }
+          if (dribbleState.t >= period) {
+            playDribble()
+            dribbleState.t = dribbleState.t % period
+          }
+        } else if ((scene.userData as any).dribbleState) {
+          ;(scene.userData as any).dribbleState.t = 0
+        }
         // Only auto-switch locomotion when no move clip is locking the avatar.
         if (now > xbot.moveLockUntil) {
           const speed = Math.hypot(dirX, dirZ) * mag
