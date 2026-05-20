@@ -17,7 +17,8 @@ import {
   Headphones,
   Pause
 } from 'lucide-react'
-import { useGetUserPlaylistsQuery } from 'lib/graphql'
+import { useMe } from 'hooks/useMe'
+import { useGetUserPlaylists } from 'hooks/useUserPlaylistsDirect'  // Phase 7e — Vercel-direct
 
 const userAvatar = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face"
 const postImage = "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600&h=400&fit=crop"
@@ -236,10 +237,11 @@ function PlaylistCard({ playlist }: { playlist: Playlist }) {
 }
 
 export function Timeline() {
-  // Fetch real playlists from API
-  const { data: playlistsData } = useGetUserPlaylistsQuery({
-    variables: { page: { first: 5 } },
-    fetchPolicy: 'cache-first'
+  // Fetch real playlists from API — Phase 7e Vercel-direct
+  const me = useMe()
+  const { data: playlistsData } = useGetUserPlaylists({
+    profileId: me?.profile?.id,
+    skip: !me,
   })
 
   // Transform API data to component format

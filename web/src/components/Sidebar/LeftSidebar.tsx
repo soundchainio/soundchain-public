@@ -3,7 +3,8 @@
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { useMe } from 'hooks/useMe'
-import { useFavoriteTracksQuery, useTracksQuery, useGetUserPlaylistsQuery, SortTrackField, SortOrder } from 'lib/graphql'
+import { useFavoriteTracksQuery, useTracksQuery, SortTrackField, SortOrder } from 'lib/graphql'
+import { useGetUserPlaylists } from 'hooks/useUserPlaylistsDirect'  // Phase 7e — Vercel-direct
 import { Avatar } from '../Avatar'
 import { Music, Users, Heart, Disc3, Settings, Wallet, ListMusic, Rocket, ExternalLink, Share2, Megaphone } from 'lucide-react'
 import { AdSlot } from '../ads/AdSlot'
@@ -63,9 +64,9 @@ export const LeftSidebar = () => {
     skip: !me,
   })
 
-  // Get user's playlists
-  const { data: playlistsData } = useGetUserPlaylistsQuery({
-    variables: { page: { first: 6 } },
+  // Get user's playlists — Phase 7e Vercel-direct
+  const { data: playlistsData } = useGetUserPlaylists({
+    profileId: me?.profile?.id,
     skip: !me,
   })
 
