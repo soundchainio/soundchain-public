@@ -789,6 +789,45 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         // Full court: half-court line + 2 keys + 2 hoops
         mkLine(courtWidth, 0.1, 0, courtZ)  // half-court line
         const center = new THREE.Mesh(new THREE.RingGeometry(1.83, 1.93, 32), lineMat)  // NBA 6 ft (1.83m)
+        // Phase 16.70 — center court SC logo (gym only). CanvasTexture
+        // painted with the SC mark; mounted as a flat disc inside the
+        // center circle. Reads as the team logo NBA courts have at mid-court.
+        if (isGymCourt) {
+          const logoCanvas = document.createElement('canvas')
+          logoCanvas.width = 512; logoCanvas.height = 512
+          const lctx = logoCanvas.getContext('2d')!
+          // Background circle (dark wood tone) with rim
+          lctx.fillStyle = 'rgba(40,20,10,0.35)'
+          lctx.beginPath(); lctx.arc(256, 256, 240, 0, Math.PI * 2); lctx.fill()
+          // SC mark — large stacked monogram
+          lctx.fillStyle = '#fbbf24'  // gold
+          lctx.font = 'bold 280px "Courier New", monospace'
+          lctx.textAlign = 'center'
+          lctx.textBaseline = 'middle'
+          lctx.fillText('SC', 256, 256)
+          // Arc text top: SOUNDCHAIN
+          lctx.fillStyle = '#facc15'
+          lctx.font = 'bold 38px "Courier New", monospace'
+          lctx.textBaseline = 'alphabetic'
+          const arcText = 'SOUNDCHAIN'
+          lctx.save(); lctx.translate(256, 256)
+          for (let i = 0; i < arcText.length; i++) {
+            const angle = -Math.PI / 2 + (i - (arcText.length - 1) / 2) * 0.20
+            lctx.save()
+            lctx.rotate(angle)
+            lctx.fillText(arcText[i], 0, -200)
+            lctx.restore()
+          }
+          lctx.restore()
+          const logoTex = new THREE.CanvasTexture(logoCanvas)
+          const logo = new THREE.Mesh(
+            new THREE.CircleGeometry(1.8, 48),
+            new THREE.MeshBasicMaterial({ map: logoTex, transparent: true, opacity: 0.85, depthWrite: false }),
+          )
+          logo.rotation.x = -Math.PI / 2
+          logo.position.set(0, 0.04, courtZ)
+          scene.add(logo)
+        }
         center.rotation.x = -Math.PI / 2
         center.position.set(0, 0.03, courtZ)
         scene.add(center)
@@ -5429,14 +5468,26 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
                 <span className="ml-1 text-gray-400 text-[9px]">{Math.round((hoopScore.makes / hoopScore.attempts) * 100)}%</span>
               )}
             </div>
-            {/* Phase 16.53 — shot clock + session timer */}
-            {(theme === 'gym' || theme === 'blacktop') && (
-              <div className={`px-2 py-1 rounded backdrop-blur text-[10px] font-mono flex items-center gap-2 ${shotClock <= 5 ? 'bg-red-500/25 border border-red-500/50 text-red-300 animate-pulse' : 'bg-black/40 border border-white/15 text-gray-300'}`}>
-                <span className="font-bold">⏱ {shotClock}s</span>
-                <span className="text-gray-500">·</span>
-                <span className="text-gray-400">{Math.floor(sessionTime / 60)}:{String(sessionTime % 60).padStart(2, '0')}</span>
-              </div>
-            )}
+            {/* Phase 16.53 — shot clock + 2K-style quarter clock */}
+            {(theme === 'gym' || theme === 'blacktop') && (() => {
+              // 2K-style: session split into 4 quarters of 3 min each (game-to-21
+              // typically runs <12 min so quarters cap nicely). Q indicator
+              // gives the game a real broadcast feel.
+              const QUARTER_LEN = 180
+              const quarter = Math.min(4, Math.floor(sessionTime / QUARTER_LEN) + 1)
+              const inQuarter = sessionTime % QUARTER_LEN
+              const remain = QUARTER_LEN - inQuarter
+              const m = Math.floor(remain / 60)
+              const s = remain % 60
+              return (
+                <div className={`px-2 py-1 rounded backdrop-blur text-[10px] font-mono flex items-center gap-2 ${shotClock <= 5 ? 'bg-red-500/25 border border-red-500/50 text-red-300 animate-pulse' : 'bg-black/40 border border-white/15 text-gray-300'}`}>
+                  <span className="font-bold">⏱ {shotClock}s</span>
+                  <span className="text-gray-500">·</span>
+                  <span className="text-yellow-300 font-bold">Q{quarter}</span>
+                  <span className="text-gray-400">{m}:{String(s).padStart(2, '0')}</span>
+                </div>
+              )
+            })()}
             {/* Phase 16.56 — points scoreboard: first to 21 */}
             {(theme === 'gym' || theme === 'blacktop') && (
               <div className="px-2 py-1 rounded backdrop-blur text-[10px] font-mono flex items-center gap-1.5 bg-black/50 border border-white/20">
