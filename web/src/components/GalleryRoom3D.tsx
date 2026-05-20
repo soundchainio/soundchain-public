@@ -224,6 +224,11 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
   // Perfect window = 70-85% fill = green burst at release. Hidden when idle.
   const [shotMeter, setShotMeter] = useState<{ active: boolean; progress: number; quality: 'early' | 'good' | 'perfect' | 'late' } | null>(null)
   const shotMeterRef = useRef<{ startMs: number; durationMs: number } | null>(null)
+  // Phase 16.75 — inbound state. After every make, brief 1.5s pause where
+  // ball is "checked" + both players reset to standard starting positions.
+  // CHECK BALL banner appears. Real-basketball rhythm — game breathes.
+  const [inboundActive, setInboundActive] = useState(false)
+  const inboundUntilRef = useRef(0)
   // Phase 16.73 — possession state mirrored to React so HUD can swap
   // SHOOT↔DEFENSE based on who owns the ball. Polled at 5Hz from the
   // scene userData (ballState.owner) since the scene mutates outside
@@ -1739,8 +1744,26 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
                 })
                 speak(["DEFENDER SCORES!", "BUCKET FOR THE OPPONENT!"][Math.floor(Math.random()*2)], { pitch: 0.95, rate: 1.18 })
                 playSwish()
-                // After defender make, ball goes back to player
+                // Phase 16.75 — INBOUND PAUSE after defender make. Ball
+                // returns to player, both characters reset to half-court
+                // start positions, 1.5s freeze with CHECK BALL banner.
                 ;(ballStateBG as any).owner = 'player'
+                inboundUntilRef.current = performance.now() + 1500
+                setInboundActive(true)
+                setTimeout(() => {
+                  setInboundActive(false)
+                  // Reposition characters to half-court start
+                  const pg = (scene.userData as any).playerGroupRef
+                  const dsRef = (scene.userData as any).defender
+                  if (pg) pg.position.set(0, 0, 4)
+                  if (dsRef?.group) dsRef.group.position.set(0, 0, -4)
+                  // Reset ball to player + reset shot clock
+                  ballStateBG.held = true
+                  ballStateBG.vel.set(0, 0, 0)
+                  shotClockRef.current = 24
+                  setShotClock(24)
+                  if (dsRef) { dsRef.mode = 'guard'; dsRef.shootTimer = 0 }
+                }, 1500)
                 break
               }
               // Phase 16.56 — player POINTS: 3pt for three, 2pt for everything else
@@ -1805,6 +1828,24 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
               if (mpPeer) {
                 try { mpPeer.sendEvent({ type: 'score', player: 'me' }) } catch {}
               }
+              // Phase 16.75 — INBOUND PAUSE after PLAYER make. Reposition
+              // both characters to half-court + reset ball to defender
+              // (loser-out rules — opponent inbounds after your make).
+              inboundUntilRef.current = performance.now() + 1500
+              setInboundActive(true)
+              setTimeout(() => {
+                setInboundActive(false)
+                const pg = (scene.userData as any).playerGroupRef
+                const dsRef = (scene.userData as any).defender
+                if (pg) pg.position.set(0, 0, 4)
+                if (dsRef?.group) dsRef.group.position.set(0, 0, -4)
+                ballStateBG.held = true
+                ballStateBG.vel.set(0, 0, 0)
+                ;(ballStateBG as any).owner = 'player'  // street rule: scorer keeps ball
+                shotClockRef.current = 24
+                setShotClock(24)
+                if (dsRef) { dsRef.mode = 'guard'; dsRef.shootTimer = 0 }
+              }, 1500)
               break
             }
             // Phase 16.65 — REAL rim ring bounce (NOT just SFX). Reflects
@@ -5175,6 +5216,24 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
           100% { opacity: 0; transform: scale(0.95) translateY(8px); }
         }
       `}</style>
+      {/* Phase 16.75 — CHECK BALL banner after every make. 1.5s pause
+          while characters reset to half-court. Gives the game a real-
+          basketball rhythm: score → check → next possession. */}
+      {inboundActive && (theme === 'gym' || theme === 'blacktop') && !gameOver && (
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 z-30 pointer-events-none">
+          <div
+            className="px-5 py-2 rounded-lg text-white font-mono font-extrabold text-lg tracking-widest"
+            style={{
+              background: 'rgba(0,0,0,0.85)',
+              border: '3px solid #facc15',
+              boxShadow: '0 0 28px rgba(250,204,21,0.55)',
+            }}
+          >
+            ✓ CHECK BALL
+          </div>
+        </div>
+      )}
+
       {/* Phase 16.73 — ON DEFENSE banner. Pulses while opponent has the
           ball so the player understands they're no longer on offense. */}
       {possession === 'defender' && (theme === 'gym' || theme === 'blacktop') && !gameOver && (
