@@ -26,7 +26,13 @@ import Head from 'next/head'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import dynamic from 'next/dynamic'
-import { useMeQuery } from 'lib/graphql'
+// Phase 7e — swapped from Apollo `useMeQuery` (api.soundchain.io / Lambda)
+// to `useMe()` Vercel-direct → Atlas. The legacy Apollo hook left this page
+// stuck on the "You need to be logged in" branch for any user whose Apollo
+// session was stale or unreachable, even when their /api/me session was
+// fully valid. Bug surfaced May 19 (Chris Miller: "Account settings doesn't
+// load" + wall Edit Profile broken because it routes to /settings too).
+import { useMe } from 'hooks/useMe'
 import {
   ArrowLeft,
   ChevronDown,
@@ -119,8 +125,9 @@ function Section({ id, icon: Icon, title, subtitle, defaultOpen, children }: Sec
 
 export default function SettingsPage() {
   const router = useRouter()
-  const { data, loading, error } = useMeQuery()
-  const me = data?.me
+  // me === undefined → still fetching; me === null → not logged in; me obj → logged in.
+  const me = useMe()
+  const loading = me === undefined
 
   const noop = () => {}
 
@@ -153,13 +160,7 @@ export default function SettingsPage() {
             <div className="h-32 rounded-xl border border-white/10 bg-white/[0.02] animate-pulse" />
           )}
 
-          {error && !loading && (
-            <div className="rounded-xl border border-red-500/30 bg-red-500/5 px-4 py-3 text-[13px] text-red-300">
-              Couldn&apos;t load your account: {error.message}
-            </div>
-          )}
-
-          {!loading && !me && !error && (
+          {!loading && !me && (
             <div className="rounded-xl border border-white/10 bg-white/[0.02] px-4 py-6 text-center">
               <p className="text-sm text-white/70 mb-3">You need to be logged in to manage settings.</p>
               <Link
