@@ -59,6 +59,7 @@ import { useFavoriteTracks as useFavoriteTracksDirect } from 'hooks/useFavoriteT
 import { useProfileVerificationRequest as useProfileVerificationRequestQuery } from 'hooks/useProfileVerificationDirect'  // Phase 7e — Vercel-direct
 import { useExploreUsersSlim } from 'hooks/useExploreUsersSlimDirect'  // Phase 7e — Vercel-direct
 import { useExploreTracksSlim } from 'hooks/useExploreTracksSlimDirect'  // Phase 7e — Vercel-direct
+import { useProfileStreamingRewards, useMyListenerRewards } from 'hooks/useProfileRewardsDirect'  // Phase 7e — Vercel-direct
 import { SelectToApolloQuery, SortListingItem } from 'lib/apollo/sorting'
 import { StateProvider } from 'contexts'
 import { ModalProvider } from 'contexts/ModalContext'
@@ -1525,17 +1526,14 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     }
   }, [userData?.me?.profile?.displayName, userData?.me?.handle])
 
-  // Fetch user's streaming rewards data for PiggyBank accordion modal
-  const { data: myStreamingRewardsData, loading: myStreamingRewardsLoading } = useQuery(PROFILE_STREAMING_REWARDS_QUERY, {
-    variables: { profileId: userData?.me?.profile?.id || '' },
+  // Rewards — Phase 7e Vercel-direct (one /api/profile/rewards call)
+  const { data: myStreamingRewardsData, loading: myStreamingRewardsLoading } = useProfileStreamingRewards({
+    profileId: userData?.me?.profile?.id,
     skip: !userData?.me?.profile?.id,
-    fetchPolicy: 'cache-first',
   })
-
-  // Fetch listener rewards (WIN-WIN - earn by streaming others' tracks)
-  const { data: myListenerRewardsData, loading: myListenerRewardsLoading } = useQuery(MY_LISTENER_REWARDS_QUERY, {
-    skip: !userData?.me,
-    fetchPolicy: 'cache-and-network',
+  const { data: myListenerRewardsData, loading: myListenerRewardsLoading } = useMyListenerRewards({
+    profileId: userData?.me?.profile?.id,
+    skip: !userData?.me?.profile?.id,
   })
 
   // Calculate total earnings from all tracks

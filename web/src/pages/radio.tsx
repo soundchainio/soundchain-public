@@ -52,6 +52,7 @@ import { useLogStream } from 'hooks/useLogStream'
 import { useMe } from 'hooks/useMe'
 import { useMagicContext } from 'hooks/useMagicContext'
 import { gql, useQuery } from '@apollo/client'
+import { useProfileStreamingRewards, useMyListenerRewards } from 'hooks/useProfileRewardsDirect'  // Phase 7e — Vercel-direct
 import { toast } from 'react-toastify'
 import { OgunRewardToast, DailyLimitToast } from 'components/common/OgunRewardToast'
 import { SimpleTrackUploadForm } from 'components/forms/track/SimpleTrackUploadForm'
@@ -277,16 +278,14 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
   const me = useMe()
   const { account: walletAddress } = useMagicContext()
 
-  // Fetch streaming rewards data for PiggyBank (only when logged in)
-  const { data: myStreamingRewardsData, loading: myStreamingRewardsLoading } = useQuery(PROFILE_STREAMING_REWARDS_QUERY, {
-    variables: { profileId: me?.profile?.id || '' },
+  // Rewards — Phase 7e Vercel-direct (one /api/profile/rewards call)
+  const { data: myStreamingRewardsData, loading: myStreamingRewardsLoading } = useProfileStreamingRewards({
+    profileId: me?.profile?.id,
     skip: !me?.profile?.id,
-    fetchPolicy: 'cache-first',
   })
-
-  const { data: myListenerRewardsData, loading: myListenerRewardsLoading } = useQuery(MY_LISTENER_REWARDS_QUERY, {
-    skip: !me,
-    fetchPolicy: 'cache-and-network',
+  const { data: myListenerRewardsData, loading: myListenerRewardsLoading } = useMyListenerRewards({
+    profileId: me?.profile?.id,
+    skip: !me?.profile?.id,
   })
 
   const myTotalOgunEarned = useMemo(() => {

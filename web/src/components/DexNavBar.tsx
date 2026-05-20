@@ -53,6 +53,7 @@ import {
   useUpdateProfileDisplayNameMutation,
 } from 'lib/graphql'
 import { useProfileVerificationRequest as useProfileVerificationRequestQuery } from 'hooks/useProfileVerificationDirect'  // Phase 7e — Vercel-direct
+import { useProfileStreamingRewards, useMyListenerRewards } from 'hooks/useProfileRewardsDirect'  // Phase 7e — Vercel-direct
 import { setJwt } from 'lib/apollo'
 import { config } from 'config'
 import { NotificationBadge } from './NotificationBadge'
@@ -245,15 +246,15 @@ export function DexNavBar() {
     }
   }
 
-  // Rewards queries — gated on auth so anonymous users never fire them
-  const { data: streamingData, loading: streamingLoading } = useQuery(PROFILE_STREAMING_REWARDS_QUERY, {
-    variables: { profileId: me?.profile?.id || '' },
+  // Rewards — Phase 7e Vercel-direct (one /api/profile/rewards call,
+  // shared between streaming + listener views via cached shape)
+  const { data: streamingData, loading: streamingLoading } = useProfileStreamingRewards({
+    profileId: me?.profile?.id,
     skip: !me?.profile?.id,
-    fetchPolicy: 'cache-first',
   })
-  const { data: listenerData, loading: listenerLoading } = useQuery(MY_LISTENER_REWARDS_QUERY, {
-    skip: !me,
-    fetchPolicy: 'cache-and-network',
+  const { data: listenerData, loading: listenerLoading } = useMyListenerRewards({
+    profileId: me?.profile?.id,
+    skip: !me?.profile?.id,
   })
 
   const totalOgunEarned = useMemo(() => {
