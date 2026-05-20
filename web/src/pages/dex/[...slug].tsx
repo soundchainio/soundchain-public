@@ -52,9 +52,11 @@ import { DexNavBar } from 'components/DexNavBar'
 import { ScrollArea } from 'components/ui/scroll-area'
 import { Separator } from 'components/ui/separator'
 import { useAudioPlayerContext, Song } from 'hooks/useAudioPlayer'
-import { useMeQuery, useGroupedTracksQuery, useTracksQuery, useTracksLazyQuery, useListingItemsQuery, useExploreUsersQuery, useExploreTracksQuery, useExploreUsersSlimQuery, useExploreTracksSlimQuery, useFollowProfileMutation, useUnfollowProfileMutation, useTrackQuery, usePostQuery, useProfileQuery, useProfileByHandleQuery, useChatsQuery, useChatHistoryLazyQuery, useSendMessageMutation, useResetUnreadMessageCountMutation, useFavoriteTracksQuery, useNotificationsQuery, useToggleFavoriteMutation, useFollowersQuery, useFollowingQuery, useFollowersLazyQuery, useFollowingLazyQuery, useUpdateHandleMutation, useUpdateProfileDisplayNameMutation, useExploreUsersLazyQuery, SortTrackField, SortOrder, useCreateProfileVerificationRequestMutation, useProfileVerificationRequestQuery, ProfileVerificationStatusType } from 'lib/graphql'
+import { useMeQuery, useGroupedTracksQuery, useTracksQuery, useTracksLazyQuery, useListingItemsQuery, useExploreUsersQuery, useExploreTracksQuery, useExploreUsersSlimQuery, useExploreTracksSlimQuery, useFollowProfileMutation, useUnfollowProfileMutation, useTrackQuery, usePostQuery, useProfileQuery, useProfileByHandleQuery, useChatsQuery, useChatHistoryLazyQuery, useSendMessageMutation, useResetUnreadMessageCountMutation, useNotificationsQuery, useToggleFavoriteMutation, useFollowersQuery, useFollowingQuery, useFollowersLazyQuery, useFollowingLazyQuery, useUpdateHandleMutation, useUpdateProfileDisplayNameMutation, useExploreUsersLazyQuery, SortTrackField, SortOrder, useCreateProfileVerificationRequestMutation, ProfileVerificationStatusType } from 'lib/graphql'
 import { useMaticUsd as useMaticUsdQuery } from 'hooks/useMaticUsdDirect'  // Phase 7e — Vercel-direct
 import { useExploreGenreCounts } from 'hooks/useExploreGenreCountsDirect'  // Phase 7e — Vercel-direct
+import { useFavoriteTracks as useFavoriteTracksDirect } from 'hooks/useFavoriteTracksDirect'  // Phase 7e — Vercel-direct
+import { useProfileVerificationRequest as useProfileVerificationRequestQuery } from 'hooks/useProfileVerificationDirect'  // Phase 7e — Vercel-direct
 import { SelectToApolloQuery, SortListingItem } from 'lib/apollo/sorting'
 import { StateProvider } from 'contexts'
 import { ModalProvider } from 'contexts/ModalContext'
@@ -1962,13 +1964,10 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     skip: selectedView !== 'explore',
   })
 
-  // Favorite Tracks Query - for Library view AND Tracks Collection modal
-  const { data: favoriteTracksData, loading: favoriteTracksLoading } = useFavoriteTracksQuery({
-    variables: {
-      page: { first: 50 }
-    },
-    skip: !userData?.me, // Always fetch when logged in (needed for modal on any view)
-    fetchPolicy: 'cache-and-network',
+  // Favorite Tracks — Phase 7e Vercel-direct
+  const { data: favoriteTracksData, loading: favoriteTracksLoading } = useFavoriteTracksDirect({
+    first: 50,
+    skip: !userData?.me,
   })
 
   // Notifications Query - for Notifications view

@@ -3,7 +3,8 @@
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { useMe } from 'hooks/useMe'
-import { useFavoriteTracksQuery, useTracksQuery, SortTrackField, SortOrder } from 'lib/graphql'
+import { useTracksQuery, SortTrackField, SortOrder } from 'lib/graphql'
+import { useFavoriteTracks as useFavoriteTracksQuery } from 'hooks/useFavoriteTracksDirect'  // Phase 7e — Vercel-direct
 import { useGetUserPlaylists } from 'hooks/useUserPlaylistsDirect'  // Phase 7e — Vercel-direct
 import { Avatar } from '../Avatar'
 import { Music, Users, Heart, Disc3, Settings, Wallet, ListMusic, Rocket, ExternalLink, Share2, Megaphone } from 'lucide-react'
@@ -58,9 +59,9 @@ export const LeftSidebar = () => {
     skip: !profile?.id,
   })
 
-  // Get user's favorite tracks
+  // Get user's favorite tracks — Phase 7e Vercel-direct
   const { data: favoritesData } = useFavoriteTracksQuery({
-    variables: { page: { first: 6 } },
+    first: 6,
     skip: !me,
   })
 

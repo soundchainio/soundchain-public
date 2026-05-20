@@ -4,7 +4,8 @@ import Link from 'next/link'
 import { useMe } from 'hooks/useMe'
 import { useMagicContext } from 'hooks/useMagicContext'
 import { Avatar } from '../Avatar'
-import { useFollowingQuery, useFavoriteTracksQuery, useTracksQuery, SortTrackField, SortOrder } from 'lib/graphql'
+import { useFollowingQuery, useTracksQuery, SortTrackField, SortOrder } from 'lib/graphql'
+import { useFavoriteTracks as useFavoriteTracksQuery } from 'hooks/useFavoriteTracksDirect'  // Phase 7e — Vercel-direct
 import {
   Music, Heart, Users, Wallet, Settings, Disc3, Rss, MessageSquare,
   ListMusic, ShoppingBag, Zap, Radio, TrendingUp
@@ -31,9 +32,9 @@ export const MiniProfileDashboard = () => {
     skip: !profile?.id,
   })
 
-  // Get user's favorite tracks
+  // Get user's favorite tracks — Phase 7e Vercel-direct
   const { data: favoritesData } = useFavoriteTracksQuery({
-    variables: { page: { first: 4 } },
+    first: 4,
     skip: !me,
   })
 

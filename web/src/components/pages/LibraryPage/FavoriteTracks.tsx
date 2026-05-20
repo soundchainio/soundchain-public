@@ -1,5 +1,6 @@
 import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
-import { SortTrackInput, Track, useFavoriteTracksQuery } from 'lib/graphql'
+import { SortTrackInput, Track } from 'lib/graphql'
+import { useFavoriteTracks as useFavoriteTracksQuery } from 'hooks/useFavoriteTracksDirect'  // Phase 7e — Vercel-direct
 import { useEffect } from 'react'
 import { SelectToApolloQuery, SortListingItem } from 'lib/apollo/sorting'
 import { GridView } from 'components/common'
@@ -19,29 +20,18 @@ export const FavoriteTracks = (props: FavoriteTracksProps) => {
 
   const { playlistState } = useAudioPlayerContext()
 
+  // Phase 7e Vercel-direct. Search applies client-side via the shim;
+  // sort param dropped (endpoint always sorts newest-first for favorites).
   const { data, loading, fetchMore, refetch } = useFavoriteTracksQuery({
-    variables: {
-      search: searchTerm,
-      sort: SelectToApolloQuery[sorting] as unknown as SortTrackInput,
-      page: { first: pageSize },
-    },
+    first: pageSize,
+    search: searchTerm,
   })
 
-  useEffect(() => {
-    refetch({
-      search: searchTerm,
-      page: {
-        first: pageSize,
-      },
-      sort: SelectToApolloQuery[sorting] as unknown as SortTrackInput,
-    })
-  }, [refetch, sorting, searchTerm])
+  useEffect(() => { refetch() }, [refetch, sorting, searchTerm])
 
   const loadMore = () => {
     fetchMore({
       variables: {
-        search: searchTerm,
-        sort: SelectToApolloQuery[sorting] as unknown as SortTrackInput,
         page: {
           first: pageSize,
           after: pageInfo.endCursor,
@@ -93,7 +83,7 @@ export const FavoriteTracks = (props: FavoriteTracksProps) => {
           hasNextPage={pageInfo.hasNextPage}
           loadMore={loadMore}
           tracks={nodes as Track[]}
-          refetch={refetch}
+          refetch={refetch as () => Promise<any>}
         />
       )}
     </>
