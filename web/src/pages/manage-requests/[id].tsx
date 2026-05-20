@@ -20,9 +20,9 @@ import {
   ProfileVerificationRequestsDocument,
   ProfileVerificationStatusType,
   Role,
-  useProfileQuery,
   useUpdateProfileVerificationRequestMutation,
 } from 'lib/graphql'
+import { useProfileById as useProfileQuery } from 'hooks/useProfileByHandleDirect'  // Phase 7e — Vercel-direct
 import { protectPage } from 'lib/protectPage'
 import NextLink from 'next/link'
 import { useRouter } from 'next/router'
@@ -64,7 +64,7 @@ const topNavBarProps: TopNavBarProps = {
 
 export default function RequestPage({ data }: RequestPageProps) {
   const [showReason, setShowReason] = useState<boolean>(false)
-  const { data: profile } = useProfileQuery({ variables: { id: data.profileId } })
+  const { data: profile } = useProfileQuery({ id: data.profileId })
   const [updateRequestVerification] = useUpdateProfileVerificationRequestMutation({
     fetchPolicy: 'network-only',
     refetchQueries: [ProfileVerificationRequestsDocument],

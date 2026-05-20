@@ -1,5 +1,6 @@
 import { ProfileWithAvatar } from 'components/ProfileWithAvatar'
-import { TrackQuery, useProfileLazyQuery } from 'lib/graphql'
+import { TrackQuery } from 'lib/graphql'
+import { useProfileLazyById as useProfileLazyQuery } from 'hooks/useProfileByHandleDirect'  // Phase 7e — Vercel-direct
 import { useEffect } from 'react'
 import tw from 'tailwind-styled-components'
 import { Divider } from 'components/common'

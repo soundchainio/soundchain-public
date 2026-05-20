@@ -1,6 +1,7 @@
 import { ManageRequestCardSkeleton } from 'components/ManageRequestCardSkeleton'
 import { CircleRightArrow } from 'icons/CircleRightArrow'
-import { ProfileVerificationRequestComponentFieldsFragment, useProfileQuery } from 'lib/graphql'
+import { ProfileVerificationRequestComponentFieldsFragment } from 'lib/graphql'
+import { useProfileById as useProfileQuery } from 'hooks/useProfileByHandleDirect'  // Phase 7e — Vercel-direct
 import Link from 'next/link'
 
 import { ProfileWithAvatar } from './ProfileWithAvatar'
@@ -10,7 +11,7 @@ interface ManageRequestCardProps {
 }
 
 export const ManageRequestCard = ({ request }: ManageRequestCardProps) => {
-  const { data: profile } = useProfileQuery({ variables: { id: request.profileId } })
+  const { data: profile } = useProfileQuery({ id: request.profileId })
 
   if (!request) return <ManageRequestCardSkeleton />
   if (!request || !profile) return null

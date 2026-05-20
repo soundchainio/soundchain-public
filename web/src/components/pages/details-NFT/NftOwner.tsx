@@ -1,5 +1,6 @@
 import { ProfileWithAvatar } from 'components/ProfileWithAvatar'
-import { Profile, useProfileLazyQuery } from 'lib/graphql'
+import { Profile } from 'lib/graphql'
+import { useProfileLazyById as useProfileLazyQuery } from 'hooks/useProfileByHandleDirect'  // Phase 7e — Vercel-direct
 import { useEffect } from 'react'
 
 interface NftOwnerProps {
