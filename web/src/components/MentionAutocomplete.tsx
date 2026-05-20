@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect, useRef } from 'react'
-import { useExploreUsersLazyQuery } from 'lib/graphql'
+import { useExploreUsersLazy as useExploreUsersLazyQuery } from 'hooks/useExploreUsersSlimDirect'  // Phase 7e — Vercel-direct
 import { Avatar } from './Avatar'
 
 interface MentionAutocompleteProps {
@@ -19,7 +19,7 @@ interface MentionAutocompleteProps {
 export function MentionAutocomplete({ text, cursorPosition, onSelect, inputRef }: MentionAutocompleteProps) {
   const [query, setQuery] = useState('')
   const [show, setShow] = useState(false)
-  const [searchUsers, { data, loading }] = useExploreUsersLazyQuery({ fetchPolicy: 'cache-first' })
+  const [searchUsers, { data, loading }] = useExploreUsersLazyQuery()
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   // Detect @mention being typed

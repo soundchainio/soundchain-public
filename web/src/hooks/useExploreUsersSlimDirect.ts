@@ -98,3 +98,28 @@ export const useExploreUsersSlim = (opts?: { first?: number; search?: string; sk
   const refetch = async () => { setBust((b) => b + 1) }
   return { data, loading, error, fetchMore, refetch }
 }
+
+// Lazy variant for MentionAutocomplete (@user search-as-you-type)
+export const useExploreUsersLazy = (): [
+  (opts: { variables: { search?: string; page?: { first?: number } } }) => Promise<void>,
+  { data: ApolloShape | undefined; loading: boolean }
+] => {
+  const [data, setData] = useState<ApolloShape | undefined>(undefined)
+  const [loading, setLoading] = useState(false)
+  const trigger = async (opts: { variables: { search?: string; page?: { first?: number } } }) => {
+    const search = opts.variables.search || ''
+    const first = opts.variables.page?.first ?? 8
+    setLoading(true)
+    const res = await fetchPage(first, search)
+    if (res) {
+      setData({
+        exploreUsers: {
+          nodes: res.nodes,
+          pageInfo: { totalCount: res.totalCount, hasNextPage: res.hasNextPage, endCursor: res.endCursor },
+        },
+      })
+    }
+    setLoading(false)
+  }
+  return [trigger, { data, loading }]
+}

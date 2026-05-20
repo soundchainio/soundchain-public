@@ -52,12 +52,12 @@ import { DexNavBar } from 'components/DexNavBar'
 import { ScrollArea } from 'components/ui/scroll-area'
 import { Separator } from 'components/ui/separator'
 import { useAudioPlayerContext, Song } from 'hooks/useAudioPlayer'
-import { useMeQuery, useGroupedTracksQuery, useTracksQuery, useTracksLazyQuery, useListingItemsQuery, useExploreUsersQuery, useExploreTracksQuery, useExploreUsersSlimQuery, useExploreTracksSlimQuery, useFollowProfileMutation, useUnfollowProfileMutation, useTrackQuery, usePostQuery, useProfileQuery, useChatsQuery, useChatHistoryLazyQuery, useSendMessageMutation, useResetUnreadMessageCountMutation, useNotificationsQuery, useToggleFavoriteMutation, useFollowersQuery, useFollowingQuery, useFollowersLazyQuery, useFollowingLazyQuery, useUpdateHandleMutation, useUpdateProfileDisplayNameMutation, useExploreUsersLazyQuery, SortTrackField, SortOrder, useCreateProfileVerificationRequestMutation, ProfileVerificationStatusType } from 'lib/graphql'
+import { useMeQuery, useGroupedTracksQuery, useTracksQuery, useTracksLazyQuery, useListingItemsQuery, useExploreUsersQuery, useExploreTracksQuery, useExploreUsersSlimQuery, useExploreTracksSlimQuery, useFollowProfileMutation, useUnfollowProfileMutation, useTrackQuery, usePostQuery, useProfileQuery, useChatsQuery, useChatHistoryLazyQuery, useSendMessageMutation, useResetUnreadMessageCountMutation, useNotificationsQuery, useToggleFavoriteMutation, useFollowersQuery, useFollowingQuery, useFollowersLazyQuery, useFollowingLazyQuery, useUpdateHandleMutation, useUpdateProfileDisplayNameMutation, SortTrackField, SortOrder, useCreateProfileVerificationRequestMutation, ProfileVerificationStatusType } from 'lib/graphql'
 import { useMaticUsd as useMaticUsdQuery } from 'hooks/useMaticUsdDirect'  // Phase 7e — Vercel-direct
 import { useExploreGenreCounts } from 'hooks/useExploreGenreCountsDirect'  // Phase 7e — Vercel-direct
 import { useFavoriteTracks as useFavoriteTracksDirect } from 'hooks/useFavoriteTracksDirect'  // Phase 7e — Vercel-direct
 import { useProfileVerificationRequest as useProfileVerificationRequestQuery } from 'hooks/useProfileVerificationDirect'  // Phase 7e — Vercel-direct
-import { useExploreUsersSlim } from 'hooks/useExploreUsersSlimDirect'  // Phase 7e — Vercel-direct
+import { useExploreUsersSlim, useExploreUsersLazy as useExploreUsersLazyQuery } from 'hooks/useExploreUsersSlimDirect'  // Phase 7e — Vercel-direct
 import { useExploreTracksSlim } from 'hooks/useExploreTracksSlimDirect'  // Phase 7e — Vercel-direct
 import { useProfileStreamingRewards, useMyListenerRewards } from 'hooks/useProfileRewardsDirect'  // Phase 7e — Vercel-direct
 import { useProfileByHandle } from 'hooks/useProfileByHandleDirect'  // Phase 7e — Vercel-direct
