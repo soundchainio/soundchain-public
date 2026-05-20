@@ -2442,15 +2442,17 @@ export function AgentStatusTicker() {
   }, [jackMode])
 
   // Publish mode + target rect to the store whenever visual state changes.
-  // The host iframe overlays the visible container in 'embedded' mode, snaps
-  // to viewport in 'fullscreen', or floats as PiP in 'mini'.
+  // The host iframe overlays the visible container in BOTH 'embedded' and
+  // 'fullscreen' — in fullscreen the panel's flex layout already sizes the
+  // container to viewport-minus-header, so overlaying the rect leaves the
+  // header (with MINI/FULL/X pills) uncovered. 'mini' floats as PiP.
   useEffect(() => {
     if (jackMode !== 'CLI_BRIDGE') return
     const visualMode: 'embedded' | 'mini' | 'fullscreen' =
       fullscreen ? 'fullscreen' : (miniMode ? 'mini' : 'embedded')
     furlTerminal.setMode(visualMode)
 
-    if (visualMode !== 'embedded') {
+    if (visualMode === 'mini') {
       furlTerminal.setTargetRect(null)
       return
     }

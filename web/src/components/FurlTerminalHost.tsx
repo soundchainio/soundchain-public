@@ -21,14 +21,27 @@ function positionIframe(iframe: HTMLIFrameElement, mode: string, targetRect: { x
   iframe.style.overflow = 'hidden'
 
   if (mode === 'fullscreen') {
-    iframe.style.left = '0'
-    iframe.style.top = '0'
-    iframe.style.right = 'auto'
-    iframe.style.bottom = 'auto'
-    iframe.style.width = '100vw'
-    // 100vh on iOS Safari extends behind the collapsing URL bar + home indicator,
-    // cropping the xterm input row. 100dvh follows the actually-visible viewport.
-    iframe.style.height = '100dvh'
+    // Overlay the cockpit's xterm container, not the raw viewport. The panel
+    // header (MINI / FULL toggle / X close pills) sits ABOVE the container in
+    // the panel's flex layout. Overlaying the rect leaves the header visible
+    // so users can exit fullscreen. Fall back to 100vw/100dvh only when the
+    // rect hasn't been measured yet (initial mount race).
+    if (targetRect && targetRect.w > 0 && targetRect.h > 0) {
+      iframe.style.left = targetRect.x + 'px'
+      iframe.style.top = targetRect.y + 'px'
+      iframe.style.right = 'auto'
+      iframe.style.bottom = 'auto'
+      iframe.style.width = targetRect.w + 'px'
+      iframe.style.height = targetRect.h + 'px'
+    } else {
+      iframe.style.left = '0'
+      iframe.style.top = '0'
+      iframe.style.right = 'auto'
+      iframe.style.bottom = 'auto'
+      iframe.style.width = '100vw'
+      // 100dvh follows the actually-visible viewport on iOS Safari.
+      iframe.style.height = '100dvh'
+    }
     iframe.style.borderRadius = '0'
     iframe.style.boxShadow = 'none'
     iframe.style.zIndex = String(FULLSCREEN_Z)
