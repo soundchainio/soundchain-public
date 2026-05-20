@@ -57,6 +57,7 @@ import { useMaticUsd as useMaticUsdQuery } from 'hooks/useMaticUsdDirect'  // Ph
 import { useExploreGenreCounts } from 'hooks/useExploreGenreCountsDirect'  // Phase 7e — Vercel-direct
 import { useFavoriteTracks as useFavoriteTracksDirect } from 'hooks/useFavoriteTracksDirect'  // Phase 7e — Vercel-direct
 import { useProfileVerificationRequest as useProfileVerificationRequestQuery } from 'hooks/useProfileVerificationDirect'  // Phase 7e — Vercel-direct
+import { useExploreUsersSlim } from 'hooks/useExploreUsersSlimDirect'  // Phase 7e — Vercel-direct
 import { SelectToApolloQuery, SortListingItem } from 'lib/apollo/sorting'
 import { StateProvider } from 'contexts'
 import { ModalProvider } from 'contexts/ModalContext'
@@ -1822,16 +1823,11 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   // 3. Memory leaks from exponential data growth
   // Manual "Load More" buttons are used instead
 
-  // Explore Users Query - search for users/profiles
-  // Load users with pagination - API max is 200 per page
-  const { data: exploreUsersData, loading: exploreUsersLoading, error: exploreUsersError, refetch: refetchUsers, fetchMore: fetchMoreUsers } = useExploreUsersSlimQuery({
-    variables: {
-      search: debouncedSearchQuery.trim() || undefined,
-      page: { first: 200 }
-    },
+  // Explore Users — Phase 7e Vercel-direct
+  const { data: exploreUsersData, loading: exploreUsersLoading, error: exploreUsersError, refetch: refetchUsers, fetchMore: fetchMoreUsers } = useExploreUsersSlim({
+    first: 200,
+    search: debouncedSearchQuery.trim() || undefined,
     skip: selectedView !== 'explore' && selectedView !== 'users',
-    fetchPolicy: 'cache-first',
-    notifyOnNetworkStatusChange: true,
   })
 
   // Fetch all users from unified Atlas database
