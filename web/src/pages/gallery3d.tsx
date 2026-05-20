@@ -53,24 +53,21 @@ export default function Gallery3DPage() {
   }, [handleParam, me?.profile])
 
   // Phase 16.62 — gym + blacktop are immersive basketball game modes,
-  // not gallery views. On mobile the global DexNavBar (Lucy brain pill,
-  // FURL search pill, top-nav chrome) collides with the game controls.
-  // Hide all top chrome on these themes — full-screen game experience.
+  // not gallery views. The global DexNavBar (Lucy brain pill, FURL
+  // search pill, top-nav chrome) belongs to the rest of SC, not in a
+  // basketball game. Phase 16.68 — hide on ALL screen sizes (was only
+  // mobile); the desktop keep was a holdover from when gym was treated
+  // as a gallery variant.
   const isGameTheme = theme === 'gym' || theme === 'blacktop'
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
       {/* Hide global chrome (DexNavBar + nav pills + header) on game themes
-          for mobile. Desktop keeps them since there's room. */}
+          on every breakpoint. Game UI owns the screen. */}
       {!isGameTheme && <DexNavBar />}
-      {isGameTheme && (
-        <div className="hidden sm:block">
-          <DexNavBar />
-        </div>
-      )}
 
-      {/* Lower nav pills — hidden on game themes for mobile */}
-      <div className={`border-b border-yellow-500/10 bg-black/40 backdrop-blur-md ${isGameTheme ? 'hidden sm:block' : ''}`}>
+      {/* Lower nav pills — hidden on game themes (mobile + desktop) */}
+      <div className={`border-b border-yellow-500/10 bg-black/40 backdrop-blur-md ${isGameTheme ? 'hidden' : ''}`}>
         <div className="flex items-center gap-1.5 px-3 pt-2 pb-2">
           <div className="flex-1 overflow-x-auto scrollbar-hide bg-black/60 backdrop-blur-md rounded-full px-2 py-1">
             <div className="flex items-center gap-1.5 min-w-max">
@@ -105,8 +102,9 @@ export default function Gallery3DPage() {
         </div>
       </div>
 
-      {/* Header — hidden on game themes for mobile (full-screen game) */}
-      <div className={`border-b border-yellow-500/20 bg-black/80 backdrop-blur-md ${isGameTheme ? 'hidden sm:block' : ''}`}>
+      {/* Header — hidden on game themes (mobile + desktop). Game owns
+          the viewport; theme switcher is in the corner controls below. */}
+      <div className={`border-b border-yellow-500/20 bg-black/80 backdrop-blur-md ${isGameTheme ? 'hidden' : ''}`}>
         <div className="max-w-[1400px] mx-auto px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div className="flex items-center gap-3 min-w-0">
             <button onClick={() => router.push('/explore3d')} className="p-1.5 rounded hover:bg-white/10 transition shrink-0">
@@ -134,11 +132,12 @@ export default function Gallery3DPage() {
         </div>
       </div>
 
-      {/* Phase 16.62 — minimal corner controls on game themes (mobile only)
-          since the full DexNavBar + nav pills + header are hidden. Gives
-          users a way to exit the game + switch themes without a refresh. */}
+      {/* Phase 16.62 — minimal corner controls on game themes (all
+          breakpoints, since Phase 16.68 hides DexNavBar on desktop too).
+          Gives users a way to exit the game + switch themes without a
+          refresh. */}
       {isGameTheme && (
-        <div className="sm:hidden absolute top-2 left-2 z-50 flex items-center gap-1.5 pointer-events-auto">
+        <div className="absolute top-2 left-2 z-50 flex items-center gap-1.5 pointer-events-auto">
           <button
             onClick={() => router.push('/explore3d')}
             className="px-2 py-1.5 rounded bg-black/70 backdrop-blur border border-white/20 text-white text-[10px] font-mono flex items-center gap-1"
@@ -158,12 +157,11 @@ export default function Gallery3DPage() {
         </div>
       )}
 
-      {/* The Gallery — full viewport on mobile game themes, normal otherwise */}
+      {/* The Gallery — full viewport on game themes (mobile + desktop
+          now that all top chrome is hidden), normal otherwise */}
       <div
         className={`relative w-full min-h-[400px] ${
-          isGameTheme
-            ? 'h-[100dvh] sm:h-[calc(100vh-200px)]'
-            : 'h-[calc(100vh-200px)]'
+          isGameTheme ? 'h-[100dvh]' : 'h-[calc(100vh-200px)]'
         }`}
       >
         {handleParam ? (
