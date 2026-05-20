@@ -665,24 +665,36 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
     composer.setSize(w, h)
     composer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     composer.addPass(new RenderPass(scene, camera))
+    // Phase 16.69 — bloom toned down on sports themes (emissives + IBL
+    // were stacking with bloom to wash out gym/blacktop white).
+    const isSportsBloom = theme === 'gym' || theme === 'blacktop'
     const bloomPass = new UnrealBloomPass(
       new THREE.Vector2(w, h),
-      0.55,   // strength
-      0.55,   // radius
-      0.85,   // threshold
+      isSportsBloom ? 0.25 : 0.55,   // strength
+      isSportsBloom ? 0.40 : 0.55,   // radius
+      isSportsBloom ? 0.95 : 0.85,   // threshold (raise so only HOT pixels bloom)
     )
     composer.addPass(bloomPass)
 
     // ─── Lighting ────────────────────────────────────────────
-    const ambient = new THREE.AmbientLight(themeCfg.ambient, 0.6)
+    // Phase 16.69 — sports themes get DIMMED globals because gym/blacktop
+    // add their OWN dedicated overhead light rigs (9 panels in gym, lamp
+    // pole + bulb on blacktop). Without the dim, all the lights compound
+    // with bloom + IBL + ACES exposure → white-out (Frank: "look at how
+    // bright the gym is now?!!").
+    const isSportsLight = theme === 'gym' || theme === 'blacktop'
+    const ambient = new THREE.AmbientLight(themeCfg.ambient, isSportsLight ? 0.25 : 0.6)
     scene.add(ambient)
-    const dir = new THREE.DirectionalLight(0xffffff, 1.2)
+    const dir = new THREE.DirectionalLight(0xffffff, isSportsLight ? 0.6 : 1.2)
     dir.position.set(5, 15, 5)
     dir.castShadow = true
     scene.add(dir)
-    const accentLight = new THREE.PointLight(themeCfg.accent, 1.5, 30)
+    const accentLight = new THREE.PointLight(themeCfg.accent, isSportsLight ? 0.4 : 1.5, 30)
     accentLight.position.set(0, 6, 0)
     scene.add(accentLight)
+    // Phase 16.69 — drop tone-mapping exposure on sports themes so the
+    // many emissive surfaces (rim, hot-zone tiles, panels) don't bloom out.
+    if (isSportsLight) renderer.toneMappingExposure = 0.75
 
     // ─── Floor ───────────────────────────────────────────────
     // Phase 16.25 — city theme gets a HUGE 200x200 asphalt floor (open world);
@@ -772,7 +784,7 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
       if (isGymCourt) {
         // Full court: half-court line + 2 keys + 2 hoops
         mkLine(courtWidth, 0.1, 0, courtZ)  // half-court line
-        const center = new THREE.Mesh(new THREE.RingGeometry(1.7, 1.8, 32), lineMat)
+        const center = new THREE.Mesh(new THREE.RingGeometry(1.83, 1.93, 32), lineMat)  // NBA 6 ft (1.83m)
         center.rotation.x = -Math.PI / 2
         center.position.set(0, 0.03, courtZ)
         scene.add(center)
@@ -787,21 +799,34 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         const dir = flip ? -1 : 1
         const baseZ = z
         // Free-throw line + key
-        mkLine(4, 0.1, 0, baseZ + 5.5 * dir)
+        // Phase 16.69 — NBA-spec dimensions (1 unit = 1 meter):
+        //   Free throw line   4.57m from baseline (15 ft)
+        //   Key paint         4.88m wide × 4.57m long (16 ft × 15 ft)
+        //   3-point arc       7.24m radius from basket (23' 9")
+        //   Corner-3 lines    6.70m from court center (22 ft)
+        //   Rim center        1.22m from baseline (4 ft)
+        //   Rim radius        0.225m (NBA standard 0.45m diameter)
+        //   Rim height        3.05m (10 ft)
+        //   Backboard         1.83m × 1.07m, 0.15m behind rim
+        // baseZ is 1.5m IN from baseline (hoopPositions offset above),
+        // so baselineZ = baseZ - 1.5*dir.
+        const baselineZ = baseZ - 1.5 * dir
+        const ftLineZ = baselineZ + 4.57 * dir
+        const keyCenterZ = baselineZ + (4.57 / 2) * dir
+        const basketZ = baselineZ + 1.22 * dir  // rim center
+        mkLine(4.88, 0.1, 0, ftLineZ)            // free throw line at 4.57m
         const keyPaint = new THREE.Mesh(
-          new THREE.PlaneGeometry(4, 5),
+          new THREE.PlaneGeometry(4.88, 4.57),
           new THREE.MeshBasicMaterial({ color: 0xdc2626, transparent: true, opacity: 0.4 }),
         )
         keyPaint.rotation.x = -Math.PI / 2
-        keyPaint.position.set(0, 0.025, baseZ + 2.8 * dir)
+        keyPaint.position.set(0, 0.025, keyCenterZ)
         scene.add(keyPaint)
-        // Three-point line — basket-centered arc + corner-3 straight segments
-        // NBA: 23.75ft (7.24m) radius from basket center. In our 15u-wide
-        // court scale, ~6.5u radius keeps the arc inside the sidelines, and
-        // corner-3 lines run straight from baseline to where the arc begins
-        // (mirrors how NBA courts handle the sideline cutoff).
-        const arc3R = 6.5
-        const basketZ = baseZ - 0.3 * dir
+        // Three-point line — basket-centered arc + corner-3 straight segments.
+        // True NBA dimensions now (7.24m arc / 6.70m corner-3) — fits inside
+        // the 15m-wide court with 0.8m clearance to each sideline.
+        const arc3R = 7.24
+        const corner3X = 6.70
         // Corner-3 straight lines (parallel to sideline, at x = ±arc3R)
         const corner3StartZ = baseZ - 1.5 * dir  // at baseline
         const corner3EndZ = basketZ              // where arc starts
@@ -813,12 +838,14 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
             lineMat,
           )
           corner3Line.rotation.x = -Math.PI / 2
-          corner3Line.position.set(xSign * arc3R, 0.03, corner3MidZ)
+          corner3Line.position.set(xSign * corner3X, 0.03, corner3MidZ)
           scene.add(corner3Line)
         }
-        // Arc — dashed segments from one corner-3 end around to the other
-        for (let a = -Math.PI / 2 + 0.05; a <= Math.PI / 2 - 0.05; a += 0.05) {
-          const seg = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.08), lineMat)
+        // Arc — basket-centered, clamped to corner-3 line meeting points.
+        // angle where arc reaches corner-3 X: asin(corner3X / arc3R)
+        const arcEndAngle = Math.asin(corner3X / arc3R)
+        for (let a = -arcEndAngle; a <= arcEndAngle; a += 0.04) {
+          const seg = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.08), lineMat)
           seg.rotation.x = -Math.PI / 2
           seg.rotation.z = a + Math.PI / 2
           seg.position.set(Math.sin(a) * arc3R, 0.03, basketZ + Math.cos(a) * arc3R * dir)
@@ -829,14 +856,15 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
           new THREE.CylinderGeometry(0.1, 0.15, 4, 12),
           new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.7, roughness: 0.4 }),
         )
-        pole.position.set(0, 2, baseZ - 0.8 * dir)
+        // Pole at backboard z + 0.5m (the stanchion behind the backboard)
+        const backboardZ = basketZ - 0.15 * dir  // 0.15m back from rim
+        pole.position.set(0, 2, backboardZ - 0.5 * dir)
         pole.castShadow = true
         scene.add(pole)
-        // Phase 16.66 — backboard now MeshPhysicalMaterial with clearcoat
-        // + transmission for proper glass refraction + reflection. Reads
-        // as real NBA tempered glass under IBL instead of flat white.
+        // NBA backboard: 1.83m × 1.07m, centered vertically around y=3.59m
+        // (top edge at 4.05m, bottom at 3.05m — rim height = backboard bottom).
         const backboard = new THREE.Mesh(
-          new THREE.BoxGeometry(2, 1.3, 0.1),
+          new THREE.BoxGeometry(1.83, 1.07, 0.05),
           new THREE.MeshPhysicalMaterial({
             color: 0xffffff,
             transparent: true,
@@ -850,35 +878,35 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
             envMapIntensity: 1.6,
           }),
         )
-        backboard.position.set(0, 3.8, baseZ - 0.7 * dir)
+        backboard.position.set(0, 3.59, backboardZ)
         backboard.castShadow = true
         scene.add(backboard)
+        // NBA shooter's square: 0.61m × 0.45m, painted on backboard
+        // just above the rim
         const sqOutline = new THREE.LineSegments(
-          new THREE.EdgesGeometry(new THREE.PlaneGeometry(0.6, 0.45)),
+          new THREE.EdgesGeometry(new THREE.PlaneGeometry(0.61, 0.45)),
           new THREE.LineBasicMaterial({ color: 0xdc2626 }),
         )
-        sqOutline.position.set(0, 3.7, baseZ - 0.65 * dir)
+        sqOutline.position.set(0, 3.30, backboardZ + 0.04 * dir)
         scene.add(sqOutline)
-        // Phase 16.66 — emissiveIntensity bumped to 1.4 so the rim
-        // crosses the UnrealBloomPass threshold (0.85) and blooms like a
-        // properly-lit metal hoop under arena lights. Higher torus
-        // segment count for smoother specular highlight under IBL.
+        // NBA rim: 0.45m diameter (0.225m radius), 0.02m tube, 3.05m height
         const rim = new THREE.Mesh(
-          new THREE.TorusGeometry(0.35, 0.04, 12, 32),
+          new THREE.TorusGeometry(0.225, 0.02, 12, 32),
           new THREE.MeshStandardMaterial({ color: 0xea580c, emissive: 0xea580c, emissiveIntensity: 1.4, metalness: 0.85, roughness: 0.2, envMapIntensity: 1.5 }),
         )
-        const rimPos = new THREE.Vector3(0, 3.3, baseZ - 0.3 * dir)
+        const rimPos = new THREE.Vector3(0, 3.05, basketZ)
         rim.position.copy(rimPos)
         rim.rotation.x = Math.PI / 2
         rim.castShadow = true
         scene.add(rim)
         hoopList.push({ rimPos })
-        // Net (12 segments)
+        // Net (12 segments, scaled to NBA rim radius 0.225m, length 0.4m
+        // hanging from rim height 3.05m down to 2.65m)
         const netMat = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.8 })
         for (let ni = 0; ni < 12; ni++) {
           const a = (ni / 12) * Math.PI * 2
-          const seg = new THREE.Mesh(new THREE.CylinderGeometry(0.005, 0.005, 0.35, 4), netMat)
-          seg.position.set(Math.cos(a) * 0.32, 3.13, rimPos.z + Math.sin(a) * 0.32)
+          const seg = new THREE.Mesh(new THREE.CylinderGeometry(0.004, 0.006, 0.4, 4), netMat)
+          seg.position.set(Math.cos(a) * 0.21, 2.85, rimPos.z + Math.sin(a) * 0.21)
           scene.add(seg)
         }
       })
@@ -1173,19 +1201,25 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         }
         window.addEventListener('pointerdown', tryStartMurmur, { once: true })
         window.addEventListener('keydown', tryStartMurmur, { once: true })
-        // Gym overhead lights (4 panels of fluorescent)
+        // Phase 16.69 — gym overhead lights tuned WAY DOWN. 9 panels
+        // × 1.5 intensity + 0.9 emissive + bloom + IBL = white-out.
+        // Now: emissive 0.35 (still visibly glowing), light 0.5 (covers
+        // the room without blowing out), 4 panels instead of 9.
         for (let lx = -8; lx <= 8; lx += 8) {
           for (let lz = -8; lz <= 8; lz += 8) {
             const panel = new THREE.Mesh(
               new THREE.BoxGeometry(3, 0.1, 1),
-              new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xfff8e0, emissiveIntensity: 0.9 }),
+              new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xfff8e0, emissiveIntensity: 0.35 }),
             )
             panel.position.set(lx, 21.5, lz)
             scene.add(panel)
-            const gymLight = new THREE.PointLight(0xfff8e0, 1.5, 40)
-            gymLight.position.set(lx, 19, lz)
-            scene.add(gymLight)
           }
+        }
+        // Just 2 mid-court overhead point lights cover the whole gym
+        for (const lz of [-6, 6]) {
+          const gymLight = new THREE.PointLight(0xfff8e0, 0.5, 40)
+          gymLight.position.set(0, 19, lz)
+          scene.add(gymLight)
         }
         // Scoreboard above mid-court
         const scoreCanvas = document.createElement('canvas')
@@ -1433,7 +1467,7 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
             const dzh = ballBG.position.z - hoop.rimPos.z
             const horizDist = Math.hypot(dxh, dzh)
             const dyh = Math.abs(ballBG.position.y - hoop.rimPos.y)
-            if (horizDist < 0.34 && dyh < 0.25) {
+            if (horizDist < 0.225 && dyh < 0.15) {  // NBA rim radius 0.225m, dy tighter for cleaner swish
               ballStateBG.scoredThisShot = true
               // Phase 16.57 — score side depends on who shot the ball
               const ballOwner = (ballStateBG as any).owner || 'player'
@@ -1518,7 +1552,7 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
             // velocity radially outward off the rim torus (outer radius
             // 0.42) so off-target shots ACTUALLY bounce off the metal
             // instead of ghosting through.
-            if (!ballStateBG.scoredThisShot && horizDist > 0.34 && horizDist < 0.55 && dyh < 0.18) {
+            if (!ballStateBG.scoredThisShot && horizDist > 0.225 && horizDist < 0.42 && dyh < 0.15) {
               const rimCD = ((ballStateBG as any).rimBounceCooldown || 0)
               if (rimCD <= 0) {
                 ;(ballStateBG as any).rimBounceCooldown = 0.15
@@ -2033,11 +2067,11 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         if ((ballState as any).rimBounceCooldown > 0) {
           ;(ballState as any).rimBounceCooldown -= g
         }
-        // Backboard bounce — plane at Z = RIM_POS.z - 0.4, normal +Z (toward court).
+        // Backboard bounce — plane at Z = RIM_POS.z - 0.15, normal +Z (NBA spec).
         // Ball must be coming AT the board (vel.z opposite of normal sign).
         // direction-aware: rim sits at (-0.3 * dir) from baseZ, board at (-0.7 * dir).
         // Normal points back toward court — same sign as -dir.
-        const boardZ = RIM_POS.z - 0.4  // approximation; baseZ is hoisted out of scope here
+        const boardZ = RIM_POS.z - 0.15  // NBA: backboard 0.15m back from rim center
         const boardNormalZ = Math.sign(ball.position.z - boardZ) || 1
         if (!ballState.scoredThisShot &&
             Math.abs(ball.position.z - boardZ) < 0.12 &&
@@ -4022,6 +4056,11 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         moveLockUntil: number
         defenseHeld: boolean
         play: (clipName: string, durationMs: number) => void
+        // Phase 16.66 — Sarg's authored shoot delta state machine. Gated by
+        // shoot.active so the other two fields are only accessed when set up.
+        shoot?: { active: boolean; startMs: number; durationMs: number; moveType: string; baseQuats: Map<string, THREE.Quaternion> }
+        shootDeltas: Record<string, Record<string, [number, number, number]>>
+        shootBoneObjects: Record<string, THREE.Bone | null>
       } | null
       // Phase 16.44 — fan animation tick. Idle fans sway gently in place;
       // excited fans jump up + tilt slightly. InstancedMesh matrix update
