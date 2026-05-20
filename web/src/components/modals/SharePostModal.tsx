@@ -2,7 +2,8 @@ import { useState, useEffect, useRef } from 'react'
 import { X, Search, Send, Copy, Check, Film, Link2 } from 'lucide-react'
 import { Avatar } from 'components/Avatar'
 import { useMe } from 'hooks/useMe'
-import { useSendMessageMutation, useChatsLazyQuery, useFollowingLazyQuery } from 'lib/graphql'
+import { useSendMessageMutation, useChatsLazyQuery } from 'lib/graphql'
+import { useFollowingLazy as useFollowingLazyQuery } from 'hooks/useUsersSocialDirect'  // Phase 7e — Vercel-direct
 import { toast } from 'react-toastify'
 
 interface ShareRecipient {
@@ -32,7 +33,7 @@ export const SharePostModal = ({ isOpen, onClose, postId, postBody, onShareToSto
   const searchRef = useRef<HTMLInputElement>(null)
 
   const [loadChats, { data: chatsData }] = useChatsLazyQuery({ fetchPolicy: 'cache-and-network' })
-  const [loadFollowing, { data: followingData }] = useFollowingLazyQuery({ fetchPolicy: 'cache-and-network' })
+  const [loadFollowing, { data: followingData }] = useFollowingLazyQuery()
   const [sendMessage] = useSendMessageMutation()
 
   const postUrl = customUrl || (typeof window !== 'undefined' ? `${window.location.origin}/posts/${postId}` : '')

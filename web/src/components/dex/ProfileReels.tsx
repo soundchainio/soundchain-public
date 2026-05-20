@@ -2,7 +2,7 @@ import { useState, useRef, useMemo, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { ChevronLeft, ChevronRight, Sparkles, Film, Users } from 'lucide-react'
 import { gql, useQuery } from '@apollo/client'
-import { useFollowingQuery } from 'lib/graphql'
+import { useFollowing as useFollowingQuery } from 'hooks/useUsersSocialDirect'  // Phase 7e — Vercel-direct
 import { StoryViewer } from './StoryViewer'
 
 // Single query for all public stories — no auth required
@@ -219,9 +219,10 @@ export const ProfileReels = ({ profileId, profileHandle, profileDisplayName, pro
     fetchPolicy: 'cache-and-network',
   })
 
-  // Fetch who this profile follows (for Their Circle)
+  // Following — Phase 7e Vercel-direct
   const { data: followingData } = useFollowingQuery({
-    variables: { profileId, page: { first: 200 } },
+    profileId,
+    first: 200,
     skip: !profileId,
   })
 

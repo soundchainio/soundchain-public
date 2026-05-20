@@ -76,9 +76,10 @@ const getEmbedHeight = (url: string): string => {
   }
 }
 import {
-  useGroupedTracksQuery, useFollowingLazyQuery, useFollowersLazyQuery,
+  useGroupedTracksQuery,
   SortTrackField, SortOrder,
 } from 'lib/graphql'
+import { useFollowingLazy as useFollowingLazyQuery, useFollowersLazy as useFollowersLazyQuery } from 'hooks/useUsersSocialDirect'  // Phase 7e — Vercel-direct
 import { useAudioPlayerContext, Song } from 'hooks/useAudioPlayer'
 
 const WALL_POSTS_QUERY = gql`
@@ -720,10 +721,10 @@ export function ProfileWall({ profileId, isOwnProfile: isOwnProfileProp, viewerP
   // Lazy-load friends when component mounts
   React.useEffect(() => {
     if (profileId && !followingCalled) {
-      fetchFollowing({ variables: { profileId, page: { first: 12 } }, fetchPolicy: 'cache-and-network' })
+      fetchFollowing({ variables: { profileId, page: { first: 12 } } })
     }
     if (profileId && !followersCalled) {
-      fetchFollowers({ variables: { profileId, page: { first: 200 } }, fetchPolicy: 'cache-and-network' })
+      fetchFollowers({ variables: { profileId, page: { first: 200 } } })
     }
   }, [profileId, followingCalled, followersCalled, fetchFollowing, fetchFollowers])
 

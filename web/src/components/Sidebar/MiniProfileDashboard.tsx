@@ -4,7 +4,8 @@ import Link from 'next/link'
 import { useMe } from 'hooks/useMe'
 import { useMagicContext } from 'hooks/useMagicContext'
 import { Avatar } from '../Avatar'
-import { useFollowingQuery, useTracksQuery, SortTrackField, SortOrder } from 'lib/graphql'
+import { useTracksQuery, SortTrackField, SortOrder } from 'lib/graphql'
+import { useFollowing as useFollowingQuery } from 'hooks/useUsersSocialDirect'  // Phase 7e — Vercel-direct
 import { useFavoriteTracks as useFavoriteTracksQuery } from 'hooks/useFavoriteTracksDirect'  // Phase 7e — Vercel-direct
 import {
   Music, Heart, Users, Wallet, Settings, Disc3, Rss, MessageSquare,
@@ -16,9 +17,10 @@ export const MiniProfileDashboard = () => {
   const profile = me?.profile
   const { balance: polBalance, ogunBalance } = useMagicContext()
 
-  // Get following count for stats
+  // Following count for stats — Phase 7e Vercel-direct
   const { data: followingData } = useFollowingQuery({
-    variables: { profileId: profile?.id || '', page: { first: 1 } },
+    profileId: profile?.id,
+    first: 1,
     skip: !profile?.id,
   })
 

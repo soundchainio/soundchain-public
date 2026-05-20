@@ -52,7 +52,7 @@ import { DexNavBar } from 'components/DexNavBar'
 import { ScrollArea } from 'components/ui/scroll-area'
 import { Separator } from 'components/ui/separator'
 import { useAudioPlayerContext, Song } from 'hooks/useAudioPlayer'
-import { useMeQuery, useGroupedTracksQuery, useTracksQuery, useTracksLazyQuery, useListingItemsQuery, useExploreUsersQuery, useExploreTracksQuery, useExploreUsersSlimQuery, useExploreTracksSlimQuery, useFollowProfileMutation, useUnfollowProfileMutation, useTrackQuery, usePostQuery, useProfileQuery, useChatsQuery, useChatHistoryLazyQuery, useSendMessageMutation, useResetUnreadMessageCountMutation, useNotificationsQuery, useToggleFavoriteMutation, useFollowersQuery, useFollowingQuery, useFollowersLazyQuery, useFollowingLazyQuery, useUpdateHandleMutation, useUpdateProfileDisplayNameMutation, SortTrackField, SortOrder, useCreateProfileVerificationRequestMutation, ProfileVerificationStatusType } from 'lib/graphql'
+import { useMeQuery, useGroupedTracksQuery, useTracksQuery, useTracksLazyQuery, useListingItemsQuery, useExploreUsersQuery, useExploreTracksQuery, useExploreUsersSlimQuery, useExploreTracksSlimQuery, useFollowProfileMutation, useUnfollowProfileMutation, useTrackQuery, usePostQuery, useProfileQuery, useChatsQuery, useChatHistoryLazyQuery, useSendMessageMutation, useResetUnreadMessageCountMutation, useNotificationsQuery, useToggleFavoriteMutation, useUpdateHandleMutation, useUpdateProfileDisplayNameMutation, SortTrackField, SortOrder, useCreateProfileVerificationRequestMutation, ProfileVerificationStatusType } from 'lib/graphql'
 import { useMaticUsd as useMaticUsdQuery } from 'hooks/useMaticUsdDirect'  // Phase 7e — Vercel-direct
 import { useExploreGenreCounts } from 'hooks/useExploreGenreCountsDirect'  // Phase 7e — Vercel-direct
 import { useFavoriteTracks as useFavoriteTracksDirect } from 'hooks/useFavoriteTracksDirect'  // Phase 7e — Vercel-direct
@@ -61,6 +61,7 @@ import { useExploreUsersSlim, useExploreUsersLazy as useExploreUsersLazyQuery } 
 import { useExploreTracksSlim } from 'hooks/useExploreTracksSlimDirect'  // Phase 7e — Vercel-direct
 import { useProfileStreamingRewards, useMyListenerRewards } from 'hooks/useProfileRewardsDirect'  // Phase 7e — Vercel-direct
 import { useProfileByHandle } from 'hooks/useProfileByHandleDirect'  // Phase 7e — Vercel-direct
+import { useFollowers as useFollowersDirect, useFollowing as useFollowingDirect, useFollowersLazy as useFollowersLazyDirect, useFollowingLazy as useFollowingLazyDirect } from 'hooks/useUsersSocialDirect'  // Phase 7e — Vercel-direct
 import { SelectToApolloQuery, SortListingItem } from 'lib/apollo/sorting'
 import { StateProvider } from 'contexts'
 import { ModalProvider } from 'contexts/ModalContext'
@@ -2123,8 +2124,8 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   }, [viewingProfileNFTsData])
 
   // Lazy queries for followers/following — fire when stats modal opens
-  const [fetchViewingFollowers, { data: viewingProfileFollowersData, loading: viewingFollowersLoading }] = useFollowersLazyQuery()
-  const [fetchViewingFollowing, { data: viewingProfileFollowingData, loading: viewingFollowingLoading }] = useFollowingLazyQuery()
+  const [fetchViewingFollowers, { data: viewingProfileFollowersData, loading: viewingFollowersLoading }] = useFollowersLazyDirect()
+  const [fetchViewingFollowing, { data: viewingProfileFollowingData, loading: viewingFollowingLoading }] = useFollowingLazyDirect()
 
   // Fire queries when stats modal or top friends picker opens
   useEffect(() => {
@@ -2199,23 +2200,17 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
       isVerified: f.followedProfile.verified || f.followedProfile.teamMember || false,
     })) || []
 
-  // Query for LOGGED-IN user's followers (for modal on feed view)
+  // Followers / Following — Phase 7e Vercel-direct
   const myProfileIdForFollowers = userData?.me?.profile?.id
-  const { data: myFollowersData } = useFollowersQuery({
-    variables: {
-      profileId: myProfileIdForFollowers || '',
-      page: { first: 100 },
-    },
+  const { data: myFollowersData } = useFollowersDirect({
+    profileId: myProfileIdForFollowers,
+    first: 100,
     skip: !myProfileIdForFollowers,
-    fetchPolicy: 'cache-first',
   })
-  const { data: myFollowingData } = useFollowingQuery({
-    variables: {
-      profileId: myProfileIdForFollowers || '',
-      page: { first: 100 },
-    },
+  const { data: myFollowingData } = useFollowingDirect({
+    profileId: myProfileIdForFollowers,
+    first: 100,
     skip: !myProfileIdForFollowers,
-    fetchPolicy: 'cache-first',
   })
 
   // Transform logged-in user's followers/following for modals

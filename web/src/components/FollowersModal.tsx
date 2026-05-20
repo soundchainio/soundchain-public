@@ -1,6 +1,7 @@
 import { X } from 'lucide-react'
 import { Avatar } from 'components/Avatar'
-import { Profile, useFollowersLazyQuery, useFollowingLazyQuery } from 'lib/graphql'
+import { Profile } from 'lib/graphql'
+import { useFollowersLazy as useFollowersLazyQuery, useFollowingLazy as useFollowingLazyQuery } from 'hooks/useUsersSocialDirect'  // Phase 7e — Vercel-direct
 import { useEffect, useState, useRef } from 'react'
 import { FollowModalType } from 'types/FollowModalType'
 import { LoaderAnimation } from 'components/LoaderAnimation'
@@ -17,12 +18,10 @@ interface FollowersModal {
 }
 
 export const FollowModal = ({ show, profileId, modalType, onClose, compact = false, anchorRef, dropdown = false }: FollowersModal) => {
-  const [followers, { data: followersData, fetchMore: fetchMoreFollowers, loading: followersLoading }] = useFollowersLazyQuery({
-    variables: { profileId },
-  })
-  const [following, { data: followingData, fetchMore: fetchMoreFollowing, loading: followingLoading }] = useFollowingLazyQuery({
-    variables: { profileId },
-  })
+  const [followers, { data: followersData, loading: followersLoading }] = useFollowersLazyQuery()
+  const [following, { data: followingData, loading: followingLoading }] = useFollowingLazyQuery()
+  const fetchMoreFollowers: any = undefined  // Phase 7e: cursor paging shipped when endpoint adds endCursor
+  const fetchMoreFollowing: any = undefined
 
   useEffect(() => {
     if (show && profileId) {
