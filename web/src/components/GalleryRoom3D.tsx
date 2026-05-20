@@ -623,17 +623,19 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
       u.volume = opts?.volume ?? 0.85
       try { window.speechSynthesis.speak(u) } catch {}
     }
-    // Pick a "hype" call for a make based on shot type + streak count
+    // Phase 16.72 — STREETBALL VOCAB. SC games are park-court / Rucker
+    // culture, NOT NBA. Strip every trademark-adjacent phrase (Mamba,
+    // posterized, Zion-mode, "he's on fire" — that's NBA Jam, EA/Acclaim
+    // IP). Replace with universal streetball lingo that's been spoken on
+    // every blacktop for 30 years.
     const announceMake = (shotType: string, streak: number) => {
-      // Streak overrides regular shot calls — these are signature crowd moments
-      if (streak >= 7) { speak(["UNCONSCIOUS!", "HE'S COOKING!", "MAMBA MENTALITY!"][streak % 3], { pitch: 1.1, rate: 1.25 }); return }
-      if (streak >= 5) { speak(["HE'S ON FIRE!", "THIS GUY CAN'T MISS!", "ABSOLUTELY COOKING!"][streak % 3], { pitch: 1.08, rate: 1.2 }); return }
-      if (streak >= 3) { speak(["HE'S HEATING UP!", "STARTING TO COOK!", "STAY HOT!"][streak % 3], { pitch: 1.05, rate: 1.15 }); return }
-      // Per shot-type calls
-      if (shotType === 'dunk')     return speak(["HE FLEW! GORILLA DUNK!", "POSTERIZED THE WHOLE FAMILY!", "ZION-MODE THROW DOWN!", "TOO STRONG! POSTERIZED!", "BOOM! WINDMILL!"][Math.floor(Math.random()*5)], { pitch: 0.88, rate: 1.25 })
-      if (shotType === 'three')    return speak(["BANG! THREE!", "FROM DOWNTOWN!", "TRIPLE!"][Math.floor(Math.random()*3)], { pitch: 1.0, rate: 1.18 })
+      if (streak >= 7) { speak(["COLD-BLOODED!", "HE'S COOKING!", "ICE IN THE VEINS!"][streak % 3], { pitch: 1.1, rate: 1.25 }); return }
+      if (streak >= 5) { speak(["HOT HAND!", "CAN'T MISS!", "ABSOLUTELY COOKING!"][streak % 3], { pitch: 1.08, rate: 1.2 }); return }
+      if (streak >= 3) { speak(["GETTING HOT!", "STARTING TO COOK!", "STAY WITH IT!"][streak % 3], { pitch: 1.05, rate: 1.15 }); return }
+      if (shotType === 'dunk')     return speak(["GET UP! SLAM!", "ON 'EM!", "PARK LEGEND!", "TOO STRONG!", "BOOM! WINDMILL!"][Math.floor(Math.random()*5)], { pitch: 0.88, rate: 1.25 })
+      if (shotType === 'three')    return speak(["BANG! TRIPLE!", "FROM DEEP!", "DROPS THE THREE!"][Math.floor(Math.random()*3)], { pitch: 1.0, rate: 1.18 })
       if (shotType === 'layup')    return speak(["EASY BUCKET!", "GOT THE LAY!", "AT THE RIM!"][Math.floor(Math.random()*3)], { rate: 1.15 })
-      if (shotType === 'fadeaway') return speak(["FADEAWAY... GOOD!", "MAMBA RANGE!", "NOTHIN' BUT NET!"][Math.floor(Math.random()*3)], { rate: 1.12 })
+      if (shotType === 'fadeaway') return speak(["FADEAWAY... GOOD!", "STEPBACK BUCKET!", "NOTHIN' BUT NET!"][Math.floor(Math.random()*3)], { rate: 1.12 })
       return speak(["MONEY!", "BUCKET!", "GOT IT!", "SPLASH!"][Math.floor(Math.random()*4)], { rate: 1.15 })
     }
     const announceMiss = (shotType: string) => {
@@ -1497,9 +1499,10 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         jumpStateBG.active = true
         jumpStateBG.t = 0
         jumpStateBG.baseY = playerGroup.position.y
-        // Phase 16.60 — ZION-STYLE GORILLA DUNK. Big airtime, big leap, big
-        // hangtime. Player rises 3.5u (was 1.8u) and stays airborne 0.95s
-        // so the dunk reads as a real flight, not a hop.
+        // Phase 16.60 / 16.72 — Park-court power dunk. Big airtime, big
+        // leap, big hangtime. Player rises 3.5u (was 1.8u) and stays
+        // airborne 0.95s so the dunk reads as a real flight, not a hop.
+        // (Phrasing kept generic to streetball — no NBA player references.)
         jumpStateBG.duration = isDunk ? 0.95 : isLayup ? 0.7 : isThree ? 0.5 : 0.55
         jumpStateBG.peakY = isDunk ? 3.5 : isLayup ? 1.0 : isThree ? 0.6 : 1.2
         jumpStateBG.ballRelease = isDunk ? 0.55 : isLayup ? 0.55 : 0.35
@@ -1696,20 +1699,20 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
                 // Phase 16.58 — record make stats + Big Play Cam
                 recordMake(shotType)
                 if (shotType === 'dunk') {
-                  const dunkBanners = ['POSTERIZED!', 'HE FLEW!', 'GORILLA DUNK!', 'TOO STRONG!']
+                  const dunkBanners = ['POSTER!', 'ON \'EM!', 'PARK LEGEND!', 'TOO STRONG!']
                   triggerBigPlay(dunkBanners[Math.floor(Math.random() * dunkBanners.length)], '#fb923c', '💥')
                   // Phase 16.71 — DJ drops new track after a poster
                   const _a2 = arenaAudioRef.current
                   if (_a2) { try { _a2.dispatchEvent(new Event('ended')) } catch {} }
                 } else if (nextStreak === 5) {
-                  triggerBigPlay('ON FIRE!', '#ef4444', '🔥')
+                  triggerBigPlay('HOT HAND!', '#ef4444', '🔥')
                 } else if (nextStreak === 7) {
-                  triggerBigPlay('UNCONSCIOUS!', '#dc2626', '👑')
+                  triggerBigPlay('COLD-BLOODED!', '#dc2626', '👑')
                 } else if (shotType === 'three' && (ballStateBG as any).shotOriginZ !== undefined) {
                   const sx = (ballStateBG as any).shotOriginX ?? 0
                   const sz = (ballStateBG as any).shotOriginZ ?? 0
                   if (Math.hypot(sx, sz) > 10) {  // Half-court range
-                    triggerBigPlay('FROM DOWNTOWN!', '#facc15', '🎯')
+                    triggerBigPlay('FROM DEEP!', '#facc15', '🎯')
                   }
                 }
                 return { makes: s.makes + 1, attempts: s.attempts, streak: nextStreak }
@@ -5625,7 +5628,7 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
               🏀 <span className="font-bold">{hoopScore.makes}</span>/<span>{hoopScore.attempts}</span>
               {hoopScore.streak >= 3 && (
                 <span className={`ml-1 ${hoopScore.streak >= 7 ? 'text-red-400 animate-pulse' : hoopScore.streak >= 5 ? 'text-orange-400' : 'text-yellow-300'}`}>
-                  🔥 {hoopScore.streak}{hoopScore.streak >= 7 ? ' UNCONSCIOUS' : hoopScore.streak >= 5 ? ' ON FIRE' : ' HEATING UP'}
+                  🔥 {hoopScore.streak}{hoopScore.streak >= 7 ? ' COLD-BLOODED' : hoopScore.streak >= 5 ? ' HOT HAND' : ' GETTING HOT'}
                 </span>
               )}
               {hoopScore.attempts > 0 && (
