@@ -17,8 +17,17 @@ import { createPortal } from 'react-dom'
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { clone as cloneSkinnedMesh } from 'three/examples/jsm/utils/SkeletonUtils.js'
+// Phase 16.66 — PBR + HDR + bloom imports. RoomEnvironment is procedural
+// (no asset download required), generates a scene with arranged light
+// sources that PMREMGenerator samples into an env cubemap for IBL.
+// EffectComposer + UnrealBloomPass adds the AAA-style bloom on emissive
+// surfaces (rim, lights, score banners) and tone-mapped highlights.
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js'
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
 import { useRouter } from 'next/router'
-import { Music, X, Heart, Share2, Play, Pause, Volume2, Copy, Check, Paintbrush, Plus } from 'lucide-react'
+import { Music, X, Heart, Share2, Play, Pause, Volume2, Copy, Check, Paintbrush, Plus, UserCog } from 'lucide-react'
 import { toast } from 'react-toastify'
 import { FURNITURE_CATALOG, FURNITURE_CATEGORIES, filterByCategory, getPlacedFurniture, savePlacedFurniture, getFurnitureById, type PlacedFurniture, type FurnitureCategory } from 'lib/nodeverse/galleryFurniture'
 import { AudioPlayer } from 'components/AudioPlayer'
@@ -74,6 +83,44 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
 
   // Furniture state — declared before the scene-building useEffect that reads placedFurniture
   const [showCustomize, setShowCustomize] = useState(false)
+  // Phase 16.66 — Ready Player Me avatar modal. Drops in a rigged GLB
+  // that's Mixamo-compatible so it inherits every body animation we wire
+  // up later. RPM hub is hosted; we listen for the postMessage events
+  // it fires when the user exports their avatar.
+  const [showRpm, setShowRpm] = useState(false)
+  // Phase 16.66 — RPM postMessage bridge. The creator iframe emits
+  // structured JSON messages on the window; we filter for the
+  // `v1.avatar.exported` event, pull the GLB URL, merge it into the
+  // stored character config, then dispatch 'character-updated' so the
+  // active gym scene rebuilds the avatar with the new model. Same
+  // path the CharacterDesigner already uses, so no scene-side wiring
+  // changes needed.
+  useEffect(() => {
+    if (!showRpm) return
+    const onMsg = (ev: MessageEvent) => {
+      let payload: any = ev.data
+      if (typeof payload === 'string') {
+        try { payload = JSON.parse(payload) } catch { return }
+      }
+      if (!payload || payload.source !== 'readyplayerme') return
+      if (payload.eventName !== 'v1.avatar.exported') return
+      const url: string | undefined = payload?.data?.url
+      if (!url) return
+      try {
+        const raw = localStorage.getItem('soundchain_character')
+        const prev = raw ? JSON.parse(raw) : {}
+        const next = { ...prev, humanGlbUrl: url, aiGlbUrl: url, type: 'human' }
+        localStorage.setItem('soundchain_character', JSON.stringify(next))
+        window.dispatchEvent(new CustomEvent('character-updated', { detail: next }))
+        toast.success('Avatar loaded into the gym')
+      } catch (e) {
+        console.error('[GalleryRoom3D] RPM avatar save failed', e)
+      }
+      setShowRpm(false)
+    }
+    window.addEventListener('message', onMsg)
+    return () => window.removeEventListener('message', onMsg)
+  }, [showRpm])
   const [furnitureCategory, setFurnitureCategory] = useState<FurnitureCategory | 'all'>('all')
   // Phase 16.13 — gamepad connection state (HUD indicator)
   const [gamepadConnected, setGamepadConnected] = useState(false)
@@ -584,7 +631,42 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     renderer.shadowMap.enabled = true
     renderer.shadowMap.type = THREE.PCFSoftShadowMap
+    // Phase 16.66 — modern color pipeline. sRGB output + ACES filmic
+    // tonemapping = same color science 2K + GTA + most modern game engines
+    // use. Without these, MeshStandardMaterial colors read flat + over-
+    // saturated. With them, the floor reads as lacquered wood, the rim
+    // pops with proper highlight rolloff, and bloom doesn't blow out.
+    renderer.outputColorSpace = THREE.SRGBColorSpace
+    renderer.toneMapping = THREE.ACESFilmicToneMapping
+    renderer.toneMappingExposure = 1.05
     container.appendChild(renderer.domElement)
+
+    // Phase 16.66 — IBL via procedural RoomEnvironment. Adds image-based
+    // lighting that gives MeshStandardMaterial real reflection +
+    // ambient response without needing an HDR cubemap download.
+    const pmrem = new THREE.PMREMGenerator(renderer)
+    const envScene = new RoomEnvironment()
+    const envTexture = pmrem.fromScene(envScene, 0.04).texture
+    scene.environment = envTexture
+    // Don't override scene.background — themes set their own clear color
+    // / sky. Environment only drives material reflection + IBL.
+    pmrem.dispose()
+
+    // Phase 16.66 — Bloom + final composite. Same EffectComposer pipeline
+    // every modern three.js demo uses. UnrealBloomPass thresholds at 0.85
+    // so only properly emissive surfaces (rim, score banners, scanner
+    // lights) bloom; the floor + walls stay sharp.
+    const composer = new EffectComposer(renderer)
+    composer.setSize(w, h)
+    composer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+    composer.addPass(new RenderPass(scene, camera))
+    const bloomPass = new UnrealBloomPass(
+      new THREE.Vector2(w, h),
+      0.55,   // strength
+      0.55,   // radius
+      0.85,   // threshold
+    )
+    composer.addPass(bloomPass)
 
     // ─── Lighting ────────────────────────────────────────────
     const ambient = new THREE.AmbientLight(themeCfg.ambient, 0.6)
@@ -629,9 +711,14 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
       const woodTex = new THREE.CanvasTexture(woodCanvas)
       woodTex.wrapS = woodTex.wrapT = THREE.RepeatWrapping
       woodTex.repeat.set(6, 6)
-      floorMat = new THREE.MeshStandardMaterial({ map: woodTex, metalness: 0.1, roughness: 0.6 })
+      // Phase 16.66 — lacquered hardwood. Lower roughness + IBL means
+      // the wood reflects the gym lights for a glossy real-floor read.
+      // Higher envMapIntensity pushes the IBL contribution so the gloss
+      // is visible without blowing out the diffuse wood color.
+      floorMat = new THREE.MeshStandardMaterial({ map: woodTex, metalness: 0.05, roughness: 0.35, envMapIntensity: 1.4 })
     } else if (theme === 'blacktop') {
-      floorMat = new THREE.MeshStandardMaterial({ color: 0x1f1f1f, metalness: 0.02, roughness: 0.95 })
+      // Phase 16.66 — wet asphalt: slightly reflective, still rough
+      floorMat = new THREE.MeshStandardMaterial({ color: 0x1f1f1f, metalness: 0.05, roughness: 0.72, envMapIntensity: 0.8 })
     } else {
       floorMat = new THREE.MeshStandardMaterial({ color: themeCfg.floor, metalness: 0.6, roughness: 0.3 })
     }
@@ -740,9 +827,23 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         pole.position.set(0, 2, baseZ - 0.8 * dir)
         pole.castShadow = true
         scene.add(pole)
+        // Phase 16.66 — backboard now MeshPhysicalMaterial with clearcoat
+        // + transmission for proper glass refraction + reflection. Reads
+        // as real NBA tempered glass under IBL instead of flat white.
         const backboard = new THREE.Mesh(
           new THREE.BoxGeometry(2, 1.3, 0.1),
-          new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.92 }),
+          new THREE.MeshPhysicalMaterial({
+            color: 0xffffff,
+            transparent: true,
+            opacity: 0.6,
+            metalness: 0.0,
+            roughness: 0.05,
+            clearcoat: 1.0,
+            clearcoatRoughness: 0.05,
+            transmission: 0.65,
+            ior: 1.5,
+            envMapIntensity: 1.6,
+          }),
         )
         backboard.position.set(0, 3.8, baseZ - 0.7 * dir)
         backboard.castShadow = true
@@ -753,9 +854,13 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         )
         sqOutline.position.set(0, 3.7, baseZ - 0.65 * dir)
         scene.add(sqOutline)
+        // Phase 16.66 — emissiveIntensity bumped to 1.4 so the rim
+        // crosses the UnrealBloomPass threshold (0.85) and blooms like a
+        // properly-lit metal hoop under arena lights. Higher torus
+        // segment count for smoother specular highlight under IBL.
         const rim = new THREE.Mesh(
-          new THREE.TorusGeometry(0.35, 0.04, 8, 24),
-          new THREE.MeshStandardMaterial({ color: 0xea580c, emissive: 0xea580c, emissiveIntensity: 0.2, metalness: 0.7, roughness: 0.3 }),
+          new THREE.TorusGeometry(0.35, 0.04, 12, 32),
+          new THREE.MeshStandardMaterial({ color: 0xea580c, emissive: 0xea580c, emissiveIntensity: 1.4, metalness: 0.85, roughness: 0.2, envMapIntensity: 1.5 }),
         )
         const rimPos = new THREE.Vector3(0, 3.3, baseZ - 0.3 * dir)
         rim.position.copy(rimPos)
@@ -2870,12 +2975,35 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
           // Start Idle
           const idleAction = clipMap['idle']
           if (idleAction) idleAction.play()
+          // Phase 16.66 — Procedural shoot motion. Pre-resolve bone objects
+          // so the per-frame tick can compose with the live bone quaternion
+          // without doing a name lookup every frame.
+          const shootBoneObjects: Record<string, THREE.Bone | null> = {
+            armR: B.armR ? boneByName[B.armR] : null,
+            armL: B.armL ? boneByName[B.armL] : null,
+            forearmR: B.forearmR ? boneByName[B.forearmR] : null,
+            forearmL: B.forearmL ? boneByName[B.forearmL] : null,
+            upLegR: B.upLegR ? boneByName[B.upLegR] : null,
+            upLegL: B.upLegL ? boneByName[B.upLegL] : null,
+            legR: B.legR ? boneByName[B.legR] : null,
+            legL: B.legL ? boneByName[B.legL] : null,
+            spine: B.spine ? boneByName[B.spine] : null,
+            head: B.head ? boneByName[B.head] : null,
+          }
           const xbotState: any = {
             mixer,
             clips: clipMap,
             currentClip: 'idle',
             moveLockUntil: 0,
             defenseHeld: false,
+            shoot: {
+              active: false,
+              startMs: 0,
+              durationMs: 0,
+              moveType: '',
+              baseQuats: new Map<string, THREE.Quaternion>(),
+            },
+            shootBoneObjects,
           }
           // Phase 16.41 — Mixamo Xbot ships with 13 stock clips that are
           // already polished retargets: Idle, Walking, Running, Dance,
@@ -2912,20 +3040,52 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
             'jumpshot', 'dunk', 'layup', 'fadeaway', 'rebound', 'block',
             'crossover', 'jabstep', 'pumpfake',
           ])
+          // Phase 16.66 — Per-move bone deltas applied procedurally over
+          // the move duration via a bell-curve envelope (env = 4t(1-t)).
+          // Each entry is { boneKey: [eulerX, eulerY, eulerZ] at PEAK }.
+          // Composed in LIVE frame as `bone.quaternion = baseQuat × delta`
+          // where baseQuat is captured at the moment xbotState.play is
+          // called (idle pose at that frame). This bypasses the bind-frame
+          // composition trap that broke phases 16.42-16.64 — deltas are
+          // applied in the bone's CURRENT local frame, not in the bind
+          // frame, so rotations land where they're authored to land.
+          const SHOOT_DELTAS: Record<string, Record<string, [number, number, number]>> = {
+            jumpshot:  { armR: [-2.4, 0, 0.05], forearmR: [-0.5, 0, 0], armL: [-0.9, 0, 0.25], spine: [-0.08, 0, 0], head: [-0.15, 0, 0] },
+            three:     { armR: [-2.5, 0, 0.05], forearmR: [-0.4, 0, 0], armL: [-0.95, 0, 0.25], spine: [-0.10, 0, 0] },
+            layup:     { armR: [-2.4, 0, 0.10], forearmR: [-0.2, 0, 0], armL: [-0.8, 0, 0.2], upLegR: [-1.1, 0, 0], legR: [0.9, 0, 0], spine: [-0.10, 0, 0] },
+            dunk:      { armR: [-2.7, 0, -0.15], armL: [-2.7, 0, 0.15], forearmR: [-0.25, 0, 0], forearmL: [-0.25, 0, 0], upLegR: [-0.9, 0, 0], upLegL: [-0.9, 0, 0], legR: [1.3, 0, 0], legL: [1.3, 0, 0], spine: [-0.12, 0, 0] },
+            fadeaway:  { armR: [-2.4, 0, 0.05], forearmR: [-0.4, 0, 0], spine: [-0.45, 0, 0], head: [-0.25, 0, 0] },
+            rebound:   { armR: [-2.7, 0, -0.2], armL: [-2.7, 0, 0.2], upLegR: [-0.8, 0, 0], upLegL: [-0.8, 0, 0], legR: [1.2, 0, 0], legL: [1.2, 0, 0] },
+            block:     { armR: [-2.7, 0, -0.05], forearmR: [-0.15, 0, 0], upLegR: [-0.7, 0, 0], upLegL: [-0.7, 0, 0], legR: [1.0, 0, 0], legL: [1.0, 0, 0] },
+            pass:      { armR: [-1.0, 0, -0.35], armL: [-1.0, 0, 0.35], forearmR: [-0.7, 0, 0], forearmL: [-0.7, 0, 0] },
+            crossover: { spine: [0, 0, 0.45], armR: [-0.4, -0.35, -0.35], armL: [-0.4, 0.35, 0.35] },
+            pumpfake:  { armR: [-1.4, 0, 0], forearmR: [-0.55, 0, 0], armL: [-0.4, 0, 0.2] },
+            jabstep:   { upLegR: [-0.5, 0, 0], legR: [0.35, 0, 0], spine: [-0.15, 0, 0] },
+          }
+          xbotState.shootDeltas = SHOOT_DELTAS
           xbotState.play = (clipName: string, durationMs: number) => {
-            // Phase 16.65 — body anim DISABLED for basketball moves.
-            // Phases 16.42–16.64 (7 rounds) all tried to layer authored
-            // delta-quat clips on top of idle. Every variant produced
-            // T-pose freezes or kick-up gestures because deltas authored
-            // in bind-frame axes don't compose correctly with the live
-            // idle pose (q_idle × q_delta rotates around the wrong axis
-            // once idle has already rotated the shoulder). Real fix is
-            // Mixamo basketball retargets via the anvil norman tunnel —
-            // banked behind that infra. Until it lands, the player STAYS
-            // in idle through every move. The ball arc + player vertical
-            // leap carry the visual; the body stays calm and readable
-            // instead of broken. Lock + SFX still fire.
+            // Phase 16.66 — KICK OFF procedural shoot motion. Replaces the
+            // Phase 16.65 stub (which left the player in idle). Now captures
+            // the LIVE bone quaternions as the baseline at this exact frame,
+            // then per-frame composes `bone.quaternion = base × delta(t)`
+            // where delta(t) ramps from identity → peak → identity via a
+            // bell curve. Math composes in the bone's LIVE local frame so
+            // the same numeric rotation produces the visual result it
+            // describes — no bind-frame axis assumption.
             const key = clipName.toLowerCase()
+            const deltas = SHOOT_DELTAS[key]
+            if (deltas) {
+              const shoot = xbotState.shoot
+              shoot.active = true
+              shoot.startMs = performance.now()
+              shoot.durationMs = durationMs
+              shoot.moveType = key
+              shoot.baseQuats.clear()
+              for (const boneKey of Object.keys(deltas)) {
+                const bone = xbotState.shootBoneObjects[boneKey]
+                if (bone) shoot.baseQuats.set(boneKey, bone.quaternion.clone())
+              }
+            }
             xbotState.moveLockUntil = performance.now() + durationMs
             if (SQUEAK_MOVES.has(key)) playSqueak()
           }
@@ -3388,6 +3548,9 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
       camera.aspect = cw / ch
       camera.updateProjectionMatrix()
       renderer.setSize(cw, ch)
+      // Phase 16.66 — keep composer + bloom pass in sync with viewport
+      composer.setSize(cw, ch)
+      bloomPass.resolution.set(cw, ch)
     }
     window.addEventListener('resize', onResize)
     const fitTimer = setTimeout(onResize, 200)
@@ -3813,6 +3976,40 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
 
       if (xbot?.mixer) {
         xbot.mixer.update(dtSec)
+        // Phase 16.66 — Procedural shoot-motion overlay. Runs AFTER the
+        // mixer has applied idle's keyframes for this frame, then OVERWRITES
+        // the shoot-relevant bones with `baseQuat × delta(env)` where:
+        //   env = 4t(1-t)  — bell curve, peaks at t=0.5
+        //   baseQuat       — captured at xbotState.play call time (idle
+        //                    pose at the moment shoot fired)
+        //   delta          — quat from per-move Euler triplet × env so it
+        //                    grows from identity → peak → identity
+        // Composes in LIVE local frame. When t >= 1, deactivate so idle
+        // resumes driving these bones via the mixer.
+        const shoot = xbot.shoot
+        if (shoot?.active) {
+          const t = Math.min(1, (now - shoot.startMs) / shoot.durationMs)
+          if (t >= 1) {
+            shoot.active = false
+          } else {
+            const env = 4 * t * (1 - t)
+            const deltas = xbot.shootDeltas?.[shoot.moveType]
+            if (deltas) {
+              const _se = new THREE.Euler()
+              const _sq = new THREE.Quaternion()
+              for (const boneKey in deltas) {
+                const bone = xbot.shootBoneObjects[boneKey] as THREE.Bone | null
+                if (!bone) continue
+                const baseQ = shoot.baseQuats.get(boneKey)
+                if (!baseQ) continue
+                const [ex, ey, ez] = deltas[boneKey]
+                _se.set(ex * env, ey * env, ez * env)
+                _sq.setFromEuler(_se)
+                bone.quaternion.copy(baseQ).multiply(_sq)
+              }
+            }
+          }
+        }
         // Phase 16.43 — ambient DRIBBLE cycle while ball is held + player
         // not airborne. ~0.55s cadence (typical pro dribble rate). Cuts
         // out during shooting moves so the audio doesn't compete with
@@ -4322,7 +4519,8 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
       })
       if (closestPlaying !== nowPlaying) setNowPlaying(closestPlaying)
 
-      renderer.render(scene, camera)
+      // Phase 16.66 — render through EffectComposer for bloom pipeline
+      composer.render()
     }
     animate()
 
@@ -5160,6 +5358,13 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         >
           <Paintbrush className="w-3 h-3" /> CUSTOMIZE
         </button>
+        {/* Phase 16.66 — Ready Player Me avatar */}
+        <button
+          onClick={() => setShowRpm(true)}
+          className="flex items-center gap-1 px-2.5 py-2 rounded-lg bg-cyan-500/20 border border-cyan-500/40 text-cyan-400 text-[9px] font-mono font-bold hover:bg-cyan-500/30 transition backdrop-blur active:scale-95"
+        >
+          <UserCog className="w-3 h-3" /> AVATAR
+        </button>
       </div>
 
       {/* Furniture placement count — dismissable */}
@@ -5170,6 +5375,47 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         </div>
       )}
 
+      {/* Phase 16.66 — READY PLAYER ME MODAL. Hosts the RPM creator in
+          an iframe; RPM postMessages back the rigged GLB URL when the
+          user exports. We save it as humanGlbUrl on the local character
+          config and dispatch character-updated so buildAvatar reloads
+          the gym with the new avatar. The skeleton is Mixamo-compatible
+          so any animations we wire up later inherit cleanly. */}
+      {showRpm && (
+        <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => setShowRpm(false)}>
+          <div className="w-full max-w-2xl bg-[#0a0f1f] border border-cyan-500/30 rounded-t-xl sm:rounded-xl shadow-2xl overflow-hidden max-h-[85vh] flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-4 py-3 border-b border-cyan-500/20 bg-black/40">
+              <div className="flex items-center gap-2">
+                <UserCog className="w-4 h-4 text-cyan-400" />
+                <span className="text-xs font-mono font-bold text-cyan-400">READY PLAYER ME — AVATAR</span>
+              </div>
+              <button onClick={() => setShowRpm(false)} className="p-1 hover:bg-white/10 rounded"><X className="w-4 h-4 text-gray-400" /></button>
+            </div>
+            <div className="text-[10px] font-mono text-gray-400 px-4 py-2 border-b border-white/5 bg-black/20">
+              Design an avatar. When you tap "Done" in the creator, your rigged 3D model loads into the gym automatically.
+            </div>
+            <iframe
+              ref={(el) => {
+                if (!el) return
+                // RPM frameApi messages — request the avatar.exported event
+                const onLoad = () => {
+                  try {
+                    el.contentWindow?.postMessage(
+                      JSON.stringify({ target: 'readyplayerme', type: 'subscribe', eventName: 'v1.**' }),
+                      '*',
+                    )
+                  } catch {}
+                }
+                el.addEventListener('load', onLoad, { once: true })
+              }}
+              src="https://demo.readyplayer.me/avatar?frameApi&clearCache"
+              allow="camera *; microphone *; clipboard-write"
+              className="flex-1 w-full min-h-[480px] bg-black"
+              title="Ready Player Me avatar creator"
+            />
+          </div>
+        </div>
+      )}
       {/* CUSTOMIZE MODAL — furniture catalog */}
       {showCustomize && (
         <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setShowCustomize(false)}>
