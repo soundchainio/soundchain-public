@@ -58,6 +58,7 @@ import { useExploreGenreCounts } from 'hooks/useExploreGenreCountsDirect'  // Ph
 import { useFavoriteTracks as useFavoriteTracksDirect } from 'hooks/useFavoriteTracksDirect'  // Phase 7e — Vercel-direct
 import { useProfileVerificationRequest as useProfileVerificationRequestQuery } from 'hooks/useProfileVerificationDirect'  // Phase 7e — Vercel-direct
 import { useExploreUsersSlim } from 'hooks/useExploreUsersSlimDirect'  // Phase 7e — Vercel-direct
+import { useExploreTracksSlim } from 'hooks/useExploreTracksSlimDirect'  // Phase 7e — Vercel-direct
 import { SelectToApolloQuery, SortListingItem } from 'lib/apollo/sorting'
 import { StateProvider } from 'contexts'
 import { ModalProvider } from 'contexts/ModalContext'
@@ -1944,15 +1945,11 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     (chat: any) => (chat.profile?.id || chat.id) === selectedChatId
   )?.profile
 
-  // Explore Tracks Query - search for tracks
-  // Load 200 tracks at once for full genre browsing — genre filtering done client-side
-  const { data: exploreTracksData, loading: exploreTracksLoading, fetchMore: fetchMoreExploreTracks } = useExploreTracksSlimQuery({
-    variables: {
-      search: debouncedSearchQuery.trim() || undefined,
-      page: { first: 200 }
-    },
+  // Explore Tracks — Phase 7e Vercel-direct
+  const { data: exploreTracksData, loading: exploreTracksLoading, fetchMore: fetchMoreExploreTracks } = useExploreTracksSlim({
+    first: 200,
+    search: debouncedSearchQuery.trim() || undefined,
     skip: selectedView !== 'explore',
-    fetchPolicy: 'cache-first',
   })
 
   // Genre counts for explore pills — Phase 7e Vercel-direct
