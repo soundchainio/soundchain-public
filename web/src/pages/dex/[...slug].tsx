@@ -52,7 +52,7 @@ import { DexNavBar } from 'components/DexNavBar'
 import { ScrollArea } from 'components/ui/scroll-area'
 import { Separator } from 'components/ui/separator'
 import { useAudioPlayerContext, Song } from 'hooks/useAudioPlayer'
-import { useMeQuery, useGroupedTracksQuery, useTracksQuery, useTracksLazyQuery, useListingItemsQuery, useExploreUsersQuery, useExploreTracksQuery, useExploreUsersSlimQuery, useExploreTracksSlimQuery, useFollowProfileMutation, useUnfollowProfileMutation, useTrackQuery, usePostQuery, useProfileQuery, useProfileByHandleQuery, useChatsQuery, useChatHistoryLazyQuery, useSendMessageMutation, useResetUnreadMessageCountMutation, useNotificationsQuery, useToggleFavoriteMutation, useFollowersQuery, useFollowingQuery, useFollowersLazyQuery, useFollowingLazyQuery, useUpdateHandleMutation, useUpdateProfileDisplayNameMutation, useExploreUsersLazyQuery, SortTrackField, SortOrder, useCreateProfileVerificationRequestMutation, ProfileVerificationStatusType } from 'lib/graphql'
+import { useMeQuery, useGroupedTracksQuery, useTracksQuery, useTracksLazyQuery, useListingItemsQuery, useExploreUsersQuery, useExploreTracksQuery, useExploreUsersSlimQuery, useExploreTracksSlimQuery, useFollowProfileMutation, useUnfollowProfileMutation, useTrackQuery, usePostQuery, useProfileQuery, useChatsQuery, useChatHistoryLazyQuery, useSendMessageMutation, useResetUnreadMessageCountMutation, useNotificationsQuery, useToggleFavoriteMutation, useFollowersQuery, useFollowingQuery, useFollowersLazyQuery, useFollowingLazyQuery, useUpdateHandleMutation, useUpdateProfileDisplayNameMutation, useExploreUsersLazyQuery, SortTrackField, SortOrder, useCreateProfileVerificationRequestMutation, ProfileVerificationStatusType } from 'lib/graphql'
 import { useMaticUsd as useMaticUsdQuery } from 'hooks/useMaticUsdDirect'  // Phase 7e — Vercel-direct
 import { useExploreGenreCounts } from 'hooks/useExploreGenreCountsDirect'  // Phase 7e — Vercel-direct
 import { useFavoriteTracks as useFavoriteTracksDirect } from 'hooks/useFavoriteTracksDirect'  // Phase 7e — Vercel-direct
@@ -60,6 +60,7 @@ import { useProfileVerificationRequest as useProfileVerificationRequestQuery } f
 import { useExploreUsersSlim } from 'hooks/useExploreUsersSlimDirect'  // Phase 7e — Vercel-direct
 import { useExploreTracksSlim } from 'hooks/useExploreTracksSlimDirect'  // Phase 7e — Vercel-direct
 import { useProfileStreamingRewards, useMyListenerRewards } from 'hooks/useProfileRewardsDirect'  // Phase 7e — Vercel-direct
+import { useProfileByHandle } from 'hooks/useProfileByHandleDirect'  // Phase 7e — Vercel-direct
 import { SelectToApolloQuery, SortListingItem } from 'lib/apollo/sorting'
 import { StateProvider } from 'contexts'
 import { ModalProvider } from 'contexts/ModalContext'
@@ -2030,11 +2031,10 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     fetchPolicy: 'cache-and-network',
   })
 
-  // Profile By Handle Query - fetch profile by userHandle when viewing /dex/users/[handle]
-  const { data: profileByHandleData, loading: profileByHandleLoading, error: profileByHandleError } = useProfileByHandleQuery({
-    variables: { handle: routeId || '' },
+  // Profile By Handle — Phase 7e Vercel-direct
+  const { data: profileByHandleData, loading: profileByHandleLoading, error: profileByHandleError } = useProfileByHandle({
+    handle: routeId || '',
     skip: selectedView !== 'profile' || !routeId || routeType !== 'users',
-    fetchPolicy: 'cache-and-network',
   })
 
   // Atlas REST fallback when GraphQL profileByHandle fails OR returns null

@@ -10,11 +10,11 @@ import { createApolloClient } from 'lib/apollo'
 import {
   ProfileByHandleDocument,
   ProfileByHandleQuery,
-  useProfileByHandleQuery,
   useGroupedTracksQuery,
   SortTrackField,
   SortOrder,
 } from 'lib/graphql'
+import { useProfileByHandle as useProfileByHandleQuery } from 'hooks/useProfileByHandleDirect'  // Phase 7e — Vercel-direct
 import { useMe } from 'hooks/useMe'
 import { Logo } from 'icons/Logo'
 import { ManagerGreeting } from 'components/manager/ManagerGreeting'
@@ -93,7 +93,7 @@ export default function ManagerPage({ ogData, handle }: ManagerPageProps) {
   const pageHandle = (router.query.handle as string) || handle
 
   const { data: profileData, loading: profileLoading } = useProfileByHandleQuery({
-    variables: { handle: pageHandle },
+    handle: pageHandle,
     skip: !pageHandle,
   })
   const profile = profileData?.profileByHandle
