@@ -4587,6 +4587,47 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
           } else {
             ;(ballRef as any).lastDribble = 0
           }
+          // Phase 16.74 — STEAL MECHANIC. When the OPPONENT character is
+          // within close-defense range (<1.0u) of the ball carrier, every
+          // ~1s tick a difficulty-tuned steal chance flips possession.
+          // Closer + slower carrier = higher steal odds. Adds a real
+          // defensive ceiling that crossovers + spins help you escape.
+          if (!gameOver && !pausedRef.current) {
+            const defState = (scene.userData as any).defender
+            const defenderG = defState?.group
+            if (defenderG) {
+              const sdx = carrier.position.x - defenderG.position.x
+              const sdz = carrier.position.z - defenderG.position.z
+              const stealDist = Math.hypot(sdx, sdz)
+              if (stealDist < 1.0) {
+                if (!(ballRef as any).lastStealCheck) (ballRef as any).lastStealCheck = 0
+                ;(ballRef as any).lastStealCheck += dtSec
+                if ((ballRef as any).lastStealCheck > 1.0) {
+                  ;(ballRef as any).lastStealCheck = 0
+                  const diff = getDiff()
+                  // base steal chance scales with difficulty; closer = bonus
+                  const proximityBonus = (1.0 - stealDist) * 0.20
+                  const stealChance = (diff.blockChance * 0.4) + proximityBonus
+                  if (Math.random() < stealChance) {
+                    // Knock the ball loose to the opposite side
+                    const flipOwner = owner === 'player' ? 'defender' : 'player'
+                    ;(ballState as any).owner = flipOwner
+                    if (defState) {
+                      defState.mode = flipOwner === 'defender' ? 'drive' : 'guard'
+                      defState.shootTimer = flipOwner === 'defender' ? diff.shootTimer : 0
+                    }
+                    speak("STOLEN!", { pitch: 0.95, rate: 1.2 })
+                    triggerBigPlay('STOLEN!', '#facc15', '⚡')
+                    triggerCameraShake(0.18, 0.2)
+                    playSqueak()
+                    setHoopScore((s) => ({ ...s, streak: 0 }))
+                  }
+                }
+              } else {
+                ;(ballRef as any).lastStealCheck = 0
+              }
+            }
+          }
         } else {
           // Physics tick (gravity + velocity integration + score detection)
           ;(scene.userData as any).gravity(dtSec)
