@@ -52,7 +52,9 @@ import { DexNavBar } from 'components/DexNavBar'
 import { ScrollArea } from 'components/ui/scroll-area'
 import { Separator } from 'components/ui/separator'
 import { useAudioPlayerContext, Song } from 'hooks/useAudioPlayer'
-import { useMeQuery, useGroupedTracksQuery, useTracksQuery, useTracksLazyQuery, useListingItemsQuery, useExploreUsersQuery, useExploreTracksQuery, useExploreUsersSlimQuery, useExploreTracksSlimQuery, useExploreGenreCountsQuery, useFollowProfileMutation, useUnfollowProfileMutation, useTrackQuery, usePostQuery, useProfileQuery, useProfileByHandleQuery, useChatsQuery, useChatHistoryLazyQuery, useSendMessageMutation, useResetUnreadMessageCountMutation, useFavoriteTracksQuery, useNotificationsQuery, useMaticUsdQuery, useToggleFavoriteMutation, useFollowersQuery, useFollowingQuery, useFollowersLazyQuery, useFollowingLazyQuery, useUpdateHandleMutation, useUpdateProfileDisplayNameMutation, useExploreUsersLazyQuery, SortTrackField, SortOrder, useCreateProfileVerificationRequestMutation, useProfileVerificationRequestQuery, ProfileVerificationStatusType } from 'lib/graphql'
+import { useMeQuery, useGroupedTracksQuery, useTracksQuery, useTracksLazyQuery, useListingItemsQuery, useExploreUsersQuery, useExploreTracksQuery, useExploreUsersSlimQuery, useExploreTracksSlimQuery, useFollowProfileMutation, useUnfollowProfileMutation, useTrackQuery, usePostQuery, useProfileQuery, useProfileByHandleQuery, useChatsQuery, useChatHistoryLazyQuery, useSendMessageMutation, useResetUnreadMessageCountMutation, useFavoriteTracksQuery, useNotificationsQuery, useToggleFavoriteMutation, useFollowersQuery, useFollowingQuery, useFollowersLazyQuery, useFollowingLazyQuery, useUpdateHandleMutation, useUpdateProfileDisplayNameMutation, useExploreUsersLazyQuery, SortTrackField, SortOrder, useCreateProfileVerificationRequestMutation, useProfileVerificationRequestQuery, ProfileVerificationStatusType } from 'lib/graphql'
+import { useMaticUsd as useMaticUsdQuery } from 'hooks/useMaticUsdDirect'  // Phase 7e — Vercel-direct
+import { useExploreGenreCounts } from 'hooks/useExploreGenreCountsDirect'  // Phase 7e — Vercel-direct
 import { SelectToApolloQuery, SortListingItem } from 'lib/apollo/sorting'
 import { StateProvider } from 'contexts'
 import { ModalProvider } from 'contexts/ModalContext'
@@ -1955,10 +1957,9 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     fetchPolicy: 'cache-first',
   })
 
-  // Genre counts for explore pills (separate lightweight query)
-  const { data: genreCountsData } = useExploreGenreCountsQuery({
+  // Genre counts for explore pills — Phase 7e Vercel-direct
+  const { data: genreCountsData } = useExploreGenreCounts({
     skip: selectedView !== 'explore',
-    fetchPolicy: 'cache-first',
   })
 
   // Favorite Tracks Query - for Library view AND Tracks Collection modal
