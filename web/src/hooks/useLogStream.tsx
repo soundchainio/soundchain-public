@@ -11,7 +11,7 @@
  * - Minimum 30 seconds playback to qualify as a stream
  */
 
-import { gql, useMutation, useLazyQuery } from '@apollo/client'
+import { gql, useMutation } from '@apollo/client'  // Phase 7e — scid lookup migrated to /api/tracks/scid
 import { useCallback, useRef, useState } from 'react'
 
 // GraphQL mutation to log a stream - WIN-WIN returns both rewards!
@@ -29,18 +29,7 @@ const LOG_STREAM_MUTATION = gql`
   }
 `
 
-// GraphQL query to get SCid for a track
-const GET_SCID_BY_TRACK_QUERY = gql`
-  query GetScidByTrack($trackId: String!) {
-    scidByTrack(trackId: $trackId) {
-      id
-      scid
-      trackId
-      streamCount
-      ogunRewardsEarned
-    }
-  }
-`
+// Phase 7e — scidByTrack now lives at /api/tracks/scid (Vercel-direct)
 
 interface LogStreamInput {
   scid: string
@@ -97,19 +86,20 @@ export function useLogStream(options: UseLogStreamOptions = {}) {
   const playStartTimes = useRef<Map<string, number>>(new Map())
 
   const [logStreamMutation] = useMutation(LOG_STREAM_MUTATION)
-  const [getScidByTrack] = useLazyQuery(GET_SCID_BY_TRACK_QUERY)
 
   /**
-   * Get SCid for a track (with caching)
+   * Get SCid for a track (with caching). Phase 7e — Vercel-direct.
+   * /api/tracks/scid replaces the Apollo scidByTrack query so streaming
+   * reward logging doesn't hit Lambda on every track change.
    */
   const getScidForTrack = useCallback(async (trackId: string): Promise<string | null> => {
-    // Check cache first
     if (scidCache.has(trackId)) {
       return scidCache.get(trackId) || null
     }
-
     try {
-      const { data } = await getScidByTrack({ variables: { trackId } })
+      const r = await fetch(`/api/tracks/scid?trackId=${encodeURIComponent(trackId)}`, { credentials: 'include' })
+      if (!r.ok) return null
+      const data = await r.json()
       const scid = data?.scidByTrack?.scid
       if (scid) {
         scidCache.set(trackId, scid)
@@ -118,9 +108,8 @@ export function useLogStream(options: UseLogStreamOptions = {}) {
     } catch (err) {
       console.warn('[useLogStream] Failed to get SCid for track:', trackId, err)
     }
-
     return null
-  }, [getScidByTrack])
+  }, [])
 
   /**
    * Start tracking playback time for a track
