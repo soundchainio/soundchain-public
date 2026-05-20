@@ -220,6 +220,10 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
   type BigPlayBanner = { id: number; text: string; color: string; emoji: string; bornAt: number }
   const [bigPlay, setBigPlay] = useState<BigPlayBanner | null>(null)
   const bigPlayIdRef = useRef(0)
+  // Phase 16.70 — 2K shot meter. Fills during the shot's jump arc.
+  // Perfect window = 70-85% fill = green burst at release. Hidden when idle.
+  const [shotMeter, setShotMeter] = useState<{ active: boolean; progress: number; quality: 'early' | 'good' | 'perfect' | 'late' } | null>(null)
+  const shotMeterRef = useRef<{ startMs: number; durationMs: number } | null>(null)
   // Phase 16.59 — difficulty selector affects defender AI
   type Difficulty = 'easy' | 'normal' | 'hard'
   const [difficulty, setDifficulty] = useState<Difficulty>('normal')
@@ -1340,6 +1344,11 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         // Phase 16.53 — every shot starts game clocks + resets shot clock
         clocksRunningRef.current = true
         shotClockRef.current = 24
+        // Phase 16.70 — shot meter starts NOW, ends at release frame
+        const _meterStart = performance.now()
+        const _meterDur = jumpStateBG.duration * jumpStateBG.ballRelease * 1000
+        shotMeterRef.current = { startMs: _meterStart, durationMs: _meterDur }
+        setShotMeter({ active: true, progress: 0, quality: 'early' })
         // Phase 16.41 — play the matching XBot body clip (durations match
         // jumpStateBG.duration so the body anim and the trajectory line up;
         // dunk = 950ms hangtime now matches Mixamo Jump clip cleanly)
@@ -2750,6 +2759,26 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
           // outlier -Z convention). One axis convention = everything aligns:
           // model faces where it walks, ball sits in front of the model.
           avatarHolder.add(model)
+
+          // Phase 16.70 — name badge floating above player's head (2K style).
+          // CanvasTexture w/ handle + cyan tint, mounted as a billboard
+          // Sprite so it tracks the camera angle automatically.
+          const myChar = getStoredCharacter()
+          const myName = ((myChar as any).name || 'YOU').toString().slice(0, 12).toUpperCase()
+          const nameCanvas = document.createElement('canvas')
+          nameCanvas.width = 256; nameCanvas.height = 96
+          const nctx = nameCanvas.getContext('2d')!
+          nctx.fillStyle = 'rgba(0,0,0,0.55)'
+          nctx.fillRect(0, 0, 256, 96)
+          nctx.fillStyle = '#22d3ee'
+          nctx.font = 'bold 56px monospace'
+          nctx.textAlign = 'center'
+          nctx.fillText(myName, 128, 66)
+          const nameTex = new THREE.CanvasTexture(nameCanvas)
+          const nameSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: nameTex, transparent: true, depthTest: false }))
+          nameSprite.scale.set(1.4, 0.5, 1)
+          nameSprite.position.set(0, 2.55, 0)
+          avatarHolder.add(nameSprite)
 
           // Phase 16.67 — Source animations from XBot regardless of which
           // mesh is rendered. Retarget track names so XBot's clips bind to
@@ -4540,6 +4569,24 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         }
       }
 
+      // Phase 16.70 — shot meter tick. Fills from 0→100% over release window.
+      // Quality bands: 0-50 early, 50-70 good, 70-90 perfect, 90-100+ late.
+      // At 100% the meter expires + announces quality flash (handled below).
+      if (shotMeterRef.current) {
+        const m = shotMeterRef.current
+        const elapsed = now - m.startMs
+        const progress = Math.min(1.1, elapsed / m.durationMs)
+        let quality: 'early' | 'good' | 'perfect' | 'late' = 'early'
+        if (progress >= 0.9) quality = 'late'
+        else if (progress >= 0.70) quality = 'perfect'
+        else if (progress >= 0.50) quality = 'good'
+        setShotMeter({ active: true, progress, quality })
+        if (progress >= 1.1) {
+          shotMeterRef.current = null
+          setTimeout(() => setShotMeter(null), 350)
+        }
+      }
+
       // Phase 16.53 — game clocks tick. Shot clock decrements while
       // running; session timer counts up. Sync to React state every 0.25s
       // (not every frame) to keep React renders quiet. Shot clock
@@ -4791,6 +4838,37 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
           100% { opacity: 0; transform: scale(0.95) translateY(8px); }
         }
       `}</style>
+      {/* Phase 16.70 — 2K-style shot meter. Vertical arc bar above the
+          player during shot animation. Fills from gray → green at the
+          perfect-release window. Mirrors NBA 2K's signature shot timing UI. */}
+      {shotMeter && shotMeter.active && (theme === 'gym' || theme === 'blacktop') && (
+        <div className="absolute left-1/2 top-[35%] -translate-x-1/2 z-30 pointer-events-none flex flex-col items-center">
+          <div className="relative w-3 h-32 bg-black/60 rounded-full border border-white/30 overflow-hidden">
+            <div
+              className="absolute bottom-0 left-0 right-0 transition-none"
+              style={{
+                height: `${Math.min(100, shotMeter.progress * 100)}%`,
+                backgroundColor: shotMeter.quality === 'perfect'
+                  ? '#22c55e'
+                  : shotMeter.quality === 'good'
+                  ? '#facc15'
+                  : shotMeter.quality === 'late'
+                  ? '#ef4444'
+                  : '#94a3b8',
+                boxShadow: shotMeter.quality === 'perfect'
+                  ? '0 0 20px #22c55e, 0 0 40px #22c55e'
+                  : 'none',
+              }}
+            />
+            {/* Perfect-window marker (70-90% band) */}
+            <div className="absolute left-0 right-0 border-y border-white/40" style={{ top: '10%', bottom: '15%' }} />
+          </div>
+          {shotMeter.quality === 'perfect' && (
+            <div className="text-[10px] font-mono font-bold text-green-400 mt-1 animate-pulse drop-shadow-[0_0_8px_rgba(34,197,94,0.8)]">PERFECT</div>
+          )}
+        </div>
+      )}
+
       {/* Phase 16.58 — BIG PLAY CAM banner: full-screen flash on signature
           moments. Different colors per play type. CSS keyframe handles
           entrance burst + hold + exit. */}
