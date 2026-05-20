@@ -42,9 +42,39 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const user = await db.collection('users').findOne({ _id: new ObjectId(userId) })
     if (!user) return res.status(200).json({ me: null })
 
-    const profile = user.profileId
+    let profile = user.profileId
       ? await db.collection('profiles').findOne({ _id: new ObjectId(user.profileId) })
       : null
+
+    // Half-baked signup backfill: some users (Magic-bypass registration path
+    // pre-May 17 hotfix) ended up with a `users` doc but no `profiles` doc,
+    // which hid the composer on /nodes + broke wall renders. Create a
+    // minimal profile on first /api/me hit so the rest of the app behaves
+    // as if registration completed cleanly.
+    if (!profile) {
+      const now = new Date()
+      const newProfile = {
+        userHandle: user.handle || '',
+        displayName: user.displayName || user.handle || '',
+        profilePicture: null,
+        coverPicture: null,
+        socialMedias: {},
+        favoriteGenres: [],
+        musicianTypes: [],
+        bio: '',
+        followerCount: 0,
+        followingCount: 0,
+        tracksCount: 0,
+        createdAt: now,
+        updatedAt: now,
+      }
+      const ins = await db.collection('profiles').insertOne(newProfile as any)
+      await db.collection('users').updateOne(
+        { _id: user._id },
+        { $set: { profileId: ins.insertedId, updatedAt: now } },
+      )
+      profile = { _id: ins.insertedId, ...newProfile } as any
+    }
 
     const me = {
       id: user._id.toString(),

@@ -595,7 +595,12 @@ export default function NodesPage() {
             {/* 24hr Stories/Reels — matches dex schema feed */}
             <StoriesBar />
 
-            {me?.profile && (
+            {/* Composer gate relaxed from me?.profile → me. Some half-baked
+                signups (Magic bypass path pre-May 17 hotfix) end up with a
+                user row but no profile doc; the inner PostFormTimeline
+                handles missing-profile gracefully and /api/me auto-creates
+                a minimal profile on first visit. */}
+            {me && (
               <div className="mb-2">
                 <button
                   onClick={() => setComposerOpen(o => !o)}
