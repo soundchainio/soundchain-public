@@ -5,7 +5,8 @@ import { HeartFilled } from 'icons/HeartFilled';
 import { Matic } from 'icons/Matic';
 import { Pause } from 'icons/Pause';
 import { Play } from 'icons/Play';
-import { ListingItemWithPrice, Maybe, Track, TrackWithListingItem, useMaticUsdQuery } from 'lib/graphql';
+import { ListingItemWithPrice, Maybe, Track, TrackWithListingItem } from 'lib/graphql';
+import { useMaticUsd as useMaticUsdQuery } from 'hooks/useMaticUsdDirect';  // Phase 7e — Vercel-direct
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useRouter } from 'next/router';

@@ -1,6 +1,6 @@
 import classNames from 'classnames'
 import { Matic as MaticIcon } from 'icons/Matic'
-import { useMaticUsdQuery } from 'lib/graphql'
+import { useMaticUsd } from 'hooks/useMaticUsdDirect'  // Phase 7e — Vercel-direct
 import { currency, fixedDecimals } from 'utils/format'
 
 interface Props {
@@ -11,7 +11,7 @@ interface Props {
 }
 
 export const Matic = ({ value = '', truncate, className, variant }: Props) => {
-  const { data: maticUsd } = useMaticUsdQuery()
+  const { data: maticUsd } = useMaticUsd()
   const maticPrice = parseFloat(maticUsd?.maticUsd || '0') || 0
   const numValue = parseFloat(value.toString()) || 0
   const currencyValue = currency(numValue * maticPrice)

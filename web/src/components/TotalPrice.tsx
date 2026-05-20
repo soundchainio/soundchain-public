@@ -1,7 +1,7 @@
 import { Matic } from 'components/Matic'
 import { Ogun } from 'components/Ogun'
 import { useMaxGasFee } from 'hooks/useMaxGasFee'
-import { useMaticUsdQuery } from 'lib/graphql'
+import { useMaticUsd as useMaticUsdQuery } from 'hooks/useMaticUsdDirect'  // Phase 7e — Vercel-direct
 import { currency, fixedDecimals } from 'utils/format'
 
 interface TotalPriceProps {
