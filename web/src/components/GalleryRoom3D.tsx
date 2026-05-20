@@ -27,11 +27,11 @@ import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
 import { useRouter } from 'next/router'
-import { Music, X, Heart, Share2, Play, Pause, Volume2, Copy, Check, Paintbrush, Plus, UserCog } from 'lucide-react'
+import { Music, X, Heart, Share2, Play, Pause, Volume2, Copy, Check, Paintbrush, Plus, UserCog, Sparkles } from 'lucide-react'
 import { toast } from 'react-toastify'
 import { FURNITURE_CATALOG, FURNITURE_CATEGORIES, filterByCategory, getPlacedFurniture, savePlacedFurniture, getFurnitureById, type PlacedFurniture, type FurnitureCategory } from 'lib/nodeverse/galleryFurniture'
 import { AudioPlayer } from 'components/AudioPlayer'
-import { getStoredCharacter, type CharacterConfig } from 'components/CharacterDesigner'
+import { CharacterDesigner, getStoredCharacter, type CharacterConfig } from 'components/CharacterDesigner'
 import { connectAsHost, connectAsGuest, type GymPeer, type GymStateMsg, type GymEventMsg } from 'lib/gym/multiplayer'
 import { detectPlatform, onGamepadChange, type PlatformInfo } from 'lib/platformDetect'
 
@@ -88,6 +88,11 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
   // up later. RPM hub is hosted; we listen for the postMessage events
   // it fires when the user exports their avatar.
   const [showRpm, setShowRpm] = useState(false)
+  // Phase 16.67 — Character Designer modal. Previously only mounted in
+  // Explore3DScene, so gym/blacktop users had no entry point to AI BUILD
+  // (Lucy SDXL + TripoSR on anvil RTX 5000). Now lives inside the gym
+  // too, gated by the new DESIGN pill in the cluster.
+  const [showDesigner, setShowDesigner] = useState(false)
   // Phase 16.66 — RPM postMessage bridge. The creator iframe emits
   // structured JSON messages on the window; we filter for the
   // `v1.avatar.exported` event, pull the GLB URL, merge it into the
@@ -2572,10 +2577,67 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
     // move-set authored as custom AnimationClips via QuaternionKeyframeTrack.
     const buildXBotPlayer = () => {
       const loader = new GLTFLoader()
-      loader.load(
-        'https://threejs.org/examples/models/gltf/Xbot.glb',
-        (gltf) => {
-          const model = gltf.scene
+      const XBOT_URL = 'https://threejs.org/examples/models/gltf/Xbot.glb'
+      const loadGltf = (url: string): Promise<any> => new Promise((resolve, reject) => {
+        loader.load(url, resolve, undefined, reject)
+      })
+      // Phase 16.67 — if the user designed a custom character (RPM /
+      // AI-generated rigged GLB), use THEIR model as the player. We still
+      // load XBot in parallel to harvest its idle/walk/run animation
+      // clips, then retarget the track names onto the user's bone
+      // hierarchy. Static (un-rigged) meshes like TripoSR can't accept
+      // animations — those silently fall back to XBot.
+      const charProbe = getStoredCharacter()
+      const probeGlb = (charProbe as any).aiGlbUrl || charProbe.humanGlbUrl
+      const hasSkin = (root: THREE.Object3D): boolean => {
+        let found = false
+        root.traverse((o: any) => { if (o.isSkinnedMesh) found = true })
+        return found
+      }
+      // Phase 16.67 — retarget an XBot AnimationClip so its track-name
+      // prefixes match an arbitrary model's bone hierarchy. XBot uses
+      // 'mixamorigHips', 'mixamorigLeftArm', etc; RPM uses 'Hips',
+      // 'LeftArm', etc. Same skeleton topology, just different naming.
+      // We resolve each track's bone name against the target model
+      // (case-insensitive endsWith) and rewrite the track if a match
+      // exists, drop the track if no bone matches at all.
+      const retargetClip = (clip: THREE.AnimationClip, target: THREE.Object3D): THREE.AnimationClip => {
+        const boneNames = new Set<string>()
+        target.traverse((o: any) => { if (o.isBone || o.name) boneNames.add(o.name) })
+        const findBoneName = (rawName: string): string | null => {
+          if (boneNames.has(rawName)) return rawName
+          const lower = rawName.toLowerCase()
+          for (const n of boneNames) if (n.toLowerCase() === lower) return n
+          // Try stripping mixamorig prefix
+          if (lower.startsWith('mixamorig')) {
+            const stripped = rawName.slice('mixamorig'.length)
+            if (boneNames.has(stripped)) return stripped
+            for (const n of boneNames) if (n.toLowerCase() === stripped.toLowerCase()) return n
+          }
+          // Try ADDING mixamorig prefix
+          const prefixed = `mixamorig${rawName}`
+          if (boneNames.has(prefixed)) return prefixed
+          for (const n of boneNames) if (n.toLowerCase() === prefixed.toLowerCase()) return n
+          return null
+        }
+        const newTracks: THREE.KeyframeTrack[] = []
+        for (const track of clip.tracks) {
+          const dotIdx = track.name.indexOf('.')
+          if (dotIdx < 0) { newTracks.push(track); continue }
+          const boneName = track.name.slice(0, dotIdx)
+          const property = track.name.slice(dotIdx)
+          const matched = findBoneName(boneName)
+          if (!matched) continue  // drop track — no matching bone
+          if (matched === boneName) { newTracks.push(track); continue }
+          const cloned = track.clone()
+          cloned.name = matched + property
+          newTracks.push(cloned)
+        }
+        const out = new THREE.AnimationClip(clip.name, clip.duration, newTracks)
+        return out
+      }
+      const proceed = (modelGltf: any, animSourceGltf: any, isCustomModel: boolean) => {
+          const model = modelGltf.scene
           const preBox = new THREE.Box3().setFromObject(model)
           const preSize = new THREE.Vector3(); preBox.getSize(preSize)
           if (preSize.y > 0 && (preSize.y < 0.5 || preSize.y > 4)) {
@@ -2611,7 +2673,10 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
             || '#1a1a1a'
           const hairColor = new THREE.Color(hairHex)
           const accentHex = (charForXBot as any).accentColor || (charForXBot as any).glowColor
-          model.traverse((obj: any) => {
+          // Phase 16.67 — custom GLBs (RPM, AI-generated) keep their own
+          // baked textures + materials. Only XBot gets the heuristic
+          // jersey/skin/hair retint.
+          if (!isCustomModel) model.traverse((obj: any) => {
             if (!obj.isMesh || !obj.material) return
             const materials = Array.isArray(obj.material) ? obj.material : [obj.material]
             const cloned = materials.map((mat: any) => {
@@ -2652,10 +2717,18 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
           // model faces where it walks, ball sits in front of the model.
           avatarHolder.add(model)
 
-          if (!gltf.animations || gltf.animations.length === 0) return
+          // Phase 16.67 — Source animations from XBot regardless of which
+          // mesh is rendered. Retarget track names so XBot's clips bind to
+          // the loaded model's actual bone hierarchy (mixamorigHips →
+          // Hips for RPM models, etc).
+          const rawAnims: THREE.AnimationClip[] = animSourceGltf?.animations || []
+          if (rawAnims.length === 0) return
+          const xbotAnims = isCustomModel
+            ? rawAnims.map(c => retargetClip(c, model))
+            : rawAnims
           const mixer = new THREE.AnimationMixer(model)
           const clipMap: Record<string, THREE.AnimationAction> = {}
-          for (const clip of gltf.animations) {
+          for (const clip of xbotAnims) {
             clipMap[clip.name.toLowerCase()] = mixer.clipAction(clip)
           }
 
@@ -3122,8 +3195,14 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
                 else m.dispose()
               }
             }
-            // Clone the rigged XBot
-            const defModel: THREE.Object3D = cloneSkinnedMesh(model)
+            // Phase 16.67 — clone the DEFENDER from XBot directly (NOT
+            // from the player model). When the player loads a custom GLB,
+            // we don't want their custom look duplicated on the opponent.
+            // animSourceGltf.scene is XBot when isCustomModel; same as
+            // modelGltf when not. Either way: defender = XBot.
+            const defSource: THREE.Object3D = animSourceGltf.scene
+            const defModel: THREE.Object3D = cloneSkinnedMesh(defSource)
+            // Match player scale so they read at the same size on court
             defModel.scale.copy(model.scale)
             // Phase 16.61 — Mixamo +Z convention, no flip needed
             // Tint to red jersey + dark skin for visual contrast
@@ -3150,7 +3229,9 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
             // Defender mixer + clip map
             const defMixer = new THREE.AnimationMixer(defModel)
             const defClips: Record<string, THREE.AnimationAction> = {}
-            for (const clip of gltf.animations) {
+            // Phase 16.67 — defender's animation source is XBot. No
+            // retargeting needed since defender mesh IS the XBot clone.
+            for (const clip of (animSourceGltf.animations || [])) {
               defClips[clip.name.toLowerCase()] = defMixer.clipAction(clip)
             }
             const defIdle = defClips['idle']
@@ -3175,17 +3256,44 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
             badgeSprite.position.set(0, 2.4, 0)
             defRef.group.add(badgeSprite)
           }
-          console.log('[GalleryRoom3D] XBot loaded w/ 2K clips', {
-            stock: gltf.animations.map(c => c.name),
+          console.log('[GalleryRoom3D] player loaded', {
+            customModel: isCustomModel,
+            stock: (animSourceGltf.animations || []).map((c: any) => c.name),
             authored: oneShotClips.map(c => c.name).concat([defenseClip.name]),
           })
-        },
-        undefined,
-        (err) => {
-          console.error('[GalleryRoom3D] XBot load failed, falling back to humanoid:', err)
-          buildCapsule({ bodyColor: '#dc2626' } as CharacterConfig)
-        },
-      )
+      }
+      // Phase 16.67 — top-level loader logic. If user has a rigged GLB,
+      // load both in parallel and pass them separately. If they have a
+      // GLB but it's static (TripoSR — no skeleton), animations can't
+      // bind so fall back to XBot. If user has nothing, just load XBot
+      // and use it for everything.
+      if (probeGlb) {
+        Promise.all([loadGltf(probeGlb), loadGltf(XBOT_URL)])
+          .then(([userGltf, xbotGltf]: any[]) => {
+            if (!hasSkin(userGltf.scene)) {
+              console.warn('[GalleryRoom3D] custom GLB has no skeleton — using XBot')
+              proceed(xbotGltf, xbotGltf, false)
+              return
+            }
+            proceed(userGltf, xbotGltf, true)
+          })
+          .catch((err) => {
+            console.error('[GalleryRoom3D] custom avatar load failed, falling back to XBot:', err)
+            loadGltf(XBOT_URL)
+              .then((g: any) => proceed(g, g, false))
+              .catch((err2: any) => {
+                console.error('[GalleryRoom3D] XBot load failed too, falling back to humanoid:', err2)
+                buildCapsule({ bodyColor: '#dc2626' } as CharacterConfig)
+              })
+          })
+      } else {
+        loadGltf(XBOT_URL)
+          .then((g: any) => proceed(g, g, false))
+          .catch((err: any) => {
+            console.error('[GalleryRoom3D] XBot load failed, falling back to humanoid:', err)
+            buildCapsule({ bodyColor: '#dc2626' } as CharacterConfig)
+          })
+      }
     }
 
     const buildAvatar = (character: CharacterConfig) => {
@@ -5365,6 +5473,13 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         >
           <UserCog className="w-3 h-3" /> AVATAR
         </button>
+        {/* Phase 16.67 — Character Designer entry point */}
+        <button
+          onClick={() => setShowDesigner(true)}
+          className="flex items-center gap-1 px-2.5 py-2 rounded-lg bg-pink-500/20 border border-pink-500/40 text-pink-400 text-[9px] font-mono font-bold hover:bg-pink-500/30 transition backdrop-blur active:scale-95"
+        >
+          <Sparkles className="w-3 h-3" /> DESIGN
+        </button>
       </div>
 
       {/* Furniture placement count — dismissable */}
@@ -5375,6 +5490,13 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         </div>
       )}
 
+      {/* Phase 16.67 — CHARACTER DESIGNER MODAL. Full AI BUILD + face
+          designer + outfit tabs, in-gym. Closing the modal triggers
+          'character-updated' via CharacterDesigner's own save flow, which
+          GalleryRoom3D already subscribes to (line ~3404) — that calls
+          buildAvatar(getStoredCharacter()) and rebuilds the player with
+          the new look. */}
+      <CharacterDesigner open={showDesigner} onClose={() => setShowDesigner(false)} />
       {/* Phase 16.66 — READY PLAYER ME MODAL. Hosts the RPM creator in
           an iframe; RPM postMessages back the rigged GLB URL when the
           user exports. We save it as humanGlbUrl on the local character
