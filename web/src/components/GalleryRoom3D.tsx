@@ -153,73 +153,6 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
     refresh()
     return onGamepadChange(refresh)
   }, [])
-  // Phase 16.71 — duck arena music when paused / game over
-  useEffect(() => {
-    const a = arenaAudioRef.current
-    if (!a) return
-    a.volume = paused || gameOver ? 0.08 : 0.32
-  }, [paused, gameOver])
-  // Phase 16.71 — fetch + auto-play SCid arena music. Only active on
-  // gym/blacktop. Skips tracks on 'ended'; respects React 18 strict-mode
-  // double-mount via the ref guard.
-  useEffect(() => {
-    const isGym = theme === 'gym' || theme === 'blacktop'
-    if (!isGym) {
-      if (arenaAudioRef.current) {
-        try { arenaAudioRef.current.pause() } catch {}
-        arenaAudioRef.current = null
-      }
-      setArenaTrack(null)
-      return
-    }
-    let cancelled = false
-    const loadNext = async () => {
-      try {
-        const r = await fetch('/api/agent/radio', { cache: 'no-store' })
-        if (cancelled || !r.ok) return
-        const data = await r.json()
-        const np = data?.data?.now_playing
-        if (!np?.stream_url) return
-        const track: ArenaTrack = {
-          title: np.title || 'Unknown',
-          artist: np.artist || 'SoundChain',
-          scid: np.scid || '',
-          streamUrl: np.stream_url,
-          artworkUrl: np.artwork_url,
-        }
-        if (cancelled) return
-        setArenaTrack(track)
-        const audio = new Audio(track.streamUrl)
-        audio.crossOrigin = 'anonymous'
-        audio.volume = 0.32  // arena ambient — under the announcer voice
-        audio.loop = false
-        audio.preload = 'auto'
-        audio.onended = () => { if (!cancelled) loadNext() }
-        audio.onerror = () => { if (!cancelled) setTimeout(loadNext, 2000) }
-        if (arenaAudioRef.current) { try { arenaAudioRef.current.pause() } catch {} }
-        arenaAudioRef.current = audio
-        // Autoplay needs user gesture in many browsers; .play() returns a
-        // Promise we catch + retry on first interaction.
-        audio.play().catch(() => {
-          const tryPlay = () => {
-            audio.play().catch(() => {})
-            window.removeEventListener('pointerdown', tryPlay)
-            window.removeEventListener('keydown', tryPlay)
-          }
-          window.addEventListener('pointerdown', tryPlay, { once: true })
-          window.addEventListener('keydown', tryPlay, { once: true })
-        })
-      } catch {}
-    }
-    loadNext()
-    return () => {
-      cancelled = true
-      if (arenaAudioRef.current) {
-        try { arenaAudioRef.current.pause() } catch {}
-        arenaAudioRef.current = null
-      }
-    }
-  }, [theme])
   // Phase 16.63 — deep-link auto-join. URL `?room=ABC123` (set after host
   // copies share-link) auto-fires startMultiplayerGuest on mount. Lets a
   // friend tap one link to be dropped straight into the lobby — no code
@@ -307,6 +240,76 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
   const [paused, setPaused] = useState(false)
   const pausedRef = useRef(false)
   useEffect(() => { pausedRef.current = paused }, [paused])
+  // Phase 16.71 — duck arena music when paused / game over.
+  // Must live AFTER paused / gameOver / arenaAudioRef declarations above
+  // (was hoisted near top in 16.71 ship; deps array eagerly reads paused/
+  // gameOver at render time → TDZ crash in minified prod bundle).
+  useEffect(() => {
+    const a = arenaAudioRef.current
+    if (!a) return
+    a.volume = paused || gameOver ? 0.08 : 0.32
+  }, [paused, gameOver])
+  // Phase 16.71 — fetch + auto-play SCid arena music. Only active on
+  // gym/blacktop. Skips tracks on 'ended'; respects React 18 strict-mode
+  // double-mount via the ref guard.
+  useEffect(() => {
+    const isGym = theme === 'gym' || theme === 'blacktop'
+    if (!isGym) {
+      if (arenaAudioRef.current) {
+        try { arenaAudioRef.current.pause() } catch {}
+        arenaAudioRef.current = null
+      }
+      setArenaTrack(null)
+      return
+    }
+    let cancelled = false
+    const loadNext = async () => {
+      try {
+        const r = await fetch('/api/agent/radio', { cache: 'no-store' })
+        if (cancelled || !r.ok) return
+        const data = await r.json()
+        const np = data?.data?.now_playing
+        if (!np?.stream_url) return
+        const track: ArenaTrack = {
+          title: np.title || 'Unknown',
+          artist: np.artist || 'SoundChain',
+          scid: np.scid || '',
+          streamUrl: np.stream_url,
+          artworkUrl: np.artwork_url,
+        }
+        if (cancelled) return
+        setArenaTrack(track)
+        const audio = new Audio(track.streamUrl)
+        audio.crossOrigin = 'anonymous'
+        audio.volume = 0.32  // arena ambient — under the announcer voice
+        audio.loop = false
+        audio.preload = 'auto'
+        audio.onended = () => { if (!cancelled) loadNext() }
+        audio.onerror = () => { if (!cancelled) setTimeout(loadNext, 2000) }
+        if (arenaAudioRef.current) { try { arenaAudioRef.current.pause() } catch {} }
+        arenaAudioRef.current = audio
+        // Autoplay needs user gesture in many browsers; .play() returns a
+        // Promise we catch + retry on first interaction.
+        audio.play().catch(() => {
+          const tryPlay = () => {
+            audio.play().catch(() => {})
+            window.removeEventListener('pointerdown', tryPlay)
+            window.removeEventListener('keydown', tryPlay)
+          }
+          window.addEventListener('pointerdown', tryPlay, { once: true })
+          window.addEventListener('keydown', tryPlay, { once: true })
+        })
+      } catch {}
+    }
+    loadNext()
+    return () => {
+      cancelled = true
+      if (arenaAudioRef.current) {
+        try { arenaAudioRef.current.pause() } catch {}
+        arenaAudioRef.current = null
+      }
+    }
+  }, [theme])
   // Phase 16.64 — NBA 2K-style camera presets. Cycle with Tab (keyboard) or
   // D-pad Up (gamepad button 12). Tab not 'C' so the binding doesn't collide
   // with crossover ('c' / RB). Each preset has its own distance / height /
