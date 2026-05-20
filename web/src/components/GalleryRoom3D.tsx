@@ -3652,13 +3652,16 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         }
       }
       const glbUrl = (character as any).aiGlbUrl || character.humanGlbUrl
-      // Phase 16.40 — sports themes (gym + blacktop) load XBot with bundled
-      // walk/run/idle animations. Other themes still honor saved character GLBs.
-      if (isSportsTheme) {
+      // Phase 16.75 — sports themes (gym + blacktop) now respect the user's
+      // CHARACTER DESIGNER mesh (aiGlbUrl) when one is saved. Falls back to
+      // XBot ONLY when no custom character exists. Per Frank: "remove the
+      // robot looking players in gym, i want to be able to create a
+      // character and use it in the gym".
+      if (isSportsTheme && !glbUrl) {
         buildXBotPlayer()
         return
       }
-      const isGlbAvatar = !!glbUrl && !isSportsTheme
+      const isGlbAvatar = !!glbUrl
       console.log('[GalleryRoom3D] character', {
         type: character.type,
         hasAiGlb: !!(character as any).aiGlbUrl,
@@ -4234,7 +4237,15 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
     // Phase 16.39 — sports courts get NBA2K-like sprint feel; bounds stay
     // inside the court geometry so dunks register and player can't run off.
     const SPEED = theme === 'city' ? 18 : (theme === 'gym' || theme === 'blacktop') ? 14 : 12
-    const PLAYER_BOUNDS = theme === 'city' ? 95 : theme === 'gym' ? 14 : theme === 'blacktop' ? 8 : 19
+    // Phase 16.75 — NBA-spec player bounds:
+    //   Gym full-court: 28m long × 15m wide; half-dims = (7.5w, 14L). Allow
+    //   player to roam INSIDE both sidelines + baselines with 0.5m buffer.
+    //   Blacktop half-court: 15m square. Half-dim = 7.5 each axis.
+    // Use asymmetric bounds so the X-axis (width) doesn't get over-constrained
+    // and the Z-axis (length) reaches all the way from rim to rim.
+    const PLAYER_BOUNDS_X = theme === 'city' ? 95 : theme === 'gym' ? 7.0 : theme === 'blacktop' ? 7.0 : 19
+    const PLAYER_BOUNDS_Z = theme === 'city' ? 95 : theme === 'gym' ? 13.5 : theme === 'blacktop' ? 7.0 : 19
+    const PLAYER_BOUNDS = PLAYER_BOUNDS_X  // backwards-compat alias
     let lastFrame = performance.now()
     let frameCount = 0
     let fpsLastUpdate = lastFrame
@@ -4336,14 +4347,14 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
           }
           moveState.type = null
         }
-        playerGroup.position.x = Math.max(-PLAYER_BOUNDS, Math.min(PLAYER_BOUNDS, playerGroup.position.x))
-        playerGroup.position.z = Math.max(-PLAYER_BOUNDS, Math.min(PLAYER_BOUNDS, playerGroup.position.z))
+        playerGroup.position.x = Math.max(-PLAYER_BOUNDS_X, Math.min(PLAYER_BOUNDS_X, playerGroup.position.x))
+        playerGroup.position.z = Math.max(-PLAYER_BOUNDS_Z, Math.min(PLAYER_BOUNDS_Z, playerGroup.position.z))
       } else {
         // Normal WASD/gamepad movement (only when no move is active)
         playerGroup.position.x += dirX * SPEED * mag * dtSec
         playerGroup.position.z += dirZ * SPEED * mag * dtSec
-        playerGroup.position.x = Math.max(-PLAYER_BOUNDS, Math.min(PLAYER_BOUNDS, playerGroup.position.x))
-        playerGroup.position.z = Math.max(-PLAYER_BOUNDS, Math.min(PLAYER_BOUNDS, playerGroup.position.z))
+        playerGroup.position.x = Math.max(-PLAYER_BOUNDS_X, Math.min(PLAYER_BOUNDS_X, playerGroup.position.x))
+        playerGroup.position.z = Math.max(-PLAYER_BOUNDS_Z, Math.min(PLAYER_BOUNDS_Z, playerGroup.position.z))
         if (mag > 0.05) {
           playerGroup.rotation.y = Math.atan2(dirX, dirZ)  // Phase 16.61 — +Z convention
         }
