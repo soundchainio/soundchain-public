@@ -978,7 +978,7 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         hoopPositions.push({ z: courtZ - courtSpan / 2 + 1.5, flip: false })
       }
 
-      const hoopList: Array<{ rimPos: THREE.Vector3 }> = []
+      const hoopList: Array<{ rimPos: THREE.Vector3; rim?: THREE.Mesh; rimMat?: THREE.MeshStandardMaterial }> = []
       hoopPositions.forEach(({ z, flip }) => {
         const dir = flip ? -1 : 1
         const baseZ = z
@@ -1074,16 +1074,17 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         sqOutline.position.set(0, 3.30, backboardZ + 0.04 * dir)
         scene.add(sqOutline)
         // NBA rim: 0.45m diameter (0.225m radius), 0.02m tube, 3.05m height
+        const rimMat = new THREE.MeshStandardMaterial({ color: 0xea580c, emissive: 0xea580c, emissiveIntensity: 1.4, metalness: 0.85, roughness: 0.2, envMapIntensity: 1.5 })
         const rim = new THREE.Mesh(
           new THREE.TorusGeometry(0.225, 0.02, 12, 32),
-          new THREE.MeshStandardMaterial({ color: 0xea580c, emissive: 0xea580c, emissiveIntensity: 1.4, metalness: 0.85, roughness: 0.2, envMapIntensity: 1.5 }),
+          rimMat,
         )
         const rimPos = new THREE.Vector3(0, 3.05, basketZ)
         rim.position.copy(rimPos)
         rim.rotation.x = Math.PI / 2
         rim.castShadow = true
         scene.add(rim)
-        hoopList.push({ rimPos })
+        hoopList.push({ rimPos, rim, rimMat })
         // Net (12 segments, scaled to NBA rim radius 0.225m, length 0.4m
         // hanging from rim height 3.05m down to 2.65m)
         const netMat = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.8 })
@@ -1097,6 +1098,22 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
       // Store ALL hoop positions in scene.userData so basketball mechanic
       // can target the NEAREST one (full court has 2 hoops).
       ;(scene.userData as any).hoops = hoopList
+
+      // Phase 16.74 — RIM FLASH. Visible feedback when ball passes through
+      // (green) or clanks off (red). Bumps emissive color + intensity for
+      // ~0.5s then eases back. Wired from gravity()'s score-detect branch.
+      const _baseRimColor = new THREE.Color(0xea580c)
+      const flashRim = (rimMat: THREE.MeshStandardMaterial | undefined, hex: number, intensity: number, durationMs = 500) => {
+        if (!rimMat) return
+        rimMat.emissive.setHex(hex)
+        rimMat.emissiveIntensity = intensity
+        setTimeout(() => {
+          // Ease back to orange-rim baseline
+          rimMat.emissive.copy(_baseRimColor)
+          rimMat.emissiveIntensity = 1.4
+        }, durationMs)
+      }
+      ;(scene.userData as any).flashRim = flashRim
 
       // Phase 16.52 — HOT ZONE heatmap overlay. CanvasTexture painted at
       // game spawn; updated each frame (or on score events) from
@@ -1446,6 +1463,51 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
       }
       ;(scene.userData as any).ball = { ball: ballBG, ballState: ballStateBG, RIM_POS: lastTargetBG }
 
+      // Phase 16.74 — BALL TRAIL. Comet trail visualizes shot arc while
+      // ball is airborne. 16-segment InstancedMesh of small spheres; each
+      // frame the head writes ball position, oldest fades out. Cheap
+      // (one mesh, one matrix update per frame).
+      const TRAIL_LEN = 16
+      const trailGeom = new THREE.SphereGeometry(0.06, 8, 6)
+      const trailMat = new THREE.MeshBasicMaterial({ color: 0xfb923c, transparent: true, opacity: 0.6, depthWrite: false })
+      const ballTrail = new THREE.InstancedMesh(trailGeom, trailMat, TRAIL_LEN)
+      ballTrail.frustumCulled = false
+      // Initialize all instances offscreen
+      const _trailMat = new THREE.Matrix4()
+      _trailMat.makeTranslation(0, -100, 0)
+      for (let i = 0; i < TRAIL_LEN; i++) ballTrail.setMatrixAt(i, _trailMat)
+      ballTrail.instanceMatrix.needsUpdate = true
+      scene.add(ballTrail)
+      const trailPositions: THREE.Vector3[] = []
+      for (let i = 0; i < TRAIL_LEN; i++) trailPositions.push(new THREE.Vector3(0, -100, 0))
+      let trailWriteIndex = 0
+      ;(scene.userData as any).ballTrail = {
+        mesh: ballTrail,
+        writeIndex: () => trailWriteIndex,
+        push: (pos: THREE.Vector3) => {
+          trailPositions[trailWriteIndex].copy(pos)
+          trailWriteIndex = (trailWriteIndex + 1) % TRAIL_LEN
+        },
+        update: () => {
+          const m = new THREE.Matrix4()
+          const fadeScale = new THREE.Vector3()
+          for (let i = 0; i < TRAIL_LEN; i++) {
+            // Compute age: head is newest, tail oldest
+            const age = (TRAIL_LEN + trailWriteIndex - i - 1) % TRAIL_LEN
+            const t = age / (TRAIL_LEN - 1)
+            const s = (1 - t) * 0.9 + 0.1
+            fadeScale.set(s, s, s)
+            m.compose(trailPositions[i], new THREE.Quaternion(), fadeScale)
+            ballTrail.setMatrixAt(i, m)
+          }
+          ballTrail.instanceMatrix.needsUpdate = true
+        },
+        reset: () => {
+          for (let i = 0; i < TRAIL_LEN; i++) trailPositions[i].set(0, -100, 0)
+          trailWriteIndex = 0
+        },
+      }
+
       const jumpStateBG = { active: false, t: 0, duration: 0, peakY: 0, ballRelease: 0, isDunk: false, baseY: 0 }
       ;(scene.userData as any).jumpState = jumpStateBG
 
@@ -1659,6 +1721,8 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
             const dyh = Math.abs(ballBG.position.y - hoop.rimPos.y)
             if (horizDist < 0.225 && dyh < 0.15) {  // NBA rim radius 0.225m, dy tighter for cleaner swish
               ballStateBG.scoredThisShot = true
+              // Phase 16.74 — green rim flash on score
+              flashRim(hoop.rimMat, 0x22c55e, 3.0, 700)
               // Phase 16.57 — score side depends on who shot the ball
               const ballOwner = (ballStateBG as any).owner || 'player'
               const shotTypeForPoints = (ballStateBG as any).shotType || 'jumpshot'
@@ -1768,6 +1832,8 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
                 if (!(ballStateBG as any).rimHitThisShot) {
                   ;(ballStateBG as any).rimHitThisShot = true
                   playRim()
+                  // Phase 16.74 — red rim flash on clank
+                  flashRim(hoop.rimMat, 0xef4444, 2.5, 400)
                 }
               }
             }
@@ -4524,6 +4590,16 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         } else {
           // Physics tick (gravity + velocity integration + score detection)
           ;(scene.userData as any).gravity(dtSec)
+          // Phase 16.74 — write current ball position to trail head
+          const trail = (scene.userData as any).ballTrail
+          if (trail) trail.push(ball.position)
+        }
+        // Phase 16.74 — refresh trail mesh every frame (held = trail
+        // points sit offscreen via reset call below)
+        const trailRef = (scene.userData as any).ballTrail
+        if (trailRef) {
+          if (ballState.held) trailRef.reset()
+          trailRef.update()
         }
         // Spin the ball based on velocity for visual juice
         ball.rotation.x += ballState.vel.z * dtSec * 4
