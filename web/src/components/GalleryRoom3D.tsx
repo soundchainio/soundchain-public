@@ -153,6 +153,73 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
     refresh()
     return onGamepadChange(refresh)
   }, [])
+  // Phase 16.71 — duck arena music when paused / game over
+  useEffect(() => {
+    const a = arenaAudioRef.current
+    if (!a) return
+    a.volume = paused || gameOver ? 0.08 : 0.32
+  }, [paused, gameOver])
+  // Phase 16.71 — fetch + auto-play SCid arena music. Only active on
+  // gym/blacktop. Skips tracks on 'ended'; respects React 18 strict-mode
+  // double-mount via the ref guard.
+  useEffect(() => {
+    const isGym = theme === 'gym' || theme === 'blacktop'
+    if (!isGym) {
+      if (arenaAudioRef.current) {
+        try { arenaAudioRef.current.pause() } catch {}
+        arenaAudioRef.current = null
+      }
+      setArenaTrack(null)
+      return
+    }
+    let cancelled = false
+    const loadNext = async () => {
+      try {
+        const r = await fetch('/api/agent/radio', { cache: 'no-store' })
+        if (cancelled || !r.ok) return
+        const data = await r.json()
+        const np = data?.data?.now_playing
+        if (!np?.stream_url) return
+        const track: ArenaTrack = {
+          title: np.title || 'Unknown',
+          artist: np.artist || 'SoundChain',
+          scid: np.scid || '',
+          streamUrl: np.stream_url,
+          artworkUrl: np.artwork_url,
+        }
+        if (cancelled) return
+        setArenaTrack(track)
+        const audio = new Audio(track.streamUrl)
+        audio.crossOrigin = 'anonymous'
+        audio.volume = 0.32  // arena ambient — under the announcer voice
+        audio.loop = false
+        audio.preload = 'auto'
+        audio.onended = () => { if (!cancelled) loadNext() }
+        audio.onerror = () => { if (!cancelled) setTimeout(loadNext, 2000) }
+        if (arenaAudioRef.current) { try { arenaAudioRef.current.pause() } catch {} }
+        arenaAudioRef.current = audio
+        // Autoplay needs user gesture in many browsers; .play() returns a
+        // Promise we catch + retry on first interaction.
+        audio.play().catch(() => {
+          const tryPlay = () => {
+            audio.play().catch(() => {})
+            window.removeEventListener('pointerdown', tryPlay)
+            window.removeEventListener('keydown', tryPlay)
+          }
+          window.addEventListener('pointerdown', tryPlay, { once: true })
+          window.addEventListener('keydown', tryPlay, { once: true })
+        })
+      } catch {}
+    }
+    loadNext()
+    return () => {
+      cancelled = true
+      if (arenaAudioRef.current) {
+        try { arenaAudioRef.current.pause() } catch {}
+        arenaAudioRef.current = null
+      }
+    }
+  }, [theme])
   // Phase 16.63 — deep-link auto-join. URL `?room=ABC123` (set after host
   // copies share-link) auto-fires startMultiplayerGuest on mount. Lets a
   // friend tap one link to be dropped straight into the lobby — no code
@@ -224,6 +291,13 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
   // Perfect window = 70-85% fill = green burst at release. Hidden when idle.
   const [shotMeter, setShotMeter] = useState<{ active: boolean; progress: number; quality: 'early' | 'good' | 'perfect' | 'late' } | null>(null)
   const shotMeterRef = useRef<{ startMs: number; durationMs: number } | null>(null)
+  // Phase 16.71 — ARENA MUSIC. SCid/NFT tracks from /api/agent/radio play
+  // continuously in gym/blacktop, just like NBA arenas pump music during
+  // gameplay + timeouts + halftime. Auto-advances on track end. Links the
+  // basketball game directly into the SC music ecosystem.
+  type ArenaTrack = { title: string; artist: string; scid: string; streamUrl: string; artworkUrl?: string }
+  const [arenaTrack, setArenaTrack] = useState<ArenaTrack | null>(null)
+  const arenaAudioRef = useRef<HTMLAudioElement | null>(null)
   // Phase 16.59 — difficulty selector affects defender AI
   type Difficulty = 'easy' | 'normal' | 'hard'
   const [difficulty, setDifficulty] = useState<Difficulty>('normal')
@@ -405,6 +479,54 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
       gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12)
       osc.connect(gain).connect(ctx.destination)
       osc.start(now); osc.stop(now + 0.13)
+    }
+    // Phase 16.71 — classic "DEFENSE! DEFENSE!" crowd chant. 8 cycles of
+    // shaped noise burst at chant rhythm (~1.5Hz). Mid-band filtered to
+    // sit where a crowd voice lands. Fires when opponent gets possession.
+    const playDefenseChant = () => {
+      const ctx = ensureAudioCtx(); if (!ctx) return
+      const startNow = ctx.currentTime
+      const cycles = 4
+      for (let i = 0; i < cycles; i++) {
+        const t0 = startNow + i * 0.72  // ~1.4Hz "DE-FENSE!" cadence
+        // "DE" syllable
+        for (let s = 0; s < 2; s++) {
+          const t = t0 + s * 0.18
+          const dur = 0.18
+          const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * dur), ctx.sampleRate)
+          const data = buf.getChannelData(0)
+          for (let j = 0; j < data.length; j++) {
+            const u = j / data.length
+            const env = Math.min(1, u * 6) * Math.pow(1 - u, 1.2)
+            data[j] = (Math.random() * 2 - 1) * env
+          }
+          const noise = ctx.createBufferSource()
+          noise.buffer = buf
+          const bp = ctx.createBiquadFilter()
+          bp.type = 'bandpass'
+          bp.frequency.value = s === 0 ? 600 : 800  // "DE" lower, "FENSE" higher
+          bp.Q.value = 1.2
+          const gain = ctx.createGain()
+          gain.gain.value = 0.42 * (1 - i * 0.08)  // slight decay across cycles
+          noise.connect(bp).connect(gain).connect(ctx.destination)
+          noise.start(t); noise.stop(t + dur)
+        }
+      }
+    }
+    // Phase 16.71 — buzzer (quarter-end / game-end / shot-clock violation)
+    const playBuzzer = () => {
+      const ctx = ensureAudioCtx(); if (!ctx) return
+      const now = ctx.currentTime
+      const osc = ctx.createOscillator()
+      osc.type = 'sawtooth'
+      osc.frequency.value = 240
+      const gain = ctx.createGain()
+      gain.gain.setValueAtTime(0.0, now)
+      gain.gain.linearRampToValueAtTime(0.4, now + 0.05)
+      gain.gain.linearRampToValueAtTime(0.4, now + 0.9)
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 1.0)
+      osc.connect(gain).connect(ctx.destination)
+      osc.start(now); osc.stop(now + 1.05)
     }
     // Phase 16.44 — CROWD CHEER on shot makes. Layered noise burst shaped
     // like a roaring crowd: low rumble (sub 200Hz) + mid voice band (300-
@@ -1526,6 +1648,7 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
                   const newDef = ps.defender + pts
                   if (newDef >= POINTS_TO_WIN && !gameOver) {
                     setGameOver('defender')
+                    playBuzzer()
                     speak("GAME! DEFENDER WINS!", { pitch: 0.92, rate: 1.15 })
                   }
                   return { ...ps, defender: newDef }
@@ -1541,6 +1664,7 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
                 const newPlayer = ps.player + pts
                 if (newPlayer >= POINTS_TO_WIN && !gameOver) {
                   setGameOver('player')
+                  playBuzzer()
                   speak("GAME! YOU WIN!", { pitch: 1.05, rate: 1.15 })
                 }
                 return { ...ps, player: newPlayer }
@@ -1571,6 +1695,9 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
                 if (shotType === 'dunk') {
                   const dunkBanners = ['POSTERIZED!', 'HE FLEW!', 'GORILLA DUNK!', 'TOO STRONG!']
                   triggerBigPlay(dunkBanners[Math.floor(Math.random() * dunkBanners.length)], '#fb923c', '💥')
+                  // Phase 16.71 — DJ drops new track after a poster
+                  const _a2 = arenaAudioRef.current
+                  if (_a2) { try { _a2.dispatchEvent(new Event('ended')) } catch {} }
                 } else if (nextStreak === 5) {
                   triggerBigPlay('ON FIRE!', '#ef4444', '🔥')
                 } else if (nextStreak === 7) {
@@ -1696,6 +1823,10 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
                 const ds = (scene.userData as any).defender
                 if (ds) { ds.mode = 'drive'; ds.shootTimer = getDiff().shootTimer }
                 speak(["REBOUND DEFENSE!", "BOARDS!", "DEF GRABS IT!"][Math.floor(Math.random()*3)], { pitch: 0.95, rate: 1.15 })
+                // Phase 16.71 — classic DEFENSE chant + duck arena music
+                setTimeout(() => playDefenseChant(), 600)
+                const _a = arenaAudioRef.current
+                if (_a) { const v = _a.volume; _a.volume = 0.10; setTimeout(() => { if (_a) _a.volume = v }, 2800) }
               }
             }
           }
@@ -4641,6 +4772,7 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         }
         if (shotClockRef.current <= 0 && !(scene.userData as any).__shotClockBuzzed) {
           ;(scene.userData as any).__shotClockBuzzed = true
+          playBuzzer()
           speak("SHOT CLOCK VIOLATION!", { pitch: 0.92, rate: 1.15 })
           // Reset shot clock + return ball so player keeps shooting
           const ballRefSC = (scene.userData as any).ball
@@ -4877,6 +5009,35 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
           100% { opacity: 0; transform: scale(0.95) translateY(8px); }
         }
       `}</style>
+      {/* Phase 16.71 — NOW PLAYING arena music pill (SCid NFT track).
+          Tap the ⏭ to skip to the next track. Tap the title to open the
+          track page in a new tab. Compact, sits top-center of the canvas. */}
+      {arenaTrack && (theme === 'gym' || theme === 'blacktop') && (
+        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-30 pointer-events-auto">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/80 backdrop-blur border border-cyan-400/40 shadow-lg max-w-[80vw]">
+            {arenaTrack.artworkUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={arenaTrack.artworkUrl} alt="" className="w-6 h-6 rounded object-cover shrink-0" />
+            )}
+            <div className="min-w-0">
+              <div className="text-[9px] font-mono text-cyan-400 leading-tight">🎵 ARENA</div>
+              <div className="text-[10px] font-mono font-bold text-white truncate max-w-[160px] sm:max-w-[240px]">{arenaTrack.title}</div>
+            </div>
+            <div className="hidden sm:block text-[9px] font-mono text-gray-400 truncate max-w-[120px]">{arenaTrack.artist}</div>
+            <button
+              onClick={() => {
+                const a = arenaAudioRef.current
+                if (a) { try { a.dispatchEvent(new Event('ended')) } catch {} }
+              }}
+              className="text-white/70 hover:text-white text-xs px-1"
+              aria-label="Skip track"
+            >
+              ⏭
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Phase 16.70 — 2K-style shot meter. Vertical arc bar above the
           player during shot animation. Fills from gray → green at the
           perfect-release window. Mirrors NBA 2K's signature shot timing UI. */}
