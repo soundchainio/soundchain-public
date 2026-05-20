@@ -224,6 +224,20 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
   // Perfect window = 70-85% fill = green burst at release. Hidden when idle.
   const [shotMeter, setShotMeter] = useState<{ active: boolean; progress: number; quality: 'early' | 'good' | 'perfect' | 'late' } | null>(null)
   const shotMeterRef = useRef<{ startMs: number; durationMs: number } | null>(null)
+  // Phase 16.73 — possession state mirrored to React so HUD can swap
+  // SHOOT↔DEFENSE based on who owns the ball. Polled at 5Hz from the
+  // scene userData (ballState.owner) since the scene mutates outside
+  // React. Reads as 'player' (offense) | 'defender' (we play D).
+  const [possession, setPossession] = useState<'player' | 'defender'>('player')
+  useEffect(() => {
+    if (theme !== 'gym' && theme !== 'blacktop') return
+    const id = setInterval(() => {
+      const owner = (sceneRef.current as any)?.userData?.ball?.ballState?.owner
+      if (owner === 'defender') setPossession((p) => p === 'defender' ? p : 'defender')
+      else setPossession((p) => p === 'player' ? p : 'player')
+    }, 200)
+    return () => clearInterval(id)
+  }, [theme])
   // Phase 16.71 — ARENA MUSIC. SCid/NFT tracks from /api/agent/radio play
   // continuously in gym/blacktop, just like NBA arenas pump music during
   // gameplay + timeouts + halftime. Auto-advances on track end. Links the
@@ -3361,17 +3375,35 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
           // composition trap that broke phases 16.42-16.64 — deltas are
           // applied in the bone's CURRENT local frame, not in the bind
           // frame, so rotations land where they're authored to land.
+          // Phase 16.73 — Frank: "slam dunks or any shot in the paint is still
+          // shot with knees". Root cause: the underlying Mixamo Wave clip
+          // (which jumpshot/three/fadeaway route to via moveToStockClip)
+          // animates the LEGS too. shoot deltas only overrode ARM bones, so
+          // the mixer's wave-leg-motion bled through and read as a kicking
+          // motion. Fix: add ZERO-rotation leg overrides on every shoot move
+          // so the legs stay STATIC during the shot (planted feet, proper
+          // shooting form). DUNK/LAYUP/REBOUND/BLOCK keep their authored
+          // knee-tuck deltas — those are real basketball mechanics; we just
+          // tone them DOWN so they read as jumping not kicking.
+          const ROOT: [number, number, number] = [0, 0, 0]
           const SHOOT_DELTAS: Record<string, Record<string, [number, number, number]>> = {
-            jumpshot:  { armR: [-2.4, 0, 0.05], forearmR: [-0.5, 0, 0], armL: [-0.9, 0, 0.25], spine: [-0.08, 0, 0], head: [-0.15, 0, 0] },
-            three:     { armR: [-2.5, 0, 0.05], forearmR: [-0.4, 0, 0], armL: [-0.95, 0, 0.25], spine: [-0.10, 0, 0] },
-            layup:     { armR: [-2.4, 0, 0.10], forearmR: [-0.2, 0, 0], armL: [-0.8, 0, 0.2], upLegR: [-1.1, 0, 0], legR: [0.9, 0, 0], spine: [-0.10, 0, 0] },
-            dunk:      { armR: [-2.7, 0, -0.15], armL: [-2.7, 0, 0.15], forearmR: [-0.25, 0, 0], forearmL: [-0.25, 0, 0], upLegR: [-0.9, 0, 0], upLegL: [-0.9, 0, 0], legR: [1.3, 0, 0], legL: [1.3, 0, 0], spine: [-0.12, 0, 0] },
-            fadeaway:  { armR: [-2.4, 0, 0.05], forearmR: [-0.4, 0, 0], spine: [-0.45, 0, 0], head: [-0.25, 0, 0] },
-            rebound:   { armR: [-2.7, 0, -0.2], armL: [-2.7, 0, 0.2], upLegR: [-0.8, 0, 0], upLegL: [-0.8, 0, 0], legR: [1.2, 0, 0], legL: [1.2, 0, 0] },
-            block:     { armR: [-2.7, 0, -0.05], forearmR: [-0.15, 0, 0], upLegR: [-0.7, 0, 0], upLegL: [-0.7, 0, 0], legR: [1.0, 0, 0], legL: [1.0, 0, 0] },
-            pass:      { armR: [-1.0, 0, -0.35], armL: [-1.0, 0, 0.35], forearmR: [-0.7, 0, 0], forearmL: [-0.7, 0, 0] },
+            // Outside shots — legs locked planted, only upper body extends
+            jumpshot:  { armR: [-2.4, 0, 0.05], forearmR: [-0.5, 0, 0], armL: [-0.9, 0, 0.25], spine: [-0.08, 0, 0], head: [-0.15, 0, 0], upLegR: ROOT, upLegL: ROOT, legR: ROOT, legL: ROOT },
+            three:     { armR: [-2.5, 0, 0.05], forearmR: [-0.4, 0, 0], armL: [-0.95, 0, 0.25], spine: [-0.10, 0, 0], upLegR: ROOT, upLegL: ROOT, legR: ROOT, legL: ROOT },
+            fadeaway:  { armR: [-2.4, 0, 0.05], forearmR: [-0.4, 0, 0], spine: [-0.45, 0, 0], head: [-0.25, 0, 0], upLegR: ROOT, upLegL: ROOT, legR: ROOT, legL: ROOT },
+            // Layup — single right knee comes up (real form), left planted
+            layup:     { armR: [-2.4, 0, 0.10], forearmR: [-0.2, 0, 0], armL: [-0.8, 0, 0.2], upLegR: [-0.7, 0, 0], legR: [0.55, 0, 0], upLegL: ROOT, legL: ROOT, spine: [-0.10, 0, 0] },
+            // Dunk — both knees TUCKED (jump pose) but less exaggerated.
+            // Reduced from -0.9/1.3 → -0.55/0.85 so it reads as jumping
+            // not kicking.
+            dunk:      { armR: [-2.7, 0, -0.15], armL: [-2.7, 0, 0.15], forearmR: [-0.25, 0, 0], forearmL: [-0.25, 0, 0], upLegR: [-0.55, 0, 0], upLegL: [-0.55, 0, 0], legR: [0.85, 0, 0], legL: [0.85, 0, 0], spine: [-0.12, 0, 0] },
+            // Rebound — two-leg leap, also toned down from -0.8/1.2
+            rebound:   { armR: [-2.7, 0, -0.2], armL: [-2.7, 0, 0.2], upLegR: [-0.50, 0, 0], upLegL: [-0.50, 0, 0], legR: [0.75, 0, 0], legL: [0.75, 0, 0] },
+            // Block — vertical leap with arm up. Toned legs.
+            block:     { armR: [-2.7, 0, -0.05], forearmR: [-0.15, 0, 0], upLegR: [-0.45, 0, 0], upLegL: [-0.45, 0, 0], legR: [0.65, 0, 0], legL: [0.65, 0, 0] },
+            pass:      { armR: [-1.0, 0, -0.35], armL: [-1.0, 0, 0.35], forearmR: [-0.7, 0, 0], forearmL: [-0.7, 0, 0], upLegR: ROOT, upLegL: ROOT, legR: ROOT, legL: ROOT },
             crossover: { spine: [0, 0, 0.45], armR: [-0.4, -0.35, -0.35], armL: [-0.4, 0.35, 0.35] },
-            pumpfake:  { armR: [-1.4, 0, 0], forearmR: [-0.55, 0, 0], armL: [-0.4, 0, 0.2] },
+            pumpfake:  { armR: [-1.4, 0, 0], forearmR: [-0.55, 0, 0], armL: [-0.4, 0, 0.2], upLegR: ROOT, upLegL: ROOT, legR: ROOT, legL: ROOT },
             jabstep:   { upLegR: [-0.5, 0, 0], legR: [0.35, 0, 0], spine: [-0.15, 0, 0] },
           }
           xbotState.shootDeltas = SHOOT_DELTAS
@@ -5015,6 +5047,23 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
           100% { opacity: 0; transform: scale(0.95) translateY(8px); }
         }
       `}</style>
+      {/* Phase 16.73 — ON DEFENSE banner. Pulses while opponent has the
+          ball so the player understands they're no longer on offense. */}
+      {possession === 'defender' && (theme === 'gym' || theme === 'blacktop') && !gameOver && (
+        <div className="absolute top-12 sm:top-16 left-1/2 -translate-x-1/2 z-30 pointer-events-none">
+          <div
+            className="px-4 py-1.5 rounded-full text-white font-mono font-extrabold text-sm tracking-widest animate-pulse"
+            style={{
+              background: 'linear-gradient(90deg, rgba(8,145,178,0.95), rgba(220,38,38,0.95))',
+              border: '2px solid #f87171',
+              boxShadow: '0 0 28px rgba(220,38,38,0.6), 0 0 12px rgba(8,145,178,0.5)',
+            }}
+          >
+            🛡 ON DEFENSE — TAP TO BLOCK
+          </div>
+        </div>
+      )}
+
       {/* Phase 16.71 — NOW PLAYING arena music pill (SCid NFT track).
           Tap the ⏭ to skip to the next track. Tap the title to open the
           track page in a new tab. Compact, sits top-center of the canvas. */}
@@ -5456,19 +5505,36 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
           the right side. Big circular tap target visible on all devices. */}
       {(theme === 'city' || theme === 'gym' || theme === 'blacktop') && (
         <>
-          {/* Phase 16.45 — SHOOT button. Solid saturated orange (no /40-/60
-              translucency) + thick neon border + outer glow so it reads as
-              the PRIMARY ACTION pill, distinct from SC chrome. */}
-          <button
-            onPointerDown={(e) => { e.stopPropagation(); shootRef.current?.() }}
-            className="absolute bottom-40 left-3 sm:bottom-32 sm:left-5 z-30 w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-orange-500 border-[3px] border-orange-200 text-white text-3xl sm:text-4xl font-bold active:scale-90 active:bg-orange-400 transition flex items-center justify-center pointer-events-auto"
-            style={{
-              boxShadow: '0 0 0 2px rgba(0,0,0,0.6), 0 0 28px rgba(249,115,22,0.7), inset 0 -4px 8px rgba(0,0,0,0.3), inset 0 4px 8px rgba(255,255,255,0.25)',
-            }}
-            aria-label="Shoot basketball"
-          >
-            🏀
-          </button>
+          {/* Phase 16.73 — possession-aware primary action. Player has ball
+              → 🏀 SHOOT (orange). Defender has ball → 🛡 BLOCK (cyan).
+              Real basketball rules: when you miss, ball goes to opponent,
+              you swap to defense automatically. */}
+          {possession === 'player' ? (
+            <button
+              onPointerDown={(e) => { e.stopPropagation(); shootRef.current?.() }}
+              className="absolute bottom-40 left-3 sm:bottom-32 sm:left-5 z-30 w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-orange-500 border-[3px] border-orange-200 text-white text-3xl sm:text-4xl font-bold active:scale-90 active:bg-orange-400 transition flex items-center justify-center pointer-events-auto"
+              style={{
+                boxShadow: '0 0 0 2px rgba(0,0,0,0.6), 0 0 28px rgba(249,115,22,0.7), inset 0 -4px 8px rgba(0,0,0,0.3), inset 0 4px 8px rgba(255,255,255,0.25)',
+              }}
+              aria-label="Shoot basketball"
+            >
+              🏀
+            </button>
+          ) : (
+            <button
+              onPointerDown={(e) => {
+                e.stopPropagation()
+                window.dispatchEvent(new KeyboardEvent('keydown', { key: 'z' }))
+              }}
+              className="absolute bottom-40 left-3 sm:bottom-32 sm:left-5 z-30 w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-cyan-500 border-[3px] border-cyan-200 text-white text-3xl sm:text-4xl font-bold active:scale-90 active:bg-cyan-400 transition flex items-center justify-center pointer-events-auto"
+              style={{
+                boxShadow: '0 0 0 2px rgba(0,0,0,0.6), 0 0 28px rgba(6,182,212,0.7), inset 0 -4px 8px rgba(0,0,0,0.3), inset 0 4px 8px rgba(255,255,255,0.25)',
+              }}
+              aria-label="Block shot"
+            >
+              🛡
+            </button>
+          )}
           <button
             onPointerDown={(e) => {
               e.stopPropagation()
