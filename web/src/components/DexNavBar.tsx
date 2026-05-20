@@ -48,10 +48,11 @@ import { useModalDispatch } from 'contexts/ModalContext'
 import {
   ProfileVerificationStatusType,
   useCreateProfileVerificationRequestMutation,
-  useProfileVerificationRequestQuery,
+  // useProfileVerificationRequestQuery moved to Phase 7e Vercel-direct hook
   useUpdateHandleMutation,
   useUpdateProfileDisplayNameMutation,
 } from 'lib/graphql'
+import { useProfileVerificationRequest as useProfileVerificationRequestQuery } from 'hooks/useProfileVerificationDirect'  // Phase 7e — Vercel-direct
 import { setJwt } from 'lib/apollo'
 import { config } from 'config'
 import { NotificationBadge } from './NotificationBadge'
