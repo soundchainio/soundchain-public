@@ -1224,21 +1224,35 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
         playerGroup.position.y = jumpStateBG.baseY + jumpY
         const shot = (jumpStateBG as any).pendingShot
         if (shot && progress >= jumpStateBG.ballRelease) {
-          const { start, target, dx, dz, isDunk, isThree } = shot
+          const { target, isDunk, isThree } = shot
           if (isDunk) {
             ballBG.position.set(target.x, target.y + 0.5, target.z)
             ballStateBG.vel.set(0, -8, 0)
           } else {
-            const releaseY = jumpStateBG.baseY + jumpStateBG.peakY + 1.4
-            ballBG.position.set(start.x, releaseY, start.z)
+            // Phase 16.65 — release ball from a HAND-equivalent point
+            // relative to the player's CURRENT position + facing direction.
+            // Previously used `start` captured at shoot-press time, which
+            // was wherever the dribble cycle left the ball (could be at
+            // floor Y or behind the player after a turn). Now: player is
+            // facing the hoop (rotation.y was set at shoot-press), and we
+            // release from in-front-of and above the player so the ball
+            // visibly comes out of the upper body area regardless of body
+            // anim state. Recompute dx/dz against the new release point.
+            const fwd = playerGroup.rotation.y
+            const releaseX = playerGroup.position.x + Math.sin(fwd) * 0.32
+            const releaseZ = playerGroup.position.z + Math.cos(fwd) * 0.32
+            const releaseY = jumpStateBG.baseY + jumpStateBG.peakY + 1.7
+            ballBG.position.set(releaseX, releaseY, releaseZ)
+            const rdx = target.x - releaseX
+            const rdz = target.z - releaseZ
             const apexY = target.y + (isThree ? 3.5 : 2.0)
             const g = 9.8 * 1.5
             const timeUp = isThree ? 0.45 : 0.4
             const timeDown = isThree ? 0.7 : 0.55
             const vy = (apexY - releaseY) / timeUp + 0.5 * g * timeUp
             const totalTime = timeUp + timeDown
-            const vx = dx / totalTime
-            const vz = dz / totalTime
+            const vx = rdx / totalTime
+            const vz = rdz / totalTime
             ballStateBG.vel.set(vx, vy, vz)
           }
           ballStateBG.held = false
@@ -1390,17 +1404,70 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
               }
               break
             }
-            // Rim chirp on close miss (ball passes near rim, slightly outside)
-            if (!(ballStateBG as any).rimHitThisShot && horizDist > 0.34 && horizDist < 0.6 && dyh < 0.3) {
-              ;(ballStateBG as any).rimHitThisShot = true
-              playRim()
+            // Phase 16.65 — REAL rim ring bounce (NOT just SFX). Reflects
+            // velocity radially outward off the rim torus (outer radius
+            // 0.42) so off-target shots ACTUALLY bounce off the metal
+            // instead of ghosting through.
+            if (!ballStateBG.scoredThisShot && horizDist > 0.34 && horizDist < 0.55 && dyh < 0.18) {
+              const rimCD = ((ballStateBG as any).rimBounceCooldown || 0)
+              if (rimCD <= 0) {
+                ;(ballStateBG as any).rimBounceCooldown = 0.15
+                const nx = dxh / (horizDist || 1)
+                const nz = dzh / (horizDist || 1)
+                const vDotN = ballStateBG.vel.x * nx + ballStateBG.vel.z * nz
+                if (vDotN < 0) {
+                  // Reflect horizontal component off rim normal, dampen
+                  ballStateBG.vel.x -= 2 * vDotN * nx * 0.5
+                  ballStateBG.vel.z -= 2 * vDotN * nz * 0.5
+                  ballStateBG.vel.x *= 0.55
+                  ballStateBG.vel.z *= 0.55
+                  ballStateBG.vel.y *= 0.6
+                  // Nudge ball outside ring so it doesn't re-collide
+                  ballBG.position.x = hoop.rimPos.x + nx * 0.55
+                  ballBG.position.z = hoop.rimPos.z + nz * 0.55
+                }
+                if (!(ballStateBG as any).rimHitThisShot) {
+                  ;(ballStateBG as any).rimHitThisShot = true
+                  playRim()
+                }
+              }
             }
-            // Backboard thud (ball within backboard plane radius)
-            if (!(ballStateBG as any).bbHitThisShot && Math.abs(ballBG.position.z - (hoop.rimPos.z - 0.4)) < 0.15 && Math.abs(ballBG.position.x) < 1.0 && ballBG.position.y > 3.2 && ballBG.position.y < 4.3) {
-              ;(ballStateBG as any).bbHitThisShot = true
-              playBackboard()
+            // Phase 16.65 — REAL backboard bounce. The board sits 0.4u
+            // FURTHER from the court center than the rim, in the same
+            // sign direction as the baseline. So for the +z hoop board
+            // is at rimZ + 0.4, for the -z hoop board is at rimZ - 0.4.
+            // boardNormalZ points back toward the court center (opposite
+            // sign from the baseline offset). Ball must be travelling
+            // INTO the board (vel.z opposite of boardNormalZ).
+            const boardSign = Math.sign(hoop.rimPos.z) || 1
+            const boardZ = hoop.rimPos.z + 0.4 * boardSign
+            const boardNormalZ = -boardSign
+            if (Math.abs(ballBG.position.z - boardZ) < 0.18 &&
+                Math.abs(ballBG.position.x - hoop.rimPos.x) < 1.0 &&
+                ballBG.position.y > 3.2 && ballBG.position.y < 4.45) {
+              const bbCD = ((ballStateBG as any).bbBounceCooldown || 0)
+              if (bbCD <= 0 && (ballStateBG.vel.z * boardNormalZ) < 0) {
+                ;(ballStateBG as any).bbBounceCooldown = 0.18
+                ballStateBG.vel.z = -ballStateBG.vel.z * 0.7
+                ballStateBG.vel.x *= 0.85
+                ballStateBG.vel.y *= 0.92
+                // Push ball off the board face toward the court
+                ballBG.position.z = boardZ + boardNormalZ * 0.18
+                if (!(ballStateBG as any).bbHitThisShot) {
+                  ;(ballStateBG as any).bbHitThisShot = true
+                  playBackboard()
+                }
+              }
             }
           }
+        }
+        // Phase 16.65 — bounce-cooldown countdown so successive rim/board
+        // contacts in the same flight don't infinite-loop the reflection.
+        if ((ballStateBG as any).rimBounceCooldown > 0) {
+          ;(ballStateBG as any).rimBounceCooldown -= g
+        }
+        if ((ballStateBG as any).bbBounceCooldown > 0) {
+          ;(ballStateBG as any).bbBounceCooldown -= g
         }
         // Track bounces — after 2 floor contacts force settle so the bounce
         // loop can't keep ball "alive" with vel.y < -2 forever.
@@ -2846,56 +2913,32 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
             'crossover', 'jabstep', 'pumpfake',
           ])
           xbotState.play = (clipName: string, durationMs: number) => {
+            // Phase 16.65 — body anim DISABLED for basketball moves.
+            // Phases 16.42–16.64 (7 rounds) all tried to layer authored
+            // delta-quat clips on top of idle. Every variant produced
+            // T-pose freezes or kick-up gestures because deltas authored
+            // in bind-frame axes don't compose correctly with the live
+            // idle pose (q_idle × q_delta rotates around the wrong axis
+            // once idle has already rotated the shoulder). Real fix is
+            // Mixamo basketball retargets via the anvil norman tunnel —
+            // banked behind that infra. Until it lands, the player STAYS
+            // in idle through every move. The ball arc + player vertical
+            // leap carry the visual; the body stays calm and readable
+            // instead of broken. Lock + SFX still fire.
             const key = clipName.toLowerCase()
-            // Phase 16.64 — ADDITIVE-SAFE ROUTING (real T-pose fix).
-            // Phase 16.50 forced NormalAnimationBlendMode on every play to
-            // route to Mixamo stock clips — but threejs.org/Xbot.glb ships
-            // with ONLY 'idle' baked in. So 'wave', 'jump', 'punch' lookups
-            // missed and fell back to the authored clips, which had been
-            // makeClipAdditive-converted (frame 0 = identity). Played in
-            // REPLACE mode, bone.quaternion = identity = T-pose.
-            // Fix: authored clips play ADDITIVELY (delta on top of idle).
-            // Stock clips (only 'idle' here) crossfade in REPLACE mode.
-            // Idle must stay running as the base layer for additive math.
-            const stockKey = moveToStockClip[key]
-            const actionKey = (stockKey && clipMap[stockKey]) ? stockKey : (clipMap[key] ? key : 'idle')
-            const newAction = clipMap[actionKey]
-            if (!newAction) return
-            const isAuthored = authoredKeys.has(actionKey)
-            newAction.blendMode = isAuthored ? THREE.AdditiveAnimationBlendMode : THREE.NormalAnimationBlendMode
-            const oldAction = clipMap[xbotState.currentClip]
-            newAction.reset().setEffectiveWeight(1).setLoop(THREE.LoopOnce, 1).fadeIn(0.12).play()
-            newAction.clampWhenFinished = true
-            // Authored = additive overlay; idle keeps running as the base
-            // layer so q_final = q_idle × q_delta gives the real pose.
-            // Stock = REPLACE; crossfade out whatever was running.
-            if (isAuthored) {
-              const idleAction = clipMap['idle']
-              if (idleAction && !idleAction.isRunning()) {
-                idleAction.reset().setEffectiveWeight(1).play()
-              }
-            } else if (oldAction && oldAction !== newAction) {
-              oldAction.fadeOut(0.12)
-            }
-            xbotState.currentClip = actionKey
             xbotState.moveLockUntil = performance.now() + durationMs
             if (SQUEAK_MOVES.has(key)) playSqueak()
           }
-          // Phase 16.64 — clean handoff back to idle when any LoopOnce move
-          // clip ends. Additive clips just fade out (idle is still the base).
-          // Replace clips need an idle crossfade-in alongside their fade-out.
+          // Phase 16.65 — finished-handler is also a no-op now (we never
+          // start a non-idle action, so nothing fires "finished"). Kept
+          // as a safety net in case a future hot-path re-enables clips.
           mixer.addEventListener('finished', (ev: any) => {
             const finishedAction = ev.action as THREE.AnimationAction | undefined
             if (!finishedAction) return
             const idleAction = clipMap['idle']
             if (!idleAction || finishedAction === idleAction) return
-            if (finishedAction.blendMode === THREE.AdditiveAnimationBlendMode) {
-              finishedAction.fadeOut(0.18)
-              if (!idleAction.isRunning()) idleAction.reset().setEffectiveWeight(1).play()
-            } else {
-              idleAction.reset().setEffectiveWeight(1).fadeIn(0.18).play()
-              finishedAction.fadeOut(0.18)
-            }
+            finishedAction.fadeOut(0.18)
+            if (!idleAction.isRunning()) idleAction.reset().setEffectiveWeight(1).play()
             xbotState.currentClip = 'idle'
             xbotState.moveLockUntil = 0
           })
