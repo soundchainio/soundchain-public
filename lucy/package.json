@@ -1,0 +1,28 @@
+{
+  "name": "@soundchain/lucy",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Lucy — SoundChain's AI surface. Chat, vision, character designer, generate studio. Local-first via anvil (norman.soundchain.io) with cloud fallback. Standalone Next.js app at lucy.soundchain.io.",
+  "scripts": {
+    "dev": "next dev -p 3003",
+    "build": "next build",
+    "start": "next start -p 3003",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "lucide-react": "^0.453.0",
+    "next": "13.5.6",
+    "react": "18.2.0",
+    "react-dom": "18.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.31",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.3.0"
+  }
+}
