@@ -52,7 +52,8 @@ import { DexNavBar } from 'components/DexNavBar'
 import { ScrollArea } from 'components/ui/scroll-area'
 import { Separator } from 'components/ui/separator'
 import { useAudioPlayerContext, Song } from 'hooks/useAudioPlayer'
-import { useMeQuery, useListingItemsQuery, useExploreUsersSlimQuery, useExploreTracksSlimQuery, useFollowProfileMutation, useUnfollowProfileMutation, usePostQuery, useProfileQuery, useChatsQuery, useChatHistoryLazyQuery, useSendMessageMutation, useResetUnreadMessageCountMutation, useNotificationsQuery, useToggleFavoriteMutation, useUpdateHandleMutation, useUpdateProfileDisplayNameMutation, SortTrackField, SortOrder, useCreateProfileVerificationRequestMutation, ProfileVerificationStatusType } from 'lib/graphql'
+import { useMeQuery, useListingItemsQuery, useExploreUsersSlimQuery, useExploreTracksSlimQuery, useFollowProfileMutation, useUnfollowProfileMutation, useProfileQuery, useChatsQuery, useChatHistoryLazyQuery, useSendMessageMutation, useResetUnreadMessageCountMutation, useNotificationsQuery, useToggleFavoriteMutation, useUpdateHandleMutation, useUpdateProfileDisplayNameMutation, SortTrackField, SortOrder, useCreateProfileVerificationRequestMutation, ProfileVerificationStatusType } from 'lib/graphql'
+import { usePost as usePostQuery } from 'hooks/usePostDirect'  // Phase 7e — Vercel-direct
 import { useGroupedTracks as useGroupedTracksQuery } from 'hooks/useGroupedTracksDirect'  // Phase 7e — Vercel-direct
 import { useTracks as useTracksQuery, useTracksLazy as useTracksLazyQuery, useTrack as useTrackQuery } from 'hooks/useTracksDirect'  // Phase 7e — Vercel-direct
 import { useMaticUsd as useMaticUsdQuery } from 'hooks/useMaticUsdDirect'  // Phase 7e — Vercel-direct

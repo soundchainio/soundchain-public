@@ -13,7 +13,8 @@ import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import { useLayoutContext } from 'hooks/useLayoutContext'
 import { useMe } from 'hooks/useMe'
 import { createApolloClient } from 'lib/apollo'
-import { PostDocument, PostQuery, usePostQuery } from 'lib/graphql'
+import { PostDocument, PostQuery } from 'lib/graphql'
+import { usePost as usePostQuery } from 'hooks/usePostDirect'  // Phase 7e — Vercel-direct
 import { useEffect, useMemo } from 'react'
 
 // Social media crawler user agents

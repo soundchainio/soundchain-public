@@ -1,4 +1,4 @@
-import { usePostQuery } from 'lib/graphql'
+import { usePost as usePostQuery } from 'hooks/usePostDirect'  // Phase 7e — Vercel-direct
 import NextLink from 'next/link'
 import React from 'react'
 import { EmoteRenderer } from './EmoteRenderer'

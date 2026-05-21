@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { ArrowPathIcon } from '@heroicons/react/24/outline'
-import { Track, usePostQuery } from 'lib/graphql'
+import { Track } from 'lib/graphql'
+import { usePost as usePostQuery } from 'hooks/usePostDirect'  // Phase 7e — Vercel-direct
 import { MediaProvider } from 'types/MediaProvider'
 import { hasLazyLoadWithThumbnailSupport, IdentifySource } from 'utils/NormalizeEmbedLinks'
 import { Avatar } from '../Avatar'
