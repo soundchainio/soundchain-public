@@ -2092,387 +2092,6 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
           scene.add(win)
         })
       }
-      // Phase 16.14 — BASKETBALL HALF-COURT at the far end of the street.
-      // Painted asphalt + boundary lines + free-throw + three-point arc + hoop.
-      // No physics yet (Phase 16.15) but it's a real visual landmark to walk
-      // up to. Frank's vision: stumble across it during a gallery walk, see
-      // the hoop, eventually pick up a game.
-      const courtZ = -17  // back of street
-      // Court boundary paint (cyan-grey concrete)
-      const courtMat = new THREE.MeshStandardMaterial({ color: 0x3a3f44, roughness: 0.95 })
-      const court = new THREE.Mesh(new THREE.PlaneGeometry(10, 6), courtMat)
-      court.rotation.x = -Math.PI / 2
-      court.position.set(0, 0.02, courtZ)
-      court.receiveShadow = true
-      scene.add(court)
-      // White boundary lines (4 thin rectangles framing the court)
-      const lineMat = new THREE.MeshBasicMaterial({ color: 0xffffff })
-      const mkLine = (w: number, h: number, x: number, z: number) => {
-        const ln = new THREE.Mesh(new THREE.PlaneGeometry(w, h), lineMat)
-        ln.rotation.x = -Math.PI / 2
-        ln.position.set(x, 0.03, z)
-        scene.add(ln)
-      }
-      mkLine(10, 0.08, 0, courtZ - 3)  // top
-      mkLine(10, 0.08, 0, courtZ + 3)  // bottom
-      mkLine(0.08, 6, -5, courtZ)      // left
-      mkLine(0.08, 6, 5, courtZ)       // right
-      // Free-throw line + key paint
-      mkLine(4, 0.08, 0, courtZ - 0.5)
-      const keyPaint = new THREE.Mesh(
-        new THREE.PlaneGeometry(4, 3),
-        new THREE.MeshBasicMaterial({ color: 0xdc2626, transparent: true, opacity: 0.4 }),
-      )
-      keyPaint.rotation.x = -Math.PI / 2
-      keyPaint.position.set(0, 0.025, courtZ - 1.8)
-      scene.add(keyPaint)
-      // Three-point arc (segmented line)
-      for (let a = -Math.PI * 0.4; a <= Math.PI * 0.4; a += 0.05) {
-        const r = 4
-        const seg = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.08), lineMat)
-        seg.rotation.x = -Math.PI / 2
-        seg.rotation.z = a + Math.PI / 2
-        seg.position.set(Math.sin(a) * r, 0.03, courtZ - 2.8 - Math.cos(a) * r)
-        scene.add(seg)
-      }
-      // Hoop pole + backboard + rim
-      const pole = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.1, 0.15, 4, 12),
-        new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.7, roughness: 0.4 }),
-      )
-      pole.position.set(0, 2, courtZ - 3.5)
-      pole.castShadow = true
-      scene.add(pole)
-      const backboard = new THREE.Mesh(
-        new THREE.BoxGeometry(2, 1.3, 0.1),
-        new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.92 }),
-      )
-      backboard.position.set(0, 3.8, courtZ - 3.4)
-      backboard.castShadow = true
-      scene.add(backboard)
-      // Backboard square (target box)
-      const targetBox = new THREE.Mesh(
-        new THREE.PlaneGeometry(0.6, 0.45),
-        new THREE.MeshBasicMaterial({ color: 0xdc2626, transparent: true, opacity: 0 }),
-      )
-      ;[
-        [-0.3, 3.6], [0.3, 3.6], [-0.3, 4.05], [0.3, 4.05],
-      ].forEach(() => {})
-      // Just draw target square outline
-      const sqOutline = new THREE.LineSegments(
-        new THREE.EdgesGeometry(new THREE.PlaneGeometry(0.6, 0.45)),
-        new THREE.LineBasicMaterial({ color: 0xdc2626 }),
-      )
-      sqOutline.position.set(0, 3.7, courtZ - 3.35)
-      scene.add(sqOutline)
-      // Rim (orange ring)
-      const rim = new THREE.Mesh(
-        new THREE.TorusGeometry(0.35, 0.04, 8, 24),
-        new THREE.MeshStandardMaterial({ color: 0xea580c, emissive: 0xea580c, emissiveIntensity: 0.2, metalness: 0.7, roughness: 0.3 }),
-      )
-      rim.position.set(0, 3.3, courtZ - 3.0)
-      rim.rotation.x = Math.PI / 2
-      rim.castShadow = true
-      scene.add(rim)
-      // Net (10 small cylinders hanging from rim — visual approximation)
-      const netMat = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.8 })
-      for (let ni = 0; ni < 12; ni++) {
-        const a = (ni / 12) * Math.PI * 2
-        const seg = new THREE.Mesh(new THREE.CylinderGeometry(0.005, 0.005, 0.35, 4), netMat)
-        seg.position.set(Math.cos(a) * 0.32, 3.13, courtZ - 3.0 + Math.sin(a) * 0.32)
-        scene.add(seg)
-      }
-      // Court signage above the court — yellow "WELCOME TO THE COURT"
-      const signCanvas = document.createElement('canvas')
-      signCanvas.width = 1024; signCanvas.height = 128
-      const sctx = signCanvas.getContext('2d')!
-      sctx.fillStyle = '#000'; sctx.fillRect(0, 0, 1024, 128)
-      sctx.strokeStyle = '#facc15'; sctx.lineWidth = 4; sctx.strokeRect(8, 8, 1008, 112)
-      sctx.fillStyle = '#facc15'; sctx.font = 'bold 64px monospace'; sctx.textAlign = 'center'
-      sctx.fillText('🏀 THE COURT', 512, 80)
-      const signTex = new THREE.CanvasTexture(signCanvas)
-      const sign = new THREE.Mesh(
-        new THREE.PlaneGeometry(6, 0.75),
-        new THREE.MeshStandardMaterial({ map: signTex, emissive: 0xfacc15, emissiveIntensity: 0.3, emissiveMap: signTex }),
-      )
-      sign.position.set(0, 5.0, courtZ - 3.6)
-      scene.add(sign)
-
-      // Phase 16.27 — BASKETBALL. Orange ball follows the character at hand
-      // height; press B (or tap SHOOT button) to launch it toward the hoop
-      // with a parabolic arc. Simple physics — gravity + initial velocity
-      // aimed at the rim's apex. Detect score by checking ball passes through
-      // the rim's 0.35u torus radius near rim Y on the way down.
-      const RIM_POS = new THREE.Vector3(0, 3.3, courtZ - 3.0)
-      const ballMat = new THREE.MeshStandardMaterial({
-        color: 0xea580c, emissive: 0xea580c, emissiveIntensity: 0.1, roughness: 0.6, metalness: 0.05,
-      })
-      const ball = new THREE.Mesh(new THREE.SphereGeometry(0.18, 16, 12), ballMat)
-      ball.castShadow = true
-      ball.position.set(0, 1.4, 5)  // initial spawn at player
-      scene.add(ball)
-      const ballState = {
-        held: true,
-        vel: new THREE.Vector3(),
-        scoredThisShot: false,
-        airborneFrames: 0,
-        returnTimer: 0,
-      }
-      ;(scene.userData as any).ball = { ball, ballState, RIM_POS }
-
-      // Phase 16.35 — NBA2K-style shot mechanic with jump animation and
-      // automatic slam dunk when close to rim. Player crouches → leaps →
-      // ball releases at apex. Distance from rim determines shot type:
-      //   <2.5u → SLAM DUNK (vertical leap, ball pushed straight through)
-      //   2.5-7u → JUMP SHOT (arc with player jump)
-      //   >7u → THREE-POINTER (longer arc, less jump)
-      const jumpState = { active: false, t: 0, duration: 0, peakY: 0, ballRelease: 0, isDunk: false, baseY: 0 }
-      ;(scene.userData as any).jumpState = jumpState
-      // playerGroup is declared further below — store ref lazily via scene.userData
-
-      shootRef.current = () => {
-        if (!ballState.held || jumpState.active) return  // can't shoot while mid-jump
-        const playerGroup = (scene.userData as any).playerGroupRef
-        if (!playerGroup) return
-        const start = ball.position.clone()
-        const target = RIM_POS.clone()
-        const dx = target.x - start.x
-        const dz = target.z - start.z
-        const horizDist = Math.hypot(dx, dz)
-        if (horizDist < 0.1) return
-
-        // Face the hoop (rotate player to look at it)
-        playerGroup.rotation.y = Math.atan2(dx, dz)
-
-        const isDunk = horizDist < 2.5
-        const isThree = horizDist > 7
-
-        // Jump animation parameters
-        jumpState.active = true
-        jumpState.t = 0
-        jumpState.baseY = playerGroup.position.y
-        jumpState.duration = isDunk ? 0.6 : isThree ? 0.5 : 0.55
-        jumpState.peakY = isDunk ? 1.8 : isThree ? 0.6 : 1.2  // dunk = highest jump
-        jumpState.ballRelease = isDunk ? 0.5 : 0.35  // release at peak of jump for dunk
-        jumpState.isDunk = isDunk
-
-        // Pre-set ball trajectory parameters but only release at peak of jump
-        ;(jumpState as any).pendingShot = { start, target, dx, dz, horizDist, isDunk, isThree }
-      }
-      ;(scene.userData as any).updateJump = (dt: number) => {
-        if (!jumpState.active) return
-        const playerGroup = (scene.userData as any).playerGroupRef
-        if (!playerGroup) return
-        jumpState.t += dt
-        const progress = jumpState.t / jumpState.duration
-        // Squat-jump-land curve: smooth parabola for vertical leap
-        let jumpY = 0
-        if (progress < 0.15) {
-          // Squat: dip slightly
-          jumpY = -0.1 * (progress / 0.15)
-        } else if (progress < 1) {
-          // Jump arc — parabola peaking at jumpState.peakY
-          const u = (progress - 0.15) / 0.85
-          jumpY = jumpState.peakY * 4 * u * (1 - u) - 0.1 + 0.1 * u
-        }
-        playerGroup.position.y = jumpState.baseY + jumpY
-        // Release ball at the apex
-        const shot = (jumpState as any).pendingShot
-        if (shot && progress >= jumpState.ballRelease) {
-          const { start, target, dx, dz, horizDist, isDunk, isThree } = shot
-          if (isDunk) {
-            // SLAM DUNK — push ball straight through rim from above
-            ball.position.set(target.x, target.y + 0.5, target.z)
-            ballState.vel.set(0, -8, 0)
-          } else {
-            // Jump shot / three — release from peak position
-            const releaseY = jumpState.baseY + jumpState.peakY + 1.4
-            ball.position.set(start.x, releaseY, start.z)
-            const apexY = target.y + (isThree ? 3.5 : 2.0)
-            const g = 9.8 * 1.5
-            const timeUp = isThree ? 0.45 : 0.4
-            const timeDown = isThree ? 0.7 : 0.55
-            const vy = (apexY - releaseY) / timeUp + 0.5 * g * timeUp
-            const totalTime = timeUp + timeDown
-            const vx = dx / totalTime
-            const vz = dz / totalTime
-            ballState.vel.set(vx, vy, vz)
-          }
-          ballState.held = false
-          ballState.scoredThisShot = false
-          ballState.airborneFrames = 0
-          ;(ballState as any).rimHitThisShot = false
-          ;(ballState as any).bbHitThisShot = false
-          ;(ballState as any).airTime = 0
-          ;(ballState as any).bounces = 0
-          ballState.returnTimer = 0
-          setHoopScore((s) => ({ ...s, attempts: s.attempts + 1 }))
-          ;(jumpState as any).pendingShot = null
-        }
-        if (jumpState.t >= jumpState.duration) {
-          jumpState.active = false
-          playerGroup.position.y = jumpState.baseY
-        }
-      }
-      ;(scene.userData as any).gravity = (g: number) => {
-        const ballRef = (scene.userData as any).ball
-        if (!ballRef) return
-        const { ball, ballState, RIM_POS } = ballRef
-        if (ballState.held) return
-        ballState.airborneFrames++
-        ballState.vel.y -= 9.8 * 1.5 * g  // g here is dtSec
-        ball.position.x += ballState.vel.x * g
-        ball.position.y += ballState.vel.y * g
-        ball.position.z += ballState.vel.z * g
-        // Phase 16.64 — REAL rim + backboard collision with velocity bounce.
-        // Previously these blocks only triggered SFX; ball passed through both
-        // like ghosts. Now: rim ring (torus major-radius 0.35, tube 0.04)
-        // reflects ball off its outer ring using the radial normal in XZ;
-        // backboard plane reflects Z-velocity. Restitution tuned to feel like
-        // 2K — rim bounces are soft (0.5), backboard is harder (0.7).
-        const dx = ball.position.x - RIM_POS.x
-        const dz = ball.position.z - RIM_POS.z
-        const horizDist = Math.hypot(dx, dz)
-        const dy = Math.abs(ball.position.y - RIM_POS.y)
-        // Made-shot detection (only while moving downward through inner radius)
-        if (!ballState.scoredThisShot && ballState.vel.y < 0) {
-          if (horizDist < 0.30 && dy < 0.18) {
-            ballState.scoredThisShot = true
-            setHoopScore((s) => ({ makes: s.makes + 1, attempts: s.attempts, streak: s.streak + 1 }))
-            playSwish()
-            // Net drag — kill horizontal vel, slow descent for realism
-            ballState.vel.x *= 0.2
-            ballState.vel.z *= 0.2
-            ballState.vel.y = Math.max(ballState.vel.y, -2.5)
-          }
-        }
-        // Rim bounce — ball is on the torus ring (between inner 0.30 and outer 0.42)
-        // at rim height. Reflect velocity radially outward in XZ plane.
-        if (!ballState.scoredThisShot && horizDist > 0.30 && horizDist < 0.42 && dy < 0.12) {
-          const rimCooldown = ((ballState as any).rimBounceCooldown || 0)
-          if (rimCooldown <= 0) {
-            ;(ballState as any).rimBounceCooldown = 0.12
-            const nx = dx / (horizDist || 1)
-            const nz = dz / (horizDist || 1)
-            const vDotN = ballState.vel.x * nx + ballState.vel.z * nz
-            if (vDotN < 0) {
-              // Reflect horizontal component off rim normal, dampen
-              ballState.vel.x -= 2 * vDotN * nx * 0.5
-              ballState.vel.z -= 2 * vDotN * nz * 0.5
-              ballState.vel.x *= 0.55
-              ballState.vel.z *= 0.55
-              ballState.vel.y *= 0.6
-              // Nudge ball just outside rim ring so it doesn't re-collide
-              ball.position.x = RIM_POS.x + nx * 0.43
-              ball.position.z = RIM_POS.z + nz * 0.43
-            }
-            ;(ballState as any).rimHitThisShot = true
-            playRim()
-          }
-        }
-        if ((ballState as any).rimBounceCooldown > 0) {
-          ;(ballState as any).rimBounceCooldown -= g
-        }
-        // Backboard bounce — plane at Z = RIM_POS.z - 0.15, normal +Z (NBA spec).
-        // Ball must be coming AT the board (vel.z opposite of normal sign).
-        // direction-aware: rim sits at (-0.3 * dir) from baseZ, board at (-0.7 * dir).
-        // Normal points back toward court — same sign as -dir.
-        const boardZ = RIM_POS.z - 0.15  // NBA: backboard 0.15m back from rim center
-        const boardNormalZ = Math.sign(ball.position.z - boardZ) || 1
-        if (!ballState.scoredThisShot &&
-            Math.abs(ball.position.z - boardZ) < 0.12 &&
-            Math.abs(ball.position.x) < 1.0 &&
-            ball.position.y > 3.2 && ball.position.y < 4.4) {
-          const bbCooldown = ((ballState as any).bbBounceCooldown || 0)
-          if (bbCooldown <= 0 && (ballState.vel.z * boardNormalZ) < 0) {
-            ;(ballState as any).bbBounceCooldown = 0.15
-            ballState.vel.z = -ballState.vel.z * 0.7
-            ballState.vel.x *= 0.85
-            ballState.vel.y *= 0.92
-            // Push ball off the board so it doesn't re-trigger
-            ball.position.z = boardZ + boardNormalZ * 0.14
-            ;(ballState as any).bbHitThisShot = true
-            playBackboard()
-          }
-        }
-        if ((ballState as any).bbBounceCooldown > 0) {
-          ;(ballState as any).bbBounceCooldown -= g
-        }
-        // Floor collision — max 2 bounces then force settle
-        if (ball.position.y < 0.18) {
-          ball.position.y = 0.18
-          ;(ballState as any).bounces = ((ballState as any).bounces || 0) + 1
-          if (ballState.vel.y < -2 && (ballState as any).bounces < 2) {
-            ballState.vel.y = -ballState.vel.y * 0.4
-            ballState.vel.x *= 0.55
-            ballState.vel.z *= 0.55
-          } else {
-            ballState.vel.set(0, 0, 0)
-            if (ballState.returnTimer <= 0) ballState.returnTimer = 0.6
-          }
-          if (!ballState.scoredThisShot && ballState.airborneFrames > 5) {
-            setHoopScore((s) => ({ ...s, streak: 0 }))
-            ballState.scoredThisShot = true
-            // Phase 16.64 — MISS callout so player has visual feedback that
-            // the shot didn't drop. Pairs with rim/backboard SFX + bounce.
-            const hitRim = !!(ballState as any).rimHitThisShot
-            const hitBoard = !!(ballState as any).bbHitThisShot
-            const missText = hitRim ? 'RIM OUT' : hitBoard ? 'OFF BOARD' : 'AIRBALL'
-            const missColor = hitRim ? '#fb923c' : hitBoard ? '#f87171' : '#9ca3af'
-            setShotResult({ text: missText, color: missColor, bornAt: performance.now() })
-          }
-        }
-        // Phase 16.39 — HARD 2.5s watchdog + OOB rescue
-        ;(ballState as any).airTime = ((ballState as any).airTime || 0) + g
-        const outOfBoundsCity = Math.abs(ball.position.x) > 12 ||
-                                Math.abs(ball.position.z - RIM_POS.z) > 14 ||
-                                ball.position.y > 25
-        if (outOfBoundsCity && ballState.returnTimer <= 0) {
-          ballState.returnTimer = 0.3
-        }
-        if ((ballState as any).airTime > 2.5 && ballState.returnTimer <= 0) {
-          ballState.returnTimer = 0.05
-        }
-        // Return to hand after ball settles
-        if (ballState.returnTimer > 0) {
-          ballState.returnTimer -= g
-          if (ballState.returnTimer <= 0) {
-            ballState.held = true
-            ballState.vel.set(0, 0, 0)
-            ;(ballState as any).airTime = 0
-            ;(ballState as any).bounces = 0
-            ;(ballState as any).rimHitThisShot = false
-            ;(ballState as any).bbHitThisShot = false
-          }
-        }
-      }
-
-      // Phase 16.15 — multiplayer pickup game sign (DEFERRED)
-      // Until WebRTC/Socket.IO server infrastructure is online, the court is
-      // single-player visit-only. Sign tells visitors the multiplayer is
-      // coming + invites them to share the URL so friends can show up
-      // (today they'd see solo; future they'd see each other's avatars).
-      const comingSignCanvas = document.createElement('canvas')
-      comingSignCanvas.width = 1024; comingSignCanvas.height = 192
-      const cctx = comingSignCanvas.getContext('2d')!
-      cctx.fillStyle = 'rgba(0,0,0,0.85)'; cctx.fillRect(0, 0, 1024, 192)
-      cctx.strokeStyle = '#22d3ee'; cctx.lineWidth = 3
-      cctx.setLineDash([12, 12]); cctx.strokeRect(12, 12, 1000, 168)
-      cctx.setLineDash([])
-      cctx.fillStyle = '#22d3ee'; cctx.font = 'bold 38px monospace'; cctx.textAlign = 'center'
-      cctx.fillText('🚧 PICKUP GAMES — COMING SOON', 512, 65)
-      cctx.fillStyle = '#ffffff'; cctx.font = '24px monospace'
-      cctx.fillText('2v2 multiplayer · share this gallery URL', 512, 110)
-      cctx.fillText('to invite friends · play w/ controllers', 512, 145)
-      const comingSignTex = new THREE.CanvasTexture(comingSignCanvas)
-      const comingSign = new THREE.Mesh(
-        new THREE.PlaneGeometry(5, 0.95),
-        new THREE.MeshStandardMaterial({ map: comingSignTex, emissive: 0x22d3ee, emissiveIntensity: 0.15, emissiveMap: comingSignTex, transparent: true }),
-      )
-      comingSign.position.set(-7, 2.5, courtZ + 1)
-      comingSign.rotation.y = Math.PI / 6
-      scene.add(comingSign)
-
       // Phase 16.26 — LOCATION SIGN at spawn point. Updates when user
       // searches a city/street in the HUD search bar. Default shows "spawn"
       // copy with hint to use the search. After search, shows the address.
@@ -3120,6 +2739,8 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
             upLegR: findBone('mixamorigRightUpLeg', 'RightUpLeg'),
             legL:   findBone('mixamorigLeftLeg', 'LeftLeg'),
             legR:   findBone('mixamorigRightLeg', 'RightLeg'),
+            footL:  findBone('mixamorigLeftFoot', 'LeftFoot'),
+            footR:  findBone('mixamorigRightFoot', 'RightFoot'),
           }
           console.log('[GalleryRoom3D] XBot bones resolved:', B)
 
@@ -3420,6 +3041,8 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
             upLegL: B.upLegL ? boneByName[B.upLegL] : null,
             legR: B.legR ? boneByName[B.legR] : null,
             legL: B.legL ? boneByName[B.legL] : null,
+            footR: B.footR ? boneByName[B.footR] : null,
+            footL: B.footL ? boneByName[B.footL] : null,
             spine: B.spine ? boneByName[B.spine] : null,
             head: B.head ? boneByName[B.head] : null,
           }
@@ -3482,36 +3105,49 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
           // composition trap that broke phases 16.42-16.64 — deltas are
           // applied in the bone's CURRENT local frame, not in the bind
           // frame, so rotations land where they're authored to land.
-          // Phase 16.73 — Frank: "slam dunks or any shot in the paint is still
-          // shot with knees". Root cause: the underlying Mixamo Wave clip
-          // (which jumpshot/three/fadeaway route to via moveToStockClip)
-          // animates the LEGS too. shoot deltas only overrode ARM bones, so
-          // the mixer's wave-leg-motion bled through and read as a kicking
-          // motion. Fix: add ZERO-rotation leg overrides on every shoot move
-          // so the legs stay STATIC during the shot (planted feet, proper
-          // shooting form). DUNK/LAYUP/REBOUND/BLOCK keep their authored
-          // knee-tuck deltas — those are real basketball mechanics; we just
-          // tone them DOWN so they read as jumping not kicking.
+          // Phase 16.76 — Frank (post-work): "any shot close to basket is still
+          // soccer style using legs". Phase 16.73 zeroed legs on outside shots
+          // but layup/dunk/rebound/block STILL had authored knee-tuck deltas
+          // (e.g. layup upLegR -0.7, dunk upLegR/L -0.55, legR/L 0.85). Those
+          // are exactly the soccer-kick frames Frank keeps seeing.
+          //
+          // The REAL fix: NO LEG ROTATION ON ANY SHOT, PERIOD. Vertical motion
+          // comes from playerGroup.position.y via jumpStateBG.peakY (it lifts
+          // the WHOLE body upward — the rendered look is "feet leave floor",
+          // not "knee kicks toward chest"). The procedural overlay re-asserts
+          // every leg bone to its captured base every frame, so the underlying
+          // Mixamo Wave/Jump/Punch clip's own leg animation is overwritten.
+          //
+          // LEG_LOCK_KEYS is appended to every move's delta map below so all
+          // four leg bones are guaranteed to render as `baseQuat × identity`
+          // = baseQuat = idle planted pose. Real NBA jump/dunk/layup motion
+          // is mostly hip + torso + arms; the knees don't rotate forward.
           const ROOT: [number, number, number] = [0, 0, 0]
+          const LEG_LOCK: Record<string, [number, number, number]> = {
+            upLegR: ROOT, upLegL: ROOT, legR: ROOT, legL: ROOT, footR: ROOT, footL: ROOT,
+          }
           const SHOOT_DELTAS: Record<string, Record<string, [number, number, number]>> = {
-            // Outside shots — legs locked planted, only upper body extends
-            jumpshot:  { armR: [-2.4, 0, 0.05], forearmR: [-0.5, 0, 0], armL: [-0.9, 0, 0.25], spine: [-0.08, 0, 0], head: [-0.15, 0, 0], upLegR: ROOT, upLegL: ROOT, legR: ROOT, legL: ROOT },
-            three:     { armR: [-2.5, 0, 0.05], forearmR: [-0.4, 0, 0], armL: [-0.95, 0, 0.25], spine: [-0.10, 0, 0], upLegR: ROOT, upLegL: ROOT, legR: ROOT, legL: ROOT },
-            fadeaway:  { armR: [-2.4, 0, 0.05], forearmR: [-0.4, 0, 0], spine: [-0.45, 0, 0], head: [-0.25, 0, 0], upLegR: ROOT, upLegL: ROOT, legR: ROOT, legL: ROOT },
-            // Layup — single right knee comes up (real form), left planted
-            layup:     { armR: [-2.4, 0, 0.10], forearmR: [-0.2, 0, 0], armL: [-0.8, 0, 0.2], upLegR: [-0.7, 0, 0], legR: [0.55, 0, 0], upLegL: ROOT, legL: ROOT, spine: [-0.10, 0, 0] },
-            // Dunk — both knees TUCKED (jump pose) but less exaggerated.
-            // Reduced from -0.9/1.3 → -0.55/0.85 so it reads as jumping
-            // not kicking.
-            dunk:      { armR: [-2.7, 0, -0.15], armL: [-2.7, 0, 0.15], forearmR: [-0.25, 0, 0], forearmL: [-0.25, 0, 0], upLegR: [-0.55, 0, 0], upLegL: [-0.55, 0, 0], legR: [0.85, 0, 0], legL: [0.85, 0, 0], spine: [-0.12, 0, 0] },
-            // Rebound — two-leg leap, also toned down from -0.8/1.2
-            rebound:   { armR: [-2.7, 0, -0.2], armL: [-2.7, 0, 0.2], upLegR: [-0.50, 0, 0], upLegL: [-0.50, 0, 0], legR: [0.75, 0, 0], legL: [0.75, 0, 0] },
-            // Block — vertical leap with arm up. Toned legs.
-            block:     { armR: [-2.7, 0, -0.05], forearmR: [-0.15, 0, 0], upLegR: [-0.45, 0, 0], upLegL: [-0.45, 0, 0], legR: [0.65, 0, 0], legL: [0.65, 0, 0] },
-            pass:      { armR: [-1.0, 0, -0.35], armL: [-1.0, 0, 0.35], forearmR: [-0.7, 0, 0], forearmL: [-0.7, 0, 0], upLegR: ROOT, upLegL: ROOT, legR: ROOT, legL: ROOT },
-            crossover: { spine: [0, 0, 0.45], armR: [-0.4, -0.35, -0.35], armL: [-0.4, 0.35, 0.35] },
-            pumpfake:  { armR: [-1.4, 0, 0], forearmR: [-0.55, 0, 0], armL: [-0.4, 0, 0.2], upLegR: ROOT, upLegL: ROOT, legR: ROOT, legL: ROOT },
-            jabstep:   { upLegR: [-0.5, 0, 0], legR: [0.35, 0, 0], spine: [-0.15, 0, 0] },
+            // Outside shots — arms up, body straight, legs locked planted
+            jumpshot:  { ...LEG_LOCK, armR: [-2.4, 0, 0.05], forearmR: [-0.5, 0, 0], armL: [-0.9, 0, 0.25], spine: [-0.08, 0, 0], head: [-0.15, 0, 0] },
+            three:     { ...LEG_LOCK, armR: [-2.5, 0, 0.05], forearmR: [-0.4, 0, 0], armL: [-0.95, 0, 0.25], spine: [-0.10, 0, 0] },
+            fadeaway:  { ...LEG_LOCK, armR: [-2.4, 0, 0.05], forearmR: [-0.4, 0, 0], spine: [-0.45, 0, 0], head: [-0.25, 0, 0] },
+            // Layup — arms extend up + slight reach, legs locked. Vertical
+            // lift handled by jumpStateBG.peakY translating the body upward.
+            layup:     { ...LEG_LOCK, armR: [-2.6, 0, 0.10], forearmR: [-0.3, 0, 0], armL: [-0.8, 0, 0.2], spine: [-0.10, 0, 0] },
+            // Dunk — both arms straight overhead in a slam motion. NO knee
+            // tuck. Body translates upward via jumpStateBG.peakY (3.5u peak).
+            dunk:      { ...LEG_LOCK, armR: [-2.9, 0, -0.10], armL: [-2.9, 0, 0.10], forearmR: [-0.15, 0, 0], forearmL: [-0.15, 0, 0], spine: [-0.18, 0, 0] },
+            // Rebound — two arms reach up to grab ball, legs locked
+            rebound:   { ...LEG_LOCK, armR: [-2.7, 0, -0.2], armL: [-2.7, 0, 0.2], spine: [-0.10, 0, 0] },
+            // Block — vertical arm extension, legs locked
+            block:     { ...LEG_LOCK, armR: [-2.7, 0, -0.05], forearmR: [-0.15, 0, 0], spine: [-0.08, 0, 0] },
+            pass:      { ...LEG_LOCK, armR: [-1.0, 0, -0.35], armL: [-1.0, 0, 0.35], forearmR: [-0.7, 0, 0], forearmL: [-0.7, 0, 0] },
+            crossover: { ...LEG_LOCK, spine: [0, 0, 0.45], armR: [-0.4, -0.35, -0.35], armL: [-0.4, 0.35, 0.35] },
+            pumpfake:  { ...LEG_LOCK, armR: [-1.4, 0, 0], forearmR: [-0.55, 0, 0], armL: [-0.4, 0, 0.2] },
+            // Jabstep is the only ground move where ONE knee deliberately
+            // extends forward (real basketball jab) — keep that, lock the
+            // other three legs.
+            jabstep:   { upLegR: [-0.5, 0, 0], legR: [0.35, 0, 0], upLegL: ROOT, legL: ROOT, footR: ROOT, footL: ROOT, spine: [-0.15, 0, 0] },
           }
           xbotState.shootDeltas = SHOOT_DELTAS
           xbotState.play = (clipName: string, durationMs: number) => {
@@ -5597,7 +5233,7 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
           a stack of pills competing with global chrome. Buttons themselves
           are larger (w-14 h-14), more saturated colors, and use bg-black/90
           for solid backgrounds (no /40 translucency). */}
-      {(theme === 'gym' || theme === 'blacktop' || theme === 'city') && (() => {
+      {(theme === 'gym' || theme === 'blacktop') && (() => {
         const tap = (k: string) => (e: React.PointerEvent) => {
           e.stopPropagation()
           window.dispatchEvent(new KeyboardEvent('keydown', { key: k }))
@@ -5690,7 +5326,7 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
           Moved to LEFT side (above D-pad) so it doesn't collide with the
           global SC chrome pills (search / brain / Invite / Customize) on
           the right side. Big circular tap target visible on all devices. */}
-      {(theme === 'city' || theme === 'gym' || theme === 'blacktop') && (
+      {(theme === 'gym' || theme === 'blacktop') && (
         <>
           {/* Phase 16.73 — possession-aware primary action. Player has ball
               → 🏀 SHOOT (orange). Defender has ball → 🛡 BLOCK (cyan).
@@ -5874,8 +5510,8 @@ export default function GalleryRoom3D({ ownerHandle, ownerProfileId, theme = 'cy
             📍 {cityLocation.label}
           </div>
         )}
-        {/* Phase 16.51 — basketball score HUD (now city + gym + blacktop) */}
-        {(theme === 'city' || theme === 'gym' || theme === 'blacktop') && (
+        {/* Phase 16.51 — basketball score HUD (gym + blacktop only) */}
+        {(theme === 'gym' || theme === 'blacktop') && (
           <>
             <div className="px-2 py-1 rounded bg-orange-500/15 backdrop-blur border border-orange-500/40 text-[10px] font-mono text-orange-300 flex items-center gap-2">
               🏀 <span className="font-bold">{hoopScore.makes}</span>/<span>{hoopScore.attempts}</span>
