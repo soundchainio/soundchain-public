@@ -99,6 +99,27 @@ export const useExploreUsersSlim = (opts?: { first?: number; search?: string; sk
   return { data, loading, error, fetchMore, refetch }
 }
 
+// Apollo-shape wrapper for non-slim useExploreUsersQuery — accepts
+// `variables: { search, page }` shape directly so callsites can swap with
+// minimal edits.
+export const useExploreUsers = (opts?: {
+  variables?: { search?: string; page?: { first?: number; after?: string | null } }
+  skip?: boolean
+  fetchPolicy?: string
+}): {
+  data: ApolloShape | undefined
+  loading: boolean
+  error: Error | null
+  fetchMore: (args?: { variables?: { search?: string; page?: { first?: number; after?: string | null } } }) => Promise<void>
+  refetch: () => Promise<void>
+} => {
+  return useExploreUsersSlim({
+    first: opts?.variables?.page?.first,
+    search: opts?.variables?.search,
+    skip: opts?.skip,
+  })
+}
+
 // Lazy variant for MentionAutocomplete (@user search-as-you-type)
 export const useExploreUsersLazy = (): [
   (opts: { variables: { search?: string; page?: { first?: number } } }) => Promise<void>,

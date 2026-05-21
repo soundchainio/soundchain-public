@@ -1,5 +1,6 @@
 /* eslint-disable react/display-name */
-import { PageInput, useExploreUsersQuery } from 'lib/graphql'
+import { PageInput } from 'lib/graphql'
+import { useExploreUsers as useExploreUsersQuery } from 'hooks/useExploreUsersSlimDirect'  // Phase 7e — Vercel-direct
 import React from 'react'
 import { NoResultFound } from '../../NoResultFound'
 import { ProfileListItemSkeleton } from '../../ProfileListItemSkeleton'

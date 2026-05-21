@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { Search, Grid3X3, List, Play, Pause, Music2, Check, X, Loader2, ChevronRight } from 'lucide-react'
-import { useExploreTracksQuery, Track } from 'lib/graphql'
+import { Track } from 'lib/graphql'
+import { useExploreTracks as useExploreTracksQuery } from 'hooks/useExploreTracksSlimDirect'  // Phase 7e — Vercel-direct
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import { getIpfsUrl } from 'utils/ipfs'
 import { useDebounce } from 'hooks/useDebounce'

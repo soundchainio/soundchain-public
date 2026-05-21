@@ -2,7 +2,8 @@
 
 import { useState, useCallback, useRef } from 'react'
 import { X, ImagePlus, Loader2, Plus, Search, Link2, Music2, Trash2 } from 'lucide-react'
-import { useExploreTracksQuery, SortExploreTracksField, SortOrder, PlaylistTrackSourceType } from 'lib/graphql'
+import { SortExploreTracksField, SortOrder, PlaylistTrackSourceType } from 'lib/graphql'
+import { useExploreTracks as useExploreTracksQuery } from 'hooks/useExploreTracksSlimDirect'  // Phase 7e — Vercel-direct
 // Apollo mutations replaced by Vercel direct (Phase 5e)
 import { useUpload } from 'hooks/useUpload'
 import Asset from 'components/Asset/Asset'

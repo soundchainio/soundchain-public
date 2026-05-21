@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Play, Pause, Heart, Share2, Clock, X, Trash2, ExternalLink, Music, Loader2, Plus, Search, SkipBack, SkipForward, Link2, Import, Check, CheckSquare, Square, Camera, MessageSquare, Film, Copy } from 'lucide-react'
 import { useAudioPlayerContext, Song } from 'hooks/useAudioPlayer'
-import { GetUserPlaylistsQuery, useExploreTracksQuery, PlaylistTrackSourceType, TrackDocument, SortExploreTracksField, SortOrder } from 'lib/graphql'
+import { GetUserPlaylistsQuery, PlaylistTrackSourceType, TrackDocument, SortExploreTracksField, SortOrder } from 'lib/graphql'
+import { useExploreTracks as useExploreTracksQuery } from 'hooks/useExploreTracksSlimDirect'  // Phase 7e — Vercel-direct
 import { useApolloClient } from '@apollo/client'
 import Asset from 'components/Asset/Asset'
 import { useUpload } from 'hooks/useUpload'

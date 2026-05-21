@@ -1,6 +1,7 @@
 /* eslint-disable react/display-name */
 import { ProfileListItem } from 'components/ProfileListItem'
-import { PageInput, useExploreUsersQuery } from 'lib/graphql'
+import { PageInput } from 'lib/graphql'
+import { useExploreUsers as useExploreUsersQuery } from 'hooks/useExploreUsersSlimDirect'  // Phase 7e — Vercel-direct
 import { memo } from 'react'
 import AutoSizer from 'react-virtualized-auto-sizer'
 import { areEqual, FixedSizeList as List } from 'react-window'

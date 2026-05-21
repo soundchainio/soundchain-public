@@ -1,4 +1,5 @@
-import { ExploreTracksQuery, PageInput, TrackQuery, useExploreTracksQuery } from 'lib/graphql'
+import { ExploreTracksQuery, PageInput, TrackQuery } from 'lib/graphql'
+import { useExploreTracks as useExploreTracksQuery } from 'hooks/useExploreTracksSlimDirect'  // Phase 7e — Vercel-direct
 import React, { memo, useState } from 'react'
 import { areEqual, FixedSizeList as List, ListChildComponentProps } from 'react-window'
 import AutoSizer from 'react-virtualized-auto-sizer'

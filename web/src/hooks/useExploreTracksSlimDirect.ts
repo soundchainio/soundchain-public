@@ -98,3 +98,23 @@ export const useExploreTracksSlim = (opts?: { first?: number; search?: string; g
   const refetch = async () => { setBust((b) => b + 1) }
   return { data, loading, error, fetchMore, refetch }
 }
+
+// Apollo-shape wrapper for non-slim useExploreTracksQuery — accepts
+// `variables: { search, page }` shape directly.
+export const useExploreTracks = (opts?: {
+  variables?: { search?: string; page?: { first?: number; after?: string | null } }
+  skip?: boolean
+  fetchPolicy?: string
+}): {
+  data: ApolloShape | undefined
+  loading: boolean
+  error: Error | null
+  fetchMore: (args?: { variables?: { search?: string; page?: { first?: number; after?: string | null } } }) => Promise<void>
+  refetch: () => Promise<void>
+} => {
+  return useExploreTracksSlim({
+    first: opts?.variables?.page?.first,
+    search: opts?.variables?.search,
+    skip: opts?.skip,
+  })
+}
