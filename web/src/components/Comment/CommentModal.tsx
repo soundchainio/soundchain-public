@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { X, ChevronDown, ChevronUp } from 'lucide-react'
 import { useModalDispatch, useModalState } from 'contexts/ModalContext'
-import { useCommentsQuery, PageInput } from 'lib/graphql'
+import { PageInput } from 'lib/graphql'
+import { useComments as useCommentsQuery } from 'hooks/useCommentsDirect'  // Phase 7e — Vercel-direct
 import { Comment } from './Comment'
 import { CommentSkeleton } from './CommentSkeleton'
 import { NewCommentForm } from '../NewCommentForm'

@@ -1,7 +1,8 @@
 import { useApolloClient } from '@apollo/client'
 import { InfiniteLoader } from 'components/InfiniteLoader'
 import { LoaderAnimation } from 'components/LoaderAnimation'
-import { PageInput, useCommentsQuery } from 'lib/graphql'
+import { PageInput } from 'lib/graphql'
+import { useComments as useCommentsQuery } from 'hooks/useCommentsDirect'  // Phase 7e — Vercel-direct
 import { useRouter } from 'next/router'
 import { useEffect, useRef, useState } from 'react'
 import { Comment } from './Comment'
