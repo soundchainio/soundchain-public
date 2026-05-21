@@ -13,6 +13,7 @@ import {
   Menu,
   X,
   Zap,
+  Dribbble,
 } from 'lucide-react'
 
 interface ArenaShellProps {
@@ -32,6 +33,7 @@ const NAV = [
   { href: '/boxing',        label: 'Boxing',  icon: Zap },
   { href: '/horse-racing',  label: 'Horse',   icon: Flag },
   { href: '/soccer',        label: 'Soccer',  icon: Trophy },
+  { href: '/gym',           label: 'Gym',     icon: Dribbble, accent: true },
   { href: '/fantasy',       label: 'Fantasy', icon: Trophy },
   { href: '/picks',         label: 'Picks',   icon: Swords },
 ]
