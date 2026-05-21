@@ -10,11 +10,11 @@ import { createApolloClient } from 'lib/apollo'
 import {
   ProfileByHandleDocument,
   ProfileByHandleQuery,
-  useGroupedTracksQuery,
   SortTrackField,
   SortOrder,
 } from 'lib/graphql'
 import { useProfileByHandle as useProfileByHandleQuery } from 'hooks/useProfileByHandleDirect'  // Phase 7e — Vercel-direct
+import { useGroupedTracks as useGroupedTracksQuery } from 'hooks/useGroupedTracksDirect'  // Phase 7e — Vercel-direct
 import { useMe } from 'hooks/useMe'
 import { Logo } from 'icons/Logo'
 import { ManagerGreeting } from 'components/manager/ManagerGreeting'

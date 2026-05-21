@@ -7,7 +7,7 @@
 import { useEffect, useState, useCallback, useMemo, ReactElement, Component, ErrorInfo, ReactNode } from 'react'
 import { useMe } from 'hooks/useMe'
 import { useRouter } from 'next/router'
-import { useGroupedTracksQuery } from 'lib/graphql'
+import { useGroupedTracks as useGroupedTracksQuery } from 'hooks/useGroupedTracksDirect'  // Phase 7e — Vercel-direct
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import dynamic from 'next/dynamic'
 import { DexNavBar } from 'components/DexNavBar'

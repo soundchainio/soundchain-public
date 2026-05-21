@@ -29,7 +29,8 @@ import {
 import { useMagicContext } from 'hooks/useMagicContext'
 import { useMe } from 'hooks/useMe'
 import { useUnifiedWallet } from 'contexts/UnifiedWalletContext'
-import { useTracksQuery, useGroupedTracksQuery } from 'lib/graphql'
+import { useTracksQuery } from 'lib/graphql'
+import { useGroupedTracks as useGroupedTracksQuery } from 'hooks/useGroupedTracksDirect'  // Phase 7e — Vercel-direct
 import { Logo } from 'icons/Logo'
 
 // Stat Card Component

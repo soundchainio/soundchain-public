@@ -76,9 +76,9 @@ const getEmbedHeight = (url: string): string => {
   }
 }
 import {
-  useGroupedTracksQuery,
   SortTrackField, SortOrder,
 } from 'lib/graphql'
+import { useGroupedTracks as useGroupedTracksQuery } from 'hooks/useGroupedTracksDirect'  // Phase 7e — Vercel-direct
 import { useFollowingLazy as useFollowingLazyQuery, useFollowersLazy as useFollowersLazyQuery } from 'hooks/useUsersSocialDirect'  // Phase 7e — Vercel-direct
 import { useAudioPlayerContext, Song } from 'hooks/useAudioPlayer'
 
