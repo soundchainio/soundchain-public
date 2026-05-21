@@ -1,7 +1,7 @@
 import { useState } from 'react'
 
 import { Button } from 'components/common/Buttons/Button'
-import { useMeQuery } from 'lib/graphql'
+import { useMeDirectQuery as useMeQuery } from 'hooks/useMeDirect'  // Phase 7e — Vercel-direct
 import Link from 'next/link'
 import { BsArrowRightShort } from 'react-icons/bs'
 import { svgGradientFromPurpleToGreen } from 'styles/svgGradientFromPurpleToGreen'

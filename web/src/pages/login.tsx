@@ -12,7 +12,8 @@ import { LeftArrow } from 'icons/LeftArrow';
 import { LogoAndText } from 'icons/LogoAndText';
 import { UserWarning } from 'icons/UserWarning';
 import { setJwt } from 'lib/apollo';
-import { AuthMethod, useLoginMutation, useMeQuery } from 'lib/graphql';
+import { AuthMethod, useLoginMutation } from 'lib/graphql';
+import { useMeDirectQuery as useMeQuery } from 'hooks/useMeDirect';  // Phase 7e — Vercel-direct
 import {
   CREATE_HD_ACCOUNT_MUTATION,
   LOGIN_BY_EMAIL_MUTATION,

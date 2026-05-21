@@ -8,7 +8,7 @@ import dynamic from 'next/dynamic'
 const MiniSphere = dynamic(() => import('components/MiniSphere').then(m => m.MiniSphere), { ssr: false })
 import { OgunPriceTicker } from 'components/OgunPriceTicker'
 import { getJwt } from 'lib/apollo'
-import { useMeQuery } from 'lib/graphql'
+import { useMeDirectQuery as useMeQuery } from 'hooks/useMeDirect'  // Phase 7e — Vercel-direct
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useMagicContext } from 'hooks/useMagicContext'

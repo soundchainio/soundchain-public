@@ -5,7 +5,7 @@ import { useMagicContext } from 'hooks/useMagicContext'
 import { useUnifiedWallet } from 'contexts/UnifiedWalletContext'
 import { useMutation } from '@apollo/client'
 import { MAKE_POST_PERMANENT_MUTATION } from 'lib/graphql/mutations'
-import { useMeQuery } from 'lib/graphql'
+import { useMeDirectQuery as useMeQuery } from 'hooks/useMeDirect'  // Phase 7e — Vercel-direct
 import Web3 from 'web3'
 import { toast } from 'react-toastify'
 
