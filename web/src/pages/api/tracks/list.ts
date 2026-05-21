@@ -86,6 +86,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (genre) {
       filter.genres = { $in: [genre] }
     }
+    const trackEditionId = req.query.trackEditionId as string
+    if (trackEditionId) {
+      try { filter.trackEditionId = new ObjectId(trackEditionId) } catch { /* invalid id */ }
+    }
     if (cursor) {
       try { filter._id = { $lt: new ObjectId(cursor) } } catch { /* invalid cursor */ }
     }

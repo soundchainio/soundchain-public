@@ -29,7 +29,7 @@ import {
 import { useMagicContext } from 'hooks/useMagicContext'
 import { useMe } from 'hooks/useMe'
 import { useUnifiedWallet } from 'contexts/UnifiedWalletContext'
-import { useTracksQuery } from 'lib/graphql'
+import { useTracks as useTracksQuery } from 'hooks/useTracksDirect'  // Phase 7e — Vercel-direct
 import { useGroupedTracks as useGroupedTracksQuery } from 'hooks/useGroupedTracksDirect'  // Phase 7e — Vercel-direct
 import { Logo } from 'icons/Logo'
 

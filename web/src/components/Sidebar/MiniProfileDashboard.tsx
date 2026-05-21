@@ -4,7 +4,8 @@ import Link from 'next/link'
 import { useMe } from 'hooks/useMe'
 import { useMagicContext } from 'hooks/useMagicContext'
 import { Avatar } from '../Avatar'
-import { useTracksQuery, SortTrackField, SortOrder } from 'lib/graphql'
+import { SortTrackField, SortOrder } from 'lib/graphql'
+import { useTracks as useTracksQuery } from 'hooks/useTracksDirect'  // Phase 7e — Vercel-direct
 import { useFollowing as useFollowingQuery } from 'hooks/useUsersSocialDirect'  // Phase 7e — Vercel-direct
 import { useFavoriteTracks as useFavoriteTracksQuery } from 'hooks/useFavoriteTracksDirect'  // Phase 7e — Vercel-direct
 import {

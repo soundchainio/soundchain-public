@@ -4,7 +4,7 @@ import { TopNavBarProps } from 'components/TopNavBar'
 import { useLayoutContext } from 'hooks/useLayoutContext'
 import { Auction } from 'icons/Auction'
 import { CheckmarkFilled } from 'icons/CheckmarkFilled'
-import { useTrackQuery } from 'lib/graphql'
+import { useTrack as useTrackQuery } from 'hooks/useTracksDirect'  // Phase 7e — Vercel-direct
 import NextLink from 'next/link'
 import { useRouter } from 'next/router'
 import { useEffect } from 'react'

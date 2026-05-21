@@ -2,7 +2,8 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { useTracksQuery, useExploreUsersQuery, SortTrackField, SortOrder } from 'lib/graphql'
+import { useExploreUsersQuery, SortTrackField, SortOrder } from 'lib/graphql'
+import { useTracks as useTracksQuery } from 'hooks/useTracksDirect'  // Phase 7e — Vercel-direct
 import { Avatar } from '../Avatar'
 import { TrendingUp, Flame, Play, Users, BadgeCheck, Sparkles, Trophy, ChevronDown, ChevronUp } from 'lucide-react'
 import { useAudioPlayerContext, Song } from 'hooks/useAudioPlayer'

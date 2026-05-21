@@ -1,5 +1,6 @@
 import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
-import { SortOrder, SortTrackField, useTracksQuery } from 'lib/graphql'
+import { SortOrder, SortTrackField } from 'lib/graphql'
+import { useTracks as useTracksQuery } from 'hooks/useTracksDirect'  // Phase 7e — Vercel-direct
 import { InfiniteLoader } from 'components/InfiniteLoader'
 import { NoResultFound } from './NoResultFound'
 import { TrackListItem } from './TrackListItem'

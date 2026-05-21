@@ -3,7 +3,8 @@
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { useMe } from 'hooks/useMe'
-import { useTracksQuery, SortTrackField, SortOrder } from 'lib/graphql'
+import { SortTrackField, SortOrder } from 'lib/graphql'
+import { useTracks as useTracksQuery } from 'hooks/useTracksDirect'  // Phase 7e — Vercel-direct
 import { useFavoriteTracks as useFavoriteTracksQuery } from 'hooks/useFavoriteTracksDirect'  // Phase 7e — Vercel-direct
 import { useGetUserPlaylists } from 'hooks/useUserPlaylistsDirect'  // Phase 7e — Vercel-direct
 import { Avatar } from '../Avatar'
