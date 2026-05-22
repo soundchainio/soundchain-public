@@ -54,11 +54,10 @@ import { useOpenClawGateway } from 'hooks/useOpenClawGateway'
 import { usePushNotifications } from 'hooks/usePushNotifications'
 import { useMeDirectQuery as useMeQuery } from 'hooks/useMeDirect'  // Phase 7e — Vercel-direct
 import {
-  useSendMessageMutation,
   useExploreUsersLazyQuery,
   ChatsDocument,
 } from 'lib/graphql'
-import { useResetUnreadMessageCountMutation } from 'hooks/useMutationsDirect'  // Phase 7f — Vercel-direct
+import { useSendMessageMutation, useResetUnreadMessageCountMutation } from 'hooks/useMutationsDirect'  // Phase 7f — Vercel-direct
 import { useUnreadMessageCountLazy as useUnreadMessageCountLazyQuery } from 'hooks/useMeDirect'  // Phase 7e — Vercel-direct
 // Vercel-direct chat fetching (kills Apollo → Lambda dependency for chat reads)
 import { useState as useStateChat, useEffect as useEffectChat, useCallback as useCallbackChat } from 'react'

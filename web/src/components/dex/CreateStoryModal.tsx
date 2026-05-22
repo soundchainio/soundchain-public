@@ -6,7 +6,8 @@ import {
 import { useMe } from 'hooks/useMe'
 import { smartCompress, needsCompression, CompressionProgress } from 'lib/mediaCompression'
 import { useUpload } from 'hooks/useUpload'
-import { usePinToIpfsMutation, Track } from 'lib/graphql'
+import { Track } from 'lib/graphql'
+import { usePinToIpfsMutation } from 'hooks/useMutationsDirect'  // Phase 7f — Vercel-direct
 import { toast } from 'react-toastify'
 import { gql, useMutation, useApolloClient } from '@apollo/client'
 import { NFTMusicPicker } from './NFTMusicPicker'

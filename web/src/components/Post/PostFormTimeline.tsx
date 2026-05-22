@@ -16,7 +16,8 @@ interface Emoji {
   shortcodes: string
 }
 import { Edit } from 'icons/Edit'
-import { CreatePostInput, useCreatePostMutation, useGuestCreatePostMutation } from 'lib/graphql'
+import { CreatePostInput } from 'lib/graphql'
+import { useCreatePostMutation, useGuestCreatePostMutation } from 'hooks/useMutationsDirect'  // Phase 7f — Vercel-direct
 import { useApolloClient } from '@apollo/client'
 import { useState, useRef } from 'react'
 import { toast } from 'react-toastify'

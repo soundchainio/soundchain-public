@@ -3,7 +3,7 @@ import { X } from 'lucide-react'
 import { GuestAvatar, formatWalletAddress } from '../GuestAvatar'
 import { StickerPicker } from '../StickerPicker'
 import { EmoteTextInput } from './EmoteTextInput'
-import { useGuestCreatePostMutation } from 'lib/graphql'
+import { useGuestCreatePostMutation } from 'hooks/useMutationsDirect'  // Phase 7f — Vercel-direct
 import Picker from '@emoji-mart/react'
 import { getNormalizedLink, hasLink } from 'utils/NormalizeEmbedLinks'
 

@@ -180,6 +180,81 @@ export const useUpdateProfileVerificationRequestMutation = (_opts?: any): Mut<Up
   })
 }
 
+// ============================================================
+// Phase 7f.2 — Content writes
+// ============================================================
+
+// --- useCreatePostMutation ---
+type CreatePostInputBag = {
+  body?: string
+  mediaLink?: string
+  mediaThumbnail?: string
+  uploadedMediaUrl?: string
+  uploadedMediaType?: string
+  uploadedMediaThumbnail?: string
+  repostId?: string
+  trackId?: string
+  isEphemeral?: boolean
+  mediaExpiresAt?: string | Date
+}
+type CreatePostVars = { input?: CreatePostInputBag }
+type CreatePostData = { createPost: { post: any } }
+
+export const useCreatePostMutation = (_opts?: any): Mut<CreatePostVars, CreatePostData> => {
+  return useMutBase<CreatePostVars, CreatePostData>(async (vars) => {
+    const input = vars?.input || {}
+    const json = await doPost('/api/feed/create', input)
+    return { createPost: { post: json?.post || json } }
+  })
+}
+
+// --- useGuestCreatePostMutation ---
+type GuestCreatePostVars = { input?: CreatePostInputBag; walletAddress?: string }
+type GuestCreatePostData = { guestCreatePost: { post: any } }
+
+export const useGuestCreatePostMutation = (_opts?: any): Mut<GuestCreatePostVars, GuestCreatePostData> => {
+  return useMutBase<GuestCreatePostVars, GuestCreatePostData>(async (vars) => {
+    const input = vars?.input || {}
+    const payload = { ...input, isGuest: true, walletAddress: vars?.walletAddress }
+    const json = await doPost('/api/feed/create', payload)
+    return { guestCreatePost: { post: json?.post || json } }
+  })
+}
+
+// --- usePinToIpfsMutation ---
+type PinJsonVars = { json?: any; fileName?: string; input?: { json?: any; fileName?: string } }
+type PinJsonData = { pinToIpfs: { cid: string; ipfsHash: string } }
+
+export const usePinToIpfsMutation = (_opts?: any): Mut<PinJsonVars, PinJsonData> => {
+  return useMutBase<PinJsonVars, PinJsonData>(async (vars) => {
+    const json = vars?.input?.json ?? vars?.json
+    const fileName = vars?.input?.fileName ?? vars?.fileName ?? 'metadata.json'
+    if (!json) throw new Error('json required')
+    const result = await doPost('/api/ipfs/pin-json', { json, fileName })
+    const cid = result?.ipfsHash || result?.cid || result?.IpfsHash || ''
+    return { pinToIpfs: { cid, ipfsHash: cid } }
+  })
+}
+
+// --- useSendMessageMutation ---
+type SendMessageVars = {
+  input?: { message?: string; toId?: string; toProfileId?: string }
+  message?: string
+  toId?: string
+}
+type SendMessageData = { sendMessage: { ok: boolean; id?: string } }
+
+export const useSendMessageMutation = (_opts?: any): Mut<SendMessageVars, SendMessageData> => {
+  return useMutBase<SendMessageVars, SendMessageData>(async (vars) => {
+    const v = vars?.input || vars || {}
+    const toId = v.toId || (v as any).toProfileId
+    const message = v.message
+    if (!toId || !message) throw new Error('toId + message required')
+    const result = await doPost('/api/dm/send', { toId, message })
+    return { sendMessage: { ok: true, id: result?.id } }
+  })
+}
+
 // --- useUpdateCommentMutation ---
 type UpdateCommentVars = { input?: { commentId?: string; body?: string }; commentId?: string; body?: string }
 type UpdateCommentData = { updateComment: { ok: boolean } }

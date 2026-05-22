@@ -3,11 +3,11 @@ import { Form, Formik, FormikHelpers } from 'formik'
 import {
   CreatePostInput,
   UpdatePostInput,
-  useCreatePostMutation,
   useCreateRepostMutation,
   useTrackLazyQuery,
   useUpdatePostMutation,
 } from 'lib/graphql'
+import { useCreatePostMutation } from 'hooks/useMutationsDirect'  // Phase 7f — Vercel-direct
 import { useEffect, useRef, useState } from 'react'
 import { ExternalLink } from 'lucide-react'
 import { PostFormType } from 'types/PostFormType'

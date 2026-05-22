@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { X, Search, Send, Copy, Check, Film, Link2 } from 'lucide-react'
 import { Avatar } from 'components/Avatar'
 import { useMe } from 'hooks/useMe'
-import { useSendMessageMutation } from 'lib/graphql'
+import { useSendMessageMutation } from 'hooks/useMutationsDirect'  // Phase 7f — Vercel-direct
 import { useChatsLazy as useChatsLazyQuery } from 'hooks/useChatsDirect'  // Phase 7e — Vercel-direct
 import { useFollowingLazy as useFollowingLazyQuery } from 'hooks/useUsersSocialDirect'  // Phase 7e — Vercel-direct
 import { toast } from 'react-toastify'
