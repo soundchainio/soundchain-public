@@ -10,7 +10,8 @@ import SEO from 'components/SEO'
 import { useMe } from 'hooks/useMe'
 import { useUpload } from 'hooks/useUpload'
 import { cacheFor } from 'lib/apollo'
-import { Genre, useCreateTrackWithSCidMutation } from 'lib/graphql'
+import { Genre } from 'lib/graphql'
+import { useCreateTrackWithSCidMutation } from 'hooks/useMutationsDirect'  // Phase 7f — Vercel-direct
 import { protectPage } from 'lib/protectPage'
 import { useCallback } from 'react'
 

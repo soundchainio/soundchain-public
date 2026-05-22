@@ -15,7 +15,8 @@ import { useMe } from 'hooks/useMe'
 import { useWalletContext } from 'hooks/useWalletContext'
 import { useMagicContext } from 'hooks/useMagicContext'
 import { Locker } from 'icons/Locker'
-import { PendingRequest, TrackDocument, TrackQuery, useUpdateTrackMutation } from 'lib/graphql'
+import { PendingRequest, TrackDocument, TrackQuery } from 'lib/graphql'
+import { useUpdateTrackMutation } from 'hooks/useMutationsDirect'  // Phase 7f — Vercel-direct
 import { useBuyNowItemLazy as useBuyNowItemLazyQuery } from 'hooks/useMarketplaceItemsDirect'  // Phase 7e — Vercel-direct
 import { protectPage } from 'lib/protectPage'
 import { useRouter } from 'next/router'

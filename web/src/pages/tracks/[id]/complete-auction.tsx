@@ -12,7 +12,8 @@ import { useMe } from 'hooks/useMe'
 import { useWalletContext } from 'hooks/useWalletContext'
 import { CheckmarkFilled } from 'icons/CheckmarkFilled'
 import { cacheFor } from 'lib/apollo'
-import { PendingRequest, TrackDocument, TrackQuery, useUpdateTrackMutation } from 'lib/graphql'
+import { PendingRequest, TrackDocument, TrackQuery } from 'lib/graphql'
+import { useUpdateTrackMutation } from 'hooks/useMutationsDirect'  // Phase 7f — Vercel-direct
 import { useAuctionItem as useAuctionItemQuery } from 'hooks/useMarketplaceItemsDirect'  // Phase 7e — Vercel-direct
 import { protectPage } from 'lib/protectPage'
 import { useRouter } from 'next/router'

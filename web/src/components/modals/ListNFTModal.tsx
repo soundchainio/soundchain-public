@@ -5,7 +5,8 @@ import { ListNFTBuyNow, ListNFTBuyNowFormValues } from 'components/pages/details
 import useBlockchain from 'hooks/useBlockchain'
 import useBlockchainV2 from 'hooks/useBlockchainV2'
 import { useMe } from 'hooks/useMe'
-import { PendingRequest, useUpdateTrackMutation } from 'lib/graphql'
+import { PendingRequest } from 'lib/graphql'
+import { useUpdateTrackMutation } from 'hooks/useMutationsDirect'  // Phase 7f — Vercel-direct
 import { useBuyNowItemLazy as useBuyNowItemLazyQuery } from 'hooks/useMarketplaceItemsDirect'  // Phase 7e — Vercel-direct
 import { FormikHelpers } from 'formik'
 import { toast } from 'react-toastify'

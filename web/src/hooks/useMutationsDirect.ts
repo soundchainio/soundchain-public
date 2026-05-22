@@ -255,6 +255,76 @@ export const useSendMessageMutation = (_opts?: any): Mut<SendMessageVars, SendMe
   })
 }
 
+// ============================================================
+// Phase 7f.3 — Marketplace + chain mutations
+// ============================================================
+
+// --- useUpdateTrackMutation ---
+type NftDataPatch = {
+  pendingRequest?: string | null
+  pendingTime?: string | Date | null
+  owner?: string | null
+  tokenId?: number | null
+  contract?: string | null
+  ipfsCid?: string | null
+  transactionHash?: string | null
+  minter?: string | null
+}
+type UpdateTrackInputBag = {
+  trackId?: string
+  nftData?: NftDataPatch
+  playbackCount?: number
+  profileId?: string
+}
+type UpdateTrackVars = { input?: UpdateTrackInputBag }
+type UpdateTrackData = { updateTrack: { track: any } }
+
+export const useUpdateTrackMutation = (_opts?: any): Mut<UpdateTrackVars, UpdateTrackData> => {
+  return useMutBase<UpdateTrackVars, UpdateTrackData>(async (vars) => {
+    const input = vars?.input || {}
+    if (!input.trackId) throw new Error('trackId required')
+    const result = await doPost('/api/tracks/update', {
+      trackId: input.trackId,
+      nftData: input.nftData,
+      playbackCount: input.playbackCount,
+      profileId: input.profileId,
+    })
+    return { updateTrack: { track: result?.track || null } }
+  })
+}
+
+// --- useCreateTrackWithSCidMutation ---
+type CreateTrackInputBag = {
+  title?: string
+  description?: string
+  assetUrl?: string
+  artworkUrl?: string
+  artist?: string
+  album?: string
+  releaseYear?: number
+  copyright?: string
+  genres?: string[]
+  createPost?: boolean
+  isrc?: string
+  utilityInfo?: string
+}
+type CreateTrackVars = { input?: CreateTrackInputBag }
+type CreateTrackData = { createTrackWithSCid: { track: any; scid: any } }
+
+export const useCreateTrackWithSCidMutation = (_opts?: any): Mut<CreateTrackVars, CreateTrackData> => {
+  return useMutBase<CreateTrackVars, CreateTrackData>(async (vars) => {
+    const input = vars?.input || {}
+    if (!input.title || !input.assetUrl) throw new Error('title + assetUrl required')
+    const result = await doPost('/api/tracks/create-scid', input)
+    return {
+      createTrackWithSCid: {
+        track: result?.track || null,
+        scid: result?.scid || null,
+      },
+    }
+  })
+}
+
 // --- useUpdateCommentMutation ---
 type UpdateCommentVars = { input?: { commentId?: string; body?: string }; commentId?: string; body?: string }
 type UpdateCommentData = { updateComment: { ok: boolean } }
