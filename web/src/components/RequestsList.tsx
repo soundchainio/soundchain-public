@@ -1,4 +1,5 @@
-import { PageInput, ProfileVerificationStatusType, useProfileVerificationRequestsQuery } from 'lib/graphql'
+import { PageInput, ProfileVerificationStatusType } from 'lib/graphql'
+import { useProfileVerificationRequests as useProfileVerificationRequestsQuery } from 'hooks/useAdminDirect'  // Phase 7e — Vercel-direct
 import React from 'react'
 import { InfiniteLoader } from 'components/InfiniteLoader'
 import { ManageRequestCard } from './ManageRequestCard'

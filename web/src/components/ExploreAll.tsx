@@ -4,7 +4,7 @@ import { Subtitle } from 'components/Subtitle'
 import { TrackListItem } from 'components/TrackListItem'
 import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import { RightArrow } from 'icons/RightArrow'
-import { useExploreQuery } from 'lib/graphql'
+import { useExplore as useExploreQuery } from 'hooks/useExploreDirect'  // Phase 7e — Vercel-direct
 import { ExploreTab } from 'types/ExploreTabType'
 import { ExploreTopTracksBanner } from './ExploreTopTracksBanner'
 import { ProfileListItemSkeleton } from './ProfileListItemSkeleton'

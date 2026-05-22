@@ -124,6 +124,47 @@ export const useFollowing = (opts: { profileId?: string; first?: number; skip?: 
   return { data, loading, error, fetchMore, refetch }
 }
 
+// Apollo-shape wrapper for useFollowedArtistsLazyQuery — same backing data
+// as useFollowing but the response key is `followedArtists` and nodes are
+// flat profiles (not { id, followedProfile: { ... } } envelopes).
+type FollowedArtistsShape = {
+  followedArtists: {
+    nodes: ProfileSlim[]
+    pageInfo: { hasNextPage: boolean; endCursor: string | null; totalCount: number }
+  }
+}
+type LazyArtistsResult = { data: FollowedArtistsShape | undefined; loading: boolean; called: boolean; refetch: () => Promise<void>; fetchMore: () => Promise<void> }
+type LazyArtistsTrigger = (opts?: { variables?: { profileId?: string; page?: { first?: number } } }) => Promise<void>
+
+export const useFollowedArtistsLazy = (): [LazyArtistsTrigger, LazyArtistsResult] => {
+  const [data, setData] = useState<FollowedArtistsShape | undefined>(undefined)
+  const [loading, setLoading] = useState(false)
+  const [called, setCalled] = useState(false)
+  const [lastProfileId, setLastProfileId] = useState<string>('')
+  const trigger: LazyArtistsTrigger = async (opts) => {
+    const profileId = opts?.variables?.profileId || ''
+    const first = opts?.variables?.page?.first ?? 50
+    if (!profileId) return
+    setLoading(true)
+    setCalled(true)
+    setLastProfileId(profileId)
+    const json = await fetchSocial(profileId, 'following', first)
+    if (json) {
+      const nodes: ProfileSlim[] = (json.nodes || []).map((n: any) => n.followingProfile || n.followedProfile).filter(Boolean)
+      setData({
+        followedArtists: {
+          nodes,
+          pageInfo: { hasNextPage: !!json.pageInfo?.hasNextPage, endCursor: json.pageInfo?.endCursor || null, totalCount: Number(json.pageInfo?.totalCount || nodes.length) },
+        },
+      })
+    }
+    setLoading(false)
+  }
+  const refetch = async () => { if (lastProfileId) await trigger({ variables: { profileId: lastProfileId } }) }
+  const fetchMore = async () => {}
+  return [trigger, { data, loading, called, refetch, fetchMore }]
+}
+
 // Lazy variants (for typeahead / on-demand load patterns)
 type LazyResult<T> = { data: T | undefined; loading: boolean; called: boolean }
 type LazyTrigger = (opts?: { variables?: { profileId?: string; page?: { first?: number; after?: string | null } } }) => Promise<void>
