@@ -1,10 +1,11 @@
 import { useCallback, useEffect } from 'react'
 
-import { useNotificationCountLazyQuery } from 'lib/graphql'
+import { useNotificationCountLazy as useNotificationCountLazyQuery } from 'hooks/useNotificationsDirect'  // Phase 7e — Vercel-direct
 import { useRouter } from 'next/router'
 
 export const NotificationBadge = () => {
-  const [fetchNotificationCount, { data, refetch }] = useNotificationCountLazyQuery({ fetchPolicy: 'no-cache' })
+  const [fetchNotificationCount, { data }] = useNotificationCountLazyQuery({ fetchPolicy: 'no-cache' })
+  const refetch = fetchNotificationCount
   const router = useRouter()
 
   const refetchNotificationCount = useCallback(() => {

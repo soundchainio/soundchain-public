@@ -4,9 +4,9 @@ import {
   NotificationCountDocument,
   SortNotificationField,
   SortOrder,
-  useNotificationsQuery,
   useResetNotificationCountMutation,
 } from 'lib/graphql'
+import { useNotifications as useNotificationsQuery } from 'hooks/useNotificationsDirect'  // Phase 7e — Vercel-direct
 
 import CircleLoading from './CircleLoading'
 import { ClearAllNotificationsButton } from './ClearAllNotificationsButton'

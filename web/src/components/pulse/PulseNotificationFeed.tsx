@@ -13,11 +13,11 @@ import {
   SortNotificationField,
   SortOrder,
   NotificationType,
-  useNotificationsQuery,
   useNotificationQuery,
   useResetNotificationCountMutation,
   useClearNotificationsMutation,
 } from 'lib/graphql'
+import { useNotifications as useNotificationsQuery } from 'hooks/useNotificationsDirect'  // Phase 7e — Vercel-direct
 import { Avatar } from 'components/Avatar'
 import { formatDistanceToNow, isToday, isYesterday, subDays, isAfter } from 'date-fns'
 import { Bell, Trash2, UserPlus, Heart, MessageCircle, ShoppingBag, Coins, Star } from 'lucide-react'
