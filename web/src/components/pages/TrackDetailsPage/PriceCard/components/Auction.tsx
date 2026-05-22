@@ -13,10 +13,10 @@ import { Matic as MaticIcon } from 'icons/Matic'
 import {
   PendingRequest,
   TrackQuery,
-  useAuctionItemQuery,
   useCountBidsLazyQuery,
   useUserByWalletLazyQuery,
 } from 'lib/graphql'
+import { useAuctionItem as useAuctionItemQuery } from 'hooks/useMarketplaceItemsDirect'  // Phase 7e — Vercel-direct
 import Link from 'next/link'
 import { type HighestBid } from 'pages/tracks/[id]/complete-auction' // Changed to type-only import
 import tw from 'tailwind-styled-components'

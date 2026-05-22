@@ -25,11 +25,11 @@ import {
   PendingRequest,
   TrackDocument,
   TrackQuery,
-  useAuctionItemQuery,
   useCountBidsQuery,
   useHaveBidedLazyQuery,
   useUserByWalletLazyQuery,
 } from 'lib/graphql'
+import { useAuctionItem as useAuctionItemQuery } from 'hooks/useMarketplaceItemsDirect'  // Phase 7e — Vercel-direct
 import { protectPage } from 'lib/protectPage'
 import { useRouter } from 'next/router'
 import { authenticator } from 'otplib'
