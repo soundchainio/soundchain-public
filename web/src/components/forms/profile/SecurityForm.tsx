@@ -2,7 +2,7 @@ import * as bip39 from 'bip39'
 import { Button, ButtonProps } from 'components/common/Buttons/Button'
 import { Form, Formik } from 'formik'
 import { useMe } from 'hooks/useMe'
-import { useUpdateOtpMutation } from 'lib/graphql'
+import { useUpdateOtpMutation } from 'hooks/useMutationsDirect'  // Phase 7f — Vercel-direct
 import React, { useState } from 'react'
 import * as yup from 'yup'
 import { toast } from 'react-toastify'

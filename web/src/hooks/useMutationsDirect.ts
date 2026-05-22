@@ -337,3 +337,50 @@ export const useUpdateCommentMutation = (_opts?: any): Mut<UpdateCommentVars, Up
     return { updateComment: { ok: true } }
   })
 }
+
+// ============================================================
+// Phase 7f.4 — Wallet + auth-recovery
+// ============================================================
+
+// --- useUpdateOtpMutation ---
+type UpdateOtpVars = { input?: { otpSecret?: string; otpRecoveryPhrase?: string } }
+type UpdateOtpData = { updateOTP: { user: { id: string } } }
+
+export const useUpdateOtpMutation = (_opts?: any): Mut<UpdateOtpVars, UpdateOtpData> => {
+  return useMutBase<UpdateOtpVars, UpdateOtpData>(async (vars) => {
+    const input = vars?.input || {}
+    const result = await doPost('/api/user/update-otp', {
+      otpSecret: input.otpSecret || '',
+      otpRecoveryPhrase: input.otpRecoveryPhrase || '',
+    })
+    await invalidateMe()
+    return { updateOTP: { user: result?.user || { id: '' } } }
+  })
+}
+
+// --- useValidateOtpRecoveryPhraseMutation ---
+type ValidateOtpVars = { input?: { otpRecoveryPhrase?: string }; otpRecoveryPhrase?: string }
+type ValidateOtpData = { validateOTPRecoveryPhrase: boolean }
+
+export const useValidateOtpRecoveryPhraseMutation = (_opts?: any): Mut<ValidateOtpVars, ValidateOtpData> => {
+  return useMutBase<ValidateOtpVars, ValidateOtpData>(async (vars) => {
+    const phrase = vars?.input?.otpRecoveryPhrase ?? vars?.otpRecoveryPhrase ?? ''
+    if (!phrase) throw new Error('otpRecoveryPhrase required')
+    const result = await doPost('/api/user/validate-otp-recovery', { otpRecoveryPhrase: phrase })
+    return { validateOTPRecoveryPhrase: !!result?.valid }
+  })
+}
+
+// --- useUpdateDefaultWalletMutation ---
+type UpdateDefaultWalletVars = { input?: { defaultWallet?: string }; defaultWallet?: string }
+type UpdateDefaultWalletData = { updateDefaultWallet: { user: { id: string; defaultWallet: string } } }
+
+export const useUpdateDefaultWalletMutation = (_opts?: any): Mut<UpdateDefaultWalletVars, UpdateDefaultWalletData> => {
+  return useMutBase<UpdateDefaultWalletVars, UpdateDefaultWalletData>(async (vars) => {
+    const defaultWallet = vars?.input?.defaultWallet ?? vars?.defaultWallet ?? ''
+    if (!defaultWallet) throw new Error('defaultWallet required')
+    const result = await doPost('/api/user/update-default-wallet', { defaultWallet })
+    await invalidateMe()
+    return { updateDefaultWallet: { user: result?.user || { id: '', defaultWallet } } }
+  })
+}

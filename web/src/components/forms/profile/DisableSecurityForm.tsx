@@ -2,7 +2,7 @@ import React from 'react'
 import { Form, Formik } from 'formik'
 import * as yup from 'yup'
 import { toast } from 'react-toastify'
-import { useUpdateOtpMutation, useValidateOtpRecoveryPhraseMutation } from 'lib/graphql'
+import { useUpdateOtpMutation, useValidateOtpRecoveryPhraseMutation } from 'hooks/useMutationsDirect'  // Phase 7f — Vercel-direct
 import { Button } from 'components/common/Buttons/Button'
 import { InputField } from 'components/InputField'
 import { updateOTPCache } from 'lib/apollo/cache/updateOTPCache'

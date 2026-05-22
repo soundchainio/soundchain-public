@@ -1,6 +1,7 @@
 import { Button } from 'components/common/Buttons/Button'
 import { network } from 'lib/blockchainNetworks'
-import { DefaultWallet, useUpdateDefaultWalletMutation } from 'lib/graphql'
+import { DefaultWallet } from 'lib/graphql'
+import { useUpdateDefaultWalletMutation } from 'hooks/useMutationsDirect'  // Phase 7f — Vercel-direct
 import React, { createContext, ReactNode, useContext } from 'react'
 import Web3 from 'web3'
 import { useMagicContext } from './useMagicContext'
