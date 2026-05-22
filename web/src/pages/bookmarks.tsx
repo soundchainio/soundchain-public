@@ -3,7 +3,7 @@ import { useRouter } from 'next/router'
 import Link from 'next/link'
 import { ArrowLeft, Bookmark } from 'lucide-react'
 import { useMe } from 'hooks/useMe'
-import { useMyBookmarksQuery } from 'lib/graphql'
+import { useMyBookmarks as useMyBookmarksQuery } from 'hooks/useBookmarksDirect'  // Phase 7e — Vercel-direct
 import { Post } from 'components/Post/Post'
 import { PostSkeleton } from 'components/Post/PostSkeleton'
 import Head from 'next/head'

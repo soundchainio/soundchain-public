@@ -4,7 +4,8 @@ import { NoResultFound } from 'components/NoResultFound'
 import { Post } from './Post'
 import { CompactPost } from './CompactPost'
 import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
-import { Post as PostType, usePostsQuery, SortOrder, SortPostField } from 'lib/graphql'
+import { Post as PostType, SortOrder, SortPostField } from 'lib/graphql'
+import { usePosts as usePostsQuery } from 'hooks/usePostsDirect'  // Phase 7e — Vercel-direct
 import { usePost as usePostQuery } from 'hooks/usePostDirect'  // Phase 7e — Vercel-direct
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import PullToRefresh from 'react-simple-pull-to-refresh'
