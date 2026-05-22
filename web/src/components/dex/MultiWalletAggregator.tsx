@@ -42,7 +42,8 @@ import Web3 from 'web3'
 import { AbiItem } from 'web3-utils'
 import SoundchainOGUN20 from 'contract/SoundchainOGUN20.sol/SoundchainOGUN20.json'
 import MetaMaskOnboarding from '@metamask/onboarding'
-import { useGroupedTracksLazyQuery, SortTrackField, SortOrder, PrimaryWalletType, MigrationStatus } from 'lib/graphql'
+import { SortTrackField, SortOrder, PrimaryWalletType, MigrationStatus } from 'lib/graphql'
+import { useGroupedTracksLazy as useGroupedTracksLazyQuery } from 'hooks/useGroupedTracksDirect'  // Phase 7e — Vercel-direct
 
 const UPGRADE_TO_HD_WALLET = gql`
   mutation UpgradeToHdWallet {

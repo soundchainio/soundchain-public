@@ -175,6 +175,39 @@ const fetchTrack = async (trackId: string): Promise<TrackSlim | null> => {
   }
 }
 
+// --- useOwnedTracks (Apollo-shape wrapper, key = ownedTracks) ---
+type OwnedFilter = { trackEditionId?: string; owner?: string }
+type OwnedTracksShape = {
+  ownedTracks: {
+    nodes: TrackSlim[]
+    pageInfo: { hasNextPage: boolean; endCursor: string | null; totalCount: number }
+  }
+}
+
+export const useOwnedTracks = (opts?: {
+  variables?: { filter?: OwnedFilter; page?: Page }
+  skip?: boolean
+  pollInterval?: number
+  ssr?: boolean
+  fetchPolicy?: string
+}): {
+  data: OwnedTracksShape | undefined
+  loading: boolean
+  error: Error | null
+  fetchMore: (args?: { variables?: { filter?: OwnedFilter; page?: Page } }) => Promise<void>
+  refetch: () => Promise<void>
+} => {
+  const filter: Filter = {
+    trackEditionId: opts?.variables?.filter?.trackEditionId,
+    nftData: opts?.variables?.filter?.owner ? { owner: opts.variables.filter.owner } : undefined,
+  }
+  const first = opts?.variables?.page?.first ?? 20
+  const skip = !!opts?.skip
+  const inner = useTracks({ variables: { filter, page: { first } }, skip })
+  const data: OwnedTracksShape | undefined = inner.data ? { ownedTracks: inner.data.tracks } : undefined
+  return { data, loading: inner.loading, error: inner.error, fetchMore: inner.fetchMore as any, refetch: inner.refetch }
+}
+
 export const useTrack = (opts: {
   variables?: { id?: string }
   skip?: boolean

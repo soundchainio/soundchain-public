@@ -52,7 +52,9 @@ import { DexNavBar } from 'components/DexNavBar'
 import { ScrollArea } from 'components/ui/scroll-area'
 import { Separator } from 'components/ui/separator'
 import { useAudioPlayerContext, Song } from 'hooks/useAudioPlayer'
-import { useListingItemsQuery, useExploreUsersSlimQuery, useExploreTracksSlimQuery, useFollowProfileMutation, useUnfollowProfileMutation, useSendMessageMutation, useResetUnreadMessageCountMutation, useToggleFavoriteMutation, useUpdateHandleMutation, useUpdateProfileDisplayNameMutation, SortTrackField, SortOrder, useCreateProfileVerificationRequestMutation, ProfileVerificationStatusType } from 'lib/graphql'
+import { useListingItemsQuery, useFollowProfileMutation, useUnfollowProfileMutation, useSendMessageMutation, useResetUnreadMessageCountMutation, useToggleFavoriteMutation, useUpdateHandleMutation, useUpdateProfileDisplayNameMutation, SortTrackField, SortOrder, useCreateProfileVerificationRequestMutation, ProfileVerificationStatusType } from 'lib/graphql'
+import { useExploreUsersSlim as useExploreUsersSlimQuery } from 'hooks/useExploreUsersSlimDirect'  // Phase 7e — Vercel-direct
+import { useExploreTracksSlim as useExploreTracksSlimQuery } from 'hooks/useExploreTracksSlimDirect'  // Phase 7e — Vercel-direct
 import { useNotifications as useNotificationsQuery } from 'hooks/useNotificationsDirect'  // Phase 7e — Vercel-direct
 import { useChats as useChatsQuery, useChatHistoryLazy as useChatHistoryLazyQuery } from 'hooks/useChatsDirect'  // Phase 7e — Vercel-direct
 import { useProfileById as useProfileQuery } from 'hooks/useProfileByHandleDirect'  // Phase 7e — Vercel-direct
@@ -88,7 +90,8 @@ import { PlaylistCard, PlaylistDetail, CreatePlaylistModal } from 'components/Pl
 import { DMModal } from 'components/modals/DMModal'
 import { FollowModal } from 'components/FollowersModal'
 import { FollowModalType } from 'types/FollowModalType'
-import { useGetUserPlaylistsQuery, GetUserPlaylistsQuery, usePlaylistLazyQuery } from 'lib/graphql'
+import { GetUserPlaylistsQuery, usePlaylistLazyQuery } from 'lib/graphql'
+import { useGetUserPlaylists as useGetUserPlaylistsQuery } from 'hooks/useUserPlaylistsDirect'  // Phase 7e — Vercel-direct
 import {
   Grid, List, Coins, Image as ImageIcon, Package, Search, Home, Music, Library,
   ShoppingBag, Plus, Wallet, Bell, TrendingUp, Zap, Globe, BarChart3, Play, Pause,
