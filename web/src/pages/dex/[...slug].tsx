@@ -52,7 +52,8 @@ import { DexNavBar } from 'components/DexNavBar'
 import { ScrollArea } from 'components/ui/scroll-area'
 import { Separator } from 'components/ui/separator'
 import { useAudioPlayerContext, Song } from 'hooks/useAudioPlayer'
-import { useListingItemsQuery, useExploreUsersSlimQuery, useExploreTracksSlimQuery, useFollowProfileMutation, useUnfollowProfileMutation, useProfileQuery, useChatsQuery, useChatHistoryLazyQuery, useSendMessageMutation, useResetUnreadMessageCountMutation, useNotificationsQuery, useToggleFavoriteMutation, useUpdateHandleMutation, useUpdateProfileDisplayNameMutation, SortTrackField, SortOrder, useCreateProfileVerificationRequestMutation, ProfileVerificationStatusType } from 'lib/graphql'
+import { useListingItemsQuery, useExploreUsersSlimQuery, useExploreTracksSlimQuery, useFollowProfileMutation, useUnfollowProfileMutation, useChatsQuery, useChatHistoryLazyQuery, useSendMessageMutation, useResetUnreadMessageCountMutation, useNotificationsQuery, useToggleFavoriteMutation, useUpdateHandleMutation, useUpdateProfileDisplayNameMutation, SortTrackField, SortOrder, useCreateProfileVerificationRequestMutation, ProfileVerificationStatusType } from 'lib/graphql'
+import { useProfileById as useProfileQuery } from 'hooks/useProfileByHandleDirect'  // Phase 7e — Vercel-direct
 import { useMeDirectQuery as useMeQuery } from 'hooks/useMeDirect'  // Phase 7e — Vercel-direct
 import { usePost as usePostQuery } from 'hooks/usePostDirect'  // Phase 7e — Vercel-direct
 import { useGroupedTracks as useGroupedTracksQuery } from 'hooks/useGroupedTracksDirect'  // Phase 7e — Vercel-direct
@@ -2031,9 +2032,8 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
   // Profile Detail Query - fetch single profile when viewing /dex/profile/[id]
   const { data: profileDetailData, loading: profileDetailLoading, error: profileDetailError } = useProfileQuery({
-    variables: { id: routeId || '' },
+    id: routeId || '',
     skip: selectedView !== 'profile' || !routeId || routeType === 'users',
-    fetchPolicy: 'cache-and-network',
   })
 
   // Profile By Handle — Phase 7e Vercel-direct
