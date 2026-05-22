@@ -15,7 +15,29 @@ import { ObjectId } from 'mongodb'
 import { authFromRequest } from 'lib/api/authJwt'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' })
+  // PATCH — edit own comment
+  if (req.method === 'PATCH') {
+    const auth = await authFromRequest(req)
+    if (!auth) return res.status(401).json({ error: 'Unauthenticated' })
+    const { commentId, body } = req.body || {}
+    if (!commentId || !body) return res.status(400).json({ error: 'commentId + body required' })
+    let cOid: ObjectId
+    try { cOid = new ObjectId(commentId) } catch { return res.status(400).json({ error: 'Invalid commentId' }) }
+    try {
+      const client = await clientPromise
+      const db = client.db('soundchain')
+      const result = await db.collection('comments').updateOne(
+        { _id: cOid, profileId: auth.profileId },
+        { $set: { body: String(body).slice(0, 1000), updatedAt: new Date() } }
+      )
+      if (result.matchedCount === 0) return res.status(404).json({ error: 'Comment not found or not yours' })
+      return res.status(200).json({ ok: true })
+    } catch (err: any) {
+      return res.status(500).json({ error: err.message })
+    }
+  }
+
+  if (req.method !== 'GET') return res.status(405).json({ error: 'GET or PATCH only' })
 
   res.setHeader('Cache-Control', 'private, no-store')
 

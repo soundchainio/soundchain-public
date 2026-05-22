@@ -9,10 +9,10 @@ import { cacheFor } from 'lib/apollo'
 import {
   ProfileVerificationRequest,
   ProfileVerificationStatusType,
-  useCreateProfileVerificationRequestMutation,
   useProfileVerificationRequestQuery,
   useRemoveProfileVerificationRequestMutation,
 } from 'lib/graphql'
+import { useCreateProfileVerificationRequestMutation } from 'hooks/useMutationsDirect'  // Phase 7f — Vercel-direct
 import { protectPage } from 'lib/protectPage'
 import Image from 'next/image'
 import { useEffect, useState } from 'react'

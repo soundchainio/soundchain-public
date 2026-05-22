@@ -67,5 +67,44 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
   }
 
-  return res.status(405).json({ error: 'GET or POST only' })
+  // Admin PATCH — approve/reject another user's request
+  if (req.method === 'PATCH') {
+    const { requestId, status, reason } = req.body || {}
+    if (!requestId) return res.status(400).json({ error: 'requestId required' })
+    if (!['APPROVED', 'REJECTED', 'PENDING'].includes(status)) {
+      return res.status(400).json({ error: 'status must be APPROVED|REJECTED|PENDING' })
+    }
+    try {
+      const { ObjectId } = require('mongodb')
+      let oid: any
+      try { oid = new ObjectId(requestId) } catch { return res.status(400).json({ error: 'Invalid requestId' }) }
+      const update: any = {
+        status,
+        reviewedAt: new Date(),
+        reviewedBy: auth.profileId,
+        updatedAt: new Date(),
+      }
+      if (reason) update.reason = String(reason).slice(0, 500)
+      const result = await db.collection('profileverificationrequests').updateOne(
+        { _id: oid },
+        { $set: update }
+      )
+      // Reflect on profile if approved
+      if (status === 'APPROVED') {
+        const reqDoc: any = await db.collection('profileverificationrequests').findOne({ _id: oid })
+        if (reqDoc?.profileId) {
+          try {
+            const profId = typeof reqDoc.profileId === 'string' ? new ObjectId(reqDoc.profileId) : reqDoc.profileId
+            await db.collection('profiles').updateOne({ _id: profId }, { $set: { verified: true } })
+          } catch {}
+        }
+      }
+      if (result.matchedCount === 0) return res.status(404).json({ error: 'Request not found' })
+      return res.status(200).json({ success: true, status })
+    } catch (err: any) {
+      return res.status(500).json({ error: err.message })
+    }
+  }
+
+  return res.status(405).json({ error: 'GET, POST, or PATCH only' })
 }

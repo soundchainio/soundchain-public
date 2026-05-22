@@ -52,7 +52,8 @@ import { DexNavBar } from 'components/DexNavBar'
 import { ScrollArea } from 'components/ui/scroll-area'
 import { Separator } from 'components/ui/separator'
 import { useAudioPlayerContext, Song } from 'hooks/useAudioPlayer'
-import { useFollowProfileMutation, useUnfollowProfileMutation, useSendMessageMutation, useResetUnreadMessageCountMutation, useToggleFavoriteMutation, useUpdateHandleMutation, useUpdateProfileDisplayNameMutation, SortTrackField, SortOrder, useCreateProfileVerificationRequestMutation, ProfileVerificationStatusType } from 'lib/graphql'
+import { useSendMessageMutation, SortTrackField, SortOrder, ProfileVerificationStatusType } from 'lib/graphql'
+import { useFollowProfileMutation, useUnfollowProfileMutation, useResetUnreadMessageCountMutation, useToggleFavoriteMutation, useUpdateHandleMutation, useUpdateProfileDisplayNameMutation, useCreateProfileVerificationRequestMutation } from 'hooks/useMutationsDirect'  // Phase 7f — Vercel-direct
 import { useListingItems as useListingItemsQuery } from 'hooks/useListingItemsDirect'  // Phase 7e — Vercel-direct
 import { useExploreUsersSlim as useExploreUsersSlimQuery } from 'hooks/useExploreUsersSlimDirect'  // Phase 7e — Vercel-direct
 import { useExploreTracksSlim as useExploreTracksSlimQuery } from 'hooks/useExploreTracksSlimDirect'  // Phase 7e — Vercel-direct

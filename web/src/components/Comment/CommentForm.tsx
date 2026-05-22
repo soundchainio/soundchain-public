@@ -1,6 +1,7 @@
 import { useModalState } from 'contexts/ModalContext'
 import { Form, Formik, FormikHelpers } from 'formik'
-import { UpdateCommentInput, useUpdateCommentMutation } from 'lib/graphql'
+import { UpdateCommentInput } from 'lib/graphql'
+import { useUpdateCommentMutation } from 'hooks/useMutationsDirect'  // Phase 7f — Vercel-direct
 import { useState } from 'react'
 import * as yup from 'yup'
 import { Button } from '../common/Buttons/Button'

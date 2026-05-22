@@ -4,7 +4,8 @@ import { Delete as DeleteButton } from 'components/common/Buttons/Delete'
 import { TextareaField } from 'components/TextareaField'
 import { Form, Formik } from 'formik'
 import { useMe } from 'hooks/useMe'
-import { ProfileVerificationRequestsDocument, ProfileVerificationStatusType, useUpdateProfileVerificationRequestMutation } from 'lib/graphql'
+import { ProfileVerificationRequestsDocument, ProfileVerificationStatusType } from 'lib/graphql'
+import { useUpdateProfileVerificationRequestMutation } from 'hooks/useMutationsDirect'  // Phase 7f — Vercel-direct
 import { useRouter } from 'next/router'
 import * as yup from 'yup'
 

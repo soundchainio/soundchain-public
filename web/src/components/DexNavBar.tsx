@@ -47,11 +47,12 @@ import { useUnifiedWallet } from 'contexts/UnifiedWalletContext'
 import { useModalDispatch } from 'contexts/ModalContext'
 import {
   ProfileVerificationStatusType,
+} from 'lib/graphql'
+import {
   useCreateProfileVerificationRequestMutation,
-  // useProfileVerificationRequestQuery moved to Phase 7e Vercel-direct hook
   useUpdateHandleMutation,
   useUpdateProfileDisplayNameMutation,
-} from 'lib/graphql'
+} from 'hooks/useMutationsDirect'  // Phase 7f — Vercel-direct
 import { useProfileVerificationRequest as useProfileVerificationRequestQuery } from 'hooks/useProfileVerificationDirect'  // Phase 7e — Vercel-direct
 import { useProfileStreamingRewards, useMyListenerRewards } from 'hooks/useProfileRewardsDirect'  // Phase 7e — Vercel-direct
 import { setJwt } from 'lib/apollo'

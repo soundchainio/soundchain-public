@@ -20,8 +20,8 @@ import {
   ProfileVerificationRequestsDocument,
   ProfileVerificationStatusType,
   Role,
-  useUpdateProfileVerificationRequestMutation,
 } from 'lib/graphql'
+import { useUpdateProfileVerificationRequestMutation } from 'hooks/useMutationsDirect'  // Phase 7f — Vercel-direct
 import { useProfileById as useProfileQuery } from 'hooks/useProfileByHandleDirect'  // Phase 7e — Vercel-direct
 import { protectPage } from 'lib/protectPage'
 import NextLink from 'next/link'
