@@ -5,7 +5,7 @@ import { useMe } from 'hooks/useMe'
 import { HeartBorder } from 'icons/HeartBorder'
 import { HeartFull } from 'icons/HeartFull'
 import { ReactionEmoji } from 'icons/ReactionEmoji'
-import { useGetOriginalPostFromTrackQuery } from 'lib/graphql'
+import { useGetOriginalPostFromTrack as useGetOriginalPostFromTrackQuery } from 'hooks/usePostFromTrackDirect'  // Phase 7e — Vercel-direct
 import NextLink from 'next/link'
 import { useRouter } from 'next/router'
 

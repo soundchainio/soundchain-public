@@ -1,5 +1,5 @@
 import { ReactionEmoji } from 'icons/ReactionEmoji'
-import { useGetOriginalPostFromTrackQuery } from 'lib/graphql'
+import { useGetOriginalPostFromTrack as useGetOriginalPostFromTrackQuery } from 'hooks/usePostFromTrackDirect'  // Phase 7e — Vercel-direct
 import NextLink from 'next/link'
 import tw from 'tailwind-styled-components'
 

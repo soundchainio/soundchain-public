@@ -30,3 +30,35 @@ export const useMeDirectQuery = (opts?: { skip?: boolean; ssr?: boolean; fetchPo
   }
   return { data, loading: !hydrated && !skip, error: null, refetch }
 }
+
+// Lazy variant of an unread-message-count query — bypasses the useMe
+// module cache by hitting /api/me directly with cache-bust so the badge
+// updates on every route change.
+type UnreadShape = { myProfile: { unreadMessageCount: number; unreadNotificationCount?: number } }
+
+export const useUnreadMessageCountLazy = (_opts?: { fetchPolicy?: string }): [
+  () => Promise<void>,
+  { data: UnreadShape | undefined; loading: boolean }
+] => {
+  const [data, setData] = useState<UnreadShape | undefined>(undefined)
+  const [loading, setLoading] = useState(false)
+  const trigger = async () => {
+    setLoading(true)
+    try {
+      const r = await fetch('/api/me', { credentials: 'include', headers: { 'Cache-Control': 'no-cache' } })
+      if (r.ok) {
+        const json = await r.json()
+        const p = json?.me?.profile
+        setData({
+          myProfile: {
+            unreadMessageCount: p?.unreadMessageCount || 0,
+            unreadNotificationCount: p?.unreadNotificationCount || 0,
+          },
+        })
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+  return [trigger, { data, loading }]
+}

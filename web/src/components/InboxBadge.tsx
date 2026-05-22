@@ -1,4 +1,4 @@
-import { useUnreadMessageCountLazyQuery } from 'lib/graphql'
+import { useUnreadMessageCountLazy as useUnreadMessageCountLazyQuery } from 'hooks/useMeDirect'  // Phase 7e — Vercel-direct
 import { useRouter } from 'next/router'
 import { useEffect } from 'react'
 

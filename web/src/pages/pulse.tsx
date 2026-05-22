@@ -58,10 +58,10 @@ import {
   useChatHistoryLazyQuery, // kept as fallback type reference
   useSendMessageMutation,
   useResetUnreadMessageCountMutation,
-  useUnreadMessageCountLazyQuery,
   useExploreUsersLazyQuery,
   ChatsDocument,
 } from 'lib/graphql'
+import { useUnreadMessageCountLazy as useUnreadMessageCountLazyQuery } from 'hooks/useMeDirect'  // Phase 7e — Vercel-direct
 // Vercel-direct chat fetching (kills Apollo → Lambda dependency for chat reads)
 import { useState as useStateChat, useEffect as useEffectChat, useCallback as useCallbackChat } from 'react'
 
