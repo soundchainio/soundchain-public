@@ -2,7 +2,7 @@ import { InfiniteLoader } from 'components/InfiniteLoader'
 import { Transaction } from 'components/Transaction'
 import { TransactionItemSkeleton } from 'components/TransactionItemSkeleton'
 import { useMaticUsd as useMaticUsdQuery } from 'hooks/useMaticUsdDirect'  // Phase 7e — Vercel-direct
-import { usePolygonscanQuery } from 'lib/graphql'
+import { usePolygonscan as usePolygonscanQuery } from 'hooks/usePolygonscanDirect'  // Phase 7e — Vercel-direct
 import React from 'react'
 import { EmptyTransactionList } from './EmptyTransactionList'
 import { NoResultFound } from './NoResultFound'

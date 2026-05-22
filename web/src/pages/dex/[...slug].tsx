@@ -91,8 +91,8 @@ import { PlaylistCard, PlaylistDetail, CreatePlaylistModal } from 'components/Pl
 import { DMModal } from 'components/modals/DMModal'
 import { FollowModal } from 'components/FollowersModal'
 import { FollowModalType } from 'types/FollowModalType'
-import { GetUserPlaylistsQuery, usePlaylistLazyQuery } from 'lib/graphql'
-import { useGetUserPlaylists as useGetUserPlaylistsQuery } from 'hooks/useUserPlaylistsDirect'  // Phase 7e — Vercel-direct
+import { GetUserPlaylistsQuery } from 'lib/graphql'
+import { useGetUserPlaylists as useGetUserPlaylistsQuery, usePlaylistLazy as usePlaylistLazyQuery } from 'hooks/useUserPlaylistsDirect'  // Phase 7e — Vercel-direct
 import {
   Grid, List, Coins, Image as ImageIcon, Package, Search, Home, Music, Library,
   ShoppingBag, Plus, Wallet, Bell, TrendingUp, Zap, Globe, BarChart3, Play, Pause,

@@ -142,6 +142,37 @@ export const useChatsLazy = (_opts?: { fetchPolicy?: string }): [LazyChatsTrigge
 type LazyHistoryResult = { data: ChatHistoryShape | undefined; loading: boolean; called: boolean; refetch: () => Promise<void> }
 type LazyHistoryTrigger = (opts?: { variables?: { profileId?: string; page?: { first?: number } } }) => Promise<void>
 
+// Single message by id (Apollo useMessageQuery)
+type MessageShape = { message: any | null }
+
+export const useMessage = (opts: {
+  variables?: { id?: string }
+  skip?: boolean
+}): {
+  data: MessageShape | undefined
+  loading: boolean
+  error: Error | null
+} => {
+  const id = opts?.variables?.id || ''
+  const skip = !!opts?.skip || !id
+  const [data, setData] = useState<MessageShape | undefined>(undefined)
+  const [loading, setLoading] = useState<boolean>(!skip)
+  useEffect(() => {
+    if (skip) { setLoading(false); return }
+    let cancelled = false
+    setLoading(true)
+    fetch(`/api/dm/message?id=${encodeURIComponent(id)}`, { credentials: 'include' })
+      .then(r => r.ok ? r.json() : null)
+      .then(json => {
+        if (cancelled) return
+        setData({ message: json?.message ?? null })
+        setLoading(false)
+      })
+    return () => { cancelled = true }
+  }, [id, skip])
+  return { data, loading, error: null }
+}
+
 export const useChatHistoryLazy = (_opts?: { fetchPolicy?: string }): [LazyHistoryTrigger, LazyHistoryResult] => {
   const [data, setData] = useState<ChatHistoryShape | undefined>(undefined)
   const [loading, setLoading] = useState(false)

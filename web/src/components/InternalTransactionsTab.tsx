@@ -1,7 +1,7 @@
 import { InfiniteLoader } from 'components/InfiniteLoader'
 import { TransactionItemSkeleton } from 'components/TransactionItemSkeleton'
 import { useMaticUsd as useMaticUsdQuery } from 'hooks/useMaticUsdDirect'  // Phase 7e — Vercel-direct
-import { usePolygonscanInternalTrxQuery } from 'lib/graphql'
+import { usePolygonscanInternalTrx as usePolygonscanInternalTrxQuery } from 'hooks/usePolygonscanDirect'  // Phase 7e — Vercel-direct
 import React from 'react'
 import { EmptyTransactionList } from './EmptyTransactionList'
 import { InternalTransaction } from './InternalTransaction'

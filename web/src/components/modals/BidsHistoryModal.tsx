@@ -3,7 +3,7 @@ import { Modal } from 'components/Modal'
 import { ProfileWithAvatar } from 'components/ProfileWithAvatar'
 import { useModalDispatch, useModalState } from 'contexts/ModalContext'
 import { DownArrow } from 'icons/DownArrow'
-import { useBidsWithInfoLazyQuery } from 'lib/graphql'
+import { useBidsWithInfoLazy as useBidsWithInfoLazyQuery } from 'hooks/useBidsDirect'  // Phase 7e — Vercel-direct
 import { useEffect } from 'react'
 
 export const BidsHistoryModal = () => {

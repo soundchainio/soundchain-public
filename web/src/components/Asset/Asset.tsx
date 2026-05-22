@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 
-import { useMimeTypeQuery } from 'lib/graphql'; // Relative to ./src
+import { useMimeType as useMimeTypeQuery } from 'hooks/useMimeTypeDirect'  // Phase 7e — Vercel-direct
 import Image from 'next/image'
 import tw from 'tailwind-styled-components'
 

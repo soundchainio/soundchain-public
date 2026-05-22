@@ -1,7 +1,8 @@
 import classNames from 'classnames'
 import { format } from 'date-fns'
 import { useMe } from 'hooks/useMe'
-import { Message as MessageItem, useMessageQuery } from 'lib/graphql'
+import { Message as MessageItem } from 'lib/graphql'
+import { useMessage as useMessageQuery } from 'hooks/useChatsDirect'  // Phase 7e — Vercel-direct
 import { Avatar } from 'components/Avatar'
 import { MessageSkeleton } from './MessageSkeleton'
 import { Timestamp } from 'components/Timestamp'

@@ -1,4 +1,5 @@
-import { TrackQuery, useBidsWithInfoQuery } from 'lib/graphql'
+import { TrackQuery } from 'lib/graphql'
+import { useBidsWithInfo as useBidsWithInfoQuery } from 'hooks/useBidsDirect'  // Phase 7e — Vercel-direct
 import { useAuctionItem as useAuctionItemQuery } from 'hooks/useMarketplaceItemsDirect'  // Phase 7e — Vercel-direct
 import { Matic as MaticIcon } from 'icons/Matic'
 import tw from 'tailwind-styled-components'

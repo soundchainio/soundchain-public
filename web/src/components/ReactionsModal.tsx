@@ -1,7 +1,8 @@
 import { useModalDispatch, useModalState } from 'contexts/ModalContext'
 import { DownArrow } from 'icons/DownArrow'
 import { ReactionEmoji } from 'icons/ReactionEmoji'
-import { Reaction, ReactionType, useReactionsLazyQuery } from 'lib/graphql'
+import { Reaction, ReactionType } from 'lib/graphql'
+import { useReactionsLazy as useReactionsLazyQuery } from 'hooks/useReactionsDirect'  // Phase 7e — Vercel-direct
 import React, { useEffect } from 'react'
 import { InfiniteLoader } from 'components/InfiniteLoader'
 import { LoaderAnimation } from 'components/LoaderAnimation'

@@ -112,3 +112,32 @@ export const useGetUserPlaylists = (opts?: { profileId?: string; skip?: boolean 
   }
   return { data, loading, error, refetch }
 }
+
+// Single playlist by id (Apollo usePlaylistLazyQuery shape)
+type SinglePlaylistShape = { playlist: any | null }
+type LazySingleResult = { data: SinglePlaylistShape | undefined; loading: boolean; called: boolean }
+type LazySingleTrigger = (opts?: { variables?: { id?: string } }) => Promise<void>
+
+export const usePlaylistLazy = (): [LazySingleTrigger, LazySingleResult] => {
+  const [data, setData] = useState<SinglePlaylistShape | undefined>(undefined)
+  const [loading, setLoading] = useState(false)
+  const [called, setCalled] = useState(false)
+  const trigger: LazySingleTrigger = async (opts) => {
+    const id = opts?.variables?.id || ''
+    if (!id) return
+    setLoading(true)
+    setCalled(true)
+    try {
+      const r = await fetch(`/api/playlists/get?id=${encodeURIComponent(id)}`, { credentials: 'include' })
+      if (r.ok) {
+        const json = await r.json()
+        setData({ playlist: json?.playlist ?? null })
+      } else {
+        setData({ playlist: null })
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+  return [trigger, { data, loading, called }]
+}

@@ -1,5 +1,6 @@
 import { Table, Row, Header } from 'components/common/Table'
-import { TrackQuery, useBuyNowListingItemsQuery } from 'lib/graphql'
+import { TrackQuery } from 'lib/graphql'
+import { useBuyNowListingItems as useBuyNowListingItemsQuery } from 'hooks/useMarketplaceItemsDirect'  // Phase 7e — Vercel-direct
 import { SaleType } from 'lib/graphql'
 import tw from 'tailwind-styled-components'
 import { ListingItem } from './ListingsItem'

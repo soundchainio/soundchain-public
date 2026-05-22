@@ -122,6 +122,109 @@ export const useAuctionItem = (opts: {
   return { data, loading, error: null, refetch }
 }
 
+// --- useBuyNowItem (eager) ---
+export const useBuyNowItem = (opts: {
+  variables?: { input?: { tokenId?: number; nft?: string; trackId?: string } }
+  skip?: boolean
+  pollInterval?: number
+}): {
+  data: BuyNowShape | undefined
+  loading: boolean
+  error: Error | null
+  refetch: () => Promise<void>
+} => {
+  const v = opts?.variables?.input || {}
+  const tokenId = v.tokenId
+  const nft = v.nft
+  const trackId = v.trackId
+  const skip = !!opts?.skip || (tokenId === undefined && !trackId)
+  const pollInterval = opts?.pollInterval || 0
+  const [data, setData] = useState<BuyNowShape | undefined>(undefined)
+  const [loading, setLoading] = useState<boolean>(!skip)
+  const [bust, setBust] = useState(0)
+  useEffect(() => {
+    if (skip) { setLoading(false); return }
+    let cancelled = false
+    const run = () => {
+      fetchBuyNow({ tokenId, nft, trackId }).then((res) => {
+        if (cancelled) return
+        if (res) setData(res)
+        setLoading(false)
+      })
+    }
+    run()
+    let timer: any = null
+    if (pollInterval > 0) timer = setInterval(run, pollInterval)
+    return () => { cancelled = true; if (timer) clearInterval(timer) }
+  }, [tokenId, nft, trackId, skip, bust, pollInterval])
+  const refetch = async () => { setBust((b) => b + 1) }
+  return { data, loading, error: null, refetch }
+}
+
+// --- useBuyNowListingItems (paginated active buy-now listings) ---
+type BuyNowListShape = {
+  buyNowListingItems: {
+    nodes: any[]
+    pageInfo: { hasNextPage: boolean; endCursor: string | null; totalCount: number }
+  }
+}
+
+export const useBuyNowListingItems = (opts?: {
+  variables?: { filter?: { trackEditionId?: string }; page?: { first?: number; after?: string | null } }
+  skip?: boolean
+  pollInterval?: number
+}): {
+  data: BuyNowListShape | undefined
+  loading: boolean
+  error: Error | null
+  fetchMore: (args?: { variables?: { page?: { first?: number; after?: string | null } } }) => Promise<void>
+  refetch: () => Promise<void>
+} => {
+  const trackEditionId = opts?.variables?.filter?.trackEditionId
+  const first = opts?.variables?.page?.first ?? 20
+  const skip = !!opts?.skip
+  const pollInterval = opts?.pollInterval || 0
+  const [nodes, setNodes] = useState<any[]>([])
+  const [endCursor, setEndCursor] = useState<string | null>(null)
+  const [hasNextPage, setHasNextPage] = useState(false)
+  const [totalCount, setTotalCount] = useState(0)
+  const [loading, setLoading] = useState<boolean>(!skip)
+  const [error, setError] = useState<Error | null>(null)
+  const [bust, setBust] = useState(0)
+  useEffect(() => {
+    if (skip) { setLoading(false); return }
+    let cancelled = false
+    const run = async () => {
+      const params = new URLSearchParams({ limit: String(first) })
+      if (trackEditionId) params.set('trackEditionId', trackEditionId)
+      try {
+        const r = await fetch(`/api/marketplace/listings?${params}`, { credentials: 'include' })
+        if (!r.ok) { setError(new Error('listings load failed')); setLoading(false); return }
+        const json = await r.json()
+        if (cancelled) return
+        setNodes(Array.isArray(json?.nodes) ? json.nodes : [])
+        setEndCursor(json?.pageInfo?.endCursor || null)
+        setHasNextPage(!!json?.pageInfo?.hasNextPage)
+        setTotalCount(Number(json?.pageInfo?.totalCount || (json?.nodes?.length || 0)))
+        setError(null)
+        setLoading(false)
+      } catch (e: any) {
+        if (!cancelled) { setError(e); setLoading(false) }
+      }
+    }
+    run()
+    let timer: any = null
+    if (pollInterval > 0) timer = setInterval(run, pollInterval)
+    return () => { cancelled = true; if (timer) clearInterval(timer) }
+  }, [trackEditionId, first, skip, bust, pollInterval])
+  const data: BuyNowListShape | undefined = nodes.length > 0 || !loading ? {
+    buyNowListingItems: { nodes, pageInfo: { totalCount, hasNextPage, endCursor } },
+  } : undefined
+  const fetchMore = async () => {}
+  const refetch = async () => { setBust((b) => b + 1) }
+  return { data, loading, error, fetchMore, refetch }
+}
+
 // --- useBuyNowItemLazy ---
 type LazyBuyNowResult = { data: BuyNowShape | undefined; loading: boolean; called: boolean }
 type LazyBuyNowTrigger = (opts?: { variables?: { input?: { tokenId?: number; nft?: string; trackId?: string }; tokenId?: number; nft?: string; trackId?: string } }) => Promise<void>
