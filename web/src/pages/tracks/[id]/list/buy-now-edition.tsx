@@ -17,8 +17,8 @@ import {
   TrackDocument,
   TrackQuery,
   useListableOwnedTrackIdsQuery,
-  useUpdateAllOwnedTracksMutation,
 } from 'lib/graphql'
+import { useUpdateAllOwnedTracksMutation } from 'hooks/useMutationsDirect'  // Phase 7f — Vercel-direct
 import { protectPage } from 'lib/protectPage'
 import { useRouter } from 'next/router'
 import { ParsedUrlQuery } from 'querystring'

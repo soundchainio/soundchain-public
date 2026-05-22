@@ -440,3 +440,83 @@ export const useCreateWhitelistEntryMutation = (_opts?: any): Mut<WhitelistVars,
     return { createWhitelistEntry: { whitelistEntry: { id: result?.whitelistEntry?.id || '' } } }
   })
 }
+
+// ============================================================
+// Phase 7f.6 — Stragglers (final cleanup batch)
+// ============================================================
+
+// --- useUpdatePostMutation ---
+type UpdatePostVars = { input?: { postId?: string; body?: string; mediaLink?: string } }
+type UpdatePostData = { updatePost: { post: { id: string; body: string } } }
+
+export const useUpdatePostMutation = (_opts?: any): Mut<UpdatePostVars, UpdatePostData> => {
+  return useMutBase<UpdatePostVars, UpdatePostData>(async (vars) => {
+    const input = vars?.input || {}
+    if (!input.postId) throw new Error('postId required')
+    const result = await doPost('/api/feed/update-post', input)
+    return { updatePost: { post: result?.post || { id: input.postId, body: input.body || '' } } }
+  })
+}
+
+// --- useCreateRepostMutation ---
+type CreateRepostVars = { input?: { repostId?: string; body?: string } }
+type CreateRepostData = { createRepost: { post: { id: string }; originalPost: { id: string; repostCount: number } } }
+
+export const useCreateRepostMutation = (_opts?: any): Mut<CreateRepostVars, CreateRepostData> => {
+  return useMutBase<CreateRepostVars, CreateRepostData>(async (vars) => {
+    const input = vars?.input || {}
+    if (!input.repostId) throw new Error('repostId required')
+    const result = await doPost('/api/feed/repost', input)
+    return {
+      createRepost: {
+        post: result?.post || { id: '' },
+        originalPost: result?.originalPost || { id: input.repostId, repostCount: 0 },
+      },
+    }
+  })
+}
+
+// --- useUpdateAllOwnedTracksMutation ---
+type UpdateAllOwnedTracksVars = {
+  input?: {
+    owner?: string
+    trackEditionId?: string
+    trackIds?: string[]
+    nftData?: NftDataPatch
+  }
+}
+type UpdateAllOwnedTracksData = { updateEditionOwnedTracks: { tracks: any[] } }
+
+export const useUpdateAllOwnedTracksMutation = (_opts?: any): Mut<UpdateAllOwnedTracksVars, UpdateAllOwnedTracksData> => {
+  return useMutBase<UpdateAllOwnedTracksVars, UpdateAllOwnedTracksData>(async (vars) => {
+    const input = vars?.input || {}
+    if (!input.trackEditionId || !input.trackIds?.length) throw new Error('trackEditionId + trackIds required')
+    const result = await doPost('/api/tracks/update-edition', input)
+    return { updateEditionOwnedTracks: { tracks: result?.tracks || [] } }
+  })
+}
+
+// --- useRemoveProfileVerificationRequestMutation ---
+type RemoveVerifVars = { variables?: { id?: string }; id?: string }
+type RemoveVerifData = { removeProfileVerificationRequest: { profileVerificationRequest: { id: string } } }
+
+export const useRemoveProfileVerificationRequestMutation = (_opts?: any): Mut<RemoveVerifVars, RemoveVerifData> => {
+  return useMutBase<RemoveVerifVars, RemoveVerifData>(async (vars) => {
+    const id = (vars as any)?.id || (vars as any)?.variables?.id
+    if (!id) throw new Error('id required')
+    await doPost(`/api/profile/verification?id=${encodeURIComponent(id)}`, undefined, 'DELETE')
+    return { removeProfileVerificationRequest: { profileVerificationRequest: { id } } }
+  })
+}
+
+// --- useClaimBadgeProfileMutation ---
+type ClaimBadgeVars = undefined
+type ClaimBadgeData = { claimBadgeProfile: { profile: any } }
+
+export const useClaimBadgeProfileMutation = (_opts?: any): Mut<ClaimBadgeVars, ClaimBadgeData> => {
+  return useMutBase<ClaimBadgeVars, ClaimBadgeData>(async () => {
+    const result = await doPost('/api/profile/claim-badge', {})
+    await invalidateMe()
+    return { claimBadgeProfile: { profile: result?.profile || null } }
+  })
+}

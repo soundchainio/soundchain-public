@@ -106,5 +106,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
   }
 
-  return res.status(405).json({ error: 'GET, POST, or PATCH only' })
+  if (req.method === 'DELETE') {
+    const id = req.query.id as string
+    try {
+      const { ObjectId } = require('mongodb')
+      if (id) {
+        let oid: any
+        try { oid = new ObjectId(id) } catch { return res.status(400).json({ error: 'Invalid id' }) }
+        const result = await db.collection('profileverificationrequests').deleteOne({ _id: oid, profileId: auth.profileId })
+        if (result.deletedCount === 0) return res.status(404).json({ error: 'Not found or not yours' })
+        return res.status(200).json({ ok: true })
+      }
+      await db.collection('verificationrequests').deleteOne({ profileId: auth.profileId })
+      return res.status(200).json({ ok: true })
+    } catch (err: any) {
+      return res.status(500).json({ error: err.message })
+    }
+  }
+
+  return res.status(405).json({ error: 'GET, POST, PATCH, or DELETE only' })
 }

@@ -12,7 +12,8 @@ import { LayoutContextProvider } from 'hooks/useLayoutContext'
 import { useMe } from 'hooks/useMe'
 import { TrackProvider } from 'hooks/useTrack'
 import { useWalletContext } from 'hooks/useWalletContext'
-import { PendingRequest, TrackDocument, TrackQuery, useUpdateTrackMutation } from 'lib/graphql'
+import { PendingRequest, TrackDocument, TrackQuery } from 'lib/graphql'
+import { useUpdateTrackMutation } from 'hooks/useMutationsDirect'  // Phase 7f — Vercel-direct
 import { useBuyNowItemLazy as useBuyNowItemLazyQuery } from 'hooks/useMarketplaceItemsDirect'  // Phase 7e — Vercel-direct
 import { protectPage } from 'lib/protectPage'
 import { Gavel } from 'lucide-react'
