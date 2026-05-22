@@ -10,7 +10,7 @@ import { errorHandler } from 'utils/errorHandler'
 import SoundchainOGUN20 from '../contract/SoundchainOGUN20.sol/SoundchainOGUN20.json'
 import { config } from 'config'
 import { AbiItem } from 'web3-utils'
-import { useLoginMutation } from 'lib/graphql'
+import { useLoginMutation } from 'hooks/useMutationsDirect'  // Phase 7f — Vercel-direct
 
 const magicPublicKey = process.env.NEXT_PUBLIC_MAGIC_KEY || 'pk_live_858EC1BFF763F101';
 

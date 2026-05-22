@@ -10,7 +10,7 @@ import SEO from 'components/SEO'
 import { useLayoutContext } from 'hooks/useLayoutContext'
 import { useMagicContext } from 'hooks/useMagicContext'
 import { setJwt } from 'lib/apollo'
-import { useRegisterMutation } from 'lib/graphql'
+import { useRegisterMutation } from 'hooks/useMutationsDirect'  // Phase 7f — Vercel-direct
 import { formatValidationErrors } from 'utils/errorHelpers'
 import { handleRegex } from 'utils/Validation'
 import { config } from 'config'

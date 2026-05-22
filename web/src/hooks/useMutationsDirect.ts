@@ -384,3 +384,59 @@ export const useUpdateDefaultWalletMutation = (_opts?: any): Mut<UpdateDefaultWa
     return { updateDefaultWallet: { user: result?.user || { id: '', defaultWallet } } }
   })
 }
+
+// ============================================================
+// Phase 7f.5 — Auth + whitelist mutations
+// ============================================================
+
+// --- useLoginMutation ---
+type LoginVars = { input?: { email?: string; publicAddress?: string; authMethod?: string }; email?: string; publicAddress?: string }
+type LoginData = { login: { jwt: string; user?: any; profile?: any } }
+
+export const useLoginMutation = (_opts?: any): Mut<LoginVars, LoginData> => {
+  return useMutBase<LoginVars, LoginData>(async (vars) => {
+    const input = (vars?.input || vars || {}) as any
+    const email = input.email || ''
+    const publicAddress = input.publicAddress || ''
+    if (!email && !publicAddress) throw new Error('email or publicAddress required')
+    const result = await doPost('/api/auth/login-by-magic-token', { email, publicAddress })
+    const jwt = result?.data?.login?.jwt || result?.jwt || ''
+    if (!jwt) throw new Error('Login failed — no JWT')
+    return { login: { jwt, user: result?.data?.login?.user, profile: result?.data?.login?.profile } }
+  })
+}
+
+// --- useRegisterMutation ---
+type RegisterVars = {
+  input?: {
+    email?: string
+    handle?: string
+    displayName?: string
+    magicWalletAddress?: string
+    oauthProvider?: string
+    [k: string]: any
+  }
+}
+type RegisterData = { register: { jwt: string; user?: any; profile?: any } }
+
+export const useRegisterMutation = (_opts?: any): Mut<RegisterVars, RegisterData> => {
+  return useMutBase<RegisterVars, RegisterData>(async (vars) => {
+    const input = vars?.input || {}
+    const result = await doPost('/api/auth/register', input)
+    const jwt = result?.data?.register?.jwt || result?.jwt || ''
+    return { register: { jwt, user: result?.data?.register?.user, profile: result?.data?.register?.profile } }
+  })
+}
+
+// --- useCreateWhitelistEntryMutation ---
+type WhitelistVars = { input?: { walletAddress?: string; emailAddress?: string } }
+type WhitelistData = { createWhitelistEntry: { whitelistEntry: { id: string } } }
+
+export const useCreateWhitelistEntryMutation = (_opts?: any): Mut<WhitelistVars, WhitelistData> => {
+  return useMutBase<WhitelistVars, WhitelistData>(async (vars) => {
+    const input = vars?.input || {}
+    if (!input.walletAddress) throw new Error('walletAddress required')
+    const result = await doPost('/api/whitelist/create', input)
+    return { createWhitelistEntry: { whitelistEntry: { id: result?.whitelistEntry?.id || '' } } }
+  })
+}

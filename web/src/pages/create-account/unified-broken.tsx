@@ -8,7 +8,7 @@ import { Form, Formik, FormikHelpers } from 'formik'
 import { useLayoutContext } from 'hooks/useLayoutContext'
 import { useMagicContext } from 'hooks/useMagicContext'
 import { setJwt } from 'lib/apollo'
-import { useRegisterMutation } from 'lib/graphql'
+import { useRegisterMutation } from 'hooks/useMutationsDirect'  // Phase 7f — Vercel-direct
 import { useRouter } from 'next/dist/client/router'
 import Link from 'next/link'
 import { formatValidationErrors } from 'utils/errorHelpers'

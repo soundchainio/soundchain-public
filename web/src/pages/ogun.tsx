@@ -7,7 +7,7 @@ import { Form, Formik } from 'formik'
 import { useLayoutContext } from 'hooks/useLayoutContext'
 import { Checked } from 'icons/Checked'
 import { OgunLogo } from 'icons/OgunLogo'
-import { useCreateWhitelistEntryMutation } from 'lib/graphql'
+import { useCreateWhitelistEntryMutation } from 'hooks/useMutationsDirect'  // Phase 7f — Vercel-direct
 import Image from 'next/image'
 import Web3 from 'web3'
 import * as yup from 'yup'
