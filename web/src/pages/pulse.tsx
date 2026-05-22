@@ -54,8 +54,6 @@ import { useOpenClawGateway } from 'hooks/useOpenClawGateway'
 import { usePushNotifications } from 'hooks/usePushNotifications'
 import { useMeDirectQuery as useMeQuery } from 'hooks/useMeDirect'  // Phase 7e — Vercel-direct
 import {
-  useChatsQuery,       // kept as fallback type reference
-  useChatHistoryLazyQuery, // kept as fallback type reference
   useSendMessageMutation,
   useResetUnreadMessageCountMutation,
   useExploreUsersLazyQuery,

@@ -16,7 +16,7 @@ import { useEffect, useRef } from 'react'
 import { useRouter } from 'next/router'
 import { useMe } from 'hooks/useMe'
 import { useOpenClawGateway } from 'hooks/useOpenClawGateway'
-import { useChatsQuery } from 'lib/graphql'
+import { useChats as useChatsQuery } from 'hooks/useChatsDirect'  // Phase 7e — Vercel-direct
 import { toast } from 'react-toastify'
 import { playNotificationChime, warmUpAudio } from 'utils/notificationChime'
 

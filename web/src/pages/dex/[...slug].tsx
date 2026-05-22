@@ -52,7 +52,8 @@ import { DexNavBar } from 'components/DexNavBar'
 import { ScrollArea } from 'components/ui/scroll-area'
 import { Separator } from 'components/ui/separator'
 import { useAudioPlayerContext, Song } from 'hooks/useAudioPlayer'
-import { useListingItemsQuery, useExploreUsersSlimQuery, useExploreTracksSlimQuery, useFollowProfileMutation, useUnfollowProfileMutation, useChatsQuery, useChatHistoryLazyQuery, useSendMessageMutation, useResetUnreadMessageCountMutation, useNotificationsQuery, useToggleFavoriteMutation, useUpdateHandleMutation, useUpdateProfileDisplayNameMutation, SortTrackField, SortOrder, useCreateProfileVerificationRequestMutation, ProfileVerificationStatusType } from 'lib/graphql'
+import { useListingItemsQuery, useExploreUsersSlimQuery, useExploreTracksSlimQuery, useFollowProfileMutation, useUnfollowProfileMutation, useSendMessageMutation, useResetUnreadMessageCountMutation, useNotificationsQuery, useToggleFavoriteMutation, useUpdateHandleMutation, useUpdateProfileDisplayNameMutation, SortTrackField, SortOrder, useCreateProfileVerificationRequestMutation, ProfileVerificationStatusType } from 'lib/graphql'
+import { useChats as useChatsQuery, useChatHistoryLazy as useChatHistoryLazyQuery } from 'hooks/useChatsDirect'  // Phase 7e — Vercel-direct
 import { useProfileById as useProfileQuery } from 'hooks/useProfileByHandleDirect'  // Phase 7e — Vercel-direct
 import { useMeDirectQuery as useMeQuery } from 'hooks/useMeDirect'  // Phase 7e — Vercel-direct
 import { usePost as usePostQuery } from 'hooks/usePostDirect'  // Phase 7e — Vercel-direct

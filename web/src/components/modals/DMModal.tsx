@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
 import { X, Send, MessageCircle, Smile, Sparkles, Film, Video } from 'lucide-react'
 import { Button } from 'components/ui/button'
-import { useSendMessageMutation, useChatHistoryLazyQuery, Profile } from 'lib/graphql'
+import { useSendMessageMutation, Profile } from 'lib/graphql'
+import { useChatHistoryLazy as useChatHistoryLazyQuery } from 'hooks/useChatsDirect'  // Phase 7e — Vercel-direct
 import { Avatar } from 'components/Avatar'
 import { useMe } from 'hooks/useMe'
 import { LoaderAnimation } from 'components/LoaderAnimation'

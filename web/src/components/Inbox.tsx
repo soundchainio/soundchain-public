@@ -1,4 +1,5 @@
-import { Chat, useChatsQuery } from 'lib/graphql'
+import { Chat } from 'lib/graphql'
+import { useChats as useChatsQuery } from 'hooks/useChatsDirect'  // Phase 7e — Vercel-direct
 import React from 'react'
 import { ChatItem } from 'components/Chat/ChatItem'
 import { ChatSkeleton } from 'components/Chat/ChatSkeleton'
