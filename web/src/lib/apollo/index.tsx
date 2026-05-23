@@ -27,8 +27,16 @@ const jwtKey = 'token'
 
 let jwt = (isBrowser && Cookies.get(jwtKey)) || undefined
 
-const apiUrl = config.apiUrl ?? 'http://localhost:4000/graphql'
-console.log('🔗 Apollo API URL:', apiUrl, '| env:', config.apiUrl)
+// PHASE 7f COMPLETE (May 22, 2026): every read + write migrated to
+// Vercel-direct /api/* endpoints. api.soundchain.io Lambda is no longer
+// the source of truth. Apollo client stays mounted ONLY because ~50 files
+// still import `gql`/`useApolloClient`/`useQuery`/`useMutation` for cache
+// helpers + legacy gql tags. Pointing the http link at /api/graphql-stub
+// makes those calls silently return { data: null } instead of TLS-timing-
+// out against the dead Lambda. Cleanup is a future pass — once the gql
+// callsites are gone, drop @apollo/client + this whole file.
+const apiUrl = '/api/graphql-stub'
+console.log('🔗 Apollo API URL (Phase 7f stub):', apiUrl)
 
 // HOTFIX 2026-05-18: api.soundchain.io custom-domain TLS bridge is DOWN.
 // Default fetch keeps sockets open ~8s+ on TLS timeout. With 10-30 Apollo
