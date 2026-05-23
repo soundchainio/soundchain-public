@@ -110,17 +110,13 @@ export default async function handler(
       })
     }
 
-    // Fallback: Query Lambda GraphQL API for profileId, then list collections for debug
-    const GQL_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.soundchain.io/graphql'
-    const gqlRes = await fetch(GQL_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        query: `{ profileByHandle(handle: "${handle.replace(/"/g, '')}") { id displayName } }`
-      })
-    })
+    // Fallback: Vercel-direct /api/profile/[handle] for profileId (Phase 7g.2)
+    const meBase = process.env.NEXT_PUBLIC_VERCEL_URL
+      ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
+      : 'http://localhost:3000'
+    const gqlRes = await fetch(`${meBase}/api/profile/${encodeURIComponent(handle)}`)
     const gqlData = await gqlRes.json()
-    const profileId = gqlData?.data?.profileByHandle?.id
+    const profileId = gqlData?.profile?.id || gqlData?.id
 
     if (!profileId) {
       return res.status(404).json({

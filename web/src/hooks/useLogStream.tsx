@@ -11,23 +11,10 @@
  * - Minimum 30 seconds playback to qualify as a stream
  */
 
-import { gql, useMutation } from '@apollo/client'  // Phase 7e — scid lookup migrated to /api/tracks/scid
+// Phase 7g.2 — LogStream now Vercel-direct (Lambda decommissioned).
+// /api/streaming/log-play replicates SCidService.logStream logic against
+// Mongo. Returns same WIN-WIN reward shape.
 import { useCallback, useRef, useState } from 'react'
-
-// GraphQL mutation to log a stream - WIN-WIN returns both rewards!
-const LOG_STREAM_MUTATION = gql`
-  mutation LogStream($input: LogStreamInput!) {
-    logStream(input: $input) {
-      success
-      totalStreams
-      creatorReward
-      listenerReward
-      creatorDailyLimitReached
-      listenerDailyLimitReached
-      trackTitle
-    }
-  }
-`
 
 // Phase 7e — scidByTrack now lives at /api/tracks/scid (Vercel-direct)
 
@@ -85,7 +72,22 @@ export function useLogStream(options: UseLogStreamOptions = {}) {
   const lastLogTime = useRef<Map<string, number>>(new Map())
   const playStartTimes = useRef<Map<string, number>>(new Map())
 
-  const [logStreamMutation] = useMutation(LOG_STREAM_MUTATION)
+  // Phase 7g.2 — fetch-based replacement for Apollo logStream mutation
+  const logStreamMutation = useCallback(async (opts: { variables: { input: LogStreamInput } }): Promise<{ data?: { logStream: LogStreamResult } }> => {
+    const r = await fetch('/api/streaming/log-play', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(opts.variables.input),
+    })
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({}))
+      throw new Error(err?.error || 'log-play failed')
+    }
+    const result = await r.json()
+    // Add legacy fields for backward compat (some consumers read ogunReward)
+    return { data: { logStream: { ...result, ogunReward: (result.creatorReward || 0) + (result.listenerReward || 0), dailyLimitReached: result.creatorDailyLimitReached } } }
+  }, [])
 
   /**
    * Get SCid for a track (with caching). Phase 7e — Vercel-direct.

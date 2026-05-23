@@ -10,24 +10,10 @@
 
 import type { NextApiRequest, NextApiResponse } from 'next'
 
-// GraphQL endpoint for streaming rewards
-const GRAPHQL_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.soundchain.io/graphql'
-
-// LogStream mutation - triggers OGUN streaming rewards
-const LOG_STREAM_MUTATION = `
-  mutation LogStream($input: LogStreamInput!) {
-    logStream(input: $input) {
-      success
-      totalStreams
-      creatorReward
-      creatorWallet
-      listenerReward
-      listenerWallet
-      trackTitle
-      trackId
-    }
-  }
-`
+// Phase 7g.2 — Vercel-direct /api/streaming/log-play (Lambda decommissioned)
+const ME_BASE = process.env.NEXT_PUBLIC_VERCEL_URL
+  ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
+  : 'http://localhost:3000'
 
 // In-memory play tracking for analytics (supplements DB tracking)
 interface PlayRecord {
@@ -57,42 +43,24 @@ async function triggerStreamingReward(scid: string, agentWallet?: string): Promi
   error?: string
 }> {
   try {
-    const response = await fetch(GRAPHQL_URL, {
+    const response = await fetch(`${ME_BASE}/api/streaming/log-play`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        query: LOG_STREAM_MUTATION,
-        variables: {
-          input: {
-            scid,
-            duration: 30, // Minimum 30 seconds for reward
-            listenerWallet: agentWallet || undefined
-          }
-        }
-      })
+      body: JSON.stringify({ scid, duration: 30, listenerWallet: agentWallet || undefined }),
     })
-
-    const json = await response.json()
-
-    if (json.errors) {
-      console.error('[OGUN Rewards] GraphQL error:', json.errors)
-      return { success: false, creatorReward: 0, listenerReward: 0, totalStreams: 0, error: json.errors[0]?.message }
-    }
-
-    const result = json.data?.logStream
+    const result = await response.json()
     if (result?.success) {
       console.log(`[OGUN Rewards] Stream logged: ${scid} - Creator: ${result.creatorReward} OGUN, Listener: ${result.listenerReward} OGUN`)
       return {
         success: true,
         creatorReward: result.creatorReward || 0,
         listenerReward: result.listenerReward || 0,
-        totalStreams: result.totalStreams || 0
+        totalStreams: result.totalStreams || 0,
       }
     }
-
-    return { success: false, creatorReward: 0, listenerReward: 0, totalStreams: 0 }
+    return { success: false, creatorReward: 0, listenerReward: 0, totalStreams: 0, error: result?.error || result?.reason }
   } catch (error: any) {
-    console.error('[OGUN Rewards] Error calling logStream:', error)
+    console.error('[OGUN Rewards] Error calling /api/streaming/log-play:', error)
     return { success: false, creatorReward: 0, listenerReward: 0, totalStreams: 0, error: error.message }
   }
 }

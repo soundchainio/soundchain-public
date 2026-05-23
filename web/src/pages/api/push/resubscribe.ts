@@ -155,35 +155,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           document.getElementById('testBtn').disabled = false;
           btn.textContent = '✅ Enabled!';
         } else {
-          // Try GraphQL mutation as fallback
-          showStatus('Trying GraphQL subscription...', 'info');
-          const subJson = sub.toJSON();
-          const gqlRes = await fetch('https://api.soundchain.io/graphql', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': token ? 'Bearer ' + token : '',
-            },
-            body: JSON.stringify({
-              query: 'mutation($input: PushSubscriptionInput!) { subscribeToPush(input: $input) { id } }',
-              variables: {
-                input: {
-                  endpoint: subJson.endpoint,
-                  p256dh: subJson.keys.p256dh,
-                  auth: subJson.keys.auth,
-                  deviceName: navigator.userAgent.includes('iPhone') ? 'iOS' : 'Mac',
-                }
-              }
-            }),
-          });
-
-          if (gqlRes.ok) {
-            showStatus('✅ Push alerts ENABLED via GraphQL! Flash alerts active.', 'success');
-            document.getElementById('testBtn').disabled = false;
-            btn.textContent = '✅ Enabled!';
-          } else {
-            showStatus('Subscription created in browser but server save failed. Try from the main site.', 'error');
-          }
+          // Phase 7g.2 — GraphQL fallback removed (Lambda decommissioned).
+          // /api/push/save-subscription is the canonical Vercel-direct path.
+          showStatus('Subscription created in browser but server save failed. Try from the main site.', 'error');
         }
       } catch (err) {
         showStatus('Error: ' + err.message, 'error');

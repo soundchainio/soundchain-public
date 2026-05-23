@@ -47,24 +47,10 @@ const MARKETPLACE_ABI = [
   'function listings(address nftContract, uint256 tokenId) view returns (address seller, uint256 price, bool isOGUN)'
 ]
 
-// GraphQL to get listing details
-const GRAPHQL_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.soundchain.io/graphql'
-
-const LISTING_QUERY = `
-  query GetListing($id: ID!) {
-    track(id: $id) {
-      id
-      title
-      artist
-      price {
-        value
-        currency
-      }
-      trackEditionId
-      profileId
-    }
-  }
-`
+// Phase 7g.2 — Vercel-direct /api/tracks/list (Lambda decommissioned)
+const ME_BASE = process.env.NEXT_PUBLIC_VERCEL_URL
+  ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
+  : 'http://localhost:3000'
 
 export default async function handler(
   req: NextApiRequest,
@@ -155,19 +141,11 @@ export default async function handler(
       })
     }
 
-    // Fetch listing details from GraphQL
-    const listingResponse = await fetch(GRAPHQL_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        query: LISTING_QUERY,
-        variables: { id: listing_id }
-      })
-    })
-
+    // Fetch listing details from Vercel-direct /api/tracks/list
+    const listingResponse = await fetch(`${ME_BASE}/api/tracks/list?trackId=${encodeURIComponent(listing_id)}`)
     const listingData = await listingResponse.json()
-
-    if (listingData.errors || !listingData.data?.track) {
+    const listing = listingData?.nodes?.[0] || (listingData?.id ? listingData : null)
+    if (!listing) {
       return res.status(404).json({
         success: false,
         error: 'Listing not found',
@@ -176,9 +154,7 @@ export default async function handler(
         meta: { request_id: requestId }
       })
     }
-
-    const listing = listingData.data.track
-    const priceValue = listing.price?.value || '0'
+    const priceValue = String(listing.price?.value ?? '0')
     const priceCurrency = listing.price?.currency || 'MATIC'
     const priceWei = ethers.utils.parseEther(priceValue)
 

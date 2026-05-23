@@ -1,75 +1,53 @@
 /**
- * Admin endpoint to soft-delete tracks via GraphQL
- * POST /api/admin/delete-tracks
- *
+ * POST /api/admin/delete-tracks — Vercel-direct (Phase 7g.2)
  * Body: { trackIds: string[], adminKey: string }
+ *
+ * Admin soft-delete batch. Admin key gate (no owner check). Direct Mongo
+ * updateMany — SCID + IPFS data preserved for blockchain integrity.
  */
-
 import type { NextApiRequest, NextApiResponse } from 'next'
+import clientPromise from 'lib/mongodb'
+import { ObjectId } from 'mongodb'
 
-// Simple admin key check
 const ADMIN_KEY = process.env.ADMIN_DELETE_KEY || 'soundchain-admin-2026'
-const GRAPHQL_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.soundchain.io/graphql'
 
-// Delete track mutation (admin version doesn't require owner check)
-const DELETE_TRACK_MUTATION = `
-  mutation DeleteTrack($trackId: String!) {
-    deleteTrack(trackId: $trackId) {
-      id
-      title
-      deleted
-    }
-  }
-`
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' })
-  }
-
-  const { trackIds, adminKey } = req.body
-
-  // Validate admin key
-  if (adminKey !== ADMIN_KEY) {
-    return res.status(401).json({ error: 'Invalid admin key' })
-  }
-
+  const { trackIds, adminKey } = req.body || {}
+  if (adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Invalid admin key' })
   if (!trackIds || !Array.isArray(trackIds) || trackIds.length === 0) {
     return res.status(400).json({ error: 'trackIds array is required' })
   }
 
   const results: { trackId: string; success: boolean; title?: string; error?: string }[] = []
 
-  for (const trackId of trackIds) {
-    try {
-      const response = await fetch(GRAPHQL_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          query: DELETE_TRACK_MUTATION,
-          variables: { trackId },
-        }),
-      })
+  try {
+    const client = await clientPromise
+    const db = client.db('soundchain')
 
-      const json = await response.json()
-
-      if (json.errors) {
-        results.push({ trackId, success: false, error: json.errors[0]?.message })
-      } else if (json.data?.deleteTrack) {
-        results.push({ trackId, success: true, title: json.data.deleteTrack.title })
-      } else {
-        results.push({ trackId, success: false, error: 'Unknown error' })
+    for (const trackId of trackIds) {
+      let oid: ObjectId
+      try { oid = new ObjectId(trackId) } catch {
+        results.push({ trackId, success: false, error: 'Invalid trackId' })
+        continue
       }
-    } catch (error: any) {
-      results.push({ trackId, success: false, error: error.message })
+      const existing = await db.collection('tracks').findOne({ _id: oid }, { projection: { title: 1 } as any })
+      if (!existing) {
+        results.push({ trackId, success: false, error: 'Not found' })
+        continue
+      }
+      await db.collection('tracks').updateOne(
+        { _id: oid },
+        { $set: { deleted: true, deletedAt: new Date(), updatedAt: new Date() } }
+      )
+      results.push({ trackId, success: true, title: existing.title || '' })
     }
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message, results })
   }
 
   const successCount = results.filter(r => r.success).length
-
   return res.status(200).json({
     success: successCount > 0,
     message: `Deleted ${successCount}/${trackIds.length} tracks`,
