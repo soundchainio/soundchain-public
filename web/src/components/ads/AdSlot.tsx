@@ -54,7 +54,6 @@ export const AdSlot = ({ slot, format = 'auto', className = '' }: AdSlotProps) =
   const impressionTracked = useRef(false)
 
   const pubId = process.env.NEXT_PUBLIC_ADSENSE_PUB_ID
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.soundchain.io/graphql'
 
   // Pick a consistent placeholder based on slot name
   const msgIndex = slot.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) % BILLBOARD_MESSAGES.length
@@ -74,40 +73,24 @@ export const AdSlot = ({ slot, format = 'auto', className = '' }: AdSlotProps) =
     const graphqlSlot = slotMap[slot]
     if (!graphqlSlot) return
 
-    fetch(apiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        query: `query BillboardForSlot($slot: BillboardSlot!) {
-          billboardForSlot(slot: $slot) {
-            id title description imageUrl linkUrl profileId expiresAt impressions
-          }
-        }`,
-        variables: { slot: graphqlSlot },
-      }),
-    })
-      .then(r => r.json())
+    fetch(`/api/billboards/slot?slot=${encodeURIComponent(graphqlSlot)}`, { credentials: 'include' })
+      .then(r => r.ok ? r.json() : null)
       .then(data => {
-        if (data?.data?.billboardForSlot) {
-          setPaidBillboard(data.data.billboardForSlot)
-        }
+        if (data?.billboard) setPaidBillboard(data.billboard)
       })
       .catch(() => { /* No paid billboard — fall through to AdSense or placeholder */ })
-  }, [slot, apiUrl])
+  }, [slot])
 
   // Track impression for paid billboard
   useEffect(() => {
     if (!paidBillboard || impressionTracked.current) return
     impressionTracked.current = true
-    fetch(apiUrl, {
+    fetch('/api/billboards/impression', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        query: `mutation TrackImpression($id: String!) { trackBillboardImpression(billboardId: $id) }`,
-        variables: { id: paidBillboard.id },
-      }),
+      body: JSON.stringify({ billboardId: paidBillboard.id }),
     }).catch(() => {})
-  }, [paidBillboard, apiUrl])
+  }, [paidBillboard])
 
   // Push AdSense if no paid billboard
   useEffect(() => {

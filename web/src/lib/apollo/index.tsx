@@ -133,10 +133,14 @@ export function createApolloClient(context?: GetServerSidePropsContext) {
 
 export const apolloClient = createApolloClient()
 
-// SSR-specific Apollo client with hardcoded production URL
-// This ensures SSR always hits the correct API endpoint
+// SSR-specific Apollo client — Phase 7f COMPLETE means SSR also stubbed.
+// Before: hit api.soundchain.io Lambda from Vercel SSR; now: no-op stub.
+// SSR data loading for SC pages is done via direct fetch to /api/* inside
+// getServerSideProps; this Apollo SSR client is legacy fallback only.
 export function initializeApollo() {
-  const ssrApiUrl = config.apiUrl ?? 'https://api.soundchain.io/graphql'
+  const ssrApiUrl = (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_VERCEL_URL)
+    ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}/api/graphql-stub`
+    : 'http://localhost:3000/api/graphql-stub'
   const ssrHttpLink = createHttpLink({ uri: ssrApiUrl, fetch: timeoutFetch })
 
   const errorLink = onError(({ graphQLErrors, networkError }) => {

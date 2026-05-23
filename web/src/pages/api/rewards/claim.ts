@@ -58,20 +58,21 @@ async function getAuthProfile(req: NextApiRequest) {
     }
   } catch {}
 
-  // Method 2: Verify via GraphQL API (works even if JWT_SECRET differs)
+  // Method 2: Verify via Vercel-direct /api/me (Phase 7g — Lambda is dead)
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.soundchain.io/graphql'
-    const res = await fetch(apiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-      body: JSON.stringify({ query: '{ me { id profile { id userHandle } } }' }),
+    const meBase = process.env.NEXT_PUBLIC_VERCEL_URL
+      ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
+      : 'http://localhost:3000'
+    const res = await fetch(`${meBase}/api/me`, {
+      method: 'GET',
+      headers: { 'Cookie': `token=${token}`, 'Authorization': `Bearer ${token}` },
       signal: AbortSignal.timeout(10_000),
     })
     const data = await res.json()
-    const me = data?.data?.me
+    const me = data?.me
     if (me?.profile?.id) {
       return {
-        userId: me.id,
+        userId: me.id || me._id,
         profileId: me.profile.id,
         handle: me.profile.userHandle || '',
       }

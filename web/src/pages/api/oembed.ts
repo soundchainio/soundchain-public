@@ -111,8 +111,10 @@ async function handleSoundChainOEmbed(
   let embedUrl = domainUrl
   let resourceType = 'link'
 
-  // Fetch actual data from GraphQL API
-  const apiUrl = config.graphqlEndpoint || process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || 'https://api.soundchain.io/graphql'
+  // Phase 7g — fetch from Vercel-direct instead of Lambda
+  const internalBase = process.env.NEXT_PUBLIC_VERCEL_URL
+    ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
+    : domainUrl
 
   if (trackMatch) {
     const trackId = trackMatch[1]
@@ -120,27 +122,12 @@ async function handleSoundChainOEmbed(
     embedUrl = `${domainUrl}/embed/track/${trackId}`
 
     try {
-      const response = await axios.post(apiUrl, {
-        query: `
-          query Track($id: String!) {
-            track(id: $id) {
-              id
-              title
-              artist
-              artworkUrl
-              playbackCountFormatted
-              description
-            }
-          }
-        `,
-        variables: { id: trackId }
-      }, { timeout: 5000 })
-
-      const track = response.data?.data?.track
+      const response = await axios.get(`${internalBase}/api/tracks/list?trackId=${encodeURIComponent(trackId)}`, { timeout: 5000 })
+      const track = response.data?.nodes?.[0] || (response.data?.id ? response.data : null)
       if (track) {
         title = `${track.title || 'Track'} by ${track.artist || 'Unknown Artist'}`
         authorName = track.artist || 'Unknown Artist'
-        authorUrl = `${domainUrl}/dex/track/${trackId}`
+        authorUrl = `${domainUrl}/tracks/${trackId}`
         if (track.artworkUrl) {
           thumbnailUrl = track.artworkUrl.startsWith('http')
             ? track.artworkUrl
@@ -158,27 +145,12 @@ async function handleSoundChainOEmbed(
     embedUrl = `${domainUrl}/dex/users/${handle}`
 
     try {
-      const response = await axios.post(apiUrl, {
-        query: `
-          query ProfileByHandle($handle: String!) {
-            profileByHandle(handle: $handle) {
-              id
-              displayName
-              userHandle
-              profilePicture
-              coverPicture
-              bio
-            }
-          }
-        `,
-        variables: { handle }
-      }, { timeout: 5000 })
-
-      const profile = response.data?.data?.profileByHandle
-      if (profile) {
+      const response = await axios.get(`${internalBase}/api/profile/${encodeURIComponent(handle)}`, { timeout: 5000 })
+      const profile = response.data?.profile || response.data
+      if (profile?.id) {
         title = `${profile.displayName || profile.userHandle} | SoundChain`
         authorName = profile.displayName || profile.userHandle
-        authorUrl = `${domainUrl}/dex/users/${handle}`
+        authorUrl = `${domainUrl}/users/${handle}`
         const profileImg = profile.profilePicture || profile.coverPicture
         if (profileImg) {
           thumbnailUrl = profileImg.startsWith('http')
