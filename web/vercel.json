@@ -38,6 +38,18 @@
     {
       "path": "/api/cron/repin-scid",
       "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/process-pending",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/process-auctions",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/cleanup-ephemeral",
+      "schedule": "0 * * * *"
     }
   ]
 }
