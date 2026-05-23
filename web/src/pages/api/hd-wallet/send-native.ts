@@ -12,18 +12,12 @@ import { ethers } from 'ethers'
 import crypto from 'crypto'
 
 const POLYGON_RPC = process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://polygon-bor-rpc.publicnode.com'
-const GRAPHQL_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.soundchain.io/graphql'
 const HUMAN_WALLET_SEED = process.env.HUMAN_WALLET_SEED
 
-const ME_QUERY = `
-  query Me {
-    me {
-      id
-      profileId
-      hdWalletAddress
-    }
-  }
-`
+// Phase 7g — Vercel-direct /api/me (Lambda decommissioned)
+const ME_BASE = process.env.NEXT_PUBLIC_VERCEL_URL
+  ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
+  : 'http://localhost:3000'
 
 function userIdToIndex(userId: string): number {
   const hash = crypto.createHash('sha256').update(userId.toLowerCase()).digest('hex')
@@ -54,13 +48,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(401).json({ success: false, error: 'Not authenticated' })
     }
 
-    const meResponse = await fetch(GRAPHQL_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', authorization: `Bearer ${jwt}` },
-      body: JSON.stringify({ query: ME_QUERY }),
+    const meResponse = await fetch(`${ME_BASE}/api/me`, {
+      method: 'GET',
+      headers: { 'Cookie': `token=${jwt}`, 'Authorization': `Bearer ${jwt}` },
     })
-    const me = (await meResponse.json())?.data?.me
-    if (!me?.id || !me?.hdWalletAddress) {
+    const me: any = (await meResponse.json())?.me
+    if ((!me?.id && !me?._id) || !me?.hdWalletAddress) {
       return res.status(401).json({ success: false, error: 'No HD wallet' })
     }
 

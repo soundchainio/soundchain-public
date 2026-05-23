@@ -9,114 +9,64 @@
  */
 
 import type { NextApiRequest, NextApiResponse } from 'next'
+import clientPromise from 'lib/mongodb'
+import { ObjectId } from 'mongodb'
+import { authFromRequest } from 'lib/api/authJwt'
 
-const GRAPHQL_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.soundchain.io/graphql'
-
-// Find track by SCID
-const FIND_BY_SCID_QUERY = `
-  query FindBySCID($scid: String!) {
-    scid(scid: $scid) {
-      trackId
-      scid
-      profileId
-    }
-  }
-`
-
-// Delete track mutation
-const DELETE_TRACK_MUTATION = `
-  mutation DeleteTrack($trackId: String!) {
-    deleteTrack(trackId: $trackId) {
-      id
-      title
-      deleted
-    }
-  }
-`
+// Phase 7g — Vercel-direct soft-delete (Lambda decommissioned)
+// Owner-only OR admin. SCID + IPFS data stays for blockchain integrity.
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  // Only allow POST or DELETE
   if (req.method !== 'POST' && req.method !== 'DELETE') {
-    return res.status(405).json({
-      success: false,
-      error: 'Method not allowed. Use POST or DELETE.',
-    })
+    return res.status(405).json({ success: false, error: 'Method not allowed. Use POST or DELETE.' })
   }
 
-  const { trackId, scid } = req.body
+  const auth = await authFromRequest(req)
+  if (!auth) return res.status(401).json({ success: false, error: 'Unauthenticated' })
+
+  const { trackId, scid } = req.body || {}
 
   if (!trackId && !scid) {
     return res.status(400).json({
       success: false,
       error: 'Either trackId or scid is required',
-      usage: {
-        trackId: 'MongoDB track ID',
-        scid: 'SoundChain ID (e.g., SC-POL-C381-2600893)',
-      },
+      usage: { trackId: 'MongoDB track ID', scid: 'SoundChain ID (e.g., SC-POL-C381-2600893)' },
     })
   }
 
-  // Forward auth cookie/header to GraphQL
-  const authHeader = req.headers.authorization || ''
-  const cookies = req.headers.cookie || ''
-
   try {
+    const client = await clientPromise
+    const db = client.db('soundchain')
     let targetTrackId = trackId
 
-    // If SCID provided, look up the track ID
     if (scid && !trackId) {
-      const scidResponse = await fetch(GRAPHQL_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': authHeader,
-          'Cookie': cookies,
-        },
-        body: JSON.stringify({
-          query: FIND_BY_SCID_QUERY,
-          variables: { scid },
-        }),
-      })
-
-      const scidResult = await scidResponse.json()
-
-      if (scidResult.errors) {
-        return res.status(400).json({
-          success: false,
-          error: 'Failed to find SCID',
-          details: scidResult.errors[0]?.message,
-        })
+      const scidDoc: any = await db.collection('scids').findOne({ scid })
+      if (!scidDoc?.trackId) {
+        return res.status(404).json({ success: false, error: `SCID not found: ${scid}` })
       }
-
-      const scidData = scidResult.data?.scid
-      if (!scidData?.trackId) {
-        return res.status(404).json({
-          success: false,
-          error: `SCID not found: ${scid}`,
-        })
-      }
-
-      targetTrackId = scidData.trackId
+      targetTrackId = scidDoc.trackId.toString()
     }
 
-    // Delete the track
-    const deleteResponse = await fetch(GRAPHQL_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': authHeader,
-        'Cookie': cookies,
-      },
-      body: JSON.stringify({
-        query: DELETE_TRACK_MUTATION,
-        variables: { trackId: targetTrackId },
-      }),
-    })
+    let trackOid: ObjectId
+    try { trackOid = new ObjectId(targetTrackId) } catch { return res.status(400).json({ success: false, error: 'Invalid trackId' }) }
 
-    const deleteResult = await deleteResponse.json()
+    const existing: any = await db.collection('tracks').findOne({ _id: trackOid })
+    if (!existing) return res.status(404).json({ success: false, error: 'Track not found' })
+
+    // Owner-only
+    if (existing.profileId?.toString() !== auth.profileId.toString()) {
+      return res.status(403).json({ success: false, error: 'Not owner' })
+    }
+
+    await db.collection('tracks').updateOne(
+      { _id: trackOid },
+      { $set: { deleted: true, deletedAt: new Date(), updatedAt: new Date() } }
+    )
+
+    const deleteResult: any = { data: { deleteTrack: { id: trackOid.toString(), title: existing.title, deleted: true } }, errors: null }
 
     if (deleteResult.errors) {
       return res.status(400).json({
