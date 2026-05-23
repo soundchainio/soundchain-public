@@ -407,7 +407,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const client = await clientPromise
     const db = client.db('soundchain')
 
-    const provider = new ethers.providers.JsonRpcProvider(POLYGON_RPC)
+    // Pass network explicitly — some public RPCs don't return chainId via
+    // eth_chainId in their initial probe, which makes ethers throw
+    // 'could not detect network'. Polygon mainnet = 137.
+    const provider = new ethers.providers.JsonRpcProvider(POLYGON_RPC, { chainId: 137, name: 'matic' })
 
     // Last processed block from tracker — single doc keyed by name
     const trackerDoc = await db.collection('blocktrackers').findOne({ name: 'vercel-cron' })
