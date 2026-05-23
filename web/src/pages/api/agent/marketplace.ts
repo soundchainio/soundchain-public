@@ -9,47 +9,7 @@
 
 import type { NextApiRequest, NextApiResponse } from 'next'
 
-// GraphQL endpoint
-const GRAPHQL_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.soundchain.io/graphql'
-
-// Query marketplace listings with OGUN price data
-const LISTINGS_QUERY = `
-  query AgentMarketplaceListings($page: PageInput, $sort: SortListingItemInput) {
-    listingItems(page: $page, sort: $sort) {
-      nodes {
-        id
-        title
-        artist
-        artworkUrl
-        playbackUrl
-        description
-        genres
-        playbackCount
-        favoriteCount
-        saleType
-        price {
-          value
-          currency
-        }
-        trackEditionId
-        editionSize
-        profileId
-        listingItem {
-          pricePerItem
-          pricePerItemToShow
-          OGUNPricePerItem
-          OGUNPricePerItemToShow
-          acceptsOGUN
-          acceptsMATIC
-        }
-      }
-      pageInfo {
-        hasNextPage
-        totalCount
-      }
-    }
-  }
-`
+// Phase 7g — Lambda decommissioned; reads now hit /api/marketplace/listings.
 
 export default async function handler(
   req: NextApiRequest,
