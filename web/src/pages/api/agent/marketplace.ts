@@ -68,42 +68,26 @@ export default async function handler(
   try {
     const { limit = '20', sort = 'newest', genre, minPrice, maxPrice } = req.query
 
-    // Fetch from GraphQL
-    const response = await fetch(GRAPHQL_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        query: LISTINGS_QUERY,
-        variables: {
-          page: { first: Math.min(parseInt(limit as string) || 20, 50) },
-          // Sort uses field + order (not direction) per GraphQL schema
-          sort: sort === 'popular'
-            ? { field: 'PLAYBACK_COUNT', order: 'DESC' }
-            : sort === 'price_low'
-            ? { field: 'PRICE', order: 'ASC' }
-            : sort === 'price_high'
-            ? { field: 'PRICE', order: 'DESC' }
-            : { field: 'CREATED_AT', order: 'DESC' }
-        }
-      })
-    })
-
+    // Phase 7g — Vercel-direct /api/marketplace/listings (Lambda decommissioned)
+    const meBase = process.env.NEXT_PUBLIC_VERCEL_URL
+      ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
+      : 'http://localhost:3000'
+    const sortParam = sort === 'price_low' ? 'cheapest'
+      : sort === 'price_high' ? 'expensive'
+      : 'newest'
+    const lim = Math.min(parseInt(limit as string) || 20, 50)
+    const response = await fetch(`${meBase}/api/marketplace/listings?sort=${sortParam}&limit=${lim}`)
     const data = await response.json()
-
-    if (data.errors) {
-      console.error('[Agent Marketplace] GraphQL Error:', data.errors)
+    if (!response.ok) {
       return res.status(500).json({
         success: false,
         error: 'Failed to fetch listings',
-        details: data.errors[0]?.message,
+        details: data?.error || 'unknown',
         meta: { request_id: requestId }
       })
     }
-
-    const listings = data.data?.listingItems?.nodes || []
-    const totalCount = data.data?.listingItems?.pageInfo?.totalCount || 0
+    const listings = data?.nodes || []
+    const totalCount = data?.pageInfo?.totalCount || listings.length
 
     // Transform to agent-friendly format with OGUN pricing
     const agentListings = listings.map((listing: any) => {
