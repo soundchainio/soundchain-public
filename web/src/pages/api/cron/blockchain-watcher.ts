@@ -31,9 +31,17 @@ import { config } from 'config'
 
 const ZERO_ADDR = '0x0000000000000000000000000000000000000000'
 const MAX_BLOCKS_PER_RUN = 10_000
-const POLYGON_RPC = process.env.POLYGON_RPC
-  || process.env.NEXT_PUBLIC_POLYGON_RPC
-  || (process.env.ALCHEMY_POLYGON_KEY ? `https://polygon-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_POLYGON_KEY}` : 'https://polygon-bor-rpc.publicnode.com')
+// Multi-RPC failover — try each in order. Filters out polygon-rpc.com
+// (default env value) because that endpoint requires a tenant key we don't
+// have, and "API key disabled, reason: tenant disabled" 403s every call.
+const POLYGON_RPCS = [
+  process.env.ALCHEMY_POLYGON_KEY ? `https://polygon-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_POLYGON_KEY}` : null,
+  process.env.QUICKNODE_POLYGON_URL,
+  'https://polygon-bor-rpc.publicnode.com',
+  'https://polygon.llamarpc.com',
+  'https://polygon.drpc.org',
+  'https://rpc.ankr.com/polygon',
+].filter((u): u is string => !!u && !u.includes('polygon-rpc.com'))
 
 const C = config.web3
 const ADDR = {
@@ -407,10 +415,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const client = await clientPromise
     const db = client.db('soundchain')
 
-    // Pass network explicitly — some public RPCs don't return chainId via
-    // eth_chainId in their initial probe, which makes ethers throw
-    // 'could not detect network'. Polygon mainnet = 137.
-    const provider = new ethers.providers.JsonRpcProvider(POLYGON_RPC, { chainId: 137, name: 'matic' })
+    // StaticJsonRpcProvider skips the network-probe round-trip + accepts
+    // an explicit network — works with public RPCs that don't respond to
+    // the initial eth_chainId detection.
+    // Try each RPC until one succeeds. Tracks which one worked for logging.
+    let provider: ethers.providers.JsonRpcProvider | null = null
+    let pickedRpc: string | null = null
+    let lastRpcErr: string | null = null
+    for (const rpc of POLYGON_RPCS) {
+      try {
+        const candidate = new ethers.providers.StaticJsonRpcProvider(rpc, { chainId: 137, name: 'matic' })
+        await candidate.getBlockNumber()
+        provider = candidate
+        pickedRpc = rpc
+        break
+      } catch (err: any) {
+        lastRpcErr = `${rpc} → ${err.message?.slice(0, 100) || 'unknown'}`
+      }
+    }
+    if (!provider) {
+      return res.status(500).json({ success: false, error: `All RPCs failed: ${lastRpcErr}`, stats })
+    }
+    stats.rpc = pickedRpc
 
     // Last processed block from tracker — single doc keyed by name
     const trackerDoc = await db.collection('blocktrackers').findOne({ name: 'vercel-cron' })
