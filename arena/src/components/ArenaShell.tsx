@@ -14,6 +14,7 @@ import {
   X,
   Zap,
   Dribbble,
+  ArrowLeft,
 } from 'lucide-react'
 
 interface ArenaShellProps {
@@ -78,6 +79,26 @@ function ThemeToggle() {
 export function ArenaShell({ children }: ArenaShellProps) {
   const router = useRouter()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [portalSC, setPortalSC] = useState(false)
+
+  // Portal-back affordance — when the user arrived from soundchain.io via the
+  // Arena pill (web/src/components/MainPillNav.tsx adds `?portal=soundchain`),
+  // we surface a prominent "← Back to SoundChain" pill instead of the subtle
+  // generic soundchain.io link. Flag persists for the session so in-arena
+  // navigation (Hub → NBA → game modal) doesn't lose the return path.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      const fromQuery = new URLSearchParams(window.location.search).get('portal') === 'soundchain'
+      const cached = sessionStorage.getItem('arenaPortalSC') === '1'
+      if (fromQuery) {
+        sessionStorage.setItem('arenaPortalSC', '1')
+        setPortalSC(true)
+      } else if (cached) {
+        setPortalSC(true)
+      }
+    } catch (_) {}
+  }, [router.asPath])
 
   const isActive = (href: string) =>
     href === '/' ? router.pathname === '/' : router.pathname.startsWith(href)
@@ -121,15 +142,25 @@ export function ArenaShell({ children }: ArenaShellProps) {
           {/* Right cluster */}
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            <a
-              href="https://soundchain.io"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-arena-muted-l dark:text-arena-muted-d hover:text-arena-text-l dark:hover:text-arena-text-d border border-arena-border-l dark:border-arena-border-d hover:border-arena-red transition"
-            >
-              <ExternalLink className="w-3.5 h-3.5" />
-              <span className="hidden md:inline">soundchain.io</span>
-            </a>
+            {portalSC ? (
+              <a
+                href="https://soundchain.io"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-white bg-arena-red border border-arena-red shadow-sm hover:opacity-90 transition"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">SoundChain</span>
+              </a>
+            ) : (
+              <a
+                href="https://soundchain.io"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-arena-muted-l dark:text-arena-muted-d hover:text-arena-text-l dark:hover:text-arena-text-d border border-arena-border-l dark:border-arena-border-d hover:border-arena-red transition"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span className="hidden md:inline">soundchain.io</span>
+              </a>
+            )}
             {/* Mobile menu trigger */}
             <button
               onClick={() => setMenuOpen((m) => !m)}
@@ -162,14 +193,23 @@ export function ArenaShell({ children }: ArenaShellProps) {
                   <span>{label}</span>
                 </Link>
               ))}
-              <a
-                href="https://soundchain.io"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="col-span-3 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg text-xs font-bold text-arena-muted-l dark:text-arena-muted-d border border-arena-border-l dark:border-arena-border-d"
-              >
-                <ExternalLink className="w-3.5 h-3.5" /> soundchain.io
-              </a>
+              {portalSC ? (
+                <a
+                  href="https://soundchain.io"
+                  className="col-span-3 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg text-xs font-bold text-white bg-arena-red border border-arena-red"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" /> Back to SoundChain
+                </a>
+              ) : (
+                <a
+                  href="https://soundchain.io"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="col-span-3 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg text-xs font-bold text-arena-muted-l dark:text-arena-muted-d border border-arena-border-l dark:border-arena-border-d"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" /> soundchain.io
+                </a>
+              )}
             </div>
           </nav>
         )}

@@ -49,6 +49,7 @@ import { Badge } from 'components/ui/badge'
 import { BadgeVerifiedOnChain } from 'components/common/Badges/BadgeVerifiedOnChain'
 import { Avatar, AvatarImage, AvatarFallback } from 'components/ui/avatar'
 import { DexNavBar } from 'components/DexNavBar'
+import MainPillNav from 'components/MainPillNav'
 import { ScrollArea } from 'components/ui/scroll-area'
 import { Separator } from 'components/ui/separator'
 import { useAudioPlayerContext, Song } from 'hooks/useAudioPlayer'
@@ -3242,42 +3243,11 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
         <div className="max-w-screen-2xl mx-auto relative">
           {/* Horizontal scrolling nav pills */}
           <div className="flex items-center gap-1.5 mb-1 px-3 pt-1">
-            <div className="flex-1 overflow-x-auto scrollbar-hide bg-black/60 backdrop-blur-md rounded-full px-2 py-1">
-              <div className="flex items-center gap-1.5 min-w-max">
-                {[
-                  ...(me?.profile ? [{ id: 'profile', label: 'Profile', route: `/users/${me?.profile?.userHandle}` }] : []),
-                  { id: 'nodes', label: 'Nodes', route: '/nodes' },
-                  { id: 'explore3d', label: 'Explore 3D', route: '/explore3d' },
-                  { id: 'land', label: 'Land', route: '/land' },
-                  { id: 'gallery3d', label: 'Gallery 3D', route: '/gallery3d' },
-                  { id: 'arena', label: 'Arena', route: '/arena' },
-                  { id: 'explore', label: 'Explore', route: '/explore' },
-                  { id: 'users', label: 'Users', route: '/users' },
-                  { id: 'radio', label: 'Radio', route: '/radio' },
-                  { id: 'moltbook', label: 'Moltbook', route: '/backend' },
-                  { id: 'library', label: 'Library', route: '/library' },
-                  { id: 'archive', label: 'Archive', route: '/archive' },
-                ].map((item) => {
-                  const isActive = selectedView === item.id || (item.id === 'profile' && isBioExpanded)
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => {
-                        setIsBioExpanded(false)
-                        router.push(item.route, undefined, { shallow: false })
-                      }}
-                      className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
-                        isActive
-                          ? 'bg-white/15 text-white border border-white/20'
-                          : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
-                      }`}
-                    >
-                      {item.label}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
+            <MainPillNav
+              active={isBioExpanded ? 'profile' : (selectedView as any)}
+              bare
+              beforeNavigate={() => setIsBioExpanded(false)}
+            />
 
             {/* View toggle */}
             <div className="flex items-center flex-shrink-0 ml-1">

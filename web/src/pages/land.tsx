@@ -15,6 +15,7 @@ import { ReactElement, useEffect, useRef, useState } from 'react'
 import { useMe } from 'hooks/useMe'
 import { useRouter } from 'next/router'
 import { DexNavBar } from 'components/DexNavBar'
+import MainPillNav from 'components/MainPillNav'
 import { ArrowLeft, MapPin, Coins, Lock, Filter, ZoomIn, ZoomOut, Wallet, X, Globe2, Grid3x3, Search, Plane, Loader2 } from 'lucide-react'
 import { useMagicContext } from 'hooks/useMagicContext'
 import { config } from '../config'
@@ -715,28 +716,7 @@ export default function LandAtlasPage() {
     <div className="min-h-screen bg-[#030308] text-white flex flex-col">
       <DexNavBar />
 
-      {/* Lower nav */}
-      <div className="border-b border-yellow-500/10 bg-black/40 backdrop-blur-md">
-        <div className="flex items-center gap-1.5 px-3 pt-2 pb-2">
-          <div className="flex-1 overflow-x-auto scrollbar-hide bg-black/60 backdrop-blur-md rounded-full px-2 py-1">
-            <div className="flex items-center gap-1.5 min-w-max">
-              {[
-                ...(me?.profile ? [{ id: 'profile', label: 'Profile', route: `/users/${me.profile.userHandle}` }] : []),
-                { id: 'nodes', label: 'Nodes', route: '/nodes' },
-                { id: 'explore3d', label: 'Explore 3D', route: '/explore3d' },
-                { id: 'land', label: 'Land Atlas', route: '/land' },
-                { id: 'gallery3d', label: 'Gallery 3D', route: '/gallery3d' },
-                { id: 'arena', label: 'Arena', route: '/arena' },
-                { id: 'archive', label: 'Archive', route: '/archive' },
-              ].map(item => (
-                <button key={item.id} onClick={() => router.push(item.route)} className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${item.id === 'land' ? 'bg-white/15 text-white border border-white/20' : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'}`}>
-                  {item.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
+      <MainPillNav active="land" borderClass="border-yellow-500/10" />
 
       {/* Header */}
       <div className="border-b border-yellow-500/20 bg-black/80 backdrop-blur-md">
