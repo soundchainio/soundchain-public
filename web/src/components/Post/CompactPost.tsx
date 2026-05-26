@@ -230,8 +230,10 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
       {!hasUploadedMedia && hasMediaLink && post.mediaLink && !hasTrack ? (
         <div ref={embedContainerRef} className="w-full h-full" onClick={(e) => e.stopPropagation()}>
           {hasLazyLoadWithThumbnailSupport(post.mediaLink) ? (
-            // YouTube, Vimeo, Facebook — list view autoplays muted on scroll;
-            // grid view shows a poster (light=true) with a play button, user-initiated playback.
+            // YouTube, Vimeo, Facebook — list view autoplays muted on scroll.
+            // Grid view loads the player INLINE but paused — user taps the player's
+            // native play button to start (same inline UX as list, no simultaneous
+            // autoplay across N >=50%-visible cards).
             <ReactPlayer
               width="100%"
               height="100%"
@@ -239,8 +241,7 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
               playsinline
               controls
               muted={!gridMode}
-              light={gridMode}
-              playing={gridMode ? undefined : isEmbedInView}
+              playing={gridMode ? false : isEmbedInView}
               pip
               stopOnUnmount={false}
               config={{
