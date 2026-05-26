@@ -54,28 +54,31 @@ const addAutoplayParam = (url: string): string => {
 }
 
 const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView = false }: CompactPostProps) => {
+  const gridMode = !listView
   const [isHovered, setIsHovered] = useState(false)
   const [isMuted, setIsMuted] = useState(true) // Videos start muted for autoplay
   const [showShareToStory, setShowShareToStory] = useState(false)
   const [isEmbedInView, setIsEmbedInView] = useState(false)
+  const [videoStarted, setVideoStarted] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
   const embedContainerRef = useRef<HTMLDivElement>(null)
   const me = useMe()
   const router = useRouter()
 
-  // Stop video on scroll - Intersection Observer
+  // Stop video on scroll - Intersection Observer.
+  // In grid mode the observer stays dormant until the user taps Play — otherwise
+  // every >=50%-visible card autoplays at once and produces an audio cacophony.
   useEffect(() => {
     const video = videoRef.current
     if (!video) return
+    if (gridMode && !videoStarted) return
 
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
-            // Video in view - play
             video.play().catch(() => {})
           } else {
-            // Video out of view - pause
             video.pause()
           }
         })
@@ -85,19 +88,24 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
 
     observer.observe(video)
     return () => observer.disconnect()
-  }, [])
+  }, [gridMode, videoStarted])
 
-  // IntersectionObserver for ReactPlayer embed autoplay
+  // IntersectionObserver for ReactPlayer embed autoplay.
+  // Skipped in grid mode — ReactPlayer renders with light={true} (poster) instead.
   useEffect(() => {
     const el = embedContainerRef.current
     if (!el) return
+    if (gridMode) {
+      setIsEmbedInView(false)
+      return
+    }
     const observer = new IntersectionObserver(
       ([entry]) => setIsEmbedInView(entry.isIntersecting && entry.intersectionRatio >= 0.5),
       { threshold: [0.5] }
     )
     observer.observe(el)
     return () => observer.disconnect()
-  }, [])
+  }, [gridMode])
 
   if (!post || post.deleted) return null
 
@@ -157,27 +165,49 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
                 playsInline
                 muted={isMuted}
                 loop
-                autoPlay
+                autoPlay={!gridMode}
               />
-              {/* Mute/Unmute button overlay */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  const newMuted = !isMuted
-                  if (videoRef.current) {
-                    videoRef.current.muted = newMuted
-                  }
-                  setIsMuted(newMuted)
-                }}
-                className="absolute bottom-2 right-2 z-10 w-8 h-8 rounded-full bg-black/70 backdrop-blur flex items-center justify-center hover:bg-black/90 transition-colors"
-                title={isMuted ? 'Unmute' : 'Mute'}
-              >
-                {isMuted ? (
-                  <VolumeX className="w-4 h-4 text-white" />
-                ) : (
-                  <Volume2 className="w-4 h-4 text-cyan-400" />
-                )}
-              </button>
+              {/* Grid-mode tap-to-play overlay — prevents N-card autoplay cacophony */}
+              {gridMode && !videoStarted && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setVideoStarted(true)
+                    setIsMuted(false)
+                    if (videoRef.current) {
+                      videoRef.current.muted = false
+                      videoRef.current.play().catch(() => {})
+                    }
+                  }}
+                  className="absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/40 transition-colors z-10"
+                  title="Play"
+                >
+                  <div className="w-14 h-14 rounded-full bg-black/70 backdrop-blur flex items-center justify-center shadow-lg">
+                    <Play className="w-6 h-6 text-white ml-0.5" fill="white" />
+                  </div>
+                </button>
+              )}
+              {/* Mute/Unmute button overlay (hidden in grid until user starts playback) */}
+              {(!gridMode || videoStarted) && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    const newMuted = !isMuted
+                    if (videoRef.current) {
+                      videoRef.current.muted = newMuted
+                    }
+                    setIsMuted(newMuted)
+                  }}
+                  className="absolute bottom-2 right-2 z-10 w-8 h-8 rounded-full bg-black/70 backdrop-blur flex items-center justify-center hover:bg-black/90 transition-colors"
+                  title={isMuted ? 'Unmute' : 'Mute'}
+                >
+                  {isMuted ? (
+                    <VolumeX className="w-4 h-4 text-white" />
+                  ) : (
+                    <Volume2 className="w-4 h-4 text-cyan-400" />
+                  )}
+                </button>
+              )}
             </div>
           )}
           {uploadedMediaType === 'audio' && (
@@ -200,30 +230,37 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
       {!hasUploadedMedia && hasMediaLink && post.mediaLink && !hasTrack ? (
         <div ref={embedContainerRef} className="w-full h-full" onClick={(e) => e.stopPropagation()}>
           {hasLazyLoadWithThumbnailSupport(post.mediaLink) ? (
-            // YouTube, Vimeo, Facebook - autoplay muted on scroll
+            // YouTube, Vimeo, Facebook — list view autoplays muted on scroll;
+            // grid view shows a poster (light=true) with a play button, user-initiated playback.
             <ReactPlayer
               width="100%"
               height="100%"
               url={post.mediaLink}
               playsinline
               controls
-              muted
-              playing={isEmbedInView}
+              muted={!gridMode}
+              light={gridMode}
+              playing={gridMode ? undefined : isEmbedInView}
               pip
               stopOnUnmount={false}
               config={{
-                youtube: { playerVars: { modestbranding: 1, rel: 0, playsinline: 1, mute: 1, autoplay: 1 } },
+                youtube: { playerVars: gridMode
+                  ? { modestbranding: 1, rel: 0, playsinline: 1 }
+                  : { modestbranding: 1, rel: 0, playsinline: 1, mute: 1, autoplay: 1 } },
                 vimeo: { playerOptions: { responsive: true, playsinline: true } },
                 facebook: { appId: '' },
               }}
             />
           ) : (
-            // All other platforms (audio + social) - airtight iframe embed with autoplay
+            // All other platforms (audio + social) — list view injects autoplay,
+            // grid view loads paused so cards don't all play simultaneously.
             <iframe
               frameBorder="0"
               className="w-full h-full bg-black"
               style={{ minHeight: getCompactEmbedHeight(platformType) }}
-              src={addAutoplayParam(post.mediaLink.replace(/^http:/, 'https:'))}
+              src={gridMode
+                ? post.mediaLink.replace(/^http:/, 'https:')
+                : addAutoplayParam(post.mediaLink.replace(/^http:/, 'https:'))}
               title="Media"
               allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture; web-share"
               allowFullScreen
