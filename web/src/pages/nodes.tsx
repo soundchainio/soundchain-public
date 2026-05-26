@@ -13,6 +13,7 @@ import dynamic from 'next/dynamic'
 import { DexNavBar } from 'components/DexNavBar'
 import MainPillNav from 'components/MainPillNav'
 import { Post } from 'components/Post/Post'
+import { CompactPost } from 'components/Post/CompactPost'
 import { PostFormTimeline } from 'components/Post/PostFormTimeline'
 import { PostSkeleton } from 'components/Post/PostSkeleton'
 
@@ -26,7 +27,8 @@ const StoriesBar = dynamic(() => import('components/dex/StoriesBar').then(m => m
 import {
   HardDrive, Wifi, WifiOff, Activity, Globe, Radio, Shield, Zap,
   Server, Database, ArrowUpRight, ArrowDownLeft, RefreshCw, Terminal,
-  Eye, Clock, ChevronRight, ChevronDown, Signal, Cpu, Lock, Music, Film, PenLine
+  Eye, Clock, ChevronRight, ChevronDown, Signal, Cpu, Lock, Music, Film, PenLine,
+  LayoutGrid, List as ListIcon
 } from 'lucide-react'
 
 interface NodeStats {
@@ -88,6 +90,7 @@ export default function NodesPage() {
   const [pinging, setPinging] = useState(false)
   const [collectionView, setCollectionView] = useState<'cards' | 'table'>('table')
   const [composerOpen, setComposerOpen] = useState(false)
+  const [feedViewMode, setFeedViewMode] = useState<'list' | 'grid'>('list')
   const [mobileTab, setMobileTab] = useState<'network' | 'feed'>(() => {
     if (typeof window === 'undefined') return 'feed'
     const params = new URLSearchParams(window.location.search)
@@ -567,11 +570,12 @@ export default function NodesPage() {
                 user row but no profile doc; the inner PostFormTimeline
                 handles missing-profile gracefully and /api/me auto-creates
                 a minimal profile on first visit. */}
-            {me && (
-              <div className="mb-2">
+            {/* Compose + view-toggle row — composer on left, grid/list pills on far right */}
+            <div className="mb-2 flex items-center gap-2">
+              {me ? (
                 <button
                   onClick={() => setComposerOpen(o => !o)}
-                  className="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-white/5 bg-black/40 hover:bg-black/60 transition"
+                  className="flex-1 flex items-center justify-between px-3 py-2 rounded-lg border border-white/5 bg-black/40 hover:bg-black/60 transition"
                   aria-expanded={composerOpen}
                 >
                   <span className="flex items-center gap-2">
@@ -582,24 +586,54 @@ export default function NodesPage() {
                     ? <ChevronDown className="w-4 h-4 text-gray-500" />
                     : <ChevronRight className="w-4 h-4 text-gray-500" />}
                 </button>
-                {composerOpen && (
-                  <div className="mt-2">
-                    <PostFormTimeline onPosted={() => { loadFeed(null); setComposerOpen(false) }} />
-                  </div>
-                )}
+              ) : (
+                <div className="flex-1" />
+              )}
+              <div className="flex items-center flex-shrink-0 rounded-lg border border-white/5 bg-black/40 p-0.5">
+                <button
+                  onClick={() => setFeedViewMode('list')}
+                  aria-label="List view"
+                  aria-pressed={feedViewMode === 'list'}
+                  className={`p-1.5 rounded-md transition-all ${feedViewMode === 'list' ? 'text-cyan-400 bg-white/5' : 'text-gray-500 hover:text-gray-300'}`}
+                >
+                  <ListIcon className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setFeedViewMode('grid')}
+                  aria-label="Grid view"
+                  aria-pressed={feedViewMode === 'grid'}
+                  className={`p-1.5 rounded-md transition-all ${feedViewMode === 'grid' ? 'text-cyan-400 bg-white/5' : 'text-gray-500 hover:text-gray-300'}`}
+                >
+                  <LayoutGrid className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+            {me && composerOpen && (
+              <div className="mb-2">
+                <PostFormTimeline onPosted={() => { loadFeed(null); setComposerOpen(false) }} />
               </div>
             )}
 
-            <div className="space-y-2">
+            <div className={feedViewMode === 'grid'
+              ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-1.5 sm:gap-2'
+              : 'space-y-2'}>
               {feedLoading && feedNodes.length === 0 && (
-                <div className="space-y-2">
-                  <PostSkeleton />
-                  <PostSkeleton />
-                  <PostSkeleton />
-                </div>
+                feedViewMode === 'grid' ? (
+                  <>
+                    {Array.from({ length: 8 }).map((_, i) => (
+                      <div key={i} className="aspect-[3/4] bg-neutral-900 border border-white/5 rounded-lg animate-pulse" />
+                    ))}
+                  </>
+                ) : (
+                  <>
+                    <PostSkeleton />
+                    <PostSkeleton />
+                    <PostSkeleton />
+                  </>
+                )
               )}
               {!feedLoading && feedNodes.length === 0 && (
-                <div className="text-center py-8 text-[10px] font-mono text-gray-700">
+                <div className={`text-center py-8 text-[10px] font-mono text-gray-700 ${feedViewMode === 'grid' ? 'col-span-full' : ''}`}>
                   {me?.profile?.id ? 'No posts yet — follow users to fill your feed' : 'Sign in to see your feed'}
                 </div>
               )}
@@ -607,17 +641,24 @@ export default function NodesPage() {
                 .filter((fi: any) => fi?.post?.id && fi?.post?.profile)
                 .map((feedItem: any) => (
                   <PostErrorBoundary key={feedItem.post.id} postId={feedItem.post.id}>
-                    <Post
-                      post={feedItem.post}
-                      handleOnPlayClicked={handleFeedPlayClicked}
-                    />
+                    {feedViewMode === 'grid' ? (
+                      <CompactPost
+                        post={feedItem.post}
+                        handleOnPlayClicked={handleFeedPlayClicked}
+                      />
+                    ) : (
+                      <Post
+                        post={feedItem.post}
+                        handleOnPlayClicked={handleFeedPlayClicked}
+                      />
+                    )}
                   </PostErrorBoundary>
                 ))}
               {/* Load more */}
               {feedPageInfo?.hasNextPage && (
                 <button
                   onClick={() => feedFetchMore()}
-                  className="w-full py-2 text-[9px] font-mono text-cyan-400/60 hover:text-cyan-400 border border-white/5 rounded-lg hover:border-cyan-500/20 transition"
+                  className={`py-2 text-[9px] font-mono text-cyan-400/60 hover:text-cyan-400 border border-white/5 rounded-lg hover:border-cyan-500/20 transition ${feedViewMode === 'grid' ? 'col-span-full w-full' : 'w-full'}`}
                 >
                   LOAD MORE
                 </button>

@@ -239,9 +239,10 @@ export const Posts = ({ profileId, disableVirtualization, viewMode: externalView
     })
   }, [fetchMore, pageInfo?.endCursor, loading])
 
-  // Auto-load more when scrolling near bottom (infinite scroll for simple mode) - MUST be before conditional returns
+  // Auto-load more when scrolling near bottom (infinite scroll for simple-mode and grid view) - MUST be before conditional returns
   useEffect(() => {
-    if (!useSimpleMode || !loadMoreRef.current || !pageInfo?.hasNextPage || loading) return
+    const useObserver = useSimpleMode || viewMode === 'grid'
+    if (!useObserver || !loadMoreRef.current || !pageInfo?.hasNextPage || loading) return
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -254,7 +255,7 @@ export const Posts = ({ profileId, disableVirtualization, viewMode: externalView
 
     observer.observe(loadMoreRef.current)
     return () => observer.disconnect()
-  }, [useSimpleMode, pageInfo?.hasNextPage, loading, loadMore])
+  }, [useSimpleMode, viewMode, pageInfo?.hasNextPage, loading, loadMore])
 
   if (loading && !data) {
     // Only show skeleton on first load (no cached data)
@@ -422,12 +423,38 @@ export const Posts = ({ profileId, disableVirtualization, viewMode: externalView
         </div>
       </div>
 
-      <PullToRefresh onRefresh={refetch} className="bg-black" backgroundColor="#000000">
-        <AutoSizer>
-          {({ height, width }) => (
-            <InfiniteLoader isItemLoaded={isItemLoaded} itemCount={postsCount} loadMoreItems={loadMoreItems} threshold={5}>
-              {({ onItemsRendered, ref }) => (
-                viewMode === 'list' ? (
+      {viewMode === 'grid' ? (
+        // Grid view — mint.soundchain.io style dense card stack, native CSS grid (no virtualization)
+        // Cards: aspect-square media + tight footer, columns scale 2→5 across breakpoints
+        <PullToRefresh onRefresh={refetch} className="bg-black" backgroundColor="#000000">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-1.5 sm:gap-2 px-2 md:px-4">
+            {(nodes as PostType[]).map((post) => (
+              <CompactPost
+                key={post.id}
+                post={post}
+                handleOnPlayClicked={handleOnPlayClicked}
+                onPostClick={handlePostClick}
+              />
+            ))}
+          </div>
+          <div ref={loadMoreRef} className="flex justify-center py-6">
+            {pageInfo?.hasNextPage && (
+              <button
+                onClick={loadMore}
+                disabled={loading}
+                className="px-6 py-2 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400 rounded-lg border border-cyan-500/30 transition-colors disabled:opacity-50 text-sm"
+              >
+                {loading ? 'Loading...' : 'Load more'}
+              </button>
+            )}
+          </div>
+        </PullToRefresh>
+      ) : (
+        <PullToRefresh onRefresh={refetch} className="bg-black" backgroundColor="#000000">
+          <AutoSizer>
+            {({ height, width }) => (
+              <InfiniteLoader isItemLoaded={isItemLoaded} itemCount={postsCount} loadMoreItems={loadMoreItems} threshold={5}>
+                {({ onItemsRendered, ref }) => (
                   <List
                     height={height}
                     width={width}
@@ -459,45 +486,12 @@ export const Posts = ({ profileId, disableVirtualization, viewMode: externalView
                       areEqual,
                     )}
                   </List>
-                ) : (
-                  // Grid view - responsive columns, tight stacking like iPhone
-                  (() => {
-                    const columnCount = getColumnCount(width)
-                    const columnWidth = width / columnCount
-                    // Row height for premium cards (square aspect + footer ~60px for new design)
-                    const rowHeight = columnWidth + 60
-                    return (
-                      <Grid
-                        height={height}
-                        width={width}
-                        columnCount={columnCount}
-                        columnWidth={columnWidth}
-                        rowCount={Math.ceil(nodes!.length / columnCount)}
-                        rowHeight={rowHeight}
-                        itemData={{ nodes, handleOnPlayClicked, columnCount, onPostClick: handlePostClick }}
-                        onItemsRendered={({ visibleRowStartIndex, visibleRowStopIndex }) => {
-                          onItemsRendered({
-                            overscanStartIndex: visibleRowStartIndex * columnCount,
-                            overscanStopIndex: (visibleRowStopIndex + 1) * columnCount - 1,
-                            visibleStartIndex: visibleRowStartIndex * columnCount,
-                            visibleStopIndex: (visibleRowStopIndex + 1) * columnCount - 1,
-                          })
-                        }}
-                        ref={grid => {
-                          typeof ref === 'function' && ref(grid)
-                          gridRef.current = grid
-                        }}
-                      >
-                        {GridCell}
-                      </Grid>
-                    )
-                  })()
-                )
-              )}
-            </InfiniteLoader>
-          )}
-        </AutoSizer>
-      </PullToRefresh>
+                )}
+              </InfiniteLoader>
+            )}
+          </AutoSizer>
+        </PullToRefresh>
+      )}
 
       {/* Post Detail Modal */}
       {selectedPostId && (

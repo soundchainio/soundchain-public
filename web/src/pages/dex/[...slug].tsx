@@ -4115,6 +4115,28 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
               {/* Main Feed - Posts lead, clean and content-first */}
               {/* Using memoized Posts to prevent re-renders when header modals open (keeps video/audio playing) */}
               <div className="flex-1 max-w-full md:max-w-[680px]" style={{ minHeight: 'calc(100vh - 160px)' }}>
+                {/* View-toggle pills — duplicated near feed so they're always visible on mobile
+                    (the upstream MainPillNav row can scroll the pills off-screen) */}
+                <div className="flex items-center justify-end mb-2 px-2 md:px-0">
+                  <div className="flex items-center flex-shrink-0 rounded-lg border border-white/5 bg-black/40 p-0.5">
+                    <button
+                      onClick={() => setViewMode('list')}
+                      aria-label="List view"
+                      aria-pressed={viewMode === 'list'}
+                      className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'text-cyan-400 bg-white/5' : 'text-gray-500 hover:text-gray-300'}`}
+                    >
+                      <List className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => setViewMode('grid')}
+                      aria-label="Grid view"
+                      aria-pressed={viewMode === 'grid'}
+                      className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'text-cyan-400 bg-white/5' : 'text-gray-500 hover:text-gray-300'}`}
+                    >
+                      <Grid className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
                 {MemoizedFeedPosts}
               </div>
 
@@ -8103,7 +8125,29 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                       {/* My Feed - Full social feed (posts from people you follow + your own) */}
                       {/* Using memoized Posts to prevent re-renders when header modals open */}
                       {profileTab === 'myfeed' && isViewingOwnProfile && (
-                        MemoizedMyFeedPosts
+                        <>
+                          <div className="flex items-center justify-end mb-2">
+                            <div className="flex items-center flex-shrink-0 rounded-lg border border-white/5 bg-black/40 p-0.5">
+                              <button
+                                onClick={() => setViewMode('list')}
+                                aria-label="List view"
+                                aria-pressed={viewMode === 'list'}
+                                className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'text-cyan-400 bg-white/5' : 'text-gray-500 hover:text-gray-300'}`}
+                              >
+                                <List className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => setViewMode('grid')}
+                                aria-label="Grid view"
+                                aria-pressed={viewMode === 'grid'}
+                                className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'text-cyan-400 bg-white/5' : 'text-gray-500 hover:text-gray-300'}`}
+                              >
+                                <Grid className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+                          {MemoizedMyFeedPosts}
+                        </>
                       )}
                       {/* Posts - Only this user's posts */}
                       {profileTab === 'posts' && (
