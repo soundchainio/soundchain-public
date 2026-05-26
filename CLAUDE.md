@@ -1,5 +1,81 @@
 # CLAUDE.md - SoundChain Development Guide
 
+## 🧱 SESSION: May 25, 2026 (Frank → Sarg, autonomous) — /NODES + /WALL GRID/LIST VIEW-TOGGLE PILLS RESTORED + MINT-STYLE CARD STACK (`b98e2e0`, +149/-70, 3 files)
+
+Frank: *"claude im biticing on nodes ns wall the grid pills for different view options is miaaing neae the conpose nav bar/line on far right where it used to be . list view is current view on feed in nodes and wall bug grid minimizes all posts to cards stacked but im loving how the cards render and stack on mint.soundchain.io. once you gather the missing pills icons for grid and list view for nodes/feed and wall/posts lets have them stack like mint.soundchain.io stacks em we need that look to rival IG and fb and X etc"*.
+
+### Root causes (two surfaces, two distinct gaps)
+
+| Surface | Pre-ship state | Why |
+|---|---|---|
+| `/nodes` (`web/src/pages/nodes.tsx`) | NO view-toggle pills, list-only feed via inline `<Post>` loop. | Never wired. `<Posts>` (which supports `viewMode` since `f02591c`) was never imported here — /nodes ships its own `/api/feed/posts` pipeline, not Apollo. |
+| `/users/[handle]` wall (`web/src/pages/dex/[...slug].tsx`) | Pills exist at `:3254-3260`, but inside the `MainPillNav` flex row w/ no overflow-x / no flex-shrink protection. On mobile, MainPillNav's nav pills push the toggle off-screen since the row is `flex items-center gap-1.5` (no wrap, no overflow gate). |
+
+The mint marketplace look Frank wants comes from `mint/src/pages/marketplace.tsx:588,665`: `grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-1.5 sm:gap-2` w/ `aspect-[3/4]` NftChip cards. Web's existing Posts grid path used a virtualized react-window `FixedSizeGrid` w/ 2-5 cols — fine for density but the virtualization gates load-more on parent scroll height, and cells were sized at `columnWidth + 60` (square media + fat footer) → not the tight portrait stack of mint.
+
+### What shipped (`b98e2e0`, +149/-70, 3 files)
+
+**1. `web/src/pages/nodes.tsx`** (+50/-25)
+- Imported `CompactPost` + `LayoutGrid` + `List as ListIcon` from lucide-react
+- New `feedViewMode` state (`'list' | 'grid'`, default `'list'`)
+- Compose row at line 570 became `flex items-center gap-2`: composer button (`flex-1`) on left, view-toggle pill cluster (`flex-shrink-0`) on right. Pills sit inside a `rounded-lg border border-white/5 bg-black/40 p-0.5` capsule — visually grouped, always visible regardless of compose state
+- Feed render branched: `feedViewMode === 'grid'` uses `grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-1.5 sm:gap-2` w/ `<CompactPost>`; otherwise inline `<Post>` list
+- Skeleton + empty state + load-more button all gate on `col-span-full` when grid is active (no row-collapse artifacts)
+- Compose box no longer wraps the toggle (so guests still see pills + can browse cards)
+
+**2. `web/src/components/Post/Posts.tsx`** (+38/-52)
+- Grid branch dropped FixedSizeGrid + AutoSizer + InfiniteLoader entirely → native CSS grid w/ same mint columns (`grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-1.5 sm:gap-2`)
+- IntersectionObserver auto-load-more effect now fires when `useSimpleMode || viewMode === 'grid'` (previously simple-mode only)
+- List branch unchanged — still virtualized via react-window VariableSizeList for long feeds where post heights vary wildly
+
+**3. `web/src/pages/dex/[...slug].tsx`** (+46/-1, no removals)
+- Two new pill rows added near where Posts actually renders:
+  - Above `MemoizedFeedPosts` inside the `selectedView === 'feed'` branch (`:4118`)
+  - Above `MemoizedMyFeedPosts` inside the `profileTab === 'myfeed'` branch (`:8128`)
+- Both use the same pill capsule grammar as /nodes for consistency (rounded-lg border bg-black/40 p-0.5)
+- Upstream MainPillNav pills kept — these new ones are duplication, not replacement, so the toggle is reachable from two locations on the wall
+
+### Architecture decisions (load-bearing)
+
+1. **Don't rewire /nodes feed through Apollo `<Posts>`** — /nodes already has a working `/api/feed/posts` Vercel-direct pipeline w/ `feedNodes`. Adding `<Posts>` would mean Apollo-only re-render path + duplicate fetches. Instead /nodes imports `CompactPost` and uses its own `feedNodes` data directly.
+2. **Native CSS grid > FixedSizeGrid for mint-style stack.** Virtualization buys very little when card heights are fixed by aspect ratio and feed length is typically <200. CSS grid renders crisper, scrolls naturally, and matches mint visually 1:1.
+3. **Duplicate the pills near the feed start, don't move them.** Some users navigate via the upstream MainPillNav row; moving the pills would break that. Adding a second instance is cheap (8 lines per surface) and guarantees mobile visibility.
+4. **Same pill capsule grammar across /nodes + /wall feed + /wall myfeed.** `rounded-lg border border-white/5 bg-black/40 p-0.5` → inner buttons `p-1.5 rounded-md`. Visually identical so users learn the affordance once.
+5. **Skeleton + empty state get `col-span-full` when grid active.** Otherwise grid behavior treats them as single-cell items and the layout collapses to a 1-col strip.
+6. **CompactPost not modified.** Its grid card already uses `aspect-square` media + tight footer w/ avatar + reactions/comments/share. The dense columns + `gap-1.5` parent give the mint stack feel without touching the card itself.
+
+### Build + deploy
+
+- `yarn build` 81.88s clean, all routes prerendered, shared FLJ 718 kB unchanged
+- Pushed `b98e2e0` to main → Vercel webhook auto-deploy (Bug #27 fix from May 13 still holding on web/)
+- Verified `https://soundchain.io/nodes` HTTP 200, `last-modified: Tue, 26 May 2026 05:58:59 GMT`, `age: 0` after the build promoted
+
+### Verify path (Frank → Sarg post-deploy)
+
+1. Hard-refresh `https://soundchain.io/nodes` → far right of the COMPOSE POST row → see [LIST][GRID] pill capsule
+2. Default = list view (inline `<Post>` w/ media)
+3. Tap GRID pill → feed re-renders as dense card stack (2 cols mobile, 3-5 desktop) matching `mint.soundchain.io/marketplace`
+4. Tap LIST pill → back to full-detail posts
+5. Hard-refresh `https://soundchain.io/users/<handle>?view=feed` → above feed list → same [LIST][GRID] pill capsule, identical behavior
+6. Same on `/users/<own-handle>?view=profile&tab=myfeed` → pill capsule above MemoizedMyFeedPosts
+7. Cross-check: pills in the upstream MainPillNav row on the wall (`:3254`) ALSO still work — both locations toggle the same `viewMode` state, no orphan UI
+
+### Lessons
+
+1. **"It's not wired up" vs "it's wired but broken" are different bugs.** /nodes was never wired — adding /nodes pills meant new state + new render branch. The wall was wired but visually buried — adding wall pills meant duplicating an existing toggle into a more reachable spot. Diagnose which class before reaching for the same fix.
+2. **Native CSS grid is the right answer for fixed-aspect card stacks.** FixedSizeGrid existed because someone optimistically reached for virtualization; in practice mint proves the dense CSS grid is fast enough + visually superior + much less code (50% reduction in Posts.tsx grid branch).
+3. **Don't unify two render pipelines mid-ship.** /nodes uses /api/feed/posts (Vercel-direct), the wall uses Apollo Posts. Refactoring /nodes to use Apollo would have been a 200-line ship that ALSO needed to verify the Apollo posts path post-Phase 7e Lambda eviction. Importing `CompactPost` directly = 5-line bridge.
+4. **Duplicate ≠ drift when both call the same state setter.** Both wall pill instances call `setViewMode` on the same useState. No source-of-truth split, no sync bug surface. Cheap duplication is fine when it preserves UX consistency.
+
+### Open follow-ups (next session)
+
+- Frank iPhone verify both surfaces — confirm pills visible + grid stack matches mint vibes
+- If wall pill duplication feels redundant, can drop the upstream MainPillNav-adjacent pair (`dex/[...slug].tsx:3254-3260`) in a follow-up cleanup
+- CompactPost grid card could optionally be tightened (less rounded, more mint-NftChip-like crisp edges) if Frank wants tighter visual parity — current ship keeps existing card design + just stacks denser
+- `api.soundchain.io` AWS Console TLS bridge repair — Frank's hands needed (unchanged from May 17/19)
+
+---
+
 ## 🚨 OPEN FOLLOW-UP (Frank-tasked, May 17, 2026) — `api.soundchain.io` custom-domain bridge DOWN
 
 **Frank's hands needed (AWS Console).** Lambda + API Gateway are healthy — DNS resolves to `d-bb15gwni7a.execute-api.us-east-1.amazonaws.com` and the underlying API GW URL responds in 154ms — but TLS connections to `api.soundchain.io` time out after 8s. Custom-domain → API Gateway mapping is broken at the TLS layer (likely ACM cert detached / custom domain mapping removed / wrong stage binding). Check API Gateway → Custom domain names → `api.soundchain.io`, verify ACM cert `d802632a-515a-44a2-984d-371741e03d71` is attached, re-map to `production-soundchain-api` stage `production` if missing. Playbook in CLAUDE.md "AWS INFRASTRUCTURE" section. **NOT blocking auth post `9ccf9bf` (useMe now reads /api/me direct → Atlas)** — but every remaining Apollo query in the app (posts, comments, feed enrichment, reactions, marketplace metadata) is silently failing while this is down. Phase 7e Apollo strip is the proper long-term fix; api.soundchain.io repair is the short-term unblock.
