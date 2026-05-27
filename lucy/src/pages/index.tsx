@@ -22,15 +22,27 @@
 import { useEffect, useRef, useState } from 'react'
 import Head from 'next/head'
 import dynamic from 'next/dynamic'
-import { Mic, MicOff, Send, Trash2, Volume2, VolumeX, Video } from 'lucide-react'
+import { Cloud, CloudOff, Cpu, Download, Mic, MicOff, Send, Trash2, Volume2, VolumeX, Video } from 'lucide-react'
 import { useLucyMemory } from 'hooks/useLucyMemory'
+import { useLucyLocal } from 'hooks/useLucyLocal'
 import LucyVoicePicker, { getVoiceConfig } from 'components/LucyVoicePicker'
 
 const LucyLiveMode = dynamic(() => import('components/LucyLiveMode'), { ssr: false })
 
 const LUCY_SYSTEM_PROMPT = `You are Lucy, SoundChain's AI companion. Always reply in English (en-US) regardless of the language used in the user's message or in any earlier turns of this conversation. Be concise, warm, and conversational. You are not Claude, ChatGPT, Grok, or any other assistant — you are Lucy.`
 
-type ChatMessage = { role: 'user' | 'assistant'; content: string; images?: string[] }
+// Anvil-first request timeout. If anvil doesn't respond in this window, we
+// either fall back to on-device Lucy (auto mode, supported browser, model
+// ready) or surface an error with the option to switch.
+const ANVIL_TIMEOUT_MS = 8000
+
+// 'auto' = anvil first, fallback to local on failure (default).
+// 'anvil' = anvil only, never fallback (debug).
+// 'local' = on-device only, never call anvil (sovereignty mode / offline).
+type LucySource = 'auto' | 'anvil' | 'local'
+type ReplySource = 'anvil' | 'local'
+
+type ChatMessage = { role: 'user' | 'assistant'; content: string; images?: string[]; source?: ReplySource }
 
 export default function LucyHome() {
   const { messages, setMessages, save: persistMessages, clear: clearMemory, ready: memoryReady } = useLucyMemory()
@@ -41,6 +53,9 @@ export default function LucyHome() {
   const [voiceOutEnabled, setVoiceOutEnabled] = useState(false)
   const [liveModeOpen, setLiveModeOpen] = useState(false)
   const [voicePickerOpen, setVoicePickerOpen] = useState(false)
+  const [lucySource, setLucySource] = useState<LucySource>('auto')
+  const [activeReplySource, setActiveReplySource] = useState<ReplySource | null>(null)
+  const local = useLucyLocal()
 
   const recognitionRef = useRef<any>(null)
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
@@ -50,6 +65,14 @@ export default function LucyHome() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
+
+  // When user explicitly picks 'local' mode, trigger lazy init so the model
+  // is downloading by the time they hit send. No-op if already ready.
+  useEffect(() => {
+    if (lucySource === 'local' && !local.ready && !local.loading) {
+      local.init().catch(() => {/* captured in hook state */})
+    }
+  }, [lucySource, local.ready, local.loading, local.init])
 
   // Web Speech Recognition setup
   useEffect(() => {
@@ -95,65 +118,116 @@ export default function LucyHome() {
     setStreaming(true)
     spokenIndexRef.current = 0
     ;(window as any).__lucyThinking = true
+    setActiveReplySource(null)
 
-    const ctrl = new AbortController()
-    abortRef.current = ctrl
+    // Outer controller — user's Stop button + propagates to inner sources.
+    const outer = new AbortController()
+    abortRef.current = outer
 
-    try {
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: [
-            { role: 'system', content: LUCY_SYSTEM_PROMPT },
-            ...next.map(m => ({ role: m.role, content: m.content })),
-          ],
-        }),
-        signal: ctrl.signal,
-      })
-      if (!res.ok || !res.body) throw new Error(`Lucy upstream ${res.status}`)
-      const reader = res.body.getReader()
-      const decoder = new TextDecoder()
-      let buf = ''
+    const payloadMessages = [
+      { role: 'system' as const, content: LUCY_SYSTEM_PROMPT },
+      ...next.map(m => ({ role: m.role, content: m.content })),
+    ]
+
+    // Shared token consumer — both anvil + local feed into this.
+    const consumeTokens = async (
+      iter: AsyncIterable<string> | AsyncGenerator<string>,
+      source: ReplySource
+    ) => {
+      setActiveReplySource(source)
       let acc = ''
-      const draft: ChatMessage[] = [...next, { role: 'assistant', content: '' }]
+      const draft: ChatMessage[] = [...next, { role: 'assistant', content: '', source }]
       setMessages(draft)
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        buf += decoder.decode(value, { stream: true })
-        const lines = buf.split('\n')
-        buf = lines.pop() || ''
-        for (const ln of lines) {
-          if (!ln.trim()) continue
-          try {
-            const parsed = JSON.parse(ln)
-            const token = parsed.message?.content ?? parsed.response ?? ''
-            if (typeof token === 'string' && token.length) {
-              acc += token
-              draft[draft.length - 1] = { role: 'assistant', content: acc }
-              setMessages([...draft])
-              // Speak sentence-by-sentence as they arrive
-              if (voiceOutEnabled) {
-                const last = acc.slice(spokenIndexRef.current)
-                const sentenceEnd = last.search(/[.!?]\s/)
-                if (sentenceEnd >= 0) {
-                  const sentence = last.slice(0, sentenceEnd + 1).trim()
-                  if (sentence) speak(sentence)
-                  spokenIndexRef.current += sentenceEnd + 2
-                }
-              }
-            }
-          } catch {/* skip malformed line */}
+      for await (const token of iter) {
+        if (outer.signal.aborted) break
+        acc += token
+        draft[draft.length - 1] = { role: 'assistant', content: acc, source }
+        setMessages([...draft])
+        if (voiceOutEnabled) {
+          const last = acc.slice(spokenIndexRef.current)
+          const sentenceEnd = last.search(/[.!?]\s/)
+          if (sentenceEnd >= 0) {
+            const sentence = last.slice(0, sentenceEnd + 1).trim()
+            if (sentence) speak(sentence)
+            spokenIndexRef.current += sentenceEnd + 2
+          }
         }
       }
-      const final = [...draft]
-      setMessages(final)
-      persistMessages(final)
-      // Speak any remaining tail
+      persistMessages([...draft])
       if (voiceOutEnabled) {
         const tail = acc.slice(spokenIndexRef.current).trim()
         if (tail) speak(tail)
+      }
+      return acc.length > 0
+    }
+
+    // Anvil path — fetch /api/chat with timeout. Aborts inner controller on
+    // timeout or when outer is aborted. Yields tokens parsed from NDJSON.
+    const anvilTokens = async function* (): AsyncGenerator<string> {
+      const inner = new AbortController()
+      const linkAbort = () => inner.abort()
+      outer.signal.addEventListener('abort', linkAbort, { once: true })
+      const timeoutId = setTimeout(() => inner.abort(), ANVIL_TIMEOUT_MS)
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messages: payloadMessages }),
+          signal: inner.signal,
+        })
+        if (!res.ok || !res.body) throw new Error(`anvil ${res.status}`)
+        const reader = res.body.getReader()
+        const decoder = new TextDecoder()
+        let buf = ''
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+          buf += decoder.decode(value, { stream: true })
+          const lines = buf.split('\n')
+          buf = lines.pop() || ''
+          for (const ln of lines) {
+            if (!ln.trim()) continue
+            try {
+              const parsed = JSON.parse(ln)
+              const token = parsed.message?.content ?? parsed.response ?? ''
+              if (typeof token === 'string' && token.length) yield token
+            } catch {/* skip malformed line */}
+          }
+        }
+      } finally {
+        clearTimeout(timeoutId)
+        outer.signal.removeEventListener('abort', linkAbort)
+      }
+    }
+
+    // Local path — WebLLM (Llama 3.2 1B in-browser). Init is lazy + downloads
+    // ~800MB on first run, then cached in OPFS.
+    const runLocal = () => consumeTokens(local.chatStream(payloadMessages, outer.signal), 'local')
+
+    try {
+      if (lucySource === 'local') {
+        await runLocal()
+      } else {
+        try {
+          await consumeTokens(anvilTokens(), 'anvil')
+        } catch (anvilErr: any) {
+          if (anvilErr?.name === 'AbortError' || outer.signal.aborted) throw anvilErr
+          if (lucySource === 'auto') {
+            // Roll forward only if local is supported + already loaded. If
+            // model isn't downloaded yet, surface an action prompt rather
+            // than silently kicking off an ~800MB download.
+            if (typeof navigator !== 'undefined' && !('gpu' in navigator)) {
+              throw new Error('Anvil unreachable + WebGPU not available on this browser. Try Safari 18+ or Chrome.')
+            }
+            if (!local.ready) {
+              setError('Anvil unreachable. Tap "Enable Local Lucy" below to download the on-device model (~800MB once) and continue offline.')
+              return
+            }
+            await runLocal()
+          } else {
+            throw anvilErr
+          }
+        }
       }
     } catch (err: any) {
       if (err?.name !== 'AbortError') {
@@ -193,10 +267,46 @@ export default function LucyHome() {
               </div>
               <div>
                 <h1 className="text-sm font-bold tracking-wider text-white">LUCY</h1>
-                <p className="text-[10px] text-gray-500">SoundChain AI · local-first</p>
+                <p className="text-[10px] text-gray-500">
+                  SoundChain AI ·{' '}
+                  {activeReplySource === 'local'
+                    ? <span className="text-lucy-glow">on-device</span>
+                    : activeReplySource === 'anvil'
+                      ? <span className="text-lucy-accent">anvil</span>
+                      : local.ready
+                        ? 'anvil + on-device ready'
+                        : 'local-first'}
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-1.5">
+              {/* Source mode toggle — anvil (cloud) / local (on-device) / auto */}
+              <button
+                onClick={() => setLucySource(s => s === 'auto' ? 'anvil' : s === 'anvil' ? 'local' : 'auto')}
+                className={`p-2 rounded transition flex items-center gap-1 ${
+                  lucySource === 'local'
+                    ? 'bg-lucy-glow/20 text-lucy-glow'
+                    : lucySource === 'anvil'
+                      ? 'bg-lucy-accent/20 text-lucy-accent'
+                      : 'bg-lucy-surface text-gray-400 hover:text-white'
+                }`}
+                title={
+                  lucySource === 'auto'
+                    ? 'Auto: anvil first, falls back to on-device Lucy if anvil is down'
+                    : lucySource === 'anvil'
+                      ? 'Anvil only — your home GPU'
+                      : 'On-device only — runs on this phone/browser'
+                }
+                aria-label={`Lucy source: ${lucySource}`}
+              >
+                {lucySource === 'local'
+                  ? <Cpu className="w-4 h-4" />
+                  : lucySource === 'anvil'
+                    ? <Cloud className="w-4 h-4" />
+                    : <Cloud className="w-4 h-4 opacity-70" />
+                }
+                <span className="text-[9px] font-mono uppercase tracking-wider">{lucySource}</span>
+              </button>
               <button
                 onClick={() => setVoiceOutEnabled(v => !v)}
                 className={`p-2 rounded transition ${voiceOutEnabled ? 'bg-lucy-accent/20 text-lucy-accent' : 'bg-lucy-surface text-gray-400 hover:text-white'}`}
@@ -249,7 +359,7 @@ export default function LucyHome() {
             {messages.map((m, i) => (
               <div
                 key={i}
-                className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                className={`flex flex-col ${m.role === 'user' ? 'items-end' : 'items-start'}`}
               >
                 <div
                   className={`max-w-[80%] px-3.5 py-2.5 rounded-lg text-sm whitespace-pre-wrap break-words ${
@@ -260,10 +370,49 @@ export default function LucyHome() {
                 >
                   {m.content || (streaming && i === messages.length - 1 ? '…' : '')}
                 </div>
+                {m.role === 'assistant' && m.source && (
+                  <div className="flex items-center gap-1 mt-1 px-1 text-[9px] font-mono uppercase tracking-wider text-gray-600">
+                    {m.source === 'local'
+                      ? <><Cpu className="w-2.5 h-2.5" /> on-device</>
+                      : <><Cloud className="w-2.5 h-2.5" /> anvil</>
+                    }
+                  </div>
+                )}
               </div>
             ))}
+            {local.loading && (
+              <div className="rounded border border-lucy-glow/30 bg-lucy-glow/5 px-3 py-2 text-xs text-lucy-glow space-y-1">
+                <div className="flex items-center gap-1.5">
+                  <Download className="w-3.5 h-3.5 animate-pulse" />
+                  <span className="font-mono uppercase tracking-wider text-[10px]">Loading on-device Lucy</span>
+                </div>
+                <div className="h-1 w-full rounded overflow-hidden bg-lucy-bg">
+                  <div
+                    className="h-full bg-lucy-glow transition-all"
+                    style={{ width: `${Math.round((local.loadProgress || 0) * 100)}%` }}
+                  />
+                </div>
+                {local.loadStatus && <div className="text-[10px] text-gray-500 truncate">{local.loadStatus}</div>}
+              </div>
+            )}
             {error && (
-              <div className="text-center text-xs text-red-400 py-2">{error}</div>
+              <div className="rounded border border-red-500/30 bg-red-500/5 px-3 py-2 text-xs text-red-300 space-y-2">
+                <div>{error}</div>
+                {error.includes('Enable Local Lucy') && local.supported !== false && !local.loading && (
+                  <button
+                    onClick={async () => {
+                      setError(null)
+                      try { await local.init() } catch {/* error is captured in hook state */}
+                    }}
+                    className="w-full px-3 py-1.5 rounded bg-lucy-glow/20 text-lucy-glow hover:bg-lucy-glow/30 text-[10px] font-mono uppercase tracking-wider flex items-center justify-center gap-1.5"
+                  >
+                    <Download className="w-3 h-3" /> Enable Local Lucy (~800MB once)
+                  </button>
+                )}
+                {local.error && (
+                  <div className="text-[10px] text-red-400/70">Local Lucy: {local.error}</div>
+                )}
+              </div>
             )}
             <div ref={messagesEndRef} />
           </div>
