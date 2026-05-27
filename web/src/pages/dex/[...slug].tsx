@@ -28,6 +28,7 @@ import { NFTCard } from 'components/dex/NFTCard'
 import { ProfileHeader } from 'components/dex/ProfileHeader'
 import { TrackNFTCard } from 'components/dex/TrackNFTCard'
 import { UserSymbols } from 'components/UserSymbols'
+import FluidNameOverlay from 'components/FluidNameOverlay'
 import { CoinbaseNFTCard } from 'components/dex/CoinbaseNFTCard'
 import { WalletNFTCollection, WalletNFTGrid } from 'components/dex/WalletNFTCollection'
 import { MultiWalletAggregator } from 'components/dex/MultiWalletAggregator'
@@ -7085,8 +7086,8 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
               {viewingProfile && (
                 <>
                   {/* Figma-era top profile-pic banner — wide horizontal rectangle
-                      showing the uploaded profile picture at the top of the wall.
-                      Nav bars overlay its top edge for the cyberpunk layered feel. */}
+                      showing the uploaded profile picture at the top of the wall,
+                      with name + handle overlaid for the cyberpunk layered feel. */}
                   <div className="relative h-[180px] sm:h-[220px] md:h-[260px] w-full overflow-hidden">
                     {viewingProfile.profilePicture ? (
                       <img
@@ -7102,11 +7103,36 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                       </div>
                     )}
                     {/* Cyberpunk top gradient — fades into the nav bar overlay */}
-                    <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/70 via-black/30 to-transparent" />
-                    {/* Bottom fade into cover photo */}
-                    <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/60 to-transparent" />
-                    {/* Subtle cyan/purple scanline accent */}
-                    <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-cyan-400/60 to-transparent" />
+                    <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/55 via-black/20 to-transparent pointer-events-none z-[5]" />
+                    {/* WebGL fluid-sim name + handle overlay — flows around edges + interior,
+                        `mix-blend-mode: difference` guarantees contrast on ANY uploaded pic */}
+                    <FluidNameOverlay
+                      name={viewingProfile.displayName || viewingProfile.userHandle || 'User'}
+                      handle={viewingProfile.userHandle || 'user'}
+                    />
+                    {/* Cyan scanline accent */}
+                    <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-cyan-400/60 to-transparent pointer-events-none z-10" />
+                  </div>
+
+                  {/* POAPs row — on-chain achievement badges under the profile box */}
+                  <div className="w-full border-b border-white/5 bg-black/50 backdrop-blur-sm">
+                    <div className="max-w-screen-lg mx-auto px-4 py-2 flex items-center gap-2 flex-wrap">
+                      <span className="text-[10px] text-gray-500 uppercase tracking-wider mr-1">POAPs</span>
+                      {viewingProfile.teamMember && (
+                        <SoundchainGoldLogo className="flex-shrink-0 w-6 h-6" aria-label="SoundChain Team Member" />
+                      )}
+                      {!viewingProfile.teamMember && viewingProfile.verified && (
+                        <VerifiedIcon className="flex-shrink-0 w-6 h-6" aria-label="Verified user" />
+                      )}
+                      <UserSymbols
+                        handle={viewingProfile.userHandle}
+                        isNftOwner={(viewingProfile.tracksCount || 0) > 0}
+                        isCreator={(viewingProfile.tracksCount || 0) > 0}
+                      />
+                      {!viewingProfile.teamMember && !viewingProfile.verified && !((viewingProfile.tracksCount || 0) > 0) && (
+                        <span className="text-[10px] text-gray-600 italic">No POAPs collected yet</span>
+                      )}
+                    </div>
                   </div>
 
                   {/* Cover Image - FULL SCREEN with profile info overlaid at bottom */}
