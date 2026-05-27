@@ -94,9 +94,16 @@ export default function NodesPage() {
     const params = new URLSearchParams(window.location.search)
     const tab = params.get('tab')
     if (tab === 'network') return 'network'
-    if (tab === 'feed') return 'feed'
     return 'feed'
   })
+
+  // Avatar-menu Network link routes to /nodes?tab=network. Since user may already be
+  // on /nodes when they click it, Next.js shallow-nav won't remount — sync from query.
+  useEffect(() => {
+    const t = router.query?.tab
+    if (t === 'network') setMobileTab('network')
+    else setMobileTab('feed')
+  }, [router.query?.tab])
   // Feed — Vercel direct route (Phase 6: kills Apollo/Lambda dependency for reads)
   const { playlistState } = useAudioPlayerContext()
   const [feedPosts, setFeedPosts] = useState<any[]>([])
@@ -246,15 +253,8 @@ export default function NodesPage() {
       <MainPillNav active="nodes" />
 
 <div className={`mx-auto py-4 space-y-4 ${mobileTab === 'feed' ? 'px-0 max-w-[680px] lg:max-w-[1400px] lg:px-4' : 'px-4 max-w-[1400px]'}`}>
-        {/* Mobile tab toggle */}
-        <div className={`flex items-center gap-1 lg:hidden ${mobileTab === 'feed' ? 'px-2' : ''}`}>
-          <button onClick={() => setMobileTab('network')} className={`flex-1 py-2 text-[10px] font-mono font-bold rounded-lg transition ${mobileTab === 'network' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-white/[0.02] text-gray-600 border border-white/5'}`}>
-            NETWORK
-          </button>
-          <button onClick={() => setMobileTab('feed')} className={`flex-1 py-2 text-[10px] font-mono font-bold rounded-lg transition ${mobileTab === 'feed' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'bg-white/[0.02] text-gray-600 border border-white/5'}`}>
-            FEED
-          </button>
-        </div>
+        {/* Mobile tab toggle retired — feed is the default mobile landing.
+            Network lives in the avatar-menu dropdown on mobile (?tab=network deeplink). */}
 
         {/* Top stats row */}
         <div className={`grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2 ${mobileTab === 'feed' ? 'hidden lg:grid' : ''}`}>

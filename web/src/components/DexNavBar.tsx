@@ -29,7 +29,7 @@ import {
   ShieldCheck, Settings as SettingsIcon, AtSign, ChevronUp, ChevronDown,
   Check, Copy, AlertCircle, LogOut, User as UserIcon,
   Moon, Sun, Monitor, Smartphone, Laptop, Tv, Film, Glasses, Lock as LockIcon,
-  ArrowLeftRight,
+  ArrowLeftRight, Network as NetworkIcon,
 } from 'lucide-react'
 import { useTheme, ThemeChoice } from 'lib/theme/ThemeContext'
 import {
@@ -808,6 +808,16 @@ export function DexNavBar() {
                       <Link href="/pulse" className="flex items-center gap-3 px-3 py-2 text-sm text-white hover:bg-cyan-500/10">
                         <MessageCircle className="w-4 h-4 text-cyan-400" />
                         <span className="flex-1">Inbox</span>
+                      </Link>
+                      {/* Network — mobile-only home for /nodes network dashboard.
+                          Desktop /nodes always shows network in its left sidebar, so hide there. */}
+                      <Link
+                        href="/nodes?tab=network"
+                        onClick={close}
+                        className="lg:hidden flex items-center gap-3 px-3 py-2 text-sm text-white hover:bg-green-500/10"
+                      >
+                        <NetworkIcon className="w-4 h-4 text-green-400" />
+                        <span className="flex-1">Network</span>
                       </Link>
                       {process.env.NEXT_PUBLIC_MINT_URL && (
                         <a
