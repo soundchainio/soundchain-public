@@ -7084,6 +7084,31 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
               )}
               {viewingProfile && (
                 <>
+                  {/* Figma-era top profile-pic banner — wide horizontal rectangle
+                      showing the uploaded profile picture at the top of the wall.
+                      Nav bars overlay its top edge for the cyberpunk layered feel. */}
+                  <div className="relative h-[180px] sm:h-[220px] md:h-[260px] w-full overflow-hidden">
+                    {viewingProfile.profilePicture ? (
+                      <img
+                        src={viewingProfile.profilePicture}
+                        alt={viewingProfile.displayName || 'Profile'}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-r from-cyan-900/40 via-purple-900/40 to-pink-900/40 flex items-center justify-center">
+                        <span className="text-6xl font-bold text-white/80">
+                          {(viewingProfile.displayName || viewingProfile.userHandle)?.charAt(0)?.toUpperCase() || 'U'}
+                        </span>
+                      </div>
+                    )}
+                    {/* Cyberpunk top gradient — fades into the nav bar overlay */}
+                    <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/70 via-black/30 to-transparent" />
+                    {/* Bottom fade into cover photo */}
+                    <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/60 to-transparent" />
+                    {/* Subtle cyan/purple scanline accent */}
+                    <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-cyan-400/60 to-transparent" />
+                  </div>
+
                   {/* Cover Image - FULL SCREEN with profile info overlaid at bottom */}
                   <div className="relative h-[40vh] min-h-[250px] w-full overflow-hidden">
                     {viewingProfile.coverPicture ? (
