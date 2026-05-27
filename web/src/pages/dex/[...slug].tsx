@@ -7169,29 +7169,9 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     {/* Profile Info - Positioned at bottom of cover */}
                     <div className="absolute bottom-0 left-0 right-0 p-4 z-10">
                       <div className="max-w-screen-lg mx-auto">
-                        {/* Avatar + Name Row */}
+                        {/* Name + Handle (mini avatar removed — wide profile-pic banner above already shows it) */}
                         <div className="flex items-end gap-4">
-                          {/* Avatar */}
-                          <div className="relative flex-shrink-0">
-                            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden border-3 border-white/20 bg-gradient-to-br from-purple-900 to-cyan-900 shadow-2xl">
-                              {viewingProfile.profilePicture ? (
-                                <img
-                                  src={viewingProfile.profilePicture}
-                                  alt={viewingProfile.displayName || 'Profile'}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center text-2xl text-white font-bold">
-                                  {(viewingProfile.displayName || viewingProfile.userHandle)?.charAt(0)?.toUpperCase() || 'U'}
-                                </div>
-                              )}
-                            </div>
-                            {/* Online indicator */}
-                            <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-black" />
-                          </div>
-
-                          {/* Name + Handle */}
-                        <div className="flex-1 min-w-0 pb-1">
+                          <div className="flex-1 min-w-0 pb-1">
                           <div className="flex items-center gap-2 flex-wrap">
                             <h1 className="text-xl sm:text-2xl font-bold text-white truncate">
                               {viewingProfile.displayName || viewingProfile.userHandle || 'User'}

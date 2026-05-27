@@ -96,24 +96,30 @@ function buildTextTexture(name: string, handle: string, width: number, height: n
   const ctx = c.getContext('2d')
   if (!ctx) return c
   ctx.clearRect(0, 0, width, height)
-  ctx.fillStyle = '#ffffff'
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
+  ctx.lineJoin = 'round'
+  const drawText = (text: string, x: number, y: number, size: number, weight: number) => {
+    ctx.font = `${weight} ${size}px ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif`
+    ctx.strokeStyle = 'rgba(0,0,0,0.78)'
+    ctx.lineWidth = Math.max(2, size * 0.09)
+    ctx.strokeText(text, x, y)
+    ctx.fillStyle = '#ffffff'
+    ctx.fillText(text, x, y)
+  }
   const nameSize = Math.floor(height * 0.42)
-  ctx.font = `900 ${nameSize}px ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif`
-  ctx.fillText(name.toUpperCase(), width / 2, height * 0.42)
+  drawText(name.toUpperCase(), width / 2, height * 0.42, nameSize, 900)
   const handleSize = Math.floor(height * 0.18)
-  ctx.font = `600 ${handleSize}px ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif`
-  ctx.fillText(`@${handle}`, width / 2, height * 0.72)
+  drawText(`@${handle}`, width / 2, height * 0.72, handleSize, 600)
   ctx.globalAlpha = 0.35
   const edgeSize = Math.floor(height * 0.12)
-  ctx.font = `700 ${edgeSize}px ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif`
   const trail = `${name.toUpperCase()}   @${handle}   `
   ctx.textAlign = 'left'
   let repeat = ''
+  ctx.font = `700 ${edgeSize}px ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif`
   while (ctx.measureText(repeat).width < width * 2) repeat += trail
-  ctx.fillText(repeat, 0, height * 0.08)
-  ctx.fillText(repeat, -width * 0.3, height * 0.92)
+  drawText(repeat, 0, height * 0.08, edgeSize, 700)
+  drawText(repeat, -width * 0.3, height * 0.92, edgeSize, 700)
   return c
 }
 
@@ -223,8 +229,8 @@ export default function FluidNameOverlay({ name, handle, className }: FluidNameO
         width: '100%',
         height: '100%',
         pointerEvents: 'none',
-        mixBlendMode: 'difference',
-        opacity: 0.92,
+        zIndex: 15,
+        opacity: 0.95,
       }}
     />
   )
