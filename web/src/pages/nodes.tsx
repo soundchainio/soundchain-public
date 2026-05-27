@@ -252,7 +252,7 @@ export default function NodesPage() {
       {/* Lower nav pills — matches dex page nav so users aren't stuck */}
       <MainPillNav active="nodes" />
 
-<div className={`mx-auto py-4 space-y-4 ${mobileTab === 'feed' ? 'px-0 max-w-[680px] lg:max-w-[1400px] lg:px-4' : 'px-4 max-w-[1400px]'}`}>
+<div className={`mx-auto pt-1 pb-4 space-y-2 ${mobileTab === 'feed' ? 'px-0 max-w-[680px] lg:max-w-[1400px] lg:px-4' : 'px-4 max-w-[1400px]'}`}>
         {/* Mobile tab toggle retired — feed is the default mobile landing.
             Network lives in the avatar-menu dropdown on mobile (?tab=network deeplink). */}
 
@@ -524,13 +524,12 @@ export default function NodesPage() {
 
         {/* MAIN: Feed — full width IG-style */}
         <div className={`${mobileTab === 'network' ? 'hidden lg:block' : 'w-full'} flex-1 min-w-0`}>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <Activity className="w-4 h-4 text-cyan-400" />
-                <h2 className="text-xs font-mono font-bold text-cyan-400 tracking-wider">FEED</h2>
-                <span className="text-[8px] font-mono text-gray-600">{feedNodes.length} posts</span>
-              </div>
+          <div className="space-y-1.5">
+            {/* FEED label — tight under MainPillNav, sits directly above Stories/Reels */}
+            <div className="flex items-center gap-2 px-3 sm:px-0">
+              <Activity className="w-3.5 h-3.5 text-cyan-400" />
+              <h2 className="text-xs font-mono font-bold text-cyan-400 tracking-wider">FEED</h2>
+              <span className="text-[8px] font-mono text-gray-600">{feedNodes.length} posts</span>
             </div>
 
             {/* 24hr Stories/Reels — matches dex schema feed */}

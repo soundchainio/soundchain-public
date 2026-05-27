@@ -15,14 +15,14 @@
  */
 import { useRouter } from 'next/router'
 import {
-  Home, Trophy, ImageIcon, Globe2, Map, Compass, Users as UsersIcon,
+  Home, Trophy, ImageIcon, Compass, Users as UsersIcon,
   Radio as RadioIcon, Music, ListMusic, Archive as ArchiveIcon, User
 } from 'lucide-react'
 import { useMe } from 'hooks/useMe'
 
 const ARENA_URL = 'https://arena.soundchain.io?portal=soundchain'
 
-type Accent = 'red' | 'violet' | 'cyan' | 'lime' | 'orange' | 'neutral'
+type Accent = 'red' | 'violet' | 'cyan' | 'lime' | 'orange' | 'neutral' | 'sky' | 'pink' | 'emerald' | 'amber' | 'fuchsia'
 
 type PillItem = {
   id: string
@@ -38,7 +38,12 @@ const ACCENT_ACTIVE: Record<Accent, string> = {
   violet: 'bg-violet-500/15 text-violet-300 border border-violet-400/40 shadow-[0_0_12px_rgba(167,139,250,0.25)]',
   cyan: 'bg-cyan-500/15 text-cyan-300 border border-cyan-400/40 shadow-[0_0_12px_rgba(34,211,238,0.25)]',
   lime: 'bg-lime-500/15 text-lime-300 border border-lime-400/40 shadow-[0_0_12px_rgba(163,230,53,0.25)]',
-  orange: 'bg-orange-500/15 text-orange-300 border border-orange-400/40',
+  orange: 'bg-orange-500/15 text-orange-300 border border-orange-400/40 shadow-[0_0_12px_rgba(251,146,60,0.25)]',
+  sky: 'bg-sky-500/15 text-sky-300 border border-sky-400/40 shadow-[0_0_12px_rgba(56,189,248,0.25)]',
+  pink: 'bg-pink-500/15 text-pink-300 border border-pink-400/40 shadow-[0_0_12px_rgba(244,114,182,0.25)]',
+  emerald: 'bg-emerald-500/15 text-emerald-300 border border-emerald-400/40 shadow-[0_0_12px_rgba(52,211,153,0.25)]',
+  amber: 'bg-amber-500/15 text-amber-300 border border-amber-400/40 shadow-[0_0_12px_rgba(251,191,36,0.25)]',
+  fuchsia: 'bg-fuchsia-500/15 text-fuchsia-300 border border-fuchsia-400/40 shadow-[0_0_12px_rgba(232,121,249,0.25)]',
   neutral: 'bg-white/15 text-white border border-white/25',
 }
 
@@ -48,6 +53,11 @@ const ACCENT_IDLE: Record<Accent, string> = {
   cyan: 'text-cyan-300/85 hover:text-cyan-200 hover:bg-cyan-500/10 border border-cyan-500/25 hover:border-cyan-400/50',
   lime: 'text-lime-300/85 hover:text-lime-200 hover:bg-lime-500/10 border border-lime-500/25 hover:border-lime-400/50',
   orange: 'text-orange-300/85 hover:text-orange-200 hover:bg-orange-500/10 border border-orange-500/25 hover:border-orange-400/50',
+  sky: 'text-sky-300/85 hover:text-sky-200 hover:bg-sky-500/10 border border-sky-500/25 hover:border-sky-400/50',
+  pink: 'text-pink-300/85 hover:text-pink-200 hover:bg-pink-500/10 border border-pink-500/25 hover:border-pink-400/50',
+  emerald: 'text-emerald-300/85 hover:text-emerald-200 hover:bg-emerald-500/10 border border-emerald-500/25 hover:border-emerald-400/50',
+  amber: 'text-amber-300/85 hover:text-amber-200 hover:bg-amber-500/10 border border-amber-500/25 hover:border-amber-400/50',
+  fuchsia: 'text-fuchsia-300/85 hover:text-fuchsia-200 hover:bg-fuchsia-500/10 border border-fuchsia-500/25 hover:border-fuchsia-400/50',
   neutral: 'text-gray-300 hover:text-white hover:bg-white/8 border border-white/10 hover:border-white/25',
 }
 
@@ -65,18 +75,22 @@ export default function MainPillNav({ active, borderClass = 'border-white/5', be
   const me = useMe()
 
   const items: PillItem[] = [
-    ...(me?.profile ? [{ id: 'profile', label: 'Profile', route: `/users/${me.profile.userHandle}`, icon: User, accent: 'neutral' as Accent }] : []),
-    { id: 'nodes', label: 'Nodes', route: '/nodes', icon: Home, accent: 'neutral' },
+    ...(me?.profile ? [{ id: 'profile', label: 'Profile', route: `/users/${me.profile.userHandle}`, icon: User, accent: 'sky' as Accent }] : []),
+    { id: 'nodes', label: 'Nodes', route: '/nodes', icon: Home, accent: 'cyan' },
     { id: 'arena', label: 'Arena', route: ARENA_URL, icon: Trophy, accent: 'red', external: true },
     { id: 'gallery3d', label: 'Gallery 3D', route: '/gallery3d', icon: ImageIcon, accent: 'violet' },
-    { id: 'explore3d', label: 'Explore 3D', route: '/explore3d', icon: Globe2, accent: 'cyan' },
-    { id: 'land', label: 'Land Atlas', route: '/land', icon: Map, accent: 'lime' },
+    // May 27, 2026 — explore3d + land atlas pills GHOSTED from nav (Frank
+    // directive: not seeing daily use, hide nav entry, keep routes alive).
+    // To restore: uncomment the two lines below. Pages at /explore3d and
+    // /land remain reachable via direct URL.
+    // { id: 'explore3d', label: 'Explore 3D', route: '/explore3d', icon: Globe2, accent: 'cyan' },
+    // { id: 'land', label: 'Land Atlas', route: '/land', icon: Map, accent: 'lime' },
     { id: 'radio', label: 'Radio', route: '/radio', icon: RadioIcon, accent: 'orange' },
-    { id: 'explore', label: 'Explore', route: '/explore', icon: Compass, accent: 'neutral' },
-    { id: 'users', label: 'Users', route: '/users', icon: UsersIcon, accent: 'neutral' },
-    { id: 'library', label: 'Library', route: '/library', icon: Music, accent: 'neutral' },
-    { id: 'playlist', label: 'Playlists', route: '/playlist', icon: ListMusic, accent: 'neutral' },
-    { id: 'archive', label: 'Archive', route: '/archive', icon: ArchiveIcon, accent: 'neutral' },
+    { id: 'explore', label: 'Explore', route: '/explore', icon: Compass, accent: 'emerald' },
+    { id: 'users', label: 'Users', route: '/users', icon: UsersIcon, accent: 'pink' },
+    { id: 'library', label: 'Library', route: '/library', icon: Music, accent: 'amber' },
+    { id: 'playlist', label: 'Playlists', route: '/playlist', icon: ListMusic, accent: 'fuchsia' },
+    { id: 'archive', label: 'Archive', route: '/archive', icon: ArchiveIcon, accent: 'lime' },
   ]
 
   const pillRow = (

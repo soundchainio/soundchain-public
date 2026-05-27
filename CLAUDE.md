@@ -1,5 +1,151 @@
 # CLAUDE.md - SoundChain Development Guide
 
+## 🎨 SESSION: May 27, 2026 (Frank → Sarg, autonomous, evening) — UI/UX LOOSE-ENDS PASS: GALLERY3D → PROFILE TAB, EXPLORE3D + LAND PILLS GHOSTED, UTILITY PILL COLORING, /NODES FEED HEADER TIGHTENED (4 files)
+
+Frank: *"claude im on sarg and im noticing the work today is looking good . were cleaning uo loose ends on the yi/ux especially on nodes. the gallery3d should be moved to profile tab /wall oage for each users profile oages so when others land on the profile/wall they can explore their gallery. explore3d and landatlas havent been really used and the rest of the pills need coloring its missing that coloring. im wondering if we should ghost the land atlas and wxplore3d for now off soundchains site cause its nog being used at all... i dont want to delete explore3d and landatlas jist hhost yhem and the pills crom the wnyire site for now. ... can we bump ip where it shows(feed" above the stories and rewls and tighen uo that space to be right under the nav bar with profile nodes wtc. i want a tight look here"*.
+
+Four atomic UI cleanups in one ship, flow-steps autonomous, build clean 71.97s.
+
+### Ship 1 — Gallery 3D embedded as a `/wall` profile tab (`web/src/pages/dex/[...slug].tsx`, +29/-3)
+
+NFT/SCid gallery walks now live where visitors actually land (the profile/wall page) instead of buried behind the `/gallery3d` standalone URL. Anyone on `/users/<handle>` taps the new yellow **Gallery 3D** tab between Wall and Posts → `<GalleryRoom3D ownerHandle ownerProfileId theme="cyberpunk" />` mounts in-place with `h-[calc(100vh-280px)] min-h-[420px]` framed by `border border-yellow-500/10 rounded-lg`. Standalone `/gallery3d` route stays for power users + the existing `wallAudioPlaylist` deep-link flow.
+
+- `profileTab` union expanded: `'myfeed' | 'posts' | 'music' | 'shop' | 'playlists' | 'wall' | 'gallery3d' | 'generate'`
+- Default-tab effect now honors `?tab=gallery3d` (and any other valid tab slug) for deep-links from search/profile previews
+- Dynamic import w/ skeleton loader (yellow LOADING THE GALLERY) — three.js bundle stays out of the initial profile-page payload
+- Theme defaults to `cyberpunk` (matches `/gallery3d` default); future enhancement: per-profile gallery theme persisted to `viewingProfile`
+
+### Ship 2 — `/explore3d` + `/land` (Land Atlas) pills ghosted from MainPillNav (`web/src/components/MainPillNav.tsx`, +4/-2 active items, +2 commented)
+
+Both routes stay live and reachable by direct URL — Frank's directive: *"i dont want to delete explore3d and landatlas jist hhost yhem"*. Pills are commented (not deleted) in the items array so restoring them is uncommenting two lines. Removed unused `Globe2` + `Map` imports from lucide-react.
+
+### Ship 3 — All utility pills now have distinct color accents (`web/src/components/MainPillNav.tsx`, palette expanded)
+
+Pre-ship: Profile/Nodes/Explore/Users/Library/Playlists/Archive all rendered with the same `neutral` (gray) accent. Visitors couldn't tell utility pills apart from the page chrome. Post-ship: every pill has its own tailwind color w/ matching active glow + idle hover state:
+
+| Pill | Accent | Active glow |
+|---|---|---|
+| Profile | sky | `rgba(56,189,248,0.25)` |
+| Nodes | cyan | `rgba(34,211,238,0.25)` |
+| Arena | red (unchanged) | `rgba(248,113,113,0.25)` |
+| Gallery 3D | violet (unchanged) | `rgba(167,139,250,0.25)` |
+| Radio | orange (unchanged) | `rgba(251,146,60,0.25)` |
+| Explore | emerald | `rgba(52,211,153,0.25)` |
+| Users | pink | `rgba(244,114,182,0.25)` |
+| Library | amber | `rgba(251,191,36,0.25)` |
+| Playlists | fuchsia | `rgba(232,121,249,0.25)` |
+| Archive | lime | `rgba(163,230,53,0.25)` |
+
+`Accent` union widened to add `sky | pink | emerald | amber | fuchsia`. `ACCENT_ACTIVE` + `ACCENT_IDLE` records match.
+
+### Ship 4 — `/nodes` feed header tightened: FEED label sits flush under MainPillNav (`web/src/pages/nodes.tsx`, +6/-6)
+
+Pre-ship: outer wrapper had `py-4 space-y-4` → 16px top padding + 16px gaps between stats row → split layout → FEED → StoriesBar. Felt loose and the FEED label appeared too far below the pill nav.
+
+Post-ship: `py-4 space-y-4` → `pt-1 pb-4 space-y-2` shrinks the top buffer by 12px + halves stack gaps. Inside the feed column: replaced the previous `flex items-center justify-between mb-2` FEED header wrapper with a simpler `flex items-center gap-2 px-3 sm:px-0` row — same Activity icon + cyan FEED label + post count, but no surplus container padding above StoriesBar. Inner feed column gap also dropped `space-y-2` → `space-y-1.5`.
+
+Net: on mobile (feed view), DexNavBar → MainPillNav → ~4px gap → **FEED label** → StoriesBar (24hr reels) → compose row → posts. Matches Frank's spec: *"i want a tight look here"*.
+
+### Build + deploy
+
+- `yarn build` 71.97s clean, shared FLJ 718 kB unchanged.
+- Files changed: `MainPillNav.tsx`, `nodes.tsx`, `dex/[...slug].tsx`, `CLAUDE.md`. Stale service worker file rotation also folded in (`worker-7Vc...js` → `worker-zPc...js`).
+- Pushed to `main` → Vercel webhook auto-deploy (Bug #27 fix from May 13 still holding on web/).
+
+### Verify path (Frank → Sarg post-deploy)
+
+1. Hard-refresh `https://soundchain.io/nodes` → MainPillNav row no longer shows **Explore 3D** or **Land Atlas** pills. Visible pills: Profile (sky), Nodes (cyan, active), Arena (red), Gallery 3D (violet), Radio (orange), Explore (emerald), Users (pink), Library (amber), Playlists (fuchsia), Archive (lime). Every pill has its own color.
+2. Same `/nodes` page → FEED label appears immediately under the MainPillNav row (gap reduced by ~16-20px) with StoriesBar directly beneath. No empty band between nav and feed start.
+3. Hard-refresh `https://soundchain.io/users/<any-handle>` → tab strip shows Wall (orange) → **Gallery 3D (yellow, NEW)** → Posts (green) → Music (purple) → Shop (amber) → Playlists (pink). Tap Gallery 3D → 3D NFT gallery mounts in-place with cyberpunk theme.
+4. Deep-link `https://soundchain.io/users/<handle>?tab=gallery3d` from a fresh tab → lands on the Gallery 3D tab immediately.
+5. Direct URLs `/explore3d` + `/land` still load (ghost, not delete) — confirm they 200 even though no pill points at them anymore.
+6. Cross-check `/gallery3d` standalone route still works (used by mint card "View in 3D Gallery" affordances, wallAudioPlaylist).
+
+### Architecture decisions (load-bearing)
+
+1. **Comment, don't delete, ghost pills.** Frank explicitly said *"ghost not delete"* — commented entries in items array preserve provenance, history, and a 5-second restore path if user behavior changes. Removing the lines would lose the accent assignment + icon import context.
+2. **Default Gallery 3D theme = `cyberpunk`.** Matches `/gallery3d` default. Per-profile theme persistence is a future enhancement (would need a `galleryTheme` field on Profile); shipping cyberpunk-only avoids a schema migration mid-cleanup.
+3. **`?tab=` honored in addition to `?wall=`.** The wall-postId deep-link path is preserved (still defaults to Wall when present), but new `?tab=gallery3d` overrides the default for shareable gallery-walk links.
+4. **Tight spacing on /nodes, not on /wall.** Wall has multi-row Cover + Avatar + Bio chrome before the tab strip, so tightening the tab→content gap there would actually feel cramped. The fix is /nodes-specific because /nodes is a single-purpose feed surface.
+5. **Sky for Profile (not neutral).** Profile is a user's primary destination on the platform — it should read as a feature pill, not chrome. Sky is distinct from cyan (Nodes) but close enough in temperature to feel like a sibling.
+
+### Lessons
+
+1. **Ghost > delete > re-add.** When a feature is "not pulling weight," Frank's pattern is to hide its entry points first and watch what users do. The page-level code is cheap to keep around; the nav real-estate is what costs attention.
+2. **Color is recognition.** The pre-ship MainPillNav had 7 of 12 pills rendering as identical `neutral` chrome. Co-workers (Frank's words from older session) couldn't tell features apart. Distinct accents = distinct destinations.
+3. **Embed-in-place beats teleport-out.** Moving Gallery 3D into the Wall tab means visitors don't lose their profile context (cover, avatar, bio, music, posts) to walk through a 3D room. The standalone `/gallery3d` route stays for direct-link / immersive use; the Wall tab is for casual discovery.
+4. **Tight = removed padding, not removed elements.** The fix for "I want a tight look" was reducing top padding from `py-4` to `pt-1` and inner gaps from `space-y-4` to `space-y-2` — same elements, less air. Adding new layout would have introduced bugs without solving the felt-experience complaint.
+5. **`useEffect` dependency arrays widen when adding URL-derived state.** Adding `router.query.tab` to the default-tab effect means in-page nav (`router.push('?tab=gallery3d', undefined, { shallow: true })`) will re-fire the effect and swap profileTab — same pattern as May 27 AM's `mobileTab` URL-sync fix on /nodes.
+
+### Open follow-ups (unchanged from May 27 AM)
+
+- `api.soundchain.io` AWS Console TLS bridge repair — Frank's hands (pinned).
+- lucy.soundchain.io CNAME at name.com → `cname.vercel-dns.com` — Frank's hands.
+- Vendor secret rotation: Magic + MongoDB on retired cluster + Pinata + 4 X API + Vercel OIDC.
+- Anvil RTX 5000 + Mixamo retarget for Phase 16.50.
+- WebRTC peer-sync for 1-on-1 arena gym matchups.
+- Per-profile Gallery 3D theme persistence (Profile schema field + theme picker inside the embedded gallery).
+
+---
+
+## 🧹 SESSION: May 27, 2026 (Frank → Sarg, autonomous) — /NODES MOBILE UI CLEANUP: PILLS RETIRED + NETWORK MOVES TO AVATAR DROPDOWN (`a7dbea8`, 2 files)
+
+Frank: *"claud exan u remove (pills tabs network and feed as well from nodes im cleabing up the ui, on desktop it already shows bith whichnis great bu mobile we remove both pills and move network to avatar menu dropdown thats where it will be in its new home on mobile. and feed will be defualt page on mobile when landing on nodes use automomous flow steps"*.
+
+### What changed
+
+Mobile `/nodes` no longer renders the `[NETWORK] [FEED]` toggle pill row. Feed is the unconditional mobile landing. Network moved into the avatar dropdown (Quick nav, between Inbox and Mint NFT) as a `lg:hidden` link to `/nodes?tab=network`. Desktop split layout untouched — already shows both columns side-by-side, so the dropdown entry is hidden there too (no redundant nav).
+
+### Files touched
+
+**`web/src/pages/nodes.tsx`**
+- Deleted the mobile pill toggle row (was at `:250-257`).
+- `mobileTab` useState initializer simplified: only opt-in to `'network'` when URL has `?tab=network`; everything else defaults to `'feed'`.
+- New `useEffect(() => { ... }, [router.query?.tab])` syncs `mobileTab` from URL changes. Required because Next.js shallow nav from the avatar dropdown (when already on /nodes) doesn't remount the page — the useState initializer runs only once at mount.
+
+**`web/src/components/DexNavBar.tsx`**
+- Added `Network as NetworkIcon` to the lucide-react import block.
+- New `<Link href="/nodes?tab=network">` entry in the avatar dropdown's Quick nav, between Inbox and Mint NFT, marked `lg:hidden` with `onClick={close}` so the dropdown closes on tap. Green icon + green hover tint matches the retired NETWORK pill color for visual continuity.
+
+### Architecture decisions (load-bearing)
+
+1. **Keep `mobileTab` state.** All the network/feed visibility gates throughout the JSX use it. Removing it would require rewriting ~30 className expressions. Just drop the UI control and drive state from URL via useEffect.
+2. **Default = feed.** Per Frank: *"feed will be defualt page on mobile when landing on nodes"*. Initial state opt-in to network only when query explicitly sets it.
+3. **`lg:hidden` on the avatar Network link.** Desktop /nodes already shows network in its left sidebar — a dropdown entry would duplicate the affordance. Hide at lg+.
+4. **`onClick={close}`** so the menu dismisses after tap, matching existing dropdown UX (My Profile, Wallet, Inbox).
+5. **useEffect, not useMemo** for query→state sync. useMemo would require threading the derived value into every gate; useEffect lets the existing gates stay verbatim.
+
+### Build + deploy
+
+- `yarn build` 79.11s clean, all routes prerendered, shared FLJ 718 kB unchanged.
+- Pushed `a7dbea8` to main → Vercel webhook auto-deploy (Bug #27 fix from May 13 still holding).
+
+### Verify path (Frank → Sarg, iPhone)
+
+1. Hard-refresh `https://soundchain.io/nodes` → NO `[NETWORK] [FEED]` pill row. Feed renders full-width immediately.
+2. Tap avatar (top-right) → dropdown opens → scroll past Inbox → see green `Network` entry.
+3. Tap Network → dropdown closes + URL becomes `/nodes?tab=network` + page swaps to network dashboard (swarm nodes + IPFS/Nostr/WebRTC/Polygon panels + NETWORK COLLECTION).
+4. Cross-check desktop (lg+ width) → split layout unchanged; avatar dropdown shows no Network entry (correctly hidden).
+5. Deep-link `https://soundchain.io/nodes?tab=network` from a fresh tab → lands on network view immediately.
+6. From `/nodes` (feed) → click avatar → Network → confirm useEffect fires + section swaps without remount.
+
+### Lessons
+
+1. **Shallow nav + useState initializer = stale UI.** Next.js's shallow routing intentionally avoids remounts. useState initializers run once. Any state derived from URL needs a `useEffect(..., [router.query.<key>])` companion or it desyncs on in-page nav.
+2. **Remove UI before rewiring state.** Deleting the pill row was 7 lines; keeping `mobileTab` + the existing gates avoided touching ~30 JSX expressions. Surgical change > over-refactor.
+3. **Avatar dropdown is becoming the mobile control center.** Profile, Wallet, Inbox, Mint, Verification, Frames, Appearance — and now Network. Continue this pattern when something is useful but doesn't earn permanent screen real estate.
+4. **`lg:hidden` is the right gate on dropdown items that mirror desktop nav.** DexNavBar mounts on every page; without the gate, the Network entry would clutter the desktop menu where it's redundant.
+
+### Open follow-ups (unchanged)
+
+- `api.soundchain.io` AWS Console TLS bridge repair — Frank's hands (pinned).
+- lucy.soundchain.io CNAME at name.com → `cname.vercel-dns.com` — Frank's hands.
+- Vendor secret rotation: Magic + MongoDB on retired cluster + Pinata + 4 X API + Vercel OIDC.
+- Anvil RTX 5000 + Mixamo retarget for Phase 16.50.
+- WebRTC peer-sync for 1-on-1 arena gym matchups.
+
+---
+
 ## 🧱 SESSION: May 25, 2026 (Frank → Sarg, autonomous) — /NODES + /WALL GRID/LIST VIEW-TOGGLE PILLS RESTORED + MINT-STYLE CARD STACK (`b98e2e0`, +149/-70, 3 files)
 
 Frank: *"claude im biticing on nodes ns wall the grid pills for different view options is miaaing neae the conpose nav bar/line on far right where it used to be . list view is current view on feed in nodes and wall bug grid minimizes all posts to cards stacked but im loving how the cards render and stack on mint.soundchain.io. once you gather the missing pills icons for grid and list view for nodes/feed and wall/posts lets have them stack like mint.soundchain.io stacks em we need that look to rival IG and fb and X etc"*.

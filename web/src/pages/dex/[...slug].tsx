@@ -139,6 +139,16 @@ const CreateTokenListingModal = dynamic(() => import('components/modals/CreateTo
 const CreateBundleListingModal = dynamic(() => import('components/modals/CreateBundleListingModal').then(mod => ({ default: mod.CreateBundleListingModal })), { ssr: false })
 const ListNFTModal = dynamic(() => import('components/modals/ListNFTModal').then(mod => ({ default: mod.ListNFTModal })), { ssr: false })
 const ProfileWall = dynamic(() => import('components/dex/ProfileWall').then(mod => ({ default: mod.ProfileWall })), { ssr: false })
+// May 27, 2026 — Gallery 3D embedded as a profile tab so visitors can walk
+// through any user's NFT/SCid gallery directly from their /wall page.
+const GalleryRoom3D = dynamic(() => import('components/GalleryRoom3D'), { ssr: false, loading: () => (
+  <div className="w-full h-[60vh] flex items-center justify-center bg-black border border-yellow-500/10 rounded-lg">
+    <div className="text-center space-y-2">
+      <div className="text-yellow-400 font-mono text-xs animate-pulse">LOADING THE GALLERY...</div>
+      <div className="text-gray-600 font-mono text-[9px]">Three.js · NFT frames · proximity audio</div>
+    </div>
+  </div>
+) })
 const PillConnectorCanvas = dynamic(() => import('components/dex/PillConnectorCanvas'), { ssr: false })
 const FluidBackground = dynamic(() => import('components/dex/FluidBackground'), { ssr: false })
 const GenreHyperspaceRings = dynamic(() => import('components/dex/GenreHyperspaceRings'), { ssr: false })
@@ -1264,7 +1274,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   const [showTop100Modal, setShowTop100Modal] = useState(false)
 
   // Profile tab state (Feed | Music | Playlists)
-  const [profileTab, setProfileTab] = useState<'myfeed' | 'posts' | 'music' | 'shop' | 'playlists' | 'wall' | 'generate'>('myfeed')
+  const [profileTab, setProfileTab] = useState<'myfeed' | 'posts' | 'music' | 'shop' | 'playlists' | 'wall' | 'gallery3d' | 'generate'>('myfeed')
 
   // Bio accordion state - collapsible bio panel for own profile
   const [isBioExpanded, setIsBioExpanded] = useState(false)
@@ -2285,12 +2295,19 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   const shouldSkipPlaylists = (selectedView !== 'playlist' && selectedView !== 'library' && !isViewingOwnProfile) || !userData?.me
 
   // Set default profile tab — Wall is always default (MySpace style)
-  // Also forces Wall tab when ?wall= deep-link param is present
+  // Also forces Wall tab when ?wall= deep-link param is present.
+  // ?tab=gallery3d|posts|music|shop|playlists|myfeed|generate honored.
   useEffect(() => {
     if (selectedView === 'profile') {
-      setProfileTab('wall')
+      const qTab = typeof router.query.tab === 'string' ? router.query.tab : null
+      const validTabs = ['wall', 'gallery3d', 'posts', 'music', 'shop', 'playlists', 'myfeed', 'generate'] as const
+      if (qTab && (validTabs as readonly string[]).includes(qTab)) {
+        setProfileTab(qTab as any)
+      } else {
+        setProfileTab('wall')
+      }
     }
-  }, [selectedView, isViewingOwnProfile, wallPostId])
+  }, [selectedView, isViewingOwnProfile, wallPostId, router.query.tab])
 
   // --- MySpace Visibility: Profile View Counter ---
   const [logProfileView] = useMutation(LOG_PROFILE_VIEW_MUTATION)
@@ -7993,6 +8010,17 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                           Wall
                         </span>
                       </Button>
+                      {/* Gallery 3D tab — walk through this user's NFT/SCid gallery */}
+                      <Button
+                        variant="ghost"
+                        onClick={() => setProfileTab('gallery3d')}
+                        className={`flex-shrink-0 transition-all duration-300 hover:bg-yellow-500/10 ${profileTab === 'gallery3d' ? 'bg-yellow-500/10' : ''}`}
+                      >
+                        <ImageIcon className={`w-4 h-4 mr-2 transition-colors duration-300 ${profileTab === 'gallery3d' ? 'text-yellow-400' : 'text-gray-400'}`} />
+                        <span className={`text-sm font-black transition-all duration-300 ${profileTab === 'gallery3d' ? 'text-yellow-400' : 'text-gray-400'}`}>
+                          Gallery 3D
+                        </span>
+                      </Button>
                       {/* Posts tab (Public) - before My Feed */}
                       <Button
                         variant="ghost"
@@ -8561,6 +8589,15 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                             } catch { toast.error('Could not add to playlist') }
                           } : undefined}
                         />
+                      )}
+                      {profileTab === 'gallery3d' && (
+                        <div className="relative w-full h-[calc(100vh-280px)] min-h-[420px] rounded-lg overflow-hidden border border-yellow-500/10 bg-black">
+                          <GalleryRoom3D
+                            ownerHandle={viewingProfile.userHandle}
+                            ownerProfileId={viewingProfile.id}
+                            theme="cyberpunk"
+                          />
+                        </div>
                       )}
                       {profileTab === 'generate' && isViewingOwnProfile && viewingProfile.userHandle === 'furdA1' && (
                         <GeneratePanel />
