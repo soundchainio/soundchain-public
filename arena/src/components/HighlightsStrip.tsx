@@ -50,11 +50,11 @@ export function HighlightsStrip({ sport, limit = 12 }: HighlightsStripProps) {
 
   if (!loaded) {
     return (
-      <div className="flex gap-3 overflow-hidden">
+      <div className="flex gap-3 overflow-hidden lg:grid lg:grid-cols-3 xl:grid-cols-4 lg:gap-4">
         {Array.from({ length: 4 }).map((_, i) => (
           <div
             key={i}
-            className="flex-shrink-0 w-72 aspect-video rounded-xl bg-arena-card dark:bg-arena-surface border border-arena-border-l dark:border-arena-border-d animate-pulse"
+            className="flex-shrink-0 w-72 lg:w-auto aspect-video rounded-xl bg-arena-card dark:bg-arena-surface border border-arena-border-l dark:border-arena-border-d animate-pulse"
           />
         ))}
       </div>
@@ -63,15 +63,18 @@ export function HighlightsStrip({ sport, limit = 12 }: HighlightsStripProps) {
 
   return (
     <>
+      {/* Mobile: horizontal scroll strip (kept "hood" per Frank).
+          Desktop (lg+): 3-col / xl: 4-col grid with bigger tiles — the standout
+          view May 27, 2026 pass added so desktop arena holds its own. */}
       <div
-        className="flex gap-3 overflow-x-auto pb-3 -mx-4 px-4 snap-x snap-mandatory"
+        className="flex gap-3 overflow-x-auto pb-3 -mx-4 px-4 snap-x snap-mandatory lg:grid lg:grid-cols-3 xl:grid-cols-4 lg:gap-4 lg:overflow-visible lg:mx-0 lg:px-0 lg:snap-none lg:pb-0"
         style={{ scrollbarWidth: 'thin' }}
       >
         {videos.map((v) => (
           <button
             key={v.id}
             onClick={() => setActive(v)}
-            className="group relative flex-shrink-0 w-72 sm:w-80 rounded-xl overflow-hidden border border-arena-border-l dark:border-arena-border-d bg-arena-card dark:bg-arena-surface hover:border-arena-red transition-colors snap-start text-left"
+            className="group relative flex-shrink-0 w-72 sm:w-80 lg:w-auto lg:flex-shrink rounded-xl overflow-hidden border border-arena-border-l dark:border-arena-border-d bg-arena-card dark:bg-arena-surface hover:border-arena-red transition-colors snap-start text-left"
           >
             <div className="relative aspect-video bg-arena-bg-l dark:bg-arena-bg-d overflow-hidden">
               <img

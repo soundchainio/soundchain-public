@@ -2198,6 +2198,10 @@ export function AgentStatusTicker() {
   const fullscreen = terminalMode === 'fullscreen'
   const miniMode = terminalMode === 'mini'
   const [activeTab, setActiveTab] = useState<PanelTab>('terminal')
+  // Mobile-only: collapse the FURL pill row (Agents/Terminal/Gaming/Neural/Operator)
+  // into a single "≡ NAV" chip to reclaim vertical space. Default = expanded.
+  // May 27, 2026 — second-line pill row on mobile, chevron-X to collapse.
+  const [furlTabsCollapsed, setFurlTabsCollapsed] = useState(false)
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null)
   // Operator — selected local files + destination + upload state + node stats
   const [operatorFiles, setOperatorFiles] = useState<File[]>([])
@@ -3623,15 +3627,16 @@ export function AgentStatusTicker() {
           style={fullscreen ? { paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' } : undefined}
         >
           {/* Panel Header with Tabs */}
-          <div className="flex items-center justify-between px-3 py-2 border-b border-white/5 flex-shrink-0 gap-2">
+          <div className="px-3 py-2 border-b border-white/5 flex-shrink-0">
+          <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-3 min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-shrink-0">
                 <Terminal className="w-3.5 h-3.5 text-cyan-400" />
                 <span className="text-xs font-mono text-cyan-400 font-bold tracking-wide">FURL</span>
                 <span className="text-[10px] font-mono text-gray-500">v{suiteVersion}</span>
               </div>
-              {/* Tabs — visible on all screens, scrollable on mobile */}
-              <div className="flex items-center gap-1 ml-2 overflow-x-auto whitespace-nowrap scrollbar-hide flex-1 min-w-0">
+              {/* Tabs — inline on sm+, dropped to a mobile-only second-line row below */}
+              <div className="hidden sm:flex items-center gap-1 ml-2 overflow-x-auto whitespace-nowrap scrollbar-hide flex-1 min-w-0">
                 <button
                   onClick={(e) => { e.stopPropagation(); setActiveTab('agents') }}
                   className={`text-[9px] font-mono px-2 py-0.5 rounded transition-colors ${
@@ -3721,6 +3726,82 @@ export function AgentStatusTicker() {
                 <X className="w-3.5 h-3.5 text-gray-400" />
               </button>
             </div>
+          </div>
+          {/* ─── Mobile-only second-line pill row (Agents / Terminal / Gaming / Neural / Operator) ───
+              Frank, May 27, 2026: scroll space was tight on mobile; pills moved to their own
+              line below FURL v1.0.0 with a chevron-X collapse to a single "≡ NAV" chip. */}
+          <div className="sm:hidden mt-1.5">
+            {furlTabsCollapsed ? (
+              <button
+                onClick={(e) => { e.stopPropagation(); setFurlTabsCollapsed(false) }}
+                className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-black/40 border border-white/10 hover:border-cyan-400/40 transition"
+                aria-label="Expand FURL nav"
+              >
+                <span className="text-[10px] font-mono text-gray-400">≡ NAV</span>
+                <span className="text-[10px] font-mono text-cyan-400 font-bold">
+                  {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+                </span>
+                <ChevronDown className="w-3 h-3 text-gray-500" />
+              </button>
+            ) : (
+              <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 overflow-x-auto whitespace-nowrap scrollbar-hide flex-1 min-w-0">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setActiveTab('agents') }}
+                    className={`text-[9px] font-mono px-2 py-0.5 rounded transition-colors ${
+                      activeTab === 'agents' ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-gray-300'
+                    }`}
+                  >
+                    Agents
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setActiveTab('terminal') }}
+                    className={`text-[9px] font-mono px-2 py-0.5 rounded transition-colors flex items-center gap-1 ${
+                      activeTab === 'terminal' ? 'bg-cyan-500/20 text-cyan-400' : 'text-gray-500 hover:text-gray-300'
+                    }`}
+                  >
+                    <Terminal className="w-2.5 h-2.5" />
+                    Terminal
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setActiveTab('gaming') }}
+                    className={`text-[9px] font-mono px-2 py-0.5 rounded transition-colors flex items-center gap-1 ${
+                      activeTab === 'gaming' ? 'bg-purple-500/20 text-purple-400' : 'text-gray-500 hover:text-gray-300'
+                    }`}
+                  >
+                    <Gamepad2 className="w-2.5 h-2.5" />
+                    Gaming
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setActiveTab('neural') }}
+                    className={`text-[9px] font-mono px-2 py-0.5 rounded transition-colors flex items-center gap-1 ${
+                      activeTab === 'neural' ? 'bg-purple-500/20 text-purple-300' : 'text-gray-500 hover:text-gray-300'
+                    }`}
+                  >
+                    <Brain className="w-2.5 h-2.5" />
+                    Neural
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setActiveTab('operator') }}
+                    className={`text-[9px] font-mono px-2 py-0.5 rounded transition-colors flex items-center gap-1 ${
+                      activeTab === 'operator' ? 'bg-green-500/20 text-green-400' : 'text-gray-500 hover:text-gray-300'
+                    }`}
+                  >
+                    <HardDrive className="w-2.5 h-2.5" />
+                    Operator
+                  </button>
+                </div>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setFurlTabsCollapsed(true) }}
+                  className="flex-shrink-0 p-0.5 rounded hover:bg-white/10 transition-colors"
+                  aria-label="Collapse FURL nav"
+                  title="Collapse nav"
+                >
+                  <X className="w-3 h-3 text-gray-500" />
+                </button>
+              </div>
+            )}
+          </div>
           </div>
 
           {/* ═══ TRON COCKPIT — 3 columns (desktop) / tabbed (mobile) ═══ */}
