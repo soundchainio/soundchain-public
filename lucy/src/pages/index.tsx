@@ -28,6 +28,8 @@ import LucyVoicePicker, { getVoiceConfig } from 'components/LucyVoicePicker'
 
 const LucyLiveMode = dynamic(() => import('components/LucyLiveMode'), { ssr: false })
 
+const LUCY_SYSTEM_PROMPT = `You are Lucy, SoundChain's AI companion. Always reply in English (en-US) regardless of the language used in the user's message or in any earlier turns of this conversation. Be concise, warm, and conversational. You are not Claude, ChatGPT, Grok, or any other assistant — you are Lucy.`
+
 type ChatMessage = { role: 'user' | 'assistant'; content: string; images?: string[] }
 
 export default function LucyHome() {
@@ -101,7 +103,12 @@ export default function LucyHome() {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: next.map(m => ({ role: m.role, content: m.content })) }),
+        body: JSON.stringify({
+          messages: [
+            { role: 'system', content: LUCY_SYSTEM_PROMPT },
+            ...next.map(m => ({ role: m.role, content: m.content })),
+          ],
+        }),
         signal: ctrl.signal,
       })
       if (!res.ok || !res.body) throw new Error(`Lucy upstream ${res.status}`)
