@@ -1,8 +1,6 @@
 /**
  * Nodes — Live P2P Network Dashboard
- * Pirate Bay meets FileZilla command center for the new millennia.
  * Shows all connected peers, IPFS pins, relay health, bandwidth, swarm status.
- * Shell + Brain + Agent = Hybrid Grid Resident
  */
 import { useEffect, useState, useCallback, useMemo, ReactElement, Component, ErrorInfo, ReactNode } from 'react'
 import { useMe } from 'hooks/useMe'
@@ -247,34 +245,7 @@ export default function NodesPage() {
       {/* Lower nav pills — matches dex page nav so users aren't stuck */}
       <MainPillNav active="nodes" />
 
-      {/* Header */}
-      <div className="border-b border-green-500/10 bg-black/60 backdrop-blur-md">
-        <div className="max-w-6xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-green-500/10 border border-green-500/20">
-                <Signal className="w-5 h-5 text-green-400" />
-              </div>
-              <div>
-                <h1 className="text-lg font-mono font-bold text-green-400 tracking-wider">P2P NODE DASHBOARD</h1>
-                <p className="text-[10px] font-mono text-gray-600">Shell + Brain + Agent = Hybrid Grid Resident</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={pingAll}
-                disabled={pinging}
-                className="flex items-center gap-1.5 text-[10px] font-mono text-green-400 px-3 py-1.5 rounded bg-green-500/10 border border-green-500/20 hover:bg-green-500/20 transition disabled:opacity-50"
-              >
-                <RefreshCw className={`w-3 h-3 ${pinging ? 'animate-spin' : ''}`} />
-                {pinging ? 'PINGING...' : 'PING ALL'}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className={`mx-auto py-4 space-y-4 ${mobileTab === 'feed' ? 'px-0 max-w-[680px] lg:max-w-[1400px] lg:px-4' : 'px-4 max-w-[1400px]'}`}>
+<div className={`mx-auto py-4 space-y-4 ${mobileTab === 'feed' ? 'px-0 max-w-[680px] lg:max-w-[1400px] lg:px-4' : 'px-4 max-w-[1400px]'}`}>
         {/* Mobile tab toggle */}
         <div className={`flex items-center gap-1 lg:hidden ${mobileTab === 'feed' ? 'px-2' : ''}`}>
           <button onClick={() => setMobileTab('network')} className={`flex-1 py-2 text-[10px] font-mono font-bold rounded-lg transition ${mobileTab === 'network' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-white/[0.02] text-gray-600 border border-white/5'}`}>
