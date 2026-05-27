@@ -15,7 +15,7 @@
  */
 import { useRouter } from 'next/router'
 import {
-  Home, Trophy, ImageIcon, Compass, Users as UsersIcon,
+  Home, Trophy, Compass, Users as UsersIcon,
   Radio as RadioIcon, Music, ListMusic, Archive as ArchiveIcon, User
 } from 'lucide-react'
 import { useMe } from 'hooks/useMe'
@@ -78,11 +78,12 @@ export default function MainPillNav({ active, borderClass = 'border-white/5', be
     ...(me?.profile ? [{ id: 'profile', label: 'Profile', route: `/users/${me.profile.userHandle}`, icon: User, accent: 'sky' as Accent }] : []),
     { id: 'nodes', label: 'Nodes', route: '/nodes', icon: Home, accent: 'cyan' },
     { id: 'arena', label: 'Arena', route: ARENA_URL, icon: Trophy, accent: 'red', external: true },
-    { id: 'gallery3d', label: 'Gallery 3D', route: '/gallery3d', icon: ImageIcon, accent: 'violet' },
-    // May 27, 2026 — explore3d + land atlas pills GHOSTED from nav (Frank
-    // directive: not seeing daily use, hide nav entry, keep routes alive).
-    // To restore: uncomment the two lines below. Pages at /explore3d and
-    // /land remain reachable via direct URL.
+    // May 27, 2026 — Gallery 3D / Explore 3D / Land Atlas pills GHOSTED from
+    // global nav. Gallery 3D moved to the profile/wall page as an in-place
+    // tab (?tab=gallery3d); Explore 3D + Land Atlas were not seeing daily use.
+    // Routes /gallery3d, /explore3d, /land remain reachable by direct URL.
+    // To restore as global pills, uncomment.
+    // { id: 'gallery3d', label: 'Gallery 3D', route: '/gallery3d', icon: ImageIcon, accent: 'violet' },
     // { id: 'explore3d', label: 'Explore 3D', route: '/explore3d', icon: Globe2, accent: 'cyan' },
     // { id: 'land', label: 'Land Atlas', route: '/land', icon: Map, accent: 'lime' },
     { id: 'radio', label: 'Radio', route: '/radio', icon: RadioIcon, accent: 'orange' },
