@@ -1,5 +1,105 @@
 # CLAUDE.md - SoundChain Development Guide
 
+## 🟣 SESSION: May 28, 2026 (Frank → Sarg, autonomous, midday) — PROFILE REELS PILL + INNER CIRCLE RESTORED (`c81a23f`) + FURL TERMINAL HEAT/BATTERY FIX (`f67b9bc`)
+
+Two ships. Frank on Sarg: *"we pushed aome shipments this morning on profile wall again. i notice a couple bugs one the reels avatar pill isnt present and circle is missing my curcle of friends i added and there is no way ti add to my circle now? its missing how to add and remove frineds to my iner circle"* → mid-run: *"bro everytime i use furl xterm and jump on claude mypjone immediately heats up and battery starts to drain!"*.
+
+### Ship 1 — Profile reels pill + inner circle (`c81a23f`, +513/-328, 1 file: `web/src/components/dex/ProfileReels.tsx`)
+
+Two root causes, both confirmed in code — NOT caused by the morning identity ships (`c4f8fa0`/`a477201`), they were latent:
+
+1. **Reels avatar pill + circle stories were empty** because `ProfileReels` fetched stories via the Apollo `publicStories` query against `api.soundchain.io` — which is DOWN (the pinned open follow-up). `StoriesBar` already uses the Vercel-direct `/api/feed/stories` and works. Swapped `ProfileReels` to the same endpoint (`/api/feed/stories?limit=200`).
+2. **Circle was ALWAYS empty even when api was up**: `followingIds` mapped `n.id` (the follow-EDGE id) instead of `n.followedProfile.id`. The circle filter then matched edge-ids against story profile-ids → never hit. Fixed to read `followedProfile.id`.
+
+Then built the inner-circle management Frank asked for (all Vercel-direct — no Apollo):
+- **Circle row now shows EVERY followed friend** (not just those with active stories): colorful story ring + tappable → StoryViewer when they have a live reel, plain gray ring → navigates to their profile otherwise. Friends-with-stories sort first.
+- **Own profile gets management**: an **Add** pill (purple, `UserPlus`) opens an inline `AddCircleModal` that searches `/api/users/explore?search=` and follows via `/api/follow/toggle {action:'follow'}`; a **× remove** badge on each circle member unfollows via the same endpoint (`action:'unfollow'`); refetches following on change.
+- **Add Reel pill** (cyan dashed + your avatar) on own profile opens `CreateStoryModal` so the reels avatar pill is always reachable even with zero stories.
+- Viewing someone ELSE's profile = read-only (no Add/remove pills), titles switch to "Your Reels/Circle" vs "<name>'s Reels/Circle".
+
+### Ship 2 — FURL terminal heat/battery (`f67b9bc`, +105/-80, 2 files)
+
+Phone heats + drains *whenever FURL xterm is open AND you're chatting with Claude*. Two stacked GPU/CPU hogs:
+- **`web/public/furl-terminal.html`**: `allowTransparency: true` with a solid `#0a0a0a` theme bg forced per-cell alpha compositing on every canvas write. Set `false` → cheap opaque fills, zero visual change. (cursorBlink already off, scrollback already 1500, CanvasAddon already loaded from prior battery passes.)
+- **`web/src/components/AgentStatusTicker.tsx`** neural visualizer: the rAF `loop` ran at full **60fps** (the "20fps" comment only throttled the React `setRegions` cadence via `frameCount % 3`, NOT the rAF). And it runs while `window.__lucyThinking` is true — i.e. exactly while you chat on a phone — stacked on the terminal's canvas repaints. Replaced the raw `requestAnimationFrame(loop)` reschedule with a `setTimeout(frameInterval) → single rAF` scheduler gated to **targetFps**: 10fps mobile (`pointer:coarse` or `<768px`), 6fps `prefers-reduced-motion`, 24fps desktop. `stopLoop` clears the timer too. Wakeups drop 3-6x; synthetic brain rhythm looks identical.
+
+### Lessons
+1. **A component that "lost" a feature may never have been migrated off dead Apollo.** `ProfileReels` was the last stories surface still on `publicStories`/api.soundchain.io while `StoriesBar` moved to Vercel-direct months ago. When api went down, it silently emptied. Audit sibling components for the same data source when one works and one doesn't.
+2. **Map the right id off a follow edge.** `useFollowing` nodes are `{ id: edgeId, followedProfile: {...} }`. Mapping `.id` gives edge ids — a silent filter-never-matches bug. See [[feed-create-body-field-trap]]-class field traps.
+3. **"Throttled to Nfps" must gate the rAF reschedule, not just setState.** A `frameCount % 3` guard around `setState` still leaves the rAF firing 60×/s doing FFT/sine math. Real battery savings come from sleeping `1000/fps` ms between frames (setTimeout→rAF).
+4. **Decorative animation that runs during inference is the worst case** — it pegs the GPU at the exact moment the user is actively waiting on a phone. Throttle hard on mobile + honor `prefers-reduced-motion`.
+
+### Verify path (Frank → Sarg, iPhone)
+1. `https://soundchain.io/users/furdA1` → Wall tab → **Your Reels** row shows the cyan "Add Reel" pill (+ your reel bubble if you have a live story); **Your Circle** row shows every friend you follow + a purple "Add" pill.
+2. Tap **Add** → search a handle → tap Add → they appear in your circle (no api.soundchain.io dependency).
+3. Tap the **×** on a circle member → they're removed (unfollowed).
+4. Open FURL xterm, chat with Claude on the phone → noticeably less heat; the neural bars animate slower (10fps) but smooth.
+
+---
+
+## 🪪 SESSION: May 28, 2026 (Frank → Sarg, AM polish pass) — PROFILE DESKTOP POLISH: FULL-SPECTRUM READABLE NAMES, ONE TIGHT IDENTITY CARD, KILL BLACK BAND + 40vh GAP (`c4f8fa0`, 2 files)
+
+Frank woke, tested DESKTOP (3 screenshots), flagged: *"theres still black background on user and handle name"* + *"the top of image is cropped abit under [nav]"* + *"theres still a massive gap from bio to social pills"* + *"do you see how my background image is light blue and the fluid gl colors are light blue?"* + *"this is all on desktop make sure mobile renders the same i think mobile profile pic is perfectly set."*
+
+### Root causes
+- **Black band** = identity/POAP/bio were transparent strips between the profile-pic banner and the cover image → showed the page's pure-black bg as a flat dead-band (worse on wide desktop).
+- **Massive gap** = the cover image was `h-[40vh]` with stats/social pinned `absolute bottom-0`; on a tall desktop viewport that's a ~400px void of mostly-empty circuit board between bio and stats.
+- **Color blend** = `.sc-fluid-name` gradient was cyan/blue-heavy → mono light-blue, same hue as furdA1's light-blue banner.
+- **Cropped top** = the banner's `h-24 from-black/55` top gradient darkened the image top under the nav.
+
+### What shipped (`c4f8fa0`, +59/-66, 2 files)
+- **`web/src/styles/globals.css`** — `.sc-fluid-name` now sweeps the FULL SoundChain spectrum (cyan→indigo→purple→pink→gold→emerald, `background-size:320%`, 6s) so it never reads mono light-blue; added a dark **text-shadow outline halo** (paints from glyph geometry, not the transparent fill) so names stay legible on ANY bg — light-blue cover, bright photo, dark page.
+- **`web/src/pages/dex/[...slug].tsx`** — (1) merged name/@handle/POAPs/bio into ONE cohesive cyberpunk **identity card** (`bg-gradient-to-b from-[#0b0f1c] via-[#080a12] to-[#06070d]` + neon left spine + glow underline, `py-2 space-y-1`) → the flat black dead-band is gone, it's now a designed dark surface; (2) cover image `h-[40vh] min-h-[250px]` → tight `h-[200px] sm:h-[240px] md:h-[280px]` banner so the social/stats overlay sits right under the bio (gap killed); (3) banner top gradient `h-24 from-black/55` → `h-12 from-black/25` (clean top, not cropped).
+
+### Mobile posture
+Frank: *"mobile profile pic is perfectly set."* The profile-pic banner heights (`h-[180px] sm:[220px] md:[260px]`) are UNTOUCHED. The identity card consolidation + color upgrade improve both surfaces; the cover-height reduction tightens both (cover ≠ the "profile pic" Frank praised). No mobile-only divergence introduced.
+
+### Build + deploy
+- `yarn build` clean 149.19s, new css bundle `a1de7376b9e8ce53.css`. Pushed `c4f8fa0` → `soundchain-site` building on production target. (verify alias promotes + serves the new css hash per [[feedback_verify_chunk_hash_promote_after_push]].)
+
+### Lessons
+1. **A bg-clip-text gradient blends if its hue matches the bg** — sweep the full brand spectrum + add a dark text-shadow halo (works even with transparent fill) so identity text pops on ANY background. The halo is the readability guarantee, the spectrum is the polish.
+2. **`h-[40vh]` + `absolute bottom-0` content = a desktop void.** vh-based hero heights balloon on tall monitors; a fixed-px banner keeps the overlay content close to the flow above it.
+3. **Consolidate sibling strips into one designed surface** to kill a "flat black band" — the band reads as dead space precisely because it's transparent-over-page-black between two images; a gradient panel + neon frame makes it intentional.
+
+---
+
+## 🪪 SESSION: May 28, 2026 (Frank → Sarg, autonomous, ~midnight, Frank asleep) — PROFILE IDENTITY FINAL: LIQUID-COLOR NAME+HANDLE, KILL BLACK BAR, RESTORE GOLD FOUNDER LOGO (`a477201`, 3 files)
+
+Frank (then *"goodnight im passing out i wont be here to help you you have your orders"*): handle/name look "crappy," gaps "ridiculous," a **black BG blocking the profile pic**, wanted **only the chars in BOTH user + handle to carry multi-SoundChain-color fluid-gl**, and *"this poap is so bad!! what happened to my gold soundchain logo only tito myself and jeremy have the gold founder logo please add it back!!"*. Five+ broken WebGL fluid ships preceded this (`edc6f7a`→…→`0696484`).
+
+### Root causes (all confirmed in code)
+1. **Black bar** = the identity row's `bg-gradient-to-r from-black/85 via-black/70 to-black/85 backdrop-blur-md` — read as an opaque band slapped under the pic.
+2. **Gap** = the handle's `FluidNameOverlay` lived in an `h-6 sm:h-7 max-w-[260px]` canvas box (taller than the text) + `py-2.5` padding.
+3. **Only handle had color** — the WebGL effect was handle-only; the display name was plain white. And the WebGL kept regressing (white/warped/doubled with the static fallback).
+4. **Terrible POAP** = `UserSymbols.tsx` rendered admins a **flat `#facc15` circle with a black "S"** (lines 79–82), NOT the real `SoundchainGoldLogo` gold swirl. Founder mark gated on `teamMember` (unreliable) instead of handle.
+
+### What shipped (`a477201`, +86/-55, 3 files)
+- **`web/src/styles/globals.css`** — new `.sc-fluid-name` class + `@keyframes scFluidNameShift`: `background-clip:text` + transparent fill over a 6-stop cyan→blue→indigo→violet→fuchsia→cyan gradient, `background-size:280%`, 7s ease-in-out shift, gold-free drop-shadow glow, `prefers-reduced-motion` kill-switch. Liquid color flows THROUGH crisp glyphs — bulletproof (no WebGL, no warp, no doubling, works on Fire TV).
+- **`web/src/pages/dex/[...slug].tsx`** — identity stack rewrite: dropped `FluidNameOverlay` import+usage; removed black bg from identity/POAP/bio strips (kept neon spine + underline); tight stack `py-1.5` + `leading-tight`, `<h1 class="sc-fluid-name">` name over `<h2 class="sc-fluid-name">@handle`; **founder gold logo gated on `ADMIN_HANDLES.includes(handle)`** (furdA1/jeremy_soundchain/tito) using the real `SoundchainGoldLogo`, inline on line 1 after the blue check; POAP row now `showFounder={false}` so the gold logo isn't duplicated.
+- **`web/src/components/UserSymbols.tsx`** — replaced the flat yellow circle+S with `<SoundchainGoldLogo>`; exported `ADMIN_HANDLES`; added `showFounder` prop (default true). Fixes the founder mark EVERYWHERE UserSymbols renders (comments, lists, profile).
+
+### Decision — dropped WebGL fluid-gl for CSS liquid gradient
+Frank asleep + 5 prior WebGL ships failed (white `vec3(1.0)`, warped glyphs, doubled text vs the static fallback). His actual GOAL — *"give every users names a polish effect no matter what color the profile pic is"* — is delivered reliably by an animated `bg-clip-text` gradient: every char colored, crisp, readable, animated, consistent name↔handle, zero context-loss risk. `FluidNameOverlay.tsx` stays in the repo if he wants WebGL back.
+
+### Build + deploy + VERIFIED
+- `yarn build` clean 68.22s.
+- Pushed `a477201` → `soundchain-site` deploy READY on production target at 00:16. Verified prod alias promoted: `soundchain.io` serves css bundle `460628e9fe715e37.css` containing `sc-fluid-name` + `scFluidNameShift` (chunk-hash protocol satisfied).
+
+### Verify path (Frank, iPhone, AM)
+1. Hard-refresh `https://soundchain.io/users/furdA1` → display name AND @handle both shimmer cyan→blue→violet→fuchsia, crisp + readable, tightly stacked, NO black bar under the pic.
+2. Line 1: name + blue ✓ + **gold SoundChain founder swirl** (the real logo, not a yellow circle). Only furdA1/jeremy/tito get it.
+3. POAP row: event-attendance badge + NFT/creator symbols, no duplicate gold logo.
+4. Cross-check a non-founder profile → name+handle liquid color, blue check if verified, NO gold logo.
+
+### Lessons
+1. **When WebGL identity text fails N times, the goal is "colorful + readable + animated," not "WebGL."** CSS `bg-clip-text` gradient nails the goal with none of the failure surface. Don't keep polishing a turd shader.
+2. **Founder marks gate on the handle allowlist, not a `teamMember` boolean** that may be unset on the very founders it's meant for.
+3. **Fix the badge at the shared component (`UserSymbols`)** so every surface inherits the real gold logo, not just the page in the screenshot.
+4. **"Remove black bg" = transparent strip + keep the neon accents** — the cyberpunk frame (spine/underline) carries the style; the opaque black was just blocking the pic.
+
+---
+
 ## 🪪 SESSION: May 27, 2026 (Frank → Sarg, autonomous, late) — PROFILE/WALL FIX: READABLE+COLORFUL FLUID HANDLE, RESTORE BLUE CHECK + ATTENDANCE POAP + BIO (`0696484`, 2 files)
 
 Frank: *"your work on usernames and handles with web-gl fluid is all off i cant read one of the names and theres no coloring to the chars its only white so what kind of fluid-gl effects work on white 🤦🏽‍♂️ wheres my blue check mark wheres my attendence poap badge? its all fine and wrong! the gaps are still present i dont see my bio!"* + *"bro this refactor has to [hit it out the] park! so users start to live their wall!!"*.
@@ -89,228 +189,6 @@ The native app is a thin WKWebView pointed at live `lucy.soundchain.io` (`server
 - lucy.soundchain.io CNAME at name.com → `cname.vercel-dns.com` — Frank's hands (still pending; PWA install needs the live HTTPS domain).
 - `api.soundchain.io` AWS Console TLS bridge repair — Frank's hands (pinned).
 - Vendor secret rotation: Magic + MongoDB on retired cluster + Pinata + 4 X API + Vercel OIDC.
-
----
-
-## 🎨 SESSION: May 27, 2026 (Frank → Sarg, autonomous, evening) — UI/UX LOOSE-ENDS PASS: GALLERY3D → PROFILE TAB, EXPLORE3D + LAND PILLS GHOSTED, UTILITY PILL COLORING, /NODES FEED HEADER TIGHTENED (4 files)
-
-Frank: *"claude im on sarg and im noticing the work today is looking good . were cleaning uo loose ends on the yi/ux especially on nodes. the gallery3d should be moved to profile tab /wall oage for each users profile oages so when others land on the profile/wall they can explore their gallery. explore3d and landatlas havent been really used and the rest of the pills need coloring its missing that coloring. im wondering if we should ghost the land atlas and wxplore3d for now off soundchains site cause its nog being used at all... i dont want to delete explore3d and landatlas jist hhost yhem and the pills crom the wnyire site for now. ... can we bump ip where it shows(feed" above the stories and rewls and tighen uo that space to be right under the nav bar with profile nodes wtc. i want a tight look here"*.
-
-Four atomic UI cleanups in one ship, flow-steps autonomous, build clean 71.97s.
-
-### Ship 1 — Gallery 3D embedded as a `/wall` profile tab (`web/src/pages/dex/[...slug].tsx`, +29/-3)
-
-NFT/SCid gallery walks now live where visitors actually land (the profile/wall page) instead of buried behind the `/gallery3d` standalone URL. Anyone on `/users/<handle>` taps the new yellow **Gallery 3D** tab between Wall and Posts → `<GalleryRoom3D ownerHandle ownerProfileId theme="cyberpunk" />` mounts in-place with `h-[calc(100vh-280px)] min-h-[420px]` framed by `border border-yellow-500/10 rounded-lg`. Standalone `/gallery3d` route stays for power users + the existing `wallAudioPlaylist` deep-link flow.
-
-- `profileTab` union expanded: `'myfeed' | 'posts' | 'music' | 'shop' | 'playlists' | 'wall' | 'gallery3d' | 'generate'`
-- Default-tab effect now honors `?tab=gallery3d` (and any other valid tab slug) for deep-links from search/profile previews
-- Dynamic import w/ skeleton loader (yellow LOADING THE GALLERY) — three.js bundle stays out of the initial profile-page payload
-- Theme defaults to `cyberpunk` (matches `/gallery3d` default); future enhancement: per-profile gallery theme persisted to `viewingProfile`
-
-### Ship 2 — `/explore3d` + `/land` (Land Atlas) pills ghosted from MainPillNav (`web/src/components/MainPillNav.tsx`, +4/-2 active items, +2 commented)
-
-Both routes stay live and reachable by direct URL — Frank's directive: *"i dont want to delete explore3d and landatlas jist hhost yhem"*. Pills are commented (not deleted) in the items array so restoring them is uncommenting two lines. Removed unused `Globe2` + `Map` imports from lucide-react.
-
-### Ship 3 — All utility pills now have distinct color accents (`web/src/components/MainPillNav.tsx`, palette expanded)
-
-Pre-ship: Profile/Nodes/Explore/Users/Library/Playlists/Archive all rendered with the same `neutral` (gray) accent. Visitors couldn't tell utility pills apart from the page chrome. Post-ship: every pill has its own tailwind color w/ matching active glow + idle hover state:
-
-| Pill | Accent | Active glow |
-|---|---|---|
-| Profile | sky | `rgba(56,189,248,0.25)` |
-| Nodes | cyan | `rgba(34,211,238,0.25)` |
-| Arena | red (unchanged) | `rgba(248,113,113,0.25)` |
-| Gallery 3D | violet (unchanged) | `rgba(167,139,250,0.25)` |
-| Radio | orange (unchanged) | `rgba(251,146,60,0.25)` |
-| Explore | emerald | `rgba(52,211,153,0.25)` |
-| Users | pink | `rgba(244,114,182,0.25)` |
-| Library | amber | `rgba(251,191,36,0.25)` |
-| Playlists | fuchsia | `rgba(232,121,249,0.25)` |
-| Archive | lime | `rgba(163,230,53,0.25)` |
-
-`Accent` union widened to add `sky | pink | emerald | amber | fuchsia`. `ACCENT_ACTIVE` + `ACCENT_IDLE` records match.
-
-### Ship 4 — `/nodes` feed header tightened: FEED label sits flush under MainPillNav (`web/src/pages/nodes.tsx`, +6/-6)
-
-Pre-ship: outer wrapper had `py-4 space-y-4` → 16px top padding + 16px gaps between stats row → split layout → FEED → StoriesBar. Felt loose and the FEED label appeared too far below the pill nav.
-
-Post-ship: `py-4 space-y-4` → `pt-1 pb-4 space-y-2` shrinks the top buffer by 12px + halves stack gaps. Inside the feed column: replaced the previous `flex items-center justify-between mb-2` FEED header wrapper with a simpler `flex items-center gap-2 px-3 sm:px-0` row — same Activity icon + cyan FEED label + post count, but no surplus container padding above StoriesBar. Inner feed column gap also dropped `space-y-2` → `space-y-1.5`.
-
-Net: on mobile (feed view), DexNavBar → MainPillNav → ~4px gap → **FEED label** → StoriesBar (24hr reels) → compose row → posts. Matches Frank's spec: *"i want a tight look here"*.
-
-### Build + deploy
-
-- `yarn build` 71.97s clean, shared FLJ 718 kB unchanged.
-- Files changed: `MainPillNav.tsx`, `nodes.tsx`, `dex/[...slug].tsx`, `CLAUDE.md`. Stale service worker file rotation also folded in (`worker-7Vc...js` → `worker-zPc...js`).
-- Pushed to `main` → Vercel webhook auto-deploy (Bug #27 fix from May 13 still holding on web/).
-
-### Verify path (Frank → Sarg post-deploy)
-
-1. Hard-refresh `https://soundchain.io/nodes` → MainPillNav row no longer shows **Explore 3D** or **Land Atlas** pills. Visible pills: Profile (sky), Nodes (cyan, active), Arena (red), Gallery 3D (violet), Radio (orange), Explore (emerald), Users (pink), Library (amber), Playlists (fuchsia), Archive (lime). Every pill has its own color.
-2. Same `/nodes` page → FEED label appears immediately under the MainPillNav row (gap reduced by ~16-20px) with StoriesBar directly beneath. No empty band between nav and feed start.
-3. Hard-refresh `https://soundchain.io/users/<any-handle>` → tab strip shows Wall (orange) → **Gallery 3D (yellow, NEW)** → Posts (green) → Music (purple) → Shop (amber) → Playlists (pink). Tap Gallery 3D → 3D NFT gallery mounts in-place with cyberpunk theme.
-4. Deep-link `https://soundchain.io/users/<handle>?tab=gallery3d` from a fresh tab → lands on the Gallery 3D tab immediately.
-5. Direct URLs `/explore3d` + `/land` still load (ghost, not delete) — confirm they 200 even though no pill points at them anymore.
-6. Cross-check `/gallery3d` standalone route still works (used by mint card "View in 3D Gallery" affordances, wallAudioPlaylist).
-
-### Architecture decisions (load-bearing)
-
-1. **Comment, don't delete, ghost pills.** Frank explicitly said *"ghost not delete"* — commented entries in items array preserve provenance, history, and a 5-second restore path if user behavior changes. Removing the lines would lose the accent assignment + icon import context.
-2. **Default Gallery 3D theme = `cyberpunk`.** Matches `/gallery3d` default. Per-profile theme persistence is a future enhancement (would need a `galleryTheme` field on Profile); shipping cyberpunk-only avoids a schema migration mid-cleanup.
-3. **`?tab=` honored in addition to `?wall=`.** The wall-postId deep-link path is preserved (still defaults to Wall when present), but new `?tab=gallery3d` overrides the default for shareable gallery-walk links.
-4. **Tight spacing on /nodes, not on /wall.** Wall has multi-row Cover + Avatar + Bio chrome before the tab strip, so tightening the tab→content gap there would actually feel cramped. The fix is /nodes-specific because /nodes is a single-purpose feed surface.
-5. **Sky for Profile (not neutral).** Profile is a user's primary destination on the platform — it should read as a feature pill, not chrome. Sky is distinct from cyan (Nodes) but close enough in temperature to feel like a sibling.
-
-### Lessons
-
-1. **Ghost > delete > re-add.** When a feature is "not pulling weight," Frank's pattern is to hide its entry points first and watch what users do. The page-level code is cheap to keep around; the nav real-estate is what costs attention.
-2. **Color is recognition.** The pre-ship MainPillNav had 7 of 12 pills rendering as identical `neutral` chrome. Co-workers (Frank's words from older session) couldn't tell features apart. Distinct accents = distinct destinations.
-3. **Embed-in-place beats teleport-out.** Moving Gallery 3D into the Wall tab means visitors don't lose their profile context (cover, avatar, bio, music, posts) to walk through a 3D room. The standalone `/gallery3d` route stays for direct-link / immersive use; the Wall tab is for casual discovery.
-4. **Tight = removed padding, not removed elements.** The fix for "I want a tight look" was reducing top padding from `py-4` to `pt-1` and inner gaps from `space-y-4` to `space-y-2` — same elements, less air. Adding new layout would have introduced bugs without solving the felt-experience complaint.
-5. **`useEffect` dependency arrays widen when adding URL-derived state.** Adding `router.query.tab` to the default-tab effect means in-page nav (`router.push('?tab=gallery3d', undefined, { shallow: true })`) will re-fire the effect and swap profileTab — same pattern as May 27 AM's `mobileTab` URL-sync fix on /nodes.
-
-### Open follow-ups (unchanged from May 27 AM)
-
-- `api.soundchain.io` AWS Console TLS bridge repair — Frank's hands (pinned).
-- lucy.soundchain.io CNAME at name.com → `cname.vercel-dns.com` — Frank's hands.
-- Vendor secret rotation: Magic + MongoDB on retired cluster + Pinata + 4 X API + Vercel OIDC.
-- Anvil RTX 5000 + Mixamo retarget for Phase 16.50.
-- WebRTC peer-sync for 1-on-1 arena gym matchups.
-- Per-profile Gallery 3D theme persistence (Profile schema field + theme picker inside the embedded gallery).
-
----
-
-## 🧹 SESSION: May 27, 2026 (Frank → Sarg, autonomous) — /NODES MOBILE UI CLEANUP: PILLS RETIRED + NETWORK MOVES TO AVATAR DROPDOWN (`a7dbea8`, 2 files)
-
-Frank: *"claud exan u remove (pills tabs network and feed as well from nodes im cleabing up the ui, on desktop it already shows bith whichnis great bu mobile we remove both pills and move network to avatar menu dropdown thats where it will be in its new home on mobile. and feed will be defualt page on mobile when landing on nodes use automomous flow steps"*.
-
-### What changed
-
-Mobile `/nodes` no longer renders the `[NETWORK] [FEED]` toggle pill row. Feed is the unconditional mobile landing. Network moved into the avatar dropdown (Quick nav, between Inbox and Mint NFT) as a `lg:hidden` link to `/nodes?tab=network`. Desktop split layout untouched — already shows both columns side-by-side, so the dropdown entry is hidden there too (no redundant nav).
-
-### Files touched
-
-**`web/src/pages/nodes.tsx`**
-- Deleted the mobile pill toggle row (was at `:250-257`).
-- `mobileTab` useState initializer simplified: only opt-in to `'network'` when URL has `?tab=network`; everything else defaults to `'feed'`.
-- New `useEffect(() => { ... }, [router.query?.tab])` syncs `mobileTab` from URL changes. Required because Next.js shallow nav from the avatar dropdown (when already on /nodes) doesn't remount the page — the useState initializer runs only once at mount.
-
-**`web/src/components/DexNavBar.tsx`**
-- Added `Network as NetworkIcon` to the lucide-react import block.
-- New `<Link href="/nodes?tab=network">` entry in the avatar dropdown's Quick nav, between Inbox and Mint NFT, marked `lg:hidden` with `onClick={close}` so the dropdown closes on tap. Green icon + green hover tint matches the retired NETWORK pill color for visual continuity.
-
-### Architecture decisions (load-bearing)
-
-1. **Keep `mobileTab` state.** All the network/feed visibility gates throughout the JSX use it. Removing it would require rewriting ~30 className expressions. Just drop the UI control and drive state from URL via useEffect.
-2. **Default = feed.** Per Frank: *"feed will be defualt page on mobile when landing on nodes"*. Initial state opt-in to network only when query explicitly sets it.
-3. **`lg:hidden` on the avatar Network link.** Desktop /nodes already shows network in its left sidebar — a dropdown entry would duplicate the affordance. Hide at lg+.
-4. **`onClick={close}`** so the menu dismisses after tap, matching existing dropdown UX (My Profile, Wallet, Inbox).
-5. **useEffect, not useMemo** for query→state sync. useMemo would require threading the derived value into every gate; useEffect lets the existing gates stay verbatim.
-
-### Build + deploy
-
-- `yarn build` 79.11s clean, all routes prerendered, shared FLJ 718 kB unchanged.
-- Pushed `a7dbea8` to main → Vercel webhook auto-deploy (Bug #27 fix from May 13 still holding).
-
-### Verify path (Frank → Sarg, iPhone)
-
-1. Hard-refresh `https://soundchain.io/nodes` → NO `[NETWORK] [FEED]` pill row. Feed renders full-width immediately.
-2. Tap avatar (top-right) → dropdown opens → scroll past Inbox → see green `Network` entry.
-3. Tap Network → dropdown closes + URL becomes `/nodes?tab=network` + page swaps to network dashboard (swarm nodes + IPFS/Nostr/WebRTC/Polygon panels + NETWORK COLLECTION).
-4. Cross-check desktop (lg+ width) → split layout unchanged; avatar dropdown shows no Network entry (correctly hidden).
-5. Deep-link `https://soundchain.io/nodes?tab=network` from a fresh tab → lands on network view immediately.
-6. From `/nodes` (feed) → click avatar → Network → confirm useEffect fires + section swaps without remount.
-
-### Lessons
-
-1. **Shallow nav + useState initializer = stale UI.** Next.js's shallow routing intentionally avoids remounts. useState initializers run once. Any state derived from URL needs a `useEffect(..., [router.query.<key>])` companion or it desyncs on in-page nav.
-2. **Remove UI before rewiring state.** Deleting the pill row was 7 lines; keeping `mobileTab` + the existing gates avoided touching ~30 JSX expressions. Surgical change > over-refactor.
-3. **Avatar dropdown is becoming the mobile control center.** Profile, Wallet, Inbox, Mint, Verification, Frames, Appearance — and now Network. Continue this pattern when something is useful but doesn't earn permanent screen real estate.
-4. **`lg:hidden` is the right gate on dropdown items that mirror desktop nav.** DexNavBar mounts on every page; without the gate, the Network entry would clutter the desktop menu where it's redundant.
-
-### Open follow-ups (unchanged)
-
-- `api.soundchain.io` AWS Console TLS bridge repair — Frank's hands (pinned).
-- lucy.soundchain.io CNAME at name.com → `cname.vercel-dns.com` — Frank's hands.
-- Vendor secret rotation: Magic + MongoDB on retired cluster + Pinata + 4 X API + Vercel OIDC.
-- Anvil RTX 5000 + Mixamo retarget for Phase 16.50.
-- WebRTC peer-sync for 1-on-1 arena gym matchups.
-
----
-
-## 🧱 SESSION: May 25, 2026 (Frank → Sarg, autonomous) — /NODES + /WALL GRID/LIST VIEW-TOGGLE PILLS RESTORED + MINT-STYLE CARD STACK (`b98e2e0`, +149/-70, 3 files)
-
-Frank: *"claude im biticing on nodes ns wall the grid pills for different view options is miaaing neae the conpose nav bar/line on far right where it used to be . list view is current view on feed in nodes and wall bug grid minimizes all posts to cards stacked but im loving how the cards render and stack on mint.soundchain.io. once you gather the missing pills icons for grid and list view for nodes/feed and wall/posts lets have them stack like mint.soundchain.io stacks em we need that look to rival IG and fb and X etc"*.
-
-### Root causes (two surfaces, two distinct gaps)
-
-| Surface | Pre-ship state | Why |
-|---|---|---|
-| `/nodes` (`web/src/pages/nodes.tsx`) | NO view-toggle pills, list-only feed via inline `<Post>` loop. | Never wired. `<Posts>` (which supports `viewMode` since `f02591c`) was never imported here — /nodes ships its own `/api/feed/posts` pipeline, not Apollo. |
-| `/users/[handle]` wall (`web/src/pages/dex/[...slug].tsx`) | Pills exist at `:3254-3260`, but inside the `MainPillNav` flex row w/ no overflow-x / no flex-shrink protection. On mobile, MainPillNav's nav pills push the toggle off-screen since the row is `flex items-center gap-1.5` (no wrap, no overflow gate). |
-
-The mint marketplace look Frank wants comes from `mint/src/pages/marketplace.tsx:588,665`: `grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-1.5 sm:gap-2` w/ `aspect-[3/4]` NftChip cards. Web's existing Posts grid path used a virtualized react-window `FixedSizeGrid` w/ 2-5 cols — fine for density but the virtualization gates load-more on parent scroll height, and cells were sized at `columnWidth + 60` (square media + fat footer) → not the tight portrait stack of mint.
-
-### What shipped (`b98e2e0`, +149/-70, 3 files)
-
-**1. `web/src/pages/nodes.tsx`** (+50/-25)
-- Imported `CompactPost` + `LayoutGrid` + `List as ListIcon` from lucide-react
-- New `feedViewMode` state (`'list' | 'grid'`, default `'list'`)
-- Compose row at line 570 became `flex items-center gap-2`: composer button (`flex-1`) on left, view-toggle pill cluster (`flex-shrink-0`) on right. Pills sit inside a `rounded-lg border border-white/5 bg-black/40 p-0.5` capsule — visually grouped, always visible regardless of compose state
-- Feed render branched: `feedViewMode === 'grid'` uses `grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-1.5 sm:gap-2` w/ `<CompactPost>`; otherwise inline `<Post>` list
-- Skeleton + empty state + load-more button all gate on `col-span-full` when grid is active (no row-collapse artifacts)
-- Compose box no longer wraps the toggle (so guests still see pills + can browse cards)
-
-**2. `web/src/components/Post/Posts.tsx`** (+38/-52)
-- Grid branch dropped FixedSizeGrid + AutoSizer + InfiniteLoader entirely → native CSS grid w/ same mint columns (`grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-1.5 sm:gap-2`)
-- IntersectionObserver auto-load-more effect now fires when `useSimpleMode || viewMode === 'grid'` (previously simple-mode only)
-- List branch unchanged — still virtualized via react-window VariableSizeList for long feeds where post heights vary wildly
-
-**3. `web/src/pages/dex/[...slug].tsx`** (+46/-1, no removals)
-- Two new pill rows added near where Posts actually renders:
-  - Above `MemoizedFeedPosts` inside the `selectedView === 'feed'` branch (`:4118`)
-  - Above `MemoizedMyFeedPosts` inside the `profileTab === 'myfeed'` branch (`:8128`)
-- Both use the same pill capsule grammar as /nodes for consistency (rounded-lg border bg-black/40 p-0.5)
-- Upstream MainPillNav pills kept — these new ones are duplication, not replacement, so the toggle is reachable from two locations on the wall
-
-### Architecture decisions (load-bearing)
-
-1. **Don't rewire /nodes feed through Apollo `<Posts>`** — /nodes already has a working `/api/feed/posts` Vercel-direct pipeline w/ `feedNodes`. Adding `<Posts>` would mean Apollo-only re-render path + duplicate fetches. Instead /nodes imports `CompactPost` and uses its own `feedNodes` data directly.
-2. **Native CSS grid > FixedSizeGrid for mint-style stack.** Virtualization buys very little when card heights are fixed by aspect ratio and feed length is typically <200. CSS grid renders crisper, scrolls naturally, and matches mint visually 1:1.
-3. **Duplicate the pills near the feed start, don't move them.** Some users navigate via the upstream MainPillNav row; moving the pills would break that. Adding a second instance is cheap (8 lines per surface) and guarantees mobile visibility.
-4. **Same pill capsule grammar across /nodes + /wall feed + /wall myfeed.** `rounded-lg border border-white/5 bg-black/40 p-0.5` → inner buttons `p-1.5 rounded-md`. Visually identical so users learn the affordance once.
-5. **Skeleton + empty state get `col-span-full` when grid active.** Otherwise grid behavior treats them as single-cell items and the layout collapses to a 1-col strip.
-6. **CompactPost not modified.** Its grid card already uses `aspect-square` media + tight footer w/ avatar + reactions/comments/share. The dense columns + `gap-1.5` parent give the mint stack feel without touching the card itself.
-
-### Build + deploy
-
-- `yarn build` 81.88s clean, all routes prerendered, shared FLJ 718 kB unchanged
-- Pushed `b98e2e0` to main → Vercel webhook auto-deploy (Bug #27 fix from May 13 still holding on web/)
-- Verified `https://soundchain.io/nodes` HTTP 200, `last-modified: Tue, 26 May 2026 05:58:59 GMT`, `age: 0` after the build promoted
-
-### Verify path (Frank → Sarg post-deploy)
-
-1. Hard-refresh `https://soundchain.io/nodes` → far right of the COMPOSE POST row → see [LIST][GRID] pill capsule
-2. Default = list view (inline `<Post>` w/ media)
-3. Tap GRID pill → feed re-renders as dense card stack (2 cols mobile, 3-5 desktop) matching `mint.soundchain.io/marketplace`
-4. Tap LIST pill → back to full-detail posts
-5. Hard-refresh `https://soundchain.io/users/<handle>?view=feed` → above feed list → same [LIST][GRID] pill capsule, identical behavior
-6. Same on `/users/<own-handle>?view=profile&tab=myfeed` → pill capsule above MemoizedMyFeedPosts
-7. Cross-check: pills in the upstream MainPillNav row on the wall (`:3254`) ALSO still work — both locations toggle the same `viewMode` state, no orphan UI
-
-### Lessons
-
-1. **"It's not wired up" vs "it's wired but broken" are different bugs.** /nodes was never wired — adding /nodes pills meant new state + new render branch. The wall was wired but visually buried — adding wall pills meant duplicating an existing toggle into a more reachable spot. Diagnose which class before reaching for the same fix.
-2. **Native CSS grid is the right answer for fixed-aspect card stacks.** FixedSizeGrid existed because someone optimistically reached for virtualization; in practice mint proves the dense CSS grid is fast enough + visually superior + much less code (50% reduction in Posts.tsx grid branch).
-3. **Don't unify two render pipelines mid-ship.** /nodes uses /api/feed/posts (Vercel-direct), the wall uses Apollo Posts. Refactoring /nodes to use Apollo would have been a 200-line ship that ALSO needed to verify the Apollo posts path post-Phase 7e Lambda eviction. Importing `CompactPost` directly = 5-line bridge.
-4. **Duplicate ≠ drift when both call the same state setter.** Both wall pill instances call `setViewMode` on the same useState. No source-of-truth split, no sync bug surface. Cheap duplication is fine when it preserves UX consistency.
-
-### Open follow-ups (next session)
-
-- Frank iPhone verify both surfaces — confirm pills visible + grid stack matches mint vibes
-- If wall pill duplication feels redundant, can drop the upstream MainPillNav-adjacent pair (`dex/[...slug].tsx:3254-3260`) in a follow-up cleanup
-- CompactPost grid card could optionally be tightened (less rounded, more mint-NftChip-like crisp edges) if Frank wants tighter visual parity — current ship keeps existing card design + just stacks denser
-- `api.soundchain.io` AWS Console TLS bridge repair — Frank's hands needed (unchanged from May 17/19)
 
 ---
 
