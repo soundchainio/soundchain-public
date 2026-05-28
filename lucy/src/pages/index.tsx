@@ -19,11 +19,11 @@
  * No auth gating in V1. Anyone can chat. Conversations stay local.
  */
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Head from 'next/head'
 import dynamic from 'next/dynamic'
-import { Cloud, CloudOff, Cpu, Download, Mic, MicOff, Send, Trash2, Volume2, VolumeX, Video } from 'lucide-react'
-import { useLucyMemory } from 'hooks/useLucyMemory'
+import { Cloud, CloudOff, Cpu, Download, Menu, MessageSquarePlus, Mic, MicOff, Send, Trash2, Volume2, VolumeX, Video, X } from 'lucide-react'
+import { useLucyMemory, listConversations, deleteConversation, type ConversationMeta } from 'hooks/useLucyMemory'
 import { useLucyLocal } from 'hooks/useLucyLocal'
 import LucyVoicePicker, { getVoiceConfig } from 'components/LucyVoicePicker'
 
@@ -75,8 +75,29 @@ type ReplySource = 'anvil' | 'local'
 
 type ChatMessage = { role: 'user' | 'assistant'; content: string; images?: string[]; source?: ReplySource }
 
+const genConvId = (): string => {
+  try { if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID() } catch {}
+  return 'c-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8)
+}
+
+const relTime = (ms: number): string => {
+  if (!ms) return ''
+  const d = Date.now() - ms
+  const m = Math.floor(d / 60000)
+  if (m < 1) return 'now'
+  if (m < 60) return `${m}m`
+  const h = Math.floor(m / 60)
+  if (h < 24) return `${h}h`
+  const days = Math.floor(h / 24)
+  if (days < 7) return `${days}d`
+  return `${Math.floor(days / 7)}w`
+}
+
 export default function LucyHome() {
-  const { messages, setMessages, save: persistMessages, clear: clearMemory, ready: memoryReady } = useLucyMemory()
+  const [activeConvId, setActiveConvId] = useState('default')
+  const { messages, setMessages, save: persistMessages, clear: clearMemory, ready: memoryReady } = useLucyMemory(activeConvId)
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [convs, setConvs] = useState<ConversationMeta[]>([])
   const [input, setInput] = useState('')
   const [streaming, setStreaming] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -94,8 +115,41 @@ export default function LucyHome() {
   const spokenIndexRef = useRef(0)
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+    // 'auto' (instant) not 'smooth' — smooth-scrolling on every streamed token
+    // is what made the screen lurch/stick mid-chat on mobile.
+    messagesEndRef.current?.scrollIntoView({ behavior: streaming ? 'auto' : 'smooth', block: 'end' })
+  }, [messages, streaming])
+
+  // Refresh the history list (decrypts all stored convs locally).
+  const refreshConvs = useCallback(() => { listConversations().then(setConvs).catch(() => {}) }, [])
+  useEffect(() => { refreshConvs() }, [refreshConvs])
+
+  const newChat = () => {
+    abortRef.current?.abort()
+    if (typeof window !== 'undefined') window.speechSynthesis?.cancel()
+    setActiveConvId(genConvId())
+    setMessages([])
+    setError(null)
+    setDrawerOpen(false)
+  }
+
+  const openConv = (id: string) => {
+    if (id === activeConvId) { setDrawerOpen(false); return }
+    abortRef.current?.abort()
+    if (typeof window !== 'undefined') window.speechSynthesis?.cancel()
+    setActiveConvId(id)   // useLucyMemory reloads this conversation's messages
+    setError(null)
+    setDrawerOpen(false)
+  }
+
+  const removeConv = async (id: string) => {
+    await deleteConversation(id)
+    if (id === activeConvId) {
+      setActiveConvId(genConvId())
+      setMessages([])
+    }
+    refreshConvs()
+  }
 
   // When user explicitly picks 'local' mode, trigger lazy init so the model
   // is downloading by the time they hit send. No-op if already ready.
@@ -268,6 +322,7 @@ export default function LucyHome() {
       setStreaming(false)
       ;(window as any).__lucyThinking = false
       abortRef.current = null
+      refreshConvs()   // surface this chat (and its new title) in the history list
     }
   }
 
@@ -289,11 +344,19 @@ export default function LucyHome() {
         <title>Lucy — SoundChain AI</title>
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
       </Head>
-      <main className="h-[100dvh] min-h-screen flex flex-col overflow-hidden bg-lucy-bg text-gray-100">
+      <main className="h-screen supports-[height:100dvh]:h-[100dvh] flex flex-col overflow-hidden bg-lucy-bg text-gray-100">
         {/* Header */}
         <header className="shrink-0 border-b border-lucy-border bg-lucy-surface/60 backdrop-blur-md">
           <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
+              <button
+                onClick={() => { refreshConvs(); setDrawerOpen(true) }}
+                className="p-2 -ml-1 rounded text-gray-400 hover:text-white hover:bg-lucy-surface transition shrink-0"
+                aria-label="Chat history"
+                title="Chat history"
+              >
+                <Menu className="w-5 h-5" />
+              </button>
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-lucy-accent to-lucy-glow flex items-center justify-center text-xs font-bold text-black">
                 L
               </div>
@@ -374,7 +437,7 @@ export default function LucyHome() {
         </header>
 
         {/* Conversation */}
-        <section className="flex-1 overflow-y-auto">
+        <section className="flex-1 overflow-y-auto overscroll-contain">
           <div className="max-w-3xl mx-auto px-4 py-4 space-y-3">
             {!memoryReady && (
               <div className="text-center text-xs text-gray-600 py-12">
@@ -471,7 +534,7 @@ export default function LucyHome() {
               }}
               placeholder={streaming ? 'Lucy is thinking…' : 'Ask Lucy anything…'}
               rows={1}
-              className="flex-1 resize-none bg-lucy-bg border border-lucy-border rounded px-3 py-2.5 text-sm focus:outline-none focus:border-lucy-accent text-white placeholder:text-gray-600 max-h-32"
+              className="flex-1 resize-none bg-lucy-bg border border-lucy-border rounded px-3 py-2.5 text-base focus:outline-none focus:border-lucy-accent text-white placeholder:text-gray-600 max-h-32"
               disabled={streaming}
             />
             {streaming ? (
@@ -503,6 +566,64 @@ export default function LucyHome() {
         {liveModeOpen && (
           <LucyLiveMode open={liveModeOpen} onClose={() => setLiveModeOpen(false)} />
         )}
+
+        {/* Chat history drawer — Claude/Grok/ChatGPT-style */}
+        <div
+          className={`fixed inset-0 z-40 bg-black/60 transition-opacity duration-200 ${drawerOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+          onClick={() => setDrawerOpen(false)}
+          aria-hidden={!drawerOpen}
+        />
+        <aside
+          className={`fixed top-0 left-0 z-50 h-full w-80 max-w-[85vw] bg-lucy-surface border-r border-lucy-border flex flex-col transform transition-transform duration-200 ease-out ${drawerOpen ? 'translate-x-0' : '-translate-x-full'}`}
+          style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+        >
+          <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-lucy-border">
+            <span className="text-sm font-bold tracking-wider text-white">CHATS</span>
+            <button
+              onClick={() => setDrawerOpen(false)}
+              className="p-1.5 rounded text-gray-400 hover:text-white hover:bg-lucy-bg transition"
+              aria-label="Close history"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <button
+            onClick={newChat}
+            className="shrink-0 mx-3 mt-3 mb-1 px-3 py-2.5 rounded bg-lucy-accent/15 text-lucy-accent border border-lucy-accent/30 hover:bg-lucy-accent/25 transition flex items-center justify-center gap-2 text-sm font-medium"
+          >
+            <MessageSquarePlus className="w-4 h-4" /> New chat
+          </button>
+          <div className="flex-1 overflow-y-auto overscroll-contain px-2 py-2 space-y-1">
+            {convs.length === 0 && (
+              <p className="text-center text-[11px] text-gray-600 py-8 px-4">No saved chats yet. Start talking to Lucy and they’ll show up here.</p>
+            )}
+            {convs.map(c => (
+              <div
+                key={c.id}
+                className={`group flex items-center gap-2 rounded px-2.5 py-2 cursor-pointer transition ${
+                  c.id === activeConvId ? 'bg-lucy-accent/15 border border-lucy-accent/25' : 'hover:bg-lucy-bg border border-transparent'
+                }`}
+                onClick={() => openConv(c.id)}
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className={`truncate text-sm ${c.id === activeConvId ? 'text-lucy-accent' : 'text-gray-200'}`}>{c.title}</span>
+                    <span className="shrink-0 text-[9px] font-mono text-gray-600">{relTime(c.updatedAt)}</span>
+                  </div>
+                  {c.preview && <p className="truncate text-[11px] text-gray-500 mt-0.5">{c.preview}</p>}
+                </div>
+                <button
+                  onClick={(e) => { e.stopPropagation(); removeConv(c.id) }}
+                  className="shrink-0 p-1.5 rounded text-gray-600 hover:text-red-400 hover:bg-lucy-bg opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition"
+                  aria-label="Delete chat"
+                  title="Delete chat"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </aside>
       </main>
     </>
   )

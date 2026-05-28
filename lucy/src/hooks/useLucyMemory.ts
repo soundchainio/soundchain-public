@@ -99,6 +99,55 @@ async function decryptJson<T = unknown>(key: CryptoKey, iv: Uint8Array, cipher: 
   return JSON.parse(new TextDecoder().decode(plainBuf)) as T
 }
 
+export type ConversationMeta = { id: string; title: string; updatedAt: number; preview: string }
+
+// List every stored conversation (decrypts each record locally to pull its
+// title + last-message preview). Powers the history drawer. All in-browser —
+// no network. Empty conversations are skipped so a fresh "New chat" that was
+// never sent doesn't litter the list.
+export async function listConversations(): Promise<ConversationMeta[]> {
+  if (typeof window === 'undefined' || !window.indexedDB || !window.crypto?.subtle) return []
+  try {
+    const key = await getOrCreateKey()
+    const db = await openDb()
+    const tx = db.transaction(STORE, 'readonly')
+    const req = tx.objectStore(STORE).getAll()
+    const recs: any[] = await new Promise((res, rej) => {
+      req.onsuccess = () => res(req.result || [])
+      req.onerror = () => rej(req.error)
+    })
+    const metas: ConversationMeta[] = []
+    for (const rec of recs) {
+      try {
+        const payload = await decryptJson<{ messages: ChatMessage[]; title?: string }>(key, rec.iv, rec.cipher)
+        const msgs = Array.isArray(payload.messages) ? payload.messages : []
+        if (msgs.length === 0) continue
+        const firstUser = msgs.find(m => m.role === 'user')?.content || ''
+        const title = (payload.title || firstUser || 'New chat').slice(0, 60)
+        const preview = (msgs[msgs.length - 1]?.content || '').replace(/\s+/g, ' ').slice(0, 80)
+        metas.push({ id: rec.id, title, updatedAt: rec.updatedAt || 0, preview })
+      } catch {/* skip records we can't decrypt (foreign key / corruption) */}
+    }
+    metas.sort((a, b) => b.updatedAt - a.updatedAt)
+    return metas
+  } catch {
+    return []
+  }
+}
+
+export async function deleteConversation(id: string): Promise<void> {
+  if (typeof window === 'undefined' || !window.indexedDB) return
+  try {
+    const db = await openDb()
+    const tx = db.transaction(STORE, 'readwrite')
+    tx.objectStore(STORE).delete(id)
+    await new Promise<void>((res, rej) => {
+      tx.oncomplete = () => res()
+      tx.onerror = () => rej(tx.error)
+    })
+  } catch {/* ignore */}
+}
+
 export function useLucyMemory(conversationId: string = DEFAULT_CONV_ID) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [ready, setReady] = useState(false)
@@ -143,12 +192,16 @@ export function useLucyMemory(conversationId: string = DEFAULT_CONV_ID) {
     return () => { cancelled = true }
   }, [conversationId])
 
-  const save = useCallback(async (next: ChatMessage[]) => {
+  const save = useCallback(async (next: ChatMessage[], title?: string) => {
     if (!keyRef.current) return
     if (typeof window === 'undefined' || !window.indexedDB) return
     try {
+      // Title is deterministic from the first user turn unless caller overrides,
+      // so the history drawer always has a label even on a one-message chat.
+      const derived = title || next.find(m => m.role === 'user')?.content?.slice(0, 60) || 'New chat'
       const { iv, cipher } = await encryptJson(keyRef.current, {
         messages: next,
+        title: derived,
         lastSeen: Date.now(),
       })
       const db = await openDb()
