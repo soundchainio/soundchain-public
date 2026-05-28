@@ -18,6 +18,7 @@ import { Settings as SettingsIcon } from 'icons/Settings'
 import { Wallet as WalletIcon } from 'icons/Wallet'
 import { NewPost } from 'icons/NewPost'
 import { Role } from 'lib/graphql'
+import { Badge as ProfileBadge } from 'lib/graphql'
 import { setJwt } from 'lib/apollo'
 import { useModalDispatch } from 'contexts/ModalContext'
 import { useMe } from 'hooks/useMe'
@@ -7129,24 +7130,32 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                       FluidNameOverlay mode="handleOnly". No gap between bottom of pic and
                       this row — Frank's "tight and sharp" spec. */}
                   <div className="w-full bg-black/70 backdrop-blur-md border-b border-white/5">
-                    <div className="max-w-screen-lg mx-auto px-4 py-2 flex items-center gap-3 flex-wrap">
-                      <h1 className="text-lg sm:text-xl font-bold text-white truncate flex-shrink min-w-0">
-                        {viewingProfile.displayName || viewingProfile.userHandle || 'User'}
-                      </h1>
-                      {viewingProfile.teamMember && (
-                        <SoundchainGoldLogo className="flex-shrink-0 w-5 h-5" aria-label="SoundChain Team Member" />
-                      )}
-                      {!viewingProfile.teamMember && viewingProfile.verified && (
-                        <VerifiedIcon className="flex-shrink-0 w-5 h-5" aria-label="Verified user" />
-                      )}
-                      <UserSymbols
-                        handle={viewingProfile.userHandle}
-                        isNftOwner={(viewingProfile.tracksCount || 0) > 0}
-                        isCreator={(viewingProfile.tracksCount || 0) > 0}
-                      />
-                      {/* @handle with fluid-gl gel — characters only, no canvas-wide warp */}
-                      <div className="relative ml-auto h-7 sm:h-8 w-[180px] sm:w-[220px] flex-shrink-0">
-                        <span className="absolute inset-0 flex items-center justify-end text-cyan-400 text-sm sm:text-base font-semibold tracking-tight opacity-0" aria-hidden="true">
+                    <div className="max-w-screen-lg mx-auto px-4 py-2">
+                      {/* Line 1 — display name + every earned mark (non-exclusive):
+                          blue verified check, gold team/founder logo, on-chain symbols. */}
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <h1 className="text-lg sm:text-xl font-bold text-white truncate min-w-0 max-w-full">
+                          {viewingProfile.displayName || viewingProfile.userHandle || 'User'}
+                        </h1>
+                        {viewingProfile.verified && (
+                          <VerifiedIcon width={20} height={20} className="flex-shrink-0" aria-label="Verified user" />
+                        )}
+                        {viewingProfile.teamMember && (
+                          <SoundchainGoldLogo className="flex-shrink-0 w-5 h-5" aria-label="SoundChain Team Member" />
+                        )}
+                        <UserSymbols
+                          handle={viewingProfile.userHandle}
+                          verified={false}
+                          teamMember={false}
+                          isNftOwner={(viewingProfile.tracksCount || 0) > 0}
+                          isCreator={(viewingProfile.tracksCount || 0) > 0}
+                        />
+                      </div>
+                      {/* Line 2 — @handle in fluid-gl gel: crisp readable letters with
+                          liquid cyan→blue→violet color flowing through them. Static colored
+                          text sits behind as the WebGL-unsupported fallback. */}
+                      <div className="relative h-6 sm:h-7 w-full max-w-[260px] mt-0.5">
+                        <span className="absolute inset-0 flex items-center justify-start text-cyan-300 text-sm sm:text-base font-bold tracking-tight">
                           @{viewingProfile.userHandle || 'user'}
                         </span>
                         <FluidNameOverlay
@@ -7158,26 +7167,55 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     </div>
                   </div>
 
-                  {/* POAPs row — on-chain achievement badges, tightened spacing */}
+                  {/* POAPs row — on-chain achievement collectibles (not the verified
+                      check, which lives on the identity line above). */}
                   <div className="w-full border-b border-white/5 bg-black/50 backdrop-blur-sm">
                     <div className="max-w-screen-lg mx-auto px-4 py-1.5 flex items-center gap-2 flex-wrap">
                       <span className="text-[10px] text-gray-500 uppercase tracking-wider mr-1">POAPs</span>
+                      {/* Founder / team POAP — gold SoundChain logo */}
                       {viewingProfile.teamMember && (
                         <SoundchainGoldLogo className="flex-shrink-0 w-5 h-5" aria-label="SoundChain Team Member" />
                       )}
-                      {!viewingProfile.teamMember && viewingProfile.verified && (
-                        <VerifiedIcon className="flex-shrink-0 w-5 h-5" aria-label="Verified user" />
+                      {/* Event attendance POAP — first AE × SC event supporter */}
+                      {viewingProfile.badges?.includes(ProfileBadge.SupporterFirstEventAeSc) && (
+                        <img
+                          src="/badges/badge-01.svg"
+                          alt="Event Attendance POAP"
+                          title="Event Attendance — First AE × SC Event"
+                          className="flex-shrink-0 w-5 h-5"
+                        />
                       )}
+                      {/* On-chain symbols — NFT owner ◆ creator (+ founder ✦ for admins) */}
                       <UserSymbols
                         handle={viewingProfile.userHandle}
+                        verified={false}
+                        teamMember={false}
                         isNftOwner={(viewingProfile.tracksCount || 0) > 0}
                         isCreator={(viewingProfile.tracksCount || 0) > 0}
                       />
-                      {!viewingProfile.teamMember && !viewingProfile.verified && !((viewingProfile.tracksCount || 0) > 0) && (
+                      {!viewingProfile.teamMember
+                        && !viewingProfile.badges?.includes(ProfileBadge.SupporterFirstEventAeSc)
+                        && !((viewingProfile.tracksCount || 0) > 0) && (
                         <span className="text-[10px] text-gray-600 italic">No POAPs collected yet</span>
                       )}
                     </div>
                   </div>
+
+                  {/* Bio row — the user's words sit FLUSH in the identity stack, on a
+                      solid panel so they're always readable (no longer buried at the
+                      bottom of the cover image). Falls back to me.profile.bio on own profile. */}
+                  {(() => {
+                    const bioText = viewingProfile.bio
+                      || (isViewingOwnProfile ? (me?.profile?.bio || userData?.me?.profile?.bio) : '')
+                    if (!bioText) return null
+                    return (
+                      <div className="w-full border-b border-white/5 bg-black/40 backdrop-blur-sm">
+                        <div className="max-w-screen-lg mx-auto px-4 py-2">
+                          <p className="text-gray-200 text-sm leading-relaxed max-w-2xl whitespace-pre-line">{bioText}</p>
+                        </div>
+                      </div>
+                    )
+                  })()}
 
                   {/* Cover Image - FULL SCREEN with profile info overlaid at bottom */}
                   <div className="relative h-[40vh] min-h-[250px] w-full overflow-hidden">
@@ -7194,16 +7232,11 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
 
                     {/* Profile Info - Positioned at bottom of cover.
-                        Name + @handle row removed — identity now lives in the tight row
-                        directly under the profile pic above. Cover overlay now leads with
-                        bio so the user's words sit on top of the cover image. */}
+                        Identity (name + @handle) lives in the tight stack above the cover;
+                        bio now has its own readable panel above too. This overlay carries
+                        social links + stats over the cover image. */}
                     <div className="absolute bottom-0 left-0 right-0 p-4 z-10">
                       <div className="max-w-screen-lg mx-auto">
-                      {/* Bio */}
-                      {viewingProfile.bio && (
-                        <p className="text-gray-300 text-sm mt-3 max-w-xl">{viewingProfile.bio}</p>
-                      )}
-
                       {/* Social Pills */}
                       {(() => {
                         const sm = viewingProfile.socialMedias

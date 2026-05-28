@@ -71,19 +71,37 @@ float fbm(vec2 p) {
 
 void main() {
   vec2 uv = v_uv;
-  float t = u_time * 0.18;
-  float dx = fbm(uv * 2.2 + vec2(t, t * 0.7));
-  float dy = fbm(uv * 2.2 + vec2(-t * 0.6, t * 1.1));
-  vec2 disp = vec2(dx, dy) * u_intensity;
-  vec2 sampleUv = uv + disp;
-  vec4 col = texture2D(u_tex, sampleUv);
-  float edgePull = pow(abs(uv.y - 0.5) * 2.0, 1.5) * 0.4;
-  vec2 edgeUv = uv + disp * (1.0 + edgePull);
-  vec4 colEdge = texture2D(u_tex, fract(edgeUv * vec2(2.3, 1.0)));
-  float pulse = 0.62 + 0.22 * sin(u_time * 0.55 + uv.x * 3.14159);
-  float edgeContrib = u_edgeTile * colEdge.a * 0.45 * edgePull;
-  float alpha = max(col.a, edgeContrib) * pulse;
-  gl_FragColor = vec4(vec3(1.0), alpha);
+
+  // Glyph alpha is sampled WITHOUT displacement so the letters stay crisp and
+  // readable — the "fluid" reads as liquid COLOR flowing through the letters,
+  // not warped letter shapes. (The old shader displaced the glyph UVs, which
+  // smeared small text into mush.)
+  float a = texture2D(u_tex, uv).a;
+
+  // 'full' mode keeps a faint warped edge-trail flowing off the top/bottom.
+  // 'handleOnly' (u_edgeTile = 0) stays perfectly crisp.
+  if (u_edgeTile > 0.5) {
+    float t = u_time * 0.18;
+    float dx = fbm(uv * 2.2 + vec2(t, t * 0.7));
+    float dy = fbm(uv * 2.2 + vec2(-t * 0.6, t * 1.1));
+    vec2 disp = vec2(dx, dy) * u_intensity;
+    float edgePull = pow(abs(uv.y - 0.5) * 2.0, 1.5) * 0.4;
+    vec4 colEdge = texture2D(u_tex, fract((uv + disp * (1.0 + edgePull)) * vec2(2.3, 1.0)));
+    a = max(a, colEdge.a * 0.45 * edgePull);
+  }
+
+  // Flowing liquid color — cyan -> blue -> violet, animated by FBM + time.
+  float n  = fbm(uv * 2.6 + vec2(u_time * 0.16, u_time * 0.10));
+  float n2 = fbm(uv * 4.0 + vec2(-u_time * 0.12, u_time * 0.08));
+  vec3 cyan   = vec3(0.133, 0.827, 0.933); // #22d3ee
+  vec3 blue   = vec3(0.231, 0.510, 0.965); // #3b82f6
+  vec3 violet = vec3(0.654, 0.545, 0.980); // #a78bfa
+  float m1 = 0.5 + 0.5 * sin(n * 3.14159 + uv.x * 4.0 + u_time * 0.6);
+  float m2 = 0.5 + 0.5 * sin(n2 * 2.5 - u_time * 0.4);
+  vec3 col = mix(cyan, blue, m1);
+  col = mix(col, violet, m2 * 0.6);
+  float pulse = 0.9 + 0.1 * sin(u_time * 0.9);
+  gl_FragColor = vec4(col * pulse, a);
 }
 `
 
@@ -119,9 +137,11 @@ function buildTextTexture(name: string, handle: string, width: number, height: n
   }
   if (mode === 'handleOnly') {
     // Only the @handle text chars get the gel — no display name, no edge trails,
-    // no horizontal tile. Just the user's handle, centered, large, fluid.
-    const handleSize = Math.floor(height * 0.62)
-    drawText(`@${handle}`, width / 2, height * 0.5, handleSize, 700)
+    // no horizontal tile. Left-aligned + crisp so it reads cleanly under the
+    // display name; the shader flows liquid color through these letters.
+    const handleSize = Math.floor(height * 0.66)
+    ctx.textAlign = 'left'
+    drawText(`@${handle}`, Math.floor(height * 0.12), height * 0.52, handleSize, 800)
     return c
   }
   const nameSize = Math.floor(height * 0.42)
