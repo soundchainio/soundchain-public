@@ -72,7 +72,6 @@ const AgentStatusTicker = dynamic(
   () => import('components/AgentStatusTicker').then(m => m.AgentStatusTicker),
   { ssr: false },
 )
-import { OgunPriceTicker } from 'components/OgunPriceTicker'
 import { SportsTickerStack } from 'components/SportsTickerStack'
 
 const PROFILE_STREAMING_REWARDS_QUERY = gql`
@@ -322,16 +321,12 @@ export function DexNavBar() {
   // Each pill's parent is `position: relative` so `sm:right-0 sm:top-full` anchors to that pill.
   const popoverBase = 'fixed left-1/2 -translate-x-1/2 top-14 sm:absolute sm:left-auto sm:right-0 sm:top-full sm:mt-2 sm:translate-x-0 z-[10000] shadow-2xl overflow-hidden rounded-lg'
 
-  // Route-scope the global tickers: Bloomberg (OgunPriceTicker) lives only on /nodes; the
-  // sports-stack (MLB/NHL/NBA/NFL) lives only on /arena*. Frank's directive Apr 29 — *"i want to
-  // only render the full stack tickers for all sports only ones in arena only.. keep bloomberg
-  // only on nodes."*
-  const path = router.pathname || ''
-  const isArenaRoute = path === '/arena' || path.startsWith('/arena/')
-  const isNodesRoute = path === '/nodes' || path.startsWith('/nodes/')
-  const showBloombergTicker = isNodesRoute
+  // Bloomberg market ticker removed (Frank, May 27 2026 — battery/heat drain on mobile).
+  // Sports-stack (MLB/NHL/NBA/NFL) still lives only on /arena*.
+  const path = router.pathname || ""
+  const isArenaRoute = path === "/arena" || path.startsWith("/arena/")
   const showSportsTickers = isArenaRoute
-  const anyTickerVisible = showBloombergTicker || showSportsTickers
+  const anyTickerVisible = showSportsTickers
 
   return (
     <header className="sticky top-0 z-50" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
@@ -1162,9 +1157,7 @@ export function DexNavBar() {
       {anyTickerVisible && (
         <div className="relative z-0" style={{ isolation: 'isolate' }}>{/* isolation:isolate forces the marquee compositor layer to stay contained — was bleeding through the avatar dropdown on /arena per Frank's Apr 29 screenshot */}
           {!tickerCollapsed && (
-            <>
-              {showBloombergTicker && <OgunPriceTicker />}
-              {showSportsTickers && <SportsTickerStack />}
+            <>              {showSportsTickers && <SportsTickerStack />}
             </>
           )}
           {/* Chevron minimizer — toggle ticker stack visibility */}
