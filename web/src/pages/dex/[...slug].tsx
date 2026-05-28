@@ -7122,23 +7122,36 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     )}
                     {/* Cyberpunk top gradient — fades into the nav bar overlay */}
                     <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/55 via-black/20 to-transparent pointer-events-none z-[5]" />
+                    {/* Neon scanline accent welding the pic to the identity stack below */}
+                    <div className="absolute inset-x-0 bottom-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-400/80 to-transparent pointer-events-none z-10 shadow-[0_0_12px_rgba(34,211,238,0.6)]" />
                   </div>
 
-                  {/* TIGHT identity row — sits FLUSH under the profile pic. Display name
-                      + badges on the left, animated fluid-gl @handle on the right.
-                      Fluid effect is constrained to the @handle text characters only via
-                      FluidNameOverlay mode="handleOnly". No gap between bottom of pic and
-                      this row — Frank's "tight and sharp" spec. */}
-                  <div className="w-full bg-black/70 backdrop-blur-md border-b border-white/5">
-                    <div className="max-w-screen-lg mx-auto px-4 py-2">
+                  {/* TIGHT identity row — sits FLUSH under the profile pic, styled as the
+                      cyberbayareapunk hero: neon left spine + glow underline. Display name
+                      + every earned mark on line 1, fluid-gl @handle on line 2. */}
+                  <div className="relative w-full bg-gradient-to-r from-black/85 via-black/70 to-black/85 backdrop-blur-md">
+                    {/* Neon left spine — cyan → violet → fuchsia */}
+                    <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-gradient-to-b from-cyan-400 via-violet-500 to-fuchsia-500 shadow-[0_0_10px_rgba(34,211,238,0.7)]" />
+                    {/* Neon underline */}
+                    <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-cyan-400/60 to-transparent" />
+                    <div className="max-w-screen-lg mx-auto px-4 py-2.5">
                       {/* Line 1 — display name + every earned mark (non-exclusive):
                           blue verified check, gold team/founder logo, on-chain symbols. */}
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <h1 className="text-lg sm:text-xl font-bold text-white truncate min-w-0 max-w-full">
+                        <h1
+                          className="text-lg sm:text-xl font-bold text-white truncate min-w-0 max-w-full"
+                          style={{ textShadow: '0 0 16px rgba(34,211,238,0.30)' }}
+                        >
                           {viewingProfile.displayName || viewingProfile.userHandle || 'User'}
                         </h1>
                         {viewingProfile.verified && (
-                          <VerifiedIcon width={20} height={20} className="flex-shrink-0" aria-label="Verified user" />
+                          <VerifiedIcon
+                            width={20}
+                            height={20}
+                            className="flex-shrink-0"
+                            style={{ filter: 'drop-shadow(0 0 5px rgba(111,161,255,0.8))' }}
+                            aria-label="Verified user"
+                          />
                         )}
                         {viewingProfile.teamMember && (
                           <SoundchainGoldLogo className="flex-shrink-0 w-5 h-5" aria-label="SoundChain Team Member" />

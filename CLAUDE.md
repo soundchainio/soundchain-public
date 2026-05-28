@@ -1,5 +1,39 @@
 # CLAUDE.md - SoundChain Development Guide
 
+## 🪪 SESSION: May 27, 2026 (Frank → Sarg, autonomous, late) — PROFILE/WALL FIX: READABLE+COLORFUL FLUID HANDLE, RESTORE BLUE CHECK + ATTENDANCE POAP + BIO (`0696484`, 2 files)
+
+Frank: *"your work on usernames and handles with web-gl fluid is all off i cant read one of the names and theres no coloring to the chars its only white so what kind of fluid-gl effects work on white 🤦🏽‍♂️ wheres my blue check mark wheres my attendence poap badge? its all fine and wrong! the gaps are still present i dont see my bio!"* + *"bro this refactor has to [hit it out the] park! so users start to live their wall!!"*.
+
+The May 27 fluid identity arc (`edc6f7a`→`df1899f`→`8618352`→`a5b9a24`) shipped a broken result. Root causes, all confirmed in code:
+
+1. **`FluidNameOverlay` shader hardcoded white** — `gl_FragColor = vec4(vec3(1.0), alpha)`. "No coloring, only white." Fix: animated cyan→blue→violet liquid flows through letters via FBM+time.
+2. **Shader warped the glyph UVs** — small handle text smeared into mush ("can't read"). Fix: sample glyph alpha UNdistorted (crisp letters); the fluid reads as liquid COLOR flowing through readable letters, not warped shapes. handleOnly texture left-aligned for a clean two-line identity.
+3. **Blue check missing** — the hand-rolled identity row gated `VerifiedIcon` behind `!teamMember`, and called `UserSymbols` WITHOUT `verified`. Founder/team members never saw a blue check. Fix: show blue `Verified` whenever `verified`, decoupled from teamMember, alongside the gold logo + symbols.
+4. **Attendance POAP missing** — the refactor replaced `<DisplayName>` (which renders `Badge.SupporterFirstEventAeSc` → `/badges/badge-01.svg`) with a hand-rolled row that dropped it. Fix: restored the event-attendance badge in the POAP row (`ProfileBadge.SupporterFirstEventAeSc`, enum alias-imported to avoid the UI `Badge` name collision).
+5. **Bio missing / gaps** — bio was buried at the bottom of the 40vh cover-image overlay (gray text on a photo, easy to miss; blank where it should be = the "gap"). Fix: pulled bio into its own readable panel flush in the identity stack (falls back to `me.profile.bio` on own profile); removed the buried duplicate from the cover overlay.
+
+### Identity stack now (top→down)
+profile-pic banner (CLEAN) → identity row [name + blue check + gold logo + symbols, then @handle on its own fluid line w/ static colored fallback] → POAPs row [gold founder + event-attendance badge + on-chain symbols] → bio panel → cover image (social links + stats overlay).
+
+### Build + deploy
+- `yarn build` (web) clean 67.52s. Pushed `0696484` to main → web webhook auto-deploy.
+- Files: `web/src/components/FluidNameOverlay.tsx`, `web/src/pages/dex/[...slug].tsx`.
+
+### Verify path (Frank → Sarg)
+1. Hard-refresh `https://soundchain.io/users/<your-handle>` → @handle reads cleanly with cyan/blue/violet color flowing through it (not white, not warped).
+2. Identity line shows your blue ✓ check AND gold founder logo AND founder ✦ symbol together.
+3. POAPs row shows the event-attendance badge (badge-01.svg).
+4. Your bio shows on its own panel right under the POAPs row.
+5. No blank gap between the pic and your identity/bio.
+
+### Lessons
+1. **A visual effect on white pixels is no effect.** The whole point of "fluid-gl on text" is color + motion; hardcoding `vec3(1.0)` made it pointless. Color the alpha, don't just alpha the white.
+2. **Don't warp the glyph to fake "fluid."** Readability is non-negotiable on identity text. Flow color through crisp letters instead of displacing letter geometry.
+3. **A hand-rolled row that replaces `<DisplayName>` inherits the duty to render everything it did** — verified, team, symbols, POAP-leaderboard, AND the event-supporter badge. Dropping any is a silent regression ([[feedback_no_silent_regressions]]).
+4. **The flagship surface bar is "users want to live here."** Identity must feel complete + sharp, not experimental. See [[feedback_constrain_effect_to_named_element]].
+
+---
+
 ## 📱 SESSION: May 27, 2026 (Frank → Sarg, autonomous, late) — LUCY GOES NATIVE: CAPACITOR SHELL + PWA / APP-STORE READY (recovery after mid-flight disconnect)
 
 Frank: *"claude we git disconnected during mid flight i didnt get to copy the chat!! ... can you see scope the current tasks it was related to shipping lucy compacitors configs etc for pwa and apple store ready"*.
