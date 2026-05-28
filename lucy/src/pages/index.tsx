@@ -287,6 +287,7 @@ export default function LucyHome() {
     <>
       <Head>
         <title>Lucy — SoundChain AI</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
       </Head>
       <main className="min-h-screen flex flex-col bg-lucy-bg text-gray-100">
         {/* Header */}

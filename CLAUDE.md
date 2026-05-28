@@ -1,5 +1,63 @@
 # CLAUDE.md - SoundChain Development Guide
 
+## 📱 SESSION: May 27, 2026 (Frank → Sarg, autonomous, late) — LUCY GOES NATIVE: CAPACITOR SHELL + PWA / APP-STORE READY (recovery after mid-flight disconnect)
+
+Frank: *"claude we git disconnected during mid flight i didnt get to copy the chat!! ... can you see scope the current tasks it was related to shipping lucy compacitors configs etc for pwa and apple store ready"*.
+
+A prior session had started turning `lucy/` (lucy.soundchain.io) into BOTH an installable PWA and a native iOS/Android Capacitor shell — the "droid in your palm" — then dropped the tunnel mid-ship. Reconstructed from the uncommitted working tree and finished the punch list.
+
+### Posture — remote-load thin shell (matches web/arena/mint)
+
+The native app is a thin WKWebView pointed at live `lucy.soundchain.io` (`server.url` in `capacitor.config.ts`). Content updates ship instantly, no App Store review cycle. The native layer ONLY adds device superpowers Lucy needs to be an agent: camera (eyes), push (reach out), haptics (body), status/splash/keyboard UX. `webDir = 'native-shell'` (a cyan-orb "waking up" offline splash) because Lucy has load-bearing API routes (`/api/chat → norman`, `/api/tools`) that can't be statically exported.
+
+### What was already in the tree (prior session, uncommitted)
+
+- `lucy/capacitor.config.ts` — appId `io.soundchain.lucy`, remote-load `server.url`, iOS/Android tuning, plugin config (SplashScreen/StatusBar/Push/Keyboard/App), iOS Info.plist usage-string notes in header comment.
+- `lucy/src/lib/nativeBridge.ts` — `initNativeShell()` (statusbar + splash-hide + back-button + push registration→`/api/tools`), `captureEyes()` (native Camera w/ web getUserMedia fallback), `haptic()`. ALL `Capacitor.isNativePlatform()`-gated; plugins dynamically imported so the web bundle stays lean.
+- `lucy/native-shell/index.html` — offline splash fallback (the `webDir`).
+- `package.json` — 11 `@capacitor/*` runtime plugins + ios/android/cli dev deps + `cap:sync`/`cap:add:ios`/`cap:add:android`/etc scripts. `node_modules` already had all 14 packages installed.
+- `_app.tsx` — calls `initNativeShell()` on mount (no-op in a normal browser tab).
+
+### What I added to finish PWA + App-Store readiness
+
+1. **App icons + splash (programmatic, on-brand).** No Lucy logo asset existed, so generated the brand orb from the splash CSS: cyan radial-gradient sphere + specular highlight + "LUCY" wordmark on `#05070d`. Source SVGs in `lucy/resources/` (`icon.svg`, `icon-maskable.svg`, `splash.svg`) → rasterized via `rsvg-convert` to `icon.png` (1024) + `icon-maskable-1024.png` + `splash.png` (2732). The 1024/2732 sources are the inputs `@capacitor/assets` will consume to generate all native iOS/Android icon+splash sizes once platforms are added.
+2. **PWA icon set** in `lucy/public/icons/` derived via `sips`: `icon-192.png`, `icon-512.png`, `icon-maskable-512.png` (orb-only, safe-zone centered), `apple-touch-icon.png` (180), `favicon-32/16.png`. `public/favicon.ico` multi-size via `magick`.
+3. **`lucy/public/manifest.webmanifest`** — name/short_name, `display: standalone`, `orientation: portrait`, `theme_color`+`background_color` `#05070d`, the 3-icon set (192 any / 512 any / 512 maskable), `id`/`start_url`/`scope` `/`.
+4. **`_document.tsx`** — `<link rel="manifest">` + `apple-mobile-web-app-capable` + `apple-mobile-web-app-status-bar-style: black-translucent` + `apple-mobile-web-app-title` + `apple-touch-icon` + favicon links.
+5. **`index.tsx` Head** — `viewport-fit=cover` so the standalone PWA / WKWebView respects the notch + safe-area insets (`capacitor.config.ts` already sets `contentInset: 'always'`).
+
+### Build + deploy
+
+- `yarn build` (lucy/) 6.33s clean. Home `/` 13.7 kB / 97.7 kB first-load; `_app` chunk 4 kB (nativeBridge import). `@capacitor/core` adds ~1 kB to the static path — all plugins dynamically imported, off the critical path.
+- Pushed to `main` → Vercel webhook auto-deploys lucy (`soundchain-lucy` project, May 20 provisioning).
+
+### Verify path (Frank → Sarg post-deploy)
+
+1. iOS Safari `https://lucy.soundchain.io` → Share → **Add to Home Screen** → icon = cyan Lucy orb, opens standalone (no Safari chrome), dark status bar, splash on launch.
+2. Android Chrome → install prompt / ⋮ → **Install app** → maskable orb icon in launcher, standalone.
+3. Lighthouse PWA audit on lucy.soundchain.io → installable (manifest + icons + HTTPS) passes.
+4. DevTools → Application → Manifest → all 3 icons resolve, no errors.
+
+### Native build = Frank's Mac (deferred, needs Xcode / Android Studio)
+
+`npx cap add ios` + `npx cap add android` generate the native Xcode/Studio projects (NOT committed — generated, platform-specific). Then `npx cap sync`. iOS Info.plist needs the camera/mic/photo usage strings documented in the `capacitor.config.ts` header. `@capacitor/assets` (add as needed) consumes `resources/icon.png` + `resources/splash.png` to fill all native sizes. Because of remote-load posture, the shell is thin — most iteration stays on the web deploy.
+
+### Lessons
+
+1. **Recover from the working tree, not memory.** A mid-flight disconnect leaves the actual artifacts on disk. `git status` + reading the uncommitted files reconstructed the exact task faster + more accurately than guessing from chat fragments.
+2. **Programmatic brand icons beat blocking on a design asset.** The splash CSS already defined the Lucy orb; rasterizing an SVG of it (rsvg-convert → sips → magick) produced a clean, consistent icon set across PWA + native without waiting for a logo handoff.
+3. **Remote-load Capacitor = one source of truth.** The same lucy.soundchain.io bundle runs in browser, PWA, and native shell. nativeBridge gates every superpower on `isNativePlatform()` so the web path is byte-for-byte untouched.
+4. **Generated native projects don't belong in git.** `cap add ios/android` output is platform tooling, regenerable from `capacitor.config.ts` + `resources/`. Commit the config + source art; let the native projects be local/CI artifacts.
+
+### Open follow-ups (unchanged + new)
+
+- **NEW: `npx cap add ios/android` + `@capacitor/assets`** on Frank's Mac w/ Xcode — generate native projects, fill icon/splash sizes, set Info.plist usage strings, archive for TestFlight.
+- lucy.soundchain.io CNAME at name.com → `cname.vercel-dns.com` — Frank's hands (still pending; PWA install needs the live HTTPS domain).
+- `api.soundchain.io` AWS Console TLS bridge repair — Frank's hands (pinned).
+- Vendor secret rotation: Magic + MongoDB on retired cluster + Pinata + 4 X API + Vercel OIDC.
+
+---
+
 ## 🎨 SESSION: May 27, 2026 (Frank → Sarg, autonomous, evening) — UI/UX LOOSE-ENDS PASS: GALLERY3D → PROFILE TAB, EXPLORE3D + LAND PILLS GHOSTED, UTILITY PILL COLORING, /NODES FEED HEADER TIGHTENED (4 files)
 
 Frank: *"claude im on sarg and im noticing the work today is looking good . were cleaning uo loose ends on the yi/ux especially on nodes. the gallery3d should be moved to profile tab /wall oage for each users profile oages so when others land on the profile/wall they can explore their gallery. explore3d and landatlas havent been really used and the rest of the pills need coloring its missing that coloring. im wondering if we should ghost the land atlas and wxplore3d for now off soundchains site cause its nog being used at all... i dont want to delete explore3d and landatlas jist hhost yhem and the pills crom the wnyire site for now. ... can we bump ip where it shows(feed" above the stories and rewls and tighen uo that space to be right under the nav bar with profile nodes wtc. i want a tight look here"*.
@@ -227,87 +285,6 @@ The mint marketplace look Frank wants comes from `mint/src/pages/marketplace.tsx
 **Frank's hands needed (AWS Console).** Lambda + API Gateway are healthy — DNS resolves to `d-bb15gwni7a.execute-api.us-east-1.amazonaws.com` and the underlying API GW URL responds in 154ms — but TLS connections to `api.soundchain.io` time out after 8s. Custom-domain → API Gateway mapping is broken at the TLS layer (likely ACM cert detached / custom domain mapping removed / wrong stage binding). Check API Gateway → Custom domain names → `api.soundchain.io`, verify ACM cert `d802632a-515a-44a2-984d-371741e03d71` is attached, re-map to `production-soundchain-api` stage `production` if missing. Playbook in CLAUDE.md "AWS INFRASTRUCTURE" section. **NOT blocking auth post `9ccf9bf` (useMe now reads /api/me direct → Atlas)** — but every remaining Apollo query in the app (posts, comments, feed enrichment, reactions, marketplace metadata) is silently failing while this is down. Phase 7e Apollo strip is the proper long-term fix; api.soundchain.io repair is the short-term unblock.
 
 ---
-
-## 🏀 SESSION: May 19, 2026 (Frank → Sarg) — PHASE 16.49: T-POSE BUG FINALLY FIXED (commit `5926028`)
-
-Frank tested Phase 16.48 (`db50c12`) and reported every action pill (SHOOT/DUNK/LAYUP/FADEAWAY/REBOUND/BLOCK/PASS/CROSSOVER/JABSTEP/PUMPFAKE) still rendering as T-pose. *"claude tge player still ahoots and does all the action pills on roght sode all in T body formationz"*. Then: *"i dod a screen revording i will share shortylwhen i get home"*. Phase 16.49 is the THIRD fix attempt across two days and the first one that's mathematically correct.
-
-### Root cause (third diagnostic round)
-
-`THREE.AnimationUtils.makeClipAdditive` computes per-frame additive values as `q_value × q_referenceFrame⁻¹` (verified by reading `web/node_modules/three/src/animation/AnimationUtils.js:288-315`). With Phase 16.42's `bindQuat × delta` keyframes still in place:
-
-- `q_value_N = bindQuat × deltaN`
-- `q_ref = bindQuat` (frame 0)
-- `additive_N = (bindQuat × deltaN) × bindQuat⁻¹` — **NOT** equal to `deltaN`
-
-At additive playback: `q_final = q_base × additive_N = q_base × bindQuat × deltaN × bindQuat⁻¹` — wrong rotation axis, wrong magnitude. Visual symptom: arms locked near T-pose with subtle wiggles instead of executing the actual shooting motion.
-
-### What shipped (`5926028`, +15 / -14, 1 file: GalleryRoom3D.tsx)
-
-`quatTrack` at `GalleryRoom3D.tsx:1916-1929` stripped of `bindQuat` composition:
-
-```ts
-// Phase 16.49 — RAW DELTA quats (no bindQuat composition)
-const quatTrack = (bonePath, times, eulers) => {
-  if (!bonePath) return null
-  const flat = new Float32Array(times.length * 4)
-  for (let i = 0; i < eulers.length; i++) {
-    _e.set(eulers[i][0] || 0, eulers[i][1] || 0, eulers[i][2] || 0)
-    _q.setFromEuler(_e)
-    flat[i*4] = _q.x; flat[i*4+1] = _q.y; flat[i*4+2] = _q.z; flat[i*4+3] = _q.w
-  }
-  return new THREE.QuaternionKeyframeTrack(`${bonePath}.quaternion`, times, flat)
-}
-```
-
-Frame 0 = identity quat (Euler `[0,0,0]`). `makeClipAdditive` leaves frame 0 as identity = zero contribution at clip start. Middle frames = pure deltas. Additive playback: `q_final = q_base × q_delta` = arm rotates from idle position (arms at sides) by `q_delta` and back to idle at clip end. Removed `_qBind` + `_qDelta` allocations — `quatTrack` is simpler and faster.
-
-### Architecture (load-bearing — don't ship Phase 16.50 that re-adds bind composition)
-
-1. **Mixamo XBot GLB bind pose IS T-pose at the shoulders.** Every Mixamo character is authored with arms-out as the bind. `bone.quaternion` at GLTF load captures T-pose rotation, not arms-at-sides. The "arms at sides" pose is what the IDLE animation produces, not the bind.
-2. **Raw deltas + additive = correct.** Idle drives the base pose. Authored shoot clip adds rotation delta on top via `q_base × q_delta`. Result: arm rotates from wherever idle has it to wherever delta takes it.
-3. **`bindQuat × delta + additive` = mathematically WRONG.** `makeClipAdditive`'s quaternion subtraction doesn't unwind the bind multiplication cleanly. Don't try to "be smart" by composing on bind — three.js's engine does that for you via the base layer.
-4. **`bindQuat × delta + REPLACE` (Phase 16.42 / 16.43) = also broken.** Frame 0 = bindQuat = T-pose, so every move SNAPS to T-pose at clip start before applying deltas.
-5. **The captured `bindQuat` is now unused.** Removed for clarity + microperf.
-
-### Phase arc (the painful path)
-
-| Phase | Commit | What it tried | Why it didn't work |
-|---|---|---|---|
-| 16.42 | `3b8f68d` | `bindQuat × delta` + REPLACE crossfade | Frame 0 = T-pose snap on every gesture |
-| 16.43 | `4a4ac3c` | Denser Kobe keyframes on top of 16.42 | Polish on broken foundation = polished broken |
-| 16.44 | `4d59b82` | Fans + crowd cheer (unrelated to player anim) | Independent ship, didn't surface or fix T-pose |
-| 16.48 | `db50c12` | Switch to additive blending, keep bind keyframes | Math: `(bindQuat × delta) × bindQuat⁻¹` ≠ delta |
-| **16.49** | **`5926028`** | **Strip bind composition + keep additive** | **Frame 0 = identity, deltas apply cleanly via `q_base × q_delta`** |
-
-### Build + deploy
-
-- `yarn build` 84.29s clean
-- Pushed `5926028` to `main` → Vercel webhook auto-deploys (Bug #27 fix from May 13 still holding on web/)
-
-### Verify path (Frank → Sarg post-deploy)
-
-1. Hard-refresh `https://soundchain.io/gallery3d?theme=gym`
-2. Tap SHOOT → arm rotates from idle (arms at sides) UP overhead and back down. Ball releases at the peak.
-3. Same test on DUNK / LAYUP / FADEAWAY / REBOUND / BLOCK / PASS / CROSSOVER / JABSTEP / PUMPFAKE / DEFENSE — all should rotate from idle through their authored gesture and back.
-4. Frank's pending iPhone screen recording will confirm cross-device.
-
-### Lessons
-
-1. **Three.js animation math doesn't commute.** Quaternion multiplication order matters at every layer (keyframe authoring, makeClipAdditive subtraction, additive playback composition). Verify the math symbolically before shipping a fix — `q_final = q_base × additive` only equals `q_base × delta` when `additive = delta`. If your additive value has bind quats baked in, the bind quats appear in `q_final` too.
-2. **Verify against the ACTUAL three.js source, not assumed behavior.** Phase 16.48 assumed `makeClipAdditive` would produce the right additive values "somehow." Reading the source revealed exactly the multiplication order — and made the bind composition asymmetry visible.
-3. **Frank's screen recording is the right verification tool.** Three failed fix-and-ship cycles burned more time than a 30-second recording would have. Default to "screen recording first, fix second" when the bug is visual and the spec is ambiguous.
-4. **A "fix" shipped + verified by intuition is not actually verified.** Phase 16.48's commit message claimed success based on the additive hypothesis, not on Frank actually playing the gym. Sarg memory + `[[feedback_threejs_additive_for_layered_anims]]` now reflect that 16.48 was incomplete and 16.49 is the actual fix.
-
-### Open follow-ups
-
-- **`api.soundchain.io` custom-domain TLS bridge repair** — Frank's hands needed (AWS Console). Pinned top of CLAUDE.md.
-- **Anvil RTX 5000 + Mixamo retarget** — banked behind AWS Console + `NORMAN_URL`. Replaces today's hand-keyframed gestures with proper NBA-rigged retargets.
-- **TripoSR mesh on court (Phase 16.50)** — auto-rig Frank's CharacterDesigner output to XBot skeleton via Mixamo Auto-Rigger API.
-- **WebRTC peer-sync for 1-on-1 arena matchups** — single-player gym dialed; 2-player is next frontier.
-
----
-
 
 ## ⚠️ SESSION START PROTOCOL (MANDATORY — READ BEFORE ANY CODE)
 
