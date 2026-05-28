@@ -2432,13 +2432,13 @@ body.lucy-active iframe[title="FURL Terminal"] {
   -webkit-text-fill-color: transparent;
   color: transparent;
   animation: scFluidNameShift 6s ease-in-out infinite;
-  /* Dark outline halo so the gradient glyphs stay legible on ANY background —
-     light-blue cover, bright photo, or dark page alike. text-shadow paints from
-     the glyph geometry (not the transparent fill), giving a crisp contrast edge. */
-  text-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.95),
-    0 0 1px rgba(0, 0, 0, 0.9),
-    0 0 14px rgba(0, 0, 0, 0.45);
+  /* IMPORTANT: use filter:drop-shadow, NOT text-shadow. text-shadow +
+     -webkit-background-clip:text makes the gradient glyphs render invisible in
+     Chrome/Blink. drop-shadow operates on the composited gradient pixels — it
+     adds a dark contrast edge + neon glow AND keeps the text visible on any bg. */
+  filter:
+    drop-shadow(0 1px 1px rgba(0, 0, 0, 0.7))
+    drop-shadow(0 0 7px rgba(34, 211, 238, 0.35));
   will-change: background-position;
 }
 @media (prefers-reduced-motion: reduce) {
