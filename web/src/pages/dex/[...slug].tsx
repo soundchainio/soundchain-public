@@ -7102,9 +7102,9 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
               )}
               {viewingProfile && (
                 <>
-                  {/* Figma-era top profile-pic banner — wide horizontal rectangle
-                      showing the uploaded profile picture at the top of the wall,
-                      with name + handle overlaid for the cyberpunk layered feel. */}
+                  {/* Profile-pic banner — CLEAN. The fluid-gl effect was removed from
+                      inside this container per Frank's directive: pic stays untouched,
+                      fluid lives ONLY on the @handle chars in the tight row below. */}
                   <div className="relative h-[180px] sm:h-[220px] md:h-[260px] w-full overflow-hidden">
                     {viewingProfile.profilePicture ? (
                       <img
@@ -7121,25 +7121,52 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     )}
                     {/* Cyberpunk top gradient — fades into the nav bar overlay */}
                     <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/55 via-black/20 to-transparent pointer-events-none z-[5]" />
-                    {/* WebGL fluid-sim name + handle overlay — flows around edges + interior,
-                        `mix-blend-mode: difference` guarantees contrast on ANY uploaded pic */}
-                    <FluidNameOverlay
-                      name={viewingProfile.displayName || viewingProfile.userHandle || 'User'}
-                      handle={viewingProfile.userHandle || 'user'}
-                    />
-                    {/* Cyan scanline accent */}
-                    <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-cyan-400/60 to-transparent pointer-events-none z-10" />
                   </div>
 
-                  {/* POAPs row — on-chain achievement badges under the profile box */}
-                  <div className="w-full border-b border-white/5 bg-black/50 backdrop-blur-sm">
-                    <div className="max-w-screen-lg mx-auto px-4 py-2 flex items-center gap-2 flex-wrap">
-                      <span className="text-[10px] text-gray-500 uppercase tracking-wider mr-1">POAPs</span>
+                  {/* TIGHT identity row — sits FLUSH under the profile pic. Display name
+                      + badges on the left, animated fluid-gl @handle on the right.
+                      Fluid effect is constrained to the @handle text characters only via
+                      FluidNameOverlay mode="handleOnly". No gap between bottom of pic and
+                      this row — Frank's "tight and sharp" spec. */}
+                  <div className="w-full bg-black/70 backdrop-blur-md border-b border-white/5">
+                    <div className="max-w-screen-lg mx-auto px-4 py-2 flex items-center gap-3 flex-wrap">
+                      <h1 className="text-lg sm:text-xl font-bold text-white truncate flex-shrink min-w-0">
+                        {viewingProfile.displayName || viewingProfile.userHandle || 'User'}
+                      </h1>
                       {viewingProfile.teamMember && (
-                        <SoundchainGoldLogo className="flex-shrink-0 w-6 h-6" aria-label="SoundChain Team Member" />
+                        <SoundchainGoldLogo className="flex-shrink-0 w-5 h-5" aria-label="SoundChain Team Member" />
                       )}
                       {!viewingProfile.teamMember && viewingProfile.verified && (
-                        <VerifiedIcon className="flex-shrink-0 w-6 h-6" aria-label="Verified user" />
+                        <VerifiedIcon className="flex-shrink-0 w-5 h-5" aria-label="Verified user" />
+                      )}
+                      <UserSymbols
+                        handle={viewingProfile.userHandle}
+                        isNftOwner={(viewingProfile.tracksCount || 0) > 0}
+                        isCreator={(viewingProfile.tracksCount || 0) > 0}
+                      />
+                      {/* @handle with fluid-gl gel — characters only, no canvas-wide warp */}
+                      <div className="relative ml-auto h-7 sm:h-8 w-[180px] sm:w-[220px] flex-shrink-0">
+                        <span className="absolute inset-0 flex items-center justify-end text-cyan-400 text-sm sm:text-base font-semibold tracking-tight opacity-0" aria-hidden="true">
+                          @{viewingProfile.userHandle || 'user'}
+                        </span>
+                        <FluidNameOverlay
+                          name=""
+                          handle={viewingProfile.userHandle || 'user'}
+                          mode="handleOnly"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* POAPs row — on-chain achievement badges, tightened spacing */}
+                  <div className="w-full border-b border-white/5 bg-black/50 backdrop-blur-sm">
+                    <div className="max-w-screen-lg mx-auto px-4 py-1.5 flex items-center gap-2 flex-wrap">
+                      <span className="text-[10px] text-gray-500 uppercase tracking-wider mr-1">POAPs</span>
+                      {viewingProfile.teamMember && (
+                        <SoundchainGoldLogo className="flex-shrink-0 w-5 h-5" aria-label="SoundChain Team Member" />
+                      )}
+                      {!viewingProfile.teamMember && viewingProfile.verified && (
+                        <VerifiedIcon className="flex-shrink-0 w-5 h-5" aria-label="Verified user" />
                       )}
                       <UserSymbols
                         handle={viewingProfile.userHandle}
@@ -7166,32 +7193,12 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     {/* Gradient overlay - stronger at bottom for text readability */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
 
-                    {/* Profile Info - Positioned at bottom of cover */}
+                    {/* Profile Info - Positioned at bottom of cover.
+                        Name + @handle row removed — identity now lives in the tight row
+                        directly under the profile pic above. Cover overlay now leads with
+                        bio so the user's words sit on top of the cover image. */}
                     <div className="absolute bottom-0 left-0 right-0 p-4 z-10">
                       <div className="max-w-screen-lg mx-auto">
-                        {/* Name + Handle (mini avatar removed — wide profile-pic banner above already shows it) */}
-                        <div className="flex items-end gap-4">
-                          <div className="flex-1 min-w-0 pb-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h1 className="text-xl sm:text-2xl font-bold text-white truncate">
-                              {viewingProfile.displayName || viewingProfile.userHandle || 'User'}
-                            </h1>
-                            {viewingProfile.teamMember && (
-                              <SoundchainGoldLogo className="flex-shrink-0 w-6 h-6" aria-label="SoundChain Team Member" />
-                            )}
-                            {!viewingProfile.teamMember && viewingProfile.verified && (
-                              <VerifiedIcon className="flex-shrink-0 w-6 h-6" aria-label="Verified user" />
-                            )}
-                            <UserSymbols
-                              handle={viewingProfile.userHandle}
-                              isNftOwner={(viewingProfile.tracksCount || 0) > 0}
-                              isCreator={(viewingProfile.tracksCount || 0) > 0}
-                            />
-                          </div>
-                          <p className="text-cyan-400 text-sm">@{viewingProfile.userHandle || 'user'}</p>
-                        </div>
-                      </div>
-
                       {/* Bio */}
                       {viewingProfile.bio && (
                         <p className="text-gray-300 text-sm mt-3 max-w-xl">{viewingProfile.bio}</p>

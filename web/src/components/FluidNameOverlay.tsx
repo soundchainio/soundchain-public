@@ -4,6 +4,13 @@ interface FluidNameOverlayProps {
   name: string
   handle: string
   className?: string
+  /**
+   * 'full'       — name (large) + @handle (small) + edge-tiled trail. Original behavior.
+   * 'handleOnly' — only @handle, centered + larger. No name, no edge trail, no horizontal repeat.
+   *                Use when you want fluid-gl on the handle text characters only and nothing
+   *                else in the frame.
+   */
+  mode?: 'full' | 'handleOnly'
 }
 
 const VERT_SRC = `
@@ -20,6 +27,8 @@ precision mediump float;
 varying vec2 v_uv;
 uniform sampler2D u_tex;
 uniform float u_time;
+uniform float u_intensity;   // displacement strength (0..1)
+uniform float u_edgeTile;    // 1.0 = enable horizontal tile/edge-pull, 0.0 = disable
 
 vec3 permute(vec3 x) { return mod(((x * 34.0) + 1.0) * x, 289.0); }
 
@@ -65,14 +74,15 @@ void main() {
   float t = u_time * 0.18;
   float dx = fbm(uv * 2.2 + vec2(t, t * 0.7));
   float dy = fbm(uv * 2.2 + vec2(-t * 0.6, t * 1.1));
-  vec2 disp = vec2(dx, dy) * 0.16;
+  vec2 disp = vec2(dx, dy) * u_intensity;
   vec2 sampleUv = uv + disp;
   vec4 col = texture2D(u_tex, sampleUv);
   float edgePull = pow(abs(uv.y - 0.5) * 2.0, 1.5) * 0.4;
   vec2 edgeUv = uv + disp * (1.0 + edgePull);
   vec4 colEdge = texture2D(u_tex, fract(edgeUv * vec2(2.3, 1.0)));
   float pulse = 0.62 + 0.22 * sin(u_time * 0.55 + uv.x * 3.14159);
-  float alpha = max(col.a, colEdge.a * 0.45 * edgePull) * pulse;
+  float edgeContrib = u_edgeTile * colEdge.a * 0.45 * edgePull;
+  float alpha = max(col.a, edgeContrib) * pulse;
   gl_FragColor = vec4(vec3(1.0), alpha);
 }
 `
@@ -89,7 +99,7 @@ function compile(gl: WebGLRenderingContext, type: number, src: string) {
   return sh
 }
 
-function buildTextTexture(name: string, handle: string, width: number, height: number) {
+function buildTextTexture(name: string, handle: string, width: number, height: number, mode: 'full' | 'handleOnly') {
   const c = document.createElement('canvas')
   c.width = width
   c.height = height
@@ -107,6 +117,13 @@ function buildTextTexture(name: string, handle: string, width: number, height: n
     ctx.fillStyle = '#ffffff'
     ctx.fillText(text, x, y)
   }
+  if (mode === 'handleOnly') {
+    // Only the @handle text chars get the gel — no display name, no edge trails,
+    // no horizontal tile. Just the user's handle, centered, large, fluid.
+    const handleSize = Math.floor(height * 0.62)
+    drawText(`@${handle}`, width / 2, height * 0.5, handleSize, 700)
+    return c
+  }
   const nameSize = Math.floor(height * 0.42)
   drawText(name.toUpperCase(), width / 2, height * 0.42, nameSize, 900)
   const handleSize = Math.floor(height * 0.18)
@@ -123,7 +140,7 @@ function buildTextTexture(name: string, handle: string, width: number, height: n
   return c
 }
 
-export default function FluidNameOverlay({ name, handle, className }: FluidNameOverlayProps) {
+export default function FluidNameOverlay({ name, handle, className, mode = 'full' }: FluidNameOverlayProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
 
   useEffect(() => {
@@ -157,11 +174,19 @@ export default function FluidNameOverlay({ name, handle, className }: FluidNameO
     const tex = gl.createTexture()
     gl.activeTexture(gl.TEXTURE0)
     gl.bindTexture(gl.TEXTURE_2D, tex)
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
+    // handleOnly: clamp both axes — no tiling/repeat, fluid stays on the char box.
+    const wrapS = mode === 'handleOnly' ? gl.CLAMP_TO_EDGE : gl.REPEAT
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, wrapS)
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
     gl.uniform1i(uTex, 0)
+
+    const uIntensity = gl.getUniformLocation(prog, 'u_intensity')
+    const uEdgeTile = gl.getUniformLocation(prog, 'u_edgeTile')
+    // handleOnly: softer warp so chars stay legible; full: original aggressive gel
+    gl.uniform1f(uIntensity, mode === 'handleOnly' ? 0.085 : 0.16)
+    gl.uniform1f(uEdgeTile, mode === 'handleOnly' ? 0.0 : 1.0)
 
     gl.enable(gl.BLEND)
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
@@ -169,7 +194,7 @@ export default function FluidNameOverlay({ name, handle, className }: FluidNameO
     let textW = 1024
     let textH = 256
     const uploadText = () => {
-      const txCanvas = buildTextTexture(name || 'User', handle || 'user', textW, textH)
+      const txCanvas = buildTextTexture(name || 'User', handle || 'user', textW, textH, mode)
       gl.bindTexture(gl.TEXTURE_2D, tex)
       gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true)
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, txCanvas)
@@ -216,7 +241,7 @@ export default function FluidNameOverlay({ name, handle, className }: FluidNameO
       gl.deleteShader(vs)
       gl.deleteShader(fs)
     }
-  }, [name, handle])
+  }, [name, handle, mode])
 
   return (
     <canvas
