@@ -80,7 +80,10 @@
       magenta: '#a855f7',
       white: '#e0e0e0'
     },
-    allowTransparency: true,
+    // Battery: opaque background lets the canvas renderer do cheap opaque
+    // fills instead of per-cell alpha compositing on every write. The theme
+    // bg is solid #0a0a0a, so transparency bought nothing but GPU heat.
+    allowTransparency: false,
     // Battery: 5000 lines × ~80 cols of DOM nodes pinned mem on mobile.
     // 1500 still covers a long session; old scrollback drops cleanly.
     scrollback: 1500

@@ -1956,8 +1956,31 @@ function NeuralInlinePanel() {
     let frameCount = 0
     let lucyStartedAt = 0
 
+    // Battery: cap the visualizer frame rate. A raw 60fps rAF (which also
+    // runs while Lucy is "thinking", i.e. exactly when you're chatting on a
+    // phone) pegs the GPU/CPU on top of the FURL terminal's canvas repaints →
+    // heat + drain. Phones and reduced-motion users get a much slower cadence;
+    // the synthetic brain rhythm looks identical at 10fps.
+    const mql = (q: string) => (typeof window !== 'undefined' && window.matchMedia ? window.matchMedia(q).matches : false)
+    const prefersReduced = mql('(prefers-reduced-motion: reduce)')
+    const isMobile = mql('(pointer: coarse)') || (typeof window !== 'undefined' && window.innerWidth < 768)
+    const targetFps = prefersReduced ? 6 : isMobile ? 10 : 24
+    const frameInterval = 1000 / targetFps
+    let frameTimer: ReturnType<typeof setTimeout> | null = null
+
     const stopLoop = () => {
+      if (frameTimer) { clearTimeout(frameTimer); frameTimer = null }
       if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = 0 as any }
+    }
+
+    // Sleep frameInterval ms, THEN request a single frame — so the loop wakes
+    // ~targetFps times/sec instead of 60, cutting wakeups (and heat) 3-6x.
+    const scheduleNext = () => {
+      if (!mounted) return
+      frameTimer = setTimeout(() => {
+        frameTimer = null
+        rafRef.current = requestAnimationFrame(loop)
+      }, frameInterval)
     }
 
     const loop = () => {
@@ -2000,11 +2023,10 @@ function NeuralInlinePanel() {
       prevBass = bass; prevMids = mids; prevHighs = highs
       const emotional = Math.min(1, (bass * 0.5 + mids * 0.3 + energy * 0.2) * 1.5)
       const reward = Math.min(1, energy * 2)
-      if (frameCount % 3 === 0) {
-        setRegions({ auditory: mids, motor: bass, prefrontal: highs, emotional, reward })
-        setEngagement(Math.round(((bass + mids + highs + emotional + reward) / 5) * 100))
-      }
-      rafRef.current = requestAnimationFrame(loop)
+      // Loop is already throttled to targetFps, so update state every frame.
+      setRegions({ auditory: mids, motor: bass, prefrontal: highs, emotional, reward })
+      setEngagement(Math.round(((bass + mids + highs + emotional + reward) / 5) * 100))
+      scheduleNext()
     }
 
     const startLoopIfReady = () => {
