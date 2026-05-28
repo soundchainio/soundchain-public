@@ -7119,28 +7119,32 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         </span>
                       </div>
                     )}
-                    {/* Cyberpunk top gradient — fades into the nav bar overlay */}
-                    <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/55 via-black/20 to-transparent pointer-events-none z-[5]" />
+                    {/* Cyberpunk top gradient — light touch so the image top reads clean,
+                        not cropped/darkened under the nav. */}
+                    <div className="absolute inset-x-0 top-0 h-12 bg-gradient-to-b from-black/25 to-transparent pointer-events-none z-[5]" />
                     {/* Neon scanline accent welding the pic to the identity stack below */}
                     <div className="absolute inset-x-0 bottom-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-400/80 to-transparent pointer-events-none z-10 shadow-[0_0_12px_rgba(34,211,238,0.6)]" />
                   </div>
 
-                  {/* TIGHT identity stack — sits FLUSH under the profile pic. No black
-                      bar over the pic: transparent backing, just the cyberpunk neon spine +
-                      glow underline. Display name on line 1 (with every earned mark inline),
-                      @handle tucked tight on line 2. Both the name AND handle glyphs carry
-                      the liquid SoundChain color via .sc-fluid-name — a polish that reads on
-                      every profile no matter what color the pic behind it is. */}
+                  {/* IDENTITY CARD — name, @handle, POAPs and bio live in ONE cohesive
+                      cyberpunk panel: a designed deep-navy surface (NOT a flat black dead-
+                      band) framed by the neon left spine + glow underline, tucked flush under
+                      the profile pic. Name + @handle carry the liquid SoundChain color (now
+                      with a dark outline so they pop on any background). Tight, no gaps. */}
                   {(() => {
                     const isFounder = !!viewingProfile.userHandle
                       && ADMIN_HANDLES.includes(viewingProfile.userHandle)
+                    const bioText = viewingProfile.bio
+                      || (isViewingOwnProfile ? (me?.profile?.bio || userData?.me?.profile?.bio) : '')
+                    const hasNft = (viewingProfile.tracksCount || 0) > 0
+                    const hasEventPoap = viewingProfile.badges?.includes(ProfileBadge.SupporterFirstEventAeSc)
                     return (
-                  <div className="relative w-full">
+                  <div className="relative w-full bg-gradient-to-b from-[#0b0f1c] via-[#080a12] to-[#06070d]">
                     {/* Neon left spine — cyan → violet → fuchsia */}
                     <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-gradient-to-b from-cyan-400 via-violet-500 to-fuchsia-500 shadow-[0_0_10px_rgba(34,211,238,0.7)]" />
                     {/* Neon underline */}
                     <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-cyan-400/60 to-transparent" />
-                    <div className="max-w-screen-lg mx-auto px-4 py-1.5">
+                    <div className="max-w-screen-lg mx-auto px-4 py-2 space-y-1">
                       {/* Line 1 — display name (liquid color) + every earned mark inline:
                           blue verified check, then the gold founder logo for founders. */}
                       <div className="flex items-center gap-1.5 flex-wrap leading-tight">
@@ -7170,60 +7174,41 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                       <h2 className="sc-fluid-name text-sm sm:text-base font-bold tracking-tight leading-tight truncate max-w-full">
                         @{viewingProfile.userHandle || 'user'}
                       </h2>
-                    </div>
-                  </div>
-                    )
-                  })()}
-
-                  {/* POAPs row — on-chain achievement collectibles. The founder gold logo
-                      lives on the identity line above; here we show the rest of the user's
-                      earned marks (event attendance + NFT owner ◆ creator symbols). */}
-                  <div className="w-full border-b border-white/5">
-                    <div className="max-w-screen-lg mx-auto px-4 py-1.5 flex items-center gap-2 flex-wrap">
-                      <span className="text-[10px] text-gray-500 uppercase tracking-wider mr-1">POAPs</span>
-                      {/* Event attendance POAP — first AE × SC event supporter */}
-                      {viewingProfile.badges?.includes(ProfileBadge.SupporterFirstEventAeSc) && (
-                        <img
-                          src="/badges/badge-01.svg"
-                          alt="Event Attendance POAP"
-                          title="Event Attendance — First AE × SC Event"
-                          className="flex-shrink-0 w-5 h-5"
+                      {/* POAPs — earned marks (founder gold shown on line 1 above). */}
+                      <div className="flex items-center gap-2 flex-wrap pt-0.5">
+                        <span className="text-[10px] text-gray-500 uppercase tracking-wider mr-1">POAPs</span>
+                        {hasEventPoap && (
+                          <img
+                            src="/badges/badge-01.svg"
+                            alt="Event Attendance POAP"
+                            title="Event Attendance — First AE × SC Event"
+                            className="flex-shrink-0 w-5 h-5"
+                          />
+                        )}
+                        <UserSymbols
+                          handle={viewingProfile.userHandle}
+                          verified={false}
+                          teamMember={false}
+                          showFounder={false}
+                          isNftOwner={hasNft}
+                          isCreator={hasNft}
                         />
-                      )}
-                      {/* On-chain symbols — NFT owner ◆ creator (founder gold shown above). */}
-                      <UserSymbols
-                        handle={viewingProfile.userHandle}
-                        verified={false}
-                        teamMember={false}
-                        showFounder={false}
-                        isNftOwner={(viewingProfile.tracksCount || 0) > 0}
-                        isCreator={(viewingProfile.tracksCount || 0) > 0}
-                      />
-                      {!viewingProfile.badges?.includes(ProfileBadge.SupporterFirstEventAeSc)
-                        && !((viewingProfile.tracksCount || 0) > 0) && (
-                        <span className="text-[10px] text-gray-600 italic">No POAPs collected yet</span>
+                        {!hasEventPoap && !hasNft && (
+                          <span className="text-[10px] text-gray-600 italic">No POAPs collected yet</span>
+                        )}
+                      </div>
+                      {/* Bio — flush in the card, always readable. */}
+                      {bioText && (
+                        <p className="text-gray-200 text-sm leading-relaxed max-w-2xl whitespace-pre-line pt-0.5">{bioText}</p>
                       )}
                     </div>
                   </div>
-
-                  {/* Bio row — the user's words sit FLUSH in the identity stack, on a
-                      solid panel so they're always readable (no longer buried at the
-                      bottom of the cover image). Falls back to me.profile.bio on own profile. */}
-                  {(() => {
-                    const bioText = viewingProfile.bio
-                      || (isViewingOwnProfile ? (me?.profile?.bio || userData?.me?.profile?.bio) : '')
-                    if (!bioText) return null
-                    return (
-                      <div className="w-full border-b border-white/5">
-                        <div className="max-w-screen-lg mx-auto px-4 py-2">
-                          <p className="text-gray-200 text-sm leading-relaxed max-w-2xl whitespace-pre-line">{bioText}</p>
-                        </div>
-                      </div>
                     )
                   })()}
 
-                  {/* Cover Image - FULL SCREEN with profile info overlaid at bottom */}
-                  <div className="relative h-[40vh] min-h-[250px] w-full overflow-hidden">
+                  {/* Cover Image — a tight banner (no longer a 40vh void): the social
+                      pills + stats overlay sit close under the bio, killing the big gap. */}
+                  <div className="relative h-[200px] sm:h-[240px] md:h-[280px] w-full overflow-hidden">
                     {viewingProfile.coverPicture ? (
                       <img
                         src={viewingProfile.coverPicture}

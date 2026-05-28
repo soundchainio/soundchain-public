@@ -2413,24 +2413,32 @@ body.lucy-active iframe[title="FURL Terminal"] {
   100% { background-position: 0% 50%; }
 }
 .sc-fluid-name {
+  /* Full SoundChain spectrum — cyan, indigo, purple, pink, gold, emerald —
+     so the name never reads as mono light-blue (and never blends into a
+     light-blue cover image). */
   background-image: linear-gradient(
     90deg,
     #22d3ee 0%,
-    #3b82f6 22%,
-    #6366f1 40%,
-    #a78bfa 58%,
-    #e879f9 76%,
+    #818cf8 18%,
+    #c084fc 34%,
+    #f472b6 50%,
+    #fbbf24 66%,
+    #34d399 82%,
     #22d3ee 100%
   );
-  background-size: 280% 100%;
+  background-size: 320% 100%;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   color: transparent;
-  animation: scFluidNameShift 7s ease-in-out infinite;
-  /* glow reads through the transparent fill via the drop-shadow filter,
-     so the name still pops on a dark page background */
-  filter: drop-shadow(0 0 6px rgba(34, 211, 238, 0.35));
+  animation: scFluidNameShift 6s ease-in-out infinite;
+  /* Dark outline halo so the gradient glyphs stay legible on ANY background —
+     light-blue cover, bright photo, or dark page alike. text-shadow paints from
+     the glyph geometry (not the transparent fill), giving a crisp contrast edge. */
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.95),
+    0 0 1px rgba(0, 0, 0, 0.9),
+    0 0 14px rgba(0, 0, 0, 0.45);
   will-change: background-position;
 }
 @media (prefers-reduced-motion: reduce) {
