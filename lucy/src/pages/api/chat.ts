@@ -42,7 +42,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const timeoutId = setTimeout(() => controller.abort(), NORMAN_TIMEOUT_MS)
 
   try {
-    const upstream = await fetch(`${NORMAN_URL}/chat`, {
+    const upstream = await fetch(`${NORMAN_URL}/api/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
