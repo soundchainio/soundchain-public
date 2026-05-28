@@ -289,9 +289,9 @@ export default function LucyHome() {
         <title>Lucy — SoundChain AI</title>
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
       </Head>
-      <main className="min-h-screen flex flex-col bg-lucy-bg text-gray-100">
+      <main className="h-[100dvh] min-h-screen flex flex-col overflow-hidden bg-lucy-bg text-gray-100">
         {/* Header */}
-        <header className="border-b border-lucy-border bg-lucy-surface/60 backdrop-blur-md">
+        <header className="shrink-0 border-b border-lucy-border bg-lucy-surface/60 backdrop-blur-md">
           <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-lucy-accent to-lucy-glow flex items-center justify-center text-xs font-bold text-black">
@@ -450,8 +450,8 @@ export default function LucyHome() {
           </div>
         </section>
 
-        {/* Composer */}
-        <footer className="border-t border-lucy-border bg-lucy-surface/60 backdrop-blur-md">
+        {/* Composer — sticky footer, always visible (never scroll to type) */}
+        <footer className="shrink-0 border-t border-lucy-border bg-lucy-surface/60 backdrop-blur-md pb-[env(safe-area-inset-bottom)]">
           <div className="max-w-3xl mx-auto px-4 py-3 flex items-end gap-2">
             <button
               onClick={toggleMic}
