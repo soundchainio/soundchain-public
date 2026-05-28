@@ -14,9 +14,24 @@
 
 import { useCallback, useRef, useState } from 'react'
 
-// 1B chosen for first-load weight (~700MB q4f16). Bumps to 3B once we're sure
-// iPhones tolerate the download — model identifier swap, nothing else.
-const DEFAULT_MODEL_ID = 'Llama-3.2-1B-Instruct-q4f16_1-MLC'
+// 1B chosen for first-load weight. Two quantizations:
+//   q4f16 (~700MB) — needs the WebGPU `shader-f16` feature. Fast where available.
+//   q4f32 (~1.1GB) — no f16 requirement. The ONLY one that runs on iOS Safari,
+//                    whose WebGPU does not expose shader-f16. Without this the
+//                    weights download fine then the shader compile dies → the
+//                    "device option doesn't work" hang on iPhone.
+// We pick per-device at init time, and fall back f16→f32 if engine build fails.
+const MODEL_F16 = 'Llama-3.2-1B-Instruct-q4f16_1-MLC'
+const MODEL_F32 = 'Llama-3.2-1B-Instruct-q4f32_1-MLC'
+
+// Probe the actual GPU adapter for shader-f16. iOS Safari → false → use f32.
+async function pickModelId(): Promise<string> {
+  try {
+    const adapter = await (navigator as any).gpu?.requestAdapter?.()
+    if (adapter?.features?.has?.('shader-f16')) return MODEL_F16
+  } catch {/* fall through to the safe choice */}
+  return MODEL_F32
+}
 
 export type LocalChatMessage = { role: 'system' | 'user' | 'assistant'; content: string }
 
@@ -61,15 +76,27 @@ export function useLucyLocal() {
       const mod: any = await import('@mlc-ai/web-llm')
       const create = mod.CreateMLCEngine || mod.default?.CreateMLCEngine
       if (!create) throw new Error('WebLLM CreateMLCEngine not found')
-      const engine = await create(DEFAULT_MODEL_ID, {
-        initProgressCallback: (p: any) => {
-          setState(s => ({
-            ...s,
-            loadProgress: typeof p?.progress === 'number' ? p.progress : s.loadProgress,
-            loadStatus: typeof p?.text === 'string' ? p.text : s.loadStatus,
-          }))
-        },
-      })
+      const onProgress = (p: any) => {
+        setState(s => ({
+          ...s,
+          loadProgress: typeof p?.progress === 'number' ? p.progress : s.loadProgress,
+          loadStatus: typeof p?.text === 'string' ? p.text : s.loadStatus,
+        }))
+      }
+      const primary = await pickModelId()
+      let engine
+      try {
+        engine = await create(primary, { initProgressCallback: onProgress })
+      } catch (buildErr) {
+        // f16 can build-fail on a GPU that advertises shader-f16 but chokes on
+        // the compile (some mobile drivers). Fall back to the universal f32.
+        if (primary === MODEL_F16) {
+          setState(s => ({ ...s, loadProgress: 0, loadStatus: 'Switching to compatible model…' }))
+          engine = await create(MODEL_F32, { initProgressCallback: onProgress })
+        } else {
+          throw buildErr
+        }
+      }
       engineRef.current = engine
       setState(s => ({ ...s, ready: true, loading: false, loadProgress: 1, loadStatus: 'Ready' }))
       return engine
