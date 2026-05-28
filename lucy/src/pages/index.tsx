@@ -302,11 +302,11 @@ export default function LucyHome() {
                 <p className="text-[10px] text-gray-500">
                   SoundChain AI ·{' '}
                   {activeReplySource === 'local'
-                    ? <span className="text-lucy-glow">on-device</span>
+                    ? <span className="text-lucy-glow">lucy · on-device</span>
                     : activeReplySource === 'anvil'
-                      ? <span className="text-lucy-accent">anvil</span>
+                      ? <span className="text-lucy-accent">lucy</span>
                       : local.ready
-                        ? 'anvil + on-device ready'
+                        ? 'lucy · ready'
                         : 'local-first'}
                 </p>
               </div>
@@ -405,8 +405,8 @@ export default function LucyHome() {
                 {m.role === 'assistant' && m.source && (
                   <div className="flex items-center gap-1 mt-1 px-1 text-[9px] font-mono uppercase tracking-wider text-gray-600">
                     {m.source === 'local'
-                      ? <><Cpu className="w-2.5 h-2.5" /> on-device</>
-                      : <><Cloud className="w-2.5 h-2.5" /> anvil</>
+                      ? <><Cpu className="w-2.5 h-2.5" /> lucy · on-device</>
+                      : <><Cloud className="w-2.5 h-2.5" /> lucy</>
                     }
                   </div>
                 )}
