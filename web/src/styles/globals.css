@@ -2397,3 +2397,42 @@ body.arena-modal-open .arena-hologram-text { animation-play-state: paused; }
 body.lucy-active iframe[title="FURL Terminal"] {
   display: none !important;
 }
+
+/* ============================================
+   FLUID IDENTITY NAMES — liquid SoundChain color
+   flows THROUGH the glyphs of display names + @handles.
+   Crisp + readable (the gradient colors the letter
+   pixels, it never warps the geometry) and the same
+   polish reads on every profile no matter what color
+   the profile picture behind it is.
+   Used on /users/<handle> identity stack.
+   ============================================ */
+@keyframes scFluidNameShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.sc-fluid-name {
+  background-image: linear-gradient(
+    90deg,
+    #22d3ee 0%,
+    #3b82f6 22%,
+    #6366f1 40%,
+    #a78bfa 58%,
+    #e879f9 76%,
+    #22d3ee 100%
+  );
+  background-size: 280% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: scFluidNameShift 7s ease-in-out infinite;
+  /* glow reads through the transparent fill via the drop-shadow filter,
+     so the name still pops on a dark page background */
+  filter: drop-shadow(0 0 6px rgba(34, 211, 238, 0.35));
+  will-change: background-position;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sc-fluid-name { animation: none; }
+}

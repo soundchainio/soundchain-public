@@ -13,8 +13,9 @@
  */
 
 import { useState, useRef, useEffect } from 'react'
+import { SoundchainGoldLogo } from 'icons/SoundchainGoldLogo'
 
-const ADMIN_HANDLES = ['furdA1', 'jeremy_soundchain', 'tito']
+export const ADMIN_HANDLES = ['furdA1', 'jeremy_soundchain', 'tito']
 
 interface UserSymbolsProps {
   handle?: string
@@ -24,6 +25,7 @@ interface UserSymbolsProps {
   isAirdropRecipient?: boolean
   teamMember?: boolean
   compact?: boolean // smaller for comments
+  showFounder?: boolean // render the gold founder logo (true by default)
 }
 
 function SymbolTooltip({ text, children }: { text: string; children: React.ReactNode }) {
@@ -63,23 +65,21 @@ export function UserSymbols({
   isAirdropRecipient,
   teamMember,
   compact = false,
+  showFounder = true,
 }: UserSymbolsProps) {
   const isAdmin = handle && ADMIN_HANDLES.includes(handle)
   const s = compact ? 16 : 20 // match gold logo + attendance badge size
 
   return (
     <span className="inline-flex items-center gap-0.5">
-      {/* Admin/Founder POAP — gold SoundChain logo */}
-      {isAdmin && (
+      {/* Admin/Founder POAP — the real gold SoundChain logo (furdA1/jeremy/tito) */}
+      {isAdmin && showFounder && (
         <SymbolTooltip text="SoundChain Founder">
           <span
             className="inline-flex items-center justify-center cursor-pointer"
-            style={{ filter: 'drop-shadow(0 0 4px rgba(250,204,21,0.6))' }}
+            style={{ filter: 'drop-shadow(0 0 5px rgba(255,224,130,0.7))' }}
           >
-            <svg width={s} height={s} viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="10" fill="#facc15" />
-              <text x="12" y="16" textAnchor="middle" fontSize="12" fill="#000" fontWeight="bold">S</text>
-            </svg>
+            <SoundchainGoldLogo width={s} height={s} aria-label="SoundChain Founder" />
           </span>
         </SymbolTooltip>
       )}
