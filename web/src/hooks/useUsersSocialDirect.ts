@@ -78,7 +78,9 @@ export const useFollowers = (opts: { profileId?: string; first?: number; skip?: 
     return () => { cancelled = true }
   }, [profileId, first, skip, bust])
   const fetchMore = async () => {}  // single-page endpoint v1; pagination shipped when endpoint adds cursor
-  const refetch = async () => { setBust((b) => b + 1) }
+  // refetch must DROP the cached page first — otherwise fetchSocial returns the
+  // <60s stale list and a just-added follow never shows up.
+  const refetch = async () => { cache.delete(`${profileId}:followers:${first}`); setBust((b) => b + 1) }
   return { data, loading, error, fetchMore, refetch }
 }
 
@@ -120,7 +122,9 @@ export const useFollowing = (opts: { profileId?: string; first?: number; skip?: 
     return () => { cancelled = true }
   }, [profileId, first, skip, bust])
   const fetchMore = async () => {}
-  const refetch = async () => { setBust((b) => b + 1) }
+  // refetch must DROP the cached page first — otherwise fetchSocial returns the
+  // <60s stale list and a just-added (or removed) circle member never shows up.
+  const refetch = async () => { cache.delete(`${profileId}:following:${first}`); setBust((b) => b + 1) }
   return { data, loading, error, fetchMore, refetch }
 }
 

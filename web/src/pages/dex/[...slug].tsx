@@ -7144,7 +7144,9 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-gradient-to-b from-cyan-400 via-violet-500 to-fuchsia-500 shadow-[0_0_10px_rgba(34,211,238,0.7)]" />
                     {/* Neon underline */}
                     <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-cyan-400/60 to-transparent" />
-                    <div className="max-w-screen-lg mx-auto px-4 py-2 space-y-1">
+                    {/* pt-3 bumps the name/handle clearly DOWN under the pic — they read as
+                        their own content row, never as an overlay on the picture. */}
+                    <div className="max-w-screen-lg mx-auto px-4 pt-3 pb-2 space-y-1">
                       {/* Line 1 — display name (liquid color) + every earned mark inline:
                           blue verified check, then the gold founder logo for founders. */}
                       <div className="flex items-center gap-1.5 flex-wrap leading-tight">

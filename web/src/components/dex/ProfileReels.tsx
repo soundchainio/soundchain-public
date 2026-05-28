@@ -154,7 +154,10 @@ const ReelRow = ({
                             alt={bubble.displayName || bubble.userHandle}
                             className="w-full h-full object-cover"
                             onError={(e) => {
-                              (e.target as HTMLImageElement).src = getAvatarUrl(undefined, bubble.profileId)
+                              const img = e.target as HTMLImageElement
+                              if (img.dataset.fb) return // fall back at most once — never loop the console
+                              img.dataset.fb = '1'
+                              img.src = '/default-pictures/profile/red.png'
                             }}
                           />
                         </div>
@@ -302,7 +305,12 @@ const AddCircleModal = ({
                     src={getAvatarUrl(u.profilePicture, u.id)}
                     alt={u.displayName || u.userHandle}
                     className="w-full h-full object-cover"
-                    onError={(e) => { (e.target as HTMLImageElement).src = getAvatarUrl(undefined, u.id) }}
+                    onError={(e) => {
+                      const img = e.target as HTMLImageElement
+                      if (img.dataset.fb) return
+                      img.dataset.fb = '1'
+                      img.src = '/default-pictures/profile/red.png'
+                    }}
                   />
                 </div>
                 <div className="flex-1 min-w-0">
