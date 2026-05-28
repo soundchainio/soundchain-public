@@ -12,11 +12,12 @@
 import { MongoClient } from 'mongodb'
 
 const options = {
-  maxPoolSize: 3,
+  maxPoolSize: 1,        // shares web's M0 cluster (500-conn cap); 1/Lambda to not exhaust it (was 3 — contributed to May 28 cap-exhaustion outage)
   minPoolSize: 0,
-  maxIdleTimeMS: 10000,
+  maxIdleTimeMS: 5000,   // drain idle conns fast so the shared M0 pool frees up (was 10s)
   serverSelectionTimeoutMS: 5000,
   socketTimeoutMS: 45000,
+  waitQueueTimeoutMS: 10000,
 }
 
 const globalWithMongo = global as typeof globalThis & {
