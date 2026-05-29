@@ -447,14 +447,14 @@ export default function LucyHome() {
     <>
       <Head>
         <title>Lucy — SoundChain AI</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
       </Head>
       <main className="h-screen supports-[height:100dvh]:h-[100dvh] flex flex-col overflow-hidden bg-lucy-bg text-gray-100">
         {/* Header — pt-[env(safe-area-inset-top)] keeps the LUCY title clear of
             the iOS Dynamic Island / status pills (no more blending). */}
         <header className="shrink-0 border-b border-lucy-border bg-lucy-surface/60 backdrop-blur-md pt-[env(safe-area-inset-top)]">
-          <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
+          <div className="max-w-3xl mx-auto px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
               <button
                 onClick={() => { refreshConvs(); setDrawerOpen(true) }}
                 className="p-2 -ml-1 rounded text-gray-400 hover:text-white hover:bg-lucy-surface transition shrink-0"
@@ -544,7 +544,7 @@ export default function LucyHome() {
 
         {/* Conversation */}
         <section className="flex-1 overflow-y-auto overscroll-contain">
-          <div className="max-w-3xl mx-auto px-4 py-4 space-y-3">
+          <div className="max-w-3xl mx-auto px-3 sm:px-4 py-3 sm:py-4 space-y-2.5 sm:space-y-3">
             {!memoryReady && (
               <div className="text-center text-xs text-gray-600 py-12">
                 Loading memory…
@@ -623,7 +623,7 @@ export default function LucyHome() {
 
         {/* Composer — sticky footer, always visible (never scroll to type) */}
         <footer className="shrink-0 border-t border-lucy-border bg-lucy-surface/60 backdrop-blur-md pb-[env(safe-area-inset-bottom)]">
-          <div className="max-w-3xl mx-auto px-4 py-3 flex items-end gap-2">
+          <div className="max-w-3xl mx-auto px-3 sm:px-4 py-2.5 sm:py-3 flex items-end gap-1.5 sm:gap-2">
             <button
               onClick={toggleMic}
               className={`p-2.5 rounded transition shrink-0 ${listening ? 'bg-red-500/20 text-red-400 animate-pulse' : 'bg-lucy-bg text-gray-400 hover:text-white border border-lucy-border'}`}
