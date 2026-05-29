@@ -111,7 +111,7 @@ export function getVoiceConfig(): VoiceConfig {
     return { voice: null, rate: 1.0, pitch: 1.0, personaId: 'lucy-default' }
   }
   const voices = window.speechSynthesis.getVoices()
-  // Explicit voice-name selection wins (Premium/Enhanced voices Frank picks
+  // Explicit voice-name selection wins (Premium/Enhanced voices the user picks
   // directly from the All Voices list).
   const explicitName = localStorage.getItem(VOICE_NAME_KEY) || ''
   if (explicitName) {
@@ -183,7 +183,7 @@ export default function LucyVoicePicker({ open: openProp, onClose }: LucyVoicePi
       window.speechSynthesis.cancel()
       const persona = VOICE_PERSONAS.find((p) => p.id === id) || VOICE_PERSONAS[0]
       const voice = voices.find(persona.matchVoice) || voices.find((v) => /en/i.test(v.lang)) || null
-      const u = new SpeechSynthesisUtterance('Hello Frank.')
+      const u = new SpeechSynthesisUtterance('Hello.')
       if (voice) u.voice = voice
       u.rate = persona.rate ?? 1.0
       u.pitch = persona.pitch ?? 1.0
@@ -197,7 +197,7 @@ export default function LucyVoicePicker({ open: openProp, onClose }: LucyVoicePi
     setOpen(false)
     if (typeof window !== 'undefined' && window.speechSynthesis) {
       window.speechSynthesis.cancel()
-      const u = new SpeechSynthesisUtterance('Hello Frank. This is my new voice.')
+      const u = new SpeechSynthesisUtterance('Hello. This is my new voice.')
       u.voice = voice
       u.rate = 1.05
       u.pitch = 1.0
@@ -207,7 +207,7 @@ export default function LucyVoicePicker({ open: openProp, onClose }: LucyVoicePi
 
   const selectedPersona = VOICE_PERSONAS.find((p) => p.id === selected) || VOICE_PERSONAS[0]
 
-  // Friendly language labels — keeps Frank from accidentally picking Monica
+  // Friendly language labels — keeps the user from accidentally picking Monica
   // (Spanish) and getting Lucy's English text spoken with Spanish phonemes.
   // Flag emojis tag languages instantly at a glance.
   function labelForLang(lang: string): { flag: string; name: string } {
@@ -239,7 +239,7 @@ export default function LucyVoicePicker({ open: openProp, onClose }: LucyVoicePi
     return { flag: '🌐', name: lang.toUpperCase() }
   }
 
-  // Group voices by language. English variants first (Frank's primary use),
+  // Group voices by language. English variants first (the user's primary use),
   // then everything else alphabetical by language name.
   const grouped = new Map<string, SpeechSynthesisVoice[]>()
   for (const v of voices) {
@@ -324,7 +324,7 @@ export default function LucyVoicePicker({ open: openProp, onClose }: LucyVoicePi
             })}
 
             {/* All voices on the device, grouped by language. English first
-                so Frank doesn't accidentally pick Monica (Spanish) and get
+                so the user doesn't accidentally pick Monica (Spanish) and get
                 his English chat spoken with Spanish phonemes. Premium /
                 Enhanced voices float to the top of each group. */}
             <div className="text-[10px] uppercase tracking-wide text-gray-500 px-2 pt-3 pb-1 border-t border-white/5 mt-2">

@@ -2,7 +2,7 @@
  * useLucyMemory — Phase 8 of the Lucy stack.
  *
  * Local-first encrypted memory for Lucy conversations. Lives entirely in
- * the user's browser via IndexedDB; never touches a server. Frank wanted
+ * the user's browser via IndexedDB; never touches a server. the user wanted
  * memory decentralized — this is that.
  *
  * Storage shape: one record per conversation, encrypted with AES-GCM.

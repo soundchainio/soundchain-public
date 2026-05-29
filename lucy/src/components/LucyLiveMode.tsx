@@ -11,7 +11,7 @@
  *     M5000's LLaVA throughput (~3-5s per inference). Scene-diff detection
  *     skips identical frames so she doesn't re-narrate static views.
  *   - Continuous SpeechRecognition (always listening like a phone call) —
- *     when Frank speaks, transcript bumps the next frame to Lucy with
+ *     when the user speaks, transcript bumps the next frame to Lucy with
  *     the question as context.
  *   - TTS sentence-by-sentence playback (managed queue + iOS keepalive,
  *     same pattern as /norman). Audio routes to whatever BT device is
@@ -19,7 +19,7 @@
  *
  * UX states (visible in top status bar):
  *   - WATCHING — camera live, Lucy idle
- *   - LISTENING — Frank's voice detected, transcript in flight
+ *   - LISTENING — the user's voice detected, transcript in flight
  *   - THINKING — frame + question sent to anvil, awaiting tokens
  *   - SPEAKING — Lucy generating audio, words playing in earbuds
  *
@@ -100,7 +100,7 @@ export default function LucyLiveMode({ onClose, captureIntervalMs = 6000 }: Lucy
           await videoRef.current.play().catch(() => {})
         }
         // Audible greeting on Live Mode start — confirms audio chain is
-        // routing correctly to Frank's earbuds BEFORE the first inference
+        // routing correctly to the user's earbuds BEFORE the first inference
         // roundtrip. If he doesn't hear this, audio is muted/broken and
         // he knows immediately. Doubles as iOS audio session unlock from
         // within the page's user-gesture-initiated mount.
@@ -112,7 +112,7 @@ export default function LucyLiveMode({ onClose, captureIntervalMs = 6000 }: Lucy
           unlock.volume = 0
           window.speechSynthesis.speak(unlock)
           // Then audible greeting at full volume in selected persona voice
-          const greet = new SpeechSynthesisUtterance("I'm with you Frank. Show me what you're looking at.")
+          const greet = new SpeechSynthesisUtterance("I'm with you. Show me what you're looking at.")
           greet.volume = 1.0
           const { voice, rate, pitch } = getVoiceConfig()
           if (voice) greet.voice = voice
@@ -259,7 +259,7 @@ export default function LucyLiveMode({ onClose, captureIntervalMs = 6000 }: Lucy
     }
     // Pause continuous mic during TTS so iOS audio session stays in
     // playback mode — otherwise voice-chat mode attenuates Lucy's voice
-    // through BT earbuds and Frank can't hear her.
+    // through BT earbuds and the user can't hear her.
     if (!sttPausedRef.current) {
       sttPausedRef.current = true
       try { recognitionRef.current?.stop() } catch {}
@@ -447,7 +447,7 @@ export default function LucyLiveMode({ onClose, captureIntervalMs = 6000 }: Lucy
       />
 
       {/* Top status strip — Phase 11.6.1 polish: bigger pulsing indicator,
-          status word in larger font, clear visual hierarchy so Frank knows at
+          status word in larger font, clear visual hierarchy so the user knows at
           a glance whether Lucy is watching, hearing him, thinking, or
           speaking. */}
       <div className="relative z-10 px-4 pt-[max(env(safe-area-inset-top,12px),12px)] pb-3 bg-gradient-to-b from-black/80 to-transparent flex items-center gap-3">
