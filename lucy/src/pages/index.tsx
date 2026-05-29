@@ -332,9 +332,49 @@ export default function LucyHome() {
     const outer = new AbortController()
     abortRef.current = outer
 
+    // Trim history aggressively for LOCAL mode (Llama 3.2 1B is small-context).
+    // Keep the latest N turns + the system prompt; older history would push
+    // recent intent off the context window and make Lucy reply with empty
+    // streams or garbage. Anvil's 8B handles more comfortably, but trimming
+    // helps it stay responsive too.
+    const HISTORY_TURNS = lucySource === 'local' ? 8 : 16
+    const trimmedHistory = next.slice(-HISTORY_TURNS)
+
+    // If the user's latest message has a link (IG/FB/X/YouTube/news/blog —
+    // anything ship-able with OG tags), pre-fetch /api/summarize and inject
+    // the metadata + body excerpt as a system note BEFORE Lucy sees the turn.
+    // She can then talk about it accurately instead of hallucinating.
+    // Exclude GIF URLs (they're images we already render inline).
+    const URL_RE = /https?:\/\/[^\s)]+/g
+    const candidateUrls = (text.match(URL_RE) || []).filter(u => !GIF_URL_LINE.test(u.trim())).slice(0, 3)
+    const linkSummaries: Array<{ url: string; title: string; description: string; siteName: string; body: string }> = []
+    if (candidateUrls.length > 0) {
+      try {
+        const results = await Promise.allSettled(
+          candidateUrls.map(u =>
+            fetch(`/api/summarize?url=${encodeURIComponent(u)}`).then(r => r.ok ? r.json() : null)
+          )
+        )
+        for (const r of results) {
+          if (r.status === 'fulfilled' && r.value && (r.value.title || r.value.description || r.value.body)) {
+            linkSummaries.push(r.value)
+          }
+        }
+      } catch {/* link summarize is best-effort */}
+    }
+    const linkContext = linkSummaries.length === 0 ? '' :
+      '\n\nThe user just shared ' + (linkSummaries.length === 1 ? 'a link' : 'these links') + '. Use this context to actually engage with what they sent — summarize, react, ask about it. Do not just list these facts; talk about them.\n\n' +
+      linkSummaries.map((s) =>
+        `URL: ${s.url}\n` +
+        (s.siteName ? `Site: ${s.siteName}\n` : '') +
+        (s.title ? `Title: ${s.title}\n` : '') +
+        (s.description ? `Description: ${s.description}\n` : '') +
+        (s.body ? `Body excerpt: ${s.body}\n` : '')
+      ).join('\n---\n')
+
     const payloadMessages = [
-      { role: 'system' as const, content: LUCY_SYSTEM_PROMPT },
-      ...next.map(m => ({ role: m.role, content: m.content })),
+      { role: 'system' as const, content: LUCY_SYSTEM_PROMPT + linkContext },
+      ...trimmedHistory.map(m => ({ role: m.role, content: m.content })),
     ]
 
     // Shared token consumer — both anvil + local feed into this.
@@ -439,7 +479,24 @@ export default function LucyHome() {
       }
     } catch (err: any) {
       if (err?.name !== 'AbortError') {
-        setError(err?.message || 'Lucy hit an error')
+        const msg = err?.message || 'Lucy hit an error'
+        setError(msg)
+        // CRITICAL: also surface the failure INSIDE the chat. The empty
+        // assistant draft from consumeTokens otherwise sits there as a blank
+        // bubble and Lucy looks dead. Replace it with an honest inline message
+        // so the user always sees what happened (and the bubble disappears
+        // when they send a new turn).
+        setMessages((msgs) => {
+          if (msgs.length === 0) return msgs
+          const last = msgs[msgs.length - 1]
+          const note = lucySource === 'local'
+            ? `_(Hmm, hit an error: ${msg}. The on-device model can choke on long context — try a new chat with shorter prompts.)_`
+            : `_(Hmm, hit an error: ${msg}. Try again or switch source via the cloud pill.)_`
+          if (last.role === 'assistant' && !last.content.trim()) {
+            return msgs.map((mm, i) => i === msgs.length - 1 ? { ...mm, content: note } : mm)
+          }
+          return [...msgs, { role: 'assistant', content: note }]
+        })
       }
     } finally {
       setStreaming(false)
