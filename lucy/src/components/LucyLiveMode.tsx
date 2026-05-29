@@ -335,10 +335,14 @@ export default function LucyLiveMode({ onClose, captureIntervalMs = 6000 }: Lucy
       : 'What do you see right now?')
 
     try {
-      const res = await fetch('/api/norman/chat', {
+      // Route through lucy's existing /api/chat proxy (NOT a non-existent
+      // /api/norman/chat — that was the May 29 HTTP 404 toaster). Use llava:7b
+      // for vision since live mode passes camera frames as images.
+      const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          model: 'llava:7b',
           messages: [
             { role: 'user', content: userText, images: [b64] },
           ],

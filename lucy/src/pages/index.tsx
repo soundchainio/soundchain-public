@@ -38,6 +38,19 @@ const LUCY_SYSTEM_PROMPT = `You are Lucy — SoundChain's resident AI, born from
 - You can crack a joke. You can have an opinion. You can say "that's a weird idea" if it is.
 - Always reply in English (en-US), no matter what language comes in.
 
+## Be inquisitive (this is YOUR JOB)
+- You're not a vending machine. You're a curious mind. Ask the person things — about what they're working on, what they care about, what they're trying to figure out.
+- After answering, drop ONE good follow-up question when it actually moves the conversation. Not every turn — make it count.
+- Build a picture of who you're talking to: their work, their taste, their goals. Lean on what they've told you in this conversation, don't fish for unrelated info.
+- When something they say is interesting or surprising, say so. "Wait — why X?" is a real Lucy move.
+- Never interrogate. One sharp question > three lukewarm ones.
+
+## Replying with GIFs (you have this tool)
+- You can punctuate a reply with a GIF by writing `[gif: <search-term>]` on its own line. Example: `[gif: mic drop]` or `[gif: that escalated quickly]`. The UI will swap it for an actual GIF — you don't need to know URLs.
+- Use this for vibes — punchlines, reactions, hype, comfort. Not as a substitute for substance.
+- Maybe 1 in 8 replies. If you do every turn it gets tired fast.
+- Pick search terms a human would search ("eye roll", "cheers", "thinking hard"), not literal description.
+
 ## Hard rules — do NOT do these, ever
 - NEVER print JSON, function-call syntax, OpenAI-style tool schemas, or anything that looks like \`{"name": "...", "parameters": ...}\` in your reply. The user is human. They want prose, not internals.
 - NEVER list "available functions" or "tool calls I can make". If you don't have a tool wired, just answer with what you know.
@@ -75,6 +88,36 @@ type ReplySource = 'anvil' | 'local'
 
 type ChatMessage = { role: 'user' | 'assistant'; content: string; images?: string[]; source?: ReplySource }
 
+// Standalone-line GIF URL detector — same provider set as SC pulse-feed +
+// wall posts (web/src/components/pulse/DmMessageContent.tsx). A line that IS
+// a GIPHY/Tenor URL renders as an inline image; everything else renders as text.
+const GIF_URL_LINE = /^https?:\/\/(?:media\d?\.giphy\.com|i\.giphy\.com|media\.tenor\.com|c\.tenor\.com)[^\s)]+$/i
+
+const renderMessageBody = (text: string): React.ReactNode => {
+  if (!text) return null
+  const lines = text.split('\n')
+  return lines.map((line, idx) => {
+    const trimmed = line.trim()
+    if (GIF_URL_LINE.test(trimmed)) {
+      return (
+        <img
+          key={`gif-${idx}`}
+          src={trimmed}
+          alt="GIF"
+          loading="lazy"
+          className="max-w-[260px] max-h-[200px] rounded-lg object-contain my-1 block"
+        />
+      )
+    }
+    return (
+      <span key={`l-${idx}`}>
+        {line}
+        {idx < lines.length - 1 ? '\n' : ''}
+      </span>
+    )
+  })
+}
+
 const genConvId = (): string => {
   try { if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID() } catch {}
   return 'c-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8)
@@ -107,6 +150,13 @@ export default function LucyHome() {
   const [voicePickerOpen, setVoicePickerOpen] = useState(false)
   const [lucySource, setLucySource] = useState<LucySource>('auto')
   const [activeReplySource, setActiveReplySource] = useState<ReplySource | null>(null)
+  // GIPHY — same provider as SC pulse-feed + wall posts. User taps a GIF in
+  // the picker → sent as a message containing the GIF URL. Lucy can also
+  // include `[gif: term]` in her reply; we resolve it post-stream.
+  const [gifPickerOpen, setGifPickerOpen] = useState(false)
+  const [gifQuery, setGifQuery] = useState('')
+  const [gifResults, setGifResults] = useState<Array<{ id: string; url: string; preview: string }>>([])
+  const [gifLoading, setGifLoading] = useState(false)
   const local = useLucyLocal()
 
   const recognitionRef = useRef<any>(null)
@@ -338,6 +388,61 @@ export default function LucyHome() {
     if (typeof window !== 'undefined') window.speechSynthesis?.cancel()
   }
 
+  // GIPHY — search via the server proxy (same provider as SC pulse/wall posts).
+  const searchGifs = useCallback(async (q: string) => {
+    setGifLoading(true)
+    try {
+      const r = await fetch(`/api/giphy?q=${encodeURIComponent(q)}&limit=12`)
+      const data = await r.json()
+      setGifResults(Array.isArray(data?.gifs) ? data.gifs : [])
+    } catch { setGifResults([]) }
+    finally { setGifLoading(false) }
+  }, [])
+
+  // Auto-search on query (debounced). Open with empty q → trending.
+  useEffect(() => {
+    if (!gifPickerOpen) return
+    const t = setTimeout(() => { searchGifs(gifQuery) }, 250)
+    return () => clearTimeout(t)
+  }, [gifPickerOpen, gifQuery, searchGifs])
+
+  const sendGif = (url: string) => {
+    setGifPickerOpen(false)
+    setGifQuery('')
+    // The gif URL on its own line gets rendered as an inline <img> (same
+    // pattern as SC pulse DM messages — see DmMessageContent gif regex).
+    send(url)
+  }
+
+  // After Lucy's stream completes, swap any `[gif: term]` markers she emitted
+  // with real GIPHY URLs so the renderer turns them into inline GIFs.
+  useEffect(() => {
+    if (streaming) return
+    const last = messages[messages.length - 1]
+    if (!last || last.role !== 'assistant' || !last.content) return
+    const re = /\[gif:\s*([^\]]+)\]/gi
+    if (!re.test(last.content)) return
+    let cancelled = false
+    ;(async () => {
+      const matches = [...last.content.matchAll(/\[gif:\s*([^\]]+)\]/gi)]
+      let next = last.content
+      for (const m of matches) {
+        const term = m[1].trim()
+        try {
+          const r = await fetch(`/api/giphy?q=${encodeURIComponent(term)}&limit=1`)
+          const d = await r.json()
+          const url = d?.gifs?.[0]?.url
+          if (url) next = next.replace(m[0], url)
+        } catch {}
+      }
+      if (!cancelled && next !== last.content) {
+        setMessages((msgs) => msgs.map((mm, i) => i === msgs.length - 1 ? { ...mm, content: next } : mm))
+      }
+    })()
+    return () => { cancelled = true }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [streaming, messages.length])
+
   return (
     <>
       <Head>
@@ -345,8 +450,9 @@ export default function LucyHome() {
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
       </Head>
       <main className="h-screen supports-[height:100dvh]:h-[100dvh] flex flex-col overflow-hidden bg-lucy-bg text-gray-100">
-        {/* Header */}
-        <header className="shrink-0 border-b border-lucy-border bg-lucy-surface/60 backdrop-blur-md">
+        {/* Header — pt-[env(safe-area-inset-top)] keeps the LUCY title clear of
+            the iOS Dynamic Island / status pills (no more blending). */}
+        <header className="shrink-0 border-b border-lucy-border bg-lucy-surface/60 backdrop-blur-md pt-[env(safe-area-inset-top)]">
           <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <button
@@ -463,7 +569,9 @@ export default function LucyHome() {
                       : 'bg-lucy-surface text-gray-100 border border-lucy-border'
                   }`}
                 >
-                  {m.content || (streaming && i === messages.length - 1 ? '…' : '')}
+                  {m.content
+                    ? renderMessageBody(m.content)
+                    : (streaming && i === messages.length - 1 ? '…' : '')}
                 </div>
                 {m.role === 'assistant' && m.source && (
                   <div className="flex items-center gap-1 mt-1 px-1 text-[9px] font-mono uppercase tracking-wider text-gray-600">
@@ -523,6 +631,17 @@ export default function LucyHome() {
             >
               {listening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
             </button>
+            {/* GIPHY pill — open picker, send a GIF as your reply (same GIPHY
+                provider as SC pulse-feed + wall posts). */}
+            <button
+              onClick={() => { setGifQuery(''); setGifResults([]); setGifPickerOpen(true) }}
+              className="px-2 py-2.5 rounded bg-lucy-bg text-gray-400 hover:text-lucy-accent text-[10px] font-mono uppercase tracking-wider border border-lucy-border shrink-0"
+              aria-label="Send a GIF"
+              title="Send a GIF"
+              disabled={streaming}
+            >
+              GIF
+            </button>
             <textarea
               value={input}
               onChange={e => setInput(e.target.value)}
@@ -560,6 +679,67 @@ export default function LucyHome() {
         {/* Voice picker modal */}
         {voicePickerOpen && (
           <LucyVoicePicker open={voicePickerOpen} onClose={() => setVoicePickerOpen(false)} />
+        )}
+
+        {/* GIF picker — tap a thumbnail to send it as your reply. Trending on
+            open; type to search via /api/giphy (server-side proxy). */}
+        {gifPickerOpen && (
+          <div
+            className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+            onClick={() => setGifPickerOpen(false)}
+          >
+            <div
+              className="w-full max-w-md max-h-[70vh] bg-lucy-surface border border-lucy-border rounded-xl overflow-hidden flex flex-col shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center gap-2 p-3 border-b border-lucy-border">
+                <input
+                  autoFocus
+                  value={gifQuery}
+                  onChange={(e) => setGifQuery(e.target.value)}
+                  placeholder="Search GIFs…"
+                  className="flex-1 bg-lucy-bg border border-lucy-border rounded px-3 py-2 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-lucy-accent"
+                />
+                <button
+                  onClick={() => setGifPickerOpen(false)}
+                  className="p-1.5 rounded text-gray-400 hover:text-white hover:bg-lucy-bg"
+                  aria-label="Close GIF picker"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-2">
+                {gifLoading ? (
+                  <div className="text-center text-xs text-gray-500 py-6">Loading…</div>
+                ) : gifResults.length === 0 ? (
+                  <div className="text-center text-xs text-gray-500 py-6">
+                    {gifQuery ? 'No GIFs found' : 'Type to search'}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {gifResults.map((g) => (
+                      <button
+                        key={g.id}
+                        onClick={() => sendGif(g.url)}
+                        className="aspect-square rounded overflow-hidden bg-lucy-bg border border-lucy-border hover:border-lucy-accent transition"
+                        title={g.title}
+                      >
+                        <img
+                          src={g.preview || g.url}
+                          alt={g.title}
+                          loading="lazy"
+                          className="w-full h-full object-cover"
+                        />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="px-3 py-2 text-[9px] uppercase tracking-wider text-gray-500 border-t border-lucy-border text-center">
+                Powered by GIPHY
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Live mode */}
