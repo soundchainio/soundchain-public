@@ -1,5 +1,29 @@
 # CLAUDE.md - SoundChain Development Guide
 
+## 🟢 SESSION: May 28, 2026 (Frank → Sarg, autonomous, early-PM) — ADD-TO-CIRCLE FIX + KILL AVATAR onError CONSOLE LOOP + BUMP NAME/HANDLE UNDER PIC (`5423e76`, 3 files)
+
+Frank tested the midday circle ship: *"adding to circle isnt working"* + *"lets remove user and handle names from being overlays on top of profile pic lets just bump it right underneath the pic square"* + *"look how much errors loop on console!"* (screenshot of the devtools console full of repeating red errors).
+
+### Root causes (all confirmed in code)
+1. **Add-to-circle silently no-ops in the UI** — `useUsersSocialDirect.fetchSocial` has a module-level 60s cache. `AddCircleModal` follows via `/api/follow/toggle` (writes the DB fine) then calls `refetchFollowing()`, but `refetch()` only bumped the effect's `bust` counter — `fetchSocial` then returned the **<60s stale cached list WITHOUT the new follow**, so the circle row never updated. Looked broken even though the follow landed.
+2. **Console error loop** — `ProfileReels` avatar `<img onError>` set `src` to the dicebear fallback; the initial src for a pic-less user is ALSO the dicebear URL, so if dicebear ever fails to load, `onError` re-fires → sets the same failing URL → `onError` again → **infinite re-fire spamming the console**. (Page-level cover img/video onErrors were already state-guarded; the reels avatars were not.)
+3. **Name/handle read as an overlay on the pic** — the identity card sat flush at the banner seam (`py-2`), so the name line butted right against the picture's bottom edge.
+
+### What shipped (`5423e76`, +19/-5, 3 files)
+- **`web/src/hooks/useUsersSocialDirect.ts`** — `refetch()` in BOTH `useFollowing` + `useFollowers` now `cache.delete(`${profileId}:${type}:${first}`)` before bumping `bust`, so the next fetch is fresh and the new/removed circle member shows immediately.
+- **`web/src/components/dex/ProfileReels.tsx`** — both avatar `onError` handlers (reels row + AddCircle search results) guard with `if (img.dataset.fb) return; img.dataset.fb='1'` and fall back to the LOCAL `/default-pictures/profile/red.png` (can't 404) — at most one fallback, never a loop.
+- **`web/src/pages/dex/[...slug].tsx`** — identity card `py-2` → `pt-3 pb-2` so name/@handle bump clearly DOWN under the pic as their own content row.
+
+### Build + deploy
+- `yarn build` clean 129.37s. Pushed `5423e76` → `soundchain-site` building on production target. (verify alias promotes per [[feedback_verify_chunk_hash_promote_after_push]].)
+
+### Lessons
+1. **A client cache makes refetch lie.** Any hook with a TTL cache must invalidate the key inside `refetch()`, or post-mutation refetches silently return the stale snapshot — the mutation looks broken when it actually worked.
+2. **An `<img onError>` that sets a src which can itself error is an infinite loop.** Always guard (one-shot flag) AND prefer a local asset that can't 404. External fallbacks (dicebear) need both.
+3. **"Bump it under the pic" = give the content row real top padding** at the image seam; flush content reads as an overlay even when it's a separate DOM block.
+
+---
+
 ## 🟣 SESSION: May 28, 2026 (Frank → Sarg, autonomous, midday) — PROFILE REELS PILL + INNER CIRCLE RESTORED (`c81a23f`) + FURL TERMINAL HEAT/BATTERY FIX (`f67b9bc`)
 
 Two ships. Frank on Sarg: *"we pushed aome shipments this morning on profile wall again. i notice a couple bugs one the reels avatar pill isnt present and circle is missing my curcle of friends i added and there is no way ti add to my circle now? its missing how to add and remove frineds to my iner circle"* → mid-run: *"bro everytime i use furl xterm and jump on claude mypjone immediately heats up and battery starts to drain!"*.

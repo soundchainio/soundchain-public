@@ -22,19 +22,36 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const now = new Date()
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000)
 
+    // Resolve the author profile so the story carries denormalized creator
+    // fields — same shape /api/feed/stories POST writes. Without these the
+    // GET/ProfileReels grouping can't render the reel pill for the author.
+    const profile = await db
+      .collection('profiles')
+      .findOne({ _id: new ObjectId(auth.profileId) })
+
     const doc: any = {
-      profileId: auth.profileId,
+      // Store profileId as a STRING to match /api/feed/stories POST + the way
+      // ProfileReels/StoriesBar group + match (me.profile.id / followedProfile.id
+      // are strings). Mixed ObjectId/string profileId is the repo's known id-type
+      // trap that yields empty reel rows.
+      profileId: auth.profileId.toString(),
       mediaUrl,
-      mediaType,
+      mediaType: mediaType || 'image',
       caption: caption || undefined,
       duration: typeof duration === 'number' ? duration : 60,
       overlays: overlays || [],
-      attachedTrackId: attachedTrackId ? new ObjectId(attachedTrackId) : undefined,
+      // attachedTrackId can be a non-ObjectId (e.g. radio/wall-audio sentinel);
+      // store as-is to avoid a BSONError 500 on share. The GET reads it raw.
+      attachedTrackId: attachedTrackId || undefined,
       attachedTrackIpfsUrl: attachedAudioUrl || undefined,
       attachedTrackTitle: attachedAudioTitle || undefined,
       attachedTrackArtist: attachedAudioArtist || undefined,
       attachedTrackCoverUrl: attachedAudioCoverUrl || undefined,
+      creatorDisplayName: profile?.displayName || null,
+      creatorUserHandle: profile?.userHandle || null,
+      creatorAvatarUrl: profile?.profilePicture || null,
       isPermanent: false,
+      isGuest: false,
       viewCount: 0,
       reactions: [],
       createdAt: now,
