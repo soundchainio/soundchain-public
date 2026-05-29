@@ -132,8 +132,24 @@ export function getVoiceConfig(): VoiceConfig {
   }
 }
 
-export default function LucyVoicePicker() {
-  const [open, setOpen] = useState(false)
+interface LucyVoicePickerProps {
+  /** When provided, the picker is controlled by the parent (header Voice button). */
+  open?: boolean
+  onClose?: () => void
+}
+
+export default function LucyVoicePicker({ open: openProp, onClose }: LucyVoicePickerProps = {}) {
+  const [internalOpen, setInternalOpen] = useState(false)
+  const isControlled = typeof openProp === 'boolean'
+  const open = isControlled ? !!openProp : internalOpen
+  const setOpen = (v: boolean | ((prev: boolean) => boolean)) => {
+    const next = typeof v === 'function' ? (v as any)(open) : v
+    if (isControlled) {
+      if (!next) onClose?.()
+    } else {
+      setInternalOpen(next)
+    }
+  }
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([])
   const [selected, setSelected] = useState<string>('lucy-default')
   const [explicitVoiceName, setExplicitVoiceName] = useState<string>('')
@@ -249,21 +265,33 @@ export default function LucyVoicePicker() {
 
   return (
     <div className="relative">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="text-xs px-2 py-1 rounded-lg bg-white/5 text-gray-300 border border-white/10 hover:bg-white/10 transition-colors"
-        title="Pick Lucy's voice"
-        aria-label="voice persona"
-      >
-        🎭
-      </button>
+      {/* Internal toggle — only when uncontrolled. In lucy.soundchain.io the
+          header Voice button controls the picker (open/onClose props), so we
+          hide the internal toggle and render the modal as a fixed centered
+          overlay you can actually reach + scroll on mobile. */}
+      {!isControlled && (
+        <button
+          onClick={() => setOpen((v) => !v)}
+          className="text-xs px-2 py-1 rounded-lg bg-white/5 text-gray-300 border border-white/10 hover:bg-white/10 transition-colors"
+          title="Pick Lucy's voice"
+          aria-label="voice persona"
+        >
+          🎭
+        </button>
+      )}
       {open && (
         <>
           <div
-            className="fixed inset-0 z-[90]"
+            className={isControlled
+              ? "fixed inset-0 z-[90] bg-black/70 backdrop-blur-sm"
+              : "fixed inset-0 z-[90]"}
             onClick={() => setOpen(false)}
           />
-          <div className="absolute right-0 top-full mt-2 w-72 max-h-[70vh] overflow-y-auto rounded-xl bg-black border border-white/15 shadow-2xl z-[95] p-2">
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className={isControlled
+              ? "fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[min(90vw,22rem)] max-h-[80vh] overflow-y-auto rounded-xl bg-black border border-white/15 shadow-2xl z-[95] p-2"
+              : "absolute right-0 top-full mt-2 w-72 max-h-[70vh] overflow-y-auto rounded-xl bg-black border border-white/15 shadow-2xl z-[95] p-2"}>
             <div className="text-[10px] uppercase tracking-wide text-gray-500 px-2 py-1">Voice persona</div>
             {VOICE_PERSONAS.map((persona) => {
               const isSel = !explicitVoiceName && persona.id === selected
