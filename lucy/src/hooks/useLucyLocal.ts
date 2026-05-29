@@ -114,7 +114,9 @@ export function useLucyLocal() {
         messages,
         stream: true,
         temperature: 0.7,
-        max_tokens: 1024,
+        // 512 tokens is plenty for a chat reply and keeps the run short — long
+        // generations on iOS PWA push memory pressure into reload territory.
+        max_tokens: 512,
       })
       for await (const chunk of stream) {
         if (signal?.aborted) break
