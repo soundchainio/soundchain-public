@@ -1,7 +1,7 @@
 import { useState, useRef, useMemo, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { useRouter } from 'next/router'
-import { ChevronLeft, ChevronRight, Sparkles, Film, Users, Plus, X, Search, UserPlus, Check, Loader2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Sparkles, Film, Users, Plus, X, Search, UserPlus, Check, Loader2, Pencil } from 'lucide-react'
 import { useMe } from 'hooks/useMe'
 import { useFollowing as useFollowingQuery } from 'hooks/useUsersSocialDirect'  // Phase 7e — Vercel-direct
 import { StoryViewer } from './StoryViewer'
@@ -196,6 +196,134 @@ const ReelRow = ({
   )
 }
 
+// One circle avatar — tap goes straight to the user's wall (Frank's ask).
+// Story ring stays as a decorative "has a live reel" indicator; it does NOT
+// hijack the tap into the StoryViewer anymore.
+const CircleAvatar = ({
+  bubble,
+  manageMode,
+  removing,
+  onOpen,
+  onRemove,
+}: {
+  bubble: StoryBubble
+  manageMode?: boolean
+  removing?: boolean
+  onOpen: (bubble: StoryBubble) => void
+  onRemove?: (bubble: StoryBubble) => void
+}) => (
+  <div className="relative flex-shrink-0">
+    <button
+      onClick={() => { if (!manageMode) onOpen(bubble) }}
+      className="flex flex-col items-center gap-1 group"
+    >
+      <div className="relative">
+        <div
+          className={`w-9 h-9 sm:w-12 sm:h-12 rounded-full p-[2px] transition-all group-hover:opacity-80 ${manageMode ? 'animate-pulse' : ''} ${
+            bubble.hasStory
+              ? 'bg-gradient-to-tr from-purple-500 via-pink-500 to-orange-500'
+              : 'bg-gradient-to-tr from-gray-600 to-gray-700'
+          }`}
+        >
+          <div className="w-full h-full rounded-full p-[2px] bg-black">
+            <div className="w-full h-full rounded-full overflow-hidden bg-neutral-900">
+              <img
+                src={getAvatarUrl(bubble.profilePicture, bubble.profileId)}
+                alt={bubble.displayName || bubble.userHandle}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  const img = e.target as HTMLImageElement
+                  if (img.dataset.fb) return // fall back at most once — never loop the console
+                  img.dataset.fb = '1'
+                  img.src = '/default-pictures/profile/red.png'
+                }}
+              />
+            </div>
+          </div>
+        </div>
+        {bubble.storyCount > 1 && (
+          <div className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 px-1 py-0.5 rounded-full bg-black/80 border border-white/10">
+            <span className="text-[7px] text-cyan-400 font-medium">{bubble.storyCount}</span>
+          </div>
+        )}
+      </div>
+      <span className="text-[9px] text-gray-400 group-hover:text-white transition-colors max-w-[40px] sm:max-w-[52px] truncate">
+        {bubble.displayName || bubble.userHandle}
+      </span>
+    </button>
+    {manageMode && onRemove && (
+      <button
+        onClick={(e) => { e.stopPropagation(); onRemove(bubble) }}
+        title="Remove from circle"
+        disabled={removing}
+        className="absolute -top-1 -left-1 w-4 h-4 rounded-full bg-red-600 hover:bg-red-500 flex items-center justify-center ring-2 ring-black z-10 disabled:opacity-50"
+      >
+        <X className="w-2.5 h-2.5 text-white" />
+      </button>
+    )}
+  </div>
+)
+
+// Inner circle = a capped 2-row stack (7 top / 8 bottom = 15), IG-style.
+// NOT every follow — just the first 15. Each avatar taps through to the wall.
+const CircleGrid = ({
+  title,
+  icon,
+  bubbles,
+  totalCount,
+  emptyMessage,
+  manageMode,
+  removingId,
+  addButton,
+  onOpen,
+  onRemove,
+}: {
+  title: string
+  icon: React.ReactNode
+  bubbles: StoryBubble[]
+  totalCount: number
+  emptyMessage: string
+  manageMode?: boolean
+  removingId?: string | null
+  addButton?: React.ReactNode
+  onOpen: (bubble: StoryBubble) => void
+  onRemove?: (bubble: StoryBubble) => void
+}) => {
+  const capped = bubbles.slice(0, 15)
+  const topRow = capped.slice(0, 7)
+  const bottomRow = capped.slice(7, 15)
+
+  return (
+    <div className="mb-3">
+      <div className="flex items-center gap-2 mb-2 px-1">
+        {icon}
+        <h4 className="text-gray-400 text-xs font-semibold uppercase tracking-wider">{title}</h4>
+        {totalCount > 0 && <span className="text-gray-600 text-xs">{totalCount} following</span>}
+        {addButton && <div className="ml-auto">{addButton}</div>}
+      </div>
+
+      {capped.length === 0 ? (
+        <div className="text-center py-3 text-gray-600 text-xs">{emptyMessage}</div>
+      ) : (
+        <div className="flex flex-col items-center gap-2 px-1">
+          <div className="flex justify-center gap-1 sm:gap-3">
+            {topRow.map((b) => (
+              <CircleAvatar key={b.id} bubble={b} manageMode={manageMode} removing={removingId === b.id} onOpen={onOpen} onRemove={onRemove} />
+            ))}
+          </div>
+          {bottomRow.length > 0 && (
+            <div className="flex justify-center gap-1 sm:gap-3">
+              {bottomRow.map((b) => (
+                <CircleAvatar key={b.id} bubble={b} manageMode={manageMode} removing={removingId === b.id} onOpen={onOpen} onRemove={onRemove} />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // Inline "Add to Circle" modal — search users (Vercel-direct) + follow
 const AddCircleModal = ({
   isOpen,
@@ -368,6 +496,7 @@ export const ProfileReels = ({ profileId, profileHandle, profileDisplayName, pro
 
   const [showCreateStory, setShowCreateStory] = useState(false)
   const [showAddCircle, setShowAddCircle] = useState(false)
+  const [circleEdit, setCircleEdit] = useState(false)
   const [showStoryViewer, setShowStoryViewer] = useState(false)
   const [selectedUserId, setSelectedUserId] = useState<string | undefined>()
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null)
@@ -471,6 +600,12 @@ export const ProfileReels = ({ profileId, profileHandle, profileDisplayName, pro
     }
   }
 
+  // Inner-circle avatars ALWAYS open the user's wall (Frank's directive),
+  // regardless of whether they have a live reel.
+  const handleCircleOpen = (bubble: StoryBubble) => {
+    if (bubble.userHandle) router.push(`/users/${bubble.userHandle}`)
+  }
+
   const handleRemoveFromCircle = async (bubble: StoryBubble) => {
     if (removingId) return
     setRemovingId(bubble.id)
@@ -508,16 +643,30 @@ export const ProfileReels = ({ profileId, profileHandle, profileDisplayName, pro
     </button>
   ) : undefined
 
-  const addCircleButton = isOwnProfile ? (
-    <button
-      onClick={() => setShowAddCircle(true)}
-      className="flex flex-col items-center gap-1 flex-shrink-0 group"
-    >
-      <div className="w-14 h-14 rounded-full border-2 border-dashed border-purple-500/50 group-hover:border-purple-400 transition-colors flex items-center justify-center">
-        <UserPlus className="w-5 h-5 text-purple-400 group-hover:text-purple-300" />
-      </div>
-      <span className="text-[9px] text-purple-400 max-w-[52px] truncate">Add</span>
-    </button>
+  // Circle management lives in the section header (Add + Edit), so the pills
+  // themselves stay clean — no red × stamped on every avatar. The remove
+  // controls only appear while Edit is on.
+  const circleHeaderControls = isOwnProfile ? (
+    <div className="flex items-center gap-1.5">
+      <button
+        onClick={() => setShowAddCircle(true)}
+        className="flex items-center gap-1 px-2 py-1 rounded-full border border-purple-500/40 hover:border-purple-400 text-purple-300 hover:text-purple-200 transition-colors"
+      >
+        <UserPlus className="w-3 h-3" />
+        <span className="text-[10px] font-medium">Add</span>
+      </button>
+      <button
+        onClick={() => setCircleEdit((v) => !v)}
+        className={`flex items-center gap-1 px-2 py-1 rounded-full border transition-colors ${
+          circleEdit
+            ? 'border-cyan-400 text-cyan-300 bg-cyan-500/10'
+            : 'border-white/15 text-gray-400 hover:text-white hover:border-white/30'
+        }`}
+      >
+        {circleEdit ? <Check className="w-3 h-3" /> : <Pencil className="w-3 h-3" />}
+        <span className="text-[10px] font-medium">{circleEdit ? 'Done' : 'Edit'}</span>
+      </button>
+    </div>
   ) : undefined
 
   const reelsTitle = isOwnProfile ? 'Your Reels' : `${profileDisplayName || profileHandle}'s Reels`
@@ -534,15 +683,16 @@ export const ProfileReels = ({ profileId, profileHandle, profileDisplayName, pro
         leadingButton={createReelButton}
         onBubbleClick={handleBubbleClick}
       />
-      <ReelRow
+      <CircleGrid
         title={circleTitle}
         icon={<Users className="w-3.5 h-3.5 text-purple-400" />}
         bubbles={circleBubbles}
-        accentColor="from-purple-500 via-pink-500 to-orange-500"
-        emptyMessage={isOwnProfile ? 'Tap + to add friends to your circle' : 'No one in their circle yet'}
-        leadingButton={addCircleButton}
-        manageMode={isOwnProfile}
-        onBubbleClick={handleBubbleClick}
+        totalCount={circleMembers.length}
+        emptyMessage={isOwnProfile ? 'Tap Add to fill your circle' : 'No one in their circle yet'}
+        manageMode={isOwnProfile && circleEdit}
+        removingId={removingId}
+        addButton={circleHeaderControls}
+        onOpen={handleCircleOpen}
         onRemove={handleRemoveFromCircle}
       />
 
