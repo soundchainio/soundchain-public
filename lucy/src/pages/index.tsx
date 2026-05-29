@@ -616,10 +616,47 @@ export default function LucyHome() {
               </div>
             )}
             {memoryReady && messages.length === 0 && (
-              <div className="text-center py-12 space-y-2">
-                <div className="text-2xl">👋</div>
-                <p className="text-sm text-gray-400">Hi, I'm Lucy. Ask me anything.</p>
-                <p className="text-[10px] text-gray-600">Conversations stay in your browser. Voice in/out optional.</p>
+              <div className="py-6 sm:py-10 px-1">
+                <div className="max-w-md mx-auto">
+                  <div className="rounded-2xl border border-lucy-border bg-lucy-surface/40 backdrop-blur-sm p-5 sm:p-6 space-y-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-lucy-accent to-lucy-glow flex items-center justify-center text-base font-bold text-black shrink-0">
+                        L
+                      </div>
+                      <div>
+                        <div className="text-base font-bold tracking-wider text-white">Hi — I'm Lucy.</div>
+                        <div className="text-[11px] text-gray-500 font-mono uppercase tracking-wider">SoundChain AI · local-first</div>
+                      </div>
+                    </div>
+
+                    <p className="text-sm text-gray-200 leading-relaxed">
+                      I'm a thinking partner who actually lives on your phone. Not in a data center, not in someone else's cloud — <span className="text-lucy-accent">on this device</span>. Ask me anything: code, ideas, what to make for dinner, why your migration broke. I'll talk to you like a person.
+                    </p>
+
+                    <div className="space-y-2 text-[12px] text-gray-400">
+                      <div className="flex items-start gap-2">
+                        <Cpu className="w-3.5 h-3.5 mt-0.5 text-lucy-glow shrink-0" />
+                        <span><span className="text-gray-200">Off-grid by default.</span> In LOCAL mode I run on your phone's hardware (WebLLM, Llama 3.2 1B). Nothing leaves the device.</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <Cloud className="w-3.5 h-3.5 mt-0.5 text-lucy-accent shrink-0" />
+                        <span><span className="text-gray-200">WiFi makes me smarter, not necessary.</span> Tap the cloud pill to switch to the bigger model when you want extra brain.</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <Download className="w-3.5 h-3.5 mt-0.5 text-gray-300 shrink-0" />
+                        <span><span className="text-gray-200">Your chats are yours.</span> Stored locally in this browser. Tap the download button up top to save a chat to your Files / Downloads.</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <Video className="w-3.5 h-3.5 mt-0.5 text-lucy-glow shrink-0" />
+                        <span><span className="text-gray-200">Eyes + voice optional.</span> Tap LIVE to hand me the camera, or the mic to talk instead of type.</span>
+                      </div>
+                    </div>
+
+                    <p className="text-[12px] text-gray-500 italic border-t border-lucy-border pt-3">
+                      What's on your mind?
+                    </p>
+                  </div>
+                </div>
               </div>
             )}
             {messages.map((m, i) => (
