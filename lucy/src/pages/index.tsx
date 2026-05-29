@@ -388,6 +388,33 @@ export default function LucyHome() {
     if (typeof window !== 'undefined') window.speechSynthesis?.cancel()
   }
 
+  // Save chat to the user's Files app (iOS) / Downloads (Android/desktop).
+  // Lives on the device — pure local-first export, no server roundtrip.
+  // This is the first concrete piece of the "Lucy lives on your phone, brain
+  // and memory in hardware" vision.
+  const exportChat = () => {
+    if (typeof window === 'undefined' || messages.length === 0) return
+    const ts = new Date()
+    const stamp = ts.toISOString().replace(/[:.]/g, '-').slice(0, 19)
+    const header = `# Lucy — SoundChain AI\n# Exported ${ts.toString()}\n# Conversation: ${activeConvId}\n\n`
+    const body = messages.map((m) => {
+      const who = m.role === 'user' ? 'You' : 'Lucy'
+      const tag = m.role === 'assistant' && m.source ? ` [${m.source === 'local' ? 'on-device' : 'cloud'}]` : ''
+      // Clean unresolved gif markers for the exported transcript.
+      const clean = (m.content || '').replace(/\[gif:\s*[^\]]+\]/gi, '').trim()
+      return `## ${who}${tag}\n${clean}\n`
+    }).join('\n')
+    const blob = new Blob([header + body], { type: 'text/markdown;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `lucy-chat-${stamp}.md`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
+  }
+
   // GIPHY — search via the server proxy (same provider as SC pulse/wall posts).
   const searchGifs = useCallback(async (q: string) => {
     setGifLoading(true)
@@ -426,14 +453,24 @@ export default function LucyHome() {
     ;(async () => {
       const matches = [...last.content.matchAll(/\[gif:\s*([^\]]+)\]/gi)]
       let next = last.content
+      let apiAvailable = true
       for (const m of matches) {
         const term = m[1].trim()
         try {
           const r = await fetch(`/api/giphy?q=${encodeURIComponent(term)}&limit=1`)
           const d = await r.json()
+          if (!r.ok) {
+            // No GIPHY key on this Vercel project → strip the marker quietly
+            // so Lucy's reply reads clean instead of leaking `[gif: ...]` text.
+            apiAvailable = false
+            break
+          }
           const url = d?.gifs?.[0]?.url
           if (url) next = next.replace(m[0], url)
-        } catch {}
+        } catch { apiAvailable = false; break }
+      }
+      if (!apiAvailable) {
+        next = next.replace(/\n?\s*\[gif:\s*[^\]]+\]\s*\n?/gi, '\n').replace(/\n{3,}/g, '\n\n').trim()
       }
       if (!cancelled && next !== last.content) {
         setMessages((msgs) => msgs.map((mm, i) => i === msgs.length - 1 ? { ...mm, content: next } : mm))
@@ -529,6 +566,15 @@ export default function LucyHome() {
                 title="Live camera + continuous chat"
               >
                 <Video className="w-3 h-3" /> Live
+              </button>
+              <button
+                onClick={exportChat}
+                disabled={messages.length === 0}
+                className="p-2 rounded bg-lucy-surface text-gray-400 hover:text-lucy-accent transition disabled:opacity-30"
+                aria-label="Save chat to your files"
+                title="Save this conversation to your Files (iOS Files / Android Downloads)"
+              >
+                <Download className="w-4 h-4" />
               </button>
               <button
                 onClick={() => { stopStream(); clearMemory() }}
@@ -653,7 +699,11 @@ export default function LucyHome() {
               }}
               placeholder={streaming ? 'Lucy is thinking…' : 'Ask Lucy anything…'}
               rows={1}
-              className="flex-1 resize-none bg-lucy-bg border border-lucy-border rounded px-3 py-2.5 text-base focus:outline-none focus:border-lucy-accent text-white placeholder:text-gray-600 max-h-32"
+              // Explicit 16px fontSize + touch-action: manipulation prevents iOS
+              // Safari's auto-zoom on focus (anything <16px triggers it, and class
+              // utilities can lose to user-agent styles in PWA standalone mode).
+              style={{ fontSize: '16px', touchAction: 'manipulation' }}
+              className="flex-1 resize-none bg-lucy-bg border border-lucy-border rounded px-3 py-2.5 focus:outline-none focus:border-lucy-accent text-white placeholder:text-gray-600 max-h-32"
               disabled={streaming}
             />
             {streaming ? (
@@ -698,7 +748,8 @@ export default function LucyHome() {
                   value={gifQuery}
                   onChange={(e) => setGifQuery(e.target.value)}
                   placeholder="Search GIFs…"
-                  className="flex-1 bg-lucy-bg border border-lucy-border rounded px-3 py-2 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-lucy-accent"
+                  style={{ fontSize: '16px', touchAction: 'manipulation' }}
+                  className="flex-1 bg-lucy-bg border border-lucy-border rounded px-3 py-2 text-white placeholder:text-gray-600 focus:outline-none focus:border-lucy-accent"
                 />
                 <button
                   onClick={() => setGifPickerOpen(false)}
