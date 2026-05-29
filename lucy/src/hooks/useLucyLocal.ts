@@ -114,9 +114,12 @@ export function useLucyLocal() {
         messages,
         stream: true,
         temperature: 0.7,
-        // 512 tokens is plenty for a chat reply and keeps the run short — long
-        // generations on iOS PWA push memory pressure into reload territory.
-        max_tokens: 512,
+        // No max_tokens cap. Standing directive: Lucy lives on the user's
+        // device, so length shouldn't be artificially bounded. The model
+        // stops naturally on EOS or when it runs into its own context
+        // ceiling. Trade-off accepted: very long generations can push iOS
+        // Safari into a memory-reclaim reload on some phones.
+        max_tokens: -1,
       })
       for await (const chunk of stream) {
         if (signal?.aborted) break
