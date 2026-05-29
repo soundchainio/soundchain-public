@@ -27,22 +27,31 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     try {
       const pid = new ObjectId(profileId)
+      const sid = profileId // string form — the canonical Lambda FollowService stored ids as STRINGS
+
+      // The follows collection mixes id TYPES, not just field names:
+      //   - 708-era legacy docs (Lambda FollowService / Follow model `@prop string`)
+      //     store followerId/followedId as hex STRINGS.
+      //   - recent docs (follow/toggle, feed/follow) store them as ObjectId.
+      // Plus very-old Lambda docs used followerProfileId/followingProfileId.
+      // Match every form, then coerce partner ids → ObjectId for the profiles _id lookup.
+      const toOid = (v: any): ObjectId | null => {
+        if (!v) return null
+        if (v instanceof ObjectId) return v
+        try { return new ObjectId(String(v)) } catch { return null }
+      }
 
       if (type === 'followers') {
-        // The follows collection has TWO schemas: the canonical writers
-        // (follow/toggle, feed/follow, pulse/follow) store { followerId, followedId };
-        // legacy Lambda-era docs used { followerProfileId, followingProfileId }.
-        // Match either so newly-added members AND old docs both resolve.
         const follows = await db.collection('follows')
-          .find({ $or: [{ followedId: pid }, { followingProfileId: pid }] })
+          .find({ $or: [{ followedId: pid }, { followedId: sid }, { followingProfileId: pid }, { followingProfileId: sid }] })
           .sort({ createdAt: -1 })
           .limit(limit)
           .toArray()
 
-        const followerIds = follows.map(f => f.followerId || f.followerProfileId).filter(Boolean)
-        const profiles = followerIds.length > 0
+        const followerOids = follows.map(f => toOid(f.followerId ?? f.followerProfileId)).filter(Boolean)
+        const profiles = followerOids.length > 0
           ? await db.collection('profiles')
-              .find({ _id: { $in: followerIds } })
+              .find({ _id: { $in: followerOids } })
               .project({ displayName: 1, userHandle: 1, profilePicture: 1, verified: 1, teamMember: 1, badges: 1, tracksCount: 1, followerCount: 1 })
               .toArray()
           : []
@@ -70,18 +79,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(200).json({ nodes, pageInfo: { totalCount: nodes.length } })
 
       } else if (type === 'following') {
-        // Same dual-schema match as followers (see note above): canonical
-        // { followerId, followedId } OR legacy { followerProfileId, followingProfileId }.
+        // Same multi-type match as followers (see note above).
         const follows = await db.collection('follows')
-          .find({ $or: [{ followerId: pid }, { followerProfileId: pid }] })
+          .find({ $or: [{ followerId: pid }, { followerId: sid }, { followerProfileId: pid }, { followerProfileId: sid }] })
           .sort({ createdAt: -1 })
           .limit(limit)
           .toArray()
 
-        const followingIds = follows.map(f => f.followedId || f.followingProfileId).filter(Boolean)
-        const profiles = followingIds.length > 0
+        const followingOids = follows.map(f => toOid(f.followedId ?? f.followingProfileId)).filter(Boolean)
+        const profiles = followingOids.length > 0
           ? await db.collection('profiles')
-              .find({ _id: { $in: followingIds } })
+              .find({ _id: { $in: followingOids } })
               .project({ displayName: 1, userHandle: 1, profilePicture: 1, verified: 1, teamMember: 1, badges: 1, tracksCount: 1, followerCount: 1 })
               .toArray()
           : []
