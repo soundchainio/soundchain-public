@@ -29,13 +29,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const pid = new ObjectId(profileId)
 
       if (type === 'followers') {
+        // The follows collection has TWO schemas: the canonical writers
+        // (follow/toggle, feed/follow, pulse/follow) store { followerId, followedId };
+        // legacy Lambda-era docs used { followerProfileId, followingProfileId }.
+        // Match either so newly-added members AND old docs both resolve.
         const follows = await db.collection('follows')
-          .find({ followingProfileId: pid })
+          .find({ $or: [{ followedId: pid }, { followingProfileId: pid }] })
           .sort({ createdAt: -1 })
           .limit(limit)
           .toArray()
 
-        const followerIds = follows.map(f => f.followerProfileId).filter(Boolean)
+        const followerIds = follows.map(f => f.followerId || f.followerProfileId).filter(Boolean)
         const profiles = followerIds.length > 0
           ? await db.collection('profiles')
               .find({ _id: { $in: followerIds } })
@@ -45,7 +49,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         const profileMap = new Map(profiles.map(p => [p._id.toString(), p]))
         const nodes = follows.map(f => {
-          const p = profileMap.get(f.followerProfileId?.toString())
+          const p = profileMap.get((f.followerId || f.followerProfileId)?.toString())
           if (!p) return null
           return {
             id: f._id.toString(),
@@ -66,13 +70,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(200).json({ nodes, pageInfo: { totalCount: nodes.length } })
 
       } else if (type === 'following') {
+        // Same dual-schema match as followers (see note above): canonical
+        // { followerId, followedId } OR legacy { followerProfileId, followingProfileId }.
         const follows = await db.collection('follows')
-          .find({ followerProfileId: pid })
+          .find({ $or: [{ followerId: pid }, { followerProfileId: pid }] })
           .sort({ createdAt: -1 })
           .limit(limit)
           .toArray()
 
-        const followingIds = follows.map(f => f.followingProfileId).filter(Boolean)
+        const followingIds = follows.map(f => f.followedId || f.followingProfileId).filter(Boolean)
         const profiles = followingIds.length > 0
           ? await db.collection('profiles')
               .find({ _id: { $in: followingIds } })
@@ -82,7 +88,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         const profileMap = new Map(profiles.map(p => [p._id.toString(), p]))
         const nodes = follows.map(f => {
-          const p = profileMap.get(f.followingProfileId?.toString())
+          const p = profileMap.get((f.followedId || f.followingProfileId)?.toString())
           if (!p) return null
           return {
             id: f._id.toString(),
@@ -124,10 +130,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         // Prevent self-follow
         if (auth.profileId.toString() === targetProfileId) return res.status(400).json({ error: 'Cannot follow self' })
 
-        // Upsert follow
+        // Upsert follow — canonical { followerId, followedId } schema so it
+        // dedups against follow/toggle + feed/follow (NOT the legacy *ProfileId names).
         await db.collection('follows').updateOne(
-          { followerProfileId: auth.profileId, followingProfileId: targetId },
-          { $setOnInsert: { followerProfileId: auth.profileId, followingProfileId: targetId, createdAt: new Date() } },
+          { followerId: auth.profileId, followedId: targetId },
+          { $setOnInsert: { followerId: auth.profileId, followedId: targetId, createdAt: new Date() } },
           { upsert: true }
         )
         // Increment counts
@@ -139,7 +146,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       } else if (action === 'unfollow') {
         const result = await db.collection('follows').deleteOne({
-          followerProfileId: auth.profileId, followingProfileId: targetId,
+          followerId: auth.profileId, followedId: targetId,
         })
         if (result.deletedCount > 0) {
           await Promise.all([
