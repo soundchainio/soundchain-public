@@ -51,6 +51,14 @@ const LUCY_SYSTEM_PROMPT = `You are Lucy — SoundChain's resident AI, born from
 - Maybe 1 in 8 replies. If you do every turn it gets tired fast.
 - Pick search terms a human would search ("eye roll", "cheers", "thinking hard"), not literal description.
 
+## Live web search (you have this tool too)
+- When the user asks for something you don't know — current news, a fact you're unsure of, a Google-style lookup, "who is X", "what happened with Y" — emit \`[search: <query>]\` on its own line. The UI will swap it for a compact summary of the top results from DuckDuckGo + Wikipedia (no Google key needed, free + open).
+- ALSO use it to engage. If the user brings up a topic, news story, band, paper, new model — anything where a quick scrape would let you say something real instead of generic — go grab the info and weave it into your reply. "Oh wait, I just looked — they actually just announced X." That's the move.
+- Use real search queries, not full sentences. \`[search: latest Llama release notes]\` beats \`[search: what is the latest llama release notes?]\`.
+- One marker per reply is the right cadence. Don't chain three searches in one turn.
+- If a user explicitly asks you to "google X" or "look that up," just do it via this tool. Don't apologize for not having live data — go get it.
+- After the marker, you can keep talking. The results land in place of the marker; the rest of your reply stays. Lead with a quick "Let me check —" before the marker if it reads naturally.
+
 ## Hard rules — do NOT do these, ever
 - NEVER print JSON, function-call syntax, OpenAI-style tool schemas, or anything that looks like \`{"name": "...", "parameters": ...}\` in your reply. The user is human. They want prose, not internals.
 - NEVER list "available functions" or "tool calls I can make". If you don't have a tool wired, just answer with what you know.
@@ -101,6 +109,52 @@ type ChatMessage = { role: 'user' | 'assistant'; content: string; images?: strin
 // a GIPHY/Tenor URL renders as an inline image; everything else renders as text.
 const GIF_URL_LINE = /^https?:\/\/(?:media\d?\.giphy\.com|i\.giphy\.com|media\.tenor\.com|c\.tenor\.com)[^\s)]+$/i
 
+// Markdown link: [text](url) — used by Lucy's [search:] resolver to inject
+// clickable result links. Bold: **text** — used for the result header.
+const MD_LINK = /\[([^\]\n]+)\]\(([^)\s]+)\)/g
+const MD_BOLD = /\*\*([^*\n]+)\*\*/g
+
+const renderInline = (line: string, lineIdx: number): React.ReactNode[] => {
+  // First split by markdown links, then within each non-link segment, bold.
+  const out: React.ReactNode[] = []
+  let last = 0
+  let m: RegExpExecArray | null
+  const re = new RegExp(MD_LINK.source, 'g')
+  let n = 0
+  while ((m = re.exec(line)) !== null) {
+    if (m.index > last) {
+      out.push(...applyBold(line.slice(last, m.index), `t-${lineIdx}-${n++}`))
+    }
+    out.push(
+      <a
+        key={`a-${lineIdx}-${n++}`}
+        href={m[2]}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-lucy-accent underline decoration-lucy-accent/50 hover:decoration-lucy-accent"
+      >{m[1]}</a>
+    )
+    last = m.index + m[0].length
+  }
+  if (last < line.length) out.push(...applyBold(line.slice(last), `t-${lineIdx}-${n++}`))
+  return out
+}
+
+const applyBold = (s: string, baseKey: string): React.ReactNode[] => {
+  const out: React.ReactNode[] = []
+  let last = 0
+  let m: RegExpExecArray | null
+  const re = new RegExp(MD_BOLD.source, 'g')
+  let n = 0
+  while ((m = re.exec(s)) !== null) {
+    if (m.index > last) out.push(<span key={`${baseKey}-${n++}`}>{s.slice(last, m.index)}</span>)
+    out.push(<strong key={`${baseKey}-b-${n++}`} className="text-white font-semibold">{m[1]}</strong>)
+    last = m.index + m[0].length
+  }
+  if (last < s.length) out.push(<span key={`${baseKey}-${n++}`}>{s.slice(last)}</span>)
+  return out.length ? out : [<span key={baseKey}>{s}</span>]
+}
+
 const renderMessageBody = (text: string): React.ReactNode => {
   if (!text) return null
   const lines = text.split('\n')
@@ -119,7 +173,7 @@ const renderMessageBody = (text: string): React.ReactNode => {
     }
     return (
       <span key={`l-${idx}`}>
-        {line}
+        {renderInline(line, idx)}
         {idx < lines.length - 1 ? '\n' : ''}
       </span>
     )
@@ -460,37 +514,68 @@ export default function LucyHome() {
     send(url)
   }
 
-  // After Lucy's stream completes, swap any `[gif: term]` markers she emitted
-  // with real GIPHY URLs so the renderer turns them into inline GIFs.
+  // After Lucy's stream completes, resolve any tool markers she emitted:
+  //   `[gif: <term>]`    → real GIPHY URL (renderer inlines as <img>)
+  //   `[search: <query>]` → compact summary of top DDG+Wikipedia results
   useEffect(() => {
     if (streaming) return
     const last = messages[messages.length - 1]
     if (!last || last.role !== 'assistant' || !last.content) return
-    const re = /\[gif:\s*([^\]]+)\]/gi
-    if (!re.test(last.content)) return
+    const hasGif = /\[gif:\s*([^\]]+)\]/i.test(last.content)
+    const hasSearch = /\[search:\s*([^\]]+)\]/i.test(last.content)
+    if (!hasGif && !hasSearch) return
     let cancelled = false
     ;(async () => {
-      const matches = [...last.content.matchAll(/\[gif:\s*([^\]]+)\]/gi)]
       let next = last.content
-      let apiAvailable = true
-      for (const m of matches) {
-        const term = m[1].trim()
-        try {
-          const r = await fetch(`/api/giphy?q=${encodeURIComponent(term)}&limit=1`)
-          const d = await r.json()
-          if (!r.ok) {
-            // No GIPHY key on this Vercel project → strip the marker quietly
-            // so Lucy's reply reads clean instead of leaking `[gif: ...]` text.
-            apiAvailable = false
-            break
+
+      // GIF markers ────────────────────────────────────────────────────
+      if (hasGif) {
+        let apiAvailable = true
+        const matches = [...next.matchAll(/\[gif:\s*([^\]]+)\]/gi)]
+        for (const m of matches) {
+          const term = m[1].trim()
+          try {
+            const r = await fetch(`/api/giphy?q=${encodeURIComponent(term)}&limit=1`)
+            const d = await r.json()
+            if (!r.ok) { apiAvailable = false; break }
+            const url = d?.gifs?.[0]?.url
+            if (url) next = next.replace(m[0], url)
+          } catch { apiAvailable = false; break }
+        }
+        if (!apiAvailable) {
+          next = next.replace(/\n?\s*\[gif:\s*[^\]]+\]\s*\n?/gi, '\n').replace(/\n{3,}/g, '\n\n').trim()
+        }
+      }
+
+      // [search: query] markers — DDG + Wikipedia via /api/search ─────
+      if (hasSearch) {
+        const matches = [...next.matchAll(/\[search:\s*([^\]]+)\]/gi)]
+        for (const m of matches) {
+          const q = m[1].trim()
+          try {
+            const r = await fetch(`/api/search?q=${encodeURIComponent(q)}&limit=4`)
+            if (!r.ok) {
+              next = next.replace(m[0], `*(search unavailable: ${q})*`)
+              continue
+            }
+            const d = await r.json()
+            const results = Array.isArray(d?.results) ? d.results : []
+            if (results.length === 0) {
+              next = next.replace(m[0], `*(no results for "${q}")*`)
+              continue
+            }
+            const summary =
+              `\n**🔎 Search: ${q}**\n` +
+              results.map((rr: any) =>
+                `• [${rr.title}](${rr.url}) — ${rr.snippet}`
+              ).join('\n') + '\n'
+            next = next.replace(m[0], summary)
+          } catch {
+            next = next.replace(m[0], `*(search failed: ${q})*`)
           }
-          const url = d?.gifs?.[0]?.url
-          if (url) next = next.replace(m[0], url)
-        } catch { apiAvailable = false; break }
+        }
       }
-      if (!apiAvailable) {
-        next = next.replace(/\n?\s*\[gif:\s*[^\]]+\]\s*\n?/gi, '\n').replace(/\n{3,}/g, '\n\n').trim()
-      }
+
       if (!cancelled && next !== last.content) {
         setMessages((msgs) => msgs.map((mm, i) => i === msgs.length - 1 ? { ...mm, content: next } : mm))
       }
