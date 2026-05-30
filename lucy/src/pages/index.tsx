@@ -142,6 +142,17 @@ const GIF_URL_LINE = new RegExp(`^https?://${GIF_HOST}/${URL_CHARS}+${GIF_EXT}$`
 // around each match.
 const GIF_URL_ANY = new RegExp(`https?://${GIF_HOST}/${URL_CHARS}+${GIF_EXT}`, 'gi')
 
+// Lucy's GIF marker. She's TOLD to emit `[gif: term]` on its own line, but the
+// cloud model (anvil's 8B) routinely drops the brackets ("gif: lightspeed
+// connection") or wraps the marker in markdown ("**[gif: ...]**", "*gif: ...*").
+// All of those used to slip past the bracket-only resolver and render as literal
+// text. Match a whole LINE that — after stripping any leading/trailing markdown,
+// quote or list chars and optional brackets — is just `gif: <term>`. The `m`
+// flag anchors `^`/`$` to a line so "gif:" never matches mid-prose; the lazy
+// term capture stops before trailing markdown so "**" etc. is consumed, not kept.
+const GIF_MARKER_SRC = '^[ \\t>*_`~-]*\\[?\\s*gif:\\s*([^\\]\\n]+?)\\s*\\]?[ \\t*_`~]*$'
+const gifMarkerRe = () => new RegExp(GIF_MARKER_SRC, 'gim')
+
 const gifImg = (src: string, key: string) => (
   <img
     key={key}
@@ -610,7 +621,7 @@ export default function LucyHome() {
       const who = m.role === 'user' ? 'You' : 'Lucy'
       const tag = m.role === 'assistant' && m.source ? ` [${m.source === 'local' ? 'on-device' : 'cloud'}]` : ''
       // Clean unresolved gif markers for the exported transcript.
-      const clean = (m.content || '').replace(/\[gif:\s*[^\]]+\]/gi, '').trim()
+      const clean = (m.content || '').replace(gifMarkerRe(), '').trim()
       return `## ${who}${tag}\n${clean}\n`
     }).join('\n')
     const blob = new Blob([header + body], { type: 'text/markdown;charset=utf-8' })
@@ -657,7 +668,7 @@ export default function LucyHome() {
     if (streaming) return
     const last = messages[messages.length - 1]
     if (!last || last.role !== 'assistant' || !last.content) return
-    const hasGif = /\[gif:\s*([^\]]+)\]/i.test(last.content)
+    const hasGif = gifMarkerRe().test(last.content)
     const hasSearch = /\[search:\s*([^\]]+)\]/i.test(last.content)
     if (!hasGif && !hasSearch) return
     let cancelled = false
@@ -667,7 +678,7 @@ export default function LucyHome() {
       // GIF markers ────────────────────────────────────────────────────
       if (hasGif) {
         let apiAvailable = true
-        const matches = [...next.matchAll(/\[gif:\s*([^\]]+)\]/gi)]
+        const matches = [...next.matchAll(gifMarkerRe())]
         for (const m of matches) {
           const term = m[1].trim()
           try {
@@ -682,7 +693,7 @@ export default function LucyHome() {
           } catch { apiAvailable = false; break }
         }
         if (!apiAvailable) {
-          next = next.replace(/\n?\s*\[gif:\s*[^\]]+\]\s*\n?/gi, '\n').replace(/\n{3,}/g, '\n\n').trim()
+          next = next.replace(gifMarkerRe(), '\n').replace(/\n{3,}/g, '\n\n').trim()
         }
         // Collapse any 3+ newlines created by the wrap above.
         next = next.replace(/\n{3,}/g, '\n\n')
