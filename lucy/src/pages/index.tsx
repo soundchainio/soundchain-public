@@ -150,7 +150,12 @@ const GIF_URL_ANY = new RegExp(`https?://${GIF_HOST}/${URL_CHARS}+${GIF_EXT}`, '
 // quote or list chars and optional brackets — is just `gif: <term>`. The `m`
 // flag anchors `^`/`$` to a line so "gif:" never matches mid-prose; the lazy
 // term capture stops before trailing markdown so "**" etc. is consumed, not kept.
-const GIF_MARKER_SRC = '^[ \\t>*_`~\'"-]*\\[?\\s*gif:\\s*([^\\]\\n]+?)\\s*\\]?[ \\t*_`~\'".]*$'
+// Bracketed `[gif: term]` matches ANYWHERE in a line (incl. wrapped in
+// quotes/markdown, and with prose before/after — the 8B writes "I'm excited!
+// '[gif: electric spark]'" all on one line). Bare `gif: term` only matches at
+// the START of a line, so mid-prose "...that gif: it was great" never triggers.
+// Group 1 = bracketed term, group 2 = bare term.
+const GIF_MARKER_SRC = '(?:[*_`~\'"]*\\[\\s*gif:\\s*([^\\]\\n]+?)\\s*\\][*_`~\'".]*|^[ \\t>*_`~\'"-]*gif:\\s*([^\\n]+?)[ \\t*_`~\'".]*$)'
 const gifMarkerRe = () => new RegExp(GIF_MARKER_SRC, 'gim')
 
 // Strip real GIF/media URLs out of conversation history BEFORE sending it to the
@@ -699,7 +704,7 @@ export default function LucyHome() {
         let apiAvailable = true
         const matches = [...next.matchAll(gifMarkerRe())]
         for (const m of matches) {
-          const term = m[1].trim()
+          const term = (m[1] ?? m[2]).trim()
           try {
             const r = await fetch(`/api/giphy?q=${encodeURIComponent(term)}&limit=1`)
             const d = await r.json()
