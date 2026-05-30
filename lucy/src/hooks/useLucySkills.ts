@@ -36,7 +36,7 @@ export type Skill = {
   enabled: boolean
   flagged: boolean
   flagReason?: string
-  source: 'paste' | 'file' | 'fence' | 'command'
+  source: 'paste' | 'file' | 'fence' | 'command' | 'url'
   version: string
   addedAt: number
 }
@@ -167,6 +167,26 @@ export function detectSkill(text: string): { isSkill: boolean; raw: string; sour
   if (LEARN_INTENT.test(t) && /^#\s+.+/m.test(t) && /##\s*(instructions|purpose|steps)/i.test(t)) {
     return { isSkill: true, raw: t, source: 'paste' }
   }
+  return null
+}
+
+// Detect a request to LEARN A SKILL FROM A URL. Lucy fetches it herself
+// (on-device first, server-proxy fallback) and ingests through the same
+// sanitize → store pipeline. Triggers: `[skill: <url>]`, `/skill <url>`, a URL
+// ending in skill.md / .md, or any URL with explicit learn-intent.
+export function detectSkillUrl(text: string): string | null {
+  const t = (text || '').trim()
+  if (!t) return null
+  const urlRe = /(https?:\/\/[^\s)>\]]+)/i
+  const bracket = t.match(/\[skill:\s*(https?:\/\/[^\s\]]+)\s*\]/i)
+  if (bracket) return bracket[1]
+  const cmd = t.match(/^\/(skill|learn)\b[ \t]+(https?:\/\/\S+)/i)
+  if (cmd) return cmd[2]
+  const url = (t.match(urlRe) || [])[1]
+  if (!url) return null
+  // a .md / skill.md URL is high-confidence; any URL + learn-intent also counts
+  if (/\bskill\.md(?:[?#]|$)/i.test(url) || /\.md(?:[?#]|$)/i.test(url)) return url
+  if (LEARN_INTENT.test(t)) return url
   return null
 }
 

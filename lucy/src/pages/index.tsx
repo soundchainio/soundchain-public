@@ -26,7 +26,7 @@ import { Cloud, CloudOff, Cpu, Download, Heart, Menu, MessageSquarePlus, Mic, Mi
 import { useLucyMemory, listConversations, deleteConversation, type ConversationMeta } from 'hooks/useLucyMemory'
 import { useLucyLocal } from 'hooks/useLucyLocal'
 import { useLucyHost } from 'hooks/useLucyHost'
-import { useLucySkills, detectSkill, SKILL_CORE_REASSERT } from 'hooks/useLucySkills'
+import { useLucySkills, detectSkill, detectSkillUrl, SKILL_CORE_REASSERT } from 'hooks/useLucySkills'
 import LucyVoicePicker, { getVoiceConfig } from 'components/LucyVoicePicker'
 
 const LucyLiveMode = dynamic(() => import('components/LucyLiveMode'), { ssr: false })
@@ -68,6 +68,11 @@ const LUCY_SYSTEM_PROMPT = `You are Lucy — SoundChain's resident AI, born from
 - It covers: crypto prices (\`[live: bitcoin price]\`, \`[live: eth and sol]\`), weather (\`[live: weather in Tokyo]\`), current time anywhere (\`[live: time in London]\`), cooking recipes (\`[live: recipe for carbonara]\`), and stock quotes (\`[live: AAPL stock]\`).
 - When the user asks "how much is bitcoin", "what's the weather", "what time is it in X", "give me a recipe for Y", "TSLA price" — emit the matching \`[live: ...]\` marker. Do NOT answer from memory; do NOT use \`[search:]\` for these (live is faster + exact).
 - Put the marker on its own line; you can keep talking before/after it. The live answer lands in place of the marker.
+
+## Video (you can show real, playable videos)
+- To SHOW a video, emit \`[video: <what to find>]\` on its own line. The UI scrapes a REAL YouTube result and renders a playable thumbnail inline. NEVER type a youtube.com/watch?v= URL yourself — you don't know real video ids and will hallucinate a dead link. The marker is the only way that works.
+- Use it when the user asks to "show me / find footage of / play / watch" something. e.g. \`[video: Blue Origin rocket explosion]\`, \`[video: Wembanyama highlights]\`.
+- After the marker you can keep talking. One video per reply is plenty.
 
 ## Live news (you scan the headlines in real time)
 - You have a live news feed across beats. Emit \`[news: <topic>]\` on its own line for current headlines. Topics: \`world\`, \`film\`, \`sports\`, \`arts\`, \`government\` (politics), \`tech\`, \`music\`, \`business\`, \`science\`. e.g. \`[news: film]\`, \`[news: world]\`, \`[news: government]\`.
@@ -209,6 +214,64 @@ const gifImg = (src: string, key: string) => (
     className="max-w-[260px] max-h-[200px] rounded-lg object-contain my-1 block"
   />
 )
+
+// ── Rich media embeds ───────────────────────────────────────────────────────
+// YouTube (+ youtu.be / shorts) → an inline thumbnail that expands to a real
+// playable embed on tap. Lucy emits these via [video: ...]; pasted YT links
+// also render this way. youtube-nocookie + only the 11-char id is used — never
+// a hallucinated /watch?v= (which is why [video:] scrapes a REAL id first).
+const YT_ID_RE = /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{11})/i
+const YT_URL_ANY = /https?:\/\/(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)[\w-]{11}[^\s)]*/gi
+// Plain image URL (jpg/jpeg/png/webp). gif/mp4/webp media-host URLs are handled
+// by the GIF path; this catches generic images Lucy/news/thumbnails surface.
+const IMG_URL_ANY = /https?:\/\/[^\s)]+\.(?:jpg|jpeg|png)(?:[?#][^\s)]*)?/gi
+const IMG_URL_LINE = /^https?:\/\/[^\s)]+\.(?:jpg|jpeg|png)(?:[?#][^\s)]*)?$/i
+
+function YouTubeEmbed({ id, label }: { id: string; label?: string }) {
+  const [play, setPlay] = useState(false)
+  if (play) {
+    return (
+      <span className="block my-1.5">
+        <iframe
+          src={`https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0`}
+          title={label || 'video'}
+          allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+          allowFullScreen
+          className="w-full max-w-[400px] aspect-video rounded-lg border border-lucy-border"
+        />
+      </span>
+    )
+  }
+  return (
+    <button
+      type="button"
+      onClick={() => setPlay(true)}
+      className="relative block my-1.5 w-full max-w-[400px] group rounded-lg overflow-hidden border border-lucy-border"
+      title={label || 'Play video'}
+    >
+      <img src={`https://i.ytimg.com/vi/${id}/hqdefault.jpg`} alt={label || 'video'} loading="lazy" className="w-full object-cover aspect-video" />
+      <span className="absolute inset-0 flex items-center justify-center">
+        <span className="w-12 h-12 rounded-full bg-black/65 group-hover:bg-red-600 transition flex items-center justify-center">
+          <span className="ml-0.5 border-y-[8px] border-y-transparent border-l-[13px] border-l-white" />
+        </span>
+      </span>
+      {label && <span className="absolute bottom-0 inset-x-0 px-2 py-1 text-[11px] text-white/90 bg-gradient-to-t from-black/70 to-transparent text-left truncate">{label}</span>}
+    </button>
+  )
+}
+
+const imgEmbed = (src: string, key: string) => (
+  <img key={key} src={src} alt="" loading="lazy" decoding="async" className="max-w-[320px] max-h-[260px] rounded-lg object-contain my-1 block border border-lucy-border" />
+)
+
+// Render any single media URL as the right element; null if not media.
+const renderMediaUrl = (url: string, key: string): React.ReactNode | null => {
+  const yt = url.match(YT_ID_RE)
+  if (yt) return <YouTubeEmbed key={key} id={yt[1]} />
+  if (new RegExp(GIF_URL_ANY.source, 'i').test(url)) return gifImg(url, key)
+  if (IMG_URL_LINE.test(url)) return imgEmbed(url, key)
+  return null
+}
 
 // Markdown link: [text](url) — used by Lucy's [search:] resolver to inject
 // clickable result links. Bold: **text** — used for the result header.
@@ -470,6 +533,45 @@ export default function LucyHome() {
     // store + reply is deterministic (reliable even on the 1B), and the parsed
     // skill is sanitized before it can ever touch a prompt. The skill then
     // becomes a capability on future turns via skills.promptBlock().
+    // URL skill: Lucy fetches the skill.md herself — on-device first (works for
+    // CORS-open hosts like soundchain.io/skill.md), server-proxy fallback — then
+    // ingests it through the same sanitize → store pipeline.
+    const skillUrl = !detectSkill(text) ? detectSkillUrl(text) : null
+    if (skillUrl) {
+      const afterUser: ChatMessage[] = [...messages, { role: 'user', content: text }]
+      setMessages(afterUser)
+      const fetching: ChatMessage[] = [...afterUser, { role: 'assistant', content: `_Fetching that skill from ${skillUrl}…_`, source: (lucySource === 'local' ? 'local' : 'anvil') as ReplySource }]
+      setMessages(fetching)
+      let raw = ''
+      try {
+        // on-device direct fetch first (decentralized)
+        const direct = await fetch(skillUrl, { headers: { accept: 'text/markdown,text/plain,text/*' } })
+        if (direct.ok) raw = await direct.text()
+      } catch {/* CORS or network — fall back to proxy */}
+      if (!raw) {
+        try {
+          const px = await fetch(`/api/fetch-skill?url=${encodeURIComponent(skillUrl)}`)
+          const d = await px.json()
+          if (d?.ok && d.text) raw = d.text
+        } catch {/* give up below */}
+      }
+      let reply: string
+      if (raw) {
+        try {
+          const sk = await skills.addSkill(raw, 'url')
+          reply = sk.flagged
+            ? `I fetched **${sk.name}** from that URL, but flagged it — it ${sk.flagReason}. Kept it OFF; review it in the spark panel.`
+            : `Got it — fetched and learned **${sk.name}**${sk.description ? `: ${sk.description}` : ''}. It's active now. Manage skills via the spark icon.`
+        } catch { reply = "I fetched it but couldn't store it as a skill. Try `/skill` with the text pasted directly." }
+      } else {
+        reply = "I couldn't fetch that URL (it may be down or blocking reads). Try pasting the skill text with `/skill` at the start."
+      }
+      const withReply: ChatMessage[] = [...afterUser, { role: 'assistant', content: reply, source: (lucySource === 'local' ? 'local' : 'anvil') as ReplySource }]
+      setMessages(withReply)
+      persistMessages(withReply)
+      return
+    }
+
     const detected = detectSkill(text)
     if (detected) {
       const afterUser: ChatMessage[] = [...messages, { role: 'user', content: text }]
@@ -798,7 +900,8 @@ export default function LucyHome() {
     const hasSearch = /\[search:\s*([^\]]+)\]/i.test(last.content)
     const hasLive = /\[live:\s*([^\]]+)\]/i.test(last.content)
     const hasNews = /\[news:\s*([^\]]+)\]/i.test(last.content)
-    if (!hasGif && !hasSearch && !hasLive && !hasNews) return
+    const hasVideo = /\[video:\s*([^\]]+)\]/i.test(last.content)
+    if (!hasGif && !hasSearch && !hasLive && !hasNews && !hasVideo) return
     let cancelled = false
     ;(async () => {
       let next = last.content
@@ -900,6 +1003,27 @@ export default function LucyHome() {
             }
           } catch {
             next = next.replace(m[0], `*(news fetch failed for "${topic}")*`)
+          }
+        }
+        next = next.replace(/\n{3,}/g, '\n\n').trim()
+      }
+
+      // [video: topic] markers — real YouTube result (keyless scrape) via
+      // /api/video. Splices the watch URL on its own line so the renderer shows
+      // a playable thumbnail embed. Fixes Lucy hallucinating fake /watch?v= ids.
+      if (hasVideo) {
+        const matches = [...next.matchAll(/\[video:\s*([^\]]+)\]/gi)]
+        for (const m of matches) {
+          const q = m[1].trim()
+          try {
+            const r = await fetch(`/api/video?q=${encodeURIComponent(q)}&limit=1`)
+            const d = await r.json()
+            const v = Array.isArray(d?.results) ? d.results[0] : null
+            next = v
+              ? next.replace(m[0], `\n${v.url}\n${v.title ? `_${v.title}_\n` : ''}`)
+              : next.replace(m[0], `*(no video found for "${q}")*`)
+          } catch {
+            next = next.replace(m[0], `*(video search failed for "${q}")*`)
           }
         }
         next = next.replace(/\n{3,}/g, '\n\n').trim()
