@@ -51,7 +51,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const gifs: GifItem[] = (json?.data || []).map((g: any) => ({
       id: g.id,
       url: g.images?.downsized_medium?.url || g.images?.original?.url || '',
-      preview: g.images?.fixed_width_small?.url || g.images?.preview_gif?.url || g.images?.fixed_width?.url || '',
+      preview: g.images?.fixed_width?.url || g.images?.fixed_width_downsampled?.url || g.images?.fixed_width_small?.url || '',
       title: g.title || '',
     })).filter((g: GifItem) => g.url)
 
