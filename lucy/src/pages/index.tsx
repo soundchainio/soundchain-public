@@ -158,12 +158,19 @@ const gifMarkerRe = () => new RegExp(GIF_MARKER_SRC, 'gim')
 // in the message. If we feed it back verbatim, the model (cloud 8B or on-device
 // 1B) copycats the format and emits its OWN raw URL next turn — usually
 // truncated + markdown-wrapped — which can't be resolved and renders as a busted
-// link instead of art. Replacing each gif URL with a plain `[gif]` token keeps
-// the conversational beat ("a gif was shared here") without giving the model a
-// URL to imitate. Applied ONLY to the model payload; the on-screen message keeps
-// the real URL so the user still sees the actual GIF.
+// link instead of art. Replace each gif URL with a NATURAL phrase ("(shared a
+// gif)") — NOT a bracketed token. A token like `[gif]` gets parroted back into
+// Lucy's own replies verbatim (learned the hard way — an injected `[gif]` showed
+// up as literal text in her messages); a plain phrase is harmless even if echoed.
+// Applied ONLY to the model payload; the on-screen + stored message keeps the
+// real URL so the user still sees the actual GIF.
 const stripGifUrlsForModel = (content: string): string =>
-  content.replace(new RegExp(GIF_URL_ANY.source, 'gi'), '[gif]')
+  content.replace(new RegExp(GIF_URL_ANY.source, 'gi'), '(shared a gif)')
+
+// A term-less `[gif]` the model parroted from history (legacy: we briefly
+// injected that token). It has no search term so it can't resolve to a real GIF
+// — strip it rather than render literal "[gif]" text. Factory → fresh lastIndex.
+const bareGifRe = () => /\[gif\]/gi
 
 const gifImg = (src: string, key: string) => (
   <img
@@ -680,7 +687,7 @@ export default function LucyHome() {
     if (streaming) return
     const last = messages[messages.length - 1]
     if (!last || last.role !== 'assistant' || !last.content) return
-    const hasGif = gifMarkerRe().test(last.content)
+    const hasGif = gifMarkerRe().test(last.content) || bareGifRe().test(last.content)
     const hasSearch = /\[search:\s*([^\]]+)\]/i.test(last.content)
     if (!hasGif && !hasSearch) return
     let cancelled = false
@@ -707,8 +714,11 @@ export default function LucyHome() {
         if (!apiAvailable) {
           next = next.replace(gifMarkerRe(), '\n').replace(/\n{3,}/g, '\n\n').trim()
         }
+        // Strip any term-less `[gif]` the model parroted from history — it's not
+        // a resolvable marker, so it would otherwise render as literal "[gif]".
+        next = next.replace(/^[ \t]*\[gif\][ \t]*$/gim, '').replace(/[ \t]*\[gif\][ \t]*/gi, ' ')
         // Collapse any 3+ newlines created by the wrap above.
-        next = next.replace(/\n{3,}/g, '\n\n')
+        next = next.replace(/\n{3,}/g, '\n\n').trim()
       }
 
       // [search: query] markers — DDG + Wikipedia via /api/search ─────
