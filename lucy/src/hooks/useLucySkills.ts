@@ -153,9 +153,17 @@ export function detectSkill(text: string): { isSkill: boolean; raw: string; sour
   // 2) fenced ```skill block
   const fence = t.match(/```skill\s*\n([\s\S]*?)```/i)
   if (fence) return { isSkill: true, raw: fence[1].trim(), source: 'fence' }
-  // 3) frontmatter + learn intent
-  if (/^---\n[\s\S]*?\nname:/m.test(t) && LEARN_INTENT.test(t)) return { isSkill: true, raw: t, source: 'paste' }
-  // 4) learn intent + skill structure (heading + instructions/purpose section)
+  // 3+4) a frontmatter block (anywhere, leading whitespace/intro text allowed)
+  //    whose body has name:. If it ALSO has description: it's a canonical
+  //    skill.md (high confidence on its own); otherwise it needs explicit
+  //    learn-intent. A blog/doc with only `title:` or a lone `name:` won't trip.
+  const fm = t.match(/(?:^|\n)---\n([\s\S]*?)\n---/)
+  if (fm && /\bname:\s*\S/.test(fm[1])) {
+    if (/\bdescription:\s*\S/.test(fm[1]) || LEARN_INTENT.test(t)) {
+      return { isSkill: true, raw: t, source: 'paste' }
+    }
+  }
+  // 5) learn intent + skill structure (heading + instructions/purpose section)
   if (LEARN_INTENT.test(t) && /^#\s+.+/m.test(t) && /##\s*(instructions|purpose|steps)/i.test(t)) {
     return { isSkill: true, raw: t, source: 'paste' }
   }
