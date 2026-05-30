@@ -955,6 +955,14 @@ export default function LucyHome() {
                 Voice
               </button>
               <button
+                onClick={() => { setHostNameDraft(host.profile.name); setHostPanelOpen(true) }}
+                className={`p-2 rounded transition ${host.profile.bond > 0 ? 'bg-pink-500/15 text-pink-400 hover:bg-pink-500/25' : 'bg-lucy-surface text-gray-400 hover:text-white'}`}
+                aria-label="What Lucy knows about you"
+                title={host.profile.bond > 0 ? `Your bond with Lucy — ${host.profile.bond}/100` : 'Your bond with Lucy'}
+              >
+                <Heart className="w-4 h-4" fill={host.profile.bond > 0 ? 'currentColor' : 'none'} />
+              </button>
+              <button
                 onClick={() => setLiveModeOpen(true)}
                 className="px-2 py-1.5 rounded bg-lucy-glow/15 text-lucy-glow hover:bg-lucy-glow/25 text-[10px] font-mono uppercase flex items-center gap-1"
                 title="Live camera + continuous chat"
@@ -1183,6 +1191,117 @@ export default function LucyHome() {
         {/* Voice picker modal */}
         {voicePickerOpen && (
           <LucyVoicePicker open={voicePickerOpen} onClose={() => setVoicePickerOpen(false)} />
+        )}
+
+        {/* Host bond panel — what Lucy knows about YOU, across all chats. You
+            own it: view, correct, add, or wipe. The relationship made visible.
+            Everything here lives on this device, encrypted, never uploaded. */}
+        {hostPanelOpen && (
+          <div
+            className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+            onClick={() => setHostPanelOpen(false)}
+          >
+            <div
+              className="w-full max-w-md max-h-[80vh] bg-lucy-surface border border-lucy-border rounded-xl overflow-hidden flex flex-col shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between p-3 border-b border-lucy-border">
+                <div className="flex items-center gap-2">
+                  <Heart className="w-4 h-4 text-pink-400" fill="currentColor" />
+                  <span className="text-sm font-medium text-white">Your bond with Lucy</span>
+                </div>
+                <button onClick={() => setHostPanelOpen(false)} className="p-1.5 rounded text-gray-400 hover:text-white hover:bg-lucy-bg" aria-label="Close">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-4 space-y-4 text-sm">
+                {/* bond meter */}
+                <div>
+                  <div className="flex items-center justify-between text-xs text-gray-400 mb-1">
+                    <span>Bond</span>
+                    <span>{host.profile.bond}/100</span>
+                  </div>
+                  <div className="h-2 rounded-full bg-lucy-bg overflow-hidden">
+                    <div className="h-full bg-gradient-to-r from-pink-500 to-lucy-accent transition-all" style={{ width: `${host.profile.bond}%` }} />
+                  </div>
+                  <p className="text-[11px] text-gray-500 mt-1.5">
+                    {host.profile.convCount > 0
+                      ? `${host.profile.convCount} conversation${host.profile.convCount === 1 ? '' : 's'} together${host.profile.firstMet ? ` · since ${new Date(host.profile.firstMet).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}` : ''}`
+                      : 'Your bond grows the more you talk. Everything here lives on your device — nothing leaves it.'}
+                  </p>
+                </div>
+
+                {/* name */}
+                <div>
+                  <label className="text-xs text-gray-400">What should Lucy call you?</label>
+                  <div className="flex gap-2 mt-1">
+                    <input
+                      value={hostNameDraft}
+                      onChange={(e) => setHostNameDraft(e.target.value)}
+                      placeholder="your name"
+                      style={{ fontSize: '16px' }}
+                      className="flex-1 bg-lucy-bg border border-lucy-border rounded px-3 py-2 text-white placeholder:text-gray-600 focus:outline-none focus:border-lucy-accent"
+                    />
+                    <button
+                      onClick={() => host.setName(hostNameDraft)}
+                      className="px-3 py-2 rounded bg-lucy-accent/20 text-lucy-accent text-xs font-medium hover:bg-lucy-accent/30 transition"
+                    >Save</button>
+                  </div>
+                </div>
+
+                {/* who you are */}
+                {host.profile.persona && (
+                  <div>
+                    <div className="text-xs text-gray-400 mb-1">Who Lucy thinks you are</div>
+                    <p className="text-gray-200 leading-relaxed bg-lucy-bg/50 rounded-lg p-2.5">{host.profile.persona}</p>
+                  </div>
+                )}
+
+                {/* facts */}
+                <div>
+                  <div className="text-xs text-gray-400 mb-1.5">What Lucy knows about you</div>
+                  {host.profile.facts.length === 0 ? (
+                    <p className="text-[11px] text-gray-500">Nothing yet — Lucy learns as you talk. You can add something now too.</p>
+                  ) : (
+                    <ul className="space-y-1">
+                      {host.profile.facts.map((f, i) => (
+                        <li key={i} className="flex items-start gap-2">
+                          <span className="text-lucy-accent mt-0.5">•</span>
+                          <span className="flex-1 text-gray-200">{f}</span>
+                          <button
+                            onClick={() => host.removeFact(i)}
+                            className="text-gray-600 hover:text-red-400 transition text-xs"
+                            aria-label="Forget this"
+                          >✕</button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  <div className="flex gap-2 mt-2">
+                    <input
+                      value={hostFactDraft}
+                      onChange={(e) => setHostFactDraft(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter' && hostFactDraft.trim()) { host.addFact(hostFactDraft); setHostFactDraft('') } }}
+                      placeholder="tell Lucy something about you…"
+                      style={{ fontSize: '16px' }}
+                      className="flex-1 bg-lucy-bg border border-lucy-border rounded px-3 py-2 text-white placeholder:text-gray-600 focus:outline-none focus:border-lucy-accent"
+                    />
+                    <button
+                      onClick={() => { if (hostFactDraft.trim()) { host.addFact(hostFactDraft); setHostFactDraft('') } }}
+                      className="px-3 py-2 rounded bg-lucy-accent/20 text-lucy-accent text-xs font-medium hover:bg-lucy-accent/30 transition"
+                    >Add</button>
+                  </div>
+                </div>
+
+                {/* forget */}
+                <button
+                  onClick={() => { if (confirm('Make Lucy forget everything about you? This cannot be undone.')) { host.forget(); setHostNameDraft('') } }}
+                  className="w-full mt-2 py-2 rounded-lg border border-red-500/30 text-red-400 text-xs hover:bg-red-500/10 transition"
+                >Make Lucy forget me</button>
+                <p className="text-[10px] text-gray-600 text-center">Stored encrypted on this device only. Never uploaded.</p>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* GIF picker — tap a thumbnail to send it as your reply. Trending on
