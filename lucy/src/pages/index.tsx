@@ -153,6 +153,18 @@ const GIF_URL_ANY = new RegExp(`https?://${GIF_HOST}/${URL_CHARS}+${GIF_EXT}`, '
 const GIF_MARKER_SRC = '^[ \\t>*_`~-]*\\[?\\s*gif:\\s*([^\\]\\n]+?)\\s*\\]?[ \\t*_`~]*$'
 const gifMarkerRe = () => new RegExp(GIF_MARKER_SRC, 'gim')
 
+// Strip real GIF/media URLs out of conversation history BEFORE sending it to the
+// model. Once a `[gif:]` marker is resolved to a real GIPHY URL, that URL lives
+// in the message. If we feed it back verbatim, the model (cloud 8B or on-device
+// 1B) copycats the format and emits its OWN raw URL next turn — usually
+// truncated + markdown-wrapped — which can't be resolved and renders as a busted
+// link instead of art. Replacing each gif URL with a plain `[gif]` token keeps
+// the conversational beat ("a gif was shared here") without giving the model a
+// URL to imitate. Applied ONLY to the model payload; the on-screen message keeps
+// the real URL so the user still sees the actual GIF.
+const stripGifUrlsForModel = (content: string): string =>
+  content.replace(new RegExp(GIF_URL_ANY.source, 'gi'), '[gif]')
+
 const gifImg = (src: string, key: string) => (
   <img
     key={key}
@@ -464,7 +476,7 @@ export default function LucyHome() {
     const promptBase = lucySource === 'local' ? LUCY_SYSTEM_PROMPT_LOCAL : LUCY_SYSTEM_PROMPT
     const payloadMessages = [
       { role: 'system' as const, content: promptBase + linkContext },
-      ...trimmedHistory.map(m => ({ role: m.role, content: m.content })),
+      ...trimmedHistory.map(m => ({ role: m.role, content: stripGifUrlsForModel(m.content) })),
     ]
 
     // Shared token consumer — both anvil + local feed into this.
@@ -729,7 +741,13 @@ export default function LucyHome() {
       }
 
       if (!cancelled && next !== last.content) {
-        setMessages((msgs) => msgs.map((mm, i) => i === msgs.length - 1 ? { ...mm, content: next } : mm))
+        const resolved = messages.map((mm, i) => i === messages.length - 1 ? { ...mm, content: next } : mm)
+        setMessages(resolved)
+        // Persist the RESOLVED reply (real GIPHY URL / search summary) — send()
+        // saved the raw marker before this resolver ran. Without this, every
+        // reopen re-fetches GIPHY to re-resolve, and offline the gif vanishes.
+        // Saving resolved makes it stick: instant on reload, no re-fetch.
+        persistMessages(resolved)
       }
     })()
     return () => { cancelled = true }
