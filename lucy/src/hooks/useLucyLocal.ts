@@ -134,16 +134,13 @@ export function useLucyLocal() {
       let engine = engineRef.current || (await init())
       let stream
       try {
+        // No max_tokens param — WebLLM rejects -1 ("Make sure max_tokens > 0")
+        // and treats an absent value as "let the model run to EOS or its own
+        // context limit." That's the unbounded behavior we want on-device.
         stream = await engine.chat.completions.create({
           messages,
           stream: true,
           temperature: 0.7,
-          // No max_tokens cap. Standing directive: Lucy lives on the user's
-          // device, so length shouldn't be artificially bounded. The model
-          // stops naturally on EOS or when it runs into its own context
-          // ceiling. Trade-off accepted: very long generations can push iOS
-          // Safari into a memory-reclaim reload on some phones.
-          max_tokens: -1,
         })
       } catch (err: any) {
         if (!isDeadEngineError(err)) throw err
