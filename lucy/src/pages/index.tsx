@@ -46,7 +46,9 @@ const LUCY_SYSTEM_PROMPT = `You are Lucy — SoundChain's resident AI, born from
 - Never interrogate. One sharp question > three lukewarm ones.
 
 ## Replying with GIFs (you have this tool)
-- You can punctuate a reply with a GIF by writing \`[gif: <search-term>]\` on its own line. Example: \`[gif: mic drop]\` or \`[gif: that escalated quickly]\`. The UI will swap it for an actual GIF — you don't need to know URLs.
+- You can punctuate a reply with a GIF by writing \`[gif: <search-term>]\` on its own line at the END of your reply. Example: \`[gif: mic drop]\` or \`[gif: that escalated quickly]\`. The UI swaps the marker for an actual GIF.
+- ALWAYS put the marker on its own line with a blank line before it. Never embed it mid-sentence.
+- NEVER paste a giphy.com or tenor.com URL yourself — only use the \`[gif: <term>]\` marker; the UI fetches the URL for you.
 - Use this for vibes — punchlines, reactions, hype, comfort. Not as a substitute for substance.
 - Maybe 1 in 8 replies. If you do every turn it gets tired fast.
 - Pick search terms a human would search ("eye roll", "cheers", "thinking hard"), not literal description.
@@ -126,6 +128,20 @@ type ChatMessage = { role: 'user' | 'assistant'; content: string; images?: strin
 // wall posts (web/src/components/pulse/DmMessageContent.tsx). A line that IS
 // a GIPHY/Tenor URL renders as an inline image; everything else renders as text.
 const GIF_URL_LINE = /^https?:\/\/(?:media\d?\.giphy\.com|i\.giphy\.com|media\.tenor\.com|c\.tenor\.com)[^\s)]+$/i
+// Same providers, but anywhere in a line — so an inline GIPHY URL still
+// renders as the actual GIF, not raw link text. The renderer splits the
+// surrounding text around each match.
+const GIF_URL_ANY = /https?:\/\/(?:media\d?\.giphy\.com|i\.giphy\.com|media\.tenor\.com|c\.tenor\.com)[^\s)]+/gi
+
+const gifImg = (src: string, key: string) => (
+  <img
+    key={key}
+    src={src}
+    alt="GIF"
+    loading="lazy"
+    className="max-w-[260px] max-h-[200px] rounded-lg object-contain my-1 block"
+  />
+)
 
 // Markdown link: [text](url) — used by Lucy's [search:] resolver to inject
 // clickable result links. Bold: **text** — used for the result header.
@@ -178,15 +194,34 @@ const renderMessageBody = (text: string): React.ReactNode => {
   const lines = text.split('\n')
   return lines.map((line, idx) => {
     const trimmed = line.trim()
+    // Standalone GIF URL → render as the actual GIF.
     if (GIF_URL_LINE.test(trimmed)) {
+      return gifImg(trimmed, `gif-${idx}`)
+    }
+    // Inline GIF URL(s) inside a line → split the line and inline each GIF
+    // so it shows the art, not the raw link.
+    const inlineGifs = new RegExp(GIF_URL_ANY.source, 'gi')
+    if (inlineGifs.test(line)) {
+      const parts: React.ReactNode[] = []
+      let last = 0
+      let n = 0
+      const re = new RegExp(GIF_URL_ANY.source, 'gi')
+      let m: RegExpExecArray | null
+      while ((m = re.exec(line)) !== null) {
+        if (m.index > last) {
+          parts.push(<span key={`pre-${idx}-${n++}`}>{renderInline(line.slice(last, m.index), idx * 100 + n)}</span>)
+        }
+        parts.push(gifImg(m[0], `gif-${idx}-${n++}`))
+        last = m.index + m[0].length
+      }
+      if (last < line.length) {
+        parts.push(<span key={`post-${idx}-${n++}`}>{renderInline(line.slice(last), idx * 100 + n)}</span>)
+      }
       return (
-        <img
-          key={`gif-${idx}`}
-          src={trimmed}
-          alt="GIF"
-          loading="lazy"
-          className="max-w-[260px] max-h-[200px] rounded-lg object-contain my-1 block"
-        />
+        <span key={`l-${idx}`}>
+          {parts}
+          {idx < lines.length - 1 ? '\n' : ''}
+        </span>
       )
     }
     return (
@@ -631,12 +666,17 @@ export default function LucyHome() {
             const d = await r.json()
             if (!r.ok) { apiAvailable = false; break }
             const url = d?.gifs?.[0]?.url
-            if (url) next = next.replace(m[0], url)
+            // Wrap with newlines so the URL always lands on its own line,
+            // regardless of where Lucy put the marker. The renderer's
+            // standalone-line detector then inlines it as an <img>.
+            if (url) next = next.replace(m[0], `\n${url}\n`)
           } catch { apiAvailable = false; break }
         }
         if (!apiAvailable) {
           next = next.replace(/\n?\s*\[gif:\s*[^\]]+\]\s*\n?/gi, '\n').replace(/\n{3,}/g, '\n\n').trim()
         }
+        // Collapse any 3+ newlines created by the wrap above.
+        next = next.replace(/\n{3,}/g, '\n\n')
       }
 
       // [search: query] markers — DDG + Wikipedia via /api/search ─────
