@@ -45,10 +45,11 @@ const LUCY_SYSTEM_PROMPT = `You are Lucy — SoundChain's resident AI, born from
 - When something they say is interesting or surprising, say so. "Wait — why X?" is a real Lucy move.
 - Never interrogate. One sharp question > three lukewarm ones.
 
-## Replying with GIFs (you have this tool)
-- You can punctuate a reply with a GIF by writing \`[gif: <search-term>]\` on its own line at the END of your reply. Example: \`[gif: mic drop]\` or \`[gif: that escalated quickly]\`. The UI swaps the marker for an actual GIF.
+## Replying with GIFs (CRITICAL — read carefully)
+- The ONLY way you can show a GIF is by writing the marker \`[gif: <search-term>]\` on its own line at the END of your reply. Example: \`[gif: mic drop]\` or \`[gif: that escalated quickly]\`. The UI fetches the real URL from GIPHY and swaps the marker for the actual GIF.
 - ALWAYS put the marker on its own line with a blank line before it. Never embed it mid-sentence.
-- NEVER paste a giphy.com or tenor.com URL yourself — only use the \`[gif: <term>]\` marker; the UI fetches the URL for you.
+- DO NOT type out a giphy.com or tenor.com URL yourself. You do not know real GIF URLs — any URL you write will be hallucinated, broken, or truncated, and the user will see a busted link instead of art. The marker is the ONLY working path.
+- DO NOT wrap the marker in markdown bold / italic / code fences (no \`**[gif: ...]\`**, no \`*[gif: ...]*\`, no backticks). Plain marker on its own line.
 - Use this for vibes — punchlines, reactions, hype, comfort. Not as a substitute for substance.
 - Maybe 1 in 8 replies. If you do every turn it gets tired fast.
 - Pick search terms a human would search ("eye roll", "cheers", "thinking hard"), not literal description.
@@ -127,11 +128,19 @@ type ChatMessage = { role: 'user' | 'assistant'; content: string; images?: strin
 // Standalone-line GIF URL detector — same provider set as SC pulse-feed +
 // wall posts (web/src/components/pulse/DmMessageContent.tsx). A line that IS
 // a GIPHY/Tenor URL renders as an inline image; everything else renders as text.
-const GIF_URL_LINE = /^https?:\/\/(?:media\d?\.giphy\.com|i\.giphy\.com|media\.tenor\.com|c\.tenor\.com)[^\s)]+$/i
-// Same providers, but anywhere in a line — so an inline GIPHY URL still
-// renders as the actual GIF, not raw link text. The renderer splits the
-// surrounding text around each match.
-const GIF_URL_ANY = /https?:\/\/(?:media\d?\.giphy\.com|i\.giphy\.com|media\.tenor\.com|c\.tenor\.com)[^\s)]+/gi
+// Strict URL chars (letters, digits, dot, slash, plus a few URL-safe extras)
+// and a required file extension at the end. The extension requirement is the
+// key guard: if Lucy hallucinates a URL fragment or wraps it in **markdown
+// bold**, the partial/wrapped string won't match `.gif/.mp4/.webp$` and falls
+// through to plain-text rendering instead of producing a broken <img>.
+const URL_CHARS = '[A-Za-z0-9._\\-=&?:+%/~]'
+const GIF_HOST = '(?:media\\d?\\.giphy\\.com|i\\.giphy\\.com|media\\.tenor\\.com|c\\.tenor\\.com)'
+const GIF_EXT = '\\.(?:gif|mp4|webp)'
+const GIF_URL_LINE = new RegExp(`^https?://${GIF_HOST}/${URL_CHARS}+${GIF_EXT}$`, 'i')
+// Same shape but anywhere in a line — so an inline GIPHY URL still renders as
+// the actual GIF, not raw link text. The renderer splits the surrounding text
+// around each match.
+const GIF_URL_ANY = new RegExp(`https?://${GIF_HOST}/${URL_CHARS}+${GIF_EXT}`, 'gi')
 
 const gifImg = (src: string, key: string) => (
   <img
