@@ -248,6 +248,9 @@ export default function LucyHome() {
   const [gifQuery, setGifQuery] = useState('')
   const [gifResults, setGifResults] = useState<Array<{ id: string; url: string; preview: string }>>([])
   const [gifLoading, setGifLoading] = useState(false)
+  // A GIF you picked but haven't sent yet — attaches to your draft so you
+  // can type alongside it and send text + GIF together as one message.
+  const [pendingGif, setPendingGif] = useState<string | null>(null)
   const local = useLucyLocal()
 
   const recognitionRef = useRef<any>(null)
@@ -334,10 +337,17 @@ export default function LucyHome() {
   }
 
   const send = async (textOverride?: string) => {
-    const text = (textOverride ?? input).trim()
-    if (!text || streaming) return
+    const typed = (textOverride ?? input).trim()
+    // Send is allowed if there's text OR an attached GIF. The two combine into
+    // one message: "<typed text>\n<gif url>". The GIF URL on its own line gets
+    // rendered as an inline <img> by renderMessageBody.
+    const gif = pendingGif
+    if (!typed && !gif) return
+    if (streaming) return
+    const text = gif ? (typed ? `${typed}\n${gif}` : gif) : typed
     setError(null)
     setInput('')
+    setPendingGif(null)
     const next: ChatMessage[] = [...messages, { role: 'user', content: text }]
     setMessages(next)
     persistMessages(next)
@@ -588,12 +598,12 @@ export default function LucyHome() {
     return () => clearTimeout(t)
   }, [gifPickerOpen, gifQuery, searchGifs])
 
-  const sendGif = (url: string) => {
+  // Picking a GIF attaches it to your in-progress reply instead of sending
+  // immediately. Tap Send and it goes out with whatever text you typed.
+  const attachGif = (url: string) => {
     setGifPickerOpen(false)
     setGifQuery('')
-    // The gif URL on its own line gets rendered as an inline <img> (same
-    // pattern as SC pulse DM messages — see DmMessageContent gif regex).
-    send(url)
+    setPendingGif(url)
   }
 
   // After Lucy's stream completes, resolve any tool markers she emitted:
@@ -892,6 +902,29 @@ export default function LucyHome() {
 
         {/* Composer — sticky footer, always visible (never scroll to type) */}
         <footer className="shrink-0 border-t border-lucy-border bg-lucy-surface/60 backdrop-blur-md pb-[env(safe-area-inset-bottom)]">
+          {/* Attached-GIF preview chip — sits above the textarea so you can
+              see the GIF that will be sent with your next reply, type along
+              with it, and tap × to remove it before sending. */}
+          {pendingGif && (
+            <div className="max-w-3xl mx-auto px-3 sm:px-4 pt-2">
+              <div className="inline-flex items-start gap-2 rounded-lg border border-lucy-border bg-lucy-bg p-1.5 max-w-full">
+                <img
+                  src={pendingGif}
+                  alt="Attached GIF"
+                  className="h-16 w-auto rounded object-cover shrink-0"
+                />
+                <div className="flex flex-col gap-1 justify-between min-w-0">
+                  <span className="text-[10px] uppercase tracking-wider text-gray-500 font-mono">Attached GIF</span>
+                  <button
+                    onClick={() => setPendingGif(null)}
+                    className="self-start inline-flex items-center gap-1 text-[10px] text-gray-400 hover:text-red-400 transition"
+                  >
+                    <X className="w-3 h-3" /> Remove
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
           <div className="max-w-3xl mx-auto px-3 sm:px-4 py-2.5 sm:py-3 flex items-end gap-1.5 sm:gap-2">
             <button
               onClick={toggleMic}
@@ -939,7 +972,7 @@ export default function LucyHome() {
             ) : (
               <button
                 onClick={() => send()}
-                disabled={!input.trim()}
+                disabled={!input.trim() && !pendingGif}
                 className="p-2.5 rounded bg-lucy-accent text-black disabled:opacity-30 disabled:cursor-not-allowed hover:opacity-90 transition shrink-0"
                 aria-label="Send"
               >
@@ -994,7 +1027,7 @@ export default function LucyHome() {
                     {gifResults.map((g) => (
                       <button
                         key={g.id}
-                        onClick={() => sendGif(g.url)}
+                        onClick={() => attachGif(g.url)}
                         className="aspect-square rounded overflow-hidden bg-lucy-bg border border-lucy-border hover:border-lucy-accent transition"
                         title={g.title}
                       >
