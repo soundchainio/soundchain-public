@@ -62,8 +62,14 @@ export function useLucyLocal() {
     return ok
   }, [])
 
-  const init = useCallback(async () => {
-    if (engineRef.current) return engineRef.current
+  const init = useCallback(async (force = false) => {
+    if (!force && engineRef.current) return engineRef.current
+    if (force && engineRef.current) {
+      // Dispose the stale engine before re-creating. WebLLM's engine releases
+      // GPU resources on dispose; without this we leak per failed call.
+      try { await engineRef.current.unload?.() } catch {/* best-effort */}
+      engineRef.current = null
+    }
     if (typeof window === 'undefined') throw new Error('Local Lucy is browser-only')
     if (!('gpu' in navigator)) {
       const msg = 'WebGPU not available on this browser. Try Safari 18+, Chrome, or Edge.'
@@ -107,24 +113,66 @@ export function useLucyLocal() {
     }
   }, [])
 
+  // Detect a dead WebLLM engine (disposed by iOS memory reclaim, or never
+  // finished loading). The model name + the literal error strings WebLLM
+  // throws are the reliable signals.
+  const isDeadEngineError = (err: any): boolean => {
+    const msg = (err?.message || err?.toString?.() || '').toLowerCase()
+    return (
+      msg.includes('object has already been disposed') ||
+      msg.includes('model not loaded') ||
+      msg.includes('ensure you have called') ||
+      msg.includes('reload(model)')
+    )
+  }
+
   const chatStream = useCallback(
     async function* (messages: LocalChatMessage[], signal?: AbortSignal): AsyncGenerator<string, void, unknown> {
-      const engine = engineRef.current || (await init())
-      const stream = await engine.chat.completions.create({
-        messages,
-        stream: true,
-        temperature: 0.7,
-        // No max_tokens cap. Standing directive: Lucy lives on the user's
-        // device, so length shouldn't be artificially bounded. The model
-        // stops naturally on EOS or when it runs into its own context
-        // ceiling. Trade-off accepted: very long generations can push iOS
-        // Safari into a memory-reclaim reload on some phones.
-        max_tokens: -1,
-      })
-      for await (const chunk of stream) {
-        if (signal?.aborted) break
-        const token: string = chunk?.choices?.[0]?.delta?.content || ''
-        if (token) yield token
+      // Lazy init OR re-init if the engine got disposed underneath us (iOS
+      // can dispose WebGPU resources between tabs / memory reclaim). One
+      // automatic retry with a fresh engine before bubbling up.
+      let engine = engineRef.current || (await init())
+      let stream
+      try {
+        stream = await engine.chat.completions.create({
+          messages,
+          stream: true,
+          temperature: 0.7,
+          // No max_tokens cap. Standing directive: Lucy lives on the user's
+          // device, so length shouldn't be artificially bounded. The model
+          // stops naturally on EOS or when it runs into its own context
+          // ceiling. Trade-off accepted: very long generations can push iOS
+          // Safari into a memory-reclaim reload on some phones.
+          max_tokens: -1,
+        })
+      } catch (err: any) {
+        if (!isDeadEngineError(err)) throw err
+        // Stale engine — drop it and rebuild, then retry the call once.
+        engineRef.current = null
+        setState(s => ({ ...s, ready: false, loadStatus: 'Reloading model…' }))
+        engine = await init(true)
+        stream = await engine.chat.completions.create({
+          messages,
+          stream: true,
+          temperature: 0.7,
+          max_tokens: -1,
+        })
+      }
+      try {
+        for await (const chunk of stream) {
+          if (signal?.aborted) break
+          const token: string = chunk?.choices?.[0]?.delta?.content || ''
+          if (token) yield token
+        }
+      } catch (err: any) {
+        // Mid-stream dispose — surface a useful message instead of leaking the
+        // internal one. The next call will auto-reinit.
+        if (isDeadEngineError(err)) {
+          engineRef.current = null
+          setState(s => ({ ...s, ready: false }))
+          throw new Error('On-device model was unloaded mid-reply (likely iOS memory reclaim). Send the message again to retry.')
+        }
+        throw err
       }
     },
     [init]
