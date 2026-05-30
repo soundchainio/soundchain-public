@@ -150,7 +150,7 @@ const GIF_URL_ANY = new RegExp(`https?://${GIF_HOST}/${URL_CHARS}+${GIF_EXT}`, '
 // quote or list chars and optional brackets — is just `gif: <term>`. The `m`
 // flag anchors `^`/`$` to a line so "gif:" never matches mid-prose; the lazy
 // term capture stops before trailing markdown so "**" etc. is consumed, not kept.
-const GIF_MARKER_SRC = '^[ \\t>*_`~-]*\\[?\\s*gif:\\s*([^\\]\\n]+?)\\s*\\]?[ \\t*_`~]*$'
+const GIF_MARKER_SRC = '^[ \\t>*_`~\'"-]*\\[?\\s*gif:\\s*([^\\]\\n]+?)\\s*\\]?[ \\t*_`~\'".]*$'
 const gifMarkerRe = () => new RegExp(GIF_MARKER_SRC, 'gim')
 
 // Strip real GIF/media URLs out of conversation history BEFORE sending it to the
