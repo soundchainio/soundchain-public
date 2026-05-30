@@ -22,9 +22,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Head from 'next/head'
 import dynamic from 'next/dynamic'
-import { Cloud, CloudOff, Cpu, Download, Menu, MessageSquarePlus, Mic, MicOff, Send, Trash2, Volume2, VolumeX, Video, X } from 'lucide-react'
+import { Cloud, CloudOff, Cpu, Download, Heart, Menu, MessageSquarePlus, Mic, MicOff, Send, Trash2, Volume2, VolumeX, Video, X } from 'lucide-react'
 import { useLucyMemory, listConversations, deleteConversation, type ConversationMeta } from 'hooks/useLucyMemory'
 import { useLucyLocal } from 'hooks/useLucyLocal'
+import { useLucyHost } from 'hooks/useLucyHost'
 import LucyVoicePicker, { getVoiceConfig } from 'components/LucyVoicePicker'
 
 const LucyLiveMode = dynamic(() => import('components/LucyLiveMode'), { ssr: false })
@@ -321,6 +322,9 @@ export default function LucyHome() {
   const [voiceOutEnabled, setVoiceOutEnabled] = useState(false)
   const [liveModeOpen, setLiveModeOpen] = useState(false)
   const [voicePickerOpen, setVoicePickerOpen] = useState(false)
+  const [hostPanelOpen, setHostPanelOpen] = useState(false)
+  const [hostNameDraft, setHostNameDraft] = useState('')
+  const [hostFactDraft, setHostFactDraft] = useState('')
   // Default to LOCAL (on-device WebLLM) and persist the user's choice across
   // sessions — Lucy lives on your phone first, cloud is opt-in. the user's
   // standing directive May 29, 2026: "default all of lucy on pwa/site/norman
@@ -345,6 +349,10 @@ export default function LucyHome() {
   // can type alongside it and send text + GIF together as one message.
   const [pendingGif, setPendingGif] = useState<string | null>(null)
   const local = useLucyLocal()
+  // The host bond — what Lucy remembers about THIS person across all chats.
+  // Lives on-device, encrypted; injected into every system prompt; updated by
+  // a persona-learn pass after conversations (see observeHost below).
+  const host = useLucyHost()
 
   const recognitionRef = useRef<any>(null)
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
@@ -500,8 +508,10 @@ export default function LucyHome() {
 
     // Pick the right prompt size for the model that will answer.
     const promptBase = lucySource === 'local' ? LUCY_SYSTEM_PROMPT_LOCAL : LUCY_SYSTEM_PROMPT
+    // The host bond: prepend what Lucy remembers about THIS person (carried
+    // across every past conversation) so she shows up already knowing them.
     const payloadMessages = [
-      { role: 'system' as const, content: promptBase + linkContext },
+      { role: 'system' as const, content: promptBase + host.hostPromptBlock(host.profile) + linkContext },
       ...trimmedHistory.map(m => ({ role: m.role, content: stripGifUrlsForModel(m.content) })),
     ]
 
@@ -533,6 +543,39 @@ export default function LucyHome() {
       if (voiceOutEnabled) {
         const tail = acc.slice(spokenIndexRef.current).trim()
         if (tail) speak(tail)
+      }
+      // HOST BOND — after a reply lands, let Lucy learn about her host. The
+      // persona-update pass runs on the SAME source that just answered (so in
+      // LOCAL mode it's on-device, cloud-free — true independent companionship).
+      // observe() debounces internally; fire-and-forget so it never blocks UI.
+      if (acc.length > 0) {
+        const learnRun = async (lm: { role: string; content: string }[]): Promise<string> => {
+          if (source === 'local') {
+            let out = ''
+            for await (const t of local.chatStream(lm as any)) out += t
+            return out
+          }
+          const res = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ messages: lm }),
+          })
+          if (!res.ok || !res.body) return ''
+          const reader = res.body.getReader(); const dec = new TextDecoder()
+          let buf = ''; let out = ''
+          while (true) {
+            const { value, done } = await reader.read(); if (done) break
+            buf += dec.decode(value, { stream: true })
+            const lines = buf.split('\n'); buf = lines.pop() || ''
+            for (const line of lines) {
+              if (!line.trim()) continue
+              try { const p = JSON.parse(line); out += p.message?.content ?? p.response ?? ''; if (p.done) return out } catch {/* skip */}
+            }
+          }
+          return out
+        }
+        host.observe(draft, learnRun, { newConversation: draft.filter(m => m.role === 'user').length === 1 })
+          .catch(() => {/* learning is best-effort, never block chat */})
       }
       return acc.length > 0
     }
