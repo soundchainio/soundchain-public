@@ -322,26 +322,31 @@ const applyBold = (s: string, baseKey: string): React.ReactNode[] => {
 const renderMessageBody = (text: string): React.ReactNode => {
   if (!text) return null
   const lines = text.split('\n')
+  // Unified media matcher (anywhere in a line): GIF/Tenor URLs, YouTube URLs,
+  // and image URLs. Each match renders as the right embed; surrounding prose is
+  // preserved. A standalone media line renders as just the embed.
+  const MEDIA_ANY = new RegExp(`${YT_URL_ANY.source}|${GIF_URL_ANY.source}|${IMG_URL_ANY.source}`, 'gi')
   return lines.map((line, idx) => {
     const trimmed = line.trim()
-    // Standalone GIF URL → render as the actual GIF.
-    if (GIF_URL_LINE.test(trimmed)) {
-      return gifImg(trimmed, `gif-${idx}`)
+    // Standalone media URL (gif / youtube / image) → render as the embed alone.
+    if (trimmed.split(/\s/).length === 1 && (GIF_URL_LINE.test(trimmed) || YT_ID_RE.test(trimmed) || IMG_URL_LINE.test(trimmed))) {
+      const solo = renderMediaUrl(trimmed, `media-${idx}`)
+      if (solo) return solo
     }
-    // Inline GIF URL(s) inside a line → split the line and inline each GIF
-    // so it shows the art, not the raw link.
-    const inlineGifs = new RegExp(GIF_URL_ANY.source, 'gi')
-    if (inlineGifs.test(line)) {
+    // Inline media URL(s) → split the line, embed each, keep the prose.
+    const probe = new RegExp(MEDIA_ANY.source, 'gi')
+    if (probe.test(line)) {
       const parts: React.ReactNode[] = []
       let last = 0
       let n = 0
-      const re = new RegExp(GIF_URL_ANY.source, 'gi')
+      const re = new RegExp(MEDIA_ANY.source, 'gi')
       let m: RegExpExecArray | null
       while ((m = re.exec(line)) !== null) {
         if (m.index > last) {
           parts.push(<span key={`pre-${idx}-${n++}`}>{renderInline(line.slice(last, m.index), idx * 100 + n)}</span>)
         }
-        parts.push(gifImg(m[0], `gif-${idx}-${n++}`))
+        const el = renderMediaUrl(m[0], `media-${idx}-${n++}`)
+        parts.push(el ?? <span key={`raw-${idx}-${n++}`}>{m[0]}</span>)
         last = m.index + m[0].length
       }
       if (last < line.length) {
