@@ -7,6 +7,7 @@
  */
 
 import React from 'react'
+import { embedForUrl } from 'components/Post/MessageBody'
 
 // Emote name → 7TV emote ID mapping (most popular emotes)
 const EMOTE_MAP: Record<string, string> = {
@@ -87,8 +88,14 @@ export function DmMessageContent({ text, isMe }: DmMessageContentProps) {
       return
     }
 
-    // Check if line is a regular URL (non-GIF) — render as clickable link
+    // Standalone URL (non-GIF) — render a RICH EMBED if it's a SoundChain post /
+    // NFT / SCID post / X / YouTube / image; otherwise a clickable link.
     if (/^https?:\/\/[^\s]+$/.test(trimmed) && !gifMatch) {
+      const embed = embedForUrl(trimmed, `embed-${lineIdx}`)
+      if (embed) {
+        elements.push(embed)
+        return
+      }
       elements.push(
         <a
           key={`link-${lineIdx}`}

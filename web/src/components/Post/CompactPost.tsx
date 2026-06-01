@@ -8,6 +8,7 @@ import { GuestAvatar, formatWalletAddress } from '../GuestAvatar'
 import { Play, Heart, MessageCircle, Share2, BadgeCheck, Volume2, VolumeX, Film } from 'lucide-react'
 import { createPortal } from 'react-dom'
 import { CreateStoryModal } from 'components/dex/CreateStoryModal'
+import { SharePostModal } from 'components/modals/SharePostModal'
 import { useMe } from 'hooks/useMe'
 import { useRouter } from 'next/router'
 import { IdentifySource, hasLazyLoadWithThumbnailSupport } from 'utils/NormalizeEmbedLinks'
@@ -58,6 +59,7 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
   const [isHovered, setIsHovered] = useState(false)
   const [isMuted, setIsMuted] = useState(true) // Videos start muted for autoplay
   const [showShareToStory, setShowShareToStory] = useState(false)
+  const [showShareModal, setShowShareModal] = useState(false)
   const [isEmbedInView, setIsEmbedInView] = useState(false)
   const [videoStarted, setVideoStarted] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -466,15 +468,18 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
               <button
                 onClick={(e) => {
                   e.stopPropagation()
-                  const postUrl = `${window.location.origin}/posts/${post.id}`
-                  if (navigator.share) {
-                    navigator.share({
-                      title: 'SoundChain',
-                      text: 'Check out this post on SoundChain!',
-                      url: postUrl,
-                    }).catch(() => {})
+                  // Open SoundChain's INTERNAL share options first (story/reel/copy/
+                  // send-to-people, with native share as one choice inside) — NOT the
+                  // OS share sheet, which used to hijack the primary action.
+                  if (me) {
+                    setShowShareModal(true)
                   } else {
-                    navigator.clipboard.writeText(postUrl)
+                    const postUrl = `${window.location.origin}/posts/${post.id}`
+                    if (navigator.share) {
+                      navigator.share({ title: 'SoundChain', text: 'Check out this post on SoundChain!', url: postUrl }).catch(() => {})
+                    } else {
+                      navigator.clipboard.writeText(postUrl)
+                    }
                   }
                 }}
                 className="flex items-center text-neutral-500 hover:text-white transition-colors"
@@ -527,6 +532,17 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
           })()}
         />,
         document.body
+      )}
+
+      {/* Internal share options (story/reel/copy/send-to-people + native share inside) */}
+      {showShareModal && (
+        <SharePostModal
+          isOpen={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          postId={post.id}
+          postBody={post.body || ''}
+          onShareToStory={me && (hasUploadedMedia || post.mediaLink) ? () => { setShowShareModal(false); setShowShareToStory(true) } : undefined}
+        />
       )}
     </div>
   )

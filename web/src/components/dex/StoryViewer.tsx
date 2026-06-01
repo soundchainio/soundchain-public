@@ -12,7 +12,15 @@ import { useMe } from 'hooks/useMe'
 
 // Detect if a URL is an embeddable platform (YouTube, Vimeo, etc.) vs a direct file
 const isEmbedUrl = (url: string) =>
-  /(?:youtube\.com|youtu\.be|vimeo\.com|dailymotion\.com|twitch\.tv|soundcloud\.com|spotify\.com|bandcamp\.com|facebook\.com\/.*video)/i.test(url)
+  /(?:youtube\.com|youtube-nocookie\.com|youtu\.be|vimeo\.com|dailymotion\.com|twitch\.tv|soundcloud\.com|spotify\.com|bandcamp\.com|facebook\.com\/.*video)/i.test(url)
+
+// Normalize YouTube embed/nocookie URLs to a watch URL ReactPlayer reliably
+// plays — a shared YT post's mediaLink is often youtube-nocookie.com/embed/<id>,
+// which ReactPlayer doesn't recognize (the "YT story didn't load" bug).
+const normalizeForPlayer = (url: string): string => {
+  const m = url.match(/(?:youtube(?:-nocookie)?\.com\/(?:embed\/|watch\?v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/)
+  return m ? `https://www.youtube.com/watch?v=${m[1]}` : url
+}
 
 const REACT_TO_STORY = gql`
   mutation reactToStory($storyId: String!, $emoji: String!) {
@@ -723,7 +731,7 @@ export const StoryViewer = ({ isOpen, onClose, initialUserId, initialStoryId, us
         {isEmbedUrl(currentStory.mediaUrl) ? (
           <div className="w-full h-full bg-black flex items-center justify-center">
             <ReactPlayer
-              url={currentStory.mediaUrl}
+              url={normalizeForPlayer(currentStory.mediaUrl)}
               playing={!isPaused}
               muted={isMuted}
               width="100%"

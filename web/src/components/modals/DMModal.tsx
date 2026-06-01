@@ -10,6 +10,7 @@ import { LoaderAnimation } from 'components/LoaderAnimation'
 import { StickerPicker } from 'components/StickerPicker'
 import { GifPicker } from 'components/GifPicker'
 import { CreateStoryModal } from 'components/dex/CreateStoryModal'
+import { MessageBody } from 'components/Post/MessageBody'
 import Picker from '@emoji-mart/react'
 import { formatDistanceToNow } from 'date-fns'
 
@@ -160,7 +161,7 @@ export const DMModal = ({ show, onClose, recipientProfile }: DMModalProps) => {
                           : 'bg-purple-500/20 border border-purple-500/30 text-white'
                       }`}
                     >
-                      <p className="text-sm">{message.message}</p>
+                      <MessageBody text={message.message} />
                       <p className="text-[10px] text-gray-400 mt-1">
                         {formatDistanceToNow(new Date(message.createdAt), { addSuffix: true })}
                       </p>
