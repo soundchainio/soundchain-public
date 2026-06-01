@@ -335,7 +335,7 @@ export function DexNavBar() {
           {/* Left: Logo + Publish */}
           <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink min-w-0">
             <Link href="/nodes" className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
-              <Logo className="h-9 w-9 sm:h-12 sm:w-12" />
+              <Logo spin={false} className="h-9 w-9 sm:h-12 sm:w-12" />
               <span className="text-xl font-bold bg-gradient-to-r from-orange-400 via-yellow-400 to-cyan-400 bg-clip-text text-transparent hidden lg:block">
                 SoundChain
               </span>

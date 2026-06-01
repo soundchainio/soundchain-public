@@ -147,6 +147,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.setHeader('Cache-Control', 'private, no-cache')
     return res.status(200).json({ me })
   } catch (err: any) {
-    return res.status(500).json({ error: err.message })
+    // (Frank, Jun 1 2026) A transient DB blip (M0 connection-cap flap) used to
+    // 500 here, which the client treated as "broken" and stormed refetches.
+    // Degrade gracefully: return { me: null } (200) so a momentary DB hiccup
+    // reads as "not logged in right now" and self-heals on the next poll
+    // instead of hard-erroring the page. Log the real reason server-side.
+    console.error('[api/me] error, returning me:null —', err?.message)
+    res.setHeader('Cache-Control', 'no-store')
+    return res.status(200).json({ me: null })
   }
 }

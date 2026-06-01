@@ -127,7 +127,7 @@ const WalletButton = () => {
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Logo className="w-5 h-5" />
+                  <Logo spin={false} className="w-5 h-5" />
                   <span className="text-cyan-400 font-semibold">{formatBalance(ogunBalance)} OGUN</span>
                 </div>
               </div>

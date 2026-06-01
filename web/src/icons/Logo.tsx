@@ -8,9 +8,13 @@ interface LogoProps extends React.SVGProps<SVGSVGElement> {
 export const Logo = ({ id = 'logo', width, height, spin, spinSpeed = 'normal', className, ...props }: LogoProps) => {
   const w = width || 100
   const h = height || 100
-  // Auto-disable spin for tiny icons (under 24px) unless explicitly set
-  const numSize = typeof w === 'string' ? parseInt(w, 10) : Number(w)
-  const shouldSpin = spin !== undefined ? spin : numSize >= 24
+  // (Frank, Jun 1 2026 — heat fix) Default to STATIC. The logo used to
+  // auto-spin whenever it rendered >=24px (i.e. almost everywhere, incl. the
+  // top-left nav on every page) via the `logo-sphere` CSS animation — a
+  // perpetual 60fps transform that ran site-wide and helped cook phones.
+  // Now it only spins when a caller explicitly passes `spin`. Nothing does
+  // today, so every logo is static; opt back in per-use if ever wanted.
+  const shouldSpin = spin === true
 
   const sphereClass = shouldSpin
     ? spinSpeed === 'slow' ? 'logo-sphere-subtle' : 'logo-sphere'

@@ -66,7 +66,7 @@ export const NavBar = () => {
       <div className="flex w-full items-center justify-between px-4">
         {/* Logo */}
         <Link href="/" passHref className="flex items-center gap-3">
-          <Logo className="h-7 w-auto" />
+          <Logo spin={false} className="h-7 w-auto" />
           <span className="hidden xl:block text-white font-semibold text-lg">SoundCh<span className="matrix-ai">ai</span>n</span>
         </Link>
 
