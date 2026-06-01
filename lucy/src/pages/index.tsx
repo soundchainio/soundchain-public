@@ -22,7 +22,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Head from 'next/head'
 import dynamic from 'next/dynamic'
-import { Cloud, CloudOff, Cpu, Download, Heart, Menu, MessageSquarePlus, Mic, MicOff, Send, Sparkles, Trash2, Volume2, VolumeX, Video, X } from 'lucide-react'
+import { ChevronLeft, Cloud, CloudOff, Cpu, Download, Heart, Menu, MessageSquarePlus, Mic, MicOff, Send, Sparkles, Trash2, Volume2, VolumeX, Video, X } from 'lucide-react'
 import { useLucyMemory, listConversations, deleteConversation, type ConversationMeta } from 'hooks/useLucyMemory'
 import { useLucyLocal } from 'hooks/useLucyLocal'
 import { useLucyHost } from 'hooks/useLucyHost'
@@ -390,6 +390,14 @@ export default function LucyHome() {
   const [activeConvId, setActiveConvId] = useState('default')
   const { messages, setMessages, save: persistMessages, clear: clearMemory, ready: memoryReady } = useLucyMemory(activeConvId)
   const [drawerOpen, setDrawerOpen] = useState(false)
+  // Portal-back: when a logged-in SoundChain user arrives via ?portal=soundchain
+  // (from the "Lucy AI" avatar-menu item), show a chevron back to soundchain.io —
+  // same pattern as Arena's "← Back to SoundChain" return pill.
+  const [showPortalBack, setShowPortalBack] = useState(false)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try { setShowPortalBack(new URLSearchParams(window.location.search).get('portal') === 'soundchain') } catch {}
+  }, [])
   const [convs, setConvs] = useState<ConversationMeta[]>([])
   const [input, setInput] = useState('')
   const [streaming, setStreaming] = useState(false)
@@ -1060,6 +1068,16 @@ export default function LucyHome() {
         <header className="shrink-0 border-b border-lucy-border bg-lucy-surface/60 backdrop-blur-md pt-[env(safe-area-inset-top)]">
           <div className="max-w-3xl mx-auto px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between gap-2">
             <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
+              {showPortalBack && (
+                <a
+                  href="https://soundchain.io"
+                  className="p-2 -ml-1 rounded text-lucy-accent hover:text-white hover:bg-lucy-surface transition shrink-0 flex items-center"
+                  aria-label="Back to SoundChain"
+                  title="Back to SoundChain"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </a>
+              )}
               <button
                 onClick={() => { refreshConvs(); setDrawerOpen(true) }}
                 className="p-2 -ml-1 rounded text-gray-400 hover:text-white hover:bg-lucy-surface transition shrink-0"
