@@ -42,14 +42,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const timeoutId = setTimeout(() => controller.abort(), NORMAN_TIMEOUT_MS)
 
   try {
+    // IMPORTANT: do NOT default a model here. norman now points at the Lucy
+    // orchestrator, which CLASSIFIES each turn (vision→llava, reason→phi4,
+    // fast→llama3.1) — but only when no model is forced. Sending a model makes
+    // the orchestrator treat it as "forced" and skip routing, so an attached
+    // image would hit a text model instead of llava. Pass model ONLY if the
+    // client explicitly set one (debug/override); otherwise let it route.
+    const upstreamBody: { messages: ChatMessage[]; stream: boolean; model?: string } = {
+      messages,
+      stream: true,
+    }
+    if (model) upstreamBody.model = model
     const upstream = await fetch(`${NORMAN_URL}/api/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: model || 'llama3.1:latest',
-        messages,
-        stream: true,
-      }),
+      body: JSON.stringify(upstreamBody),
       signal: controller.signal,
     })
 

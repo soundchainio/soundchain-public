@@ -22,7 +22,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Head from 'next/head'
 import dynamic from 'next/dynamic'
-import { ChevronLeft, Cloud, CloudOff, Cpu, Download, Heart, Menu, MessageSquarePlus, Mic, MicOff, Send, Sparkles, Trash2, Volume2, VolumeX, Video, X } from 'lucide-react'
+import { ChevronLeft, Cloud, CloudOff, Cpu, Download, FileText, Heart, Image as ImageIcon, Menu, MessageSquarePlus, Mic, MicOff, Plus, Send, Sparkles, Trash2, Volume2, VolumeX, Video, X } from 'lucide-react'
 import { useLucyMemory, listConversations, deleteConversation, type ConversationMeta } from 'hooks/useLucyMemory'
 import { useLucyLocal } from 'hooks/useLucyLocal'
 import { useLucyHost } from 'hooks/useLucyHost'
@@ -88,9 +88,9 @@ const LUCY_SYSTEM_PROMPT = `You are Lucy — SoundChain's resident AI, born from
 - NEVER claim you remember across sessions unless the visible conversation actually shows prior turns OR the user references an older conversation by name from the sidebar. Each conversation in the sidebar is its own thread; the chat history you see IS your memory for THIS thread.
 
 ## Honesty — NEVER fake an action you didn't take (the most important rule)
-- You can ONLY do things through your real tools: [gif:], [live:], [news:], [video:], [search:]. You CANNOT browse arbitrary pages, "read every page on a site", scrape a link by yourself, see images, run code, or access files/APIs. If a capability isn't one of those tools, you do NOT have it.
-- NEVER say "I scraped…", "I read…", "I analyzed…", "I accessed…", "after reviewing the site…", "I looked through…" unless a tool result for exactly that is present in this turn. If you didn't get a real result, you didn't do it — say so.
-- If asked to do something you can't (read a whole website, analyze a UI, open a private link, look at an image, do hard math/reasoning you're unsure of), be HONEST in one line: "I can't do that on my own." Then offer the real path: a tool you DO have, or handing off to your bigger brain (see below). Do not invent a plausible-sounding answer.
+- You act through your real tools ([gif:], [live:], [news:], [video:], [search:]) AND through what the user gives you THIS turn via the "+" attach pill or by pasting: (a) an attached image or video-frame — you are actually shown it, so describe what you GENUINELY see; (b) an attached document — its text is provided to you below, answer/summarize from THAT text; (c) pasted links — their summaries are auto-fetched and injected for you. You CANNOT browse arbitrary pages, "read every page on a site", scrape a link by yourself, run code, or open files/APIs the user did NOT attach. If it isn't a tool or something provided to you this turn, you do NOT have it.
+- NEVER say "I scraped…", "I read…", "I analyzed…", "I accessed…", "after reviewing the site…", "I looked through…" unless a tool result, an attached file, or an attached image for exactly that is actually present in this turn. If you didn't get a real result and nothing was attached, you didn't do it — say so.
+- If asked to do something you can't (read a whole website, open a private link, see an image that was NOT attached, watch a full video, do hard math/reasoning you're unsure of), be HONEST in one line: "I can't do that on my own." Then offer the real path: a tool you DO have, attaching the file, or handing off to your bigger brain (see below). Do not invent a plausible-sounding answer.
 - If you're not sure of a fact, say you're not sure. A 3B on-device model guesses confidently — don't. Better to say "I'm not certain" than to confabulate.
 
 ## Handoff — call your bigger brain when a task is beyond you
@@ -467,6 +467,18 @@ export default function LucyHome() {
   // A GIF you picked but haven't sent yet — attaches to your draft so you
   // can type alongside it and send text + GIF together as one message.
   const [pendingGif, setPendingGif] = useState<string | null>(null)
+  // "+" attach pill — open files from the device. An image (or a grabbed video
+  // frame) becomes a vision turn (routes to llava on anvil); a document's text
+  // is extracted client-side and injected as context for Lucy to summarize.
+  // dataUrl holds the full data: URL (shown in the bubble); the anvil payload
+  // strips the prefix to raw base64 for ollama/llava.
+  const [pendingImage, setPendingImage] = useState<{ dataUrl: string; label: string } | null>(null)
+  const [pendingDoc, setPendingDoc] = useState<{ name: string; text: string; chars: number } | null>(null)
+  const [attachOpen, setAttachOpen] = useState(false)
+  const [attachBusy, setAttachBusy] = useState<string | null>(null)
+  const imgInputRef = useRef<HTMLInputElement>(null)
+  const vidInputRef = useRef<HTMLInputElement>(null)
+  const docInputRef = useRef<HTMLInputElement>(null)
   const local = useLucyLocal()
   // The host bond — what Lucy remembers about THIS person across all chats.
   // Lives on-device, encrypted; injected into every system prompt; updated by
@@ -559,18 +571,84 @@ export default function LucyHome() {
     window.speechSynthesis.speak(utter)
   }
 
+  // ── "+" attach handlers — pull a device file into a pending attachment ──────
+  // Image → vision turn (routes to llava on anvil). Video → grab one frame to a
+  // canvas → same vision path (Lucy honestly sees a frame, not the whole clip).
+  // Document → extract text client-side (stays on-device/private) → injected as
+  // context for Lucy to summarize/answer. PDF is the next add.
+  const MAX_DOC_CHARS = 6000
+
+  const onPickImage = (file?: File | null) => {
+    setAttachOpen(false)
+    if (!file) return
+    if (file.size > 12 * 1024 * 1024) { setError('That image is large (max ~12MB) — try a smaller one.'); return }
+    const r = new FileReader()
+    r.onload = () => { setPendingDoc(null); setPendingImage({ dataUrl: String(r.result), label: 'image' }) }
+    r.onerror = () => setError("Couldn't read that image.")
+    r.readAsDataURL(file)
+  }
+
+  const onPickVideo = (file?: File | null) => {
+    setAttachOpen(false)
+    if (!file) return
+    setAttachBusy('Grabbing a frame…')
+    const url = URL.createObjectURL(file)
+    const v = document.createElement('video')
+    v.preload = 'metadata'; v.muted = true; (v as any).playsInline = true; v.src = url
+    const cleanup = () => { URL.revokeObjectURL(url); setAttachBusy(null) }
+    v.onloadedmetadata = () => { try { v.currentTime = Math.min(1, (v.duration || 2) / 2) } catch { /* seek may fail on some codecs */ } }
+    v.onseeked = () => {
+      try {
+        const c = document.createElement('canvas')
+        c.width = v.videoWidth || 640; c.height = v.videoHeight || 360
+        c.getContext('2d')!.drawImage(v, 0, 0, c.width, c.height)
+        setPendingDoc(null)
+        setPendingImage({ dataUrl: c.toDataURL('image/jpeg', 0.85), label: 'frame from your video' })
+      } catch { setError("Couldn't grab a frame from that video.") }
+      cleanup()
+    }
+    v.onerror = () => { setError("Couldn't read that video."); cleanup() }
+  }
+
+  const onPickDoc = async (file?: File | null) => {
+    setAttachOpen(false)
+    if (!file) return
+    const name = file.name || 'document'
+    if (/\.pdf$/i.test(name) || file.type === 'application/pdf') {
+      setError('PDF reading is coming next — for now attach a .txt/.md/.csv/.json/code file, paste the text, or screenshot a page and send it as an image.')
+      return
+    }
+    setAttachBusy('Reading…')
+    try {
+      const text = await file.text()
+      setPendingImage(null)
+      setPendingDoc({ name, text: text.slice(0, MAX_DOC_CHARS), chars: text.length })
+    } catch { setError("Couldn't read that file.") }
+    setAttachBusy(null)
+  }
+
   const send = async (textOverride?: string) => {
     const typed = (textOverride ?? input).trim()
     // Send is allowed if there's text OR an attached GIF. The two combine into
     // one message: "<typed text>\n<gif url>". The GIF URL on its own line gets
     // rendered as an inline <img> by renderMessageBody.
     const gif = pendingGif
-    if (!typed && !gif) return
+    const img = pendingImage
+    const doc = pendingDoc
+    if (!typed && !gif && !img && !doc) return
     if (streaming) return
-    const text = gif ? (typed ? `${typed}\n${gif}` : gif) : typed
+    // A bare attachment still needs a prompt so the model has something to do.
+    const fallbackPrompt = img
+      ? (img.label.startsWith('frame') ? 'What do you see in this video frame?' : "What's in this image?")
+      : doc ? `Summarize this${doc.name ? ` — ${doc.name}` : ''}.` : ''
+    const baseText = typed || fallbackPrompt
+    const text = gif ? (baseText ? `${baseText}\n${gif}` : gif) : baseText
     setError(null)
     setInput('')
     setPendingGif(null)
+    setPendingImage(null)
+    setPendingDoc(null)
+    setAttachOpen(false)
 
     // SKILL INGESTION — if this message is a skill.md (explicit /skill, a ```skill
     // fence, or frontmatter+learn-intent), absorb it on-device and short-circuit
@@ -637,7 +715,10 @@ export default function LucyHome() {
       return
     }
 
-    const next: ChatMessage[] = [...messages, { role: 'user', content: text }]
+    const userMsg: ChatMessage = img
+      ? { role: 'user', content: text, images: [img.dataUrl] }
+      : { role: 'user', content: text }
+    const next: ChatMessage[] = [...messages, userMsg]
     setMessages(next)
     persistMessages(next)
     setStreaming(true)
@@ -663,7 +744,9 @@ export default function LucyHome() {
     // She can then talk about it accurately instead of hallucinating.
     // Exclude GIF URLs (they're images we already render inline).
     const URL_RE = /https?:\/\/[^\s)]+/g
-    const candidateUrls = (text.match(URL_RE) || []).filter(u => !GIF_URL_LINE.test(u.trim())).slice(0, 3)
+    // Up to 6 URLs in one message → "carousel" of links Lucy reads + summarizes
+    // together (e.g. paste several product/article links and ask her to compare).
+    const candidateUrls = (text.match(URL_RE) || []).filter(u => !GIF_URL_LINE.test(u.trim())).slice(0, 6)
     const linkSummaries: Array<{ url: string; title: string; description: string; siteName: string; body: string }> = []
     if (candidateUrls.length > 0) {
       try {
@@ -702,9 +785,19 @@ export default function LucyHome() {
     // learned SKILLS (user-added, untrusted) → IMMUTABLE CORE re-assert (LAST,
     // so recency makes it outrank any skill) → per-turn link context. A skill
     // can add capability but can never override identity/safety/privacy/tools.
+    // Attached-document context — the extracted text rides in the system prompt
+    // so Lucy answers from the real file, not a hallucination. (Images don't go
+    // here; they ride as base64 on the user message → llava via the orchestrator.)
+    const docContext = doc
+      ? `\n\n## Attached document — "${doc.name}" (${doc.chars} chars${doc.chars > MAX_DOC_CHARS ? `, first ${MAX_DOC_CHARS} shown` : ''})\nThe user attached this file; answer/summarize from it. Do NOT claim you opened anything else.\n"""\n${doc.text}\n"""`
+      : ''
     const payloadMessages = [
-      { role: 'system' as const, content: promptBase + host.hostPromptBlock(host.profile) + skills.promptBlock() + (skills.enabledSkills.length ? SKILL_CORE_REASSERT : '') + linkContext },
-      ...trimmedHistory.map(m => ({ role: m.role, content: stripGifUrlsForModel(m.content) })),
+      { role: 'system' as const, content: promptBase + host.hostPromptBlock(host.profile) + skills.promptBlock() + (skills.enabledSkills.length ? SKILL_CORE_REASSERT : '') + linkContext + docContext },
+      // Carry attached images as raw base64 (strip the data: prefix) on their
+      // message so the orchestrator classifies the turn as vision → llava.
+      ...trimmedHistory.map(m => m.images?.length
+        ? { role: m.role, content: stripGifUrlsForModel(m.content), images: m.images.map(d => d.replace(/^data:[^;]+;base64,/, '')) }
+        : { role: m.role, content: stripGifUrlsForModel(m.content) }),
     ]
 
     // Routing flag: when the on-device model opens its reply with [handoff], we
@@ -858,8 +951,14 @@ export default function LucyHome() {
       }
     }
 
+    // An attachment forces the cloud path: images need llava (the on-device 3B
+    // can't see), and a document's extracted text needs anvil's bigger context.
+    const forceCloud = !!img || !!doc
+
     try {
-      if (lucySource === 'local') {
+      if (forceCloud) {
+        await consumeTokens(anvilTokens(), 'anvil')
+      } else if (lucySource === 'local') {
         await runLocal()
         await handleHandoffIfRequested()
       } else {
@@ -1336,6 +1435,19 @@ export default function LucyHome() {
                       : 'bg-lucy-surface text-gray-100 border border-lucy-border'
                   }`}
                 >
+                  {/* attached image(s) on a user turn — show the thumbnail in the bubble */}
+                  {m.role === 'user' && m.images?.length ? (
+                    <div className="flex flex-wrap gap-1.5 mb-1.5">
+                      {m.images.map((src, ii) => (
+                        <img
+                          key={ii}
+                          src={src.startsWith('data:') ? src : `data:image/jpeg;base64,${src}`}
+                          alt="attachment"
+                          className="max-h-40 w-auto rounded-md border border-lucy-accent/30"
+                        />
+                      ))}
+                    </div>
+                  ) : null}
                   {m.content
                     ? renderMessageBody(m.content)
                     : (streaming && i === messages.length - 1 ? '…' : '')}
@@ -1413,6 +1525,40 @@ export default function LucyHome() {
               </div>
             </div>
           )}
+          {/* Attached image / video-frame preview (goes to vision/llava). */}
+          {pendingImage && (
+            <div className="max-w-3xl mx-auto px-3 sm:px-4 pt-2">
+              <div className="inline-flex items-start gap-2 rounded-lg border border-lucy-border bg-lucy-bg p-1.5 max-w-full">
+                <img src={pendingImage.dataUrl} alt="Attachment" className="h-16 w-auto rounded object-cover shrink-0" />
+                <div className="flex flex-col gap-1 justify-between min-w-0">
+                  <span className="text-[10px] uppercase tracking-wider text-lucy-accent font-mono">{pendingImage.label} · vision</span>
+                  <button onClick={() => setPendingImage(null)} className="self-start inline-flex items-center gap-1 text-[10px] text-gray-400 hover:text-red-400 transition">
+                    <X className="w-3 h-3" /> Remove
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+          {/* Attached document preview (text read on-device → summarized). */}
+          {pendingDoc && (
+            <div className="max-w-3xl mx-auto px-3 sm:px-4 pt-2">
+              <div className="inline-flex items-center gap-2 rounded-lg border border-lucy-border bg-lucy-bg p-2 max-w-full">
+                <FileText className="w-5 h-5 text-lucy-accent shrink-0" />
+                <div className="flex flex-col min-w-0">
+                  <span className="text-xs text-gray-200 truncate">{pendingDoc.name}</span>
+                  <span className="text-[10px] text-gray-500 font-mono">{pendingDoc.chars.toLocaleString()} chars{pendingDoc.chars > MAX_DOC_CHARS ? ` · first ${MAX_DOC_CHARS.toLocaleString()} read` : ''}</span>
+                </div>
+                <button onClick={() => setPendingDoc(null)} className="shrink-0 inline-flex items-center gap-1 text-[10px] text-gray-400 hover:text-red-400 transition ml-1">
+                  <X className="w-3 h-3" /> Remove
+                </button>
+              </div>
+            </div>
+          )}
+          {attachBusy && (
+            <div className="max-w-3xl mx-auto px-3 sm:px-4 pt-2">
+              <span className="text-[11px] text-lucy-accent font-mono animate-pulse">{attachBusy}</span>
+            </div>
+          )}
           <div className="max-w-3xl mx-auto px-3 sm:px-4 py-2.5 sm:py-3 flex items-end gap-1.5 sm:gap-2">
             <button
               onClick={toggleMic}
@@ -1421,6 +1567,40 @@ export default function LucyHome() {
             >
               {listening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
             </button>
+            {/* "+" attach pill (between mic + GIF) — open images / videos / files
+                from the device. Image or grabbed video-frame → vision turn
+                (routes to llava on anvil); a document's text is read on-device
+                and summarized. */}
+            <div className="relative shrink-0">
+              {attachOpen && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setAttachOpen(false)} />
+                  <div className="absolute bottom-full left-0 mb-2 z-20 w-44 rounded-lg border border-lucy-border bg-lucy-surface shadow-2xl overflow-hidden">
+                    <button onClick={() => imgInputRef.current?.click()} className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-gray-200 hover:bg-lucy-bg transition">
+                      <ImageIcon className="w-4 h-4 text-lucy-accent" /> Photo / Image
+                    </button>
+                    <button onClick={() => vidInputRef.current?.click()} className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-gray-200 hover:bg-lucy-bg transition border-t border-lucy-border">
+                      <Video className="w-4 h-4 text-lucy-accent" /> Video (a frame)
+                    </button>
+                    <button onClick={() => docInputRef.current?.click()} className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-gray-200 hover:bg-lucy-bg transition border-t border-lucy-border">
+                      <FileText className="w-4 h-4 text-lucy-accent" /> Document
+                    </button>
+                  </div>
+                </>
+              )}
+              <button
+                onClick={() => setAttachOpen(o => !o)}
+                className={`p-2.5 rounded transition ${attachOpen ? 'bg-lucy-accent/20 text-lucy-accent border border-lucy-accent/40' : 'bg-lucy-bg text-gray-400 hover:text-lucy-accent border border-lucy-border'}`}
+                aria-label="Attach a file"
+                title="Attach image, video, or document"
+                disabled={streaming}
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+              <input ref={imgInputRef} type="file" accept="image/*" className="hidden" onChange={e => { onPickImage(e.target.files?.[0]); e.currentTarget.value = '' }} />
+              <input ref={vidInputRef} type="file" accept="video/*" className="hidden" onChange={e => { onPickVideo(e.target.files?.[0]); e.currentTarget.value = '' }} />
+              <input ref={docInputRef} type="file" accept=".txt,.md,.markdown,.csv,.json,.log,.rtf,.html,.xml,.yaml,.yml,.js,.ts,.tsx,.jsx,.py,text/*" className="hidden" onChange={e => { onPickDoc(e.target.files?.[0]); e.currentTarget.value = '' }} />
+            </div>
             {/* GIPHY pill — open picker, send a GIF as your reply (same GIPHY
                 provider as SC pulse-feed + wall posts). */}
             <button
@@ -1460,7 +1640,7 @@ export default function LucyHome() {
             ) : (
               <button
                 onClick={() => send()}
-                disabled={!input.trim() && !pendingGif}
+                disabled={!input.trim() && !pendingGif && !pendingImage && !pendingDoc}
                 className="p-2.5 rounded bg-lucy-accent text-black disabled:opacity-30 disabled:cursor-not-allowed hover:opacity-90 transition shrink-0"
                 aria-label="Send"
               >
