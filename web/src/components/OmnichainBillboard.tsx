@@ -21,9 +21,7 @@ const shimmer = keyframes`
 `;
 
 const BillboardContainer = styled.div`
-  background: rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: rgba(0, 0, 0, 0.82);
   border-radius: 24px;
   padding: 32px;
   margin-bottom: 32px;
@@ -116,8 +114,6 @@ const ChainCard = styled.button<{ $active: boolean; $color: string }>`
   background: ${props => props.$active
     ? `rgba(${parseInt(props.$color.slice(1,3), 16)}, ${parseInt(props.$color.slice(3,5), 16)}, ${parseInt(props.$color.slice(5,7), 16)}, 0.25)`
     : 'rgba(255, 255, 255, 0.08)'};
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
   border: 3px solid ${props => props.$active ? props.$color : 'rgba(255, 255, 255, 0.15)'};
   border-radius: 16px;
   padding: 20px;
@@ -181,8 +177,6 @@ const CategorySection = styled.div`
 
 const CategoryHeader = styled.div`
   background: rgba(0, 212, 170, 0.15);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
   border-left: 4px solid #00d4aa;
   padding: 12px 20px;
   margin-bottom: 16px;

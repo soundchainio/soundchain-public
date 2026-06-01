@@ -2039,6 +2039,10 @@ function NeuralInlinePanel() {
 
     const checkAnalyzer = () => {
       if (!mounted) return
+      // (Frank, Jun 1 2026 — heat fix) Skip while backgrounded. The poll runs
+      // every 1s; without this, its setState calls keep waking the draw loop
+      // even when the tab is hidden. Pairs with pausing the poll itself below.
+      if (typeof document !== 'undefined' && document.hidden) return
       const existing = (window as any).__soundchainAnalyzer as AnalyserNode | undefined
       const lucy = !!(window as any).__lucyThinking
       const wasLive = !!analyzerRef.current || lucyActiveRef.current
@@ -2063,17 +2067,24 @@ function NeuralInlinePanel() {
       }
     }
 
-    const onVisibilityChange = () => {
-      if (typeof document === 'undefined') return
-      if (document.hidden) stopLoop()
-      else startLoopIfReady()
-    }
-
-    checkAnalyzer()
     // 1000ms poll. Audio analyzer presence flips on play/pause, and Lucy's
     // thinking window can be brief (a few seconds per response) so we want
     // to catch the start without missing the visualization entirely.
-    const poll = setInterval(checkAnalyzer, 1000)
+    // (Frank, Jun 1 2026 — heat fix) The poll PAUSES when the tab is hidden
+    // and resumes (with an immediate check) on unhide, so a backgrounded tab
+    // does zero polling + zero loop wakeups.
+    let poll: ReturnType<typeof setInterval> | null = null
+    const startPoll = () => { if (!poll) poll = setInterval(checkAnalyzer, 1000) }
+    const stopPoll = () => { if (poll) { clearInterval(poll); poll = null } }
+
+    const onVisibilityChange = () => {
+      if (typeof document === 'undefined') return
+      if (document.hidden) { stopLoop(); stopPoll() }
+      else { startPoll(); checkAnalyzer(); startLoopIfReady() }
+    }
+
+    checkAnalyzer()
+    if (typeof document === 'undefined' || !document.hidden) startPoll()
     if (typeof document !== 'undefined') document.addEventListener('visibilitychange', onVisibilityChange)
 
     // Phase 14 — anvil-driven Neural poll. /api/neural/state returns real
@@ -2122,7 +2133,7 @@ function NeuralInlinePanel() {
 
     return () => {
       mounted = false
-      clearInterval(poll)
+      stopPoll()
       clearInterval(anvilPoll)
       stopLoop()
       if (typeof document !== 'undefined') document.removeEventListener('visibilitychange', onVisibilityChange)

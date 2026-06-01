@@ -9,8 +9,15 @@ interface GlowingLogoProps {
 }
 
 /**
- * Animated SoundChain logo with pulsing energy glow effect
- * The logo appears to radiate energy/light outward
+ * SoundChain logo with a STATIC energy glow.
+ *
+ * (Frank, Jun 1 2026 — heat fix) This used to stack 5 infinite animations
+ * (animate-ping + pulse + spin + breathe + helix-glow), each at 60fps on
+ * radial/conic gradients with blur + drop-shadows. Mounted in the top nav,
+ * it pegged ~15-25% GPU on EVERY page, idle or not — the single biggest
+ * always-on mobile heat source. We keep the same colorful glow look but
+ * render it STATIC (no animation, no per-frame blur recompositing). The
+ * brand stays vivid; phones stay cool. The sphere no longer spins.
  */
 export const GlowingLogo = ({
   width = 100,
@@ -26,66 +33,29 @@ export const GlowingLogo = ({
 
   return (
     <div className={`relative inline-flex items-center justify-center ${className}`}>
-      {/* Outer energy rings - pulsing outward */}
+      {/* Static layered glow — same colors, no animation. */}
       <div
-        className="absolute animate-ping"
+        className="absolute"
         style={{
-          width: width * 1.5,
-          height: height * 1.5,
-          background: 'radial-gradient(circle, rgba(162,82,254,0.3) 0%, rgba(63,221,138,0.2) 40%, transparent 70%)',
+          width: width * 1.4,
+          height: height * 1.4,
+          background: 'radial-gradient(circle, rgba(162,82,254,0.3) 0%, rgba(1,192,214,0.25) 35%, rgba(63,221,138,0.18) 55%, transparent 72%)',
           borderRadius: '50%',
-          animationDuration: '3s',
+          filter: `blur(${Math.round(glowSize.blur * 0.6)}px)`,
         }}
       />
 
-      {/* Secondary pulse ring */}
-      <div
-        className="absolute animate-pulse"
-        style={{
-          width: width * 1.3,
-          height: height * 1.3,
-          background: 'radial-gradient(circle, rgba(1,192,214,0.4) 0%, rgba(241,65,158,0.2) 50%, transparent 70%)',
-          borderRadius: '50%',
-          animationDuration: '2s',
-        }}
-      />
-
-      {/* Rotating glow layer */}
-      <div
-        className="absolute animate-spin"
-        style={{
-          width: width * 1.2,
-          height: height * 1.2,
-          background: 'conic-gradient(from 0deg, rgba(254,85,64,0.5), rgba(162,82,254,0.5), rgba(63,221,138,0.5), rgba(1,192,214,0.5), rgba(254,214,3,0.5), rgba(254,85,64,0.5))',
-          borderRadius: '50%',
-          filter: `blur(${glowSize.blur}px)`,
-          animationDuration: '8s',
-          animationTimingFunction: 'linear',
-        }}
-      />
-
-      {/* Inner glow - breathing effect */}
-      <div
-        className="absolute animate-breathe"
-        style={{
-          width: width,
-          height: height,
-          background: 'radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 60%)',
-          borderRadius: '50%',
-        }}
-      />
-
-      {/* The actual spinning sphere logo */}
-      <div className="relative z-10 animate-helix-glow">
-        <Logo width={width} height={height} spinSpeed="normal" />
+      {/* The sphere logo — no spin (motion removed for heat). */}
+      <div className="relative z-10">
+        <Logo width={width} height={height} spin={false} />
       </div>
     </div>
   )
 }
 
 /**
- * Simpler version with slower sphere spin
- * Good for nav/header use - still spins but calmer
+ * Nav/header logo — STATIC glow, no spin. Same look, zero per-frame cost.
+ * (See GlowingLogo note above for the Jun 1 2026 heat fix.)
  */
 export const SubtleGlowLogo = ({
   width = 100,
@@ -94,21 +64,21 @@ export const SubtleGlowLogo = ({
 }: Omit<GlowingLogoProps, 'intensity'>) => {
   return (
     <div className={`relative inline-flex items-center justify-center ${className}`}>
-      {/* Subtle pulsing glow */}
+      {/* Static subtle glow. */}
       <div
-        className="absolute animate-pulse"
+        className="absolute"
         style={{
           width: width * 1.2,
           height: height * 1.2,
           background: 'radial-gradient(circle, rgba(162,82,254,0.4) 0%, rgba(63,221,138,0.3) 40%, transparent 70%)',
           borderRadius: '50%',
-          filter: 'blur(10px)',
+          filter: 'blur(8px)',
         }}
       />
 
-      {/* Slowly spinning sphere logo */}
-      <div className="relative z-10 animate-helix-glow">
-        <Logo width={width} height={height} spinSpeed="slow" />
+      {/* Sphere logo — no spin. */}
+      <div className="relative z-10">
+        <Logo width={width} height={height} spin={false} />
       </div>
     </div>
   )

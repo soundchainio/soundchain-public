@@ -2146,27 +2146,38 @@ input[type="number"]::-webkit-outer-spin-button {
 }
 
 /* ============================================
-   GREEN MODE: Disable backdrop-blur on mobile
-   Eliminates GPU Gaussian blur shader entirely.
-   Visually near-identical on small screens.
+   GREEN MODE: Disable backdrop-blur EVERYWHERE
+   (Frank, Jun 1 2026): backdrop-filter:blur is one of the most expensive
+   mobile GPU ops — a full-width frosted nav recomposites on every scroll
+   frame and every time anything animates beneath it. It was a months-ago
+   polish attempt nobody misses. Kill it site-wide (all viewports, all
+   themes, every `backdrop-blur-*` Tailwind class + the `.backdrop-blur`
+   base) and replace with a solid wash so chrome stays readable. Keeps the
+   site cool + safe to run anywhere; zero functionality lost.
    ============================================ */
-@media (max-width: 768px) {
-  .backdrop-blur-sm,
-  .backdrop-blur-md,
-  .backdrop-blur-lg,
-  .backdrop-blur-xl {
-    -webkit-backdrop-filter: none !important;
-    backdrop-filter: none !important;
-    background-color: rgba(0, 0, 0, 0.85) !important;
-  }
+.backdrop-blur,
+.backdrop-blur-none,
+.backdrop-blur-sm,
+.backdrop-blur-md,
+.backdrop-blur-lg,
+.backdrop-blur-xl,
+.backdrop-blur-2xl,
+.backdrop-blur-3xl {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  background-color: rgba(0, 0, 0, 0.85) !important;
+}
 
-  /* Light mode: mobile fallback uses light wash instead of opaque black */
-  :root[data-theme="light"] .backdrop-blur-sm,
-  :root[data-theme="light"] .backdrop-blur-md,
-  :root[data-theme="light"] .backdrop-blur-lg,
-  :root[data-theme="light"] .backdrop-blur-xl {
-    background-color: rgba(255, 255, 255, 0.92) !important;
-  }
+/* Light mode: use a light wash instead of opaque black */
+:root[data-theme="light"] .backdrop-blur,
+:root[data-theme="light"] .backdrop-blur-none,
+:root[data-theme="light"] .backdrop-blur-sm,
+:root[data-theme="light"] .backdrop-blur-md,
+:root[data-theme="light"] .backdrop-blur-lg,
+:root[data-theme="light"] .backdrop-blur-xl,
+:root[data-theme="light"] .backdrop-blur-2xl,
+:root[data-theme="light"] .backdrop-blur-3xl {
+  background-color: rgba(255, 255, 255, 0.92) !important;
 }
 
 /* ============================================

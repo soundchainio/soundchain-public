@@ -1076,7 +1076,7 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
 
           {/* Upload Free Accordion — space station design, open by default */}
           {showUploadAccordion && (
-            <div className="mt-2 relative overflow-hidden rounded-xl border border-cyan-500/20" style={{ background: 'linear-gradient(135deg, rgba(0,20,40,0.85) 0%, rgba(0,40,60,0.85) 50%, rgba(10,20,50,0.85) 100%)', backdropFilter: 'blur(12px)' }}>
+            <div className="mt-2 relative overflow-hidden rounded-xl border border-cyan-500/20" style={{ background: 'linear-gradient(135deg, rgba(0,20,40,0.92) 0%, rgba(0,40,60,0.92) 50%, rgba(10,20,50,0.92) 100%)' }}>
               {/* Animated scan line */}
               <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <div className="absolute w-full h-px bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent animate-pulse" style={{ top: '30%' }} />
