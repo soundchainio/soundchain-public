@@ -5,6 +5,7 @@ interface AutoplayVideoProps {
   className?: string
   muted?: boolean
   loop?: boolean
+  poster?: string  // thumbnail shown before/while not playing — without it the <video> is a black box
   onPlay?: () => void
   onPause?: () => void
 }
@@ -18,6 +19,7 @@ export const AutoplayVideo = memo(({
   className = '',
   muted = true, // Default muted for autoplay (required by most browsers)
   loop = true,
+  poster,
   onPlay,
   onPause,
 }: AutoplayVideoProps) => {
@@ -100,7 +102,9 @@ export const AutoplayVideo = memo(({
       <video
         ref={videoRef}
         src={src}
-        className={`w-full max-h-[600px] object-contain cursor-pointer ${className}`}
+        poster={poster}
+        preload="metadata"
+        className={`w-full max-h-[600px] object-contain cursor-pointer bg-black ${className}`}
         playsInline
         muted={isMuted}
         loop={loop}
