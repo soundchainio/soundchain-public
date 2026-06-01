@@ -156,6 +156,18 @@ export default function LoginPage() {
   const [passkeyRegisterVerifyMutation] = useMutation(PASSKEY_REGISTER_VERIFY_MUTATION);
 
 
+  // (Frank, Jun 1 2026 — desktop login-hang fix) If the user is ALREADY logged
+  // in and lands on /login (e.g. clicks the login pill while authed, or has a
+  // live session cookie), the render gate below — `me && !loggingIn` — showed a
+  // permanent loader and never moved, hanging the page on desktop. Redirect them
+  // away to the post-login destination instead. window.location.assign (not
+  // router.push) so the authed session is read fresh on the destination.
+  useEffect(() => {
+    if (!isClient || loggingIn || !me) return;
+    const dest = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
+    window.location.assign(dest);
+  }, [isClient, me, loggingIn, router.query.callbackUrl]);
+
   useEffect(() => {
     setIsClient(true);
     if (isInAppBrowser()) {

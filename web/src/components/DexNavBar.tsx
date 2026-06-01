@@ -29,7 +29,7 @@ import {
   ShieldCheck, Settings as SettingsIcon, AtSign, ChevronUp, ChevronDown,
   Check, Copy, AlertCircle, LogOut, User as UserIcon,
   Moon, Sun, Monitor, Smartphone, Laptop, Tv, Film, Glasses, Lock as LockIcon,
-  ArrowLeftRight, Network as NetworkIcon,
+  ArrowLeftRight, Network as NetworkIcon, Brain,
 } from 'lucide-react'
 import { useTheme, ThemeChoice } from 'lib/theme/ThemeContext'
 import {
@@ -826,6 +826,20 @@ export function DexNavBar() {
                           <span className="text-[9px] uppercase tracking-widest px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">New</span>
                         </a>
                       )}
+                      {/* Lucy — the AI surface now lives on its own subdomain
+                          (lucy.soundchain.io), same as Arena. The brain pill +
+                          /norman were removed from soundchain.io to cut overhead;
+                          this is the single entry point. ?portal=soundchain tells
+                          lucy to show a chevron-back to soundchain.io for users
+                          who are already logged in here. */}
+                      <a
+                        href="https://lucy.soundchain.io?portal=soundchain"
+                        className="flex items-center gap-3 px-3 py-2 text-sm text-white hover:bg-purple-500/10 border-t border-purple-500/10"
+                      >
+                        <Brain className="w-4 h-4 text-purple-400 flex-shrink-0" />
+                        <span className="flex-1">Lucy AI</span>
+                        <span className="text-[9px] uppercase tracking-widest px-1.5 py-0.5 rounded bg-purple-500/15 text-purple-300 border border-purple-500/30">New</span>
+                      </a>
                     </div>
 
                     {/* Get Verified accordion */}

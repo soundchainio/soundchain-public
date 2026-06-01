@@ -12,8 +12,7 @@ import { TopNavBarProps } from 'components/TopNavBar'
 import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import { useLayoutContext } from 'hooks/useLayoutContext'
 import { useMe } from 'hooks/useMe'
-import { createApolloClient } from 'lib/apollo'
-import { PostDocument, PostQuery } from 'lib/graphql'
+import { PostQuery } from 'lib/graphql'
 import { usePost as usePostQuery } from 'hooks/usePostDirect'  // Phase 7e — Vercel-direct
 import { useEffect, useMemo } from 'react'
 
@@ -115,21 +114,75 @@ export const getServerSideProps: GetServerSideProps<PostPageProps, PostPageParam
   }
 
   try {
-    const apolloClient = createApolloClient(context)
+    // Humans are redirected to the modern /dex/post view regardless of post
+    // contents — do that BEFORE any data fetch so we never block on the DB.
+    if (!isBotRequest) {
+      return {
+        redirect: { destination: `/dex/post/${postId}`, permanent: false },
+      }
+    }
 
-    const { error, data } = await apolloClient.query({
-      query: PostDocument,
-      variables: { id: postId },
-      context,
-    })
+    // (Frank, Jun 1 2026 — share/OG fix) Build OG tags from MONGO directly, not
+    // the Apollo Lambda (api.soundchain.io is dead; createApolloClient now points
+    // at /api/graphql-stub which returns {data:null}, so every link preview fell
+    // through to notFound → the generic SoundChain logo). iMessage/WhatsApp/etc.
+    // now get the real post title, body, and image inline like rival platforms.
+    const { default: clientPromise } = await import('lib/mongodb')
+    const { ObjectId } = await import('mongodb')
+    let mPost: any = null
+    try {
+      const client = await clientPromise
+      const db = client.db('soundchain')
+      mPost = await db.collection('posts').findOne({ _id: new ObjectId(postId) })
+      if (mPost) {
+        const mProfile = mPost.profileId
+          ? await db.collection('profiles').findOne(
+              { _id: typeof mPost.profileId === 'string' ? new ObjectId(mPost.profileId) : mPost.profileId },
+              { projection: { displayName: 1, userHandle: 1, profilePicture: 1 } },
+            )
+          : null
+        const mTrack = mPost.trackId
+          ? await db.collection('tracks').findOne(
+              { _id: typeof mPost.trackId === 'string' ? new ObjectId(mPost.trackId) : mPost.trackId },
+              { projection: { title: 1, artist: 1, artworkUrl: 1 } },
+            )
+          : null
+        // Shape to match the OG builder's expectations below.
+        mPost = {
+          body: mPost.body || '',
+          mediaLink: mPost.mediaLink || null,
+          uploadedMediaUrl: mPost.uploadedMediaUrl || null,
+          uploadedMediaType: mPost.uploadedMediaType || null,
+          mediaThumbnail: mPost.mediaThumbnail || null,
+          profile: mProfile ? { displayName: mProfile.displayName || '', profilePicture: mProfile.profilePicture || null } : null,
+          track: mTrack ? { title: mTrack.title || '', artist: mTrack.artist || '', artworkUrl: mTrack.artworkUrl || null } : null,
+        }
+      }
+    } catch (dbErr) {
+      console.error('[posts/[id]] OG mongo fetch failed:', (dbErr as any)?.message)
+    }
 
-    if (error || !data?.post) {
-      return { notFound: true }
+    if (!mPost) {
+      // Post genuinely missing OR a transient DB blip — still return a valid
+      // OG page (generic) so the link never 404s in a preview, just without rich data.
+      return {
+        props: {
+          post: null,
+          postId,
+          isBot: true,
+          ogData: {
+            title: 'Post | SoundChain',
+            description: 'Check out this post on SoundChain',
+            image: `${config.domainUrl}/soundchain-meta-logo.png`,
+            url: `${config.domainUrl}/posts/${postId}`,
+          },
+        },
+      }
     }
 
     // For bots, compute OG data server-side and return minimal props
-    if (isBotRequest) {
-      const post = data.post
+    {
+      const post = mPost
       const track = post?.track
       const postWithMedia = post as typeof post & {
         uploadedMediaUrl?: string | null
@@ -194,15 +247,6 @@ export const getServerSideProps: GetServerSideProps<PostPageProps, PostPageParam
           },
         },
       }
-    }
-
-    // For regular users, redirect to DEX post view (modern UI)
-    // The /posts/[id] page uses legacy layout - redirect to DEX-era design
-    return {
-      redirect: {
-        destination: `/dex/post/${postId}`,
-        permanent: false,
-      },
     }
   } catch (e) {
     console.error('Error fetching post:', e)
