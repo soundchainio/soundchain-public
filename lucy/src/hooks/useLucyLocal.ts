@@ -1,9 +1,9 @@
 /**
- * useLucyLocal — on-device Lucy fallback via WebLLM (Llama 3.2 1B in browser).
+ * useLucyLocal — on-device Lucy via WebLLM (Llama 3.2 3B in browser).
  *
  * Runs when anvil (norman.soundchain.io) is unreachable — e.g. anvil powered
  * down, off-grid, regulatory blackout. WebGPU-accelerated; first call lazy-
- * downloads ~800MB then caches in OPFS. Subsequent loads are instant.
+ * downloads ~2.3–3GB then caches in OPFS. Subsequent loads are instant.
  *
  * iOS Safari 18+ has WebGPU. Android Chrome has WebGPU. Older browsers fail
  * gracefully with a clear error.
@@ -14,15 +14,24 @@
 
 import { useCallback, useRef, useState } from 'react'
 
-// 1B chosen for first-load weight. Two quantizations:
-//   q4f16 (~700MB) — needs the WebGPU `shader-f16` feature. Fast where available.
-//   q4f32 (~1.1GB) — no f16 requirement. The ONLY one that runs on iOS Safari,
+// On-device model — Llama 3.2 3B (Frank, Jun 1 2026: "3B minimum, never lower").
+// 3B is the realistic CEILING for a PWA: it's not the phone's RAM that limits us
+// (modern iPhones have 8GB) — it's the BROWSER. iOS Safari's WebGPU sandbox caps
+// buffer size + iOS jetsam kills any tab that uses too much memory, well under
+// physical RAM. 3B@4bit (~2.3GB f16 / ~3GB f32) sits right at that edge and runs.
+// 8B (~5–6GB) blows past the browser budget → Safari terminates the tab. The only
+// way past 3B on a phone is a NATIVE app (full RAM + Neural Engine) — which is
+// off the table by design: Lucy stays a PWA so no gatekeeper touches the vision.
+//
+// Two quantizations:
+//   q4f16 (~2.3GB) — needs the WebGPU `shader-f16` feature. Fast where available.
+//   q4f32 (~3.0GB) — no f16 requirement. The ONLY one that runs on iOS Safari,
 //                    whose WebGPU does not expose shader-f16. Without this the
 //                    weights download fine then the shader compile dies → the
 //                    "device option doesn't work" hang on iPhone.
-// We pick per-device at init time, and fall back f16→f32 if engine build fails.
-const MODEL_F16 = 'Llama-3.2-1B-Instruct-q4f16_1-MLC'
-const MODEL_F32 = 'Llama-3.2-1B-Instruct-q4f32_1-MLC'
+// Pick per-device at init time, fall back f16→f32 if engine build fails.
+const MODEL_F16 = 'Llama-3.2-3B-Instruct-q4f16_1-MLC'
+const MODEL_F32 = 'Llama-3.2-3B-Instruct-q4f32_1-MLC'
 
 // Probe the actual GPU adapter for shader-f16. iOS Safari → false → use f32.
 async function pickModelId(): Promise<string> {
