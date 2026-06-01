@@ -117,8 +117,10 @@ export const getServerSideProps: GetServerSideProps<PostPageProps, PostPageParam
     // Humans are redirected to the modern /dex/post view regardless of post
     // contents — do that BEFORE any data fetch so we never block on the DB.
     if (!isBotRequest) {
+      // Clean URL: /post/:id is rewritten to /dex/post/:id in next.config — same
+      // view, but the user never SEES /dex. (Frank, Jun 1 2026.)
       return {
-        redirect: { destination: `/dex/post/${postId}`, permanent: false },
+        redirect: { destination: `/post/${postId}`, permanent: false },
       }
     }
 
