@@ -840,6 +840,20 @@ export default function LucyHome() {
         }
       }
       if (handoffRequested) return false  // router takes over; skip persist/learn
+      // GRACEFUL UPSTREAM-ERROR HANDLING: the anvil orchestrator emits
+      // "(orchestrator: upstream NNN)" / "(orchestrator error: …)" when a model
+      // backend fails (e.g. the vision runner crashing on anvil's old GPUs).
+      // Never show users that raw marker — replace with an honest, on-brand line.
+      if (/\(orchestrator:?\s*(?:upstream\s*\d+|error)/i.test(acc)) {
+        const hadImage = !!next[next.length - 1]?.images?.length
+        acc = hadImage
+          ? "I couldn't analyze that image right now — my vision is being repaired on the backend. I can still help with anything text-based in the meantime!"
+          : "My bigger brain hit a snag just now — give it another shot, or ask me something else and I'm on it."
+        draft[draft.length - 1] = { role: 'assistant', content: acc, source }
+        setMessages([...draft])
+        persistMessages([...draft])
+        return false
+      }
       // CONFABULATION SCRUB (in code, post-stream): if NO real tool marker is in
       // the reply, strip fabricated "I scraped/read/analyzed…" claims so Lucy
       // can't lie about an action she didn't take. A tool result present = legit.
