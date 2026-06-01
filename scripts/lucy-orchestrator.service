@@ -7,11 +7,15 @@ Wants=network-online.target
 User=soundchain
 Environment=OLLAMA_URL=http://127.0.0.1:11434
 Environment=LUCY_MODEL_VISION=llava:7b
-# reason = llama3.1 for now: on the current 24GB box (M5000 8GB + RTX 5000 16GB)
-# mixtral:8x22b / llama3.3:70b CPU-spill to ~1.5 tok/s (unusable interactively),
-# so the safe default keeps reasoning FAST. Flip this ONE line once the +32GB RAM
-# / extra RTX 5000s land:  Environment=LUCY_MODEL_REASON=llama3.3:70b
-Environment=LUCY_MODEL_REASON=llama3.1:latest
+# reason = phi4:latest (Microsoft Phi-4 14B, MIT, NON-qwen). Chosen 2026-06-01 over
+# a 5-model eval: fits the 16GB RTX 5000 at Q4 (~12GB used, 100% GPU, no CPU-spill)
+# and crushes llama3.1:8b on reasoning — MMLU 84.8 vs ~70, GPQA 56.1 vs ~31,
+# MATH 80.4 vs ~52, HumanEval 82.6 vs ~73 — while answering directly (no slow
+# hidden chain-of-thought). MUST be the exact ollama tag (phi4:latest), else the
+# name-match safety check falls back. NOTE: mixtral:8x22b / llama3.3:70b still
+# CPU-spill to ~1.5 tok/s on 24GB — only flip to 70b once the +32GB RAM lands.
+# Runner-up for a future "deep mode": phi4-reasoning (stronger, but verbose/slow).
+Environment=LUCY_MODEL_REASON=phi4:latest
 Environment=LUCY_MODEL_FAST=llama3.1:latest
 Environment=LUCY_MODEL_DEFAULT=llama3.1:latest
 Environment=LUCY_ORCH_PORT=11440
