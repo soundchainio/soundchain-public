@@ -1,0 +1,22 @@
+[Unit]
+Description=Lucy Orchestrator — anvil-side model router (port 11438)
+After=network-online.target ollama.service
+Wants=network-online.target
+
+[Service]
+User=soundchain
+# Override any route here without touching code — e.g. once you pull the 70B:
+#   Environment=LUCY_MODEL_REASON=llama3.3:70b
+Environment=OLLAMA_URL=http://127.0.0.1:11434
+Environment=LUCY_MODEL_VISION=llava:7b
+Environment=LUCY_MODEL_REASON=mixtral:8x22b
+Environment=LUCY_MODEL_FAST=llama3.1:latest
+Environment=LUCY_MODEL_DEFAULT=llama3.1:latest
+Environment=LUCY_ORCH_PORT=11438
+ExecStart=/home/soundchain/piper-venv/bin/python -m uvicorn lucy-orchestrator-server:app --host 127.0.0.1 --port 11438
+WorkingDirectory=/home/soundchain
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
