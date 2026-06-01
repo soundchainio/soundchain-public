@@ -35,10 +35,15 @@ ROUTING TIERS (edit MODELS below to taste — all must be `ollama pull`ed)
   (image-GENERATION via x/z-image-turbo is a different API shape — not wired
    into chat streaming here; route it from a dedicated /api/generate instead.)
 
-RUNS as systemd unit (lucy-orchestrator.service) on port 11438.
-Reverse-SSH tunnel forwards anvil:11438 → EC2:11438.
-EC2 nginx exposes it; Vercel /api/chat proxies to it (point NORMAN_URL or a new
-ORCHESTRATOR_URL at it). See lucy-orchestrator-install.md for the wiring.
+RUNS as systemd unit (lucy-orchestrator.service) on port 11440.
+  (11438 was taken by lucy-sdxl-server — verified on anvil 2026-06-01.)
+INTEGRATION (no EC2/nginx/Vercel change): the norman tunnel already forwards
+EC2:11434 → anvil:11434 (ollama). Retarget that ONE forward to anvil:11440
+(`-R 11434:localhost:11440`) so norman's ollama traffic lands on THIS instead.
+This orchestrator is a TRANSPARENT PROXY — it intercepts /api/chat for smart
+routing and passes every other ollama path (/api/tags, /api/generate, etc.)
+straight through to localhost:11434 — so it's a safe drop-in for the forward.
+See lucy-orchestrator-install.md for the wiring.
 
 Self-contained: stdlib + httpx + fastapi + uvicorn (already in the piper-venv).
 """
@@ -189,6 +194,49 @@ async def chat_alias(request: Request):
     return await chat(request)
 
 
+# ── Transparent passthrough (MUST be defined LAST — it's the catch-all) ───────
+# Everything NOT matched above (/api/tags, /api/generate, /api/embeddings, the
+# norman /health model-list probe, etc.) is proxied verbatim to Ollama. This is
+# what makes the orchestrator a safe drop-in for the EC2:11434 tunnel forward —
+# only /api/chat gets smart routing; the rest behaves exactly like raw Ollama.
+@app.api_route(
+    "/{full_path:path}",
+    methods=["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"],
+)
+async def passthrough(full_path: str, request: Request):
+    url = f"{OLLAMA}/{full_path}"
+    if request.url.query:
+        url += f"?{request.url.query}"
+    body = await request.body()
+    fwd_headers = {
+        k: v for k, v in request.headers.items()
+        if k.lower() not in ("host", "content-length")
+    }
+    client = httpx.AsyncClient(timeout=REQUEST_TIMEOUT)
+    try:
+        upstream = await client.send(
+            client.build_request(request.method, url, content=body, headers=fwd_headers),
+            stream=True,
+        )
+    except Exception as e:
+        await client.aclose()
+        return JSONResponse({"error": f"orchestrator passthrough: {e}"}, status_code=502)
+
+    async def gen():
+        try:
+            async for chunk in upstream.aiter_raw():
+                yield chunk
+        finally:
+            await upstream.aclose()
+            await client.aclose()
+
+    safe_headers = {
+        k: v for k, v in upstream.headers.items()
+        if k.lower() not in ("content-length", "transfer-encoding", "content-encoding", "connection")
+    }
+    return StreamingResponse(gen(), status_code=upstream.status_code, headers=safe_headers)
+
+
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=int(os.environ.get("LUCY_ORCH_PORT", "11438")))
+    uvicorn.run(app, host="127.0.0.1", port=int(os.environ.get("LUCY_ORCH_PORT", "11440")))

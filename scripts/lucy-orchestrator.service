@@ -5,15 +5,17 @@ Wants=network-online.target
 
 [Service]
 User=soundchain
-# Override any route here without touching code — e.g. once you pull the 70B:
-#   Environment=LUCY_MODEL_REASON=llama3.3:70b
 Environment=OLLAMA_URL=http://127.0.0.1:11434
 Environment=LUCY_MODEL_VISION=llava:7b
-Environment=LUCY_MODEL_REASON=mixtral:8x22b
+# reason = llama3.1 for now: on the current 24GB box (M5000 8GB + RTX 5000 16GB)
+# mixtral:8x22b / llama3.3:70b CPU-spill to ~1.5 tok/s (unusable interactively),
+# so the safe default keeps reasoning FAST. Flip this ONE line once the +32GB RAM
+# / extra RTX 5000s land:  Environment=LUCY_MODEL_REASON=llama3.3:70b
+Environment=LUCY_MODEL_REASON=llama3.1:latest
 Environment=LUCY_MODEL_FAST=llama3.1:latest
 Environment=LUCY_MODEL_DEFAULT=llama3.1:latest
-Environment=LUCY_ORCH_PORT=11438
-ExecStart=/home/soundchain/piper-venv/bin/python -m uvicorn lucy-orchestrator-server:app --host 127.0.0.1 --port 11438
+Environment=LUCY_ORCH_PORT=11440
+ExecStart=/home/soundchain/piper-venv/bin/python -m uvicorn lucy-orchestrator-server:app --host 127.0.0.1 --port 11440
 WorkingDirectory=/home/soundchain
 Restart=always
 RestartSec=5
