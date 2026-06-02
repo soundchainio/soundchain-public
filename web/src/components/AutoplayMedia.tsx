@@ -6,6 +6,12 @@ interface AutoplayVideoProps {
   muted?: boolean
   loop?: boolean
   poster?: string  // thumbnail shown before/while not playing — without it the <video> is a black box
+  // Referrer policy for the media fetch. X/Twitter (video.twimg.com) HOTLINK-BLOCKS
+  // the soundchain.io referer with a 403 — the browser's default policy sends our
+  // origin as the Referer, so the <video> source dies with "no supported sources".
+  // NativeTweetCard passes 'no-referrer' (the only value that twimg serves, 206).
+  // Default undefined → existing consumers (uploaded videos) are unchanged.
+  referrerPolicy?: '' | 'no-referrer' | 'no-referrer-when-downgrade' | 'origin' | 'origin-when-cross-origin' | 'same-origin' | 'strict-origin' | 'strict-origin-when-cross-origin' | 'unsafe-url'
   onPlay?: () => void
   onPause?: () => void
 }
@@ -20,6 +26,7 @@ export const AutoplayVideo = memo(({
   muted = true, // Default muted for autoplay (required by most browsers)
   loop = true,
   poster,
+  referrerPolicy,
   onPlay,
   onPause,
 }: AutoplayVideoProps) => {
@@ -103,6 +110,7 @@ export const AutoplayVideo = memo(({
         ref={videoRef}
         src={src}
         poster={poster}
+        referrerPolicy={referrerPolicy}
         preload="metadata"
         className={`w-full max-h-[600px] object-contain cursor-pointer bg-black ${className}`}
         playsInline

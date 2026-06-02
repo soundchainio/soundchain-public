@@ -9,6 +9,7 @@ import { Play, Heart, MessageCircle, Share2, BadgeCheck, Volume2, VolumeX, Film 
 import { createPortal } from 'react-dom'
 import { CreateStoryModal } from 'components/dex/CreateStoryModal'
 import { SharePostModal } from 'components/modals/SharePostModal'
+import { NativeTweetCard } from './NativeTweetCard'
 import { useMe } from 'hooks/useMe'
 import { useRouter } from 'next/router'
 import { IdentifySource, hasLazyLoadWithThumbnailSupport } from 'utils/NormalizeEmbedLinks'
@@ -130,6 +131,13 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
   const mediaSource = post.mediaLink ? IdentifySource(post.mediaLink) : null
   const platformType = mediaSource?.type || 'unknown'
 
+  // X/Twitter — extract the tweet id so we can render the native card (with inline
+  // MP4 autoplay) instead of the platform.twitter.com iframe, which never autoplays
+  // video in-feed. Null for every non-X embed, so nothing else changes.
+  const xTweetId = platformType === MediaProvider.X && post.mediaLink
+    ? (post.mediaLink.match(/(?:status\/|id=)(\d+)/)?.[1] || null)
+    : null
+
   // Track artwork
   const trackArtwork = hasTrack ? post.track?.artworkUrl : null
 
@@ -146,7 +154,7 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
 
   // Shared media render component for both views
   const renderMediaPreview = (aspectClass: string) => (
-    <div className={`relative ${aspectClass} overflow-hidden bg-black`}>
+    <div className={`relative ${aspectClass} ${xTweetId && gridMode ? 'overflow-y-auto' : 'overflow-hidden'} bg-black`}>
       {/* Uploaded media (images/videos/audio) - priority display */}
       {hasUploadedMedia && !isExpired && (
         <>
@@ -230,6 +238,15 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
 
       {/* Media link - Legacy-style iframe embeds */}
       {!hasUploadedMedia && hasMediaLink && post.mediaLink && !hasTrack ? (
+        xTweetId && gridMode ? (
+          // Native X/Twitter card — same component Post.tsx uses, so the tweet's
+          // own video autoplays inline (AutoplayVideo + light MP4 variant) instead
+          // of the platform.twitter.com iframe that never plays in-feed. X-only +
+          // grid-only: list view + every other embed are untouched below.
+          <div className="w-full" onClick={(e) => e.stopPropagation()}>
+            <NativeTweetCard tweetId={xTweetId} originalUrl={post.mediaLink} />
+          </div>
+        ) : (
         <div ref={embedContainerRef} className="w-full h-full" onClick={(e) => e.stopPropagation()}>
           {hasLazyLoadWithThumbnailSupport(post.mediaLink) ? (
             // YouTube, Vimeo, Facebook — list view autoplays muted on scroll.
@@ -271,6 +288,7 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
             />
           )}
         </div>
+        )
       ) : !hasUploadedMedia && hasTrack && (
         <>
           {/* Track artwork */}

@@ -158,6 +158,7 @@ export const NativeTweetCard = ({ tweetId, originalUrl }: NativeTweetCardProps) 
               className="w-full"
               muted={true}
               loop={m.type === 'animated_gif'}
+              referrerPolicy="no-referrer"
             />
           </div>
         ) : m.thumbnailUrl ? (
