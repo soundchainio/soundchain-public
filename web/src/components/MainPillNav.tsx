@@ -95,8 +95,8 @@ export default function MainPillNav({ active, borderClass = 'border-white/5', be
   ]
 
   const pillRow = (
-    <div className="flex-1 overflow-x-auto scrollbar-hide bg-black/60 backdrop-blur-md rounded-full px-2 py-1">
-      <div className="flex items-center gap-1.5 min-w-max">
+    <div className="flex-1 overflow-x-auto scrollbar-hide bg-black/60 backdrop-blur-md rounded-full px-1.5 py-0.5">
+      <div className="flex items-center gap-1 min-w-max">
         {items.map(item => {
           const Icon = item.icon
           const isActive = item.id === active
@@ -112,10 +112,10 @@ export default function MainPillNav({ active, borderClass = 'border-white/5', be
                   router.push(item.route)
                 }
               }}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${cls}`}
+              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap transition-all ${cls}`}
               aria-current={isActive ? 'page' : undefined}
             >
-              <Icon className="w-3.5 h-3.5" strokeWidth={2.25} />
+              <Icon className="w-3 h-3" strokeWidth={2.25} />
               <span>{item.label}</span>
             </button>
           )
