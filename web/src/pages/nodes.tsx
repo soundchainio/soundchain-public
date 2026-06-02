@@ -2,7 +2,7 @@
  * Nodes — Live P2P Network Dashboard
  * Shows all connected peers, IPFS pins, relay health, bandwidth, swarm status.
  */
-import { useEffect, useState, useCallback, useMemo, ReactElement, Component, ErrorInfo, ReactNode } from 'react'
+import { useEffect, useState, useCallback, useMemo, useRef, ReactElement, Component, ErrorInfo, ReactNode } from 'react'
 import { useMe } from 'hooks/useMe'
 import { useRouter } from 'next/router'
 import { useGroupedTracks as useGroupedTracksQuery } from 'hooks/useGroupedTracksDirect'  // Phase 7e — Vercel-direct
@@ -226,11 +226,28 @@ export default function NodesPage() {
   }, [nodes])
 
   // Grouped tracks — deduplicated editions (one card per unique track)
-  const { data: tracksData, loading: tracksLoading, refetch: refetchTracks } = useGroupedTracksQuery({
-    variables: { page: { first: 500 } },
+  const { data: tracksData, loading: tracksLoading, refetch: refetchTracks, fetchMore: fetchMoreTracks } = useGroupedTracksQuery({
+    variables: { page: { first: 60 } },
     fetchPolicy: 'cache-and-network',
   })
   const collection = useMemo(() => tracksData?.groupedTracks?.nodes || [], [tracksData])
+  const collectionHasNext = !!tracksData?.groupedTracks?.pageInfo?.hasNextPage
+  // Footer-reach pagination for the Collection rail — loads the next page as you scroll
+  // toward the footer so the right rail extends down alongside the feed (desktop look).
+  const loadingMoreCollectionRef = useRef(false)
+  const collectionFooterRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const el = collectionFooterRef.current
+    if (!el) return
+    const obs = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting && collectionHasNext && !tracksLoading && !loadingMoreCollectionRef.current) {
+        loadingMoreCollectionRef.current = true
+        Promise.resolve(fetchMoreTracks()).finally(() => { loadingMoreCollectionRef.current = false })
+      }
+    }, { rootMargin: '800px 0px' })
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [collectionHasNext, tracksLoading, fetchMoreTracks])
 
   useEffect(() => {
     fetchStatus()
@@ -267,9 +284,10 @@ export default function NodesPage() {
         </div>
 
         {/* ─── Split Layout: Network (left sidebar) + Feed (main) on desktop ─── */}
-        <div className="flex flex-col-reverse lg:flex-row gap-4">
-        {/* LEFT: Network dashboard — sidebar on desktop, hidden on mobile when feed active */}
-        <div className={`${mobileTab === 'feed' ? 'hidden lg:block' : ''} lg:w-[420px] lg:flex-shrink-0 min-w-0 space-y-4`}>
+        {/* Desktop = 3-col (Network | centered Feed | Collection) via flex order; mobile = tabbed stack */}
+        <div className="flex flex-col lg:flex-row lg:items-start gap-4">
+        {/* LEFT RAIL: Network dashboard */}
+        <div className={`${mobileTab === 'feed' ? 'hidden lg:block' : ''} lg:order-1 lg:w-[300px] lg:flex-shrink-0 min-w-0 space-y-4`}>
 
         {/* Node swarm grid */}
         <div>
@@ -392,6 +410,10 @@ export default function NodesPage() {
           </div>
         </div>
 
+        </div>{/* end LEFT RAIL: Network dashboard */}
+
+        {/* RIGHT RAIL: Collection — tracks/NFTs/SCIDs; extends down + paginates to the footer on desktop */}
+        <div className={`${mobileTab === 'feed' ? 'hidden lg:block' : ''} lg:order-3 lg:w-[340px] lg:flex-shrink-0 min-w-0`}>
         {/* ─── Network Collection — NFTs/SCids on IPFS ─── */}
         <div>
           <div className="flex items-center justify-between mb-2">
@@ -464,7 +486,7 @@ export default function NodesPage() {
                 <span className="col-span-2 text-[7px] font-mono text-gray-600 text-right">CID / PIN</span>
               </div>
               {/* Rows */}
-              <div className="max-h-[400px] overflow-y-auto">
+              <div className="max-h-[400px] overflow-y-auto lg:max-h-none lg:overflow-visible">
                 {collection.length === 0 && !tracksLoading && (
                   <div className="text-center py-6 text-[10px] font-mono text-gray-700">No data — upload tracks to populate</div>
                 )}
@@ -520,10 +542,13 @@ export default function NodesPage() {
           )}
         </div>
 
-        </div>{/* end network column */}
+          {collectionHasNext && (
+            <div ref={collectionFooterRef} className="w-full py-3 text-center text-[8px] font-mono text-gray-700">loading more…</div>
+          )}
+        </div>{/* end RIGHT RAIL: Collection */}
 
-        {/* MAIN: Feed — full width IG-style */}
-        <div className={`${mobileTab === 'network' ? 'hidden lg:block' : 'w-full'} flex-1 min-w-0`}>
+        {/* CENTER: Feed — centered between the rails on desktop */}
+        <div className={`${mobileTab === 'network' ? 'hidden lg:block' : 'w-full'} lg:order-2 flex-1 min-w-0 lg:max-w-[640px] lg:mx-auto`}>
           <div className="space-y-1.5">
             {/* FEED label — tight under MainPillNav, sits directly above Stories/Reels */}
             <div className="flex items-center gap-2 px-3 sm:px-0">
