@@ -97,12 +97,14 @@ const scrapeMeta = (html: string, prop: string): string | null => {
 // ── id extractors ────────────────────────────────────────────────────────────
 const ytId = (u: string) => u.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/|live\/|v\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/)?.[1] || null
 const vimeoId = (u: string) => u.match(/vimeo\.com\/(?:video\/)?(\d+)/)?.[1] || null
-const tiktokId = (u: string) => u.match(/tiktok\.com\/.*\/video\/(\d+)/)?.[1] || null
+const tiktokId = (u: string) => u.match(/tiktok\.com\/(?:.*\/video\/|embed\/v2\/)(\d+)/)?.[1] || null
 const xId = (u: string) => u.match(/(?:x|twitter)\.com\/[^/\s]+\/status\/(\d+)/i)?.[1] || u.match(/(?:status\/|id=)(\d+)/)?.[1] || null
 const igShortcode = (u: string) => u.match(/instagram\.com\/(?:p|reel|tv)\/([a-zA-Z0-9_-]+)/)?.[1] || null
 const discordCode = (u: string) => u.match(/discord\.(?:com\/(?:invite|servers)\/|gg\/)([a-zA-Z0-9-]+)/)?.[1] || null
 const spotifyParts = (u: string) => {
-  const m = u.match(/(?:open\.spotify\.com\/|spotify:)(track|album|playlist|episode|show)[/:]([a-zA-Z0-9]+)/)
+  // Handles share form (open.spotify.com/track/ID), the stored EMBED form
+  // (open.spotify.com/embed/track/ID), and the URI form (spotify:track:ID).
+  const m = u.match(/(?:open\.spotify\.com\/(?:embed\/)?|spotify:)(track|album|playlist|episode|show)[/:]([a-zA-Z0-9]+)/)
   return m ? { type: m[1], id: m[2] } : null
 }
 const audioMime = (u: string): string | null => {
@@ -301,7 +303,9 @@ async function enrichExternal(meta: PostOgMetadata, link: string, ctx: { origin:
   const sp = spotifyParts(link)
   if (sp || /spotify\.(com|link)/.test(link)) {
     meta.ogType = 'music.song'
-    const o = await fetchJson(`https://open.spotify.com/oembed?url=${encodeURIComponent(link)}`, 3000)
+    // oEmbed wants the canonical share URL, not the /embed/ form.
+    const canonical = sp ? `https://open.spotify.com/${sp.type}/${sp.id}` : link
+    const o = await fetchJson(`https://open.spotify.com/oembed?url=${encodeURIComponent(canonical)}`, 3000)
     if (o?.thumbnail_url) meta.image = o.thumbnail_url
     if (o?.title) meta.title = `${o.title} | SoundChain`
     const emb = sp ? `https://open.spotify.com/embed/${sp.type}/${sp.id}` : null
@@ -317,10 +321,14 @@ async function enrichExternal(meta: PostOgMetadata, link: string, ctx: { origin:
   // SoundCloud — oEmbed thumb + visual player
   if (/soundcloud\.com/.test(link)) {
     meta.ogType = 'music.song'
-    const o = await fetchJson(`https://soundcloud.com/oembed?format=json&url=${encodeURIComponent(link)}`, 3000)
+    // mediaLink may be the w.soundcloud.com/player/?url=<encoded track> form —
+    // unwrap to the real track URL for oEmbed + the canonical player.
+    let scUrl = link
+    try { const inner = new URL(link).searchParams.get('url'); if (inner) scUrl = inner } catch {}
+    const o = await fetchJson(`https://soundcloud.com/oembed?format=json&url=${encodeURIComponent(scUrl)}`, 3000)
     if (o?.thumbnail_url) meta.image = o.thumbnail_url.replace(/-large(\.\w+)$/, '-t500x500$1')
     if (o?.title) meta.title = `${o.title} | SoundChain`
-    const player = `https://w.soundcloud.com/player/?url=${encodeURIComponent(link)}&visual=true`
+    const player = /w\.soundcloud\.com\/player/.test(link) ? link : `https://w.soundcloud.com/player/?url=${encodeURIComponent(scUrl)}&visual=true`
     meta.videoEmbed = { url: player, width: 480, height: 480 }
     meta.player = { url: player, width: 480, height: 480 }
     meta.cardType = 'player'
