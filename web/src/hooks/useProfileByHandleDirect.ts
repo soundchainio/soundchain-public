@@ -9,7 +9,7 @@
  * (isFollowed, isSubscriber, unreadNotificationCount, unreadMessageCount)
  * default to safe zero/false so consumers compile.
  */
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import type { Profile } from 'lib/graphql'
 
 type ApolloShape = { profileByHandle: (Partial<Profile> & { id: string }) | null }
@@ -129,13 +129,18 @@ export const useProfileLazyById = (): [
 ] => {
   const [data, setData] = useState<ProfileQueryShape | undefined>(undefined)
   const [loading, setLoading] = useState(false)
-  const trigger = async (opts: { variables: { id: string } }) => {
+  // MUST be memoized: 11 consumers (NftOwner, ListingsItem, DescriptionCard, …)
+  // put this trigger in a useEffect dep array. An unstable (new-every-render)
+  // function there + setData's fresh object literal = infinite render/refetch loop
+  // (the recurring console spam). Same family as the /api/me lazy-trigger fix.
+  // loadProfile owns its own module cache, so the callback is dependency-free.
+  const trigger = useCallback(async (opts: { variables: { id: string } }) => {
     const id = opts.variables.id
     if (!id) return
     setLoading(true)
     const value = await loadProfile(id)
     if (value?.profileByHandle) setData({ profile: value.profileByHandle })
     setLoading(false)
-  }
+  }, [])
   return [trigger, { data, loading }]
 }
