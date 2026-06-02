@@ -314,7 +314,7 @@ export const NewCommentForm = ({ postId, onSuccess, compact, inputRef, replyToCo
             )}
           </div>
         )}
-        <div className="flex-1 relative">
+        <div className="flex-1 relative min-w-0">
           {/* Selected Stickers Preview */}
           {selectedStickers.length > 0 && (
             <div className="mb-2 p-2 bg-neutral-800/50 rounded-xl border border-neutral-700">
@@ -404,7 +404,7 @@ export const NewCommentForm = ({ postId, onSuccess, compact, inputRef, replyToCo
 
           {/* Action bar: Emoji, Stickers, Embed, character count */}
           <div className="flex items-center justify-between mt-2 gap-2">
-            <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide">
+            <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide flex-1 min-w-0">
               {/* Emoji button */}
               <button
                 type="button"

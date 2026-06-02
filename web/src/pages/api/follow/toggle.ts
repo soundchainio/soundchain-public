@@ -28,10 +28,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const follows = db.collection('follows')
     const profiles = db.collection('profiles')
 
+    // Legacy follows (written by the old Lambda FollowService) stored follower/followed
+    // ids as STRINGS, while newer Vercel-direct writes use ObjectId. Match BOTH forms so
+    // follow upserts don't duplicate and — the reported bug — the circle red-× actually
+    // deletes the record. [[feedback_follows_id_string_vs_objectid]]
+    const followerIdStr = auth.profileId.toString()
+    const idMatch = {
+      followerId: { $in: [auth.profileId, followerIdStr] as any[] },
+      followedId: { $in: [followedOid, String(followedId)] as any[] },
+    }
+
     if (action === 'follow') {
       const now = new Date()
       const upd = await follows.updateOne(
-        { followerId: auth.profileId, followedId: followedOid },
+        idMatch,
         { $setOnInsert: { followerId: auth.profileId, followedId: followedOid, createdAt: now } },
         { upsert: true },
       )
@@ -46,7 +56,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (action === 'unfollow') {
-      const del = await follows.deleteOne({ followerId: auth.profileId, followedId: followedOid })
+      const del = await follows.deleteMany(idMatch)
       if (del.deletedCount > 0) {
         await Promise.all([
           profiles.updateOne({ _id: followedOid, followerCount: { $gt: 0 } }, { $inc: { followerCount: -1 } }),
