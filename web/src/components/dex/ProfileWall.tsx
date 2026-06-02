@@ -286,6 +286,7 @@ interface ProfileWallProps {
   walletAddress?: string
   userHandle?: string
   highlightPostId?: string | null
+  viewMode?: 'grid' | 'list'
   onSetProfileSong?: (audio: { url: string; title: string; artist: string; coverUrl?: string }) => void
   onAddToPlaylist?: (audio: { url: string; title: string; artist: string; coverUrl?: string; wallPostId: string }) => void
 }
@@ -519,7 +520,7 @@ function WallInputToolbar({
   )
 }
 
-export function ProfileWall({ profileId, isOwnProfile: isOwnProfileProp, viewerProfileId, profileName, walletAddress, userHandle, highlightPostId, onSetProfileSong, onAddToPlaylist }: ProfileWallProps) {
+export function ProfileWall({ profileId, isOwnProfile: isOwnProfileProp, viewerProfileId, profileName, walletAddress, userHandle, highlightPostId, viewMode = 'list', onSetProfileSong, onAddToPlaylist }: ProfileWallProps) {
   // Belt-and-suspenders: if parent says it's own profile OR viewer ID matches wall owner, treat as own
   const isOwnProfile = isOwnProfileProp || (Boolean(viewerProfileId) && viewerProfileId === profileId)
   const [body, setBody] = useState('')
@@ -1189,7 +1190,7 @@ export function ProfileWall({ profileId, isOwnProfile: isOwnProfileProp, viewerP
             <p className="text-sm">No wall posts yet. Be the first to write!</p>
           </div>
         ) : (
-          <div className="space-y-2.5">
+          <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 gap-2.5' : 'space-y-2.5'}>
             {sortedPosts.map((post: any, postIndex: number) => {
               const isFirstAudioPost = post.mediaType === 'audio' && post.mediaUrl && sortedPosts.findIndex((p: any) => p.mediaType === 'audio' && p.mediaUrl) === postIndex
               return (

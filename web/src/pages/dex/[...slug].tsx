@@ -8572,6 +8572,18 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         </div>
                       )}
                       {profileTab === 'wall' && (
+                        <div className="flex items-center justify-end mb-2 lg:max-w-[640px] lg:mx-auto px-2 md:px-0">
+                          <div className="flex items-center flex-shrink-0 rounded-lg border border-white/5 bg-black/40 p-0.5">
+                            <button onClick={() => setViewMode('list')} aria-label="List view" aria-pressed={viewMode === 'list'} className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'text-cyan-400 bg-white/5' : 'text-gray-500 hover:text-gray-300'}`}>
+                              <List className="w-4 h-4" />
+                            </button>
+                            <button onClick={() => setViewMode('grid')} aria-label="Grid view" aria-pressed={viewMode === 'grid'} className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'text-cyan-400 bg-white/5' : 'text-gray-500 hover:text-gray-300'}`}>
+                              <Grid className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                      {profileTab === 'wall' && (
                         <ProfileWall
                           profileId={viewingProfile.id}
                           isOwnProfile={isViewingOwnProfile}
@@ -8579,6 +8591,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                           profileName={viewingProfile.displayName}
                           userHandle={viewingProfile.userHandle}
                           highlightPostId={wallPostId}
+                          viewMode={viewMode}
                           onSetProfileSong={isViewingOwnProfile ? async (audio) => {
                             try {
                               await fetch('/api/profile/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ fields: { featuredTrackId: '', featuredAudioUrl: audio.url, featuredAudioTitle: audio.title, featuredAudioArtist: audio.artist, featuredAudioCoverUrl: audio.coverUrl || '' } }) })
