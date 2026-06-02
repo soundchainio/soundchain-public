@@ -1014,7 +1014,11 @@ export function ProfileWall({ profileId, isOwnProfile: isOwnProfileProp, viewerP
   }
 
   return (
-    <div className="space-y-4">
+    // Desktop = 3-col (Their Music+Following | centered Wall | Collection+Stats) via flex
+    // order; mobile = single stacked column (rails fall below the wall, unchanged).
+    <div className="flex flex-col lg:flex-row lg:items-start gap-4">
+      {/* CENTER — message board + wall posts, centered between the rails on desktop */}
+      <div className="w-full lg:order-2 flex-1 min-w-0 lg:max-w-[640px] lg:mx-auto space-y-4">
       {/* === WALL MESSAGE BOARD (top of dashboard) === */}
       {viewerProfileId && (
         <div className="p-4 bg-white/5 rounded-2xl border border-white/10">
@@ -1666,8 +1670,10 @@ export function ProfileWall({ profileId, isOwnProfile: isOwnProfileProp, viewerP
         />
       )}
 
-      {/* === PERSONALIZED DASHBOARD — collapsible cards, long scroll === */}
-      <div className="space-y-3">
+      </div>{/* end CENTER */}
+
+      {/* LEFT RAIL — Their Music + Following (desktop); stacks under the wall on mobile */}
+      <aside className="w-full lg:w-[300px] lg:order-1 lg:flex-shrink-0 min-w-0 space-y-3">
 
         {/* Their Music */}
         <div className="rounded-2xl border border-cyan-500/20 bg-gradient-to-br from-neutral-900/80 via-cyan-950/10 to-neutral-900/80 p-4 backdrop-blur-sm">
@@ -1766,6 +1772,11 @@ export function ProfileWall({ profileId, isOwnProfile: isOwnProfileProp, viewerP
             </div>
         </div>
 
+        </aside>{/* end LEFT RAIL */}
+
+        {/* RIGHT RAIL — Their Collection + Stats (desktop); stacks on mobile */}
+        <aside className="w-full lg:w-[340px] lg:order-3 lg:flex-shrink-0 min-w-0 space-y-3">
+
         {/* Their Collection — NFT artwork grid */}
         {userTracks.filter((t: any) => t.nftData?.tokenId || t.nftData?.contract).length > 0 && (
           <div className="rounded-2xl border border-amber-500/20 bg-gradient-to-br from-neutral-900/80 via-amber-950/10 to-neutral-900/80 p-4 backdrop-blur-sm">
@@ -1834,7 +1845,7 @@ export function ProfileWall({ profileId, isOwnProfile: isOwnProfileProp, viewerP
               </div>
             </div>
         </div>
-      </div>
+      </aside>{/* end RIGHT RAIL */}
     </div>
   )
 }
