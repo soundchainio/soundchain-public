@@ -273,13 +273,17 @@ async function enrichExternal(meta: PostOgMetadata, link: string, ctx: { origin:
     return
   }
 
-  // YouTube — provider-native player + maxres thumb
+  // YouTube — stored form is youtube.com/embed/<id> (or /embed/videoseries?list= for
+  // playlists, /embed/live_stream for live — those have no single-video thumbnail).
   const yt = ytId(link)
-  if (yt) {
+  if (yt || /youtube\.com\/embed\//.test(link)) {
     meta.ogType = 'video.other'
-    meta.image = `https://img.youtube.com/vi/${yt}/maxresdefault.jpg`
-    meta.videoEmbed = { url: `https://www.youtube.com/embed/${yt}`, width: 1280, height: 720 }
-    meta.player = { url: `https://www.youtube.com/embed/${yt}`, width: 480, height: 270 }
+    const realVid = yt && yt !== 'videoseries' && yt !== 'live_stream' ? yt : null
+    if (realVid) meta.image = `https://img.youtube.com/vi/${realVid}/maxresdefault.jpg`
+    // Use the stored embed URL directly so ?list=/playlist context is preserved.
+    const emb = /youtube\.com\/embed\//.test(link) ? link : `https://www.youtube.com/embed/${yt}`
+    meta.videoEmbed = { url: emb, width: 1280, height: 720 }
+    meta.player = { url: emb, width: 480, height: 270 }
     meta.cardType = 'player'
     meta.inlinePlayable = 'provider-native'
     return
@@ -336,20 +340,26 @@ async function enrichExternal(meta: PostOgMetadata, link: string, ctx: { origin:
     return
   }
 
-  // Bandcamp — scrape og:image + embedded player
+  // Bandcamp — stored form is usually an EmbeddedPlayer URL (already the iframe),
+  // otherwise the album/track page.
   if (/bandcamp\.com/.test(link)) {
     meta.ogType = 'music.song'
+    if (/EmbeddedPlayer/i.test(link)) {
+      meta.videoEmbed = { url: link, width: 400, height: 472 }
+      meta.player = { url: link, width: 400, height: 472 }
+      meta.cardType = 'player'
+    }
     const html = await fetchText(link, 3500)
     if (html) {
-      const img = scrapeMeta(html, 'og:image')
-      if (img) meta.image = img
-      const t = scrapeMeta(html, 'og:title')
-      if (t) meta.title = `${t} | SoundChain`
-      const pl = scrapeMeta(html, 'og:video') || scrapeMeta(html, 'og:video:secure_url')
-      if (pl) {
-        meta.videoEmbed = { url: pl, width: 400, height: 472 }
-        meta.player = { url: pl, width: 400, height: 472 }
-        meta.cardType = 'player'
+      const img = scrapeMeta(html, 'og:image'); if (img) meta.image = img
+      const t = scrapeMeta(html, 'og:title'); if (t) meta.title = `${t} | SoundChain`
+      if (!meta.player) {
+        const pl = scrapeMeta(html, 'og:video') || scrapeMeta(html, 'og:video:secure_url')
+        if (pl) {
+          meta.videoEmbed = { url: pl, width: 400, height: 472 }
+          meta.player = { url: pl, width: 400, height: 472 }
+          meta.cardType = 'player'
+        }
       }
     }
     meta.inlinePlayable = 'provider-native'
@@ -373,24 +383,25 @@ async function enrichExternal(meta: PostOgMetadata, link: string, ctx: { origin:
     return
   }
 
-  // Twitch — scrape og:image + player (parent MUST be exact host)
+  // Twitch — stored form is player.twitch.tv/?video=|channel=...&parent=<host>.
+  // The embed's parent MUST be our exact host or Twitch refuses to render.
   if (/twitch\.tv/.test(link)) {
     meta.ogType = 'video.other'
-    const html = await fetchText(link, 4000)
-    if (html) {
-      const img = scrapeMeta(html, 'og:image'); if (img) meta.image = img
-    }
-    const vid = link.match(/twitch\.tv\/videos\/(\d+)/)?.[1]
-    const clip = link.match(/clips\.twitch\.tv\/([a-zA-Z0-9_-]+)/)?.[1] || link.match(/twitch\.tv\/\w+\/clip\/([a-zA-Z0-9_-]+)/)?.[1]
-    const chan = link.match(/twitch\.tv\/([a-zA-Z0-9_]+)(?:\/|$)/)?.[1]
     const host = (() => { try { return new URL(origin).hostname } catch { return 'soundchain.io' } })()
-    const emb = vid
-      ? `https://player.twitch.tv/?video=${vid}&parent=${host}`
-      : clip
-        ? `https://clips.twitch.tv/embed?clip=${clip}&parent=${host}`
-        : chan
-          ? `https://player.twitch.tv/?channel=${chan}&parent=${host}`
-          : null
+    let emb: string | null = null
+    if (/player\.twitch\.tv|clips\.twitch\.tv\/embed/i.test(link)) {
+      // Already an embed URL — guarantee parent is our host.
+      try { const u = new URL(link); u.searchParams.set('parent', host); emb = u.toString() } catch { emb = link }
+    } else {
+      const vid = link.match(/twitch\.tv\/videos\/(\d+)/)?.[1]
+      const clip = link.match(/clips\.twitch\.tv\/([a-zA-Z0-9_-]+)/)?.[1] || link.match(/twitch\.tv\/\w+\/clip\/([a-zA-Z0-9_-]+)/)?.[1]
+      const chan = link.match(/twitch\.tv\/([a-zA-Z0-9_]+)(?:\/|$)/)?.[1]
+      emb = vid ? `https://player.twitch.tv/?video=${vid}&parent=${host}`
+        : clip ? `https://clips.twitch.tv/embed?clip=${clip}&parent=${host}`
+        : chan && chan !== 'videos' ? `https://player.twitch.tv/?channel=${chan}&parent=${host}` : null
+      const html = await fetchText(link, 4000)
+      if (html) { const img = scrapeMeta(html, 'og:image'); if (img) meta.image = img }
+    }
     if (emb) {
       meta.videoEmbed = { url: emb, width: 620, height: 378 }
       meta.player = { url: emb, width: 620, height: 378 }
@@ -400,51 +411,71 @@ async function enrichExternal(meta: PostOgMetadata, link: string, ctx: { origin:
     return
   }
 
-  // Instagram — scrape og:image (token-free); embed player. image-only if no poster.
+  // Instagram — stored form is instagram.com/p/<code>/embed/. The embed iframe is
+  // token-free; the og:image is best-effort (Meta 429s datacenter IPs → we fall back
+  // to the thumbnail captured at post time / author avatar — NO Meta token, by design).
   const ig = igShortcode(link)
   if (ig || /instagram\.com/.test(link)) {
     meta.ogType = 'video.other'
     const html = await fetchText(link, 4000)
     const img = html ? scrapeMeta(html, 'og:image') : null
     if (img) meta.image = img
-    if (ig) {
-      const emb = `https://www.instagram.com/p/${ig}/embed/`
+    const emb = ig ? `https://www.instagram.com/p/${ig}/embed/` : (/instagram\.com\/.*embed/.test(link) ? link : null)
+    if (emb) {
       meta.videoEmbed = { url: emb, width: 480, height: 600 }
       meta.player = { url: emb, width: 480, height: 600 }
+      meta.cardType = 'player'
+    } else {
+      meta.cardType = 'summary_large_image'
     }
-    meta.cardType = img ? 'player' : 'summary_large_image'
     meta.inlinePlayable = img ? 'provider-native' : 'image-only'
     return
   }
 
-  // Facebook — scrape og:image; plugin video player
+  // Facebook — stored form is the plugins/video.php?href=<encoded> wrapper (token-free
+  // iframe). Don't double-wrap; unwrap the inner href for the best-effort og:image.
   if (/facebook\.com|fb\.watch/.test(link)) {
     meta.ogType = 'video.other'
-    const html = await fetchText(link, 4000)
+    const isPlugin = /plugins\/video/i.test(link)
+    let scrapeTarget = link
+    if (isPlugin) { try { const h = new URL(link).searchParams.get('href'); if (h) scrapeTarget = h } catch {} }
+    const html = await fetchText(scrapeTarget, 4000)
     const img = html ? scrapeMeta(html, 'og:image') : null
     if (img) meta.image = img
-    const emb = `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(link)}&show_text=false&width=734`
+    const emb = isPlugin ? link : `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(link)}&show_text=false&width=734`
     meta.videoEmbed = { url: emb, width: 734, height: 413 }
     meta.player = { url: emb, width: 734, height: 413 }
-    meta.cardType = img ? 'player' : 'summary_large_image'
+    meta.cardType = 'player'
     meta.inlinePlayable = img ? 'provider-native' : 'image-only'
     return
   }
 
-  // Discord — invite → server icon card
+  // Discord — stored form is discord.com/invite/<code> or discord.com/widget?id=<serverId>.
   const dc = discordCode(link)
-  if (dc) {
+  const widgetId = link.match(/discord\.com\/widget\?id=(\d+)/)?.[1]
+  if (dc || widgetId) {
     meta.ogType = 'website'
-    const inv = await fetchJson(`https://discord.com/api/v10/invites/${dc}?with_counts=true`, 4000, { 'User-Agent': 'SoundChain/1.0 (+https://soundchain.io)' })
-    const g = inv?.guild
-    if (g?.id && g?.icon) meta.image = `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png?size=512`
-    if (g?.name) {
-      meta.title = `Join ${g.name} on Discord`
-      const members = inv?.approximate_member_count
-      const online = inv?.approximate_presence_count
-      meta.description = members ? `${g.name} · ${members.toLocaleString()} members${online ? `, ${online.toLocaleString()} online` : ''}` : `Join ${g.name} on Discord`
+    if (dc) {
+      const inv = await fetchJson(`https://discord.com/api/v10/invites/${dc}?with_counts=true`, 4000, { 'User-Agent': 'SoundChain/1.0 (+https://soundchain.io)' })
+      const g = inv?.guild
+      if (g?.id && g?.icon) meta.image = `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png?size=512`
+      if (g?.name) {
+        meta.title = `Join ${g.name} on Discord`
+        const members = inv?.approximate_member_count
+        const online = inv?.approximate_presence_count
+        meta.description = members ? `${g.name} · ${members.toLocaleString()} members${online ? `, ${online.toLocaleString()} online` : ''}` : `Join ${g.name} on Discord`
+      }
+      meta.cardType = 'summary' // square server icon — don't crop
+    } else if (widgetId) {
+      const w = await fetchJson(`https://discord.com/api/guilds/${widgetId}/widget.json`, 4000, { 'User-Agent': 'SoundChain/1.0 (+https://soundchain.io)' })
+      if (w?.name) {
+        meta.title = `Join ${w.name} on Discord`
+        meta.description = `${w.name} on Discord${w.presence_count ? ` · ${w.presence_count} online` : ''}`
+      }
+      meta.videoEmbed = { url: link, width: 350, height: 500 }
+      meta.player = { url: link, width: 350, height: 500 }
+      meta.cardType = 'player'
     }
-    meta.cardType = 'summary' // square server icon — don't crop
     meta.inlinePlayable = 'image-only'
     return
   }
