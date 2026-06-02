@@ -48,10 +48,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       media: (data.mediaDetails || []).map((m: any) => ({
         type: m.type, // 'photo' | 'video' | 'animated_gif'
         thumbnailUrl: m.media_url_https || '',
-        videoUrl: m.video_info?.variants
-          ?.filter((v: any) => v.content_type === 'video/mp4')
-          ?.sort((a: any, b: any) => (b.bitrate || 0) - (a.bitrate || 0))
-          ?.[0]?.url || null,
+        // Pick a LIGHT mp4 variant for instant inline autoplay-on-scroll (like
+        // YouTube). The highest variant is often 1080p @ 10Mbit, which buffers too
+        // long to autoplay in a feed → looks stuck on the poster. Take the highest
+        // variant ≤ 2.5Mbit (~720p), falling back to the smallest if all are heavy.
+        videoUrl: (() => {
+          const mp4s = (m.video_info?.variants || [])
+            .filter((v: any) => v.content_type === 'video/mp4' && v.url)
+            .sort((a: any, b: any) => (a.bitrate || 0) - (b.bitrate || 0)) // ascending
+          if (!mp4s.length) return null
+          const light = mp4s.filter((v: any) => (v.bitrate || 0) <= 2_500_000)
+          return (light.length ? light[light.length - 1] : mp4s[0]).url
+        })(),
         width: m.original_info?.width,
         height: m.original_info?.height,
       })),
