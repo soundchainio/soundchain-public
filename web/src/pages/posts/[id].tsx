@@ -289,10 +289,20 @@ export default function PostPage({ post, postId, isBot: isBotRequest, ogData }: 
           <link rel="canonical" href={ogData.url} />
           <link rel="alternate" type="application/json+oembed" href={`${ogData.url.replace(/\/posts\/.*/, '')}/api/oembed?url=${encodeURIComponent(ogData.url)}`} title={ogData.title} />
         </Head>
+        {/* This bot HTML is CDN-cached + served to humans too (the cache key has no
+            Vary:User-Agent). So when someone TAPS a shared card, the in-app browser
+            lands here — bounce real browsers to the playable post. Crawlers don't run
+            JS, so they keep reading the OG tags above and the card is unaffected.
+            (Fixes the dead "black title" page on tapping a YouTube/Spotify card.) */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var b=/bot|crawl|spider|facebookexternalhit|Twitterbot|Slackbot|TelegramBot|Discordbot|WhatsApp|LinkedInBot|Embedly|Pinterest|Snapchat|Googlebot|bingbot|applebot|iMessageLinkPreview/i;if(!b.test(navigator.userAgent)){location.replace(${JSON.stringify('/post/' + postId)})}}catch(e){}`,
+          }}
+        />
         <div className="min-h-screen bg-black flex items-center justify-center">
           <div className="text-center p-8">
             <h1 className="text-xl text-white">{ogData.title}</h1>
-            <p className="text-gray-400">{ogData.description}</p>
+            <p className="text-gray-400 mt-2">Opening on SoundChain…</p>
           </div>
         </div>
       </>
