@@ -7105,7 +7105,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   {/* Profile-pic banner — CLEAN. The fluid-gl effect was removed from
                       inside this container per Frank's directive: pic stays untouched,
                       fluid lives ONLY on the @handle chars in the tight row below. */}
-                  <div className="relative h-[180px] sm:h-[220px] md:h-[260px] w-full overflow-hidden">
+                  <div className="relative h-[180px] sm:h-[220px] md:h-[260px] w-full overflow-hidden mt-2 sm:mt-3 scroll-mt-[96px]">
                     {viewingProfile.profilePicture ? (
                       <img
                         src={viewingProfile.profilePicture}
@@ -7121,7 +7121,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     )}
                     {/* Cyberpunk top gradient — light touch so the image top reads clean,
                         not cropped/darkened under the nav. */}
-                    <div className="absolute inset-x-0 top-0 h-12 bg-gradient-to-b from-black/25 to-transparent pointer-events-none z-[5]" />
+                    <div className="absolute inset-x-0 top-0 h-6 bg-gradient-to-b from-black/15 to-transparent pointer-events-none z-[5]" />
                     {/* Neon scanline accent welding the pic to the identity stack below */}
                     <div className="absolute inset-x-0 bottom-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-400/80 to-transparent pointer-events-none z-10 shadow-[0_0_12px_rgba(34,211,238,0.6)]" />
                   </div>
@@ -7139,7 +7139,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     const hasNft = (viewingProfile.tracksCount || 0) > 0
                     const hasEventPoap = viewingProfile.badges?.includes(ProfileBadge.SupporterFirstEventAeSc)
                     return (
-                  <div className="relative w-full bg-gradient-to-b from-[#0b0f1c] via-[#080a12] to-[#06070d]">
+                  <div className="relative w-full">
                     {/* Neon left spine — cyan → violet → fuchsia */}
                     <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-gradient-to-b from-cyan-400 via-violet-500 to-fuchsia-500 shadow-[0_0_10px_rgba(34,211,238,0.7)]" />
                     {/* Neon underline */}
