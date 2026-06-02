@@ -153,7 +153,7 @@ export const NativeTweetCard = ({ tweetId, originalUrl }: NativeTweetCardProps) 
         m.videoUrl ? (
           <div key={i} className="mt-2">
             <AutoplayVideo
-              src={`/api/social/tweet-video?u=${encodeURIComponent(m.videoUrl)}`}
+              src={`/api/social/tweet-video?u=${encodeURIComponent(m.videoUrl)}&v=2`}
               poster={m.thumbnailUrl || undefined}
               className="w-full"
               muted={true}
