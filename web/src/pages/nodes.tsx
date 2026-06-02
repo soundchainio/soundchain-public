@@ -2,8 +2,7 @@
  * Nodes — Live P2P Network Dashboard
  * Shows all connected peers, IPFS pins, relay health, bandwidth, swarm status.
  */
-import { useEffect, useState, useCallback, useMemo, useRef, ReactElement, Component, ErrorInfo, ReactNode } from 'react'
-import { useWindowVirtualizer } from '@tanstack/react-virtual'
+import { useEffect, useState, useCallback, useMemo, ReactElement, Component, ErrorInfo, ReactNode } from 'react'
 import { useMe } from 'hooks/useMe'
 import { useRouter } from 'next/router'
 import { useGroupedTracks as useGroupedTracksQuery } from 'hooks/useGroupedTracksDirect'  // Phase 7e — Vercel-direct
@@ -154,72 +153,6 @@ export default function NodesPage() {
   const feedFetchMore = useCallback(() => {
     if (feedCursor) loadFeed(feedCursor)
   }, [feedCursor, loadFeed])
-
-  // ── Virtualized feed (IG/X/TikTok-class windowing, web-native) ───────────────
-  // Only posts near the viewport stay mounted (fully live + AUTOPLAYING); posts that
-  // scroll far away recycle out of the DOM so memory stays flat at any page depth
-  // (fixes the mobile jetsam tab-reload). Autoplay is UNTOUCHED — each in/near-view
-  // item is a real mounted node, so the existing IntersectionObservers in Post.tsx /
-  // CompactPost.tsx / AutoplayMedia.tsx fire on attach exactly as before. overscan:4
-  // guarantees a post mounts ~a screen early, so its video is ready before it's 50%
-  // visible — never the recycle boundary (that separation is what the banned
-  // tap-to-play revert violated).
-  const renderable = useMemo(
-    () => feedNodes.filter((fi: any) => fi?.post?.id && fi?.post?.profile),
-    [feedNodes],
-  )
-  const feedWrapRef = useRef<HTMLDivElement>(null)
-  const [lanes, setLanes] = useState(1)
-  const [scrollMargin, setScrollMargin] = useState(0)
-  useEffect(() => {
-    const recompute = () => {
-      if (feedViewMode === 'list') setLanes(1)
-      else {
-        const w = window.innerWidth
-        setLanes(w >= 1280 ? 5 : w >= 768 ? 4 : w >= 640 ? 3 : 2)
-      }
-      if (feedWrapRef.current) {
-        setScrollMargin(feedWrapRef.current.getBoundingClientRect().top + window.scrollY)
-      }
-    }
-    recompute()
-    window.addEventListener('resize', recompute)
-    return () => window.removeEventListener('resize', recompute)
-  }, [feedViewMode, composerOpen])
-  // Shape-aware estimate so the post-measure correction is tiny (a flat estimate is
-  // what causes scroll-jump).
-  const estimateForPost = useCallback((post: any): number => {
-    if (feedViewMode === 'grid') return 300
-    const hasEmbed = !!post?.mediaLink
-    const um = post?.uploadedMediaType
-    if (hasEmbed || um === 'video') return 620
-    if (um === 'image') return 480
-    return 200
-  }, [feedViewMode])
-  const virtualizer = useWindowVirtualizer({
-    count: renderable.length,
-    estimateSize: (i) => estimateForPost(renderable[i]?.post),
-    overscan: 4,
-    lanes,
-    scrollMargin,
-    getItemKey: (i) => renderable[i]?.post?.id ?? i,
-  })
-  // Re-measure on list/grid or lane changes (heights differ wildly).
-  useEffect(() => { virtualizer.measure() }, [feedViewMode, lanes]) // eslint-disable-line react-hooks/exhaustive-deps
-  // Auto-load the next page as the tail nears; loadingMoreRef dedupes the burst of
-  // re-renders during a fling (feedFetchMore has no internal dedupe). LOAD MORE button
-  // stays as the Fire-TV/d-pad fallback.
-  const loadingMoreRef = useRef(false)
-  const virtualItems = virtualizer.getVirtualItems()
-  useEffect(() => {
-    const last = virtualItems[virtualItems.length - 1]
-    if (!last) return
-    if (last.index >= renderable.length - 3 && feedHasNext && !feedLoading && !loadingMoreRef.current) {
-      loadingMoreRef.current = true
-      feedFetchMore()
-    }
-  }, [virtualItems, renderable.length, feedHasNext, feedLoading, feedFetchMore])
-  useEffect(() => { loadingMoreRef.current = false }, [renderable.length])
   const handleFeedPlayClicked = useCallback((trackId: string) => {
     const tracks = feedNodes
       .filter(fi => fi?.post?.track && !fi.post.track.deleted)
@@ -651,85 +584,56 @@ export default function NodesPage() {
               </div>
             )}
 
-            {/* Loading skeleton (initial load) */}
-            {feedLoading && feedNodes.length === 0 && (
-              <div className={feedViewMode === 'grid'
-                ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-1.5 sm:gap-2'
-                : 'space-y-2'}>
-                {feedViewMode === 'grid' ? (
-                  Array.from({ length: 8 }).map((_, i) => (
-                    <div key={i} className="aspect-[3/4] bg-neutral-900 border border-white/5 rounded-lg animate-pulse" />
-                  ))
+            <div className={feedViewMode === 'grid'
+              ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-1.5 sm:gap-2'
+              : 'space-y-2'}>
+              {feedLoading && feedNodes.length === 0 && (
+                feedViewMode === 'grid' ? (
+                  <>
+                    {Array.from({ length: 8 }).map((_, i) => (
+                      <div key={i} className="aspect-[3/4] bg-neutral-900 border border-white/5 rounded-lg animate-pulse" />
+                    ))}
+                  </>
                 ) : (
                   <>
                     <PostSkeleton />
                     <PostSkeleton />
                     <PostSkeleton />
                   </>
-                )}
-              </div>
-            )}
-
-            {/* Empty state */}
-            {!feedLoading && feedNodes.length === 0 && (
-              <div className="text-center py-8 text-[10px] font-mono text-gray-700">
-                {me?.profile?.id ? 'No posts yet — follow users to fill your feed' : 'Sign in to see your feed'}
-              </div>
-            )}
-
-            {/* Virtualized feed — windowed so only ~visible+overscan posts are mounted
-                (flat memory at any page depth); visible posts stay live + AUTOPLAYING. */}
-            {renderable.length > 0 && (
-              <div
-                ref={feedWrapRef}
-                style={{ position: 'relative', width: '100%', height: `${virtualizer.getTotalSize()}px` }}
-              >
-                {virtualItems.map((vItem) => {
-                  const feedItem = renderable[vItem.index]
-                  if (!feedItem) return null
-                  const isGrid = feedViewMode === 'grid'
-                  return (
-                    <div
-                      key={vItem.key}
-                      data-index={vItem.index}
-                      ref={virtualizer.measureElement}
-                      style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: isGrid ? `${(vItem.lane / lanes) * 100}%` : 0,
-                        width: isGrid ? `${100 / lanes}%` : '100%',
-                        transform: `translateY(${vItem.start - scrollMargin}px)`,
-                        padding: isGrid ? '0 4px 8px' : '0 0 8px',
-                      }}
-                    >
-                      <PostErrorBoundary postId={feedItem.post.id}>
-                        {isGrid ? (
-                          <CompactPost
-                            post={feedItem.post}
-                            handleOnPlayClicked={handleFeedPlayClicked}
-                          />
-                        ) : (
-                          <Post
-                            post={feedItem.post}
-                            handleOnPlayClicked={handleFeedPlayClicked}
-                          />
-                        )}
-                      </PostErrorBoundary>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-
-            {/* Load more — fallback (scroll auto-loads the next page) */}
-            {feedPageInfo?.hasNextPage && (
-              <button
-                onClick={() => feedFetchMore()}
-                className="w-full mt-2 py-2 text-[9px] font-mono text-cyan-400/60 hover:text-cyan-400 border border-white/5 rounded-lg hover:border-cyan-500/20 transition"
-              >
-                LOAD MORE
-              </button>
-            )}
+                )
+              )}
+              {!feedLoading && feedNodes.length === 0 && (
+                <div className={`text-center py-8 text-[10px] font-mono text-gray-700 ${feedViewMode === 'grid' ? 'col-span-full' : ''}`}>
+                  {me?.profile?.id ? 'No posts yet — follow users to fill your feed' : 'Sign in to see your feed'}
+                </div>
+              )}
+              {feedNodes
+                .filter((fi: any) => fi?.post?.id && fi?.post?.profile)
+                .map((feedItem: any) => (
+                  <PostErrorBoundary key={feedItem.post.id} postId={feedItem.post.id}>
+                    {feedViewMode === 'grid' ? (
+                      <CompactPost
+                        post={feedItem.post}
+                        handleOnPlayClicked={handleFeedPlayClicked}
+                      />
+                    ) : (
+                      <Post
+                        post={feedItem.post}
+                        handleOnPlayClicked={handleFeedPlayClicked}
+                      />
+                    )}
+                  </PostErrorBoundary>
+                ))}
+              {/* Load more */}
+              {feedPageInfo?.hasNextPage && (
+                <button
+                  onClick={() => feedFetchMore()}
+                  className={`py-2 text-[9px] font-mono text-cyan-400/60 hover:text-cyan-400 border border-white/5 rounded-lg hover:border-cyan-500/20 transition ${feedViewMode === 'grid' ? 'col-span-full w-full' : 'w-full'}`}
+                >
+                  LOAD MORE
+                </button>
+              )}
+            </div>
           </div>
         </div>
 

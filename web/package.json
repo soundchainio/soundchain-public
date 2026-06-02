@@ -149,7 +149,6 @@
     "react-textarea-autosize": "^8.5.3",
     "react-toastify": "^10.0.5",
     "react-tooltip": "^5.30.0",
-    "@tanstack/react-virtual": "^3.13.12",
     "react-virtualized-auto-sizer": "^1.0.24",
     "react-window": "^1.8.10",
     "react-window-infinite-loader": "^1.0.10",
