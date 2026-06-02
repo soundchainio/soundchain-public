@@ -165,9 +165,14 @@ const fetchTrack = async (trackId: string): Promise<TrackSlim | null> => {
       return null
     }
     const json = await r.json()
-    // /api/tracks/list?trackId=xxx returns the track at the top-level or as
-    // first node depending on shape — handle both
-    const track: TrackSlim | null = json?.id ? (json as TrackSlim) : (Array.isArray(json?.nodes) && json.nodes[0]) || null
+    // /api/tracks/list?trackId=xxx returns { track: {...} } (the actual shape) — older
+    // shapes returned the track top-level or as nodes[0]. The MISSING json.track case is
+    // why the track detail page rendered blank (fetchTrack returned null despite 200 OK).
+    const track: TrackSlim | null =
+      (json?.track as TrackSlim) ||
+      (json?.id ? (json as TrackSlim) : null) ||
+      (Array.isArray(json?.nodes) ? (json.nodes[0] as TrackSlim) : null) ||
+      null
     trackCache.set(trackId, { value: track, ts: Date.now() })
     return track
   } catch {
