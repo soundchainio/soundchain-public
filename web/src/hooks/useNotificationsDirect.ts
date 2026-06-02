@@ -7,7 +7,7 @@
  *
  * Returns Apollo contract `data.notifications.nodes[]`.
  */
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 type NotificationNode = any  // Discriminated union — type-cast in Notification.tsx renderer
 type ApolloShape = {
@@ -75,7 +75,10 @@ export const useNotificationCountLazy = (_opts?: { fetchPolicy?: string }): [
 ] => {
   const [data, setData] = useState<CountShape | undefined>(undefined)
   const [loading, setLoading] = useState(false)
-  const trigger = async () => {
+  // MUST be memoized: consumers (NotificationBadge) put this trigger in a
+  // useEffect dep array. An unstable (new-every-render) function there causes an
+  // infinite fetch loop → /api/me flood → Vercel DDoS auto-deny → site 403.
+  const trigger = useCallback(async () => {
     setLoading(true)
     try {
       const r = await fetch('/api/me', { credentials: 'include', headers: { 'Cache-Control': 'no-cache' } })
@@ -87,6 +90,6 @@ export const useNotificationCountLazy = (_opts?: { fetchPolicy?: string }): [
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
   return [trigger, { data, loading }]
 }

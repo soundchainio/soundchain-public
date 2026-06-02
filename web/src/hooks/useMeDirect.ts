@@ -5,7 +5,7 @@
  * returns the Apollo contract `{ data: { me }, loading, refetch }` so
  * callsites swap with a 1-line import change.
  */
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useMe, invalidateMe } from './useMe'
 
 type MeShape = { me: any }
@@ -42,7 +42,10 @@ export const useUnreadMessageCountLazy = (_opts?: { fetchPolicy?: string }): [
 ] => {
   const [data, setData] = useState<UnreadShape | undefined>(undefined)
   const [loading, setLoading] = useState(false)
-  const trigger = async () => {
+  // MUST be memoized: consumers (InboxBadge, pulse) put this trigger in a
+  // useEffect dep array. An unstable (new-every-render) function there causes an
+  // infinite fetch loop → /api/me flood → Vercel DDoS auto-deny → site 403.
+  const trigger = useCallback(async () => {
     setLoading(true)
     try {
       const r = await fetch('/api/me', { credentials: 'include', headers: { 'Cache-Control': 'no-cache' } })
@@ -59,6 +62,6 @@ export const useUnreadMessageCountLazy = (_opts?: { fetchPolicy?: string }): [
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
   return [trigger, { data, loading }]
 }
