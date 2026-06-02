@@ -1,4 +1,4 @@
-import { memo, useState, useRef, useCallback, useEffect, ReactNode } from 'react'
+import { memo, useState, useRef, useCallback, useEffect } from 'react'
 import { useModalDispatch } from 'contexts/ModalContext'
 import { useMe } from 'hooks/useMe'
 import { Ellipsis } from 'icons/Ellipsis'
@@ -39,35 +39,6 @@ const addAutoplayParam = (url: string): string => {
     }
   } catch { /* return original */ }
   return url
-}
-
-// Mounts a heavy embed (raw provider iframe) ONLY when within ~1.5 screens of the
-// viewport, and unmounts it when scrolled far away, so live iframes stay capped to the
-// visible window instead of piling up across feed pages (the mobile memory / tab-reload
-// fix). Renders a same-height placeholder otherwise so layout never jumps.
-const LazyEmbed = ({ children, minHeight }: { children: ReactNode; minHeight: string }) => {
-  const ref = useRef<HTMLDivElement>(null)
-  const [show, setShow] = useState(false)
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    const obs = new IntersectionObserver(([e]) => setShow(e.isIntersecting), { rootMargin: '150% 0px' })
-    obs.observe(el)
-    return () => obs.disconnect()
-  }, [])
-  return (
-    <div ref={ref} className="w-full" style={{ minHeight }}>
-      {show ? (
-        children
-      ) : (
-        <div className="relative w-full bg-neutral-900 rounded-lg overflow-hidden flex items-center justify-center" style={{ minHeight }}>
-          <div className="w-12 h-12 rounded-full bg-black/50 backdrop-blur flex items-center justify-center">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z" /></svg>
-          </div>
-        </div>
-      )}
-    </div>
-  )
 }
 
 // Helper to extract YouTube video ID and generate thumbnail URL
@@ -377,7 +348,7 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
                   src={uploadedMediaUrl}
                   alt="Post media"
                   className="w-full h-auto"
-                  loading="lazy"
+                  loading="eager"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement
                     target.style.display = 'none'
@@ -415,7 +386,7 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
                   src={uploadedMediaUrl}
                   alt="Post media"
                   className="w-full h-auto"
-                  loading="lazy"
+                  loading="eager"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement
                     target.style.display = 'none'
@@ -467,13 +438,6 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
                       height="100%"
                       style={{ position: 'absolute', top: 0, left: 0 }}
                       url={post.mediaLink}
-                      // light = render only a thumbnail until tapped → NO cross-origin
-                      // iframe is mounted for offscreen/untapped embeds. This is the fix
-                      // for the feed reloading after a few pages on mobile: dozens of live
-                      // YouTube/Vimeo iframes blew past the jetsam memory limit → the OS
-                      // killed + reloaded the tab. Native SC video (X/uploaded) still
-                      // autoplays via AutoplayVideo (lightweight <video>, paused offscreen).
-                      light={getYouTubeThumbnail(post.mediaLink) || true}
                       playsinline
                       controls
                       muted={isPlayerMuted}
@@ -600,32 +564,27 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
                 const embedHeight = getEmbedHeight()
 
                 return (
-                  // Viewport-gated: the iframe only mounts when within ~1.5 screens and
-                  // UNMOUNTS when scrolled far away → live embeds stay capped to the visible
-                  // window instead of accumulating across pages (mobile memory / tab reload fix).
-                  <LazyEmbed minHeight={embedHeight}>
-                    <div
-                      key={`iframe-wrapper-${post.id}`}
-                      className="orientation-stable"
-                      style={{
-                        contain: 'layout style',
-                        willChange: 'contents',
-                        transform: 'translateZ(0)',
-                      }}
-                    >
-                      <iframe
-                        key={`iframe-${post.id}`}
-                        frameBorder="0"
-                        className="w-full bg-black"
-                        style={{ minHeight: embedHeight }}
-                        src={addAutoplayParam(mediaUrl)}
-                        title="Media"
-                        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture; web-share"
-                        allowFullScreen
-                        referrerPolicy="no-referrer-when-downgrade"
-                      />
-                    </div>
-                  </LazyEmbed>
+                  <div
+                    key={`iframe-wrapper-${post.id}`}
+                    className="orientation-stable"
+                    style={{
+                      contain: 'layout style',
+                      willChange: 'contents',
+                      transform: 'translateZ(0)',
+                    }}
+                  >
+                    <iframe
+                      key={`iframe-${post.id}`}
+                      frameBorder="0"
+                      className="w-full bg-black"
+                      style={{ minHeight: embedHeight }}
+                      src={addAutoplayParam(mediaUrl)}
+                      title="Media"
+                      allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture; web-share"
+                      allowFullScreen
+                      referrerPolicy="no-referrer-when-downgrade"
+                    />
+                  </div>
                 )
               })()
             )
