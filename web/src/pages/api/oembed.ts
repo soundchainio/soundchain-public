@@ -167,7 +167,22 @@ async function handleSoundChainOEmbed(
     const postId = postMatch[1]
     resourceType = 'post'
     embedUrl = `${domainUrl}/embed/post/${postId}`
-    // Posts can be enhanced similarly if needed
+    // Reuse the same builder the share cards use → correct per-provider title,
+    // author, thumbnail, and the best player iframe (provider-native when possible).
+    try {
+      const { buildPostOgMeta } = await import('lib/og/buildPostOg')
+      const { default: clientPromise } = await import('lib/mongodb')
+      const client = await clientPromise
+      const db = client.db('soundchain')
+      const og = await buildPostOgMeta(db, postId, domainUrl)
+      if (og.title) title = og.title
+      if (og.authorName) authorName = og.authorName
+      if (og.image) thumbnailUrl = og.image
+      if (og.player?.url) embedUrl = og.player.url
+      else if (og.videoEmbed?.url) embedUrl = og.videoEmbed.url
+    } catch (err) {
+      console.error('oEmbed post fetch error:', err)
+    }
   }
 
   // Build oEmbed response with actual data

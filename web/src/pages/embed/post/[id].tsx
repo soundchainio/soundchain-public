@@ -4,9 +4,7 @@ import { GetServerSideProps } from 'next'
 import { ParsedUrlQuery } from 'querystring'
 import Head from 'next/head'
 import { config } from 'config'
-import { createApolloClient } from 'lib/apollo'
-import { PostDocument, PostQuery } from 'lib/graphql'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import ReactPlayer from 'react-player'
 
 /**
@@ -23,7 +21,7 @@ import ReactPlayer from 'react-player'
  */
 
 interface EmbedPostPageProps {
-  post: PostQuery['post'] | null
+  post: any | null
   postId: string
 }
 
@@ -44,8 +42,10 @@ function getVimeoId(url: string): string | null {
 }
 
 // Get thumbnail URL
-function getThumbnail(post: PostQuery['post'] | null): string {
+function getThumbnail(post: any | null): string {
   if (post?.track?.artworkUrl) return post.track.artworkUrl
+  if (post?.mediaThumbnail) return post.mediaThumbnail
+  if (post?.uploadedMediaType === 'image' && post?.uploadedMediaUrl) return post.uploadedMediaUrl
 
   if (post?.mediaLink) {
     const ytId = getYouTubeId(post.mediaLink)
@@ -54,37 +54,54 @@ function getThumbnail(post: PostQuery['post'] | null): string {
 
   if (post?.profile?.profilePicture) return post.profile.profilePicture
 
-  return `${config.domainUrl}/soundchain-meta-logo.png`
+  return `${config.domainUrl || 'https://soundchain.io'}/soundchain-meta-logo.png`
 }
 
+// Mongo-direct (api.soundchain.io / Apollo is dead — this page used to render blank
+// for every embed). Mirrors the posts/[id].tsx pattern + carries uploaded media so
+// the twitter:player iframe actually plays tracks/audio/uploaded video.
 export const getServerSideProps: GetServerSideProps<EmbedPostPageProps, EmbedPostPageParams> = async context => {
   const postId = context.params?.id
-
-  if (!postId) {
-    return { notFound: true }
-  }
+  if (!postId) return { notFound: true }
 
   try {
-    const apolloClient = createApolloClient(context)
-    const { data } = await apolloClient.query({
-      query: PostDocument,
-      variables: { id: postId },
-    })
+    const { default: clientPromise } = await import('lib/mongodb')
+    const { ObjectId } = await import('mongodb')
+    let oid: any
+    try { oid = new ObjectId(postId) } catch { return { props: { post: null, postId } } }
+    const client = await clientPromise
+    const db = client.db('soundchain')
+    const p: any = await db.collection('posts').findOne({ _id: oid })
+    if (!p) return { props: { post: null, postId } }
 
-    return {
-      props: {
-        post: data?.post || null,
-        postId,
-      },
+    const profile: any = p.profileId
+      ? await db.collection('profiles').findOne(
+          { _id: typeof p.profileId === 'string' ? new ObjectId(p.profileId) : p.profileId },
+          { projection: { displayName: 1, userHandle: 1, profilePicture: 1 } },
+        )
+      : null
+    const track: any = p.trackId
+      ? await db.collection('tracks').findOne(
+          { _id: typeof p.trackId === 'string' ? new ObjectId(p.trackId) : p.trackId },
+          { projection: { title: 1, artist: 1, artworkUrl: 1, playbackUrl: 1, assetUrl: 1 } },
+        )
+      : null
+
+    const post = {
+      body: p.body || '',
+      mediaLink: p.mediaLink || null,
+      uploadedMediaUrl: p.uploadedMediaUrl || null,
+      uploadedMediaType: p.uploadedMediaType || null,
+      mediaThumbnail: p.mediaThumbnail || null,
+      profile: profile ? { displayName: profile.displayName || '', userHandle: profile.userHandle || '', profilePicture: profile.profilePicture || null } : null,
+      track: track ? { title: track.title || '', artist: track.artist || '', artworkUrl: track.artworkUrl || null, playbackUrl: track.playbackUrl || track.assetUrl || null } : null,
     }
+
+    context.res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=604800')
+    return { props: { post, postId } }
   } catch (e) {
     console.error('Error fetching post for embed:', e)
-    return {
-      props: {
-        post: null,
-        postId,
-      },
-    }
+    return { props: { post: null, postId } }
   }
 }
 
@@ -98,8 +115,14 @@ export default function EmbedPostPage({ post, postId }: EmbedPostPageProps) {
 
   // Determine media type and URL
   const getMediaInfo = () => {
+    if (post?.uploadedMediaType === 'video' && post?.uploadedMediaUrl) {
+      return { type: 'video', url: post.uploadedMediaUrl }
+    }
     if (post?.track?.playbackUrl) {
       return { type: 'audio', url: post.track.playbackUrl }
+    }
+    if (post?.uploadedMediaType === 'audio' && post?.uploadedMediaUrl) {
+      return { type: 'audio', url: post.uploadedMediaUrl }
     }
     if (post?.mediaLink) {
       if (getYouTubeId(post.mediaLink)) {
@@ -149,6 +172,20 @@ export default function EmbedPostPage({ post, postId }: EmbedPostPageProps) {
       </Head>
 
       <div className="w-full h-screen bg-black relative overflow-hidden">
+        {/* Uploaded video — autoplays inline */}
+        {mediaInfo.type === 'video' && mediaInfo.url && (
+          <video
+            src={mediaInfo.url}
+            poster={thumbnail}
+            controls
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="w-full h-full object-contain bg-black"
+          />
+        )}
+
         {/* YouTube/Vimeo Player */}
         {(mediaInfo.type === 'youtube' || mediaInfo.type === 'vimeo') && mediaInfo.url && (
           <>

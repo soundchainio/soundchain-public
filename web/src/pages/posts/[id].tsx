@@ -2,6 +2,7 @@ import { GetServerSideProps } from 'next'
 import { ParsedUrlQuery } from 'querystring'
 import Head from 'next/head'
 import { config } from 'config'
+import { buildPostOgMeta, PostOgMetadata } from 'lib/og/buildPostOg'
 import { BottomSheet } from 'components/BottomSheet'
 import { Comments } from 'components/Comment/Comments'
 import { InboxButton } from 'components/common/Buttons/InboxButton'
@@ -85,13 +86,9 @@ function getHttpImageUrl(url: string | null | undefined): string {
   return url
 }
 
-// OG metadata computed server-side for bots
-interface OgMetadata {
-  title: string
-  description: string
-  image: string
-  url: string
-}
+// OG metadata computed server-side for bots — full structured shape lives in
+// lib/og/buildPostOg.ts (PostOgMetadata) so every embed type gets rich/playable tags.
+type OgMetadata = PostOgMetadata
 
 export interface PostPageProps {
   post: PostQuery['post'] | null
@@ -124,131 +121,46 @@ export const getServerSideProps: GetServerSideProps<PostPageProps, PostPageParam
       }
     }
 
-    // (Frank, Jun 1 2026 — share/OG fix) Build OG tags from MONGO directly, not
-    // the Apollo Lambda (api.soundchain.io is dead; createApolloClient now points
-    // at /api/graphql-stub which returns {data:null}, so every link preview fell
-    // through to notFound → the generic SoundChain logo). iMessage/WhatsApp/etc.
-    // now get the real post title, body, and image inline like rival platforms.
-    const { default: clientPromise } = await import('lib/mongodb')
-    const { ObjectId } = await import('mongodb')
-    let mPost: any = null
+    // (Frank, Jun 1-2 2026 — rich/PLAYABLE share cards) Build OG/Twitter/JSON-LD
+    // from MONGO directly (api.soundchain.io is dead). buildPostOgMeta covers EVERY
+    // supported embed type: X + uploaded video play INLINE in the bubble (og:video
+    // mp4 via the same-origin range proxy); YouTube/Vimeo/TikTok/Twitch/Spotify/
+    // SoundCloud/Bandcamp/Facebook/Instagram get provider players + real thumbnails;
+    // tracks/NFTs/uploaded audio get cover-art audio cards; Discord gets a server
+    // card; and nothing falls back to a bare logo. It never throws (degrades to a
+    // generic card) so the preview is always valid.
+    const ORIGIN = config.domainUrl || 'https://soundchain.io'
+    let ogData: any
     try {
+      const { default: clientPromise } = await import('lib/mongodb')
       const client = await clientPromise
       const db = client.db('soundchain')
-      mPost = await db.collection('posts').findOne({ _id: new ObjectId(postId) })
-      if (mPost) {
-        const mProfile = mPost.profileId
-          ? await db.collection('profiles').findOne(
-              { _id: typeof mPost.profileId === 'string' ? new ObjectId(mPost.profileId) : mPost.profileId },
-              { projection: { displayName: 1, userHandle: 1, profilePicture: 1 } },
-            )
-          : null
-        const mTrack = mPost.trackId
-          ? await db.collection('tracks').findOne(
-              { _id: typeof mPost.trackId === 'string' ? new ObjectId(mPost.trackId) : mPost.trackId },
-              { projection: { title: 1, artist: 1, artworkUrl: 1 } },
-            )
-          : null
-        // Shape to match the OG builder's expectations below.
-        mPost = {
-          body: mPost.body || '',
-          mediaLink: mPost.mediaLink || null,
-          uploadedMediaUrl: mPost.uploadedMediaUrl || null,
-          uploadedMediaType: mPost.uploadedMediaType || null,
-          mediaThumbnail: mPost.mediaThumbnail || null,
-          profile: mProfile ? { displayName: mProfile.displayName || '', profilePicture: mProfile.profilePicture || null } : null,
-          track: mTrack ? { title: mTrack.title || '', artist: mTrack.artist || '', artworkUrl: mTrack.artworkUrl || null } : null,
-        }
-      }
+      ogData = await buildPostOgMeta(db, postId, ORIGIN)
     } catch (dbErr) {
-      console.error('[posts/[id]] OG mongo fetch failed:', (dbErr as any)?.message)
-    }
-
-    if (!mPost) {
-      // Post genuinely missing OR a transient DB blip — still return a valid
-      // OG page (generic) so the link never 404s in a preview, just without rich data.
-      return {
-        props: {
-          post: null,
-          postId,
-          isBot: true,
-          ogData: {
-            title: 'Post | SoundChain',
-            description: 'Check out this post on SoundChain',
-            image: `${config.domainUrl}/soundchain-meta-logo.png`,
-            url: `${config.domainUrl}/posts/${postId}`,
-          },
-        },
+      console.error('[posts/[id]] OG build failed:', (dbErr as any)?.message)
+      ogData = {
+        title: 'Post | SoundChain',
+        description: 'Check out this post on SoundChain',
+        image: `${ORIGIN}/soundchain-meta-logo.png`,
+        url: `${ORIGIN}/posts/${postId}`,
+        siteName: 'SoundChain',
+        ogType: 'article',
+        cardType: 'summary_large_image',
+        inlinePlayable: 'image-only',
       }
     }
+    // CDN-cache the preview hard — one provider fetch per post per region per day.
+    // Critical for rate-limited providers (Discord). Humans redirect above, so a
+    // day-stale OG card never affects the live app.
+    context.res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=604800')
 
-    // For bots, compute OG data server-side and return minimal props
-    {
-      const post = mPost
-      const track = post?.track
-      const postWithMedia = post as typeof post & {
-        uploadedMediaUrl?: string | null
-        uploadedMediaType?: string | null
-        mediaThumbnail?: string | null
-      }
-
-      // Build title
-      const title = track
-        ? `${track.title} - song by ${track.artist} | SoundChain`
-        : post?.profile?.displayName
-          ? `${post.profile.displayName} on SoundChain`
-          : 'Post | SoundChain'
-
-      // Build description
-      const isVideoPost = postWithMedia?.uploadedMediaType === 'video'
-      const isAudioPost = postWithMedia?.uploadedMediaType === 'audio'
-      // Strip emote/sticker/GIF markdown so raw syntax doesn't show in link previews
-      const cleanPostBody = post?.body
-        ? post.body
-            .replace(/!\[!?emote:[^\]]*\]\([^)]*\)/g, '')
-            .replace(/!\[!?sticker:[^\]]*\]\([^)]*\)/g, '')
-            .replace(/!\[!?gif:[^\]]*\]\([^)]*\)/g, '')
-            .trim()
-        : ''
-      const description = track
-        ? `Listen to ${track.title} on SoundChain. ${track.artist}.`
-        : isVideoPost
-          ? `${post?.profile?.displayName || 'Someone'} shared a video on SoundChain`
-          : isAudioPost
-            ? `${post?.profile?.displayName || 'Someone'} shared audio on SoundChain`
-            : cleanPostBody
-              ? cleanPostBody.substring(0, 200)
-              : 'Check out this post on SoundChain'
-
-      // Get share image
-      let image = `${config.domainUrl}/soundchain-meta-logo.png`
-      if (track?.artworkUrl) {
-        image = getHttpImageUrl(track.artworkUrl)
-      } else if (post?.mediaLink) {
-        const ytThumb = getYouTubeThumbnail(post.mediaLink)
-        if (ytThumb) image = ytThumb
-      } else if (postWithMedia?.uploadedMediaUrl && postWithMedia?.uploadedMediaType === 'image') {
-        image = getHttpImageUrl(postWithMedia.uploadedMediaUrl)
-      } else if (postWithMedia?.uploadedMediaType === 'video' && postWithMedia?.mediaThumbnail) {
-        // For video posts, use the captured thumbnail
-        image = getHttpImageUrl(postWithMedia.mediaThumbnail)
-      } else if (post?.profile?.profilePicture) {
-        image = getHttpImageUrl(post.profile.profilePicture)
-      }
-
-      return {
-        props: {
-          post: null, // Don't send full post to bots - they just need OG tags
-          postId,
-          isBot: true,
-          ogData: {
-            title,
-            description,
-            image,
-            url: `${config.domainUrl}/posts/${postId}`,
-          },
-        },
-      }
+    return {
+      props: {
+        post: null,
+        postId,
+        isBot: true,
+        ogData,
+      },
     }
   } catch (e) {
     console.error('Error fetching post:', e)
@@ -263,8 +175,12 @@ export const getServerSideProps: GetServerSideProps<PostPageProps, PostPageParam
           ogData: {
             title: 'Post | SoundChain',
             description: 'Check out this post on SoundChain',
-            image: `${config.domainUrl}/soundchain-meta-logo.png`,
-            url: `${config.domainUrl}/posts/${postId}`,
+            image: `${config.domainUrl || 'https://soundchain.io'}/soundchain-meta-logo.png`,
+            url: `${config.domainUrl || 'https://soundchain.io'}/posts/${postId}`,
+            siteName: 'SoundChain',
+            ogType: 'article',
+            cardType: 'summary_large_image',
+            inlinePlayable: 'image-only',
           },
         },
       }
@@ -282,17 +198,96 @@ export default function PostPage({ post, postId, isBot: isBotRequest, ogData }: 
         <Head>
           <title>{ogData.title}</title>
           <meta name="description" content={ogData.description} />
+          {/* Core OG — every card */}
           <meta property="og:title" content={ogData.title} />
           <meta property="og:description" content={ogData.description} />
           <meta property="og:image" content={ogData.image} />
+          {ogData.imageType && <meta property="og:image:type" content={ogData.imageType} />}
+          {ogData.imageWidth && <meta property="og:image:width" content={String(ogData.imageWidth)} />}
+          {ogData.imageHeight && <meta property="og:image:height" content={String(ogData.imageHeight)} />}
           <meta property="og:url" content={ogData.url} />
-          <meta property="og:type" content="article" />
-          <meta property="og:site_name" content="SoundChain" />
-          <meta name="twitter:card" content="summary_large_image" />
+          <meta property="og:type" content={ogData.ogType || 'article'} />
+          <meta property="og:site_name" content={ogData.siteName || 'SoundChain'} />
+          {/* Inline-playable MP4 (X video, uploaded video) → plays IN the bubble on iMessage/WhatsApp/Telegram */}
+          {ogData.videoMp4 && (
+            <>
+              <meta property="og:video" content={ogData.videoMp4.url} />
+              <meta property="og:video:secure_url" content={ogData.videoMp4.url} />
+              <meta property="og:video:type" content="video/mp4" />
+              <meta property="og:video:width" content={String(ogData.videoMp4.width)} />
+              <meta property="og:video:height" content={String(ogData.videoMp4.height)} />
+            </>
+          )}
+          {/* Provider iframe player (YouTube/Vimeo/TikTok/etc.) — embed surfaces */}
+          {!ogData.videoMp4 && ogData.videoEmbed && (
+            <>
+              <meta property="og:video" content={ogData.videoEmbed.url} />
+              <meta property="og:video:secure_url" content={ogData.videoEmbed.url} />
+              <meta property="og:video:type" content="text/html" />
+              <meta property="og:video:width" content={String(ogData.videoEmbed.width)} />
+              <meta property="og:video:height" content={String(ogData.videoEmbed.height)} />
+            </>
+          )}
+          {/* Direct audio stream (tracks/uploaded audio with a progressive mp3/m4a) */}
+          {ogData.audio && (
+            <>
+              <meta property="og:audio" content={ogData.audio.url} />
+              <meta property="og:audio:secure_url" content={ogData.audio.url} />
+              <meta property="og:audio:type" content={ogData.audio.type} />
+            </>
+          )}
+          {/* Twitter card — player when we have an inline player, else large image */}
+          <meta name="twitter:card" content={ogData.player ? 'player' : 'summary_large_image'} />
           <meta name="twitter:title" content={ogData.title} />
           <meta name="twitter:description" content={ogData.description} />
           <meta name="twitter:image" content={ogData.image} />
+          <meta name="twitter:site" content="@SoundChainFM" />
+          {ogData.player && (
+            <>
+              <meta name="twitter:player" content={ogData.player.url} />
+              <meta name="twitter:player:width" content={String(ogData.player.width)} />
+              <meta name="twitter:player:height" content={String(ogData.player.height)} />
+              {ogData.player.stream && <meta name="twitter:player:stream" content={ogData.player.stream} />}
+            </>
+          )}
+          {/* JSON-LD — the layer AI wearables / agents / Apple Intelligence parse */}
+          {(ogData.videoMp4 || ogData.videoEmbed) && (
+            <script
+              type="application/ld+json"
+              dangerouslySetInnerHTML={{
+                __html: JSON.stringify({
+                  '@context': 'https://schema.org',
+                  '@type': 'VideoObject',
+                  name: ogData.title,
+                  description: ogData.description,
+                  thumbnailUrl: [ogData.image],
+                  uploadDate: ogData.uploadDate || undefined,
+                  contentUrl: ogData.videoMp4?.url || undefined,
+                  embedUrl: ogData.videoEmbed?.url || ogData.player?.url || undefined,
+                  publisher: { '@type': 'Organization', name: 'SoundChain' },
+                  ...(ogData.authorName ? { author: { '@type': 'Person', name: ogData.authorName } } : {}),
+                }),
+              }}
+            />
+          )}
+          {ogData.audio && (
+            <script
+              type="application/ld+json"
+              dangerouslySetInnerHTML={{
+                __html: JSON.stringify({
+                  '@context': 'https://schema.org',
+                  '@type': 'MusicRecording',
+                  name: ogData.title,
+                  image: ogData.image,
+                  uploadDate: ogData.uploadDate || undefined,
+                  audio: { '@type': 'AudioObject', contentUrl: ogData.audio.url, encodingFormat: ogData.audio.type },
+                  ...(ogData.authorName ? { byArtist: { '@type': 'MusicGroup', name: ogData.authorName } } : {}),
+                }),
+              }}
+            />
+          )}
           <link rel="canonical" href={ogData.url} />
+          <link rel="alternate" type="application/json+oembed" href={`${ogData.url.replace(/\/posts\/.*/, '')}/api/oembed?url=${encodeURIComponent(ogData.url)}`} title={ogData.title} />
         </Head>
         <div className="min-h-screen bg-black flex items-center justify-center">
           <div className="text-center p-8">

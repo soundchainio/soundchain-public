@@ -92,9 +92,14 @@ export default async function handler(req: Request): Promise<Response> {
   // cacheable, and even then Vary on Range so ranged + full never collide.
   const isPartial = upstream.status === 206 || !!range
   if (isPartial) {
+    // DO NOT cache 206 partials — the CDN key ignores the Range header, so a cached
+    // partial gets replayed for every range → "no supported sources" + the iMessage
+    // byte-range probe breaks. This line is load-bearing; do not add s-maxage here.
     headers.set('Cache-Control', 'private, no-store')
   } else {
-    headers.set('Cache-Control', 'public, max-age=3600, s-maxage=604800, stale-while-revalidate=604800')
+    // Full 200 (crawler / og:video fetch path) — tweet clips are immutable, cache 30d
+    // so repeated link-preview crawlers don't re-pull twimg every time.
+    headers.set('Cache-Control', 'public, max-age=3600, s-maxage=2592000, stale-while-revalidate=604800')
     headers.set('Vary', 'Range')
   }
 
