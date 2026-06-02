@@ -578,14 +578,41 @@ export default function LucyHome() {
   // context for Lucy to summarize/answer. PDF is the next add.
   const MAX_DOC_CHARS = 6000
 
-  const onPickImage = (file?: File | null) => {
+  // Downscale + JPEG-compress an image to a SMALL data URL before it touches React
+  // state / IndexedDB / the network. A raw phone photo is multi-MB — holding that
+  // base64 crashed the tab (WebKit OOM, "a problem repeatedly occurred") AND blew
+  // past /api/chat's body cap ("anvil 413"). 1024px @ q0.8 → ~100-300KB, which
+  // llava reads fine. The downscale draws to a small canvas immediately, so the
+  // full-res bitmap never lingers in memory.
+  const downscaleToDataUrl = (file: File, maxDim = 1024, quality = 0.8): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file)
+      const im = new window.Image()
+      im.onload = () => {
+        let w = im.naturalWidth || im.width || 1
+        let h = im.naturalHeight || im.height || 1
+        const scale = Math.min(1, maxDim / Math.max(w, h))
+        w = Math.max(1, Math.round(w * scale)); h = Math.max(1, Math.round(h * scale))
+        const c = document.createElement('canvas')
+        c.width = w; c.height = h
+        c.getContext('2d')!.drawImage(im, 0, 0, w, h)
+        URL.revokeObjectURL(url)
+        try { resolve(c.toDataURL('image/jpeg', quality)) } catch (e) { reject(e) }
+      }
+      im.onerror = () => { URL.revokeObjectURL(url); reject(new Error('decode failed')) }
+      im.src = url
+    })
+
+  const onPickImage = async (file?: File | null) => {
     setAttachOpen(false)
     if (!file) return
-    if (file.size > 12 * 1024 * 1024) { setError('That image is large (max ~12MB) — try a smaller one.'); return }
-    const r = new FileReader()
-    r.onload = () => { setPendingDoc(null); setPendingImage({ dataUrl: String(r.result), label: 'image' }) }
-    r.onerror = () => setError("Couldn't read that image.")
-    r.readAsDataURL(file)
+    setAttachBusy('Processing image…')
+    try {
+      const dataUrl = await downscaleToDataUrl(file, 1024, 0.8)
+      setPendingDoc(null)
+      setPendingImage({ dataUrl, label: 'image' })
+    } catch { setError("Couldn't read that image — try a different one.") }
+    setAttachBusy(null)
   }
 
   const onPickVideo = (file?: File | null) => {
@@ -599,11 +626,13 @@ export default function LucyHome() {
     v.onloadedmetadata = () => { try { v.currentTime = Math.min(1, (v.duration || 2) / 2) } catch { /* seek may fail on some codecs */ } }
     v.onseeked = () => {
       try {
+        const vw = v.videoWidth || 640, vh = v.videoHeight || 360
+        const s = Math.min(1, 1024 / Math.max(vw, vh))  // cap frame size (same OOM/413 reason as photos)
         const c = document.createElement('canvas')
-        c.width = v.videoWidth || 640; c.height = v.videoHeight || 360
+        c.width = Math.max(1, Math.round(vw * s)); c.height = Math.max(1, Math.round(vh * s))
         c.getContext('2d')!.drawImage(v, 0, 0, c.width, c.height)
         setPendingDoc(null)
-        setPendingImage({ dataUrl: c.toDataURL('image/jpeg', 0.85), label: 'frame from your video' })
+        setPendingImage({ dataUrl: c.toDataURL('image/jpeg', 0.8), label: 'frame from your video' })
       } catch { setError("Couldn't grab a frame from that video.") }
       cleanup()
     }

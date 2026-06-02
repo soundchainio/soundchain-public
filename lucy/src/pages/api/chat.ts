@@ -16,7 +16,7 @@ const NORMAN_TIMEOUT_MS = 30000
 
 export const config = {
   api: {
-    bodyParser: { sizeLimit: '2mb' },
+    bodyParser: { sizeLimit: '8mb' },  // headroom for attached images (downscaled client-side, but allow margin); 2mb caused "anvil 413"
     responseLimit: false,
   },
 }
