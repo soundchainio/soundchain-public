@@ -971,7 +971,25 @@ export default function LucyHome() {
 
     try {
       if (forceCloud) {
-        await consumeTokens(anvilTokens(), 'anvil')
+        // Attachments REQUIRE anvil (vision/llava + big context). The on-device 3B
+        // can't see images, so on failure we show an honest inline message and
+        // NEVER fall back to local / prompt a 2.5GB download for an image turn.
+        try {
+          await consumeTokens(anvilTokens(), 'anvil')
+        } catch (cloudErr: any) {
+          if (cloudErr?.name === 'AbortError' || outer.signal.aborted) throw cloudErr
+          const note = img
+            ? "I couldn't analyze that image — my cloud vision is unreachable right now. I can still help with anything text-based."
+            : "I couldn't read that file right now — my cloud brain is unreachable. Try again in a moment."
+          setMessages((msgs) => {
+            const last = msgs[msgs.length - 1]
+            if (last && last.role === 'assistant' && !last.content) {
+              return msgs.map((mm, i) => i === msgs.length - 1 ? { ...mm, content: note } : mm)
+            }
+            return [...msgs, { role: 'assistant', content: note }]
+          })
+          return
+        }
       } else if (lucySource === 'local') {
         await runLocal()
         await handleHandoffIfRequested()

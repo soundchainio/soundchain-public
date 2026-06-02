@@ -99,15 +99,21 @@ export function useLucyLocal() {
         }))
       }
       const primary = await pickModelId()
+      // Cap the KV cache. The 3B weights are ~3GB (f32); WebLLM's DEFAULT context
+      // window builds a multi-GB KV cache on top → total blows past iOS Safari's
+      // jetsam budget → the tab crashes mid-load (the "tap local → loads → crash"
+      // on iPhone). A 2048 window is plenty for chat (compact LOCAL prompt + a few
+      // turns) and cuts the KV cache by 2-4×, keeping the 3B under the budget.
+      const CHAT_OPTS = { context_window_size: 2048 }
       let engine
       try {
-        engine = await create(primary, { initProgressCallback: onProgress })
+        engine = await create(primary, { initProgressCallback: onProgress }, CHAT_OPTS)
       } catch (buildErr) {
         // f16 can build-fail on a GPU that advertises shader-f16 but chokes on
         // the compile (some mobile drivers). Fall back to the universal f32.
         if (primary === MODEL_F16) {
           setState(s => ({ ...s, loadProgress: 0, loadStatus: 'Switching to compatible model…' }))
-          engine = await create(MODEL_F32, { initProgressCallback: onProgress })
+          engine = await create(MODEL_F32, { initProgressCallback: onProgress }, CHAT_OPTS)
         } else {
           throw buildErr
         }
