@@ -608,7 +608,11 @@ export default function LucyHome() {
     if (!file) return
     setAttachBusy('Processing image…')
     try {
-      const dataUrl = await downscaleToDataUrl(file, 1024, 0.8)
+      // 1536px @ q0.85 → more detail for faces/text recognition, still ~0.4-0.7MB
+      // (well under Vercel's ~4.5MB body cap + no mobile OOM). Going higher gives
+      // llava's vision encoder ~no extra signal (it tiles/downsamples internally)
+      // while ballooning the payload + latency — 1536 is the sweet spot.
+      const dataUrl = await downscaleToDataUrl(file, 1536, 0.85)
       setPendingDoc(null)
       setPendingImage({ dataUrl, label: 'image' })
     } catch { setError("Couldn't read that image — try a different one.") }
