@@ -153,6 +153,24 @@ export default function NodesPage() {
   const feedFetchMore = useCallback(() => {
     if (feedCursor) loadFeed(feedCursor)
   }, [feedCursor, loadFeed])
+  // Auto-load the next feed page as you near the bottom (so grid/list don't stop at 20).
+  // Additive pagination — appends to the existing .map, autoplay untouched. LOAD MORE
+  // button stays as the Fire-TV/d-pad fallback. loadingMoreFeedRef dedupes the burst.
+  const loadingMoreFeedRef = useRef(false)
+  const feedFooterRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const el = feedFooterRef.current
+    if (!el) return
+    const obs = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting && feedHasNext && !feedLoading && !loadingMoreFeedRef.current) {
+        loadingMoreFeedRef.current = true
+        feedFetchMore()
+      }
+    }, { rootMargin: '1200px 0px' })
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [feedHasNext, feedLoading, feedFetchMore])
+  useEffect(() => { loadingMoreFeedRef.current = false }, [feedPosts.length])
   const handleFeedPlayClicked = useCallback((trackId: string) => {
     const tracks = feedNodes
       .filter(fi => fi?.post?.track && !fi.post.track.deleted)
@@ -649,7 +667,11 @@ export default function NodesPage() {
                     )}
                   </PostErrorBoundary>
                 ))}
-              {/* Load more */}
+              {/* Auto-load sentinel — pulls the next page in before you hit the bottom */}
+              {feedPageInfo?.hasNextPage && (
+                <div ref={feedFooterRef} className={feedViewMode === 'grid' ? 'col-span-full h-px' : 'h-px'} />
+              )}
+              {/* Load more (fallback) */}
               {feedPageInfo?.hasNextPage && (
                 <button
                   onClick={() => feedFetchMore()}

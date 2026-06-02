@@ -502,7 +502,14 @@ export const NewCommentForm = ({ postId, onSuccess, compact, inputRef, replyToCo
                 onClick={() => {
                   if (navigator.share && typeof navigator.share === 'function') {
                     const postUrl = `${window.location.origin}/posts/${postId}`
-                    navigator.share({ title: 'SoundChain', text: postData?.body || 'Check this out!', url: postUrl }).catch(() => {
+                    // Strip emote/sticker/GIF markdown so raw ![gif:…](…) syntax never
+                    // leaks into the shared text (it showed up as "emote-text" in pastes).
+                    const shareText = (postData?.body || '')
+                      .replace(/!\[!?emote:[^\]]*\]\([^)]*\)/g, '')
+                      .replace(/!\[!?sticker:[^\]]*\]\([^)]*\)/g, '')
+                      .replace(/!\[!?gif:[^\]]*\]\([^)]*\)/g, '')
+                      .trim() || 'Check this out!'
+                    navigator.share({ title: 'SoundChain', text: shareText, url: postUrl }).catch(() => {
                       setShowShareModal(true)
                     })
                   } else {
