@@ -129,10 +129,13 @@ export default function NodesPage() {
     }
   }, [me?.profile?.id])
 
+  // Reset to page 1 ONLY when the actual viewer changes (login/logout/switch) — NOT on
+  // every loadFeed identity change, which would wipe accumulated pages mid-scroll.
   useEffect(() => {
     setFeedLoading(true)
     loadFeed(null)
-  }, [loadFeed])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [me?.profile?.id])
 
   // Remove a post from the local feed state as soon as AuthorActionsModal confirms deletion.
   // The backend already marks deleted + clears feeditems; this just avoids a refetch roundtrip.

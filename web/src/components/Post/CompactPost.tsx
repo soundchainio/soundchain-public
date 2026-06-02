@@ -257,6 +257,10 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
               width="100%"
               height="100%"
               url={post.mediaLink}
+              // light (grid only) = thumbnail until tapped → no iframe mounted per tile,
+              // so a grid of N video posts doesn't blow the mobile memory limit. List view
+              // (Posts.tsx) keeps autoplay-on-scroll.
+              light={gridMode}
               playsinline
               controls
               muted={!gridMode}
