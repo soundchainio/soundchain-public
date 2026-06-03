@@ -12,8 +12,14 @@ const PROFILE_FIELDS = new Set([
   'topFriends', 'pinnedPostId',
 ])
 
-// Fields that go on the USERS collection (handle is special)
-const USER_FIELDS = new Set(['handle'])
+// Fields that go on the USERS collection (handle is special; notification
+// settings live on the user doc — NotificationSettingsForm, Phase 7f migration
+// off the dead Apollo UPDATE_NOTIFICATION_SETTINGS mutation).
+const USER_FIELDS = new Set([
+  'handle',
+  'notifyOnFollow', 'notifyOnLike', 'notifyOnComment', 'notifyOnSale',
+  'notifyOnTip', 'notifyOnDM', 'notifyViaNostr',
+])
 
 // POST { fields: { [fieldName]: value, ... } }
 // Handles both profile + user collection updates in one call

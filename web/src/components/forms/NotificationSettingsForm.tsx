@@ -253,9 +253,14 @@ export function NotificationSettingsForm({ afterSubmit, initialValues }: Notific
     });
 
     try {
-      const result = await updateSettings({
-        variables: {
-          input: {
+      // Vercel-direct (Phase 7f) — the old Apollo UPDATE_NOTIFICATION_SETTINGS hit
+      // the dead api.soundchain.io stub and silently failed, so toggles never saved.
+      const r = await fetch('/api/profile/update', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fields: {
             notifyOnFollow,
             notifyOnLike,
             notifyOnComment,
@@ -264,10 +269,13 @@ export function NotificationSettingsForm({ afterSubmit, initialValues }: Notific
             notifyOnDM,
             notifyViaNostr,
           },
-        },
+        }),
       });
-
-      console.log('[NotificationSettingsForm] Save result:', result);
+      if (!r.ok) {
+        let detail = '';
+        try { detail = (await r.json())?.error || ''; } catch {}
+        throw new Error(`HTTP ${r.status}${detail ? `: ${detail}` : ''}`);
+      }
 
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
