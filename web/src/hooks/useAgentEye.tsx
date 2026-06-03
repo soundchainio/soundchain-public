@@ -103,6 +103,35 @@ function getSelector(el: Element): string {
   return `${tag}${id}${cls}`
 }
 
+// ─── Circular-safe arg stringify ─────────────────────────────────────
+// Used by the console.error wrapper. A naive JSON.stringify on a value with a
+// circular reference (wagmi connectors, Apollo cache/error objects, DOM nodes,
+// React fibers) throws "Converting circular structure to JSON". Because the
+// wrapper runs INSIDE the caller's console.error call, that throw propagated out
+// and crashed the caller (wagmi setConnectors via the EIP-6963 wallet handler,
+// Apollo writeToStore) — flooding the console with uncaught TypeErrors. This
+// helper can never throw: strings pass through, Errors use their message, and
+// objects serialize with a circular-reference replacer, falling back to String().
+function safeStringifyArg(a: unknown): string {
+  if (typeof a === 'string') return a
+  if (a instanceof Error) return a.message || a.name || 'Error'
+  try {
+    const seen = new WeakSet<object>()
+    const out = JSON.stringify(a, (_k, v) => {
+      if (typeof v === 'object' && v !== null) {
+        if (seen.has(v as object)) return '[Circular]'
+        seen.add(v as object)
+      }
+      if (typeof v === 'bigint') return v.toString()
+      if (typeof v === 'function') return '[Function]'
+      return v
+    })
+    return out ?? String(a)
+  } catch {
+    try { return String(a) } catch { return '[Unserializable]' }
+  }
+}
+
 // ─── Provider ────────────────────────────────────────────────────────
 
 export function AgentEyeProvider({ children }: { children: ReactNode }) {
@@ -219,10 +248,17 @@ export function AgentEyeProvider({ children }: { children: ReactNode }) {
     window.addEventListener('unhandledrejection', onRejection)
 
     // ── Console.error Wrapper ──
+    // This override must NEVER throw: it runs inside every console.error call, so a
+    // throw here (e.g. circular JSON.stringify) propagates out and crashes the caller.
+    // safeStringifyArg + the try/catch guarantee a benign log can't break the app.
     originalConsoleError.current = console.error
     console.error = (...args: unknown[]) => {
-      const msg = args.map((a) => (typeof a === 'string' ? a : JSON.stringify(a))).join(' ')
-      sendReport(TRIGGER_KIND.CONSOLE_ERROR, BUG_SEVERITY.WARNING, msg)
+      try {
+        const msg = args.map(safeStringifyArg).join(' ')
+        sendReport(TRIGGER_KIND.CONSOLE_ERROR, BUG_SEVERITY.WARNING, msg)
+      } catch {
+        // Agent Eye never breaks the app
+      }
       originalConsoleError.current?.apply(console, args)
     }
 

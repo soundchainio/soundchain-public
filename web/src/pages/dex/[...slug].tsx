@@ -1996,6 +1996,13 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   // Follow/Unfollow mutations
   const [followProfile, { loading: followLoading }] = useFollowProfileMutation()
   const [unfollowProfile, { loading: unfollowLoading }] = useUnfollowProfileMutation()
+  // Optimistic follow state — the Vercel-direct follow/unfollow writes to Mongo fine, but
+  // the profile query is module-cached and never refetches, so viewingProfile.isFollowed
+  // stays stale and the button looked dead ("can't follow"). Reflect the new state locally.
+  // null = use the server value; true/false = the user just (un)followed this session.
+  const [followOverride, setFollowOverride] = useState<boolean | null>(null)
+  // Reset the override whenever the viewed handle changes (new profile = fresh server value)
+  useEffect(() => { setFollowOverride(null) }, [routeId])
   const [toggleFavorite] = useToggleFavoriteMutation()
 
   // Track Detail Query - fetch single track when viewing /dex/track/[id]
@@ -7125,91 +7132,19 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     <div className="absolute inset-x-0 bottom-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-400/80 to-transparent pointer-events-none z-10 shadow-[0_0_12px_rgba(34,211,238,0.6)]" />
                   </div>
 
-                  {/* IDENTITY CARD — name, @handle, POAPs and bio live in ONE cohesive
-                      cyberpunk panel: a designed deep-navy surface (NOT a flat black dead-
-                      band) framed by the neon left spine + glow underline, tucked flush under
-                      the profile pic. Name + @handle carry the liquid SoundChain color (now
-                      with a dark outline so they pop on any background). Tight, no gaps. */}
-                  {(() => {
-                    const isFounder = !!viewingProfile.userHandle
-                      && ADMIN_HANDLES.includes(viewingProfile.userHandle)
-                    const bioText = viewingProfile.bio
-                      || (isViewingOwnProfile ? (me?.profile?.bio || userData?.me?.profile?.bio) : '')
-                    const hasNft = (viewingProfile.tracksCount || 0) > 0
-                    const hasEventPoap = viewingProfile.badges?.includes(ProfileBadge.SupporterFirstEventAeSc)
-                    return (
-                  <div className="relative w-full">
-                    {/* Neon left spine — cyan → violet → fuchsia */}
-                    <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-gradient-to-b from-cyan-400 via-violet-500 to-fuchsia-500 shadow-[0_0_10px_rgba(34,211,238,0.7)]" />
-                    {/* Neon underline */}
-                    <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-cyan-400/60 to-transparent" />
-                    {/* pt-3 bumps the name/handle clearly DOWN under the pic — they read as
-                        their own content row, never as an overlay on the picture. */}
-                    <div className="max-w-screen-lg mx-auto px-4 pt-3 pb-2 space-y-1">
-                      {/* Line 1 — display name (liquid color) + every earned mark inline:
-                          blue verified check, then the gold founder logo for founders. */}
-                      <div className="flex items-center gap-1.5 flex-wrap leading-tight">
-                        <h1 className="sc-fluid-name text-lg sm:text-xl font-extrabold truncate min-w-0 max-w-full">
-                          {viewingProfile.displayName || viewingProfile.userHandle || 'User'}
-                        </h1>
-                        {viewingProfile.verified && (
-                          <VerifiedIcon
-                            width={20}
-                            height={20}
-                            className="flex-shrink-0"
-                            style={{ filter: 'drop-shadow(0 0 5px rgba(111,161,255,0.8))' }}
-                            aria-label="Verified user"
-                          />
-                        )}
-                        {isFounder && (
-                          <span
-                            className="inline-flex flex-shrink-0"
-                            title="SoundChain Founder"
-                            style={{ filter: 'drop-shadow(0 0 5px rgba(255,224,130,0.7))' }}
-                          >
-                            <SoundchainGoldLogo width={20} height={20} aria-label="SoundChain Founder" />
-                          </span>
-                        )}
-                      </div>
-                      {/* Line 2 — @handle, tucked tight under the name, same liquid color. */}
-                      <h2 className="sc-fluid-name text-sm sm:text-base font-bold tracking-tight leading-tight truncate max-w-full">
-                        @{viewingProfile.userHandle || 'user'}
-                      </h2>
-                      {/* POAPs — earned marks (founder gold shown on line 1 above). */}
-                      <div className="flex items-center gap-2 flex-wrap pt-0.5">
-                        <span className="text-[10px] text-gray-500 uppercase tracking-wider mr-1">POAPs</span>
-                        {hasEventPoap && (
-                          <img
-                            src="/badges/badge-01.svg"
-                            alt="Event Attendance POAP"
-                            title="Event Attendance — First AE × SC Event"
-                            className="flex-shrink-0 w-5 h-5"
-                          />
-                        )}
-                        <UserSymbols
-                          handle={viewingProfile.userHandle}
-                          verified={false}
-                          teamMember={false}
-                          showFounder={false}
-                          isNftOwner={hasNft}
-                          isCreator={hasNft}
-                        />
-                        {!hasEventPoap && !hasNft && (
-                          <span className="text-[10px] text-gray-600 italic">No POAPs collected yet</span>
-                        )}
-                      </div>
-                      {/* Bio — flush in the card, always readable. */}
-                      {bioText && (
-                        <p className="text-gray-200 text-sm leading-relaxed max-w-2xl whitespace-pre-line pt-0.5">{bioText}</p>
-                      )}
-                    </div>
-                  </div>
-                    )
-                  })()}
-
-                  {/* Cover Image — a tight banner (no longer a 40vh void): the social
-                      pills + stats overlay sit close under the bio, killing the big gap. */}
-                  <div className="relative h-[200px] sm:h-[240px] md:h-[280px] w-full overflow-hidden">
+                  {/* Cover Image — the GRANDER profile-pic header (Frank's original design,
+                      restored Jun 3 2026): the cover art fills the banner and ALL identity —
+                      name, @handle, POAPs, bio, social links, stats, action buttons — is
+                      overlaid INSIDE its empty space at the bottom (see the overlay below).
+                      The profile-pic banner above stays clean — nothing blocks it. The old
+                      separate identity strip (the black dead-band between pic and cover) is
+                      gone; its content now lives in the cover overlay where it belongs. */}
+                  <div className="relative min-h-[40vh] w-full overflow-hidden flex flex-col justify-end">
+                    {/* Cover art — an absolute background layer so the identity/stats/actions
+                        below flow on TOP of it and are NEVER clipped by overflow-hidden, no
+                        matter how long the bio is. The parent's flex justify-end pins the
+                        content to the bottom; the cover art fills the empty space above. */}
+                    <div className="absolute inset-0">
                     {viewingProfile.coverPicture ? (
                       <img
                         src={viewingProfile.coverPicture}
@@ -7221,13 +7156,86 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     )}
                     {/* Gradient overlay - stronger at bottom for text readability */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+                    </div>
 
-                    {/* Profile Info - Positioned at bottom of cover.
-                        Identity (name + @handle) lives in the tight stack above the cover;
-                        bio now has its own readable panel above too. This overlay carries
-                        social links + stats over the cover image. */}
-                    <div className="absolute bottom-0 left-0 right-0 p-4 z-10">
+                    {/* Profile Info — in NORMAL FLOW, pinned to the bottom by the parent's
+                        flex justify-end. This is the ONE grand header: identity (name +
+                        @handle + POAPs + bio) drops into the cover's empty space here, on top
+                        of the social links + stats + action buttons. The dark bottom gradient
+                        keeps it readable; flowing (not absolute) means it never clips. */}
+                    <div className="relative z-10 p-4">
                       <div className="max-w-screen-lg mx-auto">
+                      {/* Identity — name, @handle, POAPs, bio. Relocated Jun 3 2026 out of
+                          the old dead-band strip and INTO the cover's empty space so the
+                          profile pic banner stays clean. Liquid sc-fluid-name (with its dark
+                          halo) + the cover's bottom gradient keep every glyph readable. */}
+                      {(() => {
+                        const isFounder = !!viewingProfile.userHandle
+                          && ADMIN_HANDLES.includes(viewingProfile.userHandle)
+                        const bioText = viewingProfile.bio
+                          || (isViewingOwnProfile ? (me?.profile?.bio || userData?.me?.profile?.bio) : '')
+                        const hasNft = (viewingProfile.tracksCount || 0) > 0
+                        const hasEventPoap = viewingProfile.badges?.includes(ProfileBadge.SupporterFirstEventAeSc)
+                        return (
+                      <div className="space-y-1 mb-3">
+                        {/* Line 1 — display name (liquid color) + blue verified check + gold founder logo */}
+                        <div className="flex items-center gap-1.5 flex-wrap leading-tight">
+                          <h1 className="sc-fluid-name text-xl sm:text-2xl font-extrabold truncate min-w-0 max-w-full drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
+                            {viewingProfile.displayName || viewingProfile.userHandle || 'User'}
+                          </h1>
+                          {viewingProfile.verified && (
+                            <VerifiedIcon
+                              width={22}
+                              height={22}
+                              className="flex-shrink-0"
+                              style={{ filter: 'drop-shadow(0 0 5px rgba(111,161,255,0.8))' }}
+                              aria-label="Verified user"
+                            />
+                          )}
+                          {isFounder && (
+                            <span
+                              className="inline-flex flex-shrink-0"
+                              title="SoundChain Founder"
+                              style={{ filter: 'drop-shadow(0 0 5px rgba(255,224,130,0.7))' }}
+                            >
+                              <SoundchainGoldLogo width={22} height={22} aria-label="SoundChain Founder" />
+                            </span>
+                          )}
+                        </div>
+                        {/* Line 2 — @handle, tucked tight under the name, same liquid color. */}
+                        <h2 className="sc-fluid-name text-sm sm:text-base font-bold tracking-tight leading-tight truncate max-w-full drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">
+                          @{viewingProfile.userHandle || 'user'}
+                        </h2>
+                        {/* POAPs — earned marks (founder gold shown on line 1 above). */}
+                        <div className="flex items-center gap-2 flex-wrap pt-0.5">
+                          <span className="text-[10px] text-gray-300 uppercase tracking-wider mr-1 drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">POAPs</span>
+                          {hasEventPoap && (
+                            <img
+                              src="/badges/badge-01.svg"
+                              alt="Event Attendance POAP"
+                              title="Event Attendance — First AE × SC Event"
+                              className="flex-shrink-0 w-5 h-5"
+                            />
+                          )}
+                          <UserSymbols
+                            handle={viewingProfile.userHandle}
+                            verified={false}
+                            teamMember={false}
+                            showFounder={false}
+                            isNftOwner={hasNft}
+                            isCreator={hasNft}
+                          />
+                          {!hasEventPoap && !hasNft && (
+                            <span className="text-[10px] text-gray-300 italic drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">No POAPs collected yet</span>
+                          )}
+                        </div>
+                        {/* Bio — overlaid in the cover, kept readable by the dark gradient. */}
+                        {bioText && (
+                          <p className="text-gray-100 text-sm leading-relaxed max-w-2xl whitespace-pre-line pt-0.5 drop-shadow-[0_1px_4px_rgba(0,0,0,0.95)]">{bioText}</p>
+                        )}
+                      </div>
+                        )
+                      })()}
                       {/* Social Pills */}
                       {(() => {
                         const sm = viewingProfile.socialMedias
@@ -7257,7 +7265,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                           <span className="text-gray-500 hover:text-cyan-400">Tracks</span>
                         </button>
                         <button onClick={() => setProfileStatsModal('followers')} className="flex items-center gap-1 cursor-pointer hover:text-cyan-400 transition-colors">
-                          <span className="font-bold text-white">{viewingProfile.followerCount?.toLocaleString() || 0}</span>
+                          <span className="font-bold text-white">{Math.max(0, (viewingProfile.followerCount || 0) + (followOverride === null ? 0 : followOverride && !viewingProfile.isFollowed ? 1 : !followOverride && viewingProfile.isFollowed ? -1 : 0)).toLocaleString()}</span>
                           <span className="text-gray-500 hover:text-cyan-400">Followers</span>
                         </button>
                         <button onClick={() => setProfileStatsModal('following')} className="flex items-center gap-1 cursor-pointer hover:text-cyan-400 transition-colors">
@@ -7465,11 +7473,14 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                             onClick={async () => {
                               if (!me) { router.push('/login'); return; }
                               if (followLoading || unfollowLoading) return;
+                              const currentlyFollowed = followOverride ?? viewingProfile.isFollowed
                               try {
-                                if (viewingProfile.isFollowed) {
+                                if (currentlyFollowed) {
                                   await unfollowProfile({ variables: { input: { followedId: viewingProfile.id } } })
+                                  setFollowOverride(false)
                                 } else {
                                   await followProfile({ variables: { input: { followedId: viewingProfile.id } } })
+                                  setFollowOverride(true)
                                 }
                               } catch (err: any) {
                                 console.error('[Follow] Error:', err)
@@ -7481,13 +7492,13 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                             disabled={followLoading || unfollowLoading}
                             className={`px-4 py-2 text-sm rounded-lg flex items-center gap-2 transition-colors ${
                               followLoading || unfollowLoading ? 'opacity-50 cursor-wait' :
-                              viewingProfile.isFollowed
+                              (followOverride ?? viewingProfile.isFollowed)
                                 ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50'
                                 : 'bg-cyan-500 text-white hover:bg-cyan-600'
                             }`}
                           >
                             <Users className={`w-4 h-4 ${followLoading || unfollowLoading ? 'animate-pulse' : ''}`} />
-                            {followLoading || unfollowLoading ? 'Working...' : viewingProfile.isFollowed ? 'Following' : 'Follow'}
+                            {followLoading || unfollowLoading ? 'Working...' : (followOverride ?? viewingProfile.isFollowed) ? 'Following' : 'Follow'}
                           </button>
                         )}
                         {!isViewingOwnProfile && (
