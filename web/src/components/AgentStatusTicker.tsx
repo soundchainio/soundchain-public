@@ -2129,7 +2129,11 @@ function NeuralInlinePanel() {
       } catch {
         anvilFailures++
       }
-    }, 1000)
+      // Cost: this hits /api/neural/state on every active page for every user.
+      // 5s (was 1s) — the neural viz is decorative and interpolates between
+      // updates, so 5x fewer invocations is imperceptible. (Backs off to ~1/min
+      // on repeated failure; pauses entirely when the tab is hidden.)
+    }, 5000)
 
     return () => {
       mounted = false
@@ -2266,7 +2270,7 @@ export function AgentStatusTicker() {
     const start = () => {
       if (iv) return
       fetchStatus()
-      iv = setInterval(fetchStatus, 15000)
+      iv = setInterval(fetchStatus, 60000) // 60s (was 15s) — /api/operator/status on every page; 4x fewer calls
     }
     const stop = () => { if (iv) { clearInterval(iv); iv = null } }
     const onVis = () => { (typeof document !== 'undefined' && document.hidden) ? stop() : start() }

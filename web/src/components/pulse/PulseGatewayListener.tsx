@@ -159,7 +159,7 @@ const PulseGatewayListener = () => {
   const shouldPoll = !connected && !!me && !isOnPulse
 
   const { data: chatsData } = useChatsQuery({
-    pollInterval: shouldPoll ? 8000 : 0,
+    pollInterval: shouldPoll ? 30000 : 0, // 30s (was 8s) — global incoming-call/DM poll; 3.75x fewer calls
     skip: !shouldPoll,
   })
 
