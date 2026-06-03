@@ -4,8 +4,8 @@ import { GetServerSideProps } from 'next'
 export const getServerSideProps: GetServerSideProps = async () => {
   return {
     redirect: {
-      destination: '/explore',
-      permanent: true, // 301 redirect - SEO friendly
+      destination: '/dex/explore',
+      permanent: false, // was self-redirecting to '/explore' → infinite loop (pre-launch audit blocker)
     },
   }
 }

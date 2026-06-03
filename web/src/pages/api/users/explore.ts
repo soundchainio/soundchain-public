@@ -72,6 +72,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       createdAt: p.createdAt || null,
     }))
 
+    // Backfill @handle from the users collection. Legacy human profiles store no
+    // userHandle on the profiles doc — the handle lives in users.handle (joined by
+    // users.profileId === profiles._id). Without this, AddCircleModal + explore show
+    // blank @handles. (pre-launch audit blocker; mirrors /api/profile/[handle].)
+    const missingIds = nodes.filter(n => !n.userHandle).map(n => new ObjectId(n.id))
+    if (missingIds.length) {
+      const users = await db.collection('users')
+        .find({ profileId: { $in: missingIds } })
+        .project({ profileId: 1, handle: 1 })
+        .toArray()
+      const handleByProfile = new Map(users.map((u: any) => [u.profileId?.toString(), u.handle]))
+      for (const n of nodes) {
+        if (!n.userHandle) n.userHandle = handleByProfile.get(n.id) || ''
+      }
+    }
+
     res.setHeader('Cache-Control', 's-maxage=30, stale-while-revalidate=60')
     return res.status(200).json({
       nodes,
