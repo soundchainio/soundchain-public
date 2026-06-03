@@ -12,10 +12,6 @@
   ],
   "crons": [
     {
-      "path": "/api/warmup",
-      "schedule": "*/5 * * * *"
-    },
-    {
       "path": "/api/agent/radio/broadcast",
       "schedule": "0 * * * *"
     },
@@ -33,19 +29,19 @@
     },
     {
       "path": "/api/cron/settle-picks",
-      "schedule": "*/10 * * * *"
+      "schedule": "*/15 * * * *"
     },
     {
       "path": "/api/cron/repin-scid",
-      "schedule": "*/5 * * * *"
+      "schedule": "0 * * * *"
     },
     {
       "path": "/api/cron/process-pending",
-      "schedule": "*/5 * * * *"
+      "schedule": "*/15 * * * *"
     },
     {
       "path": "/api/cron/process-auctions",
-      "schedule": "*/5 * * * *"
+      "schedule": "*/15 * * * *"
     },
     {
       "path": "/api/cron/cleanup-ephemeral",
@@ -53,7 +49,7 @@
     },
     {
       "path": "/api/cron/blockchain-watcher",
-      "schedule": "* * * * *"
+      "schedule": "*/5 * * * *"
     }
   ]
 }
