@@ -7111,7 +7111,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   {/* Profile-pic banner — CLEAN. The fluid-gl effect was removed from
                       inside this container per Frank's directive: pic stays untouched,
                       fluid lives ONLY on the @handle chars in the tight row below. */}
-                  <div className="relative h-[180px] sm:h-[220px] md:h-[260px] w-full overflow-hidden mt-2 sm:mt-3 scroll-mt-[96px]">
+                  <div className="relative h-[180px] sm:h-[220px] md:h-[260px] w-full overflow-hidden mt-4 sm:mt-6 md:mt-8 scroll-mt-[96px]">
                     {viewingProfile.profilePicture ? (
                       <img
                         src={viewingProfile.profilePicture}
@@ -8156,6 +8156,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         profileHandle={viewingProfile.userHandle}
                         profileDisplayName={viewingProfile.displayName}
                         profilePicture={viewingProfile.profilePicture}
+                        circleIds={(viewingProfile as any)?.topFriends || []}
                       />
                     )}
 

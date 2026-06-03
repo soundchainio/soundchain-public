@@ -12,6 +12,15 @@ interface ProfileReelsProps {
   profileHandle: string
   profileDisplayName?: string
   profilePicture?: string
+  // Curated "My Circle" = the profile's topFriends ids (NOT the follow list).
+  circleIds?: string[]
+}
+
+interface CircleProfile {
+  id: string
+  userHandle: string
+  displayName: string
+  profilePicture?: string
 }
 
 interface StoryBubble {
@@ -275,6 +284,7 @@ const CircleGrid = ({
   manageMode,
   removingId,
   addButton,
+  leadingPill,
   onOpen,
   onRemove,
 }: {
@@ -286,27 +296,33 @@ const CircleGrid = ({
   manageMode?: boolean
   removingId?: string | null
   addButton?: React.ReactNode
+  leadingPill?: React.ReactNode
   onOpen: (bubble: StoryBubble) => void
   onRemove?: (bubble: StoryBubble) => void
 }) => {
-  const capped = bubbles.slice(0, 15)
-  const topRow = capped.slice(0, 7)
-  const bottomRow = capped.slice(7, 15)
+  // The "+" pill takes the first slot of the top row when present (so 6 + 8 = 14
+  // members + 1 pill = 15 slots); otherwise a clean 7 + 8 = 15.
+  const cap = leadingPill ? 14 : 15
+  const topCount = leadingPill ? 6 : 7
+  const capped = bubbles.slice(0, cap)
+  const topRow = capped.slice(0, topCount)
+  const bottomRow = capped.slice(topCount, cap)
 
   return (
     <div className="mb-3">
       <div className="flex items-center gap-2 mb-2 px-1">
         {icon}
         <h4 className="text-gray-400 text-xs font-semibold uppercase tracking-wider">{title}</h4>
-        {totalCount > 0 && <span className="text-gray-600 text-xs">{totalCount} following</span>}
+        {totalCount > 0 && <span className="text-gray-600 text-xs">{totalCount}/15</span>}
         {addButton && <div className="ml-auto">{addButton}</div>}
       </div>
 
-      {capped.length === 0 ? (
+      {!leadingPill && capped.length === 0 ? (
         <div className="text-center py-3 text-gray-600 text-xs">{emptyMessage}</div>
       ) : (
         <div className="flex flex-col items-center gap-2 px-1">
           <div className="flex justify-center gap-1 sm:gap-3">
+            {leadingPill}
             {topRow.map((b) => (
               <CircleAvatar key={b.id} bubble={b} manageMode={manageMode} removing={removingId === b.id} onOpen={onOpen} onRemove={onRemove} />
             ))}
@@ -324,26 +340,26 @@ const CircleGrid = ({
   )
 }
 
-// Inline "Add to Circle" modal — search users (Vercel-direct) + follow
+// Inline "Add to Circle" modal — search users (Vercel-direct) + add to the
+// curated circle (writes topFriends, NEVER follows/unfollows). Add is instant.
 const AddCircleModal = ({
   isOpen,
   onClose,
-  followingIds,
-  onChanged,
+  circleIds,
+  onAdd,
 }: {
   isOpen: boolean
   onClose: () => void
-  followingIds: Set<string>
-  onChanged: () => void
+  circleIds: Set<string>
+  onAdd: (p: CircleProfile) => void
 }) => {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
-  const [pendingId, setPendingId] = useState<string | null>(null)
-  const [localFollowed, setLocalFollowed] = useState<Set<string>>(new Set())
+  const [localAdded, setLocalAdded] = useState<Set<string>>(new Set())
 
   useEffect(() => {
-    if (!isOpen) { setQuery(''); setResults([]); setLocalFollowed(new Set()) }
+    if (!isOpen) { setQuery(''); setResults([]); setLocalAdded(new Set()) }
   }, [isOpen])
 
   useEffect(() => {
@@ -362,23 +378,15 @@ const AddCircleModal = ({
     return () => { cancelled = true; clearTimeout(t) }
   }, [query, isOpen])
 
-  const handleFollow = async (id: string) => {
-    if (pendingId) return
-    setPendingId(id)
-    try {
-      const r = await fetch('/api/follow/toggle', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ followedId: id, action: 'follow' }),
-      })
-      if (r.ok) {
-        setLocalFollowed(prev => new Set(prev).add(id))
-        onChanged()
-      }
-    } finally {
-      setPendingId(null)
-    }
+  const handleAdd = (u: any) => {
+    if (circleIds.has(u.id) || localAdded.has(u.id)) return
+    setLocalAdded(prev => new Set(prev).add(u.id))
+    onAdd({
+      id: u.id,
+      userHandle: u.userHandle || '',
+      displayName: u.displayName || u.userHandle || 'user',
+      profilePicture: u.profilePicture || undefined,
+    })
   }
 
   if (!isOpen) return null
@@ -425,7 +433,7 @@ const AddCircleModal = ({
             <div className="text-center py-6 text-gray-600 text-xs">Type at least 2 characters to search</div>
           )}
           {results.map((u) => {
-            const already = followingIds.has(u.id) || localFollowed.has(u.id)
+            const already = circleIds.has(u.id) || localAdded.has(u.id)
             return (
               <div key={u.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5">
                 <div className="w-10 h-10 rounded-full overflow-hidden bg-neutral-900 flex-shrink-0">
@@ -446,17 +454,15 @@ const AddCircleModal = ({
                   <p className="text-xs text-gray-500 truncate">@{u.userHandle}</p>
                 </div>
                 <button
-                  onClick={() => !already && handleFollow(u.id)}
-                  disabled={already || pendingId === u.id}
+                  onClick={() => !already && handleAdd(u)}
+                  disabled={already}
                   className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-all flex-shrink-0 ${
                     already
                       ? 'bg-green-500/15 text-green-400 cursor-default'
                       : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:opacity-90'
                   }`}
                 >
-                  {pendingId === u.id ? (
-                    <Loader2 className="w-3 h-3 animate-spin" />
-                  ) : already ? (
+                  {already ? (
                     <><Check className="w-3 h-3" /> In Circle</>
                   ) : (
                     <><UserPlus className="w-3 h-3" /> Add</>
@@ -472,7 +478,7 @@ const AddCircleModal = ({
   )
 }
 
-export const ProfileReels = ({ profileId, profileHandle, profileDisplayName, profilePicture }: ProfileReelsProps) => {
+export const ProfileReels = ({ profileId, profileHandle, profileDisplayName, profilePicture, circleIds }: ProfileReelsProps) => {
   const me = useMe()
   const router = useRouter()
   const isOwnProfile = !!me?.profile?.id && me.profile.id === profileId
@@ -487,12 +493,9 @@ export const ProfileReels = ({ profileId, profileHandle, profileDisplayName, pro
   }, [])
   useEffect(() => { fetchStories() }, [fetchStories])
 
-  // Following — Phase 7e Vercel-direct
-  const { data: followingData, refetch: refetchFollowing } = useFollowingQuery({
-    profileId,
-    first: 200,
-    skip: !profileId,
-  })
+  // "My Circle" is a CURATED list (the profile's topFriends), NOT the follow list.
+  // Frank's directive: never load the full following list here; start empty, add via
+  // the inline "+" pill, remove instantly — writes topFriends, never (un)follows.
 
   const [showCreateStory, setShowCreateStory] = useState(false)
   const [showAddCircle, setShowAddCircle] = useState(false)
@@ -504,22 +507,66 @@ export const ProfileReels = ({ profileId, profileHandle, profileDisplayName, pro
 
   useEffect(() => { setPortalContainer(document.body) }, [])
 
-  // Circle members = everyone this profile follows (the inner circle). FIX: use
-  // followedProfile.id, not the follow-edge id (n.id) — the old code matched edge
-  // ids against story profile ids so the circle was always empty.
-  const circleMembers = useMemo(() => {
-    return (followingData?.following?.nodes || [])
-      .map((n: any) => n.followedProfile)
-      .filter((p: any) => p && p.id)
-      .map((p: any) => ({
-        id: p.id,
-        userHandle: p.userHandle || '',
-        displayName: p.displayName || p.userHandle || 'user',
-        profilePicture: p.profilePicture || undefined,
-      }))
-  }, [followingData])
+  // Curated circle source = topFriends. Own profile prefers /api/me's topFriends
+  // (most reliable Vercel-direct source); otherwise the circleIds prop (the viewed
+  // profile's topFriends).
+  const sourceCircleIds = useMemo(() => {
+    const own = (me?.profile as any)?.topFriends
+    const ids = (isOwnProfile && Array.isArray(own) ? own : circleIds) || []
+    return ids.filter(Boolean) as string[]
+  }, [isOwnProfile, me?.profile, circleIds])
 
-  const followingIdSet = useMemo(() => new Set(circleMembers.map((m: any) => m.id)), [circleMembers])
+  // Resolved members (id/handle/name/pic). Starts EMPTY; resolved from the curated
+  // ids Vercel-direct (/api/profile/<id>). After mount, local add/remove mutate this
+  // directly — instant, no full-following reload, ever.
+  const [circleProfiles, setCircleProfiles] = useState<CircleProfile[]>([])
+  const resolvedKeyRef = useRef<string>('')
+  useEffect(() => {
+    const key = sourceCircleIds.join(',')
+    if (key === resolvedKeyRef.current) return
+    resolvedKeyRef.current = key
+    if (sourceCircleIds.length === 0) { setCircleProfiles([]); return }
+    let cancelled = false
+    Promise.all(sourceCircleIds.map((id) =>
+      fetch(`/api/profile/${encodeURIComponent(id)}`)
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => d?.profile)
+        .catch(() => null)
+    )).then((profs) => {
+      if (cancelled) return
+      const ordered = sourceCircleIds
+        .map((id) => {
+          const p = profs.find((x: any) => x && (x.id === id || x._id === id))
+          return p ? { id, userHandle: p.userHandle || '', displayName: p.displayName || p.userHandle || 'user', profilePicture: p.profilePicture || undefined } : null
+        })
+        .filter(Boolean) as CircleProfile[]
+      setCircleProfiles(ordered)
+    })
+    return () => { cancelled = true }
+  }, [sourceCircleIds])
+
+  const circleIdSet = useMemo(() => new Set(circleProfiles.map((m) => m.id)), [circleProfiles])
+
+  // Persist the curated circle to topFriends (Vercel-direct, own profile only). Bump
+  // resolvedKeyRef so the resolver effect won't clobber the optimistic local state.
+  const persistCircle = useCallback((profiles: CircleProfile[]) => {
+    resolvedKeyRef.current = profiles.map((p) => p.id).join(',')
+    fetch('/api/profile/update', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fields: { topFriends: profiles.map((p) => p.id) } }),
+    }).catch(() => {})
+  }, [])
+
+  const handleAddToCircle = useCallback((p: CircleProfile) => {
+    setCircleProfiles((prev) => {
+      if (prev.some((x) => x.id === p.id) || prev.length >= 15) return prev
+      const next = [...prev, p]
+      persistCircle(next)
+      return next
+    })
+  }, [persistCircle])
 
   // Group active stories by profile id
   const storiesByProfile = useMemo(() => {
@@ -549,10 +596,10 @@ export const ProfileReels = ({ profileId, profileHandle, profileDisplayName, pro
     }]
   }, [ownStories, profileId, profileHandle, profileDisplayName, profilePicture])
 
-  // Circle bubbles = all followed friends; story ring + tappable when they have an active story
+  // Circle bubbles = curated members; story ring + tappable when they have an active story
   const circleBubbles: StoryBubble[] = useMemo(() => {
-    return circleMembers
-      .map((m: any) => {
+    return circleProfiles
+      .map((m) => {
         const memberStories = storiesByProfile[m.id] || []
         // prefer denormalized creator avatar from the story if profile pic is missing
         const avatar = m.profilePicture || memberStories[0]?.creatorAvatarUrl || memberStories[0]?.profile?.profilePicture
@@ -569,7 +616,7 @@ export const ProfileReels = ({ profileId, profileHandle, profileDisplayName, pro
       })
       // friends with active stories first, then the rest of the circle
       .sort((a: StoryBubble, b: StoryBubble) => Number(b.hasStory) - Number(a.hasStory))
-  }, [circleMembers, storiesByProfile])
+  }, [circleProfiles, storiesByProfile])
 
   // StoryViewer data — all active stories grouped by profile (own + circle)
   const allStoryUsers = useMemo(() => {
@@ -606,20 +653,14 @@ export const ProfileReels = ({ profileId, profileHandle, profileDisplayName, pro
     if (bubble.userHandle) router.push(`/users/${bubble.userHandle}`)
   }
 
-  const handleRemoveFromCircle = async (bubble: StoryBubble) => {
-    if (removingId) return
-    setRemovingId(bubble.id)
-    try {
-      const r = await fetch('/api/follow/toggle', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ followedId: bubble.id, action: 'unfollow' }),
-      })
-      if (r.ok) await refetchFollowing()
-    } finally {
-      setRemovingId(null)
-    }
+  // Remove from circle = drop from topFriends. INSTANT (local state), never
+  // unfollows, never reloads the following list.
+  const handleRemoveFromCircle = (bubble: StoryBubble) => {
+    setCircleProfiles((prev) => {
+      const next = prev.filter((x) => x.id !== bubble.id)
+      persistCircle(next)
+      return next
+    })
   }
 
   const createReelButton = isOwnProfile ? (
@@ -646,15 +687,25 @@ export const ProfileReels = ({ profileId, profileHandle, profileDisplayName, pro
   // Circle management lives in the section header (Add + Edit), so the pills
   // themselves stay clean — no red × stamped on every avatar. The remove
   // controls only appear while Edit is on.
-  const circleHeaderControls = isOwnProfile ? (
+  // Blank "+" avatar pill — the primary way to add to the circle (Frank's ask).
+  // Always present (own profile) until the circle is full, rendered as the first
+  // slot in the grid; tapping opens the search-and-add modal.
+  const addCirclePill = isOwnProfile && circleProfiles.length < 15 ? (
+    <button
+      onClick={() => setShowAddCircle(true)}
+      className="flex flex-col items-center gap-1 flex-shrink-0 group"
+      title="Add to your circle"
+    >
+      <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-full border-2 border-dashed border-purple-500/50 group-hover:border-purple-400 transition-colors flex items-center justify-center bg-neutral-900/40">
+        <Plus className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
+      </div>
+      <span className="text-[9px] text-purple-400 max-w-[40px] sm:max-w-[52px] truncate">Add</span>
+    </button>
+  ) : null
+
+  // Edit toggle only — adding happens via the inline "+" pill above.
+  const circleHeaderControls = isOwnProfile && circleProfiles.length > 0 ? (
     <div className="flex items-center gap-1.5">
-      <button
-        onClick={() => setShowAddCircle(true)}
-        className="flex items-center gap-1 px-2 py-1 rounded-full border border-purple-500/40 hover:border-purple-400 text-purple-300 hover:text-purple-200 transition-colors"
-      >
-        <UserPlus className="w-3 h-3" />
-        <span className="text-[10px] font-medium">Add</span>
-      </button>
       <button
         onClick={() => setCircleEdit((v) => !v)}
         className={`flex items-center gap-1 px-2 py-1 rounded-full border transition-colors ${
@@ -687,11 +738,12 @@ export const ProfileReels = ({ profileId, profileHandle, profileDisplayName, pro
         title={circleTitle}
         icon={<Users className="w-3.5 h-3.5 text-purple-400" />}
         bubbles={circleBubbles}
-        totalCount={circleMembers.length}
-        emptyMessage={isOwnProfile ? 'Tap Add to fill your circle' : 'No one in their circle yet'}
+        totalCount={circleProfiles.length}
+        emptyMessage={isOwnProfile ? 'Tap + to add people to your circle' : 'No one in their circle yet'}
         manageMode={isOwnProfile && circleEdit}
         removingId={removingId}
         addButton={circleHeaderControls}
+        leadingPill={addCirclePill}
         onOpen={handleCircleOpen}
         onRemove={handleRemoveFromCircle}
       />
@@ -721,8 +773,8 @@ export const ProfileReels = ({ profileId, profileHandle, profileDisplayName, pro
       <AddCircleModal
         isOpen={showAddCircle}
         onClose={() => setShowAddCircle(false)}
-        followingIds={followingIdSet}
-        onChanged={() => refetchFollowing()}
+        circleIds={circleIdSet}
+        onAdd={handleAddToCircle}
       />
     </div>
   )
