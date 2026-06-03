@@ -747,6 +747,9 @@ const InlineComment = ({ comment, onReplyClick }: {
 }) => {
   const isGuest = comment.isGuest && comment.walletAddress
   const hasProfile = !!comment.profile
+  // YouTube-style replies: collapsed by default, expand/collapse via the "N replies" toggle
+  const totalReplies = comment.replyCount ?? comment.replies?.length ?? 0
+  const [repliesExpanded, setRepliesExpanded] = useState(false)
 
   if (comment.deleted) return null
 
@@ -802,22 +805,49 @@ const InlineComment = ({ comment, onReplyClick }: {
             </button>
           )}
         </div>
-        {/* Inline replies */}
-        {comment.replies && comment.replies.length > 0 && (
-          <div className="mt-2 pl-3 border-l border-white/10 space-y-2">
-            {comment.replies.map((reply: any) => (
-              <InlineComment key={reply.id} comment={reply} onReplyClick={onReplyClick} />
-            ))}
-            {(comment.replyCount ?? 0) > comment.replies.length && (
-              <button
-                onClick={() => {
-                  if (comment.postId) window.location.href = `/posts/${comment.postId}`
-                }}
-                className="flex items-center gap-1 text-[10px] text-neutral-500 hover:text-cyan-400 transition-colors py-0.5"
-              >
-                <ChevronDown className="w-2.5 h-2.5" />
-                View {(comment.replyCount ?? 0) - comment.replies.length} more {(comment.replyCount ?? 0) - comment.replies.length === 1 ? 'reply' : 'replies'}
-              </button>
+        {/* Replies — YouTube-style: collapsed by default behind a "N replies" toggle
+            (with a replier avatar + chevron) that expands/collapses the thread inline.
+            The reply COUNT stays visible in both states. */}
+        {totalReplies > 0 && (
+          <div className="mt-1.5">
+            <button
+              onClick={() => {
+                // Expand inline when replies are loaded; otherwise open the full thread.
+                if (comment.replies && comment.replies.length > 0) {
+                  setRepliesExpanded((v) => !v)
+                } else if (comment.postId) {
+                  window.location.href = `/posts/${comment.postId}`
+                }
+              }}
+              className="flex items-center gap-1.5 text-cyan-400 hover:text-cyan-300 transition-colors"
+            >
+              {!repliesExpanded && comment.replies?.[0] && (
+                comment.replies[0].isGuest && comment.replies[0].walletAddress ? (
+                  <GuestAvatar walletAddress={comment.replies[0].walletAddress} pixels={18} className="w-[18px] h-[18px] flex-shrink-0" />
+                ) : comment.replies[0].profile ? (
+                  <Avatar profile={comment.replies[0].profile} pixels={18} className="w-[18px] h-[18px] flex-shrink-0" />
+                ) : null
+              )}
+              <span className="text-[11px] font-semibold">
+                {totalReplies} {totalReplies === 1 ? 'reply' : 'replies'}
+              </span>
+              <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-150 ${repliesExpanded ? '' : '-rotate-90'}`} />
+            </button>
+            {repliesExpanded && comment.replies && comment.replies.length > 0 && (
+              <div className="mt-2 pl-3 border-l-2 border-white/10 space-y-2">
+                {comment.replies.map((reply: any) => (
+                  <InlineComment key={reply.id} comment={reply} onReplyClick={onReplyClick} />
+                ))}
+                {(comment.replyCount ?? 0) > comment.replies.length && (
+                  <button
+                    onClick={() => { if (comment.postId) window.location.href = `/posts/${comment.postId}` }}
+                    className="flex items-center gap-1 text-[10px] text-neutral-500 hover:text-cyan-400 transition-colors py-0.5"
+                  >
+                    <ChevronDown className="w-2.5 h-2.5 -rotate-90" />
+                    View {(comment.replyCount ?? 0) - comment.replies.length} more {(comment.replyCount ?? 0) - comment.replies.length === 1 ? 'reply' : 'replies'}
+                  </button>
+                )}
+              </div>
             )}
           </div>
         )}
