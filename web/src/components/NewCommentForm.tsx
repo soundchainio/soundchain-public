@@ -756,11 +756,35 @@ export const NewCommentForm = ({ postId, onSuccess, compact, inputRef, replyToCo
             </div>
           )}
 
-          {/* Create Story Modal */}
+          {/* Create Story Modal — the Reel pill pre-loads THIS post's content into the
+              story (uploaded media OR the embed URL) so it plays in Stories with autoplay,
+              IG-style. Mirrors CompactPost's share-to-story prefill; was opening empty. */}
           {showStoryModal && (
             <CreateStoryModal
               isOpen={showStoryModal}
               onClose={() => setShowStoryModal(false)}
+              prefillMedia={(() => {
+                const pd = postData as any
+                if (!pd) return null
+                if (pd.uploadedMediaUrl) {
+                  return {
+                    url: pd.uploadedMediaUrl,
+                    type: (pd.uploadedMediaType?.startsWith('video') ? 'video' : 'image') as 'image' | 'video',
+                    caption: pd.body || undefined,
+                    authorName: pd.profile?.displayName || pd.profile?.userHandle || undefined,
+                  }
+                }
+                // Embedded media (YouTube/X/etc) — pass the embed URL so it autoplays in StoryViewer
+                if (pd.mediaLink) {
+                  return {
+                    url: pd.mediaLink,
+                    type: 'video' as const,
+                    caption: pd.body || undefined,
+                    authorName: pd.profile?.displayName || pd.profile?.userHandle || undefined,
+                  }
+                }
+                return null
+              })()}
             />
           )}
         </div>
