@@ -320,21 +320,31 @@ const CircleGrid = ({
       {!leadingPill && capped.length === 0 ? (
         <div className="text-center py-3 text-gray-600 text-xs">{emptyMessage}</div>
       ) : (
-        <div className="flex flex-col items-center md:items-start gap-2 px-1">
-          <div className="flex justify-center md:justify-start gap-1 sm:gap-3 lg:gap-5">
-            {leadingPill}
-            {topRow.map((b) => (
-              <CircleAvatar key={b.id} bubble={b} manageMode={manageMode} removing={removingId === b.id} onOpen={onOpen} onRemove={onRemove} />
-            ))}
-          </div>
-          {bottomRow.length > 0 && (
-            <div className="flex justify-center md:justify-start gap-1 sm:gap-3 lg:gap-5">
-              {bottomRow.map((b) => (
+        <>
+          {/* Mobile — stacked 7 / 8, centered (the look Frank approved) */}
+          <div className="md:hidden flex flex-col items-center gap-2 px-1">
+            <div className="flex justify-center gap-1 sm:gap-3">
+              {leadingPill}
+              {topRow.map((b) => (
                 <CircleAvatar key={b.id} bubble={b} manageMode={manageMode} removing={removingId === b.id} onOpen={onOpen} onRemove={onRemove} />
               ))}
             </div>
-          )}
-        </div>
+            {bottomRow.length > 0 && (
+              <div className="flex justify-center gap-1 sm:gap-3">
+                {bottomRow.map((b) => (
+                  <CircleAvatar key={b.id} bubble={b} manageMode={manageMode} removing={removingId === b.id} onOpen={onOpen} onRemove={onRemove} />
+                ))}
+              </div>
+            )}
+          </div>
+          {/* Desktop — ONE row, left to right (scrolls if the circle gets full) */}
+          <div className="hidden md:flex items-start gap-4 lg:gap-5 px-1 overflow-x-auto">
+            {leadingPill}
+            {capped.map((b) => (
+              <CircleAvatar key={b.id} bubble={b} manageMode={manageMode} removing={removingId === b.id} onOpen={onOpen} onRemove={onRemove} />
+            ))}
+          </div>
+        </>
       )}
     </div>
   )
@@ -724,7 +734,7 @@ export const ProfileReels = ({ profileId, profileHandle, profileDisplayName, pro
   const circleTitle = isOwnProfile ? 'Your Circle' : `${profileDisplayName || profileHandle}'s Circle`
 
   return (
-    <div className="mb-4 bg-black/30 backdrop-blur-sm rounded-xl p-3 border border-white/5">
+    <div className="mb-4 bg-black/30 backdrop-blur-sm rounded-xl p-3 border border-white/5 md:max-w-2xl">
       <ReelRow
         title={reelsTitle}
         icon={<Film className="w-3.5 h-3.5 text-cyan-400" />}
