@@ -774,14 +774,23 @@ export const NewCommentForm = ({ postId, onSuccess, compact, inputRef, replyToCo
                     authorName: pd.profile?.displayName || pd.profile?.userHandle || undefined,
                   }
                 }
-                // Embedded media (YouTube/X/etc) — pass the embed URL so it autoplays in StoryViewer
+                // Embedded media. YouTube/Vimeo/Twitch/SoundCloud/Spotify/Bandcamp autoplay
+                // via ReactPlayer in the reel canvas. X/IG/TikTok have no playable file there,
+                // so use the post's thumbnail image instead of a raw link → no more blank card.
+                const authorName = pd.profile?.displayName || pd.profile?.userHandle || undefined
                 if (pd.mediaLink) {
-                  return {
-                    url: pd.mediaLink,
-                    type: 'video' as const,
-                    caption: pd.body || undefined,
-                    authorName: pd.profile?.displayName || pd.profile?.userHandle || undefined,
+                  const playable = /(?:youtube\.com|youtu\.be|vimeo\.com|dailymotion\.com|twitch\.tv|soundcloud\.com|spotify\.com|bandcamp\.com)/i.test(pd.mediaLink)
+                  if (playable) {
+                    return { url: pd.mediaLink, type: 'video' as const, caption: pd.body || undefined, authorName }
                   }
+                  if (pd.mediaThumbnail) {
+                    return { url: pd.mediaThumbnail, type: 'image' as const, caption: pd.body || undefined, authorName }
+                  }
+                  return { url: pd.mediaLink, type: 'video' as const, caption: pd.body || undefined, authorName }
+                }
+                // No embed link, but the post has a thumbnail (image/track card) — reel it.
+                if (pd.mediaThumbnail) {
+                  return { url: pd.mediaThumbnail, type: 'image' as const, caption: pd.body || undefined, authorName }
                 }
                 return null
               })()}

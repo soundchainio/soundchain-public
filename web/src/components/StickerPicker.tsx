@@ -921,41 +921,29 @@ export const StickerPicker = ({ onSelect, onClose, theme = 'dark' }: StickerPick
                 title={`${emote.name} (${emote.source.toUpperCase()}${emote.animated ? ' - Animated' : ''})`}
               >
                 <img
-                  src={emote.url}
+                  src={emote.url.replace(/\/[0-9]x\.webp$/, '/1x.webp').replace(/\/2x\.(gif|png)$/, '/1x.$1')}
                   alt={emote.name}
                   className="w-7 h-7 object-contain"
                   loading="lazy"
+                  decoding="async"
                   onError={(e) => {
-                    // 7TV CDN works without extensions - don't add them
+                    // The lightweight 1x thumbnail failed — almost always a transient
+                    // timeout from loading ~200 animated emotes at once. Retry ONCE at
+                    // the full-size url, then fall back to a short text label.
+                    // NEVER strip 7TV's extension back to bare /2x: that 308-redirects
+                    // and renders no art (the old "text pill instead of emote" bug).
                     const img = e.target as HTMLImageElement
-                    const url = img.src
-                    const is7TV = url.includes('cdn.7tv.app')
-
-                    if (is7TV) {
-                      // 7TV: strip any extension, CDN auto-serves correct format
-                      const baseUrl = url.replace(/\.(gif|webp|png)$/, '')
-                      if (url !== baseUrl) {
-                        img.src = baseUrl
-                        return
-                      }
-                    } else {
-                      // Non-7TV: fallback chain
-                      if (url.includes('.gif')) {
-                        img.src = url.replace('.gif', '.webp')
-                        return
-                      } else if (url.includes('.webp')) {
-                        img.src = url.replace('.webp', '.png')
-                        return
-                      }
+                    if (!img.dataset.retried && img.src !== emote.url) {
+                      img.dataset.retried = '1'
+                      img.src = emote.url
+                      return
                     }
-
-                    // All failed - show text fallback
                     img.style.display = 'none'
                     const parent = img.parentElement
-                    if (parent) {
+                    if (parent && !parent.querySelector('span.emote-fallback')) {
                       parent.classList.add('bg-neutral-700/50')
                       const span = document.createElement('span')
-                      span.className = 'text-[8px] text-cyan-400 font-medium'
+                      span.className = 'emote-fallback text-[8px] text-cyan-400 font-medium'
                       span.textContent = emote.name.slice(0, 5)
                       parent.appendChild(span)
                     }
