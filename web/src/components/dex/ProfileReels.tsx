@@ -228,7 +228,7 @@ const CircleAvatar = ({
     >
       <div className="relative">
         <div
-          className={`w-9 h-9 sm:w-12 sm:h-12 rounded-full p-[2px] transition-all group-hover:opacity-80 ${manageMode ? 'animate-pulse' : ''} ${
+          className={`w-9 h-9 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-full p-[2px] transition-all group-hover:opacity-80 ${manageMode ? 'animate-pulse' : ''} ${
             bubble.hasStory
               ? 'bg-gradient-to-tr from-purple-500 via-pink-500 to-orange-500'
               : 'bg-gradient-to-tr from-gray-600 to-gray-700'
@@ -256,7 +256,7 @@ const CircleAvatar = ({
           </div>
         )}
       </div>
-      <span className="text-[9px] text-gray-400 group-hover:text-white transition-colors max-w-[40px] sm:max-w-[52px] truncate">
+      <span className="text-[9px] text-gray-400 group-hover:text-white transition-colors max-w-[40px] sm:max-w-[52px] lg:max-w-[64px] truncate">
         {bubble.displayName || bubble.userHandle}
       </span>
     </button>
@@ -320,15 +320,15 @@ const CircleGrid = ({
       {!leadingPill && capped.length === 0 ? (
         <div className="text-center py-3 text-gray-600 text-xs">{emptyMessage}</div>
       ) : (
-        <div className="flex flex-col items-center gap-2 px-1">
-          <div className="flex justify-center gap-1 sm:gap-3">
+        <div className="flex flex-col items-center md:items-start gap-2 px-1">
+          <div className="flex justify-center md:justify-start gap-1 sm:gap-3 lg:gap-5">
             {leadingPill}
             {topRow.map((b) => (
               <CircleAvatar key={b.id} bubble={b} manageMode={manageMode} removing={removingId === b.id} onOpen={onOpen} onRemove={onRemove} />
             ))}
           </div>
           {bottomRow.length > 0 && (
-            <div className="flex justify-center gap-1 sm:gap-3">
+            <div className="flex justify-center md:justify-start gap-1 sm:gap-3 lg:gap-5">
               {bottomRow.map((b) => (
                 <CircleAvatar key={b.id} bubble={b} manageMode={manageMode} removing={removingId === b.id} onOpen={onOpen} onRemove={onRemove} />
               ))}
