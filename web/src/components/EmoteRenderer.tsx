@@ -107,7 +107,12 @@ export const EmoteRenderer = ({ text, className = '', linkify = false }: EmoteRe
     }
 
     const emoteName = match[1]
-    const emoteUrl = match[2]
+    // Normalize 7TV urls: a bare /Nx (no extension) 308-redirects and renders no art in an
+    // <img>; request the .webp form so stored markdown (old bare or new) always displays.
+    let emoteUrl = match[2]
+    if (emoteUrl.includes('cdn.7tv.app') && /\/[0-9]x$/.test(emoteUrl)) {
+      emoteUrl = emoteUrl + '.webp'
+    }
     const isGif = emoteName.startsWith('gif:')
 
     // GIFs inline with text: slightly larger than emotes but still inline
@@ -134,14 +139,16 @@ export const EmoteRenderer = ({ text, className = '', linkify = false }: EmoteRe
           const is7TV = currentSrc.includes('cdn.7tv.app')
 
           if (is7TV) {
-            // For 7TV: strip any extension and let CDN auto-serve
-            const baseUrl = currentSrc.replace(/\.(gif|webp|png)$/, '')
-            if (currentSrc !== baseUrl) {
-              // Had an extension, try without it
-              target.src = baseUrl
+            // bare /Nx -> .webp (NEVER strip .webp back to bare — bare 308-redirects to
+            // nothing in an <img>; that downgrade was the ":name:" text-fallback bug).
+            if (/\/[0-9]x$/.test(currentSrc)) { target.src = currentSrc + '.webp'; return }
+            // .webp failed (usually a transient timeout under load) — retry once at 1x.webp.
+            if (!target.dataset.retried && /\/[0-9]x\.webp$/.test(currentSrc)) {
+              target.dataset.retried = '1'
+              target.src = currentSrc.replace(/\/[0-9]x\.webp$/, '/1x.webp')
               return
             }
-            // Already tried without extension, show fallback
+            // genuinely failed — show text fallback
           } else {
             // Non-7TV: try different formats
             if (!currentSrc.includes('.webp') && !currentSrc.includes('.gif') && !currentSrc.includes('.png')) {
