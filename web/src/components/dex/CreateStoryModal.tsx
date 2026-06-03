@@ -1107,8 +1107,11 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish, prefillTrack, pre
         onClick={onClose}
       />
 
-      {/* Modal - compact on mobile to keep Share button accessible */}
-      <div className="fixed z-[101] top-2 sm:top-8 left-1/2 -translate-x-1/2 w-[94vw] max-w-md animate-in slide-in-from-top-2 duration-150">
+      {/* Modal — CENTERED in the viewport on desktop (was top-anchored top-8, which
+          rendered it far up the screen / partly offscreen). Mobile stays top-anchored
+          so the on-screen keyboard doesn't cover it; the inner max-h-[85vh] scrolls so
+          a centered desktop modal never overflows. */}
+      <div className="fixed z-[101] left-1/2 -translate-x-1/2 top-2 sm:top-1/2 sm:-translate-y-1/2 w-[94vw] max-w-md animate-in fade-in zoom-in-95 duration-150">
         <div className="bg-neutral-900 border border-neutral-700 rounded-xl overflow-hidden shadow-xl max-h-[75vh] sm:max-h-[85vh] flex flex-col">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-800">
