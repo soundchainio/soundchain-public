@@ -7154,8 +7154,10 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     ) : (
                       <div className="w-full h-full bg-gradient-to-br from-purple-900/80 via-cyan-900/50 to-black" />
                     )}
-                    {/* Gradient overlay - stronger at bottom for text readability */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+                    {/* Gradient overlay — stronger at bottom for text readability. via-black/60
+                        + a black/10 floor (instead of fully transparent) so the name/@handle
+                        near the middle stay legible even over a light/bright cover photo. */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-black/10" />
                     </div>
 
                     {/* Profile Info — in NORMAL FLOW, pinned to the bottom by the parent's
@@ -7180,7 +7182,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                       <div className="space-y-1 mb-3">
                         {/* Line 1 — display name (liquid color) + blue verified check + gold founder logo */}
                         <div className="flex items-center gap-1.5 flex-wrap leading-tight">
-                          <h1 className="sc-fluid-name text-xl sm:text-2xl font-extrabold truncate min-w-0 max-w-full drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
+                          <h1 className="sc-fluid-name text-xl sm:text-2xl font-extrabold truncate min-w-0 max-w-full">
                             {viewingProfile.displayName || viewingProfile.userHandle || 'User'}
                           </h1>
                           {viewingProfile.verified && (
@@ -7203,7 +7205,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                           )}
                         </div>
                         {/* Line 2 — @handle, tucked tight under the name, same liquid color. */}
-                        <h2 className="sc-fluid-name text-sm sm:text-base font-bold tracking-tight leading-tight truncate max-w-full drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">
+                        <h2 className="sc-fluid-name text-sm sm:text-base font-bold tracking-tight leading-tight truncate max-w-full">
                           @{viewingProfile.userHandle || 'user'}
                         </h2>
                         {/* POAPs — earned marks (founder gold shown on line 1 above). */}
