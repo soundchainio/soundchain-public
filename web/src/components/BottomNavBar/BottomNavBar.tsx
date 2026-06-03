@@ -51,18 +51,28 @@ export const BottomNavBar = () => {
   const [showWinWinModal, setShowWinWinModal] = useState(false)
   const [showSocialModal, setShowSocialModal] = useState(false)
 
-  // Fetch unclaimed streaming rewards - only when logged in and modal is open
-  const { data: rewardsData, loading: rewardsLoading, refetch: refetchRewards } = useQuery(GET_UNCLAIMED_REWARDS, {
-    skip: !me || !showWinWinModal,
-    fetchPolicy: 'network-only',
-  })
+  // Unclaimed streaming rewards — Vercel-direct (Phase 7f). The Apollo
+  // myUnclaimedStreamingRewards query hit the dead api.soundchain.io stub → the
+  // Win-Win modal always showed 0 and the claim/stake buttons stayed hidden.
+  const [rewardsData, setRewardsData] = useState<any>(null)
+  const [rewardsLoading, setRewardsLoading] = useState(false)
+  const refetchRewards = async () => {
+    if (!me) return
+    setRewardsLoading(true)
+    try {
+      const r = await fetch('/api/rewards/streaming', { credentials: 'include' })
+      if (r.ok) { const j = await r.json(); setRewardsData({ myUnclaimedStreamingRewards: j.unclaimed }) }
+    } catch {} finally { setRewardsLoading(false) }
+  }
+  useEffect(() => { if (me && showWinWinModal) refetchRewards() }, [me, showWinWinModal])
 
   // Get user's wallet address for claiming
   const { account: magicAccount } = useMagicContext()
   const userWallet = magicAccount || me?.magicWalletAddress || me?.googleWalletAddress || me?.discordWalletAddress || me?.twitchWalletAddress
 
-  // Claim/stake mutation
-  const [claimStreamingRewardsMutation, { loading: claimLoading }] = useMutation(CLAIM_STREAMING_REWARDS)
+  // Claim/stake loading state (was Apollo mutation loading; now local since the
+  // claim/stake go through the Vercel /api/rewards/claim fetch below)
+  const [claimLoading, setClaimLoading] = useState(false)
 
   // Handle claim to wallet
   const handleClaimToWallet = async () => {
@@ -77,26 +87,30 @@ export const BottomNavBar = () => {
       return
     }
 
+    setClaimLoading(true)
     try {
-      const { data } = await claimStreamingRewardsMutation({
-        variables: {
-          input: {
-            walletAddress: userWallet,
-            stakeDirectly: false,
-          },
-        },
+      // Vercel-direct (Phase 7f) — the proven /api/rewards/claim path (was an
+      // Apollo→stub no-op). Bearer JWT, same as StakingPanel's claim-to-wallet.
+      const { getJwt } = await import('lib/apollo')
+      const jwtToken = getJwt() || ''
+      const response = await fetch('/api/rewards/claim', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${jwtToken}` },
+        body: JSON.stringify({ walletAddress: userWallet, stakeDirectly: false }),
       })
+      const data = await response.json()
 
-      if (data?.claimStreamingRewards?.success) {
-        const totalClaimed = data.claimStreamingRewards.totalClaimed
-        toast.success(`Claimed ${totalClaimed.toFixed(4)} OGUN!`)
+      if (data.success) {
+        toast.success(`Claimed ${(data.totalClaimed || 0).toFixed(4)} OGUN!`)
         refetchRewards()
       } else {
-        toast.error(data?.claimStreamingRewards?.error || 'Claim failed')
+        toast.error(data.error || 'Claim failed')
       }
     } catch (err: any) {
       console.error('Claim error:', err)
       toast.error(err.message || 'Failed to claim rewards')
+    } finally {
+      setClaimLoading(false)
     }
   }
 
@@ -113,26 +127,29 @@ export const BottomNavBar = () => {
       return
     }
 
+    setClaimLoading(true)
     try {
-      const { data } = await claimStreamingRewardsMutation({
-        variables: {
-          input: {
-            walletAddress: userWallet,
-            stakeDirectly: true,
-          },
-        },
+      // Vercel-direct (Phase 7f) — proven /api/rewards/claim path, stakeDirectly:true.
+      const { getJwt } = await import('lib/apollo')
+      const jwtToken = getJwt() || ''
+      const response = await fetch('/api/rewards/claim', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${jwtToken}` },
+        body: JSON.stringify({ walletAddress: userWallet, stakeDirectly: true }),
       })
+      const data = await response.json()
 
-      if (data?.claimStreamingRewards?.success) {
-        const totalClaimed = data.claimStreamingRewards.totalClaimed
-        toast.success(`Staked ${totalClaimed.toFixed(4)} OGUN!`)
+      if (data.success) {
+        toast.success(`Staked ${(data.totalClaimed || 0).toFixed(4)} OGUN!`)
         refetchRewards()
       } else {
-        toast.error(data?.claimStreamingRewards?.error || 'Stake failed')
+        toast.error(data.error || 'Stake failed')
       }
     } catch (err: any) {
       console.error('Stake error:', err)
       toast.error(err.message || 'Failed to stake rewards')
+    } finally {
+      setClaimLoading(false)
     }
   }
 

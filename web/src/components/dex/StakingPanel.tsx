@@ -119,14 +119,20 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
   const [slippage, setSlippage] = useState<number>(SWAP_CONFIG.DEFAULT_SLIPPAGE)
   const [polBalance, setPolBalance] = useState('0')
 
-  // Fetch user's streaming rewards
-  const { data: streamingData, loading: streamingLoading, refetch: refetchStreaming } = useQuery(
-    GET_USER_STREAMING_REWARDS,
-    {
-      variables: { profileId: me?.profile?.id || '' },
-      skip: !me?.profile?.id,
-    }
-  )
+  // Fetch user's streaming rewards — Vercel-direct (Phase 7f). The Apollo
+  // scidsByProfile query hit the dead api.soundchain.io stub → returned null →
+  // totalUnclaimed computed to 0 → claim/stake buttons stayed disabled.
+  const [streamingData, setStreamingData] = useState<any>(null)
+  const [streamingLoading, setStreamingLoading] = useState(false)
+  const refetchStreaming = useCallback(async () => {
+    if (!me?.profile?.id) return
+    setStreamingLoading(true)
+    try {
+      const r = await fetch('/api/rewards/streaming', { credentials: 'include' })
+      if (r.ok) setStreamingData(await r.json())
+    } catch {} finally { setStreamingLoading(false) }
+  }, [me?.profile?.id])
+  useEffect(() => { refetchStreaming() }, [refetchStreaming])
 
   // Claim streaming rewards mutation
   const [claimStreamingRewardsMutation] = useMutation(CLAIM_STREAMING_REWARDS)
@@ -214,18 +220,20 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
 
     setClaimLoading(true)
     try {
-      const { data } = await claimStreamingRewardsMutation({
-        variables: {
-          input: {
-            walletAddress: targetWallet,
-            stakeDirectly: true,
-          },
-        },
+      // Vercel-direct (Phase 7f) — same proven /api/rewards/claim path as
+      // handleClaimToWallet, just stakeDirectly:true (was an Apollo→stub no-op).
+      const { getJwt } = await import('lib/apollo')
+      const jwtToken = getJwt() || ''
+      const response = await fetch('/api/rewards/claim', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${jwtToken}` },
+        body: JSON.stringify({ walletAddress: targetWallet, stakeDirectly: true }),
       })
+      const data = await response.json()
 
-      if (data?.claimStreamingRewards?.success) {
-        const totalClaimed = data.claimStreamingRewards.totalClaimed
-        const txHash = data.claimStreamingRewards.transactionHash
+      if (data.success) {
+        const totalClaimed = data.totalClaimed
+        const txHash = data.transactionHash
 
         if (txHash) {
           toast.success(`Staked ${totalClaimed.toFixed(2)} OGUN! TX: ${txHash.slice(0, 10)}...`)
@@ -235,7 +243,7 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
         refetchStreaming()
         fetchBalances()
       } else {
-        toast.error(data?.claimStreamingRewards?.error || 'Stake failed')
+        toast.error(data.error || 'Stake failed')
       }
     } catch (err: any) {
       console.error('Stake error:', err)
