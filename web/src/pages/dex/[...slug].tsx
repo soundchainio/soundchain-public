@@ -4220,10 +4220,9 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                       }
                     }} />
 
-                    {/* Comments Section */}
-                    <div className="mt-4 px-0 md:px-0">
-                      <Comments postId={routeId} />
-                    </div>
+                    {/* Comments render INSIDE the <Post> component above (inline thread +
+                        compose). The standalone <Comments> here was a duplicate — every
+                        comment showed twice (once in the post, once outside). Removed. */}
 
                     {/* View Full Feed CTA */}
                     <div className="mt-6 px-4 text-center">
