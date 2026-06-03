@@ -33,7 +33,7 @@ const BTTV_CDN = 'https://cdn.betterttv.net/emote'
 const TWITCH_CDN = 'https://static-cdn.jtvnw.net/emoticons/v2'
 
 function buildSevenTv(id: string, name: string): ArenaEmote {
-  return { id: `s7-${id}`, name, url: `${SEVEN_TV_CDN}/${id}/2x` }
+  return { id: `s7-${id}`, name, url: `${SEVEN_TV_CDN}/${id}/2x.webp` }
 }
 
 // --- LAYER 1: Static, instant-loading favorites --------------------------------
@@ -180,7 +180,7 @@ export async function searchSevenTv(query: string, limit = 100): Promise<ArenaEm
       const name = e?.name
       if (!id || !name || seen.has(id)) continue
       seen.add(id)
-      out.push({ id: `s7-${id}`, name, url: `${SEVEN_TV_CDN}/${id}/2x` })
+      out.push({ id: `s7-${id}`, name, url: `${SEVEN_TV_CDN}/${id}/2x.webp` })
       if (out.length >= limit) break
     }
     return out

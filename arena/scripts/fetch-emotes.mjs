@@ -36,7 +36,7 @@ async function fetch7tvGlobal() {
     return items.map((e) => ({
       id: `s7g-${e.id}`,
       name: e.name,
-      url: `${SEVEN_TV_CDN}/${e.id}/2x`,
+      url: `${SEVEN_TV_CDN}/${e.id}/2x.webp`, // 7TV /2x 308-redirects → request .webp or <img> shows no art
     }))
   } catch (err) {
     console.warn('[emotes] 7TV global failed:', err.message)
