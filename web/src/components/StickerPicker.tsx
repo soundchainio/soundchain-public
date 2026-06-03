@@ -202,7 +202,7 @@ export const StickerPicker = ({ onSelect, onClose, theme = 'dark' }: StickerPick
         return {
           id: emote.id,
           name: emote.name,
-          url: `https://cdn.7tv.app/emote/${emote.id}/2x`,
+          url: `https://cdn.7tv.app/emote/${emote.id}/2x.webp`,
           animated: isAnimated,
           source: '7tv' as const,
         }
@@ -368,7 +368,7 @@ export const StickerPicker = ({ onSelect, onClose, theme = 'dark' }: StickerPick
               allEmotes.push({
                 id: `kick-${emote.id}`,
                 name: emote.name,
-                url: `https://cdn.7tv.app/emote/${emote.id}/2x`,
+                url: `https://cdn.7tv.app/emote/${emote.id}/2x.webp`,
                 animated: isAnimated,
                 source: 'kick' as const,
               })
@@ -391,7 +391,7 @@ export const StickerPicker = ({ onSelect, onClose, theme = 'dark' }: StickerPick
       const curated = curatedKickEmotes.map(e => ({
         id: `kick-curated-${e.id}`,
         name: e.name,
-        url: `https://cdn.7tv.app/emote/${e.id}/2x`,
+        url: `https://cdn.7tv.app/emote/${e.id}/2x.webp`,
         animated: true,
         source: 'kick' as const,
       }))
@@ -430,7 +430,7 @@ export const StickerPicker = ({ onSelect, onClose, theme = 'dark' }: StickerPick
               allEmotes.push({
                 id: `trend-${emote.id}`,
                 name: emote.name,
-                url: `https://cdn.7tv.app/emote/${emote.id}/2x`,
+                url: `https://cdn.7tv.app/emote/${emote.id}/2x.webp`,
                 animated: isAnimated,
                 source: '7tv' as const,
               })
@@ -639,7 +639,7 @@ export const StickerPicker = ({ onSelect, onClose, theme = 'dark' }: StickerPick
     return reactions.map(r => ({
       id: `react-${r.id}`,
       name: r.name,
-      url: `https://cdn.7tv.app/emote/${r.id}/2x`,
+      url: `https://cdn.7tv.app/emote/${r.id}/2x.webp`,
       animated: true,
       source: '7tv' as const,
     }))
@@ -674,7 +674,7 @@ export const StickerPicker = ({ onSelect, onClose, theme = 'dark' }: StickerPick
     return musicEmotes.map(e => ({
       id: `music-${e.id}`,
       name: e.name,
-      url: `https://cdn.7tv.app/emote/${e.id}/2x`,
+      url: `https://cdn.7tv.app/emote/${e.id}/2x.webp`,
       animated: true,
       source: '7tv' as const,
     }))

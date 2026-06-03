@@ -41,7 +41,7 @@ async function fetch7tvGlobal() {
     return items.map((e) => ({
       id: e.id,
       name: e.name,
-      url: `${SEVEN_TV_CDN}/${e.id}/2x`,
+      url: `${SEVEN_TV_CDN}/${e.id}/2x.webp`, // 7TV now 308-redirects /2x → must request /2x.webp or <img> shows no art
       animated: !!e?.data?.animated,
       source: '7tv',
     }))
