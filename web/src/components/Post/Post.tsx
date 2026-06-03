@@ -220,7 +220,7 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
   }
 
   return (
-    <article className="p-3.5 rounded-2xl border border-white/10 bg-white/[0.03]">
+    <article className="sc-cv-card p-3.5 rounded-2xl border border-white/10 bg-white/[0.03]">
       {/* Header */}
       <header className="flex items-center justify-between">
         {isGuest ? (

@@ -2168,6 +2168,23 @@ input[type="number"]::-webkit-outer-spin-button {
   background-color: rgba(0, 0, 0, 0.85) !important;
 }
 
+/* ============================================
+   MOBILE-HEAT REDUCER — content-visibility (Jun 3 2026, Frank's directive:
+   reduce heating WITHOUT changing functionality or autoplay).
+   The browser SKIPS rendering + painting offscreen feed/wall post cards, so a long
+   feed stops burning GPU/CPU/battery on cards you can't see. ZERO behavior change:
+   the DOM stays mounted and every IntersectionObserver + autoplay path is untouched
+   — a card renders and autoplays the instant it nears the viewport, exactly as
+   before. `contain-intrinsic-size: auto 600px` reserves space (no scroll jank) and
+   `auto` remembers each card's real height after first render. Pure paint/composite
+   optimization, fully reversible (delete this rule). Applied to <Post> cards via the
+   sc-cv-card class — a no-op on already-windowed feeds + single-post views.
+   ============================================ */
+.sc-cv-card {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 600px;
+}
+
 /* Light mode: use a light wash instead of opaque black */
 :root[data-theme="light"] .backdrop-blur,
 :root[data-theme="light"] .backdrop-blur-none,
