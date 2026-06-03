@@ -880,34 +880,39 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
             </div>
           </div>
 
-          {/* Duration + Motion + Steps */}
-          <div className="grid grid-cols-3 gap-2 mb-3">
+          {/* Duration + Motion + Steps — stack 1-col on mobile so the value readouts
+              never collide with the labels or the slider thumb; 3-col on sm+. Each value
+              sits on the label row (justify-between), slider full-width beneath. */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-3 gap-y-3 mb-3">
             <div>
-              <label className="text-[10px] text-gray-500 uppercase tracking-wider">Duration</label>
-              <div className="flex items-center gap-1 mt-1">
-                <input
-                  type="range" min={2} max={180} value={animateDuration}
-                  onChange={(e) => setAnimateDuration(Number(e.target.value))}
-                  className="flex-1 h-1 accent-cyan-500"
-                  disabled={generating}
-                />
-                <span className="text-[10px] text-cyan-400 w-8 text-right">{animateDuration}s</span>
+              <div className="flex items-center justify-between">
+                <label className="text-[10px] text-gray-500 uppercase tracking-wider">Duration</label>
+                <span className="text-[10px] font-semibold text-cyan-400 tabular-nums">{animateDuration}s</span>
               </div>
+              <input
+                type="range" min={2} max={180} value={animateDuration}
+                onChange={(e) => setAnimateDuration(Number(e.target.value))}
+                className="w-full mt-1 h-1 accent-cyan-500"
+                disabled={generating}
+              />
             </div>
             <div>
-              <label className="text-[10px] text-gray-500 uppercase tracking-wider">Motion</label>
-              <div className="flex items-center gap-1 mt-1">
-                <input
-                  type="range" min={1} max={255} value={animateMotion}
-                  onChange={(e) => setAnimateMotion(Number(e.target.value))}
-                  className="flex-1 h-1 accent-cyan-500"
-                  disabled={generating}
-                />
-                <span className="text-[10px] text-cyan-400 w-6 text-right">{animateMotion}</span>
+              <div className="flex items-center justify-between">
+                <label className="text-[10px] text-gray-500 uppercase tracking-wider">Motion</label>
+                <span className="text-[10px] font-semibold text-cyan-400 tabular-nums">{animateMotion}</span>
               </div>
+              <input
+                type="range" min={1} max={255} value={animateMotion}
+                onChange={(e) => setAnimateMotion(Number(e.target.value))}
+                className="w-full mt-1 h-1 accent-cyan-500"
+                disabled={generating}
+              />
             </div>
             <div>
-              <label className="text-[10px] text-gray-500 uppercase tracking-wider">Steps</label>
+              <div className="flex items-center justify-between">
+                <label className="text-[10px] text-gray-500 uppercase tracking-wider">Steps</label>
+                <span className="text-[10px] font-semibold text-cyan-400 tabular-nums">{animateSteps}</span>
+              </div>
               <input
                 type="number" value={animateSteps} min={5} max={50}
                 onChange={(e) => setAnimateSteps(Number(e.target.value))}
