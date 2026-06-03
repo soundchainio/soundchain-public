@@ -57,6 +57,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             .filter((v: any) => v.content_type === 'video/mp4' && v.url)
             .sort((a: any, b: any) => (a.bitrate || 0) - (b.bitrate || 0)) // ascending
           if (!mp4s.length) return null
+          // LONG videos (>3 min) at a high bitrate are too heavy to autoplay inline as
+          // a progressive mp4 — a 30-min clip is 100MB+ and just sticks on the poster.
+          // Serve the LIGHTEST variant so it buffers + autoplays fast (a 30-min talk in
+          // the feed at ~480p is fine; tap-through to X for HD). Short clips keep the
+          // higher-quality ≤2.5Mbit pick.
+          const durationMs = m.video_info?.duration_millis || 0
+          if (durationMs > 180_000) return mp4s[0].url
           const light = mp4s.filter((v: any) => (v.bitrate || 0) <= 2_500_000)
           return (light.length ? light[light.length - 1] : mp4s[0]).url
         })(),
