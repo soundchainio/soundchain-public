@@ -5,7 +5,9 @@ Wants=network-online.target
 
 [Service]
 User=soundchain
-ExecStart=/usr/bin/ssh -NT -i /home/soundchain/.ssh/soundchain-key-pair-2025.pem -o ServerAliveInterval=60 -o ExitOnForwardFailure=yes -o StrictHostKeyChecking=accept-new -R 11434:localhost:11434 ubuntu@44.209.136.62
+# NOTE: real host/key/forwards live only in the deployed unit on anvil (not the public repo).
+# Placeholders below — fill EC2_HOST, SSH_KEY_PATH, and the -R forwards on the box.
+ExecStart=/usr/bin/ssh -NT -i <SSH_KEY_PATH> -o ServerAliveInterval=60 -o ExitOnForwardFailure=yes -o StrictHostKeyChecking=accept-new -R 11434:localhost:11434 <EC2_USER>@<EC2_HOST>
 Restart=always
 RestartSec=10
 
