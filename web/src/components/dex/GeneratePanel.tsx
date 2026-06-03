@@ -890,8 +890,8 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
                 <span className="text-[10px] font-semibold text-cyan-400 tabular-nums">{animateDuration}s</span>
               </div>
               <input
-                type="range" min={2} max={180} value={animateDuration}
-                onChange={(e) => setAnimateDuration(Number(e.target.value))}
+                type="range" min={2} max={10} value={animateDuration}
+                onChange={(e) => setAnimateDuration(Math.min(10, Math.max(2, Number(e.target.value) || 2)))}
                 className="w-full mt-1 h-1 accent-cyan-500"
                 disabled={generating}
               />
@@ -914,8 +914,8 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
                 <span className="text-[10px] font-semibold text-cyan-400 tabular-nums">{animateSteps}</span>
               </div>
               <input
-                type="number" value={animateSteps} min={5} max={50}
-                onChange={(e) => setAnimateSteps(Number(e.target.value))}
+                type="number" value={animateSteps} min={5} max={25}
+                onChange={(e) => setAnimateSteps(Math.min(25, Math.max(5, Number(e.target.value) || 5)))}
                 className="w-full mt-1 bg-neutral-900 border border-white/10 rounded px-2 py-1 text-white text-xs"
                 disabled={generating}
               />
