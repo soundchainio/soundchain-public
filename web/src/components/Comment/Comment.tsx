@@ -38,6 +38,8 @@ export const Comment = ({ commentId, onReplyClick }: CommentProps) => {
   const canEdit = isAuthor || me?.roles?.includes(Role.Admin) || me?.roles?.includes(Role.TeamMember)
   const [showShareModal, setShowShareModal] = useState(false)
   const [showStoryModal, setShowStoryModal] = useState(false)
+  // YouTube-style replies: collapsed by default behind the "N replies" toggle
+  const [repliesExpanded, setRepliesExpanded] = useState(false)
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null)
   const deleteComment = async ({ variables }: any) => {
     await fetch('/api/posts/comment-delete', {
@@ -182,32 +184,54 @@ export const Comment = ({ commentId, onReplyClick }: CommentProps) => {
         </div>
       </div>
 
-      {/* Inline replies */}
-      {comment.replies?.nodes && comment.replies.nodes.length > 0 && (
-        <div className="mt-2 ml-8 pl-3 border-l border-white/10 space-y-2">
-          {comment.replies.nodes.map((reply: any) => (
-            <Comment
-              key={reply.id}
-              commentId={reply.id}
-              onReplyClick={onReplyClick}
-            />
-          ))}
-          {(comment.replyCount ?? 0) > comment.replies.nodes.length && (
+      {/* Replies — YouTube-style: collapsed by default behind a "N replies" toggle
+          (replier avatar + true total count + chevron), expands the thread inline.
+          Mirrors the feed/wall InlineComment behavior. */}
+      {(() => {
+        const nodes = comment.replies?.nodes || []
+        const totalReplies = comment.replyCount ?? nodes.length
+        if (totalReplies <= 0) return null
+        const first = nodes[0]
+        return (
+          <div className="mt-1.5 ml-8">
             <button
               onClick={() => {
-                // Navigate to full post view to see all replies
-                if (comment.postId) {
-                  window.location.href = `/posts/${comment.postId}`
-                }
+                if (nodes.length > 0) setRepliesExpanded((v) => !v)
+                else if (comment.postId) window.location.href = `/posts/${comment.postId}`
               }}
-              className="flex items-center gap-1 text-[10px] text-neutral-500 hover:text-cyan-400 transition-colors py-0.5"
+              className="flex items-center gap-1.5 text-cyan-400 hover:text-cyan-300 transition-colors"
             >
-              <ChevronDown className="w-2.5 h-2.5" />
-              View {(comment.replyCount ?? 0) - comment.replies.nodes.length} more {(comment.replyCount ?? 0) - comment.replies.nodes.length === 1 ? 'reply' : 'replies'}
+              {!repliesExpanded && first && (
+                first.isGuest && first.walletAddress ? (
+                  <GuestAvatar walletAddress={first.walletAddress} pixels={18} className="w-[18px] h-[18px] flex-shrink-0" />
+                ) : first.profile ? (
+                  <Avatar profile={first.profile} pixels={18} className="w-[18px] h-[18px] flex-shrink-0" />
+                ) : null
+              )}
+              <span className="text-[11px] font-semibold">
+                {totalReplies} {totalReplies === 1 ? 'reply' : 'replies'}
+              </span>
+              <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-150 ${repliesExpanded ? '' : '-rotate-90'}`} />
             </button>
-          )}
-        </div>
-      )}
+            {repliesExpanded && nodes.length > 0 && (
+              <div className="mt-2 pl-3 border-l-2 border-white/10 space-y-2">
+                {nodes.map((reply: any) => (
+                  <Comment key={reply.id} commentId={reply.id} onReplyClick={onReplyClick} />
+                ))}
+                {(comment.replyCount ?? 0) > nodes.length && (
+                  <button
+                    onClick={() => { if (comment.postId) window.location.href = `/posts/${comment.postId}` }}
+                    className="flex items-center gap-1 text-[10px] text-neutral-500 hover:text-cyan-400 transition-colors py-0.5"
+                  >
+                    <ChevronDown className="w-2.5 h-2.5 -rotate-90" />
+                    View {(comment.replyCount ?? 0) - nodes.length} more {(comment.replyCount ?? 0) - nodes.length === 1 ? 'reply' : 'replies'}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        )
+      })()}
 
       {/* Share Post Modal (DM share) */}
       {portalContainer && showShareModal && createPortal(
