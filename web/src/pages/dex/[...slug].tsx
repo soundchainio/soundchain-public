@@ -7139,7 +7139,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                       The profile-pic banner above stays clean — nothing blocks it. The old
                       separate identity strip (the black dead-band between pic and cover) is
                       gone; its content now lives in the cover overlay where it belongs. */}
-                  <div className="relative min-h-[40vh] w-full overflow-hidden flex flex-col justify-end">
+                  <div className="relative min-h-[180px] w-full overflow-hidden flex flex-col justify-end">
                     {/* Cover art — an absolute background layer so the identity/stats/actions
                         below flow on TOP of it and are NEVER clipped by overflow-hidden, no
                         matter how long the bio is. The parent's flex justify-end pins the
