@@ -768,7 +768,7 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
             <span className="text-[10px] bg-cyan-500/20 text-cyan-400 px-1.5 py-0.5 rounded border border-cyan-500/30">SVD</span>
           </div>
           <p className="text-xs text-gray-500 mb-3">
-            Upload an image and bring it to life with Stable Video Diffusion. Add face references for character consistency. CPU inference — expect 5-30 min per generation.
+            Upload an image and bring it to life with Stable Video Diffusion. Add face references for character consistency. Runs on the RTX 5000 GPU — about 1–2 min per generation.
           </p>
 
           {/* Image Upload */}
@@ -943,7 +943,7 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
             <div className="flex flex-col items-center justify-center gap-2 py-6">
               <Loader2 className="w-5 h-5 text-cyan-400 animate-spin" />
               <span className="text-sm text-gray-400">Animating with SVD...</span>
-              <span className="text-xs text-gray-600">{elapsed}s elapsed (est. 5-30 min on CPU)</span>
+              <span className="text-xs text-gray-600">{elapsed}s elapsed · ~1–2 min on the RTX 5000</span>
             </div>
           )}
 
