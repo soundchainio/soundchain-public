@@ -37,6 +37,7 @@ function createWindow() {
     minHeight: 480,
     backgroundColor: '#06070f',
     title: 'SoundChain · North Star',
+    icon: path.join(__dirname, 'assets', 'icon.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,

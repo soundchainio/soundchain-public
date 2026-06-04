@@ -1,0 +1,30 @@
+{
+  "name": "soundchain-desktop",
+  "productName": "SoundChain",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Desktop wrappers for the SoundChain stack (soundchain/lucy/arena/mint). Cloud-connected v1 — loads the live sites. The sovereign no-server path is ../northstar-node.",
+  "main": "main.js",
+  "scripts": {
+    "start": "node scripts/prep.js soundchain && electron .",
+    "start:lucy": "node scripts/prep.js lucy && electron .",
+    "start:arena": "node scripts/prep.js arena && electron .",
+    "start:mint": "node scripts/prep.js mint && electron .",
+    "dist:soundchain": "node scripts/build.js soundchain --mac",
+    "dist:lucy": "node scripts/build.js lucy --mac",
+    "dist:arena": "node scripts/build.js arena --mac",
+    "dist:mint": "node scripts/build.js mint --mac",
+    "dist:all:mac": "node scripts/build.js soundchain --mac && node scripts/build.js lucy --mac && node scripts/build.js arena --mac && node scripts/build.js mint --mac"
+  },
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "io.soundchain.app",
+    "files": ["main.js", "app.config.json", "assets/icon.png"],
+    "mac": { "category": "public.app-category.music", "target": ["dmg", "zip"], "icon": "assets/icon.icns" },
+    "win": { "target": ["nsis", "portable"], "icon": "assets/icon.ico" },
+    "linux": { "target": ["AppImage"], "icon": "assets/icon.png" }
+  }
+}

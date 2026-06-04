@@ -1,0 +1,6 @@
+{
+  "soundchain": { "appId": "io.soundchain.app",   "productName": "SoundChain",        "url": "https://soundchain.io" },
+  "lucy":       { "appId": "io.soundchain.lucy",  "productName": "Lucy",              "url": "https://lucy.soundchain.io" },
+  "arena":      { "appId": "io.soundchain.arena", "productName": "SoundChain Arena",  "url": "https://arena.soundchain.io" },
+  "mint":       { "appId": "io.soundchain.mint",  "productName": "SoundChain Mint",   "url": "https://mint.soundchain.io" }
+}
