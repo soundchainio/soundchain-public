@@ -816,12 +816,16 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
             }}
           />
 
+          {/* Desktop: media (uploader/preview) left, controls right. Mobile: stacked. */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-4 items-start">
+          {/* LEFT — media */}
+          <div>
           {animateImage ? (
             <div className="relative mb-3">
               <img
                 src={animateImage}
                 alt="Image to animate"
-                className="w-full h-40 object-cover rounded-lg border border-cyan-500/30"
+                className="w-full aspect-[4/5] object-contain bg-black rounded-lg border border-cyan-500/30"
               />
               <button
                 onClick={() => { setAnimateImage(null); setAnimateImageName(''); if (animateFileRef.current) animateFileRef.current.value = '' }}
@@ -836,9 +840,9 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
           ) : (
             <button
               onClick={() => animateFileRef.current?.click()}
-              className="w-full mb-3 border border-dashed border-cyan-500/30 rounded-lg px-3 py-6 flex flex-col items-center justify-center gap-2 hover:bg-cyan-500/5 transition-all"
+              className="w-full mb-3 border border-dashed border-cyan-500/30 rounded-lg px-3 aspect-[4/5] flex flex-col items-center justify-center gap-2 hover:bg-cyan-500/5 transition-all"
             >
-              <Upload className="w-5 h-5 text-cyan-500/50" />
+              <Upload className="w-6 h-6 text-cyan-500/50" />
               <span className="text-xs text-gray-500">Upload image to animate</span>
             </button>
           )}
@@ -910,10 +914,13 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
             </div>
           </div>
 
-          {/* Duration + Motion + Steps — stack 1-col on mobile so the value readouts
-              never collide with the labels or the slider thumb; 3-col on sm+. Each value
-              sits on the label row (justify-between), slider full-width beneath. */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-3 gap-y-3 mb-3">
+          {/* end LEFT column (media) */}
+          </div>
+
+          {/* RIGHT — controls */}
+          <div>
+          {/* Duration + Image Hold + Steps — stacked in the right column */}
+          <div className="space-y-3 mb-3">
             <div>
               <div className="flex items-center justify-between">
                 <label className="text-[10px] text-gray-500 uppercase tracking-wider">Duration</label>
@@ -983,8 +990,12 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
               <p className="text-sm text-red-400">{error}</p>
             </div>
           )}
+          {/* end RIGHT column */}
+          </div>
+          {/* end media/controls GRID */}
+          </div>
 
-          {/* Video Result */}
+          {/* Video Result (full width below the grid) */}
           {animateResult && !generating && (
             <div className="space-y-3 mt-3">
               <div className="relative rounded-lg overflow-hidden border border-cyan-500/20 bg-black">
