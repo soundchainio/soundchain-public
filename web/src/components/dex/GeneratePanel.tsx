@@ -768,7 +768,7 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
             <span className="text-[10px] bg-cyan-500/20 text-cyan-400 px-1.5 py-0.5 rounded border border-cyan-500/30">LTX</span>
           </div>
           <p className="text-xs text-gray-500 mb-3">
-            Upload an image and a prompt — your text drives the motion (LTX-Video, image+text→video). Runs on the RTX 5000 GPU; the first clip after idle is slow (one-time model load), then a couple minutes each.
+            Upload an image and a prompt — your text drives the motion (LTX-Video, image+text→video; your prompt is auto-expanded into rich detail). Runs on the RTX 5000 GPU; first clip after idle is slow (one-time model load), then ~3–5 min each. More descriptive prompts = stronger results.
           </p>
 
           {/* Image Upload */}
@@ -943,7 +943,7 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
             <div className="flex flex-col items-center justify-center gap-2 py-6">
               <Loader2 className="w-5 h-5 text-cyan-400 animate-spin" />
               <span className="text-sm text-gray-400">Animating with LTX...</span>
-              <span className="text-xs text-gray-600">{elapsed}s elapsed · ~1–3 min on the RTX 5000</span>
+              <span className="text-xs text-gray-600">{elapsed}s elapsed · ~3–5 min on the RTX 5000</span>
             </div>
           )}
 
