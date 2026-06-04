@@ -825,7 +825,7 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
               <img
                 src={animateImage}
                 alt="Image to animate"
-                className="w-full aspect-[4/5] object-contain bg-black rounded-lg border border-cyan-500/30"
+                className="w-full h-64 object-contain bg-black rounded-lg border border-cyan-500/30"
               />
               <button
                 onClick={() => { setAnimateImage(null); setAnimateImageName(''); if (animateFileRef.current) animateFileRef.current.value = '' }}
@@ -840,7 +840,7 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
           ) : (
             <button
               onClick={() => animateFileRef.current?.click()}
-              className="w-full mb-3 border border-dashed border-cyan-500/30 rounded-lg px-3 aspect-[4/5] flex flex-col items-center justify-center gap-2 hover:bg-cyan-500/5 transition-all"
+              className="w-full mb-3 border border-dashed border-cyan-500/30 rounded-lg px-3 h-64 flex flex-col items-center justify-center gap-2 hover:bg-cyan-500/5 transition-all"
             >
               <Upload className="w-6 h-6 text-cyan-500/50" />
               <span className="text-xs text-gray-500">Upload image to animate</span>
