@@ -41,9 +41,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const payloadKB = Math.round(JSON.stringify(req.body).length / 1024)
   console.log(`[Animate] steps=${steps || 25} faceMode=${!!face_mode} refs=${refCount} duration=${target_duration || 6}s payload=${payloadKB}KB`)
 
-  // SVD can be very slow on CPU — use full 5 minute timeout
+  // LTX on the RTX 5000 takes several minutes at high steps; allow ~9.5 min
+  // (just under the EC2 relay's 600s nginx read timeout).
   const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), 295_000)
+  const timeout = setTimeout(() => controller.abort(), 570_000)
 
   try {
     const backendRes = await fetch(`${IMAGINE_SERVER_URL}/api/animate`, {
@@ -94,7 +95,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     clearTimeout(timeout)
     if (err.name === 'AbortError') {
       return res.status(504).json({
-        error: 'Animation timed out after 5 minutes. SVD on CPU is slow — try fewer steps (10-15) or restart the server.',
+        error: 'Animation timed out (~9 min). Lower Steps or shorten Duration — high steps on this GPU are slow.',
       })
     }
     const message = err.message || 'Animation failed'
@@ -113,5 +114,5 @@ export const config = {
     bodyParser: { sizeLimit: '50mb' },
     responseLimit: '50mb',
   },
-  maxDuration: 300,
+  maxDuration: 800,
 }
