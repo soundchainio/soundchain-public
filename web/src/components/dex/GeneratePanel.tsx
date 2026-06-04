@@ -765,10 +765,10 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
           <div className="flex items-center gap-2 mb-2">
             <Play className="w-4 h-4 text-cyan-400" />
             <span className="text-sm font-medium text-cyan-300">Animate Images</span>
-            <span className="text-[10px] bg-cyan-500/20 text-cyan-400 px-1.5 py-0.5 rounded border border-cyan-500/30">SVD</span>
+            <span className="text-[10px] bg-cyan-500/20 text-cyan-400 px-1.5 py-0.5 rounded border border-cyan-500/30">LTX</span>
           </div>
           <p className="text-xs text-gray-500 mb-3">
-            Upload an image and bring it to life with Stable Video Diffusion. Add face references for character consistency. Runs on the RTX 5000 GPU — ~1–3 min per generation (fewer steps = faster).
+            Upload an image and a prompt — your text drives the motion (LTX-Video, image+text→video). Runs on the RTX 5000 GPU; the first clip after idle is slow (one-time model load), then a couple minutes each.
           </p>
 
           {/* Image Upload */}
@@ -818,7 +818,7 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
           <textarea
             value={animatePrompt}
             onChange={(e) => setAnimatePrompt(e.target.value)}
-            placeholder="Optional: describe the motion... e.g. slowly panning camera, wind blowing hair"
+            placeholder='Describe the scene & motion — this drives the video. e.g. "waves crashing, camera slowly zooms in, hair blowing in the wind"'
             className="w-full mb-3 bg-neutral-900 border border-white/10 rounded-lg px-3 py-2 text-white text-xs placeholder-gray-500 resize-none focus:outline-none focus:border-cyan-500/50"
             rows={2}
             disabled={generating}
@@ -942,7 +942,7 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
           {generating && (
             <div className="flex flex-col items-center justify-center gap-2 py-6">
               <Loader2 className="w-5 h-5 text-cyan-400 animate-spin" />
-              <span className="text-sm text-gray-400">Animating with SVD...</span>
+              <span className="text-sm text-gray-400">Animating with LTX...</span>
               <span className="text-xs text-gray-600">{elapsed}s elapsed · ~1–3 min on the RTX 5000</span>
             </div>
           )}
@@ -968,7 +968,7 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
                 />
                 <div className="absolute top-2 right-2 flex gap-1.5">
                   <span className="text-[9px] bg-black/70 backdrop-blur-sm text-gray-300 px-1.5 py-0.5 rounded">
-                    SVD
+                    LTX
                   </span>
                   <span className="text-[9px] bg-black/70 backdrop-blur-sm text-gray-300 px-1.5 py-0.5 rounded">
                     {animateResult.duration_seconds}s
