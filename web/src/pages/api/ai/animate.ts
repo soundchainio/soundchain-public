@@ -41,10 +41,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const payloadKB = Math.round(JSON.stringify(req.body).length / 1024)
   console.log(`[Animate] steps=${steps || 25} faceMode=${!!face_mode} refs=${refCount} duration=${target_duration || 6}s payload=${payloadKB}KB`)
 
-  // LTX on the RTX 5000 takes several minutes at high steps; allow ~9.5 min
-  // (just under the EC2 relay's 600s nginx read timeout).
+  // Vercel Pro caps serverless maxDuration at 300s — abort just under that so the
+  // client gets a clean 504 instead of Vercel hard-killing the function.
   const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), 570_000)
+  const timeout = setTimeout(() => controller.abort(), 290_000)
 
   try {
     const backendRes = await fetch(`${IMAGINE_SERVER_URL}/api/animate`, {
@@ -95,7 +95,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     clearTimeout(timeout)
     if (err.name === 'AbortError') {
       return res.status(504).json({
-        error: 'Animation timed out (~9 min). Lower Steps or shorten Duration — high steps on this GPU are slow.',
+        error: 'Animation timed out (~5 min). Lower Steps or shorten Duration — high steps on this GPU are slow.',
       })
     }
     const message = err.message || 'Animation failed'
@@ -114,5 +114,5 @@ export const config = {
     bodyParser: { sizeLimit: '50mb' },
     responseLimit: '50mb',
   },
-  maxDuration: 800,
+  maxDuration: 300,
 }
