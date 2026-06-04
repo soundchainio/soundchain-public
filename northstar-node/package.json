@@ -1,0 +1,27 @@
+{
+  "name": "soundchain-northstar",
+  "productName": "SoundChain North Star",
+  "version": "0.1.0-beta.1",
+  "description": "Sovereign p2p node — a SoundChain feed that syncs laptop-to-laptop over the LAN with NO server (no Vercel, no Atlas, no relay).",
+  "private": true,
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "smoke": "node test/p2p-smoke.js",
+    "dist:mac": "electron-builder --mac",
+    "dist:win": "electron-builder --win",
+    "dist:linux": "electron-builder --linux"
+  },
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "io.soundchain.northstar",
+    "productName": "SoundChain North Star",
+    "files": ["main.js", "preload.js", "src/**/*", "renderer/**/*"],
+    "mac": { "category": "public.app-category.music", "target": ["dmg", "zip"] },
+    "win": { "target": ["nsis", "portable"] },
+    "linux": { "target": ["AppImage"] }
+  }
+}
