@@ -891,8 +891,8 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
                 <span className="text-[10px] font-semibold text-cyan-400 tabular-nums">{animateDuration}s</span>
               </div>
               <input
-                type="range" min={2} max={10} value={animateDuration}
-                onChange={(e) => setAnimateDuration(Math.min(10, Math.max(2, Number(e.target.value) || 2)))}
+                type="range" min={2} max={60} value={animateDuration}
+                onChange={(e) => setAnimateDuration(Math.min(60, Math.max(2, Number(e.target.value) || 2)))}
                 className="w-full mt-1 h-1 accent-cyan-500"
                 disabled={generating}
               />
