@@ -5,7 +5,7 @@ import { Avatar, AvatarImage, AvatarFallback } from 'components/ui/avatar'
 import { Button } from 'components/ui/button'
 import {
   Send, Trash2, Pin, MessageCircle, ChevronDown, Play, Heart,
-  Users, BadgeCheck, Music, Disc3, Headphones, TrendingUp, ExternalLink, Minus, Plus,
+  Users, Music, Disc3, Headphones, TrendingUp, ExternalLink, Minus, Plus, ListMusic,
   Smile, Sparkles, Link2, X, Paperclip, Share2, Upload, Image as ImageIcon, Film, Video, Pencil, Check,
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
@@ -20,6 +20,7 @@ import { StickerPicker } from 'components/StickerPicker'
 import { GifPicker } from 'components/GifPicker'
 import { AutoplayVideo } from 'components/AutoplayMedia'
 import { useUpload } from 'hooks/useUpload'
+import { useGetUserPlaylists } from 'hooks/useUserPlaylistsDirect'
 import { SharePostModal } from 'components/modals/SharePostModal'
 import { CreateStoryModal } from 'components/dex/CreateStoryModal'
 import { MentionAutocomplete } from 'components/MentionAutocomplete'
@@ -730,9 +731,13 @@ export function ProfileWall({ profileId, isOwnProfile: isOwnProfileProp, viewerP
   }, [profileId, followingCalled, followersCalled, fetchFollowing, fetchFollowers])
 
   const userTracks = userTracksData?.groupedTracks?.nodes || []
-  const following = followingData?.following?.nodes?.map((n: any) => n.followedProfile).filter(Boolean) || []
   const followersCount = followersData?.followers?.pageInfo?.totalCount || 0
   const followingCount = followingData?.following?.pageInfo?.totalCount || 0
+
+  // THIS USER's playlists (Vercel-direct). Fills the left rail under "My Music"
+  // — the curated "My Circle" lives in the top ProfileReels strip, not here.
+  const { data: playlistsData } = useGetUserPlaylists({ profileId, skip: !profileId })
+  const playlists = playlistsData?.getUserPlaylists?.nodes || []
 
   const handlePlayTrack = (tracks: any[], index: number) => {
     const playlist: Song[] = tracks.map(t => ({
@@ -1673,7 +1678,7 @@ export function ProfileWall({ profileId, isOwnProfile: isOwnProfileProp, viewerP
 
       </div>{/* end CENTER */}
 
-      {/* LEFT RAIL — Their Music + Following (desktop); stacks under the wall on mobile */}
+      {/* LEFT RAIL — Their Music + Playlists (desktop); stacks under the wall on mobile */}
       <aside className="w-full lg:w-[300px] lg:order-1 lg:flex-shrink-0 min-w-0 space-y-3">
 
         {/* Their Music */}
@@ -1725,50 +1730,59 @@ export function ProfileWall({ profileId, isOwnProfile: isOwnProfileProp, viewerP
             </div>
         </div>
 
-        {/* Their Friends / Following */}
-        <div className="rounded-2xl border border-purple-500/20 bg-gradient-to-br from-neutral-900/80 via-purple-950/10 to-neutral-900/80 p-4 backdrop-blur-sm">
-          <button onClick={() => toggle('circle')} className="flex items-center gap-2 w-full">
-            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
-              <Users className="w-3.5 h-3.5 text-white" />
+        {/* Their Playlists — curated "My Circle" lives in the top reels strip, not here */}
+        <div className="rounded-2xl border border-emerald-500/20 bg-gradient-to-br from-neutral-900/80 via-emerald-950/10 to-neutral-900/80 p-4 backdrop-blur-sm">
+          <button onClick={() => toggle('playlists')} className="flex items-center gap-2 w-full">
+            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center flex-shrink-0">
+              <ListMusic className="w-3.5 h-3.5 text-white" />
             </div>
-            <h3 className="text-white font-bold text-sm">{isOwnProfile ? 'My Circle' : `${displayName}'s Circle`}</h3>
-            <span className="text-[10px] text-purple-400">
-              {followingCount} following
+            <h3 className="text-white font-bold text-sm">{isOwnProfile ? 'My Playlists' : `${displayName}'s Playlists`}</h3>
+            <span className="text-[10px] text-emerald-400">
+              {playlists.length} {playlists.length === 1 ? 'playlist' : 'playlists'}
             </span>
             <span className="ml-auto w-5 h-5 rounded-full bg-white/10 flex items-center justify-center md:hidden">
-              {collapsed.circle ? <Plus className="w-3 h-3 text-gray-400" /> : <Minus className="w-3 h-3 text-gray-400" />}
+              {collapsed.playlists ? <Plus className="w-3 h-3 text-gray-400" /> : <Minus className="w-3 h-3 text-gray-400" />}
             </span>
           </button>
-          <div className={`${collapsed.circle ? 'hidden md:block' : ''} mt-3`}>
-              {following.length > 0 ? (
-                <div className="grid grid-cols-4 gap-2">
-                  {following.slice(0, 8).map((user: any) => (
+          <div className={`${collapsed.playlists ? 'hidden md:block' : ''} mt-3`}>
+              {playlists.length > 0 ? (
+                <div className="space-y-1.5">
+                  {playlists.slice(0, 6).map((pl: any) => (
                     <Link
-                      key={user.id}
-                      href={user.userHandle ? `/users/${user.userHandle}` : '#'}
-                      className="flex flex-col items-center gap-1 p-1.5 rounded-xl hover:bg-white/5 transition-colors group"
+                      key={pl.id}
+                      href={`/dex/playlist/${pl.id}`}
+                      className="flex items-center gap-2.5 p-1.5 rounded-xl hover:bg-white/5 transition-colors group"
                     >
-                      <div className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-purple-500/20 group-hover:ring-purple-500/50 transition-all">
-                        <img
-                          src={user.profilePicture || '/images/default-avatar.png'}
-                          alt={user.displayName || user.userHandle || ''}
-                          className="w-full h-full object-cover"
-                        />
+                      <div className="w-9 h-9 rounded-lg overflow-hidden flex-shrink-0 ring-1 ring-emerald-500/20 group-hover:ring-emerald-500/50 transition-all">
+                        {pl.artworkUrl ? (
+                          <img src={pl.artworkUrl} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center">
+                            <ListMusic className="w-4 h-4 text-white" />
+                          </div>
+                        )}
                       </div>
-                      <div className="flex items-center gap-0.5">
-                        <span className="text-[10px] text-gray-400 truncate max-w-[60px] group-hover:text-white transition-colors">
-                          {user.displayName || user.userHandle}
-                        </span>
-                        {user.verified && <BadgeCheck className="w-2.5 h-2.5 text-cyan-400 flex-shrink-0" />}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white text-xs font-medium truncate group-hover:text-emerald-400 transition-colors">{pl.title || 'Untitled playlist'}</p>
+                        <p className="text-gray-500 text-[10px] flex items-center gap-0.5 truncate">
+                          <Music className="w-2.5 h-2.5" />
+                          {pl.tracks?.nodes?.length || 0} tracks
+                        </p>
                       </div>
                     </Link>
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-600 text-xs text-center py-4">
-                  <Heart className="w-6 h-6 mx-auto mb-1 opacity-30" />
-                  {isOwnProfile ? 'Follow artists to fill your circle!' : 'Not following anyone yet'}
-                </p>
+                <div className="text-center py-4">
+                  <ListMusic className="w-6 h-6 mx-auto mb-1 text-gray-600 opacity-30" />
+                  {isOwnProfile ? (
+                    <Link href="/playlist" className="inline-block mt-1 text-emerald-400 hover:text-emerald-300 text-xs font-medium">
+                      Create your first playlist
+                    </Link>
+                  ) : (
+                    <p className="text-gray-600 text-xs">No playlists yet</p>
+                  )}
+                </div>
               )}
             </div>
         </div>

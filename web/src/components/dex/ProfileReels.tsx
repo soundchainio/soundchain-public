@@ -4,6 +4,7 @@ import { useRouter } from 'next/router'
 import { ChevronLeft, ChevronRight, Sparkles, Film, Users, Plus, X, Search, UserPlus, Check, Loader2, Pencil } from 'lucide-react'
 import { useMe } from 'hooks/useMe'
 import { useFollowing as useFollowingQuery } from 'hooks/useUsersSocialDirect'  // Phase 7e — Vercel-direct
+import { usePointerReorder } from 'hooks/usePointerReorder'
 import { StoryViewer } from './StoryViewer'
 import { CreateStoryModal } from './CreateStoryModal'
 
@@ -212,16 +213,20 @@ const CircleAvatar = ({
   bubble,
   manageMode,
   removing,
+  dragging,
+  itemProps,
   onOpen,
   onRemove,
 }: {
   bubble: StoryBubble
   manageMode?: boolean
   removing?: boolean
+  dragging?: boolean
+  itemProps?: Record<string, any>
   onOpen: (bubble: StoryBubble) => void
   onRemove?: (bubble: StoryBubble) => void
 }) => (
-  <div className="relative flex-shrink-0">
+  <div className={`relative flex-shrink-0 transition-opacity ${dragging ? 'opacity-30' : ''}`} {...itemProps}>
     <button
       onClick={() => { if (!manageMode) onOpen(bubble) }}
       className="flex flex-col items-center gap-1 group"
@@ -262,6 +267,7 @@ const CircleAvatar = ({
     </button>
     {manageMode && onRemove && (
       <button
+        data-no-drag
         onClick={(e) => { e.stopPropagation(); onRemove(bubble) }}
         title="Remove from circle"
         disabled={removing}
@@ -283,6 +289,8 @@ const CircleGrid = ({
   emptyMessage,
   manageMode,
   removingId,
+  dragId,
+  getItemProps,
   addButton,
   leadingPill,
   onOpen,
@@ -295,6 +303,8 @@ const CircleGrid = ({
   emptyMessage: string
   manageMode?: boolean
   removingId?: string | null
+  dragId?: string | null
+  getItemProps?: (id: string) => Record<string, any>
   addButton?: React.ReactNode
   leadingPill?: React.ReactNode
   onOpen: (bubble: StoryBubble) => void
@@ -326,13 +336,13 @@ const CircleGrid = ({
             <div className="flex justify-center gap-1 sm:gap-3">
               {leadingPill}
               {topRow.map((b) => (
-                <CircleAvatar key={b.id} bubble={b} manageMode={manageMode} removing={removingId === b.id} onOpen={onOpen} onRemove={onRemove} />
+                <CircleAvatar key={b.id} bubble={b} manageMode={manageMode} removing={removingId === b.id} dragging={dragId === b.id} itemProps={getItemProps?.(b.id)} onOpen={onOpen} onRemove={onRemove} />
               ))}
             </div>
             {bottomRow.length > 0 && (
               <div className="flex justify-center gap-1 sm:gap-3">
                 {bottomRow.map((b) => (
-                  <CircleAvatar key={b.id} bubble={b} manageMode={manageMode} removing={removingId === b.id} onOpen={onOpen} onRemove={onRemove} />
+                  <CircleAvatar key={b.id} bubble={b} manageMode={manageMode} removing={removingId === b.id} dragging={dragId === b.id} itemProps={getItemProps?.(b.id)} onOpen={onOpen} onRemove={onRemove} />
                 ))}
               </div>
             )}
@@ -341,7 +351,7 @@ const CircleGrid = ({
           <div className="hidden md:flex items-start gap-4 lg:gap-5 px-1 overflow-x-auto">
             {leadingPill}
             {capped.map((b) => (
-              <CircleAvatar key={b.id} bubble={b} manageMode={manageMode} removing={removingId === b.id} onOpen={onOpen} onRemove={onRemove} />
+              <CircleAvatar key={b.id} bubble={b} manageMode={manageMode} removing={removingId === b.id} dragging={dragId === b.id} itemProps={getItemProps?.(b.id)} onOpen={onOpen} onRemove={onRemove} />
             ))}
           </div>
         </>
@@ -559,14 +569,27 @@ export const ProfileReels = ({ profileId, profileHandle, profileDisplayName, pro
 
   // Persist the curated circle to topFriends (Vercel-direct, own profile only). Bump
   // resolvedKeyRef so the resolver effect won't clobber the optimistic local state.
-  const persistCircle = useCallback((profiles: CircleProfile[]) => {
-    resolvedKeyRef.current = profiles.map((p) => p.id).join(',')
+  const persistCircleIds = useCallback((ids: string[]) => {
+    resolvedKeyRef.current = ids.join(',')
     fetch('/api/profile/update', {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fields: { topFriends: profiles.map((p) => p.id) } }),
+      body: JSON.stringify({ fields: { topFriends: ids } }),
     }).catch(() => {})
+  }, [])
+  const persistCircle = useCallback((profiles: CircleProfile[]) => {
+    persistCircleIds(profiles.map((p) => p.id))
+  }, [persistCircleIds])
+
+  // Reorder the curated circle locally by id order (drag-to-reorder). Guards on
+  // length so a stale id list can never silently drop a member.
+  const applyCircleOrder = useCallback((ids: string[]) => {
+    setCircleProfiles((prev) => {
+      const byId = new Map(prev.map((p) => [p.id, p]))
+      const next = ids.map((id) => byId.get(id)).filter(Boolean) as CircleProfile[]
+      return next.length === prev.length ? next : prev
+    })
   }, [])
 
   const handleAddToCircle = useCallback((p: CircleProfile) => {
@@ -577,6 +600,17 @@ export const ProfileReels = ({ profileId, profileHandle, profileDisplayName, pro
       return next
     })
   }, [persistCircle])
+
+  // Drag-to-reorder the curated circle (own profile, Edit mode only). Desktop =
+  // hold mouse + drag; mobile = tap-hold + move. Live reorder while dragging,
+  // persist to topFriends on drop.
+  const circleOrder = useMemo(() => circleProfiles.map((p) => p.id), [circleProfiles])
+  const { dragId, dragPos, getItemProps } = usePointerReorder({
+    enabled: isOwnProfile && circleEdit,
+    order: circleOrder,
+    onReorder: applyCircleOrder,
+    onCommit: (ids) => { applyCircleOrder(ids); persistCircleIds(ids) },
+  })
 
   // Group active stories by profile id
   const storiesByProfile = useMemo(() => {
@@ -608,25 +642,27 @@ export const ProfileReels = ({ profileId, profileHandle, profileDisplayName, pro
 
   // Circle bubbles = curated members; story ring + tappable when they have an active story
   const circleBubbles: StoryBubble[] = useMemo(() => {
-    return circleProfiles
-      .map((m) => {
-        const memberStories = storiesByProfile[m.id] || []
-        // prefer denormalized creator avatar from the story if profile pic is missing
-        const avatar = m.profilePicture || memberStories[0]?.creatorAvatarUrl || memberStories[0]?.profile?.profilePicture
-        return {
-          id: m.id,
-          profileId: m.id,
-          profilePicture: avatar,
-          displayName: m.displayName,
-          userHandle: m.userHandle,
-          isPermanent: memberStories.some((s: any) => s.isPermanent),
-          storyCount: memberStories.length,
-          hasStory: memberStories.length > 0,
-        }
-      })
-      // friends with active stories first, then the rest of the circle
-      .sort((a: StoryBubble, b: StoryBubble) => Number(b.hasStory) - Number(a.hasStory))
-  }, [circleProfiles, storiesByProfile])
+    const mapped = circleProfiles.map((m) => {
+      const memberStories = storiesByProfile[m.id] || []
+      // prefer denormalized creator avatar from the story if profile pic is missing
+      const avatar = m.profilePicture || memberStories[0]?.creatorAvatarUrl || memberStories[0]?.profile?.profilePicture
+      return {
+        id: m.id,
+        profileId: m.id,
+        profilePicture: avatar,
+        displayName: m.displayName,
+        userHandle: m.userHandle,
+        isPermanent: memberStories.some((s: any) => s.isPermanent),
+        storyCount: memberStories.length,
+        hasStory: memberStories.length > 0,
+      }
+    })
+    // In Edit mode show the raw curated order so drag-to-reorder is WYSIWYG.
+    // Otherwise float friends-with-active-stories to the front (stable sort keeps
+    // the user's chosen order within each group).
+    if (isOwnProfile && circleEdit) return mapped
+    return mapped.sort((a: StoryBubble, b: StoryBubble) => Number(b.hasStory) - Number(a.hasStory))
+  }, [circleProfiles, storiesByProfile, isOwnProfile, circleEdit])
 
   // StoryViewer data — all active stories grouped by profile (own + circle)
   const allStoryUsers = useMemo(() => {
@@ -716,6 +752,9 @@ export const ProfileReels = ({ profileId, profileHandle, profileDisplayName, pro
   // Edit toggle only — adding happens via the inline "+" pill above.
   const circleHeaderControls = isOwnProfile && circleProfiles.length > 0 ? (
     <div className="flex items-center gap-1.5">
+      {circleEdit && circleProfiles.length > 1 && (
+        <span className="hidden sm:inline text-[9px] text-cyan-400/70 mr-0.5">drag to reorder</span>
+      )}
       <button
         onClick={() => setCircleEdit((v) => !v)}
         className={`flex items-center gap-1 px-2 py-1 rounded-full border transition-colors ${
@@ -752,6 +791,8 @@ export const ProfileReels = ({ profileId, profileHandle, profileDisplayName, pro
         emptyMessage={isOwnProfile ? 'Tap + to add people to your circle' : 'No one in their circle yet'}
         manageMode={isOwnProfile && circleEdit}
         removingId={removingId}
+        dragId={dragId}
+        getItemProps={getItemProps}
         addButton={circleHeaderControls}
         leadingPill={addCirclePill}
         onOpen={handleCircleOpen}
@@ -786,6 +827,27 @@ export const ProfileReels = ({ profileId, profileHandle, profileDisplayName, pro
         circleIds={circleIdSet}
         onAdd={handleAddToCircle}
       />
+
+      {/* Drag ghost — follows the pointer while reordering. pointer-events:none so the
+          elementFromPoint hit-test sees the avatar underneath. */}
+      {portalContainer && dragId && dragPos && (() => {
+        const b = circleBubbles.find((x) => x.id === dragId)
+        if (!b) return null
+        return createPortal(
+          <div
+            style={{ position: 'fixed', left: dragPos.x, top: dragPos.y, transform: 'translate(-50%, -50%) scale(1.12)', pointerEvents: 'none', zIndex: 9999 }}
+          >
+            <div className="w-12 h-12 lg:w-14 lg:h-14 rounded-full p-[2px] bg-gradient-to-tr from-purple-500 via-pink-500 to-cyan-500 shadow-2xl shadow-purple-500/50">
+              <div className="w-full h-full rounded-full p-[2px] bg-black">
+                <div className="w-full h-full rounded-full overflow-hidden bg-neutral-900">
+                  <img src={getAvatarUrl(b.profilePicture, b.profileId)} alt="" className="w-full h-full object-cover" />
+                </div>
+              </div>
+            </div>
+          </div>,
+          portalContainer,
+        )
+      })()}
     </div>
   )
 }
