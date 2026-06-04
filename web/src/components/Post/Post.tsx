@@ -5,7 +5,8 @@ import { Ellipsis } from 'icons/Ellipsis'
 import { PostQuery, Role, Track } from 'lib/graphql'
 import Link from 'next/link'
 import ReactPlayer from 'react-player'
-import { Clock, Lock, MessageCircle, ExternalLink, ChevronDown } from 'lucide-react'
+import { Clock, Lock, MessageCircle, ExternalLink, ChevronDown, Trash2 } from 'lucide-react'
+import { toast } from 'react-toastify'
 import { AuthorActionsType } from 'types/AuthorActionsType'
 import { canPlayWithReactPlayer, IdentifySource } from 'utils/NormalizeEmbedLinks'
 import { MediaProvider } from 'types/MediaProvider'
@@ -745,13 +746,34 @@ const InlineComment = ({ comment, onReplyClick }: {
   comment: any
   onReplyClick?: (authorName?: string) => void
 }) => {
+  const me = useMe()
   const isGuest = comment.isGuest && comment.walletAddress
   const hasProfile = !!comment.profile
   // YouTube-style replies: collapsed by default, expand/collapse via the "N replies" toggle
   const totalReplies = comment.replyCount ?? comment.replies?.length ?? 0
   const [repliesExpanded, setRepliesExpanded] = useState(false)
+  const [deleted, setDeleted] = useState(false)
 
-  if (comment.deleted) return null
+  const isAuthor = !isGuest && hasProfile && comment.profile?.id === me?.profile?.id
+  const canDelete = isAuthor || me?.roles?.includes(Role.Admin) || me?.roles?.includes(Role.TeamMember)
+  const handleDelete = async () => {
+    if (!confirm('Delete this comment?')) return
+    try {
+      const r = await fetch('/api/posts/comment-delete', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ commentId: comment.id }),
+      })
+      if (!r.ok) throw new Error('delete failed')
+      setDeleted(true)
+      toast.success('Comment deleted')
+    } catch {
+      toast.error('Could not delete comment')
+    }
+  }
+
+  if (deleted || comment.deleted) return null
 
   return (
     <div className="flex items-start gap-2">
@@ -802,6 +824,16 @@ const InlineComment = ({ comment, onReplyClick }: {
             >
               <MessageCircle className="w-2.5 h-2.5" />
               Reply
+            </button>
+          )}
+          {canDelete && (
+            <button
+              onClick={handleDelete}
+              className="flex items-center gap-1 text-gray-600 hover:text-red-400 transition-colors text-[10px]"
+              title="Delete comment"
+            >
+              <Trash2 className="w-2.5 h-2.5" />
+              Delete
             </button>
           )}
         </div>
