@@ -274,7 +274,7 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
   const [animateImageName, setAnimateImageName] = useState('')
   const [animateDuration, setAnimateDuration] = useState(6)
   const [animateMotion, setAnimateMotion] = useState(60) // low-motion default keeps the source photo intact (was 127 = heavy warp/blur)
-  const [animateSteps, setAnimateSteps] = useState(25)
+  const [animateSteps, setAnimateSteps] = useState(30)
   const [animatePrompt, setAnimatePrompt] = useState('')
   const [animateResult, setAnimateResult] = useState<{
     video: string
@@ -572,6 +572,7 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
           num_frames: 25, // SVD-XT native max real frames (was defaulting to 14 ≈ 2s of motion)
           target_duration: animateDuration,
           motion_bucket_id: animateMotion,
+          image_hold: animateMotion,
           steps: animateSteps,
           nsfw: nsfwMode,
           ...(faceMode && refImages.length > 0 ? {
@@ -899,11 +900,11 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
             </div>
             <div>
               <div className="flex items-center justify-between">
-                <label className="text-[10px] text-gray-500 uppercase tracking-wider">Motion</label>
+                <label className="text-[10px] text-gray-500 uppercase tracking-wider" title="High = keeps your image/face intact; Low = lets the prompt reshape the scene more">Image Hold</label>
                 <span className="text-[10px] font-semibold text-cyan-400 tabular-nums">{animateMotion}</span>
               </div>
               <input
-                type="range" min={1} max={255} value={animateMotion}
+                type="range" min={0} max={100} value={animateMotion}
                 onChange={(e) => setAnimateMotion(Number(e.target.value))}
                 className="w-full mt-1 h-1 accent-cyan-500"
                 disabled={generating}
@@ -915,9 +916,9 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
                 <span className="text-[10px] font-semibold text-cyan-400 tabular-nums">{animateSteps}</span>
               </div>
               <input
-                type="number" value={animateSteps} min={5} max={25}
-                onChange={(e) => setAnimateSteps(Math.min(25, Math.max(5, Number(e.target.value) || 5)))}
-                className="w-full mt-1 bg-neutral-900 border border-white/10 rounded px-2 py-1 text-white text-xs"
+                type="range" min={5} max={60} value={animateSteps}
+                onChange={(e) => setAnimateSteps(Number(e.target.value))}
+                className="w-full mt-1 h-1 accent-cyan-500"
                 disabled={generating}
               />
             </div>
