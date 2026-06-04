@@ -302,7 +302,7 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
   const [animateImageName, setAnimateImageName] = useState('')
   const [animateDuration, setAnimateDuration] = useState(6)
   const [animateMotion, setAnimateMotion] = useState(60) // low-motion default keeps the source photo intact (was 127 = heavy warp/blur)
-  const [animateSteps, setAnimateSteps] = useState(30)
+  const [animateSteps, setAnimateSteps] = useState(20)
   const [animatePrompt, setAnimatePrompt] = useState('')
   const [animateResult, setAnimateResult] = useState<{
     video: string
@@ -589,51 +589,69 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
 
     setGenerating(true)
     setError(null)
+    setAnimateResult(null)
     abortRef.current = new AbortController()
+    let cancelled = false
+    const onAbort = () => { cancelled = true }
+    abortRef.current.signal.addEventListener('abort', onAbort)
 
     try {
+      // 1) submit the Wan i2v job (returns a job_id immediately)
       const res = await fetch('/api/ai/animate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           image: animateImage,
           prompt: animatePrompt || '',
-          num_frames: 25, // SVD-XT native max real frames (was defaulting to 14 ≈ 2s of motion)
           target_duration: animateDuration,
-          image_hold: animateMotion,
           steps: animateSteps,
           nsfw: nsfwMode,
-          ...(faceMode && refImages.length > 0 ? {
-            reference_images: refImages.map(r => r.data),
-            face_mode: true,
-            ip_adapter_scale: ipScale,
-          } : {}),
         }),
         signal: abortRef.current.signal,
       })
+      let sub: any
+      try { sub = JSON.parse(await res.text()) } catch { setError('Server error starting animation'); return }
+      if (!res.ok || !sub.job_id) { setError(sub.error || 'Animation failed to start'); return }
 
-      const text = await res.text()
-      let data: any
-      try {
-        data = JSON.parse(text)
-      } catch {
-        setError(`Server error: ${text.slice(0, 200)}`)
-        return
+      // 2) poll status until the video is ready (Wan clips take minutes)
+      const jobId = sub.job_id
+      const startedAt = Date.now()
+      const maxMs = 12 * 60 * 1000
+      while (!cancelled) {
+        await new Promise((r) => setTimeout(r, 5000))
+        if (cancelled) break
+        if (Date.now() - startedAt > maxMs) { setError('Animation took too long — try a shorter clip.'); break }
+        let st: any
+        try {
+          const sr = await fetch(`/api/ai/animate/status?job_id=${encodeURIComponent(jobId)}`, { signal: abortRef.current.signal })
+          st = await sr.json()
+        } catch { continue } // transient — keep polling
+        if (st.done) {
+          if (st.failed) {
+            setError(st.error || 'Animation failed')
+          } else if (st.video) {
+            setAnimateResult({
+              video: st.video,
+              duration_seconds: Math.round((sub.length || 0) / (sub.fps || 24) * 10) / 10,
+              num_frames: sub.length || 0,
+              fps: sub.fps || 24,
+              time_seconds: Math.round((Date.now() - startedAt) / 1000),
+              width: sub.width || 0,
+              height: sub.height || 0,
+            })
+          }
+          break
+        }
       }
-      if (!res.ok) {
-        setError(data.error || 'Animation failed')
-        return
-      }
-
-      setAnimateResult(data)
     } catch (err: any) {
       if (err.name !== 'AbortError') {
         setError(err.message || 'Network error')
       }
     } finally {
+      abortRef.current?.signal.removeEventListener('abort', onAbort)
       setGenerating(false)
     }
-  }, [animateImage, animatePrompt, animateDuration, animateMotion, animateSteps, nsfwMode, faceMode, refImages, ipScale])
+  }, [animateImage, animatePrompt, animateDuration, animateSteps, nsfwMode])
 
   const handleSaveVideo = useCallback(() => {
     if (!animateResult?.video) return
@@ -794,10 +812,10 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
           <div className="flex items-center gap-2 mb-2">
             <Play className="w-4 h-4 text-cyan-400" />
             <span className="text-sm font-medium text-cyan-300">Animate Images</span>
-            <span className="text-[10px] bg-cyan-500/20 text-cyan-400 px-1.5 py-0.5 rounded border border-cyan-500/30">LTX</span>
+            <span className="text-[10px] bg-cyan-500/20 text-cyan-400 px-1.5 py-0.5 rounded border border-cyan-500/30">Wan 2.2</span>
           </div>
           <p className="text-xs text-gray-500 mb-3">
-            Upload an image and a prompt — your text drives the motion (LTX-Video, image+text→video; your prompt is auto-expanded into rich detail). Runs on the RTX 5000 GPU; first clip after idle is slow (one-time model load), then ~3–5 min each. More descriptive prompts = stronger results.
+            Upload an image and a prompt — your text drives the motion (Wan 2.2, image+text→video; your prompt is auto-expanded into rich detail). Runs fully on the RTX 5000 GPU; clips take a few minutes — it generates in the background, so you can keep using the app while it works.
           </p>
 
           {/* Image Upload */}
@@ -927,8 +945,8 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
                 <span className="text-[10px] font-semibold text-cyan-400 tabular-nums">{animateDuration}s</span>
               </div>
               <input
-                type="range" min={2} max={60} value={animateDuration}
-                onChange={(e) => setAnimateDuration(Math.min(60, Math.max(2, Number(e.target.value) || 2)))}
+                type="range" min={2} max={8} value={animateDuration}
+                onChange={(e) => setAnimateDuration(Math.min(8, Math.max(2, Number(e.target.value) || 2)))}
                 className="w-full mt-1 h-1 accent-cyan-500"
                 disabled={generating}
               />
@@ -951,7 +969,7 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
                 <span className="text-[10px] font-semibold text-cyan-400 tabular-nums">{animateSteps}</span>
               </div>
               <input
-                type="range" min={5} max={60} value={animateSteps}
+                type="range" min={8} max={30} value={animateSteps}
                 onChange={(e) => setAnimateSteps(Number(e.target.value))}
                 className="w-full mt-1 h-1 accent-cyan-500"
                 disabled={generating}
@@ -978,8 +996,8 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
           {generating && (
             <div className="flex flex-col items-center justify-center gap-2 py-6">
               <Loader2 className="w-5 h-5 text-cyan-400 animate-spin" />
-              <span className="text-sm text-gray-400">Animating with LTX...</span>
-              <span className="text-xs text-gray-600">{elapsed}s elapsed · ~3–5 min on the RTX 5000</span>
+              <span className="text-sm text-gray-400">Generating with Wan 2.2...</span>
+              <span className="text-xs text-gray-600">{elapsed}s elapsed · runs in the background (~a few min)</span>
             </div>
           )}
 
@@ -1008,7 +1026,7 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
                 />
                 <div className="absolute top-2 right-2 flex gap-1.5">
                   <span className="text-[9px] bg-black/70 backdrop-blur-sm text-gray-300 px-1.5 py-0.5 rounded">
-                    LTX
+                    Wan 2.2
                   </span>
                   <span className="text-[9px] bg-black/70 backdrop-blur-sm text-gray-300 px-1.5 py-0.5 rounded">
                     {animateResult.duration_seconds}s

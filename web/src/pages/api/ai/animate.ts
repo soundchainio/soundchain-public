@@ -7,112 +7,58 @@ function isAuthenticated(req: NextApiRequest): boolean {
 
 const IMAGINE_SERVER_URL = process.env.IMAGINE_SERVER_URL || 'http://localhost:8190'
 
+// Async submit: Wan 2.2 i2v clips take minutes (over Vercel's 300s cap), so this just
+// SUBMITS the job and returns a job_id. The client polls /api/ai/animate/status.
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
-
   if (!isAuthenticated(req)) {
     return res.status(403).json({ error: 'Animate is in beta. Stay tuned.' })
   }
 
-  const {
-    image,
-    prompt,
-    num_frames,
-    fps,
-    steps,
-    seed,
-    motion_bucket_id,
-    noise_aug_strength,
-    decode_chunk_size,
-    target_duration,
-    reference_images,
-    face_mode,
-    ip_adapter_scale,
-    nsfw,
-  } = req.body
-
+  const { image, prompt, steps, seed, target_duration, nsfw } = req.body
   if (!image || typeof image !== 'string') {
     return res.status(400).json({ error: 'image is required (base64)' })
   }
 
-  const refCount = reference_images?.length || 0
-  const payloadKB = Math.round(JSON.stringify(req.body).length / 1024)
-  console.log(`[Animate] steps=${steps || 25} faceMode=${!!face_mode} refs=${refCount} duration=${target_duration || 6}s payload=${payloadKB}KB`)
-
-  // Vercel Pro caps serverless maxDuration at 300s — abort just under that so the
-  // client gets a clean 504 instead of Vercel hard-killing the function.
   const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), 290_000)
-
+  const timeout = setTimeout(() => controller.abort(), 50_000)
   try {
-    const backendRes = await fetch(`${IMAGINE_SERVER_URL}/api/animate`, {
+    const r = await fetch(`${IMAGINE_SERVER_URL}/api/animate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         image,
         prompt: prompt || '',
-        num_frames: num_frames || 14,
-        fps: fps || 7,
-        steps: steps || 25,
+        steps: steps || 20,
         seed: seed ?? -1,
-        motion_bucket_id: motion_bucket_id || 127,
-        noise_aug_strength: noise_aug_strength ?? 0.02,
-        decode_chunk_size: decode_chunk_size || 4,
-        target_duration: target_duration || 6,
-        reference_images: reference_images || [],
-        face_mode: face_mode || false,
-        ip_adapter_scale: ip_adapter_scale ?? 0.6,
+        target_duration: target_duration || 4,
         nsfw: nsfw || false,
       }),
       signal: controller.signal,
     })
-
     clearTimeout(timeout)
-
-    if (!backendRes.ok) {
-      const errText = await backendRes.text()
-      let errMsg = `Imagine server error: ${backendRes.status}`
-      try {
-        const errJson = JSON.parse(errText)
-        const d = errJson.detail
-        // FastAPI validation errors return `detail` as an array of objects — stringify it so
-        // the .toLowerCase() below never throws "n.toLowerCase is not a function".
-        errMsg = typeof d === 'string' ? d : (d ? JSON.stringify(d) : errMsg)
-      } catch {
-        errMsg = errText || errMsg
-      }
-      if (errMsg.toLowerCase().includes('out of memory') || errMsg.toLowerCase().includes('oom')) {
-        errMsg = `Server ran out of memory — try fewer frames or restart the server. (${errMsg})`
-      }
-      return res.status(backendRes.status >= 500 ? 503 : backendRes.status).json({ error: errMsg })
+    const text = await r.text()
+    let data: any
+    try { data = JSON.parse(text) } catch { data = { error: text.slice(0, 200) } }
+    if (!r.ok || !data.job_id) {
+      return res.status(r.status >= 500 ? 503 : r.status).json({ error: data.detail || data.error || 'Failed to start animation' })
     }
-
-    const data = await backendRes.json()
-    return res.status(200).json(data)
+    return res.status(200).json(data) // { job_id, seed, width, height, length, fps }
   } catch (err: any) {
     clearTimeout(timeout)
-    if (err.name === 'AbortError') {
-      return res.status(504).json({
-        error: 'Animation timed out (~5 min). Lower Steps or shorten Duration — high steps on this GPU are slow.',
-      })
+    const msg = err.name === 'AbortError' ? 'Animate server did not respond' : (err.message || 'Failed to start animation')
+    if (msg.includes('ECONNREFUSED') || msg.includes('fetch failed')) {
+      return res.status(503).json({ error: 'Cannot reach Imagine Server. Is it running?' })
     }
-    const message = err.message || 'Animation failed'
-    if (message.includes('ECONNREFUSED') || message.includes('fetch failed')) {
-      return res.status(503).json({
-        error: 'Cannot reach Imagine Server. Is it running?',
-      })
-    }
-    console.error(`[Animate] ERROR: ${message}`)
-    return res.status(500).json({ error: message })
+    return res.status(500).json({ error: msg })
   }
 }
 
 export const config = {
   api: {
     bodyParser: { sizeLimit: '50mb' },
-    responseLimit: '50mb',
   },
-  maxDuration: 300,
+  maxDuration: 60,
 }
