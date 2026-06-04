@@ -75,7 +75,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       let errMsg = `Imagine server error: ${backendRes.status}`
       try {
         const errJson = JSON.parse(errText)
-        errMsg = errJson.detail || errMsg
+        const d = errJson.detail
+        // FastAPI validation errors return `detail` as an array of objects — stringify it so
+        // the .toLowerCase() below never throws "n.toLowerCase is not a function".
+        errMsg = typeof d === 'string' ? d : (d ? JSON.stringify(d) : errMsg)
       } catch {
         errMsg = errText || errMsg
       }

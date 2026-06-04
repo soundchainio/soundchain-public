@@ -571,7 +571,6 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
           prompt: animatePrompt || '',
           num_frames: 25, // SVD-XT native max real frames (was defaulting to 14 ≈ 2s of motion)
           target_duration: animateDuration,
-          motion_bucket_id: animateMotion,
           image_hold: animateMotion,
           steps: animateSteps,
           nsfw: nsfwMode,
