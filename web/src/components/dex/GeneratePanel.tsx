@@ -9,6 +9,34 @@ const StoryboardPanel = dynamic(() => import('./storyboard/StoryboardPanel'), { 
 
 const MODELS = [
   {
+    id: 'z-image',
+    name: 'Z-Image',
+    desc: 'Best quality · fast',
+    estimate: '~15-30s',
+    color: 'cyan',
+    category: 'fast',
+    defaultSteps: 8,
+    defaultWidth: 1024,
+    defaultHeight: 1024,
+    defaultCfg: 1.0,
+    maxWidth: 1024,
+    maxHeight: 1024,
+  },
+  {
+    id: 'flux',
+    name: 'FLUX.1 dev',
+    desc: 'Top prompt fidelity',
+    estimate: '~1-2 min',
+    color: 'purple',
+    category: 'quality',
+    defaultSteps: 20,
+    defaultWidth: 1024,
+    defaultHeight: 1024,
+    defaultCfg: 3.5,
+    maxWidth: 1024,
+    maxHeight: 1024,
+  },
+  {
     id: 'sdxl-turbo',
     name: 'SDXL Turbo',
     desc: '4-step, fastest',
@@ -244,12 +272,12 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
   const [mode, setMode] = useState<StoryboardMode>('single')
   const [prompt, setPrompt] = useState('')
   const [negativePrompt, setNegativePrompt] = useState(DEFAULT_NEGATIVE)
-  const [selectedModel, setSelectedModel] = useState('sdxl-turbo')
-  const [width, setWidth] = useState(512)
-  const [height, setHeight] = useState(512)
-  const [steps, setSteps] = useState(4)
+  const [selectedModel, setSelectedModel] = useState('z-image')
+  const [width, setWidth] = useState(1024)
+  const [height, setHeight] = useState(1024)
+  const [steps, setSteps] = useState(8)
   const [seed, setSeed] = useState(-1)
-  const [cfg, setCfg] = useState(0.0)
+  const [cfg, setCfg] = useState(1.0)
 
   const [showNegative, setShowNegative] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
@@ -458,6 +486,7 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
           steps,
           seed,
           cfg,
+          nsfw: nsfwMode,
           ...(useSingleImg2Img ? { image: refImages[0].data, strength } : {}),
           ...(useIpAdapter ? {
             referenceImages: refImages.map(r => r.data),

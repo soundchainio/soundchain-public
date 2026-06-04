@@ -34,6 +34,7 @@ async function handleImagine(
     referenceImages?: string[]
     faceMode?: boolean
     ipScale?: number
+    nsfw?: boolean
   }
 ) {
   // Timeout: 4.5 minutes (leave buffer within Vercel's 5min maxDuration)
@@ -58,6 +59,7 @@ async function handleImagine(
         reference_images: body.referenceImages || [],
         face_mode: body.faceMode || false,
         ip_adapter_scale: body.ipScale ?? 0.6,
+        nsfw: body.nsfw || false,
       }),
       signal: controller.signal,
     })
@@ -153,6 +155,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     referenceImages,
     faceMode,
     ipScale,
+    nsfw,
   } = req.body
 
   // Beta gate — must be logged in
@@ -191,6 +194,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         referenceImages,
         faceMode,
         ipScale,
+        nsfw,
       })
     } else if (backend === 'ollama') {
       result = await handleOllama(backendConfig.url, { prompt, model })
