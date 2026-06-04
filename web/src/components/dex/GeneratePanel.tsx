@@ -273,7 +273,7 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
   const [animateImage, setAnimateImage] = useState<string | null>(null)
   const [animateImageName, setAnimateImageName] = useState('')
   const [animateDuration, setAnimateDuration] = useState(6)
-  const [animateMotion, setAnimateMotion] = useState(127)
+  const [animateMotion, setAnimateMotion] = useState(60) // low-motion default keeps the source photo intact (was 127 = heavy warp/blur)
   const [animateSteps, setAnimateSteps] = useState(25)
   const [animatePrompt, setAnimatePrompt] = useState('')
   const [animateResult, setAnimateResult] = useState<{
