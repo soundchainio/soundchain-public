@@ -29,6 +29,8 @@ interface FormState {
   date: string
   location: string
   budgetRange: string
+  itinerary: string
+  hotel: string
   // Collab fields
   artistProjectName: string
   collabType: string
@@ -42,7 +44,7 @@ interface FormState {
 
 const initialFormState: FormState = {
   name: '', email: '',
-  eventType: '', date: '', location: '', budgetRange: '',
+  eventType: '', date: '', location: '', budgetRange: '', itinerary: '', hotel: '',
   artistProjectName: '', collabType: '', workLink: '',
   company: '', inquiryType: '',
   message: '',
@@ -93,6 +95,8 @@ export function ManagerContactForm({ type, profileId, artistName, onClose }: Man
             date: form.date,
             location: form.location,
             budgetRange: form.budgetRange,
+            itinerary: form.itinerary,
+            hotel: form.hotel,
             artistProjectName: form.artistProjectName,
             collabType: form.collabType,
             workLink: form.workLink,
@@ -208,6 +212,27 @@ export function ManagerContactForm({ type, profileId, artistName, onClose }: Man
                   {BUDGET_RANGES.map(b => <option key={b} value={b}>{b}</option>)}
                 </select>
               </div>
+            </div>
+            <div>
+              <label className={labelCls}>Flights &amp; Itinerary (optional)</label>
+              <textarea
+                value={form.itinerary}
+                onChange={e => update('itinerary', e.target.value)}
+                placeholder="Airline, flight #, confirmation #, ground transport, schedule..."
+                rows={2}
+                className={`${inputCls} resize-none`}
+              />
+            </div>
+            <div>
+              <label className={labelCls}>Hotel (optional)</label>
+              <textarea
+                value={form.hotel}
+                onChange={e => update('hotel', e.target.value)}
+                placeholder="Hotel name, confirmation #, check-in / check-out..."
+                rows={2}
+                className={`${inputCls} resize-none`}
+              />
+              <p className="text-[10px] text-gray-500 mt-1">If travel &amp; lodging are arranged, share the confirmations here — they land straight in the artist&apos;s inbox.</p>
             </div>
           </>
         )}

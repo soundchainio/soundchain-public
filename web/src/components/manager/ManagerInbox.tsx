@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import {
   Inbox, Calendar, Users, Briefcase, Mail, MapPin, DollarSign,
-  Clock, Globe, Archive, Loader2, ChevronDown, RefreshCw,
+  Clock, Globe, Archive, Loader2, ChevronDown, RefreshCw, Plane, Hotel,
 } from 'lucide-react'
 
 // ─── MANAGER inbox panel (owner-only) ─────────────────────────────────────────
@@ -14,6 +14,8 @@ interface InquiryFields {
   date?: string
   location?: string
   budgetRange?: string
+  itinerary?: string
+  hotel?: string
   artistProjectName?: string
   collabType?: string
   workLink?: string
@@ -195,6 +197,24 @@ export function ManagerInbox() {
                             ))}
                             {i.fields.workLink && (
                               <a href={i.fields.workLink} target="_blank" rel="noopener noreferrer" className="px-2 py-0.5 rounded-full bg-purple-500/10 border border-purple-500/30 text-[10px] text-purple-300 hover:bg-purple-500/20">Work link ↗</a>
+                            )}
+                          </div>
+                        )}
+
+                        {(i.fields.itinerary || i.fields.hotel) && (
+                          <div className="space-y-1.5 bg-cyan-500/[0.06] border border-cyan-500/15 rounded-lg p-3">
+                            <p className="text-[10px] font-semibold text-cyan-400/80 uppercase tracking-wider">Travel arranged</p>
+                            {i.fields.itinerary && (
+                              <div className="flex items-start gap-2 text-[12px]">
+                                <Plane className="w-3.5 h-3.5 text-cyan-400 mt-0.5 flex-shrink-0" />
+                                <span className="text-gray-300 whitespace-pre-wrap break-words">{i.fields.itinerary}</span>
+                              </div>
+                            )}
+                            {i.fields.hotel && (
+                              <div className="flex items-start gap-2 text-[12px]">
+                                <Hotel className="w-3.5 h-3.5 text-cyan-400 mt-0.5 flex-shrink-0" />
+                                <span className="text-gray-300 whitespace-pre-wrap break-words">{i.fields.hotel}</span>
+                              </div>
                             )}
                           </div>
                         )}

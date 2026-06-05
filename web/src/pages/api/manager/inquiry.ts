@@ -55,6 +55,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     date: clip(f.date, 40),
     location: clip(f.location, 160),
     budgetRange: clip(f.budgetRange, 60),
+    itinerary: clip(f.itinerary, 2000),
+    hotel: clip(f.hotel, 1000),
     artistProjectName: clip(f.artistProjectName, 120),
     collabType: clip(f.collabType, 80),
     workLink: clip(f.workLink, 400),
