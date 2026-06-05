@@ -285,7 +285,7 @@ export default function ManagerPage({ ogData, handle }: ManagerPageProps) {
 
         {/* ─── Sticky Nav ───────────────────────────────────────────── */}
         <nav className="backdrop-blur-xl bg-black/90 border-b border-cyan-500/20 px-4 py-2.5 sticky top-0 z-50">
-          <div className="max-w-5xl mx-auto flex items-center justify-between">
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-3">
               <button onClick={() => router.back()} className="p-1 hover:bg-white/10 rounded-lg transition-colors">
                 <ChevronLeft className="w-5 h-5 text-gray-400" />
@@ -316,7 +316,7 @@ export default function ManagerPage({ ogData, handle }: ManagerPageProps) {
             on widescreen (never an edge-to-edge stretched band). object-cover +
             object-center keeps any uploaded image crisp and undistorted. */}
         <div className="w-full bg-black">
-          <div className="relative max-w-5xl mx-auto h-[44vh] min-h-[260px] max-h-[460px] overflow-hidden sm:rounded-b-3xl sm:border-x border-b border-cyan-500/15">
+          <div className="relative max-w-7xl mx-auto h-[44vh] min-h-[260px] max-h-[460px] overflow-hidden sm:rounded-b-3xl sm:border-x border-b border-cyan-500/15">
             {heroSrc ? (
               <img
                 src={heroSrc}
@@ -343,7 +343,7 @@ export default function ManagerPage({ ogData, handle }: ManagerPageProps) {
 
             {/* Profile Info */}
             <div className="absolute bottom-0 left-0 right-0 p-4 z-10">
-            <div className="max-w-5xl mx-auto">
+            <div className="max-w-7xl mx-auto">
               <div className="flex items-end gap-4">
                 {/* Avatar */}
                 <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden border-2 border-white/20 bg-gradient-to-br from-purple-900 to-cyan-900 shadow-2xl flex-shrink-0">
@@ -418,9 +418,11 @@ export default function ManagerPage({ ogData, handle }: ManagerPageProps) {
         </div>
 
         {/* ─── Content ──────────────────────────────────────────────── */}
-        <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
-          {/* Language — the agent speaks the visitor's language (auto-detected) */}
-          <div className="flex items-center justify-end -mb-2">
+        {/* Desktop: 2-column grid so the page fills the width (info cards pair up
+            side-by-side); mobile collapses to a single stacked column. */}
+        <div className="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+          {/* Language — full width, right-aligned */}
+          <div className="flex items-center justify-end -mb-2 lg:col-span-2">
             <div className="flex items-center gap-1.5">
               <Globe className="w-3.5 h-3.5 text-cyan-400" />
               <select
@@ -518,7 +520,7 @@ export default function ManagerPage({ ogData, handle }: ManagerPageProps) {
 
           {/* Latest Tracks */}
           {vis.tracks && tracks.length > 0 && (
-            <section>
+            <section className="lg:col-span-2">
               <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Latest Tracks</h2>
               <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
                 {tracks.slice(0, 10).map(track => (
@@ -644,25 +646,25 @@ export default function ManagerPage({ ogData, handle }: ManagerPageProps) {
           {/* Follow on SoundChain */}
           <Link
             href={`/users/${pageHandle}`}
-            className="block w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-500 text-center text-sm font-semibold text-white hover:opacity-90 transition-opacity"
+            className="block w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-500 text-center text-sm font-semibold text-white hover:opacity-90 transition-opacity lg:col-span-2"
           >
             Follow on SoundChain
           </Link>
 
           {/* Owner Config Panel */}
           {isOwner && profile.id && (
-            <>
+            <div className="lg:col-span-2 space-y-6">
               <ManagerConfig
                 profileId={profile.id}
                 config={managerConfig}
                 onChange={setManagerConfig}
               />
               <ManagerBankVault />
-            </>
+            </div>
           )}
 
           {/* Footer */}
-          <div className="text-center py-6 border-t border-gray-800">
+          <div className="text-center py-6 border-t border-gray-800 lg:col-span-2">
             <Link href="/" className="text-xs text-gray-600 hover:text-gray-400 transition-colors">
               Powered by SoundChain AI Agent
             </Link>
