@@ -22,6 +22,8 @@ import { ManagerContactForm } from 'components/manager/ManagerContactForm'
 import { ManagerConfig, loadManagerConfig, fetchManagerConfig, ManagerConfigData } from 'components/manager/ManagerConfig'
 import { ManagerInbox } from 'components/manager/ManagerInbox'
 import { ManagerLanguageGate } from 'components/manager/ManagerLanguageGate'
+import { ManagerBookingEscrow } from 'components/manager/ManagerBookingEscrow'
+import { ManagerBankVault } from 'components/manager/ManagerBankVault'
 import { detectVisitorLang, t, MANAGER_LOCALES, localeFor } from 'lib/managerI18n'
 
 // ─── SSR for OG Tags ─────────────────────────────────────────────────
@@ -472,12 +474,25 @@ export default function ManagerPage({ ogData, handle }: ManagerPageProps) {
 
           {/* Action Buttons */}
           {activeForm ? (
-            <ManagerContactForm
-              type={activeForm}
-              profileId={profile.id}
-              artistName={displayName}
-              onClose={() => setActiveForm(null)}
-            />
+            <>
+              <ManagerContactForm
+                type={activeForm}
+                profileId={profile.id}
+                artistName={displayName}
+                onClose={() => setActiveForm(null)}
+              />
+              {/* Booking whitelist escrow — pay the deposit in crypto (BTC·ETH·SOL
+                  + 24 tokens), the on-chain deposit locks the date + reveals payout */}
+              {activeForm === 'booking' && (
+                <ManagerBookingEscrow
+                  profileId={profile.id}
+                  displayName={displayName}
+                  payoutAddress={managerConfig.payoutAddress || undefined}
+                  depositHint={managerConfig.paymentTerms.depositSchedule || managerConfig.bookingRate || undefined}
+                  lang={viewerLang}
+                />
+              )}
+            </>
           ) : (
             <div className="grid grid-cols-2 gap-3">
               {vis.booking && (
@@ -560,11 +575,14 @@ export default function ManagerPage({ ogData, handle }: ManagerPageProps) {
 
           {/* Owner Config Panel */}
           {isOwner && profile.id && (
-            <ManagerConfig
-              profileId={profile.id}
-              config={managerConfig}
-              onChange={setManagerConfig}
-            />
+            <>
+              <ManagerConfig
+                profileId={profile.id}
+                config={managerConfig}
+                onChange={setManagerConfig}
+              />
+              <ManagerBankVault />
+            </>
           )}
 
           {/* Footer */}
