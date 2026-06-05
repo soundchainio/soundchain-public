@@ -28,6 +28,7 @@
  */
 import { useEffect, useRef, useState } from 'react'
 import { getVoiceConfig } from 'components/LucyVoicePicker'
+import { useLucyMemory } from 'hooks/useLucyMemory'
 
 type LiveStatus = 'watching' | 'listening' | 'thinking' | 'speaking'
 
@@ -80,6 +81,27 @@ export default function LucyLiveMode({ onClose, captureIntervalMs = 6000 }: Lucy
   const mutedRef = useRef(false)
   const sttPausedRef = useRef(false)
   useEffect(() => { mutedRef.current = muted }, [muted])
+
+  // ───────── On-device SOUL — what Lucy SEES persists to encrypted IndexedDB
+  // (same local-first memory layer as her chats; never hits a server). This is
+  // the see→describe→REMEMBER loop from the `lucy-eye` brain, now wired into the
+  // live camera. Each observation is a "neuron" — the soul that survives the call.
+  const { messages: soul, setMessages: setSoul, save: saveSoul } = useLucyMemory('lucy-eye-soul')
+  const soulRef = useRef<{ role: 'user' | 'assistant'; content: string }[]>([])
+  useEffect(() => { soulRef.current = soul as any }, [soul])
+  const [showSoul, setShowSoul] = useState(false)
+
+  function rememberObservation(question: string, narration: string) {
+    const text = narration.trim()
+    if (text.length < 3) return
+    const next = [...soulRef.current]
+    if (question && question.trim()) next.push({ role: 'user', content: question.trim() })
+    next.push({ role: 'assistant', content: text })
+    const capped = next.slice(-400) // keep the on-device soul bounded
+    soulRef.current = capped
+    setSoul(capped as any)
+    saveSoul(capped as any)
+  }
 
   // ───────── Camera startup
   useEffect(() => {
@@ -342,6 +364,9 @@ export default function LucyLiveMode({ onClose, captureIntervalMs = 6000 }: Lucy
           messages: [
             { role: 'user', content: userText, images: [b64] },
           ],
+          // Use the upgraded VLM on the freed RTX 5000 (replaces the uninstalled
+          // minicpm-v default). Reads + describes scenes far better than llava.
+          model: 'qwen2.5vl:7b',
         }),
       })
       if (!res.ok || !res.body) {
@@ -393,6 +418,7 @@ export default function LucyLiveMode({ onClose, captureIntervalMs = 6000 }: Lucy
         speakNext()
       }
       lastNarrationRef.current = sanitizeNarration(accumulated)
+      rememberObservation(question, lastNarrationRef.current)
     } catch (err: any) {
       setError(err?.message || 'Lucy is unreachable')
     } finally {
@@ -430,6 +456,8 @@ export default function LucyLiveMode({ onClose, captureIntervalMs = 6000 }: Lucy
     if (captureTimerRef.current) clearTimeout(captureTimerRef.current)
     onClose()
   }
+
+  const remembered = soul.filter((m) => m.role === 'assistant').length
 
   return (
     <div className="fixed inset-0 z-[300] bg-black flex flex-col">
@@ -469,9 +497,18 @@ export default function LucyLiveMode({ onClose, captureIntervalMs = 6000 }: Lucy
             </span>
           </div>
           <div className="text-[10px] text-white/60 font-mono">
-            anvil · M5000 · minicpm-v
+            anvil · RTX 5000 · qwen2.5-vl
           </div>
         </div>
+        {remembered > 0 && (
+          <button
+            onClick={() => setShowSoul((s) => !s)}
+            className="px-2 py-1 rounded-full bg-white/10 border border-white/15 text-white/80 text-[11px] font-mono flex items-center gap-1"
+            aria-label="what Lucy remembers"
+          >
+            🧠 {remembered}
+          </button>
+        )}
         <button
           onClick={endCall}
           className="px-3 py-1.5 rounded-full bg-red-500 text-white text-xs font-bold shadow-[0_0_16px_rgba(239,68,68,0.6)]"
@@ -493,6 +530,20 @@ export default function LucyLiveMode({ onClose, captureIntervalMs = 6000 }: Lucy
       {error && (
         <div className="relative z-10 mx-4 mb-3 p-3 rounded-xl bg-red-500/20 border border-red-500/40 text-sm text-red-200">
           {error}
+        </div>
+      )}
+
+      {/* Soul recall — everything Lucy has SEEN this session, stored encrypted
+          on THIS device. Tap the 🧠 chip to open. This is Agent Eye's memory. */}
+      {showSoul && (
+        <div className="relative z-20 mx-4 mb-3 p-3 rounded-2xl bg-black/85 backdrop-blur-md border border-cyan-500/30 max-h-[55vh] overflow-y-auto">
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-[10px] uppercase tracking-wide text-cyan-400">🧠 Lucy remembers · on this device</div>
+            <button onClick={() => setShowSoul(false)} className="text-white/50 text-xs">close</button>
+          </div>
+          {soul.filter((m) => m.role === 'assistant').slice().reverse().map((m, i) => (
+            <div key={i} className="text-white/85 text-xs leading-relaxed py-1.5 border-b border-white/5 last:border-0">{m.content}</div>
+          ))}
         </div>
       )}
 

@@ -130,7 +130,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   // is ~2x more accurate on visual reasoning at similar VRAM footprint
   // (~5-6GB Q4 on M5000 8GB). Anvil must have it pulled: `ollama pull minicpm-v`.
   const hasImages = messages.some((m) => Array.isArray(m.images) && m.images.length > 0)
-  const targetModel = model || (hasImages ? (process.env.NORMAN_VISION_MODEL || 'minicpm-v:latest') : DEFAULT_MODEL)
+  const targetModel = model || (hasImages ? (process.env.NORMAN_VISION_MODEL || 'qwen2.5vl:7b') : DEFAULT_MODEL)
 
   // Pick the right system prompt for the modality. Vision-mode prompt
   // intentionally lacks hardware/identity context (avoids LLaVA hallucinating
