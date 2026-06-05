@@ -11,6 +11,7 @@
     "pdf": "electron scripts/make-pdf.js",
     "dist:mac": "electron-builder --mac",
     "dist:win": "electron-builder --win",
+    "dist:win:ci": "electron-builder --win -c.win.signAndEditExecutable=true",
     "dist:linux": "electron-builder --linux"
   },
   "devDependencies": {

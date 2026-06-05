@@ -1,0 +1,54 @@
+name: North Star — Windows Installer
+
+# Builds the SoundChain North Star Windows installer (.exe) on a NATIVE Windows
+# runner. No Wine/QEMU, so rcedit stamps the SoundChain icon into the .exe and
+# NSIS produces a real one-click installer (Apple-Silicon Macs can't do this
+# locally). Triggered manually, or by pushing a `northstar-v*` tag.
+
+on:
+  workflow_dispatch: {}
+  push:
+    tags:
+      - 'northstar-v*'
+
+permissions:
+  contents: write
+
+jobs:
+  windows-installer:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: northstar-node
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: yarn
+          cache-dependency-path: northstar-node/yarn.lock
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      # docs/*.pdf are committed to the repo and bundled via extraResources —
+      # no need to regenerate them on a headless CI runner.
+
+      - name: Build Windows installer (NSIS + portable, icon stamped)
+        run: yarn dist:win:ci
+
+      - name: Upload installer artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: northstar-windows-x64
+          path: northstar-node/dist/*.exe
+          if-no-files-found: error
+
+      - name: Attach to GitHub Release (tag builds only)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: northstar-node/dist/*.exe
