@@ -207,6 +207,20 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
   const [error, setError] = useState<string | null>(null)
   const [needsInteraction, setNeedsInteraction] = useState(true)
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const [expandedCard, setExpandedCard] = useState<null | 'track' | 'neural'>(null)
+
+  // Block pinch-zoom (it white-crashes the WebGL canvas on iOS) — users expand
+  // the track/neural cards via tap instead. iOS ignores viewport user-scalable,
+  // but honors preventing the gesture events. Scoped to this page via unmount.
+  useEffect(() => {
+    const block = (e: Event) => e.preventDefault()
+    document.addEventListener('gesturestart', block, { passive: false })
+    document.addEventListener('gesturechange', block, { passive: false })
+    return () => {
+      document.removeEventListener('gesturestart', block)
+      document.removeEventListener('gesturechange', block)
+    }
+  }, [])
 
   // Fullscreen toggle — hides ALL browser UI
   const toggleFullscreen = useCallback(() => {
@@ -1200,8 +1214,17 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
                 {/* Now Playing + NFT Card Layout */}
                 <div className="flex flex-col md:flex-row items-center md:items-start gap-2 md:gap-6 mb-2 md:mb-6">
 
-                  {/* NFT/SCID Card — always visible, scales down on mobile */}
-                  <div className="flex-shrink-0 order-first">
+                  {/* NFT/SCID Card — tap ⛶ to expand fullscreen-scrollable, tap again to collapse */}
+                  <div className={expandedCard === 'track' ? 'fixed inset-0 z-[100] bg-black/95 backdrop-blur-sm overflow-y-auto overscroll-contain p-4 pt-16 flex items-start justify-center' : 'relative flex-shrink-0 order-first'}>
+                    <button
+                      type="button"
+                      onClick={() => setExpandedCard(expandedCard === 'track' ? null : 'track')}
+                      className="absolute top-2 right-2 z-[101] p-1.5 rounded-lg bg-black/70 border border-white/15 text-white/80 hover:text-white hover:border-cyan-400/50 transition-colors"
+                      title={expandedCard === 'track' ? 'Collapse' : 'Expand'}
+                      aria-label={expandedCard === 'track' ? 'Collapse card' : 'Expand card'}
+                    >
+                      {expandedCard === 'track' ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
+                    </button>
                     <RadioNFTCard track={currentTrack} isPlaying={isPlaying} />
                   </div>
 
@@ -1266,8 +1289,17 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
                   </div>
                   </div>{/* Close Track Info + Vinyl wrapper */}
 
-                  {/* Brain Wave Visualizer — right side, opposite NFT card. Tony Stark HUD */}
-                  <div className="flex-shrink-0 order-last">
+                  {/* Brain Wave Visualizer — tap ⛶ to expand fullscreen-scrollable, tap again to collapse */}
+                  <div className={expandedCard === 'neural' ? 'fixed inset-0 z-[100] bg-black/95 backdrop-blur-sm overflow-y-auto overscroll-contain p-4 pt-16 flex items-start justify-center' : 'relative flex-shrink-0 order-last'}>
+                    <button
+                      type="button"
+                      onClick={() => setExpandedCard(expandedCard === 'neural' ? null : 'neural')}
+                      className="absolute top-2 right-2 z-[101] p-1.5 rounded-lg bg-black/70 border border-white/15 text-white/80 hover:text-white hover:border-green-400/50 transition-colors"
+                      title={expandedCard === 'neural' ? 'Collapse' : 'Expand'}
+                      aria-label={expandedCard === 'neural' ? 'Collapse card' : 'Expand card'}
+                    >
+                      {expandedCard === 'neural' ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
+                    </button>
                     <BrainWaveVisualizer audioRef={audioRef} isPlaying={isPlaying} trackTitle={currentTrack?.title} />
                   </div>
                 </div>

@@ -272,9 +272,9 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
 
     const bloomPass = new UnrealBloomPass(
       new THREE.Vector2(isMobile ? width / 2 : width, isMobile ? height / 2 : height),
-      isMobile ? 0.4 : 0.8,   // strength — halved on mobile
-      isMobile ? 0.2 : 0.4,   // radius — tighter on mobile
-      isMobile ? 0.6 : 0.4    // threshold — only brightest objects bloom on mobile
+      isMobile ? 0.22 : 0.45, // strength — deep-space dim, kills the white wash (Frank: darken the radar so colors pop)
+      isMobile ? 0.18 : 0.32, // radius — tighter halo
+      isMobile ? 0.82 : 0.62  // threshold — only the VERY brightest bloom, so the wireframes + nodes pop against black
     )
     composer.addPass(bloomPass)
     bloomPassRef.current = bloomPass
