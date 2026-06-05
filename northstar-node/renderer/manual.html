@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SoundChain — How to Use</title>
+    <style>
+      :root { --bg:#06070f; --surface:#0c0e1c; --border:#1c2036; --text:#e8ecff; --muted:#8b93b8; }
+      * { box-sizing: border-box; }
+      body { margin:0; background:var(--bg); color:var(--text);
+        font:15px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; }
+      .wrap { max-width: 820px; margin: 0 auto; padding: 28px 26px 80px; }
+      .brand { font-size:22px; font-weight:800; letter-spacing:.2px;
+        background:linear-gradient(90deg,#ff5e9a,#ffce5e,#5effa3,#5ec8ff,#b98bff);
+        -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+      .tag { color:var(--muted); font-size:13px; margin-top:2px; }
+      nav { margin:18px 0 26px; display:flex; gap:10px; flex-wrap:wrap; }
+      nav a { text-decoration:none; font-size:13px; font-weight:600; color:#bcd0ff;
+        background:var(--surface); border:1px solid var(--border); border-radius:999px; padding:6px 14px; }
+      h2 { margin:30px 0 10px; font-size:18px; color:#9fb0ff; border-bottom:1px solid var(--border); padding-bottom:6px; }
+      h3 { margin:20px 0 6px; font-size:15px; color:#cfe0ff; }
+      p, li { color:#d6ddf5; }
+      code, .kbd { background:#11152a; border:1px solid var(--border); border-radius:6px; padding:1px 7px; font-size:13px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace; color:#9fffd0; }
+      .card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px 16px; margin:12px 0; }
+      .step { padding-left:4px; }
+      .tip { border-left:3px solid #5effa3; }
+      .warn { border-left:3px solid #ffce5e; }
+      ol, ul { padding-left:22px; }
+      footer { margin-top:40px; color:var(--muted); font-size:12px; border-top:1px solid var(--border); padding-top:14px; }
+      @media print { body { background:#06070f; -webkit-print-color-adjust:exact; print-color-adjust:exact; } nav { display:none; } }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="brand">🌟 SoundChain — How to Use</div>
+      <div class="tag">A plain-language guide to the SoundChain desktop apps · v0.1 beta</div>
+      <nav>
+        <a href="index.html">← Back to app</a>
+        <a href="faq.html">FAQ →</a>
+      </nav>
+
+      <h2>1. What you've got</h2>
+      <p>SoundChain ships as real downloadable apps — files you own, not a website you visit. There are two kinds:</p>
+      <div class="card">
+        <h3>🛰️ North Star (the sovereign node)</h3>
+        <p>A peer-to-peer app with <b>no server behind it</b>. When you and friends open it on the same Wi-Fi, your apps find each other and share posts <b>directly</b> — no cloud, no account, no company in the middle. It even works with the internet unplugged.</p>
+        <h3>🎵 The SoundChain apps (SoundChain · Lucy · Arena · Mint)</h3>
+        <p>Desktop versions of the live SoundChain experience — the music platform, the Lucy AI, the Arena sports hub, and the Mint marketplace — in their own windows, with their own app icons.</p>
+      </div>
+
+      <h2>2. Installing &amp; opening</h2>
+      <h3>macOS (.dmg)</h3>
+      <ol class="step">
+        <li>Double-click the <code>.dmg</code>, drag <b>SoundChain</b> into <b>Applications</b>.</li>
+        <li>First launch: <b>right-click the app → Open → Open</b>. (The beta isn't notarized yet, so macOS asks once. After that it opens normally.)</li>
+      </ol>
+      <h3>Windows (.exe)</h3>
+      <ol class="step">
+        <li>Run the installer (or the <code>portable</code> .exe — no install needed).</li>
+        <li>If SmartScreen warns: <b>More info → Run anyway</b> (same beta-signing reason).</li>
+      </ol>
+      <h3>Linux (.AppImage)</h3>
+      <ol class="step">
+        <li>Make it runnable: <code>chmod +x SoundChain*.AppImage</code></li>
+        <li>Double-click it, or run it from the terminal.</li>
+      </ol>
+      <div class="card warn"><b>Heads-up:</b> the unsigned/beta warning on every OS is normal for a direct-download app and goes away once we add code-signing certificates. It does <i>not</i> mean the app is unsafe.</div>
+
+      <h2>3. Using North Star (the p2p node)</h2>
+      <ol class="step">
+        <li>Open the app on <b>two or more machines on the same Wi-Fi</b>.</li>
+        <li>Watch the pill near the top: <span class="kbd">● solo</span> turns into <span class="kbd">● 2 peers · no server</span> when it finds the others — that's your private mesh forming.</li>
+        <li>Type in the box at the bottom and hit <b>Post</b> (or <span class="kbd">Enter</span>).</li>
+        <li>Your post appears on <b>every</b> machine, instantly — with nothing in between.</li>
+        <li>Close and reopen — your posts are still there (saved locally on each device).</li>
+      </ol>
+      <div class="card tip"><b>Try this:</b> turn off Wi-Fi's internet (or pull the router's WAN cable) but stay on the same local network. Posts <i>still</i> sync. That's the whole point — the network is the people, not a data center.</div>
+
+      <h2>4. Navigating the SoundChain apps</h2>
+      <ul>
+        <li><b>SoundChain</b> — your feed, profile/wall, music, and circle. Posts autoplay inline as you scroll.</li>
+        <li><b>Lucy</b> — your AI. Type to chat; she runs toward on-device intelligence.</li>
+        <li><b>Arena</b> — live sports takes, stats, picks and fantasy.</li>
+        <li><b>Mint</b> — the NFT/marketplace surface for creating and collecting.</li>
+      </ul>
+      <p>Each app is its own window with its own icon, so you can keep them side-by-side like any other desktop apps.</p>
+
+      <h2>5. Pricing</h2>
+      <p>Long-time <b>L1 + L2</b> members get the full app bundle <b>free</b>, as a thank-you. For everyone else, the complete set of SoundChain apps is a one-time <b>$10–$20</b> — a file you own, forever.</p>
+
+      <footer>SoundChain · Operation North Star · free, open, peer-to-peer. Questions? Open the <b>FAQ</b>. Built July 14, 2021 → today.</footer>
+    </div>
+  </body>
+</html>

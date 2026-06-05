@@ -26,7 +26,15 @@
       header {
         padding: 16px 18px 12px;
         border-bottom: 1px solid var(--border);
+        position: relative;
       }
+      .help {
+        position: absolute; top: 14px; right: 16px;
+        text-decoration: none; font-size: 12px; font-weight: 600; color: #bcd0ff;
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: 999px; padding: 4px 11px;
+      }
+      .help:hover { border-color: #38406e; }
       .brand {
         font-size: 16px;
         font-weight: 700;
@@ -71,6 +79,7 @@
   </head>
   <body>
     <header>
+      <a class="help" href="manual.html">❔ Help</a>
       <div class="brand">🌟 SoundChain · North Star</div>
       <div class="sub" id="ident">sovereign node — no server, no cloud</div>
       <div class="peers"><span class="dot solo" id="dot"></span><span id="peerLabel">starting…</span></div>
