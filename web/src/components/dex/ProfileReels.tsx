@@ -684,19 +684,29 @@ export const ProfileReels = ({ profileId, profileHandle, profileDisplayName, pro
     return Object.values(grouped)
   }, [storiesRaw])
 
+  // Open a member's wall. Prefer the handle, but fall back to the profile id
+  // when the handle is empty — handles often live on users.handle, NOT
+  // profiles.userHandle, so /api/profile/<id> returns a blank userHandle for
+  // those users. /users/<id> resolves via the [...slug] page's ObjectId path,
+  // so the tap always lands somewhere (was a silent no-op when handle empty).
+  const openMemberWall = (bubble: StoryBubble) => {
+    const target = bubble.userHandle || bubble.profileId
+    if (target) router.push(`/users/${encodeURIComponent(target)}`)
+  }
+
   const handleBubbleClick = (bubble: StoryBubble) => {
     if (bubble.hasStory) {
       setSelectedUserId(bubble.profileId)
       setShowStoryViewer(true)
-    } else if (bubble.userHandle) {
-      router.push(`/users/${bubble.userHandle}`)
+    } else {
+      openMemberWall(bubble)
     }
   }
 
   // Inner-circle avatars ALWAYS open the user's wall (Frank's directive),
   // regardless of whether they have a live reel.
   const handleCircleOpen = (bubble: StoryBubble) => {
-    if (bubble.userHandle) router.push(`/users/${bubble.userHandle}`)
+    openMemberWall(bubble)
   }
 
   // Remove from circle = drop from topFriends. INSTANT (local state), never
