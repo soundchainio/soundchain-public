@@ -16,7 +16,7 @@
 import { useRouter } from 'next/router'
 import {
   Home, Trophy, Compass, Users as UsersIcon,
-  Radio as RadioIcon, Music, ListMusic, Archive as ArchiveIcon, User
+  Radio as RadioIcon, Music, ListMusic, Archive as ArchiveIcon, User, Briefcase
 } from 'lucide-react'
 import { useMe } from 'hooks/useMe'
 
@@ -62,7 +62,7 @@ const ACCENT_IDLE: Record<Accent, string> = {
 }
 
 type Props = {
-  active: 'profile' | 'nodes' | 'arena' | 'gallery3d' | 'explore3d' | 'land' | 'radio' | 'explore' | 'users' | 'library' | 'playlist' | 'archive' | 'moltbook' | (string & {})
+  active: 'profile' | 'nodes' | 'arena' | 'manager' | 'gallery3d' | 'explore3d' | 'land' | 'radio' | 'explore' | 'users' | 'library' | 'playlist' | 'archive' | 'moltbook' | (string & {})
   borderClass?: string
   /** Fired before navigation. Used by dex/[...slug].tsx to collapse the bio panel before route change. */
   beforeNavigate?: (id: string) => void
@@ -78,6 +78,10 @@ export default function MainPillNav({ active, borderClass = 'border-white/5', be
     ...(me?.profile ? [{ id: 'profile', label: 'Profile', route: `/users/${me.profile.userHandle}`, icon: User, accent: 'sky' as Accent }] : []),
     { id: 'nodes', label: 'Nodes', route: '/nodes', icon: Home, accent: 'cyan' },
     { id: 'arena', label: 'Arena', route: ARENA_URL, icon: Trophy, accent: 'red', external: true },
+    // Manager — Jeremy's booking marketplace (agents ⇄ artists book each other).
+    // Routes to the viewer's own manager page; /login when signed out (the SSR
+    // [handle] page 404s without a real handle, and there's no /manager index).
+    { id: 'manager', label: 'Manager', route: me?.profile ? `/manager/${me.profile.userHandle}` : '/login', icon: Briefcase, accent: 'violet' },
     // May 27, 2026 — Gallery 3D / Explore 3D / Land Atlas pills GHOSTED from
     // global nav. Gallery 3D moved to the profile/wall page as an in-place
     // tab (?tab=gallery3d); Explore 3D + Land Atlas were not seeing daily use.
