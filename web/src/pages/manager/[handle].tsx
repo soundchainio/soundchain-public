@@ -1,9 +1,9 @@
-import { ReactElement, useState, useMemo } from 'react'
+import { ReactElement, useState, useMemo, useEffect } from 'react'
 import { GetServerSideProps } from 'next'
 import Head from 'next/head'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { ChevronLeft, Calendar, Users, Briefcase, Music, ExternalLink } from 'lucide-react'
+import { ChevronLeft, Calendar, Users, Briefcase, Music, ExternalLink, DollarSign, Plane, Hotel, Coffee, Sliders } from 'lucide-react'
 import { config } from 'config'
 import { CustomLayout } from 'pages/_app'
 import { createApolloClient } from 'lib/apollo'
@@ -19,7 +19,7 @@ import { useMe } from 'hooks/useMe'
 import { Logo } from 'icons/Logo'
 import { ManagerGreeting } from 'components/manager/ManagerGreeting'
 import { ManagerContactForm } from 'components/manager/ManagerContactForm'
-import { ManagerConfig, loadManagerConfig, ManagerConfigData } from 'components/manager/ManagerConfig'
+import { ManagerConfig, loadManagerConfig, fetchManagerConfig, ManagerConfigData } from 'components/manager/ManagerConfig'
 import { ManagerInbox } from 'components/manager/ManagerInbox'
 
 // ─── SSR for OG Tags ─────────────────────────────────────────────────
@@ -89,6 +89,19 @@ function getSocialUrl(platform: string, value: string): string {
 
 // ─── Page Component ──────────────────────────────────────────────────
 
+// One rider line (travel / hotel / hospitality / technical) for the booker.
+function RiderRow({ icon: Icon, label, value }: { icon: typeof Plane; label: string; value: string }) {
+  return (
+    <div className="flex items-start gap-2">
+      <Icon className="w-3.5 h-3.5 text-cyan-400 mt-0.5 flex-shrink-0" />
+      <div className="min-w-0">
+        <p className="text-[11px] text-gray-500">{label}</p>
+        <p className="text-[13px] text-gray-300 whitespace-pre-wrap break-words">{value}</p>
+      </div>
+    </div>
+  )
+}
+
 export default function ManagerPage({ ogData, handle }: ManagerPageProps) {
   const router = useRouter()
   const pageHandle = (router.query.handle as string) || handle
@@ -118,16 +131,29 @@ export default function ManagerPage({ ogData, handle }: ManagerPageProps) {
     return loadManagerConfig(profile.id)
   })
 
-  // Re-load config when profile ID becomes available
-  useMemo(() => {
-    if (profile?.id && typeof window !== 'undefined') {
-      setManagerConfig(loadManagerConfig(profile.id))
-    }
+  // Load config: localStorage gives the owner an instant render; the SERVER copy
+  // is the source of truth, so VISITORS (and the agent speaking on the pro's
+  // behalf) see the greeting/voice/rates/rider/terms the pro actually set.
+  useEffect(() => {
+    if (!profile?.id || typeof window === 'undefined') return
+    setManagerConfig(loadManagerConfig(profile.id))
+    let cancelled = false
+    fetchManagerConfig(profile.id).then(server => {
+      if (!cancelled && server) setManagerConfig(server)
+    })
+    return () => { cancelled = true }
   }, [profile?.id])
 
   const displayName = profile?.displayName || profile?.userHandle || pageHandle
   const latestTrack = tracks[0]
   const vis = managerConfig.sectionsVisible
+
+  // Booking Details — derived flags so the card only shows when the pro set terms.
+  const mc = managerConfig
+  const hasServices = mc.services.length > 0
+  const hasRider = !!(mc.rider.travel || mc.rider.accommodation || mc.rider.hospitality || mc.rider.technical)
+  const hasPayment = !!(mc.paymentTerms.depositSchedule || mc.paymentTerms.methods || mc.paymentTerms.currency || mc.paymentTerms.cancellation)
+  const showBookingDetails = hasServices || hasRider || hasPayment
 
   const socialEntries = useMemo(() => {
     const sm = profile?.socialMedias
@@ -314,6 +340,59 @@ export default function ManagerPage({ ogData, handle }: ManagerPageProps) {
                 try { localStorage.setItem(`manager_config_${profile.id}`, JSON.stringify(next)) } catch {}
               }}
             />
+          )}
+
+          {/* Booking Details — rates, rider & terms the promoter needs to arrange */}
+          {showBookingDetails && (
+            <section className="backdrop-blur-xl bg-black/60 border border-cyan-500/20 rounded-2xl p-5 space-y-4">
+              <div className="flex items-center gap-2">
+                <Briefcase className="w-4 h-4 text-cyan-400" />
+                <h2 className="text-sm font-semibold text-white">Booking Details</h2>
+                {mc.profession && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/20">{mc.profession}</span>
+                )}
+              </div>
+
+              {hasServices && (
+                <div className="space-y-1.5">
+                  <p className="text-[11px] font-semibold text-cyan-400/80 uppercase tracking-wider">Services &amp; Rates</p>
+                  <div className="space-y-1">
+                    {mc.services.map((s, i) => (
+                      <div key={i} className="flex items-baseline justify-between gap-3 text-sm">
+                        <span className="text-gray-200">{s.name}{s.note && <span className="text-gray-500 text-xs"> · {s.note}</span>}</span>
+                        {s.rate && <span className="text-green-400 font-medium whitespace-nowrap">{s.rate}</span>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {hasRider && (
+                <div className="space-y-1.5">
+                  <p className="text-[11px] font-semibold text-cyan-400/80 uppercase tracking-wider">Rider</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    {mc.rider.travel && <RiderRow icon={Plane} label="Travel" value={mc.rider.travel} />}
+                    {mc.rider.accommodation && <RiderRow icon={Hotel} label="Hotel" value={mc.rider.accommodation} />}
+                    {mc.rider.hospitality && <RiderRow icon={Coffee} label="Hospitality" value={mc.rider.hospitality} />}
+                    {mc.rider.technical && <RiderRow icon={Sliders} label="Technical" value={mc.rider.technical} />}
+                  </div>
+                </div>
+              )}
+
+              {hasPayment && (
+                <div className="space-y-1.5">
+                  <p className="text-[11px] font-semibold text-cyan-400/80 uppercase tracking-wider">Payment</p>
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-[13px]">
+                    {mc.paymentTerms.depositSchedule && (
+                      <span className="flex items-center gap-1.5 text-gray-300"><DollarSign className="w-3.5 h-3.5 text-green-400" /> {mc.paymentTerms.depositSchedule}</span>
+                    )}
+                    {mc.paymentTerms.methods && <span className="text-gray-400">Methods: {mc.paymentTerms.methods}</span>}
+                    {mc.paymentTerms.currency && <span className="text-gray-400">Currency: {mc.paymentTerms.currency}</span>}
+                    {mc.paymentTerms.cancellation && <span className="text-gray-500 w-full text-xs">{mc.paymentTerms.cancellation}</span>}
+                  </div>
+                </div>
+              )}
+            </section>
           )}
 
           {/* Latest Tracks */}
