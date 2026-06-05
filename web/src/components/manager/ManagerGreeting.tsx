@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Play, Square, Pencil, Check, X, RotateCcw, Mic, ChevronDown, Loader2 } from 'lucide-react'
 import { FastAudioPlayer } from 'components/FastAudioPlayer'
+import { t, baseLang, localeFor, localizedGreeting } from 'lib/managerI18n'
 
 interface ManagerGreetingProps {
   displayName: string
@@ -12,6 +13,7 @@ interface ManagerGreetingProps {
   customGreetingAudioUrl?: string
   isOwner?: boolean
   selectedVoice?: string
+  lang?: string
   onSaveGreeting?: (text: string) => void
   onSaveVoice?: (voice: string) => void
 }
@@ -68,6 +70,7 @@ export function ManagerGreeting({
   customGreetingAudioUrl,
   isOwner,
   selectedVoice,
+  lang,
   onSaveGreeting,
   onSaveVoice,
 }: ManagerGreetingProps) {
@@ -90,8 +93,13 @@ export function ManagerGreeting({
   const autoGreeting = buildGreeting({
     displayName, bio, genres, latestTrackTitle, tracksCount,
   })
-  const greetingText = customGreetingText || autoGreeting
-  const voiceName = selectedVoice || 'en-US-EmmaMultilingualNeural'
+  // Polyglot: with no custom greeting set, a non-English visitor gets the
+  // greeting in THEIR language, spoken in a matching neural voice — the agent
+  // talks to them in their own tongue (a custom greeting stays the pro's words).
+  const useLocalized = baseLang(lang) !== 'en' && !customGreetingText
+  const greetingText = customGreetingText || (useLocalized ? localizedGreeting(lang, displayName) : autoGreeting)
+  const voiceName = useLocalized ? localeFor(lang).voice : (selectedVoice || 'en-US-EmmaMultilingualNeural')
+  const rtl = localeFor(lang).rtl
 
   // Cleanup audio on unmount
   useEffect(() => {
@@ -257,11 +265,11 @@ export function ManagerGreeting({
               title={playing ? 'Stop speaking' : 'Play greeting'}
             >
               {loading ? (
-                <><Loader2 className="w-3 h-3 animate-spin" /> Loading</>
+                <><Loader2 className="w-3 h-3 animate-spin" /> {t(lang, 'loading')}</>
               ) : playing ? (
-                <><Square className="w-3 h-3" /> Stop</>
+                <><Square className="w-3 h-3" /> {t(lang, 'stop')}</>
               ) : (
-                <><Play className="w-3 h-3" /> Play</>
+                <><Play className="w-3 h-3" /> {t(lang, 'play')}</>
               )}
             </button>
           )}
@@ -414,7 +422,7 @@ export function ManagerGreeting({
           </div>
         </div>
       ) : (
-        <p className="text-gray-300 text-sm leading-relaxed italic">
+        <p className="text-gray-300 text-sm leading-relaxed italic" dir={rtl ? 'rtl' : undefined}>
           &ldquo;{greetingText}&rdquo;
         </p>
       )}

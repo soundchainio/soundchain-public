@@ -3,7 +3,7 @@ import { GetServerSideProps } from 'next'
 import Head from 'next/head'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { ChevronLeft, Calendar, Users, Briefcase, Music, ExternalLink, DollarSign, Plane, Hotel, Coffee, Sliders } from 'lucide-react'
+import { ChevronLeft, Calendar, Users, Briefcase, Music, ExternalLink, DollarSign, Plane, Hotel, Coffee, Sliders, Globe } from 'lucide-react'
 import { config } from 'config'
 import { CustomLayout } from 'pages/_app'
 import { createApolloClient } from 'lib/apollo'
@@ -21,6 +21,8 @@ import { ManagerGreeting } from 'components/manager/ManagerGreeting'
 import { ManagerContactForm } from 'components/manager/ManagerContactForm'
 import { ManagerConfig, loadManagerConfig, fetchManagerConfig, ManagerConfigData } from 'components/manager/ManagerConfig'
 import { ManagerInbox } from 'components/manager/ManagerInbox'
+import { ManagerLanguageGate } from 'components/manager/ManagerLanguageGate'
+import { detectVisitorLang, t, MANAGER_LOCALES, localeFor } from 'lib/managerI18n'
 
 // ─── SSR for OG Tags ─────────────────────────────────────────────────
 
@@ -126,6 +128,28 @@ export default function ManagerPage({ ogData, handle }: ManagerPageProps) {
   const isOwner = !!(me?.profile?.id && profile?.id && me.profile.id === profile.id)
 
   const [activeForm, setActiveForm] = useState<'booking' | 'collab' | 'business' | null>(null)
+
+  // Polyglot: the agent talks to the visitor in THEIR language. Start at 'en' for
+  // SSR/hydration parity. On mount: use the remembered choice if any; otherwise
+  // pre-detect from the browser and show the language welcome gate so the visitor
+  // confirms before anything else — once chosen, the agent speaks + types in it.
+  const [viewerLang, setViewerLang] = useState<string>('en')
+  const [showLangGate, setShowLangGate] = useState(false)
+  useEffect(() => {
+    let saved = ''
+    try { saved = localStorage.getItem('manager_lang') || '' } catch {}
+    if (saved) {
+      setViewerLang(saved)
+    } else {
+      setViewerLang(detectVisitorLang())
+      setShowLangGate(true)
+    }
+  }, [])
+  const chooseLang = (code: string) => {
+    setViewerLang(code)
+    try { localStorage.setItem('manager_lang', code) } catch {}
+    setShowLangGate(false)
+  }
   const [managerConfig, setManagerConfig] = useState<ManagerConfigData>(() => {
     if (typeof window === 'undefined' || !profile?.id) return loadManagerConfig('')
     return loadManagerConfig(profile.id)
@@ -206,6 +230,9 @@ export default function ManagerPage({ ogData, handle }: ManagerPageProps) {
       </Head>
 
       <div className="min-h-screen bg-black text-white">
+        {/* Language welcome gate — first touch: pick the language the agent speaks */}
+        {showLangGate && <ManagerLanguageGate current={viewerLang} onSelect={chooseLang} />}
+
         {/* ─── Sticky Nav ───────────────────────────────────────────── */}
         <nav className="backdrop-blur-xl bg-black/90 border-b border-cyan-500/20 px-4 py-2.5 sticky top-0 z-50">
           <div className="max-w-3xl mx-auto flex items-center justify-between">
@@ -314,6 +341,21 @@ export default function ManagerPage({ ogData, handle }: ManagerPageProps) {
 
         {/* ─── Content ──────────────────────────────────────────────── */}
         <div className="max-w-3xl mx-auto px-4 py-6 space-y-6">
+          {/* Language — the agent speaks the visitor's language (auto-detected) */}
+          <div className="flex items-center justify-end -mb-2">
+            <div className="flex items-center gap-1.5">
+              <Globe className="w-3.5 h-3.5 text-cyan-400" />
+              <select
+                value={localeFor(viewerLang).code}
+                onChange={e => chooseLang(e.target.value)}
+                aria-label={t(viewerLang, 'language')}
+                className="bg-gray-900 border border-gray-700 rounded-lg px-2 py-1 text-xs text-gray-200 focus:border-cyan-500 focus:outline-none cursor-pointer"
+              >
+                {MANAGER_LOCALES.map(l => <option key={l.code} value={l.code}>{l.name}</option>)}
+              </select>
+            </div>
+          </div>
+
           {/* Owner Inbox — delivered inquiries land here (bookings no longer vanish) */}
           {isOwner && profile.id && <ManagerInbox />}
 
@@ -329,6 +371,7 @@ export default function ManagerPage({ ogData, handle }: ManagerPageProps) {
               customGreetingAudioUrl={managerConfig.customGreetingAudioUrl || undefined}
               isOwner={isOwner}
               selectedVoice={managerConfig.selectedVoice || undefined}
+              lang={viewerLang}
               onSaveGreeting={(text) => {
                 const next = { ...managerConfig, customGreetingText: text }
                 setManagerConfig(next)
@@ -347,7 +390,7 @@ export default function ManagerPage({ ogData, handle }: ManagerPageProps) {
             <section className="backdrop-blur-xl bg-black/60 border border-cyan-500/20 rounded-2xl p-5 space-y-4">
               <div className="flex items-center gap-2">
                 <Briefcase className="w-4 h-4 text-cyan-400" />
-                <h2 className="text-sm font-semibold text-white">Booking Details</h2>
+                <h2 className="text-sm font-semibold text-white">{t(viewerLang, 'bookingDetails')}</h2>
                 {mc.profession && (
                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/20">{mc.profession}</span>
                 )}
@@ -444,8 +487,8 @@ export default function ManagerPage({ ogData, handle }: ManagerPageProps) {
                 >
                   <Calendar className="w-5 h-5 text-cyan-400 group-hover:scale-110 transition-transform" />
                   <div className="text-left">
-                    <p className="text-sm font-medium text-white">Book This Artist</p>
-                    <p className="text-[10px] text-gray-500">Shows, events, residencies</p>
+                    <p className="text-sm font-medium text-white">{t(viewerLang, 'book')}</p>
+                    <p className="text-[10px] text-gray-500">{t(viewerLang, 'bookDesc')}</p>
                   </div>
                 </button>
               )}
@@ -456,8 +499,8 @@ export default function ManagerPage({ ogData, handle }: ManagerPageProps) {
                 >
                   <Users className="w-5 h-5 text-purple-400 group-hover:scale-110 transition-transform" />
                   <div className="text-left">
-                    <p className="text-sm font-medium text-white">Propose Collab</p>
-                    <p className="text-[10px] text-gray-500">Features, remixes, co-writes</p>
+                    <p className="text-sm font-medium text-white">{t(viewerLang, 'collab')}</p>
+                    <p className="text-[10px] text-gray-500">{t(viewerLang, 'collabDesc')}</p>
                   </div>
                 </button>
               )}
@@ -468,8 +511,8 @@ export default function ManagerPage({ ogData, handle }: ManagerPageProps) {
                 >
                   <Briefcase className="w-5 h-5 text-emerald-400 group-hover:scale-110 transition-transform" />
                   <div className="text-left">
-                    <p className="text-sm font-medium text-white">Business Inquiry</p>
-                    <p className="text-[10px] text-gray-500">Licensing, press, management</p>
+                    <p className="text-sm font-medium text-white">{t(viewerLang, 'business')}</p>
+                    <p className="text-[10px] text-gray-500">{t(viewerLang, 'businessDesc')}</p>
                   </div>
                 </button>
               )}
@@ -479,8 +522,8 @@ export default function ManagerPage({ ogData, handle }: ManagerPageProps) {
               >
                 <Music className="w-5 h-5 text-orange-400 group-hover:scale-110 transition-transform" />
                 <div className="text-left">
-                  <p className="text-sm font-medium text-white">Full Profile</p>
-                  <p className="text-[10px] text-gray-500">Listen, follow, explore</p>
+                  <p className="text-sm font-medium text-white">{t(viewerLang, 'profile')}</p>
+                  <p className="text-[10px] text-gray-500">{t(viewerLang, 'profileDesc')}</p>
                 </div>
               </Link>
             </div>
