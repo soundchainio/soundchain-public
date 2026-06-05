@@ -9,3 +9,12 @@ contextBridge.exposeInMainWorld('northstar', {
   onPost: (cb) => ipcRenderer.on('post:new', (_e, post) => cb(post)),
   onPeers: (cb) => ipcRenderer.on('peers:update', (_e, peers) => cb(peers)),
 })
+
+contextBridge.exposeInMainWorld('passActivation', {
+  state: () => ipcRenderer.invoke('activation:state'),
+  challenge: () => ipcRenderer.invoke('activation:challenge'),
+  verify: (signature) => ipcRenderer.invoke('activation:verify', signature),
+  continueBeta: () => ipcRenderer.invoke('activation:continueBeta'),
+  enterApp: () => ipcRenderer.invoke('activation:enterApp'),
+  openBuy: () => ipcRenderer.invoke('activation:openBuy'),
+})

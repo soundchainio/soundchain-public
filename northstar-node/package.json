@@ -21,10 +21,46 @@
   "build": {
     "appId": "io.soundchain.northstar",
     "productName": "SoundChain North Star",
-    "files": ["main.js", "preload.js", "src/**/*", "renderer/**/*", "assets/icon.png"],
-    "extraResources": [{ "from": "docs", "to": "docs", "filter": ["**/*.pdf"] }],
-    "mac": { "category": "public.app-category.music", "target": ["dmg", "zip"], "icon": "assets/icon.icns" },
-    "win": { "target": ["nsis", "portable"], "icon": "assets/icon.ico", "signAndEditExecutable": false },
-    "linux": { "target": ["AppImage"], "icon": "assets/icon.png" }
+    "files": [
+      "main.js",
+      "preload.js",
+      "src/**/*",
+      "renderer/**/*",
+      "assets/icon.png"
+    ],
+    "extraResources": [
+      {
+        "from": "docs",
+        "to": "docs",
+        "filter": [
+          "**/*.pdf"
+        ]
+      }
+    ],
+    "mac": {
+      "category": "public.app-category.music",
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "icon": "assets/icon.icns"
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "assets/icon.ico",
+      "signAndEditExecutable": false
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "icon": "assets/icon.png"
+    }
+  },
+  "dependencies": {
+    "ethers": "^6.16.0"
   }
 }

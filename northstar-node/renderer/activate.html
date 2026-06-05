@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'" />
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <title>Activate · SoundChain North Star</title>
+    <style>
+      :root { --bg:#06070f; --surface:#0c0e1c; --border:#1c2036; --text:#e8ecff; --muted:#8b93b8; }
+      * { box-sizing: border-box; }
+      html, body { margin:0; height:100%; }
+      body { background:var(--bg); color:var(--text); height:100vh; overflow-y:auto;
+        font:14px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; }
+      .wrap { max-width:520px; margin:0 auto; padding:26px 22px 60px; }
+      .brand { font-size:18px; font-weight:800;
+        background:linear-gradient(90deg,#ff5e9a,#ffce5e,#5effa3,#5ec8ff,#b98bff);
+        -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+      h1 { font-size:20px; margin:14px 0 4px; }
+      .sub { color:var(--muted); font-size:13px; margin-bottom:18px; }
+      .card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px 15px; margin:12px 0; }
+      .step { color:#9fb0ff; font-weight:700; font-size:12px; text-transform:uppercase; letter-spacing:.4px; margin-bottom:6px; }
+      pre { white-space:pre-wrap; word-break:break-word; background:#11152a; border:1px solid var(--border);
+        border-radius:8px; padding:10px; font-size:12px; color:#cfe0ff; margin:8px 0 0; max-height:140px; overflow:auto; }
+      textarea { width:100%; height:78px; resize:vertical; background:#11152a; color:var(--text);
+        border:1px solid var(--border); border-radius:8px; padding:9px; font:12px ui-monospace, Menlo, monospace; }
+      textarea:focus { outline:none; border-color:#38406e; }
+      button { font:inherit; font-weight:700; border:none; border-radius:9px; padding:9px 14px; cursor:pointer; }
+      .primary { color:#06070f; background:linear-gradient(90deg,#5ec8ff,#5effa3); }
+      .ghost { color:#bcd0ff; background:var(--surface); border:1px solid var(--border); }
+      .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:10px; }
+      .msg { margin-top:10px; font-size:13px; min-height:18px; }
+      .ok { color:#5effa3; } .err { color:#ff7a90; }
+      a.buy { color:#5effa3; text-decoration:none; font-weight:700; }
+      .muted { color:var(--muted); font-size:12px; }
+      .price { display:inline-block; background:#0e1330; border:1px solid #2a3566; border-radius:999px; padding:2px 10px; color:#9fffd0; font-weight:700; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="brand">🌟 SoundChain · North Star</div>
+      <h1>Activate your Pass</h1>
+      <div class="sub">North Star unlocks with a <b>North Star Pass</b> in your wallet — free for long-time <b>L1 + L2</b> members, or a one-time <span class="price">$15</span> for everyone else. No account, no server: we just check the chain.</div>
+
+      <div class="card">
+        <div class="step">Step 1 — Prove your wallet</div>
+        <div class="muted">Copy this message and sign it in your SoundChain (or any) wallet. Signing is free and sends <b>no transaction</b>.</div>
+        <pre id="challenge">…</pre>
+        <div class="row">
+          <button class="ghost" id="copy">Copy message</button>
+          <button class="ghost" id="regen">New message</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="step">Step 2 — Paste the signature</div>
+        <textarea id="sig" placeholder="0x… (the signature your wallet produced)"></textarea>
+        <div class="row">
+          <button class="primary" id="activate">Activate</button>
+          <span class="msg" id="msg"></span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="step">No Pass yet?</div>
+        <div class="muted">Get the full SoundChain app bundle for <span class="price">$15</span> — pay with USDC · BTC · ETH · SOL · OGUN. A file you own, forever.</div>
+        <div class="row"><a class="buy" id="buy" href="#">Get a North Star Pass →</a></div>
+      </div>
+
+      <div class="row" id="betaRow" style="display:none">
+        <button class="ghost" id="beta">Continue in beta (skip for now)</button>
+      </div>
+    </div>
+    <script src="activate.js"></script>
+  </body>
+</html>
