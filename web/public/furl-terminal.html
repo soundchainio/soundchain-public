@@ -12,7 +12,7 @@
   .xterm{height:100%!important}
   /* Status bar at top — thin, unobtrusive */
   #status{position:absolute;top:0;left:0;right:0;height:18px;background:#0a0a0a;border-bottom:1px solid rgba(6,182,212,0.15);
-    display:flex;align-items:center;padding:0 8px;font:10px 'JetBrains Mono',Menlo,Monaco,monospace;color:#666;z-index:10}
+    display:flex;align-items:center;padding:0 8px;font:10px 'JetBrains Mono',Menlo,Monaco,monospace;color:#666;z-index:10;cursor:pointer}
   #status .dot{width:6px;height:6px;border-radius:50%;margin-right:6px;background:#555}
   #status .dot.connected{background:#22c55e;box-shadow:0 0 4px #22c55e}
   #status .dot.connecting{background:#eab308;animation:pulse 1s infinite}
@@ -256,13 +256,14 @@
   var httpBase = 'https://' + baseUrl.replace(/^https?:\/\//, '');
   var wsBase = httpBase.replace(/^http/, 'ws');
   var ws = null;
-  var reconnectAttempts = 0;
-  var maxReconnect = 50;
+  var reconnectAttempts = 0;       // consecutive failures WHILE ONLINE (drives backoff)
   var reconnectTimer = null;
   var keepaliveInterval = null;
   var keepaliveWorker = null;
   var wasDisconnectedWhileHidden = false;
   var isFirstConnect = true;
+  var manualClose = false;         // parent explicitly disconnected — stay down on purpose
+  var awaitingOnline = false;      // offline; reconnect is gated on the 'online' event, not a timer
 
   function connect() {
     setStatus('connecting', 'connecting...');
@@ -473,14 +474,27 @@
   }
 
   function scheduleReconnect() {
-    if (reconnectAttempts >= maxReconnect) {
-      setStatus('error', 'failed — refresh to retry');
-      term.writeln('\x1b[31m[max reconnection attempts reached]\x1b[0m');
+    // Parent explicitly disconnected us — stay down until told otherwise.
+    if (manualClose) return;
+
+    // OFFLINE (wifi off, airplane mode, walked out of range): do NOT burn the
+    // backoff budget hammering a dead network, and NEVER give up. Park here and
+    // let the window 'online' event reconnect us the instant the network is
+    // back. This is the "took the dog out, wifi dropped" case — we wait as long
+    // as it takes, then heal automatically. No dead-end, no page refresh needed.
+    if (!navigator.onLine) {
+      awaitingOnline = true;
+      clearTimeout(reconnectTimer);
+      setStatus('connecting', 'offline — waiting for network');
       return;
     }
+
+    // ONLINE but the socket failed (tunnel flap, server blip): retry forever
+    // with exponential backoff capped at 30s. No hard attempt ceiling — a
+    // transient failure must always self-heal without a manual page refresh.
     reconnectAttempts++;
     var delay = Math.min(2000 * Math.pow(2, reconnectAttempts - 1), 30000);
-    setStatus('connecting', 'reconnecting in ' + Math.round(delay/1000) + 's...');
+    setStatus('connecting', 'reconnecting in ' + Math.round(delay/1000) + 's... · tap to retry');
     clearTimeout(reconnectTimer);
     reconnectTimer = setTimeout(connect, delay);
   }
@@ -498,18 +512,62 @@
     } else {
       // Tab returned to foreground
       if (!ws || ws.readyState !== WebSocket.OPEN || wasDisconnectedWhileHidden) {
-        // Connection died while away — reconnect instantly
+        // Connection died while away — reconnect instantly, but ONLY if the
+        // network is actually up. If we're still offline, park and let the
+        // 'online' event do it (otherwise we'd waste an attempt into a dead net).
         wasDisconnectedWhileHidden = false;
         reconnectAttempts = 0; // reset — this is user-initiated, not a failure
-        term.writeln('\r\n\x1b[33m[reconnecting...]\x1b[0m');
         clearTimeout(reconnectTimer);
-        connect();
+        if (navigator.onLine) {
+          term.writeln('\r\n\x1b[33m[reconnecting...]\x1b[0m');
+          connect();
+        } else {
+          awaitingOnline = true;
+          setStatus('connecting', 'offline — waiting for network');
+        }
       } else {
         // Connection survived — just refit
         try { fitAddon.fit(); } catch(e){}
         sendResize();
       }
     }
+  });
+
+  // ─── Network-aware reconnect: survive wifi drops / tunnel flaps without ever
+  //     losing the session. The browser fires 'offline'/'online' on the window
+  //     the moment connectivity changes (wifi toggle, airplane mode, walking out
+  //     of range). While offline we PARK — no backoff churn, no dead-end. The
+  //     instant we're back online we reconnect with a fresh budget. This is the
+  //     direct fix for "took the dog out, wifi dropped, the xterm died." ───────
+  window.addEventListener('offline', function() {
+    awaitingOnline = true;
+    clearTimeout(reconnectTimer);
+    setStatus('connecting', 'offline — waiting for network');
+  });
+
+  window.addEventListener('online', function() {
+    awaitingOnline = false;
+    manualClose = false;
+    reconnectAttempts = 0; // fresh start — the prior "failures" were just no-network
+    clearTimeout(reconnectTimer);
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+      term.writeln('\r\n\x1b[32m[network back — reconnecting...]\x1b[0m');
+      connect();
+    }
+  });
+
+  // Tap the status bar to force an immediate reconnect — an escape hatch to
+  // skip a backoff wait or kick a stuck socket (navigator.onLine is sometimes
+  // wrong on captive/router-only networks, so a manual kick always works).
+  document.getElementById('status').addEventListener('click', function(e) {
+    if (e.target && e.target.classList && e.target.classList.contains('term-btn')) return; // let copy/paste buttons work
+    if (ws && ws.readyState === WebSocket.OPEN) { term.focus(); return; }
+    manualClose = false;
+    awaitingOnline = false;
+    reconnectAttempts = 0;
+    clearTimeout(reconnectTimer);
+    term.writeln('\r\n\x1b[36m[manual reconnect]\x1b[0m');
+    connect();
   });
 
   // Web Worker keepalive — immune to background tab throttling on desktop
@@ -536,9 +594,17 @@
     }
     if (evt.data.type === 'furl-disconnect') {
       clearTimeout(reconnectTimer);
-      maxReconnect = 0; // prevent auto-reconnect
+      manualClose = true; // prevent auto-reconnect until explicitly reconnected
       try { ws.close(); } catch(e){}
       setStatus('error', 'disconnected by parent');
+    }
+    if (evt.data.type === 'furl-reconnect') {
+      // parent can force a reconnect (e.g. after re-enabling the tunnel)
+      manualClose = false;
+      awaitingOnline = false;
+      reconnectAttempts = 0;
+      clearTimeout(reconnectTimer);
+      if (!ws || ws.readyState !== WebSocket.OPEN) connect();
     }
     if (evt.data.type === 'furl-focus') {
       term.focus();
@@ -559,7 +625,7 @@
   term.writeln('\x1b[36m\u250C\u2500 CLI BRIDGE (iframe-isolated) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\x1b[0m');
   term.writeln('\x1b[36m\u2502\x1b[0m connecting to ' + (isRelay ? 'SoundChain relay' : 'tunnel') + '...');
   term.writeln('\x1b[36m\u2502\x1b[0m \x1b[90m' + httpBase + '\x1b[0m');
-  term.writeln('\x1b[36m\u2502\x1b[0m \x1b[32mThis terminal survives page refreshes & tab switches!\x1b[0m');
+  term.writeln('\x1b[36m\u2502\x1b[0m \x1b[32mThis terminal survives refreshes, tab switches & wifi drops!\x1b[0m');
   term.writeln('\x1b[36m\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\x1b[0m');
   term.writeln('');
 
