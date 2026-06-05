@@ -1024,8 +1024,20 @@ export default function LucyHome() {
           return
         }
       } else if (lucySource === 'local') {
-        await runLocal()
-        await handleHandoffIfRequested()
+        // Local-first, but NEVER silent. If the on-device model can't answer —
+        // failed to load, iOS memory-reclaimed mid-reply, or this browser has no
+        // WebGPU — fall back to her anvil brain so Lucy ALWAYS responds instead
+        // of dropping a dead bubble + a raw error. Sovereignty is the goal; a
+        // mute Lucy isn't. The model keeps trying on-device every turn; cloud is
+        // only the safety net when the device genuinely can't.
+        try {
+          await runLocal()
+          await handleHandoffIfRequested()
+        } catch (localErr: any) {
+          if (localErr?.name === 'AbortError' || outer.signal.aborted) throw localErr
+          setActiveReplySource(null)
+          await consumeTokens(anvilTokens(), 'anvil')
+        }
       } else {
         try {
           await consumeTokens(anvilTokens(), 'anvil')
