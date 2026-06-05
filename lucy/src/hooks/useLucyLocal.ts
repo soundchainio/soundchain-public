@@ -86,6 +86,17 @@ export function useLucyLocal() {
       throw new Error(msg)
     }
 
+    // Make the cached model weights PERSISTENT before the ~3GB download lands.
+    // WebLLM caches weights in the origin's Cache/OPFS storage so a downloaded
+    // model runs fully offline forever (the "local app" feel). BUT iOS Safari
+    // evicts script-written storage after ~7 days idle or under storage pressure
+    // → without this the model silently re-downloads every visit ("Lucy keeps
+    // re-loading on device"). navigator.storage.persist() requests the durable
+    // bucket that's exempt from that eviction. Installed as a PWA (Add to Home
+    // Screen) it's persistent by default — this covers the plain-tab case too.
+    // Best-effort: never block the load if the API is missing or the user denies.
+    try { await (navigator as any).storage?.persist?.() } catch {/* best-effort */}
+
     setState(s => ({ ...s, supported: true, loading: true, error: null, loadProgress: 0, loadStatus: 'Starting…' }))
     try {
       const mod: any = await import('@mlc-ai/web-llm')
