@@ -20,6 +20,7 @@ import { Logo } from 'icons/Logo'
 import { ManagerGreeting } from 'components/manager/ManagerGreeting'
 import { ManagerContactForm } from 'components/manager/ManagerContactForm'
 import { ManagerConfig, loadManagerConfig, ManagerConfigData } from 'components/manager/ManagerConfig'
+import { ManagerInbox } from 'components/manager/ManagerInbox'
 
 // ─── SSR for OG Tags ─────────────────────────────────────────────────
 
@@ -287,6 +288,9 @@ export default function ManagerPage({ ogData, handle }: ManagerPageProps) {
 
         {/* ─── Content ──────────────────────────────────────────────── */}
         <div className="max-w-3xl mx-auto px-4 py-6 space-y-6">
+          {/* Owner Inbox — delivered inquiries land here (bookings no longer vanish) */}
+          {isOwner && profile.id && <ManagerInbox />}
+
           {/* Greeting Card */}
           {vis.greeting && (
             <ManagerGreeting

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Send, CheckCircle, Calendar, Users, Briefcase } from 'lucide-react'
+import { Send, CheckCircle, Calendar, Users, Briefcase, Loader2 } from 'lucide-react'
 
 type FormType = 'booking' | 'collab' | 'business'
 
@@ -51,6 +51,7 @@ const initialFormState: FormState = {
 export function ManagerContactForm({ type, profileId, artistName, onClose }: ManagerContactFormProps) {
   const [form, setForm] = useState<FormState>(initialFormState)
   const [submitted, setSubmitted] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
 
   const { title, icon: Icon, color } = FORM_CONFIG[type]
@@ -60,7 +61,7 @@ export function ManagerContactForm({ type, profileId, artistName, onClose }: Man
     setError('')
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!form.name.trim() || !form.email.trim()) {
       setError('Name and email are required.')
@@ -71,17 +72,45 @@ export function ManagerContactForm({ type, profileId, artistName, onClose }: Man
       return
     }
 
-    const inquiry = { ...form, type, timestamp: new Date().toISOString() }
-    const key = `manager_inquiries_${profileId}`
+    setSubmitting(true)
+    setError('')
     try {
-      const existing = JSON.parse(localStorage.getItem(key) || '[]')
-      existing.push(inquiry)
-      localStorage.setItem(key, JSON.stringify(existing.slice(-100)))
-    } catch {
-      // localStorage full or unavailable
+      // Deliver the inquiry to the pro for real: persists to their inbox, lights
+      // their bell, and fires a Pulse push so they get it on the go. visitorLang
+      // travels along so the pro sees what language the booker is reaching out in.
+      const res = await fetch('/api/manager/inquiry', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          profileId,
+          type,
+          name: form.name,
+          email: form.email,
+          message: form.message,
+          visitorLang: typeof navigator !== 'undefined' ? navigator.language : '',
+          fields: {
+            eventType: form.eventType,
+            date: form.date,
+            location: form.location,
+            budgetRange: form.budgetRange,
+            artistProjectName: form.artistProjectName,
+            collabType: form.collabType,
+            workLink: form.workLink,
+            company: form.company,
+            inquiryType: form.inquiryType,
+          },
+        }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({} as any))
+        throw new Error(data?.error || 'Could not send your inquiry.')
+      }
+      setSubmitted(true)
+    } catch (err: any) {
+      setError(err?.message || 'Could not send your inquiry. Please try again.')
+    } finally {
+      setSubmitting(false)
     }
-
-    setSubmitted(true)
   }
 
   if (submitted) {
@@ -257,10 +286,14 @@ export function ManagerContactForm({ type, profileId, artistName, onClose }: Man
 
         <button
           type="submit"
-          className="w-full py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-500 text-white text-sm font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+          disabled={submitting}
+          className="w-full py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-500 text-white text-sm font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-60"
         >
-          <Send className="w-4 h-4" />
-          Submit Inquiry
+          {submitting ? (
+            <><Loader2 className="w-4 h-4 animate-spin" /> Sending...</>
+          ) : (
+            <><Send className="w-4 h-4" /> Submit Inquiry</>
+          )}
         </button>
       </form>
     </div>
