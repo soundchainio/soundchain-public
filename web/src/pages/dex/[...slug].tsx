@@ -8099,19 +8099,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                           Playlists
                         </span>
                       </Button>
-                      {/* Generate tab - BETA: furdA1 only */}
-                      {isViewingOwnProfile && viewingProfile.userHandle === 'furdA1' && (
-                        <Button
-                          variant="ghost"
-                          onClick={() => setProfileTab('generate')}
-                          className={`flex-shrink-0 transition-all duration-300 hover:bg-violet-500/10 ${profileTab === 'generate' ? 'bg-violet-500/10' : ''}`}
-                        >
-                          <Sparkles className={`w-4 h-4 mr-2 transition-colors duration-300 ${profileTab === 'generate' ? 'text-violet-400' : 'text-gray-400'}`} />
-                          <span className={`text-sm font-black transition-all duration-300 ${profileTab === 'generate' ? 'text-violet-400' : 'text-gray-400'}`}>
-                            Generate
-                          </span>
-                        </Button>
-                      )}
+                      {/* Generate tab benched — removed Jun 2026 */}
                       {/* Bio Accordion Toggle - Only shown when viewing own profile */}
                       {isViewingOwnProfile && (me?.profile?.bio || userData?.me?.profile?.bio) && (
                         <button
