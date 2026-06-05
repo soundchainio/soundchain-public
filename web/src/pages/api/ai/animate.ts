@@ -17,7 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(403).json({ error: 'Animate is in beta. Stay tuned.' })
   }
 
-  const { image, prompt, steps, seed, target_duration, nsfw } = req.body
+  const { image, prompt, steps, seed, target_duration, nsfw, face_mode, reference_images } = req.body
   if (!image || typeof image !== 'string') {
     return res.status(400).json({ error: 'image is required (base64)' })
   }
@@ -35,6 +35,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         seed: seed ?? -1,
         target_duration: target_duration || 4,
         nsfw: nsfw || false,
+        face_mode: face_mode || false,
+        reference_images: reference_images || [],
       }),
       signal: controller.signal,
     })

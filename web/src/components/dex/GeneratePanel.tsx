@@ -606,6 +606,8 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
           target_duration: animateDuration,
           steps: animateSteps,
           nsfw: nsfwMode,
+          face_mode: faceMode,
+          ...(faceMode && refImages.length > 0 ? { reference_images: refImages.map((r) => r.data) } : {}),
         }),
         signal: abortRef.current.signal,
       })
@@ -651,7 +653,7 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
       abortRef.current?.signal.removeEventListener('abort', onAbort)
       setGenerating(false)
     }
-  }, [animateImage, animatePrompt, animateDuration, animateSteps, nsfwMode])
+  }, [animateImage, animatePrompt, animateDuration, animateSteps, nsfwMode, faceMode, refImages])
 
   const handleSaveVideo = useCallback(() => {
     if (!animateResult?.video) return
@@ -906,19 +908,18 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
                 <ScanFace className="w-3 h-3" />
                 {refImages.length > 0 ? 'Add Face' : 'Add Face Refs'}
               </button>
+              <button
+                onClick={() => setFaceMode(!faceMode)}
+                title="Keep the face consistent across the whole clip"
+                className={`flex items-center gap-1 text-[10px] px-2 py-1 rounded-full border transition-colors ${
+                  faceMode ? 'bg-violet-500/30 text-violet-300 border-violet-400/50' : 'text-gray-500 border-white/10 hover:text-gray-300'
+                }`}
+              >
+                <ScanFace className="w-2.5 h-2.5" />
+                Face Lock
+              </button>
               {refImages.length > 0 && (
-                <>
-                  <button
-                    onClick={() => setFaceMode(!faceMode)}
-                    className={`flex items-center gap-1 text-[10px] px-2 py-1 rounded-full border transition-colors ${
-                      faceMode ? 'bg-violet-500/30 text-violet-300 border-violet-400/50' : 'text-gray-500 border-white/10 hover:text-gray-300'
-                    }`}
-                  >
-                    <ScanFace className="w-2.5 h-2.5" />
-                    Face Lock
-                  </button>
-                  <button onClick={clearAllRefImages} className="text-[10px] text-gray-500 hover:text-red-400">Clear</button>
-                </>
+                <button onClick={clearAllRefImages} className="text-[10px] text-gray-500 hover:text-red-400">Clear</button>
               )}
               <button
                 onClick={() => setNsfwMode(!nsfwMode)}
