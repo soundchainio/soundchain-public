@@ -19,6 +19,11 @@ export interface ManagerService {
 
 export interface ManagerConfigData {
   profession: string
+  // Manager-specific hero/cover image the pro uploads — branding for their
+  // "money-maker" page AND the image used on the shared link's card bubble.
+  // Distinct from the SC profile coverPicture so the manager page can be styled
+  // independently for promoters.
+  heroImageUrl: string
   customGreetingText: string
   customGreetingAudioUrl: string
   selectedVoice: string
@@ -48,6 +53,7 @@ export const PROFESSIONS = [
 
 const DEFAULT_CONFIG: ManagerConfigData = {
   profession: '',
+  heroImageUrl: '',
   customGreetingText: '',
   customGreetingAudioUrl: '',
   selectedVoice: '',
@@ -109,6 +115,21 @@ export async function fetchManagerConfig(profileId: string): Promise<ManagerConf
   } catch {
     return null
   }
+}
+
+// Persist a full config to BOTH localStorage (instant local cache) and the
+// server (the copy visitors + the agent read). Used for one-shot writes from
+// outside the settings panel (e.g. the in-hero cover uploader). The server
+// keys the doc on the authenticated owner, so only the owner's POST sticks.
+export async function saveManagerConfig(profileId: string, data: ManagerConfigData): Promise<void> {
+  try { localStorage.setItem(getStorageKey(profileId), JSON.stringify(data)) } catch {}
+  try {
+    await fetch('/api/manager/config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    })
+  } catch {}
 }
 
 interface ManagerConfigProps {

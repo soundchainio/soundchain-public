@@ -81,6 +81,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       const config = {
         profession: clip(b.profession, 60),
+        heroImageUrl: clip(b.heroImageUrl, 600), // manager hero/cover + share-card image
         customGreetingText: clip(b.customGreetingText, 4000),
         customGreetingAudioUrl: clip(b.customGreetingAudioUrl, 600),
         selectedVoice: clip(b.selectedVoice, 80),

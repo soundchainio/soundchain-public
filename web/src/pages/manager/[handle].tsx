@@ -3,7 +3,7 @@ import { GetServerSideProps } from 'next'
 import Head from 'next/head'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { ChevronLeft, Calendar, Users, Briefcase, Music, ExternalLink, DollarSign, Plane, Hotel, Coffee, Sliders, Globe } from 'lucide-react'
+import { ChevronLeft, Calendar, Users, Briefcase, Music, ExternalLink, DollarSign, Plane, Hotel, Coffee, Sliders, Globe, Share2, Check } from 'lucide-react'
 import { config } from 'config'
 import { CustomLayout } from 'pages/_app'
 import { createApolloClient } from 'lib/apollo'
@@ -19,7 +19,8 @@ import { useMe } from 'hooks/useMe'
 import { Logo } from 'icons/Logo'
 import { ManagerGreeting } from 'components/manager/ManagerGreeting'
 import { ManagerContactForm } from 'components/manager/ManagerContactForm'
-import { ManagerConfig, loadManagerConfig, fetchManagerConfig, ManagerConfigData } from 'components/manager/ManagerConfig'
+import { ManagerConfig, loadManagerConfig, fetchManagerConfig, ManagerConfigData, saveManagerConfig } from 'components/manager/ManagerConfig'
+import { ManagerCoverUploader } from 'components/manager/ManagerCoverUploader'
 import { ManagerInbox } from 'components/manager/ManagerInbox'
 import { ManagerLanguageGate } from 'components/manager/ManagerLanguageGate'
 import { ManagerBookingEscrow } from 'components/manager/ManagerBookingEscrow'
@@ -54,13 +55,33 @@ export const getServerSideProps: GetServerSideProps<ManagerPageProps> = async (c
     const profile = data?.profileByHandle
     if (!profile) return { notFound: true }
 
+    // The pro's uploaded manager cover is the share-card image (the bubble that
+    // renders when the /manager link is dropped in a DM / iMessage / X). Read it
+    // Vercel-direct from Mongo so the card uses their branding, not a logo.
+    // Dynamic import so the mongodb driver (which throws at module-load when
+    // MONGODB_URI is unset) is only pulled in at request time on the server —
+    // never during build-time page-data collection.
+    let heroImageUrl = ''
+    try {
+      if (profile.id) {
+        const { default: clientPromise } = await import('lib/mongodb')
+        const { ObjectId } = await import('mongodb')
+        const mongo = await clientPromise
+        const cfgDoc = await mongo.db('soundchain').collection('managerConfigs').findOne({ profileId: new ObjectId(profile.id) })
+        heroImageUrl = (cfgDoc?.heroImageUrl as string) || ''
+      }
+    } catch {}
+
     const name = profile.displayName || profile.userHandle || handle
+    const fallbackLogo = `${config.domainUrl || 'https://soundchain.io'}/soundchain-meta-logo.png`
     const ogData: OgData = {
       title: `${name} | Artist Manager`,
       description: profile.bio
         ? profile.bio.substring(0, 160)
         : `Connect with ${name} on SoundChain. Book shows, propose collaborations, and make business inquiries.`,
-      image: profile.profilePicture || `${config.domainUrl || 'https://soundchain.io'}/soundchain-meta-logo.png`,
+      // Wide manager banner first → cover → square avatar → logo, so the card is
+      // always a real image and never a bare logo.
+      image: heroImageUrl || profile.coverPicture || profile.profilePicture || fallbackLogo,
       url: `/manager/${handle}`,
     }
 
@@ -130,6 +151,7 @@ export default function ManagerPage({ ogData, handle }: ManagerPageProps) {
   const isOwner = !!(me?.profile?.id && profile?.id && me.profile.id === profile.id)
 
   const [activeForm, setActiveForm] = useState<'booking' | 'collab' | 'business' | null>(null)
+  const [copied, setCopied] = useState(false)
 
   // Polyglot: the agent talks to the visitor in THEIR language. Start at 'en' for
   // SSR/hydration parity. On mount: use the remembered choice if any; otherwise
@@ -173,6 +195,8 @@ export default function ManagerPage({ ogData, handle }: ManagerPageProps) {
   const displayName = profile?.displayName || profile?.userHandle || pageHandle
   const latestTrack = tracks[0]
   const vis = managerConfig.sectionsVisible
+  // Manager-specific banner first, then the SC profile cover as a sensible default.
+  const heroSrc = managerConfig.heroImageUrl || profile?.coverPicture || ''
 
   // Booking Details — derived flags so the card only shows when the pro set terms.
   const mc = managerConfig
@@ -188,6 +212,30 @@ export default function ManagerPage({ ogData, handle }: ManagerPageProps) {
   }, [profile?.socialMedias])
 
   const domainUrl = config.domainUrl || 'https://soundchain.io'
+  const shareUrl = `${domainUrl}/manager/${pageHandle}`
+
+  // Share the manager page — native OS share sheet on mobile (Frank's device),
+  // clipboard copy with inline "Copied!" feedback everywhere else.
+  const handleShare = async () => {
+    const shareData = {
+      title: `${displayName} | Artist Manager`,
+      text: `Book ${displayName} on SoundChain`,
+      url: shareUrl,
+    }
+    if (typeof navigator !== 'undefined' && (navigator as any).share) {
+      try {
+        await (navigator as any).share(shareData)
+        return
+      } catch {
+        // user dismissed the sheet (or it failed) → fall through to copy
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(shareUrl)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {}
+  }
 
   // ─── Loading / Error States ──────────────────────────────────────
 
@@ -249,25 +297,52 @@ export default function ManagerPage({ ogData, handle }: ManagerPageProps) {
                 </span>
               </Link>
             </div>
-            <span className="text-xs font-mono uppercase tracking-wider text-cyan-500/70">Artist Manager</span>
+            <div className="flex items-center gap-2.5">
+              <button
+                onClick={handleShare}
+                title="Share this manager page"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/20 hover:border-cyan-400/50 text-xs font-medium transition-colors"
+              >
+                {copied ? <Check className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
+                <span>{copied ? 'Copied!' : 'Share'}</span>
+              </button>
+              <span className="text-xs font-mono uppercase tracking-wider text-cyan-500/70 hidden sm:inline">Artist Manager</span>
+            </div>
           </div>
         </nav>
 
         {/* ─── Hero Section ─────────────────────────────────────────── */}
-        <div className="relative h-[50vh] min-h-[280px] w-full overflow-hidden">
-          {profile.coverPicture ? (
-            <img
-              src={profile.coverPicture}
-              alt="Cover"
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full bg-gradient-to-br from-purple-900/80 via-cyan-900/50 to-black" />
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
+        {/* Width-capped, centered banner: full-bleed on mobile, a polished card
+            on widescreen (never an edge-to-edge stretched band). object-cover +
+            object-center keeps any uploaded image crisp and undistorted. */}
+        <div className="w-full bg-black">
+          <div className="relative max-w-3xl mx-auto h-[44vh] min-h-[260px] max-h-[460px] overflow-hidden sm:rounded-b-3xl sm:border-x border-b border-cyan-500/15">
+            {heroSrc ? (
+              <img
+                src={heroSrc}
+                alt={`${displayName} cover`}
+                className="w-full h-full object-cover object-center"
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-purple-900/80 via-cyan-900/50 to-black" />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
 
-          {/* Profile Info */}
-          <div className="absolute bottom-0 left-0 right-0 p-4 z-10">
+            {/* Owner-only cover uploader — CTA in the empty space, edit pill once set */}
+            {isOwner && profile.id && (
+              <ManagerCoverUploader
+                currentUrl={managerConfig.heroImageUrl}
+                hasImage={!!heroSrc}
+                onUploaded={(url) => {
+                  const next = { ...managerConfig, heroImageUrl: url }
+                  setManagerConfig(next)
+                  saveManagerConfig(profile.id, next)
+                }}
+              />
+            )}
+
+            {/* Profile Info */}
+            <div className="absolute bottom-0 left-0 right-0 p-4 z-10">
             <div className="max-w-3xl mx-auto">
               <div className="flex items-end gap-4">
                 {/* Avatar */}
@@ -337,6 +412,7 @@ export default function ManagerPage({ ogData, handle }: ManagerPageProps) {
                   )}
                 </div>
               )}
+            </div>
             </div>
           </div>
         </div>
