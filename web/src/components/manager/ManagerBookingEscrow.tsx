@@ -29,6 +29,7 @@ interface ManagerBookingEscrowProps {
   packages?: BookingPackage[] // the pro's pre-set set/service choices (dropdown)
   cancellation?: string // the pro's pre-set cancellation policy
   rider?: { travel: string; accommodation: string; hospitality: string; technical: string }
+  payoutWallets?: { label?: string; address: string; chain: string; token: string }[]
   payerName?: string
   payerEmail?: string
   inquiryId?: string
@@ -54,7 +55,7 @@ const parseRate = (rate?: string): number | null => {
 }
 
 export function ManagerBookingEscrow({
-  profileId, displayName, payoutAddress, depositHint, packages, cancellation, rider, payerName, payerEmail, inquiryId, lang,
+  profileId, displayName, payoutAddress, depositHint, packages, cancellation, rider, payoutWallets, payerName, payerEmail, inquiryId, lang,
 }: ManagerBookingEscrowProps) {
   const riderItems = rider ? (Object.entries(rider) as [string, string][]).filter(([, v]) => v && v.trim()) : []
   const wallet = useWallet()
@@ -352,6 +353,12 @@ export function ManagerBookingEscrow({
         {selected.length > 1 && (
           <p className="mt-1 text-[10px] text-gray-600">Paying this deposit with <span className="text-cyan-300">{payToken?.display}</span> — tap a chip to switch.</p>
         )}
+        {payToken && (() => {
+          const m = (payoutWallets || []).find((w) => (w.token || '').toUpperCase() === payToken.symbol && w.address)
+          return m
+            ? <p className="mt-1 text-[10px] text-emerald-400/80">Settles to {displayName}&apos;s {payToken.display} wallet · {m.address.slice(0, 6)}…{m.address.slice(-4)}</p>
+            : <p className="mt-1 text-[10px] text-amber-400/80">{displayName} hasn&apos;t set a {payToken.display} payout wallet yet — add one in your address book (Settings).</p>
+        })()}
       </div>
 
       {/* Wallet */}

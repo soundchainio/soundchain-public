@@ -177,10 +177,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const escrowContractAddr = clip(process.env.NEXT_PUBLIC_MANAGER_ESCROW_ADDRESS, 60)
     let destination = escrowContractAddr
     if (!destination) {
-      const cfg = await db.collection('managerConfigs').findOne({ profileId: oid }, { projection: { payoutAddress: 1 } })
-      destination = clip(cfg?.payoutAddress, 120)
+      // Resolve the pro's payout wallet from their address book matching the SELECTED
+      // token — a promoter paying in ETH settles to the pro's ETH wallet, never a
+      // default Polygon/Magic wallet. Fall back to the single default payoutAddress.
+      const cfg = await db.collection('managerConfigs').findOne(
+        { profileId: oid },
+        { projection: { payoutAddress: 1, payoutWallets: 1 } },
+      )
+      const wallets: any[] = Array.isArray(cfg?.payoutWallets) ? cfg!.payoutWallets : []
+      const match = wallets.find((w) => clip(w?.token, 12).toUpperCase() === token && clip(w?.address, 120))
+      destination = clip(match?.address, 120) || clip(cfg?.payoutAddress, 120)
     }
-    if (!destination) return res.status(409).json({ error: 'This artist has not set up a crypto payout address yet.' })
+    if (!destination) return res.status(409).json({ error: `This artist hasn't set a payout wallet for ${token} yet.` })
 
     const revealToken = randomRevealToken()
     const now = new Date()
