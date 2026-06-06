@@ -26,6 +26,7 @@ import { ManagerBioEditor } from 'components/manager/ManagerBioEditor'
 import { ManagerReputation } from 'components/manager/ManagerReputation'
 import { ManagerFlyers } from 'components/manager/ManagerFlyers'
 import { ManagerEscrowViewer } from 'components/manager/ManagerEscrowViewer'
+import { ManagerWhitelistLink } from 'components/manager/ManagerWhitelistLink'
 import { ManagerLanguageGate } from 'components/manager/ManagerLanguageGate'
 import { ManagerBookingEscrow } from 'components/manager/ManagerBookingEscrow'
 import { ManagerBankVault } from 'components/manager/ManagerBankVault'
@@ -232,6 +233,18 @@ export default function ManagerPage({ ogData, handle, isBot }: ManagerPageProps)
     })
   }
 
+  // Whitelist deep-link: /manager/<handle>?book=1 (the escrow's own shareable URL)
+  // lands the promoter straight on the booking escrow template. Fire once profile loads.
+  const bookLinkHandled = useRef(false)
+  useEffect(() => {
+    if (bookLinkHandled.current || !router.isReady || !profile?.id) return
+    if (router.query.book === '1' || router.query.whitelist === '1') {
+      bookLinkHandled.current = true
+      openForm('booking')
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router.isReady, router.query.book, router.query.whitelist, profile?.id])
+
   // Polyglot: the agent talks to the visitor in THEIR language. Start at 'en' for
   // SSR/hydration parity. On mount: use the remembered choice if any; otherwise
   // pre-detect from the browser and show the language welcome gate so the visitor
@@ -377,7 +390,18 @@ export default function ManagerPage({ ogData, handle, isBot }: ManagerPageProps)
     <>
       {ogHead}
 
-      <div className="min-h-screen bg-black text-white">
+      <div className="relative min-h-screen bg-black text-white">
+        {/* Full-screen page background the pro uploaded (photo/GIF). object-cover so
+            it fills any desktop/mobile viewport; dark overlay keeps content readable.
+            Fixed + behind everything (content sits at z-10+). */}
+        {managerConfig.backgroundImageUrl && (
+          <div className="fixed inset-0 -z-10 pointer-events-none">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={managerConfig.backgroundImageUrl} alt="" className="w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-black/72" />
+          </div>
+        )}
+
         {/* Language welcome gate — first touch: pick the language the agent speaks */}
         {showLangGate && <ManagerLanguageGate current={viewerLang} onSelect={chooseLang} />}
 
@@ -590,6 +614,14 @@ export default function ManagerPage({ ogData, handle, isBot }: ManagerPageProps)
             payoutAddress={managerConfig.payoutAddress || undefined}
           />
 
+          {/* The escrow's own shareable URL — the booking "whitelist" link */}
+          <ManagerWhitelistLink
+            url={`${domainUrl}/manager/${pageHandle}?book=1`}
+            isOwner={isOwner}
+            displayName={displayName}
+            onOpen={() => openForm('booking')}
+          />
+
           {/* Booking Details — rates, rider & terms the promoter needs to arrange */}
           {showBookingDetails && (
             <section className="backdrop-blur-xl bg-black/60 border border-cyan-500/20 rounded-2xl p-5 space-y-4">
@@ -706,6 +738,7 @@ export default function ManagerPage({ ogData, handle, isBot }: ManagerPageProps)
                   depositHint={managerConfig.paymentTerms.depositSchedule || managerConfig.bookingRate || undefined}
                   packages={managerConfig.services}
                   cancellation={managerConfig.paymentTerms.cancellation || undefined}
+                  rider={managerConfig.rider}
                   lang={viewerLang}
                 />
               )}

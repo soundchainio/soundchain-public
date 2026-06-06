@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Settings, Save, ChevronDown, ChevronUp, Trash2, Plus } from 'lucide-react'
+import { Settings, Save, ChevronDown, ChevronUp, Trash2, Plus, Loader2, ImagePlus } from 'lucide-react'
 import { useDropzone } from 'react-dropzone'
 import { useUpload } from 'hooks/useUpload'
 import { FastAudioPlayer } from 'components/FastAudioPlayer'
@@ -17,6 +17,24 @@ export interface ManagerService {
   note: string
 }
 
+// A row in the pro's payout "address book" / ledger — the wallet that receives a
+// booking deposit on a given chain, in a given token. The pro locks these in; the
+// escrow routes the deposit to the matching chain/token.
+export interface PayoutWallet {
+  label: string
+  address: string
+  chain: string
+  token: string
+}
+
+// Chains + tokens the pro can lock a payout wallet to (ZetaChain-omnichain set).
+export const PAYOUT_CHAINS = [
+  'Ethereum', 'Polygon', 'Base', 'Arbitrum', 'Optimism', 'Avalanche', 'BNB Chain', 'Solana', 'Bitcoin', 'ZetaChain',
+]
+export const PAYOUT_TOKENS = [
+  'ETH', 'USDC', 'USDT', 'POL', 'SOL', 'BTC', 'OGUN', 'YZY', 'AVAX', 'BNB', 'ARB', 'OP', 'DAI', 'WBTC',
+]
+
 export interface ManagerConfigData {
   profession: string
   // Manager-specific hero/cover image the pro uploads — branding for their
@@ -24,6 +42,9 @@ export interface ManagerConfigData {
   // Distinct from the SC profile coverPicture so the manager page can be styled
   // independently for promoters.
   heroImageUrl: string
+  // Full-screen page background the pro uploads (themselves, the studio, a GIF…) —
+  // sits behind everything, object-cover so it fills any desktop/mobile viewport.
+  backgroundImageUrl: string
   customGreetingText: string
   customGreetingAudioUrl: string
   selectedVoice: string
@@ -34,6 +55,7 @@ export interface ManagerConfigData {
   rider: { travel: string; accommodation: string; hospitality: string; technical: string }
   paymentTerms: { depositSchedule: string; methods: string; currency: string; cancellation: string }
   payoutAddress: string
+  payoutWallets: PayoutWallet[]
   sectionsVisible: {
     greeting: boolean
     tracks: boolean
@@ -54,6 +76,7 @@ export const PROFESSIONS = [
 const DEFAULT_CONFIG: ManagerConfigData = {
   profession: '',
   heroImageUrl: '',
+  backgroundImageUrl: '',
   customGreetingText: '',
   customGreetingAudioUrl: '',
   selectedVoice: '',
@@ -64,6 +87,7 @@ const DEFAULT_CONFIG: ManagerConfigData = {
   rider: { travel: '', accommodation: '', hospitality: '', technical: '' },
   paymentTerms: { depositSchedule: '', methods: '', currency: '', cancellation: '' },
   payoutAddress: '',
+  payoutWallets: [],
   sectionsVisible: {
     greeting: true,
     tracks: true,
@@ -82,6 +106,7 @@ export function normalizeManagerConfig(partial: any): ManagerConfigData {
     ...DEFAULT_CONFIG,
     ...partial,
     services: Array.isArray(partial.services) ? partial.services : [],
+    payoutWallets: Array.isArray(partial.payoutWallets) ? partial.payoutWallets : [],
     rider: { ...DEFAULT_CONFIG.rider, ...(partial.rider || {}) },
     paymentTerms: { ...DEFAULT_CONFIG.paymentTerms, ...(partial.paymentTerms || {}) },
     sectionsVisible: { ...DEFAULT_CONFIG.sectionsVisible, ...(partial.sectionsVisible || {}) },
@@ -154,6 +179,14 @@ export function ManagerConfig({ profileId, config, onChange }: ManagerConfigProp
     maxSize: 10 * 1024 * 1024, // 10MB
   })
 
+  // Page images — the hero cover (banner + share card) and the full-screen page
+  // background (themselves, the studio, a GIF…). Both GIF-friendly, high-res.
+  const IMG_ACCEPT = { 'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.avif'] }
+  const { uploading: heroUploading, upload: uploadHero } = useUpload(config.heroImageUrl, (url) => updateField('heroImageUrl', url))
+  const heroDz = useDropzone({ onDrop: uploadHero, accept: IMG_ACCEPT, maxFiles: 1, maxSize: 15 * 1024 * 1024, noKeyboard: true })
+  const { uploading: bgUploading, upload: uploadBg } = useUpload(config.backgroundImageUrl, (url) => updateField('backgroundImageUrl', url))
+  const bgDz = useDropzone({ onDrop: uploadBg, accept: IMG_ACCEPT, maxFiles: 1, maxSize: 20 * 1024 * 1024, noKeyboard: true })
+
   // Persist to BOTH localStorage (instant local cache) and the server (the copy
   // visitors + the agent read). Debounced so rapid typing = one save.
   const persist = useCallback((data: ManagerConfigData) => {
@@ -202,6 +235,23 @@ export function ManagerConfig({ profileId, config, onChange }: ManagerConfigProp
     onChange(next); persist(next)
   }, [config, onChange, persist])
 
+  // ── Payout wallet address book (ledger: label | address | chain | token) ──
+  const updateWallet = useCallback((idx: number, key: keyof PayoutWallet, value: string) => {
+    const payoutWallets = (config.payoutWallets || []).map((w, i) => (i === idx ? { ...w, [key]: value } : w))
+    const next = { ...config, payoutWallets }
+    onChange(next); persist(next)
+  }, [config, onChange, persist])
+
+  const addWallet = useCallback(() => {
+    const next = { ...config, payoutWallets: [...(config.payoutWallets || []), { label: '', address: '', chain: PAYOUT_CHAINS[0], token: PAYOUT_TOKENS[0] }] }
+    onChange(next); persist(next)
+  }, [config, onChange, persist])
+
+  const removeWallet = useCallback((idx: number) => {
+    const next = { ...config, payoutWallets: (config.payoutWallets || []).filter((_, i) => i !== idx) }
+    onChange(next); persist(next)
+  }, [config, onChange, persist])
+
   const toggleSection = useCallback((key: keyof ManagerConfigData['sectionsVisible']) => {
     const next = {
       ...config,
@@ -242,6 +292,48 @@ export function ManagerConfig({ profileId, config, onChange }: ManagerConfigProp
 
       {expanded && (
         <div className="p-5 bg-black/40 space-y-5">
+          {/* Page images — hero cover (banner + share card) + full-screen background */}
+          <div>
+            <label className={labelCls}>Page Images (cover banner + full-screen background — photos or GIFs)</label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Hero cover */}
+              <div {...heroDz.getRootProps()} className="relative h-28 rounded-xl overflow-hidden border border-dashed border-gray-700 hover:border-cyan-500/50 bg-gray-900/60 cursor-pointer group transition-colors">
+                <input {...heroDz.getInputProps()} />
+                {config.heroImageUrl && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={config.heroImageUrl} alt="cover" className="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:opacity-50 transition-opacity" />
+                )}
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 text-center px-2">
+                  {heroUploading ? <Loader2 className="w-5 h-5 text-cyan-300 animate-spin" /> : <ImagePlus className="w-5 h-5 text-cyan-300" />}
+                  <span className="text-[11px] font-medium text-white">{config.heroImageUrl ? 'Change cover' : 'Cover banner'}</span>
+                  <span className="text-[9px] text-gray-400">Top banner + shared-link card</span>
+                </div>
+              </div>
+              {/* Full-screen background */}
+              <div {...bgDz.getRootProps()} className="relative h-28 rounded-xl overflow-hidden border border-dashed border-gray-700 hover:border-cyan-500/50 bg-gray-900/60 cursor-pointer group transition-colors">
+                <input {...bgDz.getInputProps()} />
+                {config.backgroundImageUrl && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={config.backgroundImageUrl} alt="background" className="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:opacity-50 transition-opacity" />
+                )}
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 text-center px-2">
+                  {bgUploading ? <Loader2 className="w-5 h-5 text-cyan-300 animate-spin" /> : <ImagePlus className="w-5 h-5 text-cyan-300" />}
+                  <span className="text-[11px] font-medium text-white">{config.backgroundImageUrl ? 'Change background' : 'Full-screen background'}</span>
+                  <span className="text-[9px] text-gray-400">You, the studio, a GIF — fills the page</span>
+                </div>
+                {config.backgroundImageUrl && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); updateField('backgroundImageUrl', '') }}
+                    className="absolute top-1.5 right-1.5 z-10 flex items-center justify-center w-6 h-6 rounded-full bg-black/70 border border-white/20 text-gray-200 hover:text-red-400"
+                    title="Remove background"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
           {/* Profession — universal: DJ, photographer, attorney, real-estate… */}
           <div>
             <label className={labelCls}>Your Profession (the agent represents you as this)</label>
@@ -432,9 +524,49 @@ export function ManagerConfig({ profileId, config, onChange }: ManagerConfigProp
               </div>
             </div>
             <div>
-              <label className={labelCls}>Payout Wallet (crypto address — public, safe to share)</label>
+              <label className={labelCls}>Default Payout Wallet (crypto address — public, safe to share)</label>
               <input type="text" value={config.payoutAddress} onChange={e => updateField('payoutAddress', e.target.value)} placeholder="0x… or Solana address" className={inputCls} />
               <p className="text-[10px] text-gray-600 mt-1">Bank details &amp; pay-to-reveal escrow arrive in a later update — never store raw account numbers here.</p>
+            </div>
+
+            {/* Wallet address book — a ledger of locked payout wallets per chain/token */}
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className={labelCls}>Wallet Address Book — lock a payout wallet per chain &amp; token</label>
+                <button onClick={addWallet} className="flex items-center gap-1 text-[11px] text-cyan-400 hover:text-cyan-300">
+                  <Plus className="w-3 h-3" /> Add wallet
+                </button>
+              </div>
+              <p className="text-[10px] text-gray-600 mb-2">ZetaChain-omnichain: a promoter pays in any of these; the deposit settles to the matching locked wallet.</p>
+
+              {(config.payoutWallets || []).length > 0 && (
+                <div className="hidden sm:grid grid-cols-[1fr_2fr_1.2fr_0.9fr_auto] gap-2 px-1 mb-1 text-[10px] uppercase tracking-wider text-gray-600">
+                  <span>Label</span><span>Address</span><span>Chain</span><span>Token</span><span></span>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                {(config.payoutWallets || []).map((w, idx) => (
+                  <div key={idx} className="grid grid-cols-2 sm:grid-cols-[1fr_2fr_1.2fr_0.9fr_auto] gap-2 items-center">
+                    <input type="text" value={w.label} onChange={e => updateWallet(idx, 'label', e.target.value)} placeholder="Main" className={inputCls} />
+                    <input type="text" value={w.address} onChange={e => updateWallet(idx, 'address', e.target.value)} placeholder="0x… / address" className={`${inputCls} font-mono text-[12px]`} />
+                    <select value={w.chain} onChange={e => updateWallet(idx, 'chain', e.target.value)} className={`${inputCls} cursor-pointer`}>
+                      {PAYOUT_CHAINS.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                    <select value={w.token} onChange={e => updateWallet(idx, 'token', e.target.value)} className={`${inputCls} cursor-pointer`}>
+                      {PAYOUT_TOKENS.map(tk => <option key={tk} value={tk}>{tk}</option>)}
+                    </select>
+                    <button onClick={() => removeWallet(idx)} className="flex items-center justify-center text-gray-500 hover:text-red-400 p-1.5" title="Remove wallet">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+                {(config.payoutWallets || []).length === 0 && (
+                  <button onClick={addWallet} className="w-full rounded-lg border border-dashed border-gray-700 py-3 text-[12px] text-gray-500 hover:border-cyan-500/40 hover:text-cyan-400 transition-colors">
+                    + Add your first payout wallet (address · chain · token)
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 

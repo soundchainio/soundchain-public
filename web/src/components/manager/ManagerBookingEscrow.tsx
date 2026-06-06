@@ -28,6 +28,7 @@ interface ManagerBookingEscrowProps {
   depositHint?: string // the pro's deposit-schedule / rate text, shown as guidance
   packages?: BookingPackage[] // the pro's pre-set set/service choices (dropdown)
   cancellation?: string // the pro's pre-set cancellation policy
+  rider?: { travel: string; accommodation: string; hospitality: string; technical: string }
   payerName?: string
   payerEmail?: string
   inquiryId?: string
@@ -53,8 +54,9 @@ const parseRate = (rate?: string): number | null => {
 }
 
 export function ManagerBookingEscrow({
-  profileId, displayName, payoutAddress, depositHint, packages, cancellation, payerName, payerEmail, inquiryId, lang,
+  profileId, displayName, payoutAddress, depositHint, packages, cancellation, rider, payerName, payerEmail, inquiryId, lang,
 }: ManagerBookingEscrowProps) {
+  const riderItems = rider ? (Object.entries(rider) as [string, string][]).filter(([, v]) => v && v.trim()) : []
   const wallet = useWallet()
   const [injected, setInjected] = useState<{ signer: any; address: string; chainId: number } | null>(null)
 
@@ -285,6 +287,17 @@ export function ManagerBookingEscrow({
             <option value={0}>Custom amount</option>
           </select>
         </div>
+        {riderItems.length > 0 && (
+          <div className="rounded-lg border border-gray-800 bg-black/30 p-2.5">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1">Rider — part of the booking terms</p>
+            <ul className="space-y-0.5">
+              {riderItems.map(([k, v]) => (
+                <li key={k} className="text-[11px] text-gray-300"><span className="capitalize text-gray-500">{k}:</span> {v}</li>
+              ))}
+            </ul>
+            <p className="mt-1 text-[9px] text-gray-600">Travel &amp; rider can be folded into the deposit total, or settled separately per these terms.</p>
+          </div>
+        )}
         {cancellation && (
           <p className="text-[10px] text-gray-500">Cancellation: <span className="text-gray-400">{cancellation}</span></p>
         )}
