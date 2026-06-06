@@ -243,19 +243,47 @@ export default function ManagerPage({ ogData, handle }: ManagerPageProps) {
     } catch {}
   }
 
+  // OG/share meta — MUST render in EVERY return path (incl. loading/not-found).
+  // Link-preview bots (iMessage/X) read the SERVER html, and `profile` is fetched
+  // client-side — so gating the Head behind `profile` left the share card image-less
+  // (the spinner state served no og:image). ogData comes from getServerSideProps, so
+  // it's always available server-side.
+  const ogHead = (
+    <Head>
+      <title>{ogData?.title || `${pageHandle} | Artist Manager`}</title>
+      <meta name="description" content={ogData?.description || `Connect with ${pageHandle} on SoundChain`} />
+      <meta property="og:type" content="profile" />
+      <meta property="og:title" content={ogData?.title || `${pageHandle} | Artist Manager`} />
+      <meta property="og:description" content={ogData?.description || `Connect with ${pageHandle} on SoundChain`} />
+      <meta property="og:image" content={ogData?.image || `${domainUrl}/soundchain-meta-logo.png`} />
+      <meta property="og:image:width" content="1200" />
+      <meta property="og:image:height" content="630" />
+      <meta property="og:url" content={`${domainUrl}/manager/${pageHandle}`} />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content={ogData?.title || `${pageHandle} | Artist Manager`} />
+      <meta name="twitter:description" content={ogData?.description || `Connect with ${pageHandle} on SoundChain`} />
+      <meta name="twitter:image" content={ogData?.image || `${domainUrl}/soundchain-meta-logo.png`} />
+    </Head>
+  )
+
   // ─── Loading / Error States ──────────────────────────────────────
 
   if (profileLoading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-2 border-cyan-500 border-t-transparent rounded-full" />
-      </div>
+      <>
+        {ogHead}
+        <div className="min-h-screen bg-black flex items-center justify-center">
+          <div className="animate-spin w-8 h-8 border-2 border-cyan-500 border-t-transparent rounded-full" />
+        </div>
+      </>
     )
   }
 
   if (!profile) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <>
+        {ogHead}
+        <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-xl font-bold text-white mb-2">Artist Not Found</h1>
           <p className="text-gray-500 text-sm mb-4">The profile &quot;{pageHandle}&quot; doesn&apos;t exist.</p>
@@ -264,6 +292,7 @@ export default function ManagerPage({ ogData, handle }: ManagerPageProps) {
           </Link>
         </div>
       </div>
+      </>
     )
   }
 
@@ -271,19 +300,7 @@ export default function ManagerPage({ ogData, handle }: ManagerPageProps) {
 
   return (
     <>
-      <Head>
-        <title>{ogData?.title || `${displayName} | Artist Manager`}</title>
-        <meta name="description" content={ogData?.description || `Connect with ${displayName} on SoundChain`} />
-        <meta property="og:type" content="profile" />
-        <meta property="og:title" content={ogData?.title || `${displayName} | Artist Manager`} />
-        <meta property="og:description" content={ogData?.description || `Connect with ${displayName} on SoundChain`} />
-        <meta property="og:image" content={ogData?.image || `${domainUrl}/soundchain-meta-logo.png`} />
-        <meta property="og:url" content={`${domainUrl}/manager/${pageHandle}`} />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={ogData?.title || `${displayName} | Artist Manager`} />
-        <meta name="twitter:description" content={ogData?.description || `Connect with ${displayName} on SoundChain`} />
-        <meta name="twitter:image" content={ogData?.image || `${domainUrl}/soundchain-meta-logo.png`} />
-      </Head>
+      {ogHead}
 
       <div className="min-h-screen bg-black text-white">
         {/* Language welcome gate — first touch: pick the language the agent speaks */}
