@@ -208,7 +208,9 @@ export default function ManagerPage({ ogData, handle }: ManagerPageProps) {
   const socialEntries = useMemo(() => {
     const sm = profile?.socialMedias
     if (!sm) return []
-    return Object.entries(sm).filter(([k, v]) => k !== '__typename' && v)
+    // Only known social platforms — keeps Mongo internals (_id, __typename, etc.)
+    // out of the Connect row (they rendered as broken pills → about:blank).
+    return Object.entries(sm).filter(([k, v]) => SOCIAL_ICONS[k] && typeof v === 'string' && v)
   }, [profile?.socialMedias])
 
   const domainUrl = config.domainUrl || 'https://soundchain.io'
@@ -522,7 +524,7 @@ export default function ManagerPage({ ogData, handle }: ManagerPageProps) {
           {/* Latest Tracks */}
           {vis.tracks && tracks.length > 0 && (
             <section className="lg:col-span-2">
-              <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Latest Tracks</h2>
+              <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Collection · NFTs &amp; SCIDs</h2>
               <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
                 {tracks.slice(0, 10).map(track => (
                   <Link
