@@ -208,6 +208,22 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
   const [needsInteraction, setNeedsInteraction] = useState(true)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [expandedCard, setExpandedCard] = useState<null | 'track' | 'neural'>(null)
+  const [expandedScale, setExpandedScale] = useState(1)
+
+  // When a card expands, scale it up to fill the screen. offsetWidth/Height are
+  // the unscaled layout size, so measuring after the transform is applied is safe.
+  useEffect(() => {
+    if (!expandedCard) { setExpandedScale(1); return }
+    const measure = () => {
+      const el = document.querySelector('[data-expanded-card]') as HTMLElement | null
+      if (!el || !el.offsetWidth || !el.offsetHeight) return
+      const s = Math.min((window.innerWidth * 0.92) / el.offsetWidth, (window.innerHeight * 0.84) / el.offsetHeight)
+      setExpandedScale(Math.max(1, Math.min(s, 4)))
+    }
+    const id = requestAnimationFrame(measure)
+    window.addEventListener('resize', measure)
+    return () => { cancelAnimationFrame(id); window.removeEventListener('resize', measure) }
+  }, [expandedCard])
 
   // Block pinch-zoom (it white-crashes the WebGL canvas on iOS) — users expand
   // the track/neural cards via tap instead. iOS ignores viewport user-scalable,
@@ -1214,18 +1230,29 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
                 {/* Now Playing + NFT Card Layout */}
                 <div className="flex flex-col md:flex-row items-center md:items-start gap-2 md:gap-6 mb-2 md:mb-6">
 
-                  {/* NFT/SCID Card — tap ⛶ to expand fullscreen-scrollable, tap again to collapse */}
-                  <div className={expandedCard === 'track' ? 'fixed inset-0 z-[100] bg-black/95 backdrop-blur-sm overflow-y-auto overscroll-contain p-4 pt-16 flex items-start justify-center' : 'relative flex-shrink-0 order-first'}>
+                  {/* NFT/SCID Card — tap to expand FULLSCREEN-scrollable; big ✕ or tap backdrop to collapse */}
+                  <div
+                    className={expandedCard === 'track' ? 'fixed inset-0 z-[100] bg-black overflow-y-auto overscroll-contain flex items-start justify-center p-3 pt-16' : 'relative flex-shrink-0 order-first'}
+                    onClick={expandedCard === 'track' ? () => setExpandedCard(null) : undefined}
+                  >
                     <button
                       type="button"
-                      onClick={() => setExpandedCard(expandedCard === 'track' ? null : 'track')}
-                      className="absolute top-2 right-2 z-[101] p-1.5 rounded-lg bg-black/70 border border-white/15 text-white/80 hover:text-white hover:border-cyan-400/50 transition-colors"
+                      onClick={(e) => { e.stopPropagation(); setExpandedCard(expandedCard === 'track' ? null : 'track') }}
                       title={expandedCard === 'track' ? 'Collapse' : 'Expand'}
                       aria-label={expandedCard === 'track' ? 'Collapse card' : 'Expand card'}
+                      className={expandedCard === 'track'
+                        ? 'fixed top-3 right-3 z-[110] w-8 h-8 rounded-full bg-white/15 hover:bg-white/25 active:bg-white/30 border border-white/40 backdrop-blur-md flex items-center justify-center text-white text-base leading-none shadow-lg'
+                        : 'absolute top-2 right-2 z-10 p-1.5 rounded-lg bg-black/70 border border-white/20 text-white/80 hover:text-white hover:border-cyan-400/50 transition-colors'}
                     >
-                      {expandedCard === 'track' ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
+                      {expandedCard === 'track' ? <span aria-hidden>✕</span> : <Maximize className="w-4 h-4" />}
                     </button>
-                    <RadioNFTCard track={currentTrack} isPlaying={isPlaying} />
+                    <div
+                      data-expanded-card={expandedCard === 'track' ? '' : undefined}
+                      style={expandedCard === 'track' ? { transform: `scale(${expandedScale})`, transformOrigin: 'top center' } : undefined}
+                      onClick={expandedCard === 'track' ? (e) => e.stopPropagation() : undefined}
+                    >
+                      <RadioNFTCard track={currentTrack} isPlaying={isPlaying} />
+                    </div>
                   </div>
 
                   {/* Track Info + Vinyl */}
@@ -1289,18 +1316,29 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
                   </div>
                   </div>{/* Close Track Info + Vinyl wrapper */}
 
-                  {/* Brain Wave Visualizer — tap ⛶ to expand fullscreen-scrollable, tap again to collapse */}
-                  <div className={expandedCard === 'neural' ? 'fixed inset-0 z-[100] bg-black/95 backdrop-blur-sm overflow-y-auto overscroll-contain p-4 pt-16 flex items-start justify-center' : 'relative flex-shrink-0 order-last'}>
+                  {/* Brain Wave Visualizer — tap to expand FULLSCREEN-scrollable; big ✕ or tap backdrop to collapse */}
+                  <div
+                    className={expandedCard === 'neural' ? 'fixed inset-0 z-[100] bg-black overflow-y-auto overscroll-contain flex items-start justify-center p-3 pt-16' : 'relative flex-shrink-0 order-last'}
+                    onClick={expandedCard === 'neural' ? () => setExpandedCard(null) : undefined}
+                  >
                     <button
                       type="button"
-                      onClick={() => setExpandedCard(expandedCard === 'neural' ? null : 'neural')}
-                      className="absolute top-2 right-2 z-[101] p-1.5 rounded-lg bg-black/70 border border-white/15 text-white/80 hover:text-white hover:border-green-400/50 transition-colors"
+                      onClick={(e) => { e.stopPropagation(); setExpandedCard(expandedCard === 'neural' ? null : 'neural') }}
                       title={expandedCard === 'neural' ? 'Collapse' : 'Expand'}
                       aria-label={expandedCard === 'neural' ? 'Collapse card' : 'Expand card'}
+                      className={expandedCard === 'neural'
+                        ? 'fixed top-3 right-3 z-[110] w-8 h-8 rounded-full bg-white/15 hover:bg-white/25 active:bg-white/30 border border-white/40 backdrop-blur-md flex items-center justify-center text-white text-base leading-none shadow-lg'
+                        : 'absolute top-2 right-2 z-10 p-1.5 rounded-lg bg-black/70 border border-white/20 text-white/80 hover:text-white hover:border-green-400/50 transition-colors'}
                     >
-                      {expandedCard === 'neural' ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
+                      {expandedCard === 'neural' ? <span aria-hidden>✕</span> : <Maximize className="w-4 h-4" />}
                     </button>
-                    <BrainWaveVisualizer audioRef={audioRef} isPlaying={isPlaying} trackTitle={currentTrack?.title} />
+                    <div
+                      data-expanded-card={expandedCard === 'neural' ? '' : undefined}
+                      style={expandedCard === 'neural' ? { transform: `scale(${expandedScale})`, transformOrigin: 'top center' } : undefined}
+                      onClick={expandedCard === 'neural' ? (e) => e.stopPropagation() : undefined}
+                    >
+                      <BrainWaveVisualizer audioRef={audioRef} isPlaying={isPlaying} trackTitle={currentTrack?.title} />
+                    </div>
                   </div>
                 </div>
 

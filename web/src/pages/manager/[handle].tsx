@@ -315,8 +315,9 @@ export default function ManagerPage({ ogData, handle }: ManagerPageProps) {
         {/* Width-capped, centered banner: full-bleed on mobile, a polished card
             on widescreen (never an edge-to-edge stretched band). object-cover +
             object-center keeps any uploaded image crisp and undistorted. */}
-        <div className="w-full bg-black">
-          <div className="relative max-w-7xl mx-auto h-[44vh] min-h-[260px] max-h-[460px] overflow-hidden sm:rounded-b-3xl sm:border-x border-b border-cyan-500/15">
+        <div className="w-full bg-black px-3 sm:px-4 pt-3">
+          {/* Cover as a floating digital card/bubble — rounded all corners, glowing cyan frame */}
+          <div className="relative max-w-7xl mx-auto h-[40vh] min-h-[240px] max-h-[440px] overflow-hidden rounded-[28px] border border-cyan-500/30 shadow-2xl shadow-cyan-500/15 ring-1 ring-white/10">
             {heroSrc ? (
               <img
                 src={heroSrc}

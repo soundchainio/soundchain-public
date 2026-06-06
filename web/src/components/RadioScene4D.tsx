@@ -249,7 +249,7 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
     const renderer = new THREE.WebGLRenderer({ antialias: !isMobile, alpha: false, powerPreference: isMobile ? 'low-power' : 'high-performance' })
     renderer.setSize(width, height)
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 3)) // Cap DPR on mobile to reduce GPU load
-    renderer.setClearColor(0x010408, 1)  // Deeper space black
+    renderer.setClearColor(0x000000, 1)  // Deeper space black
     renderer.toneMapping = THREE.ACESFilmicToneMapping
     renderer.toneMappingExposure = 1.2
     container.appendChild(renderer.domElement)
@@ -257,7 +257,7 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
 
     // --- Scene ---
     const scene = new THREE.Scene()
-    scene.fog = new THREE.FogExp2(0x010408, 0.012)  // Deeper fog, farther visibility for planets
+    scene.fog = new THREE.FogExp2(0x000000, 0.008)  // Deeper fog, farther visibility for planets
     sceneRef.current = scene
 
     // --- Camera (cinematic orbit) ---
@@ -272,9 +272,9 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
 
     const bloomPass = new UnrealBloomPass(
       new THREE.Vector2(isMobile ? width / 2 : width, isMobile ? height / 2 : height),
-      isMobile ? 0.22 : 0.45, // strength — deep-space dim, kills the white wash (Frank: darken the radar so colors pop)
-      isMobile ? 0.18 : 0.32, // radius — tighter halo
-      isMobile ? 0.82 : 0.62  // threshold — only the VERY brightest bloom, so the wireframes + nodes pop against black
+      isMobile ? 0.12 : 0.28, // strength — near-off; PITCH-BLACK space (Frank: full dark, realistic stars)
+      isMobile ? 0.15 : 0.28, // radius
+      isMobile ? 0.9 : 0.72   // threshold — only the absolute brightest pinpoints bloom, rest stays black
     )
     composer.addPass(bloomPass)
     bloomPassRef.current = bloomPass
