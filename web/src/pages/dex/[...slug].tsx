@@ -9672,14 +9672,16 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       // every shared profile card broke (iMessage "Click to Load Preview", bare link).
       try {
         const { default: clientPromise } = await import('lib/mongodb')
+        const { ObjectId } = await import('mongodb')
         const mongo = await clientPromise
-        const profile = await mongo
-          .db('soundchain')
-          .collection('profiles')
-          .findOne(
-            { userHandle: { $regex: `^${routeId}$`, $options: 'i' } },
-            { projection: { displayName: 1, userHandle: 1, profilePicture: 1, coverPicture: 1, bio: 1 } },
-          )
+        const db = mongo.db('soundchain')
+        const proj = { projection: { displayName: 1, userHandle: 1, profilePicture: 1, coverPicture: 1, bio: 1 } }
+        let profile: any = await db.collection('profiles').findOne({ userHandle: { $regex: `^${routeId}$`, $options: 'i' } }, proj)
+        if (!profile) {
+          // Handle may live on users.handle (profile.userHandle can be empty) → resolve via profileId.
+          const user: any = await db.collection('users').findOne({ handle: { $regex: `^${routeId}$`, $options: 'i' } }, { projection: { profileId: 1 } })
+          if (user?.profileId) profile = await db.collection('profiles').findOne({ _id: new ObjectId(user.profileId) }, proj)
+        }
 
         if (profile) {
           const name = (profile.displayName as string) || (profile.userHandle as string) || routeId

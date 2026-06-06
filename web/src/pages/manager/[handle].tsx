@@ -55,15 +55,18 @@ export const getServerSideProps: GetServerSideProps<ManagerPageProps> = async (c
     // back to the bare logo. Dynamic import so the mongodb driver is only pulled at
     // request time on the server, never during build-time page-data collection.
     const { default: clientPromise } = await import('lib/mongodb')
+    const { ObjectId } = await import('mongodb')
     const mongo = await clientPromise
-    const profile: any = await mongo
-      .db('soundchain')
-      .collection('profiles')
-      .findOne(
-        { userHandle: { $regex: `^${handle}$`, $options: 'i' } },
-        { projection: { displayName: 1, userHandle: 1, profilePicture: 1, coverPicture: 1, bio: 1 } },
-      )
-    if (!profile) return { notFound: true }
+    const db = mongo.db('soundchain')
+    const proj = { projection: { displayName: 1, userHandle: 1, profilePicture: 1, coverPicture: 1, bio: 1 } }
+    let profile: any = await db.collection('profiles').findOne({ userHandle: { $regex: `^${handle}$`, $options: 'i' } }, proj)
+    if (!profile) {
+      // The handle may live on users.handle (profile.userHandle can be empty) → resolve via profileId.
+      const user: any = await db.collection('users').findOne({ handle: { $regex: `^${handle}$`, $options: 'i' } }, { projection: { profileId: 1 } })
+      if (user?.profileId) profile = await db.collection('profiles').findOne({ _id: new ObjectId(user.profileId) }, proj)
+    }
+    // NEVER 404 the page on an OG-lookup miss — render it; the page fetches the profile client-side.
+    if (!profile) return { props: { ogData: null, handle } }
 
     // The pro's uploaded manager hero cover is the share-card image (the bubble that
     // renders when the /manager link is dropped in a DM / iMessage / X).
