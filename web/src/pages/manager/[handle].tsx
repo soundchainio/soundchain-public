@@ -23,6 +23,9 @@ import { ManagerConfig, loadManagerConfig, fetchManagerConfig, ManagerConfigData
 import { ManagerCoverUploader } from 'components/manager/ManagerCoverUploader'
 import { ManagerInbox } from 'components/manager/ManagerInbox'
 import { ManagerBioEditor } from 'components/manager/ManagerBioEditor'
+import { ManagerReputation } from 'components/manager/ManagerReputation'
+import { ManagerFlyers } from 'components/manager/ManagerFlyers'
+import { ManagerEscrowViewer } from 'components/manager/ManagerEscrowViewer'
 import { ManagerLanguageGate } from 'components/manager/ManagerLanguageGate'
 import { ManagerBookingEscrow } from 'components/manager/ManagerBookingEscrow'
 import { ManagerBankVault } from 'components/manager/ManagerBankVault'
@@ -479,6 +482,18 @@ export default function ManagerPage({ ogData, handle }: ManagerPageProps) {
             />
           )}
 
+          {/* Reputation + on-chain escrow viewer — a promoter's trust signals (pair side-by-side on desktop) */}
+          <ManagerReputation
+            followerCount={profile.followerCount ?? undefined}
+            tracksCount={profile.tracksCount ?? undefined}
+            verified={profile.verified}
+            completedBookings={(managerConfig as any).completedBookings || 0}
+          />
+          <ManagerEscrowViewer
+            artistName={displayName}
+            payoutAddress={managerConfig.payoutAddress || undefined}
+          />
+
           {/* Booking Details — rates, rider & terms the promoter needs to arrange */}
           {showBookingDetails && (
             <section className="backdrop-blur-xl bg-black/60 border border-cyan-500/20 rounded-2xl p-5 space-y-4">
@@ -563,6 +578,17 @@ export default function ManagerPage({ ogData, handle }: ManagerPageProps) {
               </div>
             </section>
           )}
+
+          {/* Recent Events — flyer gallery (owner uploads, promoters see touring history) */}
+          <ManagerFlyers
+            flyers={(managerConfig as any).flyers || []}
+            isOwner={isOwner}
+            onChange={(flyers) => {
+              const next = { ...managerConfig, flyers } as any
+              setManagerConfig(next)
+              if (profile.id) saveManagerConfig(profile.id, next)
+            }}
+          />
 
           {/* Action Buttons */}
           {activeForm ? (
