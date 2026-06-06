@@ -1,4 +1,4 @@
-import { ReactElement, useState, useMemo, useEffect } from 'react'
+import { ReactElement, useState, useMemo, useEffect, useRef } from 'react'
 import { GetServerSideProps } from 'next'
 import Head from 'next/head'
 import Link from 'next/link'
@@ -43,10 +43,24 @@ interface OgData {
 interface ManagerPageProps {
   ogData: OgData | null
   handle: string
+  isBot: boolean
 }
+
+// Social/link-preview crawlers — they read the SERVER html only (no JS). The full
+// manager app is client-rendered (Apollo/auth providers don't render server-side),
+// so a bot's #__next comes back empty → no og tags → bare-logo share card. We detect
+// these and serve them an OG-only document up front (mirrors the profile page).
+const BOT_PATTERNS = [
+  'discordbot', 'twitterbot', 'facebookexternalhit', 'linkedinbot', 'slackbot',
+  'telegrambot', 'whatsapp', 'googlebot', 'bingbot', 'applebot', 'redditbot',
+  'pinterest', 'vkshare', 'embedly', 'quora link preview', 'skypeuripreview',
+  'iframely', 'opengraph',
+]
 
 export const getServerSideProps: GetServerSideProps<ManagerPageProps> = async (context) => {
   const handle = context.params?.handle as string
+  const ua = (context.req.headers['user-agent'] || '').toLowerCase()
+  const isBot = BOT_PATTERNS.some(b => ua.includes(b))
   if (!handle) return { notFound: true }
 
   try {
@@ -66,7 +80,7 @@ export const getServerSideProps: GetServerSideProps<ManagerPageProps> = async (c
       if (user?.profileId) profile = await db.collection('profiles').findOne({ _id: new ObjectId(user.profileId) }, proj)
     }
     // NEVER 404 the page on an OG-lookup miss — render it; the page fetches the profile client-side.
-    if (!profile) return { props: { ogData: null, handle } }
+    if (!profile) return { props: { ogData: null, handle, isBot } }
 
     // The pro's uploaded manager hero cover is the share-card image (the bubble that
     // renders when the /manager link is dropped in a DM / iMessage / X).
@@ -89,9 +103,9 @@ export const getServerSideProps: GetServerSideProps<ManagerPageProps> = async (c
       url: `/manager/${handle}`,
     }
 
-    return { props: { ogData, handle } }
+    return { props: { ogData, handle, isBot } }
   } catch {
-    return { props: { ogData: null, handle } }
+    return { props: { ogData: null, handle, isBot } }
   }
 }
 
@@ -131,7 +145,49 @@ function RiderRow({ icon: Icon, label, value }: { icon: typeof Plane; label: str
   )
 }
 
-export default function ManagerPage({ ogData, handle }: ManagerPageProps) {
+export default function ManagerPage({ ogData, handle, isBot }: ManagerPageProps) {
+  // Crawler path: serve an OG-only document BEFORE any client-only hooks run, so the
+  // share-card bot gets the hero-cover image (the full app's #__next is empty SSR).
+  if (isBot) {
+    const domain = config.domainUrl || 'https://soundchain.io'
+    const img = ogData?.image || `${domain}/soundchain-meta-logo.png`
+    const title = ogData?.title || `${handle} | Artist Manager`
+    const desc = ogData?.description || `Connect with ${handle} on SoundChain`
+    const url = `${domain}/manager/${handle}`
+    return (
+      <>
+        <Head>
+          <title>{title}</title>
+          <meta name="description" content={desc} />
+          <meta property="og:type" content="profile" />
+          <meta property="og:title" content={title} />
+          <meta property="og:description" content={desc} />
+          <meta property="og:image" content={img} />
+          <meta property="og:image:width" content="1200" />
+          <meta property="og:image:height" content="630" />
+          <meta property="og:url" content={url} />
+          <meta name="twitter:card" content="summary_large_image" />
+          <meta name="twitter:title" content={title} />
+          <meta name="twitter:description" content={desc} />
+          <meta name="twitter:image" content={img} />
+          <link
+            rel="alternate"
+            type="application/json+oembed"
+            href={`${domain}/api/oembed?url=${encodeURIComponent(url)}`}
+            title={title}
+          />
+        </Head>
+        <div style={{ padding: 24, fontFamily: 'sans-serif', background: '#000', color: '#fff' }}>
+          <h1>{title}</h1>
+          <p>{desc}</p>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={img} alt={title} style={{ maxWidth: '480px', width: '100%', borderRadius: 12 }} />
+          <p><a href={url} style={{ color: '#22d3ee' }}>Open {handle}&apos;s manager on SoundChain →</a></p>
+        </div>
+      </>
+    )
+  }
+
   const router = useRouter()
   const pageHandle = (router.query.handle as string) || handle
 
@@ -156,6 +212,17 @@ export default function ManagerPage({ ogData, handle }: ManagerPageProps) {
 
   const [activeForm, setActiveForm] = useState<'booking' | 'collab' | 'business' | null>(null)
   const [copied, setCopied] = useState(false)
+
+  // The contact/inquiry form renders far below the "Contact … send an inquiry" bar
+  // (after the greeting, escrow, reputation, flyers). On mobile, tapping the bar
+  // opened the form off-screen → "nothing happens". Scroll it into view on open.
+  const formRef = useRef<HTMLDivElement>(null)
+  const openForm = (type: 'booking' | 'collab' | 'business') => {
+    setActiveForm(type)
+    requestAnimationFrame(() => {
+      setTimeout(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60)
+    })
+  }
 
   // Polyglot: the agent talks to the visitor in THEIR language. Start at 'en' for
   // SSR/hydration parity. On mount: use the remembered choice if any; otherwise
@@ -469,7 +536,7 @@ export default function ManagerPage({ ogData, handle }: ManagerPageProps) {
             </>
           ) : (
             <button
-              onClick={() => setActiveForm('booking')}
+              onClick={() => openForm('booking')}
               className="lg:col-span-2 flex items-center justify-center gap-2 w-full py-4 rounded-2xl bg-gradient-to-r from-cyan-500/90 to-purple-500/90 hover:from-cyan-500 hover:to-purple-500 text-white text-sm font-semibold shadow-lg shadow-cyan-500/20 transition-all"
             >
               📨 Contact {displayName} — send an inquiry
@@ -612,6 +679,7 @@ export default function ManagerPage({ ogData, handle }: ManagerPageProps) {
           />
 
           {/* Action Buttons */}
+          <div ref={formRef} className="scroll-mt-20" />
           {activeForm ? (
             <>
               <ManagerContactForm
@@ -636,7 +704,7 @@ export default function ManagerPage({ ogData, handle }: ManagerPageProps) {
             <div className="grid grid-cols-2 gap-3">
               {vis.booking && (
                 <button
-                  onClick={() => setActiveForm('booking')}
+                  onClick={() => openForm('booking')}
                   className="flex items-center gap-2.5 p-4 rounded-xl bg-black/60 border border-cyan-500/20 hover:border-cyan-500/40 hover:bg-cyan-500/5 transition-all group"
                 >
                   <Calendar className="w-5 h-5 text-cyan-400 group-hover:scale-110 transition-transform" />
@@ -648,7 +716,7 @@ export default function ManagerPage({ ogData, handle }: ManagerPageProps) {
               )}
               {vis.collab && (
                 <button
-                  onClick={() => setActiveForm('collab')}
+                  onClick={() => openForm('collab')}
                   className="flex items-center gap-2.5 p-4 rounded-xl bg-black/60 border border-purple-500/20 hover:border-purple-500/40 hover:bg-purple-500/5 transition-all group"
                 >
                   <Users className="w-5 h-5 text-purple-400 group-hover:scale-110 transition-transform" />
@@ -660,7 +728,7 @@ export default function ManagerPage({ ogData, handle }: ManagerPageProps) {
               )}
               {vis.business && (
                 <button
-                  onClick={() => setActiveForm('business')}
+                  onClick={() => openForm('business')}
                   className="flex items-center gap-2.5 p-4 rounded-xl bg-black/60 border border-emerald-500/20 hover:border-emerald-500/40 hover:bg-emerald-500/5 transition-all group"
                 >
                   <Briefcase className="w-5 h-5 text-emerald-400 group-hover:scale-110 transition-transform" />
