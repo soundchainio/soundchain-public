@@ -9667,17 +9667,24 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         }
       }
 
-      // Default profile OG tags (no ?wall= param or wall post not found)
+      // Default profile OG tags — Vercel-direct from Mongo. Apollo/api.soundchain.io
+      // is DEAD, so the old apolloClient.query threw → ogData null → no og:image →
+      // every shared profile card broke (iMessage "Click to Load Preview", bare link).
       try {
-        const { data } = await apolloClient.query({
-          query: graphql.ProfileByHandleDocument,
-          variables: { handle: routeId },
-          errorPolicy: 'all',
-        })
+        const { default: clientPromise } = await import('lib/mongodb')
+        const mongo = await clientPromise
+        const profile = await mongo
+          .db('soundchain')
+          .collection('profiles')
+          .findOne(
+            { userHandle: { $regex: `^${routeId}$`, $options: 'i' } },
+            { projection: { displayName: 1, userHandle: 1, profilePicture: 1, coverPicture: 1, bio: 1 } },
+          )
 
-        if (data?.profileByHandle) {
-          const profile = data.profileByHandle
-          let ogImage = profile.profilePicture || profile.coverPicture || fallbackImage
+        if (profile) {
+          const name = (profile.displayName as string) || (profile.userHandle as string) || routeId
+          // Cover first → wide summary_large_image card; avatar next; logo last.
+          let ogImage = (profile.coverPicture as string) || (profile.profilePicture as string) || fallbackImage
           if (ogImage && !ogImage.startsWith('http')) {
             ogImage = `${domainUrl}${ogImage.startsWith('/') ? '' : '/'}${ogImage}`
           }
@@ -9685,8 +9692,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
             props: {
               ogData: {
                 type: 'profile' as const,
-                title: `${profile.displayName || profile.userHandle} | SoundChain`,
-                description: profile.bio || `Follow ${profile.displayName || profile.userHandle} on SoundChain - Web3 Music Platform`,
+                title: `${name} | SoundChain`,
+                description: (profile.bio as string) || `Follow ${name} on SoundChain - Web3 Music Platform`,
                 image: ogImage,
                 url: `/dex/users/${routeId}`,
               },

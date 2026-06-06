@@ -46,30 +46,27 @@ export const getServerSideProps: GetServerSideProps<ManagerPageProps> = async (c
   if (!handle) return { notFound: true }
 
   try {
-    const apolloClient = createApolloClient(context)
-    const { data } = await apolloClient.query<ProfileByHandleQuery>({
-      query: ProfileByHandleDocument,
-      variables: { handle },
-    })
-
-    const profile = data?.profileByHandle
+    // Fetch the profile Vercel-direct from Mongo — Apollo/api.soundchain.io is DEAD,
+    // so the old apolloClient.query threw → ogData null → the manager share card fell
+    // back to the bare logo. Dynamic import so the mongodb driver is only pulled at
+    // request time on the server, never during build-time page-data collection.
+    const { default: clientPromise } = await import('lib/mongodb')
+    const mongo = await clientPromise
+    const profile: any = await mongo
+      .db('soundchain')
+      .collection('profiles')
+      .findOne(
+        { userHandle: { $regex: `^${handle}$`, $options: 'i' } },
+        { projection: { displayName: 1, userHandle: 1, profilePicture: 1, coverPicture: 1, bio: 1 } },
+      )
     if (!profile) return { notFound: true }
 
-    // The pro's uploaded manager cover is the share-card image (the bubble that
-    // renders when the /manager link is dropped in a DM / iMessage / X). Read it
-    // Vercel-direct from Mongo so the card uses their branding, not a logo.
-    // Dynamic import so the mongodb driver (which throws at module-load when
-    // MONGODB_URI is unset) is only pulled in at request time on the server —
-    // never during build-time page-data collection.
+    // The pro's uploaded manager hero cover is the share-card image (the bubble that
+    // renders when the /manager link is dropped in a DM / iMessage / X).
     let heroImageUrl = ''
     try {
-      if (profile.id) {
-        const { default: clientPromise } = await import('lib/mongodb')
-        const { ObjectId } = await import('mongodb')
-        const mongo = await clientPromise
-        const cfgDoc = await mongo.db('soundchain').collection('managerConfigs').findOne({ profileId: new ObjectId(profile.id) })
-        heroImageUrl = (cfgDoc?.heroImageUrl as string) || ''
-      }
+      const cfgDoc = await mongo.db('soundchain').collection('managerConfigs').findOne({ profileId: profile._id })
+      heroImageUrl = (cfgDoc?.heroImageUrl as string) || ''
     } catch {}
 
     const name = profile.displayName || profile.userHandle || handle
