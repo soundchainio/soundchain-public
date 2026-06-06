@@ -79,6 +79,20 @@ export function ManagerEscrowViewer({ artistName, artistAvatar, payoutAddress, c
   }
   const FEE_RATE = 0.005 // 0.5% SoundChain booking fee
   const feeEth = (eth: number) => eth * FEE_RATE
+  // Tier formatter that scales to millions (a Coachella-tier headline fee).
+  const usdTier = (eth: number) => {
+    const v = eth * RATE
+    if (v >= 1e6) return `$${(v / 1e6).toFixed(1)}M`
+    if (v >= 1e3) return `$${Math.round(v / 1e3)}k`
+    return `$${Math.round(v)}`
+  }
+  // The same escrow handles a local bar set or a festival headline worth millions.
+  const TIERS = [
+    { label: 'Local bar', eth: 0.15 },
+    { label: 'Club night', eth: 2 },
+    { label: 'Festival slot', eth: 60 },
+    { label: 'Coachella-tier', eth: 1300 },
+  ]
 
   // ── The storefront slideshow: the deal told as a 4-frame visual story ──
   const slides = [
@@ -295,6 +309,21 @@ export function ManagerEscrowViewer({ artistName, artistAvatar, payoutAddress, c
         {list[0]?.example && (
           <p className="text-[10px] text-gray-600 mt-2 italic">These are the artist's take-home payouts — what landed after SoundChain's 0.5% fee. Sample preview for a local artist; payouts scale with the artist's level, and real completions post here as bookings settle on-chain.</p>
         )}
+      </div>
+
+      {/* Scales to any tier — same escrow, local bar set → Coachella-tier headline (millions) */}
+      <div className="border-t border-white/10 pt-3 mt-3">
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 mb-2">Scales to any tier</p>
+        <div className="grid grid-cols-4 gap-1.5">
+          {TIERS.map((tt, i) => (
+            <div key={tt.label} className={`rounded-lg border p-2 text-center ${i === TIERS.length - 1 ? 'border-fuchsia-500/30 bg-fuchsia-500/[0.06]' : 'border-white/10 bg-white/[0.02]'}`}>
+              <p className={`text-[12px] font-bold ${i === TIERS.length - 1 ? 'text-fuchsia-300' : 'text-gray-200'}`}>{usdTier(tt.eth)}</p>
+              <p className="text-[9px] text-gray-500 mt-0.5">{tt.eth} ETH</p>
+              <p className={`text-[9px] mt-0.5 leading-tight ${i === TIERS.length - 1 ? 'text-fuchsia-300/80' : 'text-gray-500'}`}>{tt.label}</p>
+            </div>
+          ))}
+        </div>
+        <p className="text-[9px] text-gray-600 mt-1.5 italic">From a 2-hour local set to a festival headline worth millions — the same on-chain escrow, the same flat 0.5% fee.</p>
       </div>
 
       {payoutAddress && (

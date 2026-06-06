@@ -27,6 +27,38 @@ export const MANAGER_LOCALES: ManagerLocale[] = [
   { code: 'ru', name: 'Русский', voice: 'ru-RU-SvetlanaNeural' },
   { code: 'ar', name: 'العربية', voice: 'ar-SA-ZariyahNeural', rtl: true },
   { code: 'hi', name: 'हिन्दी', voice: 'hi-IN-SwaraNeural' },
+  // ── Global "C-3PO" expansion — fluent across the world's major tongues. Each
+  // greeting is translated below; UI labels fall back to English where untranslated. ──
+  { code: 'tr', name: 'Türkçe', voice: 'tr-TR-EmelNeural' },
+  { code: 'vi', name: 'Tiếng Việt', voice: 'vi-VN-HoaiMyNeural' },
+  { code: 'id', name: 'Bahasa Indonesia', voice: 'id-ID-GadisNeural' },
+  { code: 'th', name: 'ไทย', voice: 'th-TH-PremwadeeNeural' },
+  { code: 'pl', name: 'Polski', voice: 'pl-PL-ZofiaNeural' },
+  { code: 'nl', name: 'Nederlands', voice: 'nl-NL-ColetteNeural' },
+  { code: 'uk', name: 'Українська', voice: 'uk-UA-PolinaNeural' },
+  { code: 'el', name: 'Ελληνικά', voice: 'el-GR-AthinaNeural' },
+  { code: 'he', name: 'עברית', voice: 'he-IL-HilaNeural', rtl: true },
+  { code: 'fa', name: 'فارسی', voice: 'fa-IR-DilaraNeural', rtl: true },
+  { code: 'ur', name: 'اردو', voice: 'ur-PK-UzmaNeural', rtl: true },
+  { code: 'sv', name: 'Svenska', voice: 'sv-SE-SofieNeural' },
+  { code: 'nb', name: 'Norsk', voice: 'nb-NO-PernilleNeural' },
+  { code: 'da', name: 'Dansk', voice: 'da-DK-ChristelNeural' },
+  { code: 'fi', name: 'Suomi', voice: 'fi-FI-NooraNeural' },
+  { code: 'cs', name: 'Čeština', voice: 'cs-CZ-VlastaNeural' },
+  { code: 'ro', name: 'Română', voice: 'ro-RO-AlinaNeural' },
+  { code: 'hu', name: 'Magyar', voice: 'hu-HU-NoemiNeural' },
+  { code: 'bg', name: 'Български', voice: 'bg-BG-KalinaNeural' },
+  { code: 'sk', name: 'Slovenčina', voice: 'sk-SK-ViktoriaNeural' },
+  { code: 'hr', name: 'Hrvatski', voice: 'hr-HR-GabrijelaNeural' },
+  { code: 'sr', name: 'Српски', voice: 'sr-RS-SophieNeural' },
+  { code: 'ms', name: 'Bahasa Melayu', voice: 'ms-MY-YasminNeural' },
+  { code: 'fil', name: 'Filipino', voice: 'fil-PH-BlessicaNeural' },
+  { code: 'bn', name: 'বাংলা', voice: 'bn-IN-TanishaaNeural' },
+  { code: 'ta', name: 'தமிழ்', voice: 'ta-IN-PallaviNeural' },
+  { code: 'te', name: 'తెలుగు', voice: 'te-IN-ShrutiNeural' },
+  { code: 'sw', name: 'Kiswahili', voice: 'sw-KE-ZuriNeural' },
+  { code: 'af', name: 'Afrikaans', voice: 'af-ZA-AdriNeural' },
+  { code: 'ca', name: 'Català', voice: 'ca-ES-JoanaNeural' },
 ]
 
 type Dict = Record<string, string>
@@ -217,6 +249,156 @@ const STRINGS: Record<string, Dict> = {
     profile: 'पूरा प्रोफ़ाइल', profileDesc: 'सुनें, फ़ॉलो करें, एक्सप्लोर करें',
     play: 'चलाएँ', stop: 'रोकें', loading: 'लोड हो रहा है',
     language: 'भाषा', bookingDetails: 'बुकिंग विवरण',
+  },
+  tr: {
+    greetingLead: 'Hoş geldiniz. {name} adlı sanatçının menajerine ulaştınız.',
+    intro: 'Bugün size nasıl yardımcı olabilirim? Bir konser ayırtabilir, iş birliği önerebilir veya ticari bir talepte bulunabilirsiniz.',
+    book: 'Rezervasyon', collab: 'İş birliği', business: 'İş', hire: 'Tut', play: 'Çal', stop: 'Durdur', language: 'Dil',
+  },
+  vi: {
+    greetingLead: 'Chào mừng. Bạn đã liên hệ với quản lý của {name}.',
+    intro: 'Hôm nay tôi có thể giúp gì cho bạn? Bạn có thể đặt lịch diễn, đề xuất hợp tác hoặc gửi yêu cầu kinh doanh.',
+    book: 'Đặt lịch', collab: 'Hợp tác', business: 'Kinh doanh', hire: 'Thuê', play: 'Phát', stop: 'Dừng', language: 'Ngôn ngữ',
+  },
+  id: {
+    greetingLead: 'Selamat datang. Anda terhubung dengan manajer {name}.',
+    intro: 'Ada yang bisa saya bantu hari ini? Anda dapat memesan pertunjukan, mengajukan kolaborasi, atau mengirim permintaan bisnis.',
+    book: 'Pesan', collab: 'Kolaborasi', business: 'Bisnis', hire: 'Rekrut', play: 'Putar', stop: 'Berhenti', language: 'Bahasa',
+  },
+  th: {
+    greetingLead: 'ยินดีต้อนรับ คุณได้ติดต่อผู้จัดการของ {name}',
+    intro: 'วันนี้ให้ช่วยอะไรดีคะ คุณสามารถจองการแสดง เสนอความร่วมมือ หรือสอบถามเรื่องธุรกิจได้',
+    book: 'จอง', collab: 'ร่วมงาน', business: 'ธุรกิจ', hire: 'ว่าจ้าง', play: 'เล่น', stop: 'หยุด', language: 'ภาษา',
+  },
+  pl: {
+    greetingLead: 'Witamy. Łączysz się z menedżerem {name}.',
+    intro: 'W czym mogę dziś pomóc? Możesz zarezerwować występ, zaproponować współpracę lub złożyć zapytanie biznesowe.',
+    book: 'Rezerwuj', collab: 'Współpraca', business: 'Biznes', hire: 'Zatrudnij', play: 'Odtwórz', stop: 'Zatrzymaj', language: 'Język',
+  },
+  nl: {
+    greetingLead: 'Welkom. Je hebt de manager van {name} bereikt.',
+    intro: 'Hoe kan ik je vandaag helpen? Je kunt een optreden boeken, een samenwerking voorstellen of een zakelijke aanvraag doen.',
+    book: 'Boeken', collab: 'Samenwerken', business: 'Zakelijk', hire: 'Inhuren', play: 'Afspelen', stop: 'Stop', language: 'Taal',
+  },
+  uk: {
+    greetingLead: "Вітаємо. Ви зв'язалися з менеджером {name}.",
+    intro: 'Чим я можу допомогти? Ви можете замовити виступ, запропонувати співпрацю або надіслати діловий запит.',
+    book: 'Замовити', collab: 'Співпраця', business: 'Бізнес', hire: 'Найняти', play: 'Відтворити', stop: 'Стоп', language: 'Мова',
+  },
+  el: {
+    greetingLead: 'Καλώς ήρθατε. Επικοινωνήσατε με τον μάνατζερ του/της {name}.',
+    intro: 'Πώς μπορώ να σας βοηθήσω σήμερα; Μπορείτε να κλείσετε εμφάνιση, να προτείνετε συνεργασία ή να κάνετε επαγγελματικό αίτημα.',
+    book: 'Κράτηση', collab: 'Συνεργασία', business: 'Επιχείρηση', hire: 'Πρόσληψη', play: 'Αναπαραγωγή', stop: 'Διακοπή', language: 'Γλώσσα',
+  },
+  he: {
+    greetingLead: 'ברוכים הבאים. הגעתם למנהל של {name}.',
+    intro: 'כיצד אוכל לעזור לכם היום? תוכלו להזמין הופעה, להציע שיתוף פעולה או לשלוח פנייה עסקית.',
+    book: 'הזמנה', collab: 'שיתוף פעולה', business: 'עסקים', hire: 'שכירה', play: 'נגן', stop: 'עצור', language: 'שפה',
+  },
+  fa: {
+    greetingLead: 'خوش آمدید. شما با مدیر برنامه‌های {name} در ارتباط هستید.',
+    intro: 'امروز چطور می‌توانم کمکتان کنم؟ می‌توانید اجرا رزرو کنید، همکاری پیشنهاد دهید یا درخواست تجاری ارسال کنید.',
+    book: 'رزرو', collab: 'همکاری', business: 'تجاری', hire: 'استخدام', play: 'پخش', stop: 'توقف', language: 'زبان',
+  },
+  ur: {
+    greetingLead: 'خوش آمدید۔ آپ {name} کے مینیجر سے رابطے میں ہیں۔',
+    intro: 'آج میں آپ کی کیا مدد کر سکتا ہوں؟ آپ شو بک کر سکتے ہیں، تعاون کی تجویز دے سکتے ہیں، یا کاروباری استفسار کر سکتے ہیں۔',
+    book: 'بکنگ', collab: 'تعاون', business: 'کاروبار', hire: 'ملازمت', play: 'چلائیں', stop: 'روکیں', language: 'زبان',
+  },
+  sv: {
+    greetingLead: 'Välkommen. Du har nått {name}s manager.',
+    intro: 'Hur kan jag hjälpa dig idag? Du kan boka en spelning, föreslå ett samarbete eller göra en affärsförfrågan.',
+    book: 'Boka', collab: 'Samarbeta', business: 'Affärer', hire: 'Anlita', play: 'Spela', stop: 'Stoppa', language: 'Språk',
+  },
+  nb: {
+    greetingLead: 'Velkommen. Du har nådd manageren til {name}.',
+    intro: 'Hvordan kan jeg hjelpe deg i dag? Du kan booke en opptreden, foreslå et samarbeid eller sende en forretningsforespørsel.',
+    book: 'Book', collab: 'Samarbeid', business: 'Forretning', hire: 'Ansett', play: 'Spill', stop: 'Stopp', language: 'Språk',
+  },
+  da: {
+    greetingLead: 'Velkommen. Du har kontaktet {name}s manager.',
+    intro: 'Hvordan kan jeg hjælpe dig i dag? Du kan booke et show, foreslå et samarbejde eller sende en forretningsforespørgsel.',
+    book: 'Book', collab: 'Samarbejd', business: 'Forretning', hire: 'Hyr', play: 'Afspil', stop: 'Stop', language: 'Sprog',
+  },
+  fi: {
+    greetingLead: 'Tervetuloa. Olet tavoittanut {name}n managerin.',
+    intro: 'Miten voin auttaa sinua tänään? Voit varata keikan, ehdottaa yhteistyötä tai tehdä liiketoimintatiedustelun.',
+    book: 'Varaa', collab: 'Yhteistyö', business: 'Liiketoiminta', hire: 'Palkkaa', play: 'Toista', stop: 'Pysäytä', language: 'Kieli',
+  },
+  cs: {
+    greetingLead: 'Vítejte. Spojili jste se s manažerem {name}.',
+    intro: 'Jak vám mohu dnes pomoci? Můžete si rezervovat vystoupení, navrhnout spolupráci nebo poslat obchodní poptávku.',
+    book: 'Rezervovat', collab: 'Spolupráce', business: 'Byznys', hire: 'Najmout', play: 'Přehrát', stop: 'Zastavit', language: 'Jazyk',
+  },
+  ro: {
+    greetingLead: 'Bun venit. Ați contactat managerul lui {name}.',
+    intro: 'Cu ce vă pot ajuta astăzi? Puteți rezerva un spectacol, propune o colaborare sau trimite o solicitare de afaceri.',
+    book: 'Rezervă', collab: 'Colaborare', business: 'Afaceri', hire: 'Angajează', play: 'Redă', stop: 'Oprește', language: 'Limbă',
+  },
+  hu: {
+    greetingLead: 'Üdvözöljük. {name} menedzserét érte el.',
+    intro: 'Miben segíthetek ma? Foglalhat fellépést, javasolhat együttműködést, vagy üzleti megkeresést küldhet.',
+    book: 'Foglalás', collab: 'Együttműködés', business: 'Üzlet', hire: 'Felfogad', play: 'Lejátszás', stop: 'Leállítás', language: 'Nyelv',
+  },
+  bg: {
+    greetingLead: 'Добре дошли. Свързахте се с мениджъра на {name}.',
+    intro: 'Как мога да помогна днес? Можете да резервирате участие, да предложите сътрудничество или да изпратите бизнес запитване.',
+    book: 'Резервирай', collab: 'Сътрудничество', business: 'Бизнес', hire: 'Наеми', play: 'Пусни', stop: 'Спри', language: 'Език',
+  },
+  sk: {
+    greetingLead: 'Vitajte. Spojili ste sa s manažérom {name}.',
+    intro: 'Ako vám môžem dnes pomôcť? Môžete si rezervovať vystúpenie, navrhnúť spoluprácu alebo poslať obchodný dopyt.',
+    book: 'Rezervovať', collab: 'Spolupráca', business: 'Biznis', hire: 'Najať', play: 'Prehrať', stop: 'Zastaviť', language: 'Jazyk',
+  },
+  hr: {
+    greetingLead: 'Dobrodošli. Povezali ste se s menadžerom izvođača {name}.',
+    intro: 'Kako vam mogu pomoći danas? Možete rezervirati nastup, predložiti suradnju ili poslati poslovni upit.',
+    book: 'Rezerviraj', collab: 'Suradnja', business: 'Posao', hire: 'Angažiraj', play: 'Reproduciraj', stop: 'Zaustavi', language: 'Jezik',
+  },
+  sr: {
+    greetingLead: 'Добродошли. Повезали сте се са менаџером извођача {name}.',
+    intro: 'Како могу да помогнем данас? Можете резервисати наступ, предложити сарадњу или послати пословни упит.',
+    book: 'Резервиши', collab: 'Сарадња', business: 'Посао', hire: 'Ангажуј', play: 'Пусти', stop: 'Заустави', language: 'Језик',
+  },
+  ms: {
+    greetingLead: 'Selamat datang. Anda telah menghubungi pengurus {name}.',
+    intro: 'Bagaimana saya boleh membantu anda hari ini? Anda boleh menempah persembahan, mencadangkan kerjasama, atau membuat pertanyaan perniagaan.',
+    book: 'Tempah', collab: 'Kerjasama', business: 'Perniagaan', hire: 'Upah', play: 'Main', stop: 'Henti', language: 'Bahasa',
+  },
+  fil: {
+    greetingLead: 'Maligayang pagdating. Naabot mo ang manager ni {name}.',
+    intro: 'Paano kita matutulungan ngayon? Maaari kang mag-book ng palabas, magmungkahi ng kolaborasyon, o magpadala ng business inquiry.',
+    book: 'Mag-book', collab: 'Kolaborasyon', business: 'Negosyo', hire: 'Umupa', play: 'I-play', stop: 'Itigil', language: 'Wika',
+  },
+  bn: {
+    greetingLead: 'স্বাগতম। আপনি {name}-এর ম্যানেজারের সাথে যুক্ত হয়েছেন।',
+    intro: 'আজ আমি আপনাকে কীভাবে সাহায্য করতে পারি? আপনি একটি শো বুক করতে পারেন, সহযোগিতার প্রস্তাব দিতে পারেন, বা ব্যবসায়িক জিজ্ঞাসা করতে পারেন।',
+    book: 'বুক করুন', collab: 'সহযোগিতা', business: 'ব্যবসা', hire: 'নিয়োগ', play: 'চালান', stop: 'থামুন', language: 'ভাষা',
+  },
+  ta: {
+    greetingLead: 'வரவேற்கிறோம். நீங்கள் {name} இன் மேலாளரைத் தொடர்பு கொண்டுள்ளீர்கள்.',
+    intro: 'இன்று நான் எப்படி உதவ முடியும்? நீங்கள் ஒரு நிகழ்ச்சியை முன்பதிவு செய்யலாம், கூட்டுப்பணியை முன்மொழியலாம் அல்லது வணிக விசாரணை செய்யலாம்.',
+    book: 'முன்பதிவு', collab: 'கூட்டுப்பணி', business: 'வணிகம்', hire: 'நியமி', play: 'இயக்கு', stop: 'நிறுத்து', language: 'மொழி',
+  },
+  te: {
+    greetingLead: 'స్వాగతం. మీరు {name} మేనేజర్‌ను సంప్రదించారు.',
+    intro: 'ఈ రోజు నేను మీకు ఎలా సహాయపడగలను? మీరు ప్రదర్శనను బుక్ చేయవచ్చు, సహకారాన్ని ప్రతిపాదించవచ్చు లేదా వ్యాపార విచారణ చేయవచ్చు.',
+    book: 'బుక్ చేయి', collab: 'సహకారం', business: 'వ్యాపారం', hire: 'నియమించు', play: 'ప్లే', stop: 'ఆపు', language: 'భాష',
+  },
+  sw: {
+    greetingLead: 'Karibu. Umewasiliana na meneja wa {name}.',
+    intro: 'Naweza kukusaidiaje leo? Unaweza kuagiza onyesho, kupendekeza ushirikiano, au kutuma ombi la kibiashara.',
+    book: 'Agiza', collab: 'Ushirikiano', business: 'Biashara', hire: 'Ajiri', play: 'Cheza', stop: 'Simamisha', language: 'Lugha',
+  },
+  af: {
+    greetingLead: "Welkom. Jy het {name} se bestuurder bereik.",
+    intro: "Hoe kan ek jou vandag help? Jy kan 'n vertoning bespreek, 'n samewerking voorstel, of 'n besigheidsnavraag doen.",
+    book: 'Bespreek', collab: 'Saamwerk', business: 'Besigheid', hire: 'Huur', play: 'Speel', stop: 'Stop', language: 'Taal',
+  },
+  ca: {
+    greetingLead: 'Benvingut. Has contactat amb el mànager de {name}.',
+    intro: 'Com et puc ajudar avui? Pots reservar un concert, proposar una col·laboració o fer una consulta de negocis.',
+    book: 'Reserva', collab: 'Col·laborar', business: 'Negocis', hire: 'Contractar', play: 'Reprodueix', stop: 'Atura', language: 'Idioma',
   },
 }
 
