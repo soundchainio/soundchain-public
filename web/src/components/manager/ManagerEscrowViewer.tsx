@@ -1,9 +1,15 @@
-import { Lock, ShieldCheck, ArrowRight, CheckCircle2, CalendarCheck } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import {
+  Lock, ShieldCheck, ArrowRight, CheckCircle2, CalendarCheck,
+  HandCoins, Handshake, Music4, ChevronLeft, ChevronRight, UserRound,
+} from 'lucide-react'
 
-// Whitelist-escrow VIEWER — shows a promoter exactly how an on-chain booking escrow
-// protects both sides, using a hypothetical DJ gig, plus a "recent completions" feed
-// (the artist's proven payout history). Illustrative sample data until real bookings
-// flow through ManagerBookingEscrow; then `completions` is populated from chain.
+// Whitelist-escrow VIEWER — the booking "storefront". A swipeable slideshow walks a
+// promoter through a real deal (a 0.15 ETH, 2-hour Friday local-bar set): the offer,
+// BOTH parties agreeing on-chain, funds locking, and the auto-payout — then a step
+// recap + the artist's proven payout history. SoundChain takes a flat 0.5% booking
+// fee per escrow (see contracts/ManagerBookingEscrow.sol). Illustrative until real
+// bookings flow through that contract; then `completions` is populated from chain.
 interface Completion {
   venue: string
   date: string
@@ -13,36 +19,206 @@ interface Completion {
 
 interface Props {
   artistName: string
+  artistAvatar?: string
   payoutAddress?: string
   completions?: Completion[]
 }
 
+// A LOCAL / up-and-coming DJ's calendar — modest, grassroots bookings (a 2-hour
+// bar set, a happy hour, a house party). Real payouts scale with the artist's
+// level; once bookings settle on-chain these are replaced by the artist's own.
 const SAMPLE: Completion[] = [
-  { venue: 'Warehouse 9 · Brooklyn', date: 'May 2026', amount: '$2,500', example: true },
-  { venue: 'Sahara Tent · Festival', date: 'Apr 2026', amount: '$6,000', example: true },
-  { venue: 'The Echo · LA', date: 'Mar 2026', amount: '$1,800', example: true },
+  { venue: 'The Tap Room · Local Bar', date: 'Fri · this week', amount: '0.15 ETH', example: true },
+  { venue: "Mara's Rooftop · Happy Hour", date: 'Last Sat', amount: '0.1 ETH', example: true },
+  { venue: 'Apt 4B · House Party', date: '2 weeks ago', amount: '0.06 ETH', example: true },
+  { venue: 'Corner Pub · Open Decks', date: 'Last month', amount: '0.04 ETH', example: true },
 ]
 
-export function ManagerEscrowViewer({ artistName, payoutAddress, completions }: Props) {
+function PromoterAvatar() {
+  return (
+    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-sky-500/30 to-blue-600/30 border border-sky-400/40 flex items-center justify-center">
+      <UserRound className="w-6 h-6 text-sky-300" />
+    </div>
+  )
+}
+
+function ArtistAvatar({ name, avatar }: { name: string; avatar?: string }) {
+  return avatar ? (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={avatar} alt={name} className="w-12 h-12 rounded-full object-cover border border-emerald-400/40" />
+  ) : (
+    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-500/30 to-teal-600/30 border border-emerald-400/40 flex items-center justify-center text-emerald-200 font-bold">
+      {name.charAt(0).toUpperCase()}
+    </div>
+  )
+}
+
+export function ManagerEscrowViewer({ artistName, artistAvatar, payoutAddress, completions }: Props) {
   const list = completions && completions.length ? completions : SAMPLE
+
+  // ── The storefront slideshow: the deal told as a 4-frame visual story ──
+  const slides = [
+    {
+      key: 'offer',
+      label: 'The Offer',
+      bg: 'from-sky-900/60 via-blue-900/40 to-black',
+      ring: 'border-sky-500/30',
+      node: (
+        <div className="flex flex-col items-center text-center gap-2">
+          <div className="flex items-center gap-3">
+            <PromoterAvatar />
+            <HandCoins className="w-5 h-5 text-sky-300" />
+            <ArtistAvatar name={artistName} avatar={artistAvatar} />
+          </div>
+          <p className="text-3xl font-extrabold text-white tracking-tight">0.15 <span className="text-sky-300 text-xl align-middle">ETH</span></p>
+          <p className="text-[11px] text-sky-100/80 leading-snug">A promoter offers <span className="text-white font-medium">{artistName}</span><br />a 2-hour set · local bar · Friday night</p>
+        </div>
+      ),
+    },
+    {
+      key: 'agree',
+      label: 'Both Parties Agree',
+      bg: 'from-emerald-900/60 via-teal-900/40 to-black',
+      ring: 'border-emerald-500/30',
+      node: (
+        <div className="flex flex-col items-center text-center gap-3">
+          <div className="flex items-end gap-4">
+            <div className="flex flex-col items-center gap-1">
+              <PromoterAvatar />
+              <span className="inline-flex items-center gap-1 text-[9px] font-semibold text-emerald-300 bg-emerald-500/15 border border-emerald-500/30 rounded-full px-1.5 py-0.5"><CheckCircle2 className="w-2.5 h-2.5" /> Agreed</span>
+              <span className="text-[9px] text-gray-400">Promoter</span>
+            </div>
+            <Handshake className="w-7 h-7 text-emerald-300 mb-5 animate-pulse" />
+            <div className="flex flex-col items-center gap-1">
+              <ArtistAvatar name={artistName} avatar={artistAvatar} />
+              <span className="inline-flex items-center gap-1 text-[9px] font-semibold text-emerald-300 bg-emerald-500/15 border border-emerald-500/30 rounded-full px-1.5 py-0.5"><CheckCircle2 className="w-2.5 h-2.5" /> Agreed</span>
+              <span className="text-[9px] text-gray-400">{artistName}</span>
+            </div>
+          </div>
+          <p className="text-[11px] text-emerald-100/80 leading-snug">Both sign the terms on-chain.<br />No middleman, no handshake-and-hope.</p>
+        </div>
+      ),
+    },
+    {
+      key: 'lock',
+      label: 'Funds Locked',
+      bg: 'from-indigo-900/60 via-violet-900/40 to-black',
+      ring: 'border-violet-500/30',
+      node: (
+        <div className="flex flex-col items-center text-center gap-2">
+          <div className="w-14 h-14 rounded-2xl bg-violet-500/15 border border-violet-400/40 flex items-center justify-center">
+            <Lock className="w-7 h-7 text-violet-300" />
+          </div>
+          <p className="text-base font-bold text-white">0.15 ETH locked in escrow</p>
+          <p className="text-[11px] text-violet-100/80 leading-snug">Held by the contract — not us, not the artist.<br />Friday's date is whitelisted: no double-booking.</p>
+        </div>
+      ),
+    },
+    {
+      key: 'paid',
+      label: 'Performed & Paid',
+      bg: 'from-emerald-900/60 via-green-900/40 to-black',
+      ring: 'border-emerald-500/30',
+      node: (
+        <div className="flex flex-col items-center text-center gap-2">
+          <div className="flex items-center gap-2">
+            <Music4 className="w-6 h-6 text-emerald-300" />
+            <ArrowRight className="w-4 h-4 text-gray-500" />
+            <CheckCircle2 className="w-7 h-7 text-emerald-300" />
+          </div>
+          <p className="text-base font-bold text-white">Set performed → auto-payout</p>
+          <p className="text-[11px] text-emerald-100/80 leading-snug">Escrow releases <span className="text-emerald-300 font-semibold">0.15 ETH</span> to {artistName}<br />(0.5% SoundChain booking fee). Refunds follow the agreed terms.</p>
+        </div>
+      ),
+    },
+  ]
+
+  const [idx, setIdx] = useState(0)
+  const [paused, setPaused] = useState(false)
+  const touchX = useRef<number | null>(null)
+  const go = useCallback((n: number) => setIdx((p) => (n + slides.length) % slides.length), [slides.length])
+
+  // Auto-advance the storefront unless the promoter is interacting.
+  useEffect(() => {
+    if (paused) return
+    const id = setInterval(() => setIdx((p) => (p + 1) % slides.length), 3800)
+    return () => clearInterval(id)
+  }, [paused, slides.length])
+
+  const onTouchStart = (e: React.TouchEvent) => { touchX.current = e.touches[0].clientX; setPaused(true) }
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (touchX.current == null) return
+    const dx = e.changedTouches[0].clientX - touchX.current
+    if (Math.abs(dx) > 40) go(idx + (dx < 0 ? 1 : -1))
+    touchX.current = null
+  }
+
   const steps = [
-    { n: 1, t: 'Promoter deposits', d: 'Booking fee (e.g. $2,500 USDC) is locked in the escrow contract — not held by us or the artist.' },
-    { n: 2, t: 'Date locked on-chain', d: `The gig + ${artistName}'s slot are whitelisted on-chain so the date can't be double-booked.` },
-    { n: 3, t: 'Artist performs', d: 'The DJ plays the set. Both sides are protected by the locked funds + terms.' },
-    { n: 4, t: 'Auto payout on completion', d: 'Escrow releases the fee to the artist (5% platform). Refunds follow the cancellation terms — no middleman decides.' },
+    { n: 1, t: 'Promoter deposits', d: 'Booking fee (0.15 ETH) is locked in the escrow contract — not held by us or the artist.' },
+    { n: 2, t: 'Both parties agree', d: `The promoter and ${artistName} both sign the terms on-chain; Friday's slot is whitelisted so it can't be double-booked.` },
+    { n: 3, t: 'Artist performs', d: 'The 2-hour set is played. Both sides are protected by the locked funds + agreed terms.' },
+    { n: 4, t: 'Auto payout on completion', d: 'Escrow releases the fee to the artist minus a flat 0.5% SoundChain booking fee. Refunds follow the cancellation terms — no middleman decides.' },
   ]
 
   return (
     <section className="backdrop-blur-xl bg-black/60 border border-emerald-500/25 rounded-2xl p-4">
-      <div className="flex items-center gap-2 mb-1">
+      <div className="flex items-center gap-2 mb-3">
         <ShieldCheck className="w-4 h-4 text-emerald-400" />
         <h2 className="text-sm font-semibold text-white">On-Chain Booking Escrow</h2>
         <span className="ml-auto inline-flex items-center gap-1 text-[10px] text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-2 py-0.5">
           <Lock className="w-3 h-3" /> Polygon
         </span>
       </div>
+
+      {/* ── Storefront slideshow ── */}
+      <div
+        className="relative rounded-xl overflow-hidden border border-white/10 mb-3 select-none"
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => setPaused(false)}
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+      >
+        <div className={`relative bg-gradient-to-br ${slides[idx].bg} ${slides[idx].ring} border-0`}>
+          <div className="flex items-center justify-between px-3 pt-2.5">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-white/60">{slides[idx].label}</span>
+            <span className="text-[10px] text-white/40">{idx + 1}/{slides.length}</span>
+          </div>
+          <div className="min-h-[170px] flex items-center justify-center px-4 py-4">
+            {slides[idx].node}
+          </div>
+        </div>
+
+        {/* Arrows */}
+        <button
+          aria-label="Previous"
+          onClick={() => go(idx - 1)}
+          className="absolute left-1 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/40 hover:bg-black/70 border border-white/10 flex items-center justify-center text-white/80 transition-colors"
+        >
+          <ChevronLeft className="w-4 h-4" />
+        </button>
+        <button
+          aria-label="Next"
+          onClick={() => go(idx + 1)}
+          className="absolute right-1 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/40 hover:bg-black/70 border border-white/10 flex items-center justify-center text-white/80 transition-colors"
+        >
+          <ChevronRight className="w-4 h-4" />
+        </button>
+
+        {/* Dots */}
+        <div className="absolute bottom-2 left-0 right-0 flex items-center justify-center gap-1.5">
+          {slides.map((s, i) => (
+            <button
+              key={s.key}
+              aria-label={`Slide ${i + 1}`}
+              onClick={() => go(i)}
+              className={`h-1.5 rounded-full transition-all ${i === idx ? 'w-5 bg-emerald-400' : 'w-1.5 bg-white/30 hover:bg-white/50'}`}
+            />
+          ))}
+        </div>
+      </div>
+
       <p className="text-xs text-gray-400 mb-3">
-        Example: a <span className="text-gray-200">2-hour DJ set</span> — here's how the smart contract secures the deal for both sides.
+        Example: a <span className="text-gray-200">2-hour set at a local bar</span> — 0.15 ETH, Friday night. SoundChain takes a flat <span className="text-emerald-300">0.5%</span> booking fee; here's how the smart contract secures the deal for both sides.
       </p>
 
       <ol className="space-y-2.5 mb-4">
@@ -78,7 +254,7 @@ export function ManagerEscrowViewer({ artistName, payoutAddress, completions }: 
           ))}
         </div>
         {list[0]?.example && (
-          <p className="text-[10px] text-gray-600 mt-2 italic">Sample preview — real completions post here as bookings settle on-chain.</p>
+          <p className="text-[10px] text-gray-600 mt-2 italic">Sample preview for a local artist — payouts scale with the artist's level; real completions post here as bookings settle on-chain.</p>
         )}
       </div>
 

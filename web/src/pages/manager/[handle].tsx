@@ -511,6 +511,7 @@ export default function ManagerPage({ ogData, handle }: ManagerPageProps) {
           />
           <ManagerEscrowViewer
             artistName={displayName}
+            artistAvatar={profile.profilePicture || undefined}
             payoutAddress={managerConfig.payoutAddress || undefined}
           />
 

@@ -3,6 +3,13 @@ import { Play, Square, Pencil, Check, X, RotateCcw, Mic, ChevronDown, Loader2 } 
 import { FastAudioPlayer } from 'components/FastAudioPlayer'
 import { t, baseLang, localeFor, localizedGreeting } from 'lib/managerI18n'
 
+// iOS Safari requires audio.play() to originate inside a user gesture. Our TTS
+// fetch is async, so by the time the blob arrives the gesture activation is gone
+// and play() rejects silently (works on desktop, dead on mobile). Fix: synchronously
+// create + "bless" a reusable audio element in the tap with this near-empty WAV,
+// then swap the fetched blob into that same (now gesture-activated) element.
+const SILENT_WAV = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA='
+
 interface ManagerGreetingProps {
   displayName: string
   bio?: string | null
@@ -124,9 +131,14 @@ export function ManagerGreeting({
     setPreviewingVoice(null)
   }, [])
 
-  const playTTS = useCallback(async (text: string, voice: string) => {
+  // `preAudio` is the gesture-unlocked element from the tap handler (iOS). On
+  // desktop / programmatic calls it's omitted and we create a fresh element.
+  const playTTS = useCallback(async (text: string, voice: string, preAudio?: HTMLAudioElement) => {
     stopAudio()
     setLoading(true)
+
+    const audio = preAudio || new Audio()
+    audioRef.current = audio
 
     try {
       abortRef.current = new AbortController()
@@ -141,8 +153,7 @@ export function ManagerGreeting({
 
       const blob = await res.blob()
       const url = URL.createObjectURL(blob)
-      const audio = new Audio(url)
-      audioRef.current = audio
+      audio.src = url
 
       audio.onplay = () => { setPlaying(true); setLoading(false) }
       audio.onended = () => { setPlaying(false); setPreviewingVoice(null); URL.revokeObjectURL(url) }
@@ -159,12 +170,20 @@ export function ManagerGreeting({
     }
   }, [stopAudio])
 
+  // Synchronously create + unlock the audio element inside the tap so iOS lets
+  // us play the (async-fetched) TTS blob on it afterward.
+  const unlockAudio = (): HTMLAudioElement => {
+    const audio = new Audio(SILENT_WAV)
+    audio.play().catch(() => {})
+    return audio
+  }
+
   const handlePlay = useCallback(() => {
     if (playing || loading) {
       stopAudio()
       return
     }
-    playTTS(greetingText, voiceName)
+    playTTS(greetingText, voiceName, unlockAudio())
   }, [playing, loading, greetingText, voiceName, playTTS, stopAudio])
 
   // Voice picker
@@ -204,9 +223,9 @@ export function ManagerGreeting({
       return
     }
     setPreviewingVoice(voice)
-    // Short preview text
+    // Short preview text — unlock synchronously (iOS) before the async TTS fetch.
     const preview = `Hello, I'm the AI manager for ${displayName}. How can I help you today?`
-    playTTS(preview, voice)
+    playTTS(preview, voice, unlockAudio())
   }
 
   const handleSelectVoice = (voice: string) => {
