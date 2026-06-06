@@ -251,19 +251,22 @@ export default function ManagerPage({ ogData, handle, isBot }: ManagerPageProps)
   const trackAudioRef = useRef<HTMLAudioElement | null>(null)
   const [playingTrackId, setPlayingTrackId] = useState<string | null>(null)
   const toggleTrack = (track: any) => {
-    const url = track?.playbackUrl
-    if (!url) { router.push(`/dex/track/${track.id}`); return }
+    const url = track?.playbackUrl || track?.assetUrl
     if (playingTrackId === track.id) {
       trackAudioRef.current?.pause()
       setPlayingTrackId(null)
       return
     }
+    if (!url) return // no audio → do nothing; NEVER navigate away from the manager page
     trackAudioRef.current?.pause()
     if (!trackAudioRef.current) trackAudioRef.current = new Audio()
     const a = trackAudioRef.current
     a.src = url
     a.onended = () => setPlayingTrackId(null)
-    a.play().then(() => setPlayingTrackId(track.id)).catch(() => router.push(`/dex/track/${track.id}`))
+    a.onerror = () => setPlayingTrackId(null)
+    // Inline only — on a mobile play() rejection we reset state, we do NOT redirect
+    // to the track page (that was the bug: catch → router.push pulled you off-page).
+    a.play().then(() => setPlayingTrackId(track.id)).catch(() => setPlayingTrackId(null))
   }
   useEffect(() => () => { trackAudioRef.current?.pause(); trackAudioRef.current = null }, [])
 
@@ -710,7 +713,7 @@ export default function ManagerPage({ ogData, handle, isBot }: ManagerPageProps)
               <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
                 {tracks.slice(0, 10).map(track => {
                   const isPlaying = playingTrackId === track.id
-                  const hasAudio = !!(track as any).playbackUrl
+                  const hasAudio = !!((track as any).playbackUrl || (track as any).assetUrl)
                   return (
                     <div key={track.id} className="flex-shrink-0 w-32 group">
                       <button
