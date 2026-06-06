@@ -9685,8 +9685,10 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
         if (profile) {
           const name = (profile.displayName as string) || (profile.userHandle as string) || routeId
-          // Cover first → wide summary_large_image card; avatar next; logo last.
-          let ogImage = (profile.coverPicture as string) || (profile.profilePicture as string) || fallbackImage
+          // The PROFILE PIC (avatar) is the share-card image for /users/<handle> —
+          // Frank's call: it's the user's identity mark, not the background cover.
+          // Cover is the fallback; logo last.
+          let ogImage = (profile.profilePicture as string) || (profile.coverPicture as string) || fallbackImage
           if (ogImage && !ogImage.startsWith('http')) {
             ogImage = `${domainUrl}${ogImage.startsWith('/') ? '' : '/'}${ogImage}`
           }

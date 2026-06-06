@@ -56,6 +56,24 @@ function ArtistAvatar({ name, avatar }: { name: string; avatar?: string }) {
 export function ManagerEscrowViewer({ artistName, artistAvatar, payoutAddress, completions }: Props) {
   const list = completions && completions.length ? completions : SAMPLE
 
+  // Live ETH→USD so the (crypto) amounts read in real money — a local DJ wants to
+  // know 0.04 ETH ≈ $130. One fetch on mount; falls back to a recent estimate.
+  const [ethUsd, setEthUsd] = useState<number | null>(null)
+  useEffect(() => {
+    let on = true
+    fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd')
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (on && d?.ethereum?.usd) setEthUsd(d.ethereum.usd) })
+      .catch(() => {})
+    return () => { on = false }
+  }, [])
+  const RATE = ethUsd || 3300 // fallback estimate if the price fetch fails
+  const ethNum = (s: string) => parseFloat(s) || 0 // "0.15 ETH" → 0.15
+  const usd = (eth: number) => {
+    const v = eth * RATE
+    return v >= 1000 ? `$${(v / 1000).toFixed(1)}k` : `$${Math.round(v)}`
+  }
+
   // ── The storefront slideshow: the deal told as a 4-frame visual story ──
   const slides = [
     {
@@ -71,6 +89,7 @@ export function ManagerEscrowViewer({ artistName, artistAvatar, payoutAddress, c
             <ArtistAvatar name={artistName} avatar={artistAvatar} />
           </div>
           <p className="text-3xl font-extrabold text-white tracking-tight">0.15 <span className="text-sky-300 text-xl align-middle">ETH</span></p>
+          <p className="text-[11px] text-sky-200/70 -mt-1.5">≈ {usd(0.15)} USD</p>
           <p className="text-[11px] text-sky-100/80 leading-snug">A promoter offers <span className="text-white font-medium">{artistName}</span><br />a 2-hour set · local bar · Friday night</p>
         </div>
       ),
@@ -109,7 +128,7 @@ export function ManagerEscrowViewer({ artistName, artistAvatar, payoutAddress, c
           <div className="w-14 h-14 rounded-2xl bg-violet-500/15 border border-violet-400/40 flex items-center justify-center">
             <Lock className="w-7 h-7 text-violet-300" />
           </div>
-          <p className="text-base font-bold text-white">0.15 ETH locked in escrow</p>
+          <p className="text-base font-bold text-white">0.15 ETH <span className="text-violet-300 font-medium">(≈ {usd(0.15)})</span> locked in escrow</p>
           <p className="text-[11px] text-violet-100/80 leading-snug">Held by the contract — not us, not the artist.<br />Friday's date is whitelisted: no double-booking.</p>
         </div>
       ),
@@ -127,7 +146,7 @@ export function ManagerEscrowViewer({ artistName, artistAvatar, payoutAddress, c
             <CheckCircle2 className="w-7 h-7 text-emerald-300" />
           </div>
           <p className="text-base font-bold text-white">Set performed → auto-payout</p>
-          <p className="text-[11px] text-emerald-100/80 leading-snug">Escrow releases <span className="text-emerald-300 font-semibold">0.15 ETH</span> to {artistName}<br />(0.5% SoundChain booking fee). Refunds follow the agreed terms.</p>
+          <p className="text-[11px] text-emerald-100/80 leading-snug">Escrow releases <span className="text-emerald-300 font-semibold">0.15 ETH (≈ {usd(0.15)})</span> to {artistName}<br />(0.5% SoundChain booking fee). Refunds follow the agreed terms.</p>
         </div>
       ),
     },
@@ -166,7 +185,7 @@ export function ManagerEscrowViewer({ artistName, artistAvatar, payoutAddress, c
         <ShieldCheck className="w-4 h-4 text-emerald-400" />
         <h2 className="text-sm font-semibold text-white">On-Chain Booking Escrow</h2>
         <span className="ml-auto inline-flex items-center gap-1 text-[10px] text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-2 py-0.5">
-          <Lock className="w-3 h-3" /> Polygon
+          <Lock className="w-3 h-3" /> ZetaChain · Omnichain
         </span>
       </div>
 
@@ -218,7 +237,7 @@ export function ManagerEscrowViewer({ artistName, artistAvatar, payoutAddress, c
       </div>
 
       <p className="text-xs text-gray-400 mb-3">
-        Example: a <span className="text-gray-200">2-hour set at a local bar</span> — 0.15 ETH, Friday night. SoundChain takes a flat <span className="text-emerald-300">0.5%</span> booking fee; here's how the smart contract secures the deal for both sides.
+        Example: a <span className="text-gray-200">2-hour set at a local bar</span> — 0.15 ETH (≈ {usd(0.15)}), Friday night. SoundChain takes a flat <span className="text-emerald-300">0.5%</span> booking fee; here's how the smart contract secures the deal for both sides.
       </p>
 
       <ol className="space-y-2.5 mb-4">
@@ -249,7 +268,10 @@ export function ManagerEscrowViewer({ artistName, artistAvatar, payoutAddress, c
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
               <span className="text-gray-200 truncate">{c.venue}</span>
               <span className="text-gray-500">· {c.date}</span>
-              <span className="ml-auto text-emerald-300 font-medium whitespace-nowrap">{c.amount} · paid</span>
+              <span className="ml-auto whitespace-nowrap">
+                <span className="text-emerald-300 font-medium">{c.amount}</span>
+                <span className="text-gray-500"> · {usd(ethNum(c.amount))} · paid</span>
+              </span>
             </div>
           ))}
         </div>

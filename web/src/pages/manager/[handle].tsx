@@ -208,7 +208,15 @@ export default function ManagerPage({ ogData, handle, isBot }: ManagerPageProps)
   const tracks = tracksData?.groupedTracks?.nodes || []
 
   const me = useMe()
-  const isOwner = !!(me?.profile?.id && profile?.id && me.profile.id === profile.id)
+  // Owner = same profile id, OR (fallback) the viewer's own handle matches the page
+  // handle. The id fallback fixes mobile, where the id formats can differ between
+  // useMe and the Vercel-direct profile so the strict id check missed → owner saw
+  // the visitor "Contact" CTA instead of their Inbox.
+  const meHandle = (me?.profile?.userHandle || '').toLowerCase()
+  const isOwner = !!(
+    (me?.profile?.id && profile?.id && me.profile.id === profile.id) ||
+    (meHandle && pageHandle && meHandle === pageHandle.toLowerCase())
+  )
 
   const [activeForm, setActiveForm] = useState<'booking' | 'collab' | 'business' | null>(null)
   const [copied, setCopied] = useState(false)
@@ -696,6 +704,8 @@ export default function ManagerPage({ ogData, handle, isBot }: ManagerPageProps)
                   displayName={displayName}
                   payoutAddress={managerConfig.payoutAddress || undefined}
                   depositHint={managerConfig.paymentTerms.depositSchedule || managerConfig.bookingRate || undefined}
+                  packages={managerConfig.services}
+                  cancellation={managerConfig.paymentTerms.cancellation || undefined}
                   lang={viewerLang}
                 />
               )}

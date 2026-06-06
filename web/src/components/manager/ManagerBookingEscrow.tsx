@@ -15,11 +15,19 @@ import { TokenPickerModal } from './TokenPickerModal'
 // Built for ZERO hiccups: every state is handled, nothing fakes success, and a
 // non-EVM coin is never shown an EVM address to send to.
 
+interface BookingPackage {
+  name: string
+  rate?: string
+  note?: string
+}
+
 interface ManagerBookingEscrowProps {
   profileId: string
   displayName: string
   payoutAddress?: string
   depositHint?: string // the pro's deposit-schedule / rate text, shown as guidance
+  packages?: BookingPackage[] // the pro's pre-set set/service choices (dropdown)
+  cancellation?: string // the pro's pre-set cancellation policy
   payerName?: string
   payerEmail?: string
   inquiryId?: string
@@ -28,8 +36,24 @@ interface ManagerBookingEscrowProps {
 
 type Phase = 'idle' | 'creating' | 'deposit' | 'confirming' | 'funded' | 'bridge'
 
+// Sensible defaults so the booking template is visible/usable even before the pro
+// adds priced packages — they're just set-length labels (no fake prices). Once the
+// pro configures services WITH rates, those replace these and prefill the deposit.
+const DEFAULT_PACKAGES: BookingPackage[] = [
+  { name: '1-hour set' },
+  { name: '2-hour set' },
+  { name: '3-hour set' },
+  { name: 'Custom — enter amount' },
+]
+
+const parseRate = (rate?: string): number | null => {
+  if (!rate) return null
+  const m = rate.replace(/,/g, '').match(/([0-9]*\.?[0-9]+)/)
+  return m ? parseFloat(m[1]) : null
+}
+
 export function ManagerBookingEscrow({
-  profileId, displayName, payoutAddress, depositHint, payerName, payerEmail, inquiryId, lang,
+  profileId, displayName, payoutAddress, depositHint, packages, cancellation, payerName, payerEmail, inquiryId, lang,
 }: ManagerBookingEscrowProps) {
   const wallet = useWallet()
   const [injected, setInjected] = useState<{ signer: any; address: string; chainId: number } | null>(null)
@@ -38,6 +62,37 @@ export function ManagerBookingEscrow({
   const [selected, setSelected] = useState<string[]>([])
   const [payWith, setPayWith] = useState<string>('') // the single token used for THIS deposit
   const [pickerOpen, setPickerOpen] = useState(false)
+
+  // ── Booking terms — the pro's pre-set choices the promoter picks from ──
+  // Always offer a custom/"other" slot so any profession/gig type is bookable.
+  const basePkgs = packages && packages.length ? packages : DEFAULT_PACKAGES
+  const pkgList = basePkgs.some((p) => /custom|other/i.test(p.name))
+    ? basePkgs
+    : [...basePkgs, { name: 'Other / custom — enter details' }]
+  const [pkgIdx, setPkgIdx] = useState(0)
+  const [depositPct, setDepositPct] = useState(100)
+  // Detect a token symbol embedded in a rate string ("0.15 ETH" → ETH).
+  const tokenInRate = (rate?: string): string => {
+    if (!rate) return ''
+    const up = rate.toUpperCase()
+    const hit = BOOKING_TOKENS.find((t) => new RegExp(`\\b${t.symbol}\\b`).test(up))
+    return hit?.symbol || ''
+  }
+  // Selecting a package (or changing the deposit split) prefills the deposit amount
+  // + token from the pro's rate, when the rate carries a number.
+  const applyTerms = (idx: number, pct: number) => {
+    if (pct === 0) return // custom — leave the amount to the promoter/pro to set
+    const p = pkgList[idx]
+    const base = parseRate(p?.rate)
+    if (base != null) {
+      const dep = base * (pct / 100)
+      setAmount(String(parseFloat(dep.toFixed(8))))
+    }
+    const tk = tokenInRate(p?.rate)
+    if (tk) { setSelected([tk]); setPayWith(tk) }
+  }
+  const selectPkg = (idx: number) => { setPkgIdx(idx); applyTerms(idx, depositPct) }
+  const selectDeposit = (pct: number) => { setDepositPct(pct); applyTerms(pkgIdx, pct) }
 
   const [phase, setPhase] = useState<Phase>('idle')
   const [escrow, setEscrow] = useState<CreatedEscrow | null>(null)
@@ -146,6 +201,7 @@ export function ManagerBookingEscrow({
   const feeNote = `${(PLATFORM_FEE_RATE * 100).toFixed(2)}% platform fee on release`
   const labelCls = 'block text-[11px] font-medium text-gray-400 mb-1'
   const inputCls = 'w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-gray-200 placeholder-gray-600 focus:border-cyan-500 focus:outline-none'
+  const selectCls = `${inputCls} cursor-pointer`
 
   // ── Funded: reveal unlocked ──
   if (phase === 'funded') {
@@ -206,6 +262,33 @@ export function ManagerBookingEscrow({
         </span>
       </div>
       <p className="text-[12px] text-gray-500">{t(lang, 'whitelistBlurb')}</p>
+
+      {/* Booking terms — the pro's pre-set choices; the promoter picks from dropdowns.
+          Terms stay flexible: a Custom/Other set + a Custom deposit cover any inquiry. */}
+      <div className="space-y-3 rounded-xl border border-cyan-500/15 bg-black/30 p-3">
+        <p className="text-[11px] font-semibold text-cyan-300">Booking terms</p>
+        <div>
+          <label className={labelCls}>Set / package</label>
+          <select value={pkgIdx} onChange={(e) => selectPkg(Number(e.target.value))} className={selectCls}>
+            {pkgList.map((p, i) => (
+              <option key={i} value={i}>{p.name}{p.rate ? ` — ${p.rate}` : ''}</option>
+            ))}
+          </select>
+          {pkgList[pkgIdx]?.note && <p className="mt-1 text-[10px] text-gray-600">{pkgList[pkgIdx].note}</p>}
+        </div>
+        <div>
+          <label className={labelCls}>Deposit</label>
+          <select value={depositPct} onChange={(e) => selectDeposit(Number(e.target.value))} className={selectCls}>
+            <option value={100}>Full payment (100%)</option>
+            <option value={50}>50% deposit — balance on performance</option>
+            <option value={25}>25% to hold the date</option>
+            <option value={0}>Custom amount</option>
+          </select>
+        </div>
+        {cancellation && (
+          <p className="text-[10px] text-gray-500">Cancellation: <span className="text-gray-400">{cancellation}</span></p>
+        )}
+      </div>
 
       {/* Amount */}
       <div>
