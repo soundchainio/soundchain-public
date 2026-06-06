@@ -3,7 +3,7 @@ import { GetServerSideProps } from 'next'
 import Head from 'next/head'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { ChevronLeft, Calendar, Users, Briefcase, Music, ExternalLink, DollarSign, Plane, Hotel, Coffee, Sliders, Globe, Share2, Check } from 'lucide-react'
+import { ChevronLeft, Calendar, Users, Briefcase, Music, ExternalLink, DollarSign, Plane, Hotel, Coffee, Sliders, Globe, Share2, Check, Play, Pause, Loader2 } from 'lucide-react'
 import { config } from 'config'
 import { CustomLayout } from 'pages/_app'
 import { createApolloClient } from 'lib/apollo'
@@ -244,6 +244,28 @@ export default function ManagerPage({ ogData, handle, isBot }: ManagerPageProps)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router.isReady, router.query.book, router.query.whitelist, profile?.id])
+
+  // Collection cards play INLINE — a visitor previews a track without leaving the
+  // page (no redirect). play() fires inside the tap (no awaited fetch) so iOS allows
+  // it; a track with no playbackUrl falls back to opening its page.
+  const trackAudioRef = useRef<HTMLAudioElement | null>(null)
+  const [playingTrackId, setPlayingTrackId] = useState<string | null>(null)
+  const toggleTrack = (track: any) => {
+    const url = track?.playbackUrl
+    if (!url) { router.push(`/dex/track/${track.id}`); return }
+    if (playingTrackId === track.id) {
+      trackAudioRef.current?.pause()
+      setPlayingTrackId(null)
+      return
+    }
+    trackAudioRef.current?.pause()
+    if (!trackAudioRef.current) trackAudioRef.current = new Audio()
+    const a = trackAudioRef.current
+    a.src = url
+    a.onended = () => setPlayingTrackId(null)
+    a.play().then(() => setPlayingTrackId(track.id)).catch(() => router.push(`/dex/track/${track.id}`))
+  }
+  useEffect(() => () => { trackAudioRef.current?.pause(); trackAudioRef.current = null }, [])
 
   // Polyglot: the agent talks to the visitor in THEIR language. Start at 'en' for
   // SSR/hydration parity. On mount: use the remembered choice if any; otherwise
@@ -680,29 +702,43 @@ export default function ManagerPage({ ogData, handle, isBot }: ManagerPageProps)
             <section className="lg:col-span-2">
               <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Collection · NFTs &amp; SCIDs</h2>
               <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
-                {tracks.slice(0, 10).map(track => (
-                  <Link
-                    key={track.id}
-                    href={`/dex/track/${track.id}`}
-                    className="flex-shrink-0 w-32 group"
-                  >
-                    <div className="w-32 h-32 rounded-xl overflow-hidden bg-gray-900 border border-gray-800 group-hover:border-cyan-500/40 transition-colors">
-                      {track.artworkUrl ? (
-                        <img src={track.artworkUrl} alt={track.title} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-purple-900 to-cyan-900 flex items-center justify-center">
-                          <Music className="w-8 h-8 text-white/30" />
-                        </div>
+                {tracks.slice(0, 10).map(track => {
+                  const isPlaying = playingTrackId === track.id
+                  const hasAudio = !!(track as any).playbackUrl
+                  return (
+                    <div key={track.id} className="flex-shrink-0 w-32 group">
+                      <button
+                        onClick={() => toggleTrack(track)}
+                        className="relative block w-32 h-32 rounded-xl overflow-hidden bg-gray-900 border border-gray-800 group-hover:border-cyan-500/40 transition-colors"
+                        title={hasAudio ? (isPlaying ? 'Pause' : 'Play preview') : 'Open track'}
+                      >
+                        {track.artworkUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={track.artworkUrl} alt={track.title} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-purple-900 to-cyan-900 flex items-center justify-center">
+                            <Music className="w-8 h-8 text-white/30" />
+                          </div>
+                        )}
+                        {/* Inline play/pause overlay */}
+                        <span className={`absolute inset-0 flex items-center justify-center bg-black/35 transition-opacity ${isPlaying ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                          <span className={`flex items-center justify-center w-10 h-10 rounded-full bg-cyan-500/90 text-black shadow-lg ${isPlaying ? 'animate-pulse' : ''}`}>
+                            {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
+                          </span>
+                        </span>
+                      </button>
+                      <p
+                        onClick={() => toggleTrack(track)}
+                        className={`text-xs mt-1.5 truncate cursor-pointer transition-colors ${isPlaying ? 'text-cyan-400' : 'text-white group-hover:text-cyan-400'}`}
+                      >
+                        {track.title}
+                      </p>
+                      {track.artist && (
+                        <p className="text-[10px] text-gray-500 truncate">{track.artist}</p>
                       )}
                     </div>
-                    <p className="text-xs text-white mt-1.5 truncate group-hover:text-cyan-400 transition-colors">
-                      {track.title}
-                    </p>
-                    {track.artist && (
-                      <p className="text-[10px] text-gray-500 truncate">{track.artist}</p>
-                    )}
-                  </Link>
-                ))}
+                  )
+                })}
               </div>
             </section>
           )}

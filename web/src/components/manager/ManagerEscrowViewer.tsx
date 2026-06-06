@@ -73,6 +73,12 @@ export function ManagerEscrowViewer({ artistName, artistAvatar, payoutAddress, c
     const v = eth * RATE
     return v >= 1000 ? `$${(v / 1000).toFixed(1)}k` : `$${Math.round(v)}`
   }
+  const usdPrecise = (eth: number) => {
+    const v = eth * RATE
+    return v < 10 ? `$${v.toFixed(2)}` : usd(eth)
+  }
+  const FEE_RATE = 0.005 // 0.5% SoundChain booking fee
+  const feeEth = (eth: number) => eth * FEE_RATE
 
   // ── The storefront slideshow: the deal told as a 4-frame visual story ──
   const slides = [
@@ -240,6 +246,16 @@ export function ManagerEscrowViewer({ artistName, artistAvatar, payoutAddress, c
         Example: a <span className="text-gray-200">2-hour set at a local bar</span> — 0.15 ETH (≈ {usd(0.15)}), Friday night. SoundChain takes a flat <span className="text-emerald-300">0.5%</span> booking fee; here's how the smart contract secures the deal for both sides.
       </p>
 
+      {/* Fee transparency — what SoundChain's 0.5% actually costs, in ETH + USD */}
+      <div className="flex items-center justify-between gap-2 mb-3 rounded-lg border border-emerald-500/15 bg-emerald-500/[0.04] px-3 py-2">
+        <span className="text-[11px] text-gray-400">SoundChain booking fee · <span className="text-emerald-300">0.5%</span></span>
+        <span className="text-[11px] text-right">
+          <span className="text-emerald-300 font-medium">{feeEth(0.15).toFixed(5)} ETH</span>
+          <span className="text-gray-500"> ≈ {usdPrecise(feeEth(0.15))}</span>
+          <span className="text-gray-600"> on a 0.15 ETH booking</span>
+        </span>
+      </div>
+
       <ol className="space-y-2.5 mb-4">
         {steps.map((s) => (
           <li key={s.n} className="flex gap-3">
@@ -261,6 +277,7 @@ export function ManagerEscrowViewer({ artistName, artistAvatar, payoutAddress, c
         <div className="flex items-center gap-1.5 mb-2">
           <CalendarCheck className="w-3.5 h-3.5 text-emerald-400" />
           <h3 className="text-[11px] font-semibold text-gray-300 uppercase tracking-wider">Recent Completions</h3>
+          <span className="ml-auto text-[9px] text-gray-500">take-home · net of 0.5% fee</span>
         </div>
         <div className="space-y-1.5">
           {list.slice(0, 4).map((c, i) => (
@@ -276,7 +293,7 @@ export function ManagerEscrowViewer({ artistName, artistAvatar, payoutAddress, c
           ))}
         </div>
         {list[0]?.example && (
-          <p className="text-[10px] text-gray-600 mt-2 italic">Sample preview for a local artist — payouts scale with the artist's level; real completions post here as bookings settle on-chain.</p>
+          <p className="text-[10px] text-gray-600 mt-2 italic">These are the artist's take-home payouts — what landed after SoundChain's 0.5% fee. Sample preview for a local artist; payouts scale with the artist's level, and real completions post here as bookings settle on-chain.</p>
         )}
       </div>
 
