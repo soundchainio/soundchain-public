@@ -22,6 +22,7 @@ import { ManagerContactForm } from 'components/manager/ManagerContactForm'
 import { ManagerConfig, loadManagerConfig, fetchManagerConfig, ManagerConfigData, saveManagerConfig } from 'components/manager/ManagerConfig'
 import { ManagerCoverUploader } from 'components/manager/ManagerCoverUploader'
 import { ManagerInbox } from 'components/manager/ManagerInbox'
+import { ManagerBioEditor } from 'components/manager/ManagerBioEditor'
 import { ManagerLanguageGate } from 'components/manager/ManagerLanguageGate'
 import { ManagerBookingEscrow } from 'components/manager/ManagerBookingEscrow'
 import { ManagerBankVault } from 'components/manager/ManagerBankVault'
@@ -286,7 +287,7 @@ export default function ManagerPage({ ogData, handle }: ManagerPageProps) {
         <nav className="backdrop-blur-xl bg-black/90 border-b border-cyan-500/20 px-4 py-2.5 sticky top-0 z-50">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <button onClick={() => router.back()} className="p-1 hover:bg-white/10 rounded-lg transition-colors">
+              <button onClick={() => { if (typeof window !== 'undefined' && window.history.length > 1) router.back(); else router.push('/') }} className="p-1 hover:bg-white/10 rounded-lg transition-colors">
                 <ChevronLeft className="w-5 h-5 text-gray-400" />
               </button>
               <Link href="/" className="flex items-center gap-2">
@@ -436,8 +437,21 @@ export default function ManagerPage({ ogData, handle }: ManagerPageProps) {
             </div>
           </div>
 
-          {/* Owner Inbox — delivered inquiries land here (bookings no longer vanish) */}
-          {isOwner && profile.id && <ManagerInbox />}
+          {/* Owner: bio editor + inbox. Promoter: a clear "send an inquiry" CTA so a
+              visitor landing on a shared manager card instantly knows how to reach out. */}
+          {isOwner && profile.id ? (
+            <>
+              <ManagerBioEditor initialBio={profile.bio || ''} />
+              <ManagerInbox />
+            </>
+          ) : (
+            <button
+              onClick={() => setActiveForm('booking')}
+              className="lg:col-span-2 flex items-center justify-center gap-2 w-full py-4 rounded-2xl bg-gradient-to-r from-cyan-500/90 to-purple-500/90 hover:from-cyan-500 hover:to-purple-500 text-white text-sm font-semibold shadow-lg shadow-cyan-500/20 transition-all"
+            >
+              📨 Contact {displayName} — send an inquiry
+            </button>
+          )}
 
           {/* Greeting Card */}
           {vis.greeting && (
