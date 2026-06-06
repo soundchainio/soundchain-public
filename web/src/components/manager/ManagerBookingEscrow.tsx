@@ -298,9 +298,14 @@ export function ManagerBookingEscrow({
             <p className="mt-1 text-[9px] text-gray-600">Travel &amp; rider can be folded into the deposit total, or settled separately per these terms.</p>
           </div>
         )}
-        {cancellation && (
-          <p className="text-[10px] text-gray-500">Cancellation: <span className="text-gray-400">{cancellation}</span></p>
-        )}
+        {/* Promoter protection — exactly what the escrow guarantees the booker,
+            including an artist cancellation / no-show. */}
+        <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/[0.05] p-2.5 space-y-1">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-emerald-300">Promoter protection</p>
+          <p className="flex gap-1.5 text-[11px] text-gray-300"><ShieldCheck className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0 mt-px" /> Your deposit is locked in the escrow contract — never held by {displayName} or SoundChain.</p>
+          <p className="flex gap-1.5 text-[11px] text-gray-300"><Check className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0 mt-px" /> Funds release to {displayName} only on a completed performance.</p>
+          <p className="flex gap-1.5 text-[11px] text-gray-300"><AlertCircle className="w-3.5 h-3.5 text-amber-400 flex-shrink-0 mt-px" /> If {displayName} cancels or no-shows, the escrow refunds you{cancellation ? <> per these terms: <span className="text-gray-400">{cancellation}</span></> : ' in full'} — no middleman decides.</p>
+        </div>
       </div>
 
       {/* Amount */}

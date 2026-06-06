@@ -166,6 +166,7 @@ interface ManagerConfigProps {
 export function ManagerConfig({ profileId, config, onChange }: ManagerConfigProps) {
   const [expanded, setExpanded] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [saving, setSaving] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout>>()
 
   const { uploading, upload } = useUpload(config.customGreetingAudioUrl, (url) => {
@@ -191,15 +192,17 @@ export function ManagerConfig({ profileId, config, onChange }: ManagerConfigProp
   // visitors + the agent read). Debounced so rapid typing = one save.
   const persist = useCallback((data: ManagerConfigData) => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
+    setSaving(true)
     debounceRef.current = setTimeout(() => {
       try { localStorage.setItem(getStorageKey(profileId), JSON.stringify(data)) } catch {}
       fetch('/api/manager/config', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(data),
       })
-        .then(res => { if (res.ok) { setSaved(true); setTimeout(() => setSaved(false), 2000) } })
-        .catch(() => {})
+        .then(res => { setSaving(false); if (res.ok) { setSaved(true); setTimeout(() => setSaved(false), 2500) } })
+        .catch(() => setSaving(false))
     }, 600)
   }, [profileId])
 
@@ -442,7 +445,12 @@ export function ManagerConfig({ profileId, config, onChange }: ManagerConfigProp
               </button>
             </div>
             {config.services.length === 0 && (
-              <p className="text-[11px] text-gray-600">e.g. &ldquo;2-hour club set — $5,000&rdquo;, &ldquo;Wedding package — $8,000&rdquo;</p>
+              <button
+                onClick={addService}
+                className="w-full rounded-lg border border-dashed border-gray-700 py-3 text-[12px] text-gray-500 hover:border-cyan-500/40 hover:text-cyan-400 transition-colors"
+              >
+                + Add a service or package to quote — e.g. &ldquo;2-hour club set — $5,000&rdquo;
+              </button>
             )}
             {config.services.map((s, idx) => (
               <div key={idx} className="grid grid-cols-12 gap-2 items-start">
@@ -591,6 +599,15 @@ export function ManagerConfig({ profileId, config, onChange }: ManagerConfigProp
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* Sticky save status — always visible while scrolling the settings, so an
+              upload/edit deep in the panel still shows a clear "Saved" confirmation. */}
+          <div className="sticky bottom-0 -mx-5 -mb-5 px-5 py-3 bg-black/90 backdrop-blur border-t border-cyan-500/20 flex items-center justify-between">
+            <span className="text-[11px] text-gray-500">All changes save automatically</span>
+            <span className={`flex items-center gap-1.5 text-xs font-medium ${saving ? 'text-cyan-300' : saved ? 'text-green-400' : 'text-gray-500'}`}>
+              {saving ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving…</> : <><Save className="w-3.5 h-3.5" /> {saved ? 'Saved ✓' : 'Saved'}</>}
+            </span>
           </div>
         </div>
       )}

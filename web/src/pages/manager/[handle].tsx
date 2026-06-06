@@ -565,7 +565,7 @@ export default function ManagerPage({ ogData, handle, isBot }: ManagerPageProps)
         {/* ─── Content ──────────────────────────────────────────────── */}
         {/* Desktop: 2-column grid so the page fills the width (info cards pair up
             side-by-side); mobile collapses to a single stacked column. */}
-        <div className="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        <div className="max-w-7xl mx-auto px-4 py-5 grid grid-cols-1 lg:grid-cols-2 gap-3 items-start">
           {/* Language — full width, right-aligned */}
           <div className="flex items-center justify-end -mb-2 lg:col-span-2">
             <div className="flex items-center gap-1.5">
@@ -597,46 +597,42 @@ export default function ManagerPage({ ogData, handle, isBot }: ManagerPageProps)
             </button>
           )}
 
-          {/* Greeting Card */}
+          {/* Greeting Card — full width so a tall escrow next to it can't leave a gap */}
           {vis.greeting && (
-            <ManagerGreeting
-              displayName={displayName}
-              bio={profile.bio}
-              genres={profile.favoriteGenres}
-              latestTrackTitle={latestTrack?.title}
-              tracksCount={profile.tracksCount ?? undefined}
-              customGreetingText={managerConfig.customGreetingText || undefined}
-              customGreetingAudioUrl={managerConfig.customGreetingAudioUrl || undefined}
-              isOwner={isOwner}
-              selectedVoice={managerConfig.selectedVoice || undefined}
-              lang={viewerLang}
-              onSaveGreeting={(text) => {
-                const next = { ...managerConfig, customGreetingText: text }
-                setManagerConfig(next)
-                try { localStorage.setItem(`manager_config_${profile.id}`, JSON.stringify(next)) } catch {}
-              }}
-              onSaveVoice={(voice) => {
-                const next = { ...managerConfig, selectedVoice: voice }
-                setManagerConfig(next)
-                try { localStorage.setItem(`manager_config_${profile.id}`, JSON.stringify(next)) } catch {}
-              }}
-            />
+            <div className="lg:col-span-2">
+              <ManagerGreeting
+                displayName={displayName}
+                bio={profile.bio}
+                genres={profile.favoriteGenres}
+                latestTrackTitle={latestTrack?.title}
+                tracksCount={profile.tracksCount ?? undefined}
+                customGreetingText={managerConfig.customGreetingText || undefined}
+                customGreetingAudioUrl={managerConfig.customGreetingAudioUrl || undefined}
+                isOwner={isOwner}
+                selectedVoice={managerConfig.selectedVoice || undefined}
+                lang={viewerLang}
+                onSaveGreeting={(text) => {
+                  const next = { ...managerConfig, customGreetingText: text }
+                  setManagerConfig(next)
+                  try { localStorage.setItem(`manager_config_${profile.id}`, JSON.stringify(next)) } catch {}
+                }}
+                onSaveVoice={(voice) => {
+                  const next = { ...managerConfig, selectedVoice: voice }
+                  setManagerConfig(next)
+                  try { localStorage.setItem(`manager_config_${profile.id}`, JSON.stringify(next)) } catch {}
+                }}
+              />
+            </div>
           )}
 
-          {/* Reputation + on-chain escrow viewer — a promoter's trust signals (pair side-by-side on desktop) */}
+          {/* Trust signals — Pro Score + the whitelist link pair side-by-side (both short,
+              so no column is left stretched). */}
           <ManagerReputation
             followerCount={profile.followerCount ?? undefined}
             tracksCount={profile.tracksCount ?? undefined}
             verified={profile.verified}
             completedBookings={(managerConfig as any).completedBookings || 0}
           />
-          <ManagerEscrowViewer
-            artistName={displayName}
-            artistAvatar={profile.profilePicture || undefined}
-            payoutAddress={managerConfig.payoutAddress || undefined}
-          />
-
-          {/* The escrow's own shareable URL — the booking "whitelist" link */}
           <ManagerWhitelistLink
             url={`${domainUrl}/manager/${pageHandle}?book=1`}
             isOwner={isOwner}
@@ -644,9 +640,19 @@ export default function ManagerPage({ ogData, handle, isBot }: ManagerPageProps)
             onOpen={() => openForm('booking')}
           />
 
+          {/* On-chain escrow storefront — full width (it's tall: slideshow + steps +
+              completions + tier scale, so it never pairs with a short card). */}
+          <div className="lg:col-span-2">
+            <ManagerEscrowViewer
+              artistName={displayName}
+              artistAvatar={profile.profilePicture || undefined}
+              payoutAddress={managerConfig.payoutAddress || undefined}
+            />
+          </div>
+
           {/* Booking Details — rates, rider & terms the promoter needs to arrange */}
           {showBookingDetails && (
-            <section className="backdrop-blur-xl bg-black/60 border border-cyan-500/20 rounded-2xl p-5 space-y-4">
+            <section className="lg:col-span-2 backdrop-blur-xl bg-black/60 border border-cyan-500/20 rounded-2xl p-5 space-y-4">
               <div className="flex items-center gap-2">
                 <Briefcase className="w-4 h-4 text-cyan-400" />
                 <h2 className="text-sm font-semibold text-white">{t(viewerLang, 'bookingDetails')}</h2>
@@ -754,10 +760,11 @@ export default function ManagerPage({ ogData, handle, isBot }: ManagerPageProps)
             }}
           />
 
-          {/* Action Buttons */}
-          <div ref={formRef} className="scroll-mt-20" />
+          {/* Action buttons / inquiry form — full width so the tall booking form never
+              leaves the opposite column stretched empty (Frank's desktop-gap fix). */}
+          <div ref={formRef} className="scroll-mt-20 lg:col-span-2">
           {activeForm ? (
-            <>
+            <div className="space-y-6">
               <ManagerContactForm
                 type={activeForm}
                 profileId={profile.id}
@@ -771,6 +778,7 @@ export default function ManagerPage({ ogData, handle, isBot }: ManagerPageProps)
                   profileId={profile.id}
                   displayName={displayName}
                   payoutAddress={managerConfig.payoutAddress || undefined}
+                  payoutWallets={(managerConfig as any).payoutWallets}
                   depositHint={managerConfig.paymentTerms.depositSchedule || managerConfig.bookingRate || undefined}
                   packages={managerConfig.services}
                   cancellation={managerConfig.paymentTerms.cancellation || undefined}
@@ -778,7 +786,7 @@ export default function ManagerPage({ ogData, handle, isBot }: ManagerPageProps)
                   lang={viewerLang}
                 />
               )}
-            </>
+            </div>
           ) : (
             <div className="grid grid-cols-2 gap-3">
               {vis.booking && (
@@ -829,6 +837,7 @@ export default function ManagerPage({ ogData, handle, isBot }: ManagerPageProps)
               </Link>
             </div>
           )}
+          </div>
 
           {/* Social Links */}
           {vis.socials && socialEntries.length > 0 && (
