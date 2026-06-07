@@ -85,20 +85,36 @@ export default function LucyLiveMode({ onClose, captureIntervalMs = 6000 }: Lucy
   // front/selfie lens so she can see YOU and you can talk to her face-to-face.
   const [facing, setFacing] = useState<'environment' | 'user'>('environment')
   const facingRef = useRef<'environment' | 'user'>('environment')
+  const flippingRef = useRef(false)
   const flipCamera = async () => {
-    const next = facingRef.current === 'environment' ? 'user' : 'environment'
+    if (flippingRef.current) return
+    flippingRef.current = true
+    const prev = facingRef.current
+    const next = prev === 'environment' ? 'user' : 'environment'
+    const constraints = (f: 'environment' | 'user') => ({
+      video: { facingMode: { ideal: f }, width: { ideal: 1280 }, height: { ideal: 720 } },
+      audio: false,
+    })
+    // iOS Safari allows only ONE active camera — release the current stream BEFORE
+    // acquiring the other, or the second getUserMedia rejects.
+    streamRef.current?.getTracks().forEach((t) => t.stop())
+    streamRef.current = null
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: next }, width: { ideal: 1280 }, height: { ideal: 720 } },
-        audio: false,
-      })
-      streamRef.current?.getTracks().forEach((t) => t.stop())
+      const stream = await navigator.mediaDevices.getUserMedia(constraints(next))
       streamRef.current = stream
       if (videoRef.current) { videoRef.current.srcObject = stream; await videoRef.current.play().catch(() => {}) }
       facingRef.current = next
       setFacing(next)
     } catch (e: any) {
       setError(`Camera flip failed: ${e?.message || 'unavailable'}`)
+      // Restore the camera we just released so the call doesn't go dark.
+      try {
+        const restore = await navigator.mediaDevices.getUserMedia(constraints(prev))
+        streamRef.current = restore
+        if (videoRef.current) { videoRef.current.srcObject = restore; await videoRef.current.play().catch(() => {}) }
+      } catch {}
+    } finally {
+      flippingRef.current = false
     }
   }
 
