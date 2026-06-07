@@ -13,6 +13,7 @@
  */
 
 import { useCallback, useRef, useState } from 'react'
+import { detectCapability, recommendModels, type DeviceCapability, type ModelManifest, type ModelTier } from 'lib/lucyCapability'
 
 // On-device model — Llama 3.2 3B (Frank, Jun 1 2026: "3B minimum, never lower").
 // 3B is the realistic CEILING for a PWA: it's not the phone's RAM that limits us
@@ -64,6 +65,15 @@ export function useLucyLocal() {
     error: null,
   })
 
+  // Upgradable-engine state: what this device can run + the model manifest.
+  const [capability, setCapability] = useState<DeviceCapability | null>(null)
+  const [manifest, setManifest] = useState<ModelManifest | null>(null)
+  const [recommended, setRecommended] = useState<ModelTier | null>(null)
+  const [upgrades, setUpgrades] = useState<ModelTier[]>([])
+  const recommendedRef = useRef<ModelTier | null>(null)
+  const manifestRef = useRef<ModelManifest | null>(null)
+  const detectedRef = useRef(false)
+
   const checkSupport = useCallback((): boolean => {
     if (typeof window === 'undefined') return false
     const ok = 'gpu' in navigator
@@ -71,9 +81,36 @@ export function useLucyLocal() {
     return ok
   }, [])
 
-  const init = useCallback(async (force = false) => {
-    if (!force && engineRef.current) return engineRef.current
-    if (force && engineRef.current) {
+  // Detect device capability + load the model manifest, then compute the best
+  // model this device can run (baseline 3B always; bigger "upgrade" tiers only on
+  // capable desktops). Cheap — no WebLLM import, no download — so it's safe on
+  // mount to power Lucy's "noticed you're on a <device>…" announcement. The
+  // manifest is data (a JSON), so new devices/models qualify with no app update.
+  const detect = useCallback(async () => {
+    if (detectedRef.current) return
+    detectedRef.current = true
+    try {
+      const cap = await detectCapability()
+      setCapability(cap)
+      setState(s => ({ ...s, supported: cap.webgpu, error: cap.webgpu ? s.error : 'WebGPU not available on this browser. Try Safari 18+, Chrome, or Edge.' }))
+      let mani: ModelManifest | null = null
+      try {
+        const url = process.env.NEXT_PUBLIC_LUCY_MODELS_URL || '/lucy-models.json'
+        const r = await fetch(url, { cache: 'no-cache' })
+        if (r.ok) mani = await r.json()
+      } catch {/* offline / missing → built-in 3B fallback in recommendModels */}
+      manifestRef.current = mani
+      setManifest(mani)
+      const rec = recommendModels(mani, cap)
+      recommendedRef.current = rec.baseline
+      setRecommended(rec.baseline)
+      setUpgrades(rec.upgrades)
+    } catch {/* leave checkSupport's basic path in place */}
+  }, [])
+
+  const init = useCallback(async (opts?: { modelId?: string; force?: boolean }) => {
+    if (!opts?.force && engineRef.current) return engineRef.current
+    if (opts?.force && engineRef.current) {
       // Dispose the stale engine before re-creating. WebLLM's engine releases
       // GPU resources on dispose; without this we leak per failed call.
       try { await engineRef.current.unload?.() } catch {/* best-effort */}
@@ -109,22 +146,49 @@ export function useLucyLocal() {
           loadStatus: typeof p?.text === 'string' ? p.text : s.loadStatus,
         }))
       }
-      const primary = await pickModelId()
-      // Cap the KV cache. The 3B weights are ~3GB (f32); WebLLM's DEFAULT context
-      // window builds a multi-GB KV cache on top → total blows past iOS Safari's
-      // jetsam budget → the tab crashes mid-load (the "tap local → loads → crash"
-      // on iPhone). A 2048 window is plenty for chat (compact LOCAL prompt + a few
-      // turns) and cuts the KV cache by 2-4×, keeping the 3B under the budget.
-      const CHAT_OPTS = { context_window_size: 2048 }
+      // DURABLE, RESUMABLE, CROSS-PLATFORM CACHE — the fix for the re-download
+      // loop. WebLLM's default backend is the Cache API ('cache'), which every
+      // browser evicts under storage pressure and does NOT reliably flush before
+      // the process dies. So a tab killed mid-download — iOS jetsam, Android
+      // low-memory, a closed laptop lid — loses the partial weights, and the next
+      // load RESTARTS FROM ZERO ("LOADING ON-DEVICE LUCY… 97%… white refresh…
+      // again"). IndexedDB commits each shard in its own transaction, durably, on
+      // EVERY platform (iOS/Android/Samsung/Windows/Ubuntu/Linux/ChromeOS;
+      // Intel/AMD/NVIDIA) → a killed download RESUMES from the last cached shard
+      // instead of looping, and survives slow cellular across many attempts.
+      // Spread prebuiltAppConfig so the full prebuilt model_list is preserved.
+      const appConfig = mod.prebuiltAppConfig
+        ? { ...mod.prebuiltAppConfig, cacheBackend: 'indexeddb' as const }
+        : undefined
+      const engineConfig: any = { initProgressCallback: onProgress }
+      if (appConfig) engineConfig.appConfig = appConfig
+      // Choose the model: explicit pick (a desktop upgrade) > device-recommended
+      // baseline > f16/f32 probe. Validate against THIS WebLLM build so a manifest
+      // entry it doesn't ship can never be requested — fall back to the safe 3B
+      // baseline if so. The 3B default path is byte-for-byte unchanged when no
+      // upgrade is chosen (recommendedRef defaults to the probed baseline).
+      const availableIds: Set<string> | undefined = Array.isArray(mod.prebuiltAppConfig?.model_list)
+        ? new Set(mod.prebuiltAppConfig.model_list.map((m: any) => m.model_id))
+        : undefined
+      let primary = opts?.modelId || recommendedRef.current?.id || (await pickModelId())
+      if (availableIds && !availableIds.has(primary)) primary = await pickModelId()
+      // Cap the KV cache below WebLLM's default. The post-download GPU build is the
+      // memory PEAK (weights + KV cache resident) and what mobile jetsam kills.
+      // Phones stay tight at 1024; desktop upgrade tiers may opt to a larger
+      // context via the manifest. Zero effect on desktop GPUs (ample VRAM).
+      const tier = manifestRef.current?.models.find((m) => m.id === primary)
+      const CHAT_OPTS = { context_window_size: tier?.contextWindow || 1024 }
       let engine
       try {
-        engine = await create(primary, { initProgressCallback: onProgress }, CHAT_OPTS)
+        engine = await create(primary, engineConfig, CHAT_OPTS)
       } catch (buildErr) {
-        // f16 can build-fail on a GPU that advertises shader-f16 but chokes on
-        // the compile (some mobile drivers). Fall back to the universal f32.
-        if (primary === MODEL_F16) {
+        // f16 can build-fail on a GPU that advertises shader-f16 but chokes on the
+        // compile (some mobile drivers). Fall back to the universal f32 sibling —
+        // its shards cache durably too, so the fallback download also resumes.
+        const f32Sibling = primary.includes('q4f16_1') ? primary.replace('q4f16_1', 'q4f32_1') : null
+        if (f32Sibling && (!availableIds || availableIds.has(f32Sibling))) {
           setState(s => ({ ...s, loadProgress: 0, loadStatus: 'Switching to compatible model…' }))
-          engine = await create(MODEL_F32, { initProgressCallback: onProgress }, CHAT_OPTS)
+          engine = await create(f32Sibling, engineConfig, CHAT_OPTS)
         } else {
           throw buildErr
         }
@@ -173,7 +237,7 @@ export function useLucyLocal() {
         // Stale engine — drop it and rebuild, then retry the call once.
         engineRef.current = null
         setState(s => ({ ...s, ready: false, loadStatus: 'Reloading model…' }))
-        engine = await init(true)
+        engine = await init({ force: true })
         stream = await engine.chat.completions.create({
           messages,
           stream: true,
@@ -200,5 +264,5 @@ export function useLucyLocal() {
     [init]
   )
 
-  return { ...state, checkSupport, init, chatStream }
+  return { ...state, capability, manifest, recommended, upgrades, checkSupport, detect, init, chatStream }
 }

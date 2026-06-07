@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "updated": "2026-06-07",
+  "_comment": "Lucy upgradable model manifest. DATA, not code — add a model here and every device picks it up on next launch, no app update. Each id MUST exist in WebLLM's prebuiltAppConfig.model_list (validated at runtime; unknown ids are silently dropped). tier: baseline=runs anywhere incl. mobile (3B locked floor); desktop/workstation=bigger brains, never offered on mobile (browser sandbox ceiling — those unlock in the Electron desktop build). Gates: needsF16 (WebGPU shader-f16), minDeviceMemoryGB (Chrome/Android/desktop only), minGpuBufferGB (real weight-size ceiling), approxGB (also gated against free storage).",
+  "models": [
+    {
+      "id": "Llama-3.2-3B-Instruct-q4f32_1-MLC",
+      "label": "Lucy 3B · universal",
+      "params": "3B",
+      "approxGB": 3.0,
+      "tier": "baseline",
+      "contextWindow": 1024,
+      "note": "Runs everywhere incl. iOS Safari (no f16 needed). The locked phone floor."
+    },
+    {
+      "id": "Llama-3.2-3B-Instruct-q4f16_1-MLC",
+      "label": "Lucy 3B · fast",
+      "params": "3B",
+      "approxGB": 2.3,
+      "tier": "baseline",
+      "needsF16": true,
+      "contextWindow": 1024,
+      "note": "Smaller + faster where WebGPU shader-f16 is available (most Android/desktop)."
+    },
+    {
+      "id": "Llama-3.1-8B-Instruct-q4f32_1-MLC",
+      "label": "Lucy 8B · desktop",
+      "params": "8B",
+      "approxGB": 5.0,
+      "tier": "desktop",
+      "desktopOnly": true,
+      "minDeviceMemoryGB": 8,
+      "minGpuBufferGB": 1.0,
+      "contextWindow": 4096,
+      "note": "Stronger reasoning on a capable desktop/laptop GPU. Not offered on mobile (browser ceiling)."
+    },
+    {
+      "id": "Llama-3.1-8B-Instruct-q4f16_1-MLC",
+      "label": "Lucy 8B · desktop (fast)",
+      "params": "8B",
+      "approxGB": 4.5,
+      "tier": "desktop",
+      "desktopOnly": true,
+      "needsF16": true,
+      "minDeviceMemoryGB": 8,
+      "minGpuBufferGB": 1.0,
+      "contextWindow": 4096,
+      "note": "f16 desktop build — fastest 8B where shader-f16 is supported."
+    }
+  ]
+}

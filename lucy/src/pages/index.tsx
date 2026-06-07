@@ -26,8 +26,14 @@ import { ChevronLeft, Cloud, CloudOff, Cpu, Download, FileText, Heart, Image as 
 import { useLucyMemory, listConversations, deleteConversation, type ConversationMeta } from 'hooks/useLucyMemory'
 import { useLucyLocal } from 'hooks/useLucyLocal'
 import { useLucyHost } from 'hooks/useLucyHost'
-import { useLucySkills, detectSkill, detectSkillUrl, SKILL_CORE_REASSERT } from 'hooks/useLucySkills'
+import { useLucySkills, detectSkill, detectSkillUrl, parseSkillMd, sanitizeSkill, SKILL_CORE_REASSERT } from 'hooks/useLucySkills'
+import { useLucyPlugins, detectOpenClawIntent, pluginRunnable } from 'hooks/useLucyPlugins'
 import LucyVoicePicker, { getVoiceConfig } from 'components/LucyVoicePicker'
+import LucyBootConsole from 'components/LucyBootConsole'
+import LucyToast from 'components/LucyToast'
+import LucySkillLoader, { type LoaderStep, type SkillLoadState } from 'components/LucySkillLoader'
+import { describeDevice } from 'lib/lucyCapability'
+import { useLucyBrand } from 'lib/brand'
 
 const LucyLiveMode = dynamic(() => import('components/LucyLiveMode'), { ssr: false })
 
@@ -480,6 +486,36 @@ export default function LucyHome() {
   const vidInputRef = useRef<HTMLInputElement>(null)
   const docInputRef = useRef<HTMLInputElement>(null)
   const local = useLucyLocal()
+  const brand = useLucyBrand()
+
+  // Completion toaster + smooth boot→chat handoff. Frank (Jun 7): the download
+  // finished but handed off silently ("page just refreshed, no completion
+  // toaster"). Detect the loading→ready transition: hold the boot console in a
+  // green "ready" frame for a beat (bootDone) and fire a confirmation toast.
+  const [toast, setToast] = useState<string | null>(null)
+  const [bootDone, setBootDone] = useState(false)
+  // Transparent skill/plugin loader card (fetch → parse → sanitize → store).
+  const [skillLoad, setSkillLoad] = useState<SkillLoadState | null>(null)
+  const prevLocalLoading = useRef(false)
+  useEffect(() => {
+    const wasLoading = prevLocalLoading.current
+    prevLocalLoading.current = local.loading
+    if (wasLoading && !local.loading && local.ready) {
+      setBootDone(true)
+      setToast('✅ Lucy is now on your device — she runs offline, no server. Cached durably; she resumes instantly next time.')
+    }
+  }, [local.loading, local.ready])
+  useEffect(() => {
+    if (!bootDone) return
+    const t = setTimeout(() => setBootDone(false), 2400)
+    return () => clearTimeout(t)
+  }, [bootDone])
+  // Lucy's capability-aware announcement ("noticed you're on a <device>…") and
+  // whether this device can opt UP to a bigger brain (desktop only). Driven by the
+  // upgradable engine (useLocalLucy.detect → lib/lucyCapability).
+  const deviceDesc = local.capability
+    ? describeDevice(local.capability, { baseline: local.recommended, upgrades: local.upgrades })
+    : null
   // The host bond — what Lucy remembers about THIS person across all chats.
   // Lives on-device, encrypted; injected into every system prompt; updated by
   // a persona-learn pass after conversations (see observeHost below).
@@ -487,6 +523,8 @@ export default function LucyHome() {
   // Self-evolution: skills the user has taught Lucy (skill.md), stored encrypted
   // on-device, injected into the prompt as learned capabilities. See useLucySkills.
   const skills = useLucySkills()
+  // OpenClaw plugin registry — Lucy's "hands" (web/remote/native, runtime-tagged).
+  const plugins = useLucyPlugins()
 
   const recognitionRef = useRef<any>(null)
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
@@ -530,13 +568,15 @@ export default function LucyHome() {
     refreshConvs()
   }
 
-  // When user explicitly picks 'local' mode, trigger lazy init so the model
-  // is downloading by the time they hit send. No-op if already ready.
-  useEffect(() => {
-    if (lucySource === 'local' && !local.ready && !local.loading) {
-      local.init().catch(() => {/* captured in hook state */})
-    }
-  }, [lucySource, local.ready, local.loading, local.init])
+  // Detect on-device capability once (cheap — just 'gpu' in navigator) so the UI
+  // can offer the download where it'll actually run. CRITICAL: we NEVER auto-
+  // start the ~1.7GB download on mount. Auto-starting was exactly what caused the
+  // cross-platform reload-loop: default-'local' → download kicked on load → tab
+  // got killed at the GPU-load peak (iOS jetsam / Android low-mem) → reload →
+  // re-kicked the download → loop. The download is now an explicit, resumable
+  // user action (the "Download Lucy to this device" card / Enable button), and
+  // the IndexedDB cache means each attempt RESUMES instead of starting over.
+  useEffect(() => { local.detect() }, [local.detect])
 
   // Web Speech Recognition setup
   useEffect(() => {
@@ -692,15 +732,81 @@ export default function LucyHome() {
     // URL skill: Lucy fetches the skill.md herself — on-device first (works for
     // CORS-open hosts like soundchain.io/skill.md), server-proxy fallback — then
     // ingests it through the same sanitize → store pipeline.
+    // OPENCLAW PLUGIN ADD — "add openclaw plugin <url|name>". Registers the plugin
+    // manifest on-device (Lucy's hands), runtime-tagged so mobile vs desktop is
+    // honest. Same transparent loader as skills.
+    const ocIntent = detectOpenClawIntent(text)
+    if (ocIntent) {
+      const afterUser: ChatMessage[] = [...messages, { role: 'user', content: text }]
+      setMessages(afterUser)
+      let reply: string
+      if (ocIntent.url) {
+        const steps: LoaderStep[] = [
+          { label: 'fetch plugin manifest', status: 'active' },
+          { label: 'validate tools + runtime', status: 'pending' },
+          { label: 'register on-device', status: 'pending' },
+        ]
+        const short = ocIntent.url.replace(/^https?:\/\//, '')
+        const render = (patch?: Partial<SkillLoadState>) =>
+          setSkillLoad({ title: 'adding openclaw plugin', subtitle: short, steps: steps.map((s) => ({ ...s })), ...patch })
+        render()
+        let manifest: any = null
+        try {
+          const direct = await fetch(ocIntent.url, { headers: { accept: 'application/json,text/*' } })
+          if (direct.ok) manifest = await direct.json()
+        } catch {/* CORS → proxy */}
+        if (!manifest) {
+          try {
+            const px = await fetch(`/api/fetch-skill?url=${encodeURIComponent(ocIntent.url)}`)
+            const d = await px.json()
+            if (d?.ok && d.text) manifest = JSON.parse(d.text)
+          } catch {/* give up */}
+        }
+        if (!manifest) {
+          steps[0].status = 'error'; render({ error: "couldn't fetch a valid manifest" })
+          reply = "I couldn't fetch a valid OpenClaw manifest from that URL. It should be a JSON manifest (name, runtime, tools)."
+        } else {
+          steps[0].status = 'done'; steps[1].status = 'active'; render()
+          steps[1].status = 'done'; steps[2].status = 'active'; render()
+          const p = plugins.addPlugin(manifest, 'url')
+          steps[2].status = 'done'
+          const run = pluginRunnable(p)
+          render({ title: 'plugin added', subtitle: p.name, done: true })
+          reply = `Added the **${p.name}** plugin${p.tools.length ? ` (${p.tools.length} tool${p.tools.length > 1 ? 's' : ''})` : ''} — ${run.why}. ${p.runtime === 'native' && !run.ok ? 'On this phone I can see it but it runs in the desktop app.' : "I'll use it when it helps."} Manage plugins via the spark panel.`
+        }
+        setTimeout(() => setSkillLoad(null), 4500)
+      } else {
+        const p = plugins.addPlugin({ name: ocIntent.name, runtime: 'native', description: 'OpenClaw plugin (resolve on desktop)' }, 'manifest')
+        const run = pluginRunnable(p)
+        reply = `Noted the **${p.name}** OpenClaw plugin. ${run.ok ? "It's ready." : 'It runs in the Lucy desktop app where OpenClaw is preloaded (npm/shell/fs).'} On mobile I can use web + bridged plugins now; native ones live on desktop. Manage plugins via the spark panel.`
+      }
+      const withReply: ChatMessage[] = [...afterUser, { role: 'assistant', content: reply, source: (lucySource === 'local' ? 'local' : 'anvil') as ReplySource }]
+      setMessages(withReply)
+      persistMessages(withReply)
+      return
+    }
+
     const skillUrl = !detectSkill(text) ? detectSkillUrl(text) : null
     if (skillUrl) {
       const afterUser: ChatMessage[] = [...messages, { role: 'user', content: text }]
       setMessages(afterUser)
-      const fetching: ChatMessage[] = [...afterUser, { role: 'assistant', content: `_Fetching that skill from ${skillUrl}…_`, source: (lucySource === 'local' ? 'local' : 'anvil') as ReplySource }]
-      setMessages(fetching)
+      // Transparent skill loader — Frank (Jun 7): "add a skill.md uploader viewing
+      // so the user sees the loading bar and the files its loading." Each REAL step
+      // lands visibly: fetch → parse → sanitize → encrypt+store on-device. Same
+      // anti-rug-pull transparency as the boot console.
+      const steps: LoaderStep[] = [
+        { label: 'fetch skill.md from source', status: 'active' },
+        { label: 'parse name · description · body', status: 'pending' },
+        { label: 'safety sanitize', status: 'pending' },
+        { label: 'encrypt + store on-device', status: 'pending' },
+      ]
+      const short = skillUrl.replace(/^https?:\/\//, '')
+      const render = (patch?: Partial<SkillLoadState>) =>
+        setSkillLoad({ title: 'learning skill', subtitle: short, steps: steps.map((s) => ({ ...s })), ...patch })
+      render()
       let raw = ''
       try {
-        // on-device direct fetch first (decentralized)
+        // on-device direct fetch first (decentralized; works for CORS-open hosts)
         const direct = await fetch(skillUrl, { headers: { accept: 'text/markdown,text/plain,text/*' } })
         if (direct.ok) raw = await direct.text()
       } catch {/* CORS or network — fall back to proxy */}
@@ -712,16 +818,32 @@ export default function LucyHome() {
         } catch {/* give up below */}
       }
       let reply: string
-      if (raw) {
+      if (!raw) {
+        steps[0].status = 'error'
+        render({ error: "couldn't fetch — host down or blocking reads" })
+        reply = "I couldn't fetch that URL (it may be down or blocking reads). Try pasting the skill text with `/skill` at the start."
+      } else {
+        steps[0].status = 'done'; steps[1].status = 'active'; render()
+        const parsed = parseSkillMd(raw, 'url')
+        steps[1].status = 'done'; steps[2].status = 'active'; render({ subtitle: parsed.name || short })
+        const safety = sanitizeSkill(parsed.body)
+        steps[2].status = safety.flagged ? 'error' : 'done'; steps[3].status = 'active'; render({ subtitle: parsed.name || short })
         try {
           const sk = await skills.addSkill(raw, 'url')
+          steps[3].status = 'done'
+          render({ title: sk.flagged ? 'skill flagged' : 'skill learned', subtitle: sk.name, done: !sk.flagged, error: sk.flagged ? `flagged — it ${sk.flagReason}` : undefined })
           reply = sk.flagged
             ? `I fetched **${sk.name}** from that URL, but flagged it — it ${sk.flagReason}. Kept it OFF; review it in the spark panel.`
             : `Got it — fetched and learned **${sk.name}**${sk.description ? `: ${sk.description}` : ''}. It's active now. Manage skills via the spark icon.`
-        } catch { reply = "I fetched it but couldn't store it as a skill. Try `/skill` with the text pasted directly." }
-      } else {
-        reply = "I couldn't fetch that URL (it may be down or blocking reads). Try pasting the skill text with `/skill` at the start."
+        } catch {
+          steps[3].status = 'error'
+          render({ error: "couldn't store the skill" })
+          reply = "I fetched it but couldn't store it as a skill. Try `/skill` with the text pasted directly."
+        }
       }
+      // Leave the card up briefly so the user reads the result; the chat reply
+      // carries the outcome permanently.
+      setTimeout(() => setSkillLoad(null), 4500)
       const withReply: ChatMessage[] = [...afterUser, { role: 'assistant', content: reply, source: (lucySource === 'local' ? 'local' : 'anvil') as ReplySource }]
       setMessages(withReply)
       persistMessages(withReply)
@@ -811,7 +933,9 @@ export default function LucyHome() {
       ).join('\n---\n')
 
     // Pick the right prompt size for the model that will answer.
-    const promptBase = lucySource === 'local' ? LUCY_SYSTEM_PROMPT_LOCAL : LUCY_SYSTEM_PROMPT
+    // Brand persona seam: a white-label fork can fully replace Lucy's identity via
+    // brand.personaOverride; default '' keeps the built-in Lucy persona verbatim.
+    const promptBase = brand.personaOverride || (lucySource === 'local' ? LUCY_SYSTEM_PROMPT_LOCAL : LUCY_SYSTEM_PROMPT)
     // The host bond: prepend what Lucy remembers about THIS person (carried
     // across every past conversation) so she shows up already knowing them.
     // Prompt assembly ORDER IS A SECURITY BOUNDARY: base persona → host bond →
@@ -825,7 +949,7 @@ export default function LucyHome() {
       ? `\n\n## Attached document — "${doc.name}" (${doc.chars} chars${doc.chars > MAX_DOC_CHARS ? `, first ${MAX_DOC_CHARS} shown` : ''})\nThe user attached this file; answer/summarize from it. Do NOT claim you opened anything else.\n"""\n${doc.text}\n"""`
       : ''
     const payloadMessages = [
-      { role: 'system' as const, content: promptBase + host.hostPromptBlock(host.profile) + skills.promptBlock() + (skills.enabledSkills.length ? SKILL_CORE_REASSERT : '') + linkContext + docContext },
+      { role: 'system' as const, content: promptBase + host.hostPromptBlock(host.profile) + skills.promptBlock() + (skills.enabledSkills.length ? SKILL_CORE_REASSERT : '') + plugins.promptBlock() + linkContext + docContext },
       // Carry attached images as raw base64 (strip the data: prefix) on their
       // message so the orchestrator classifies the turn as vision → llava.
       ...trimmedHistory.map(m => m.images?.length
@@ -1314,7 +1438,7 @@ export default function LucyHome() {
   return (
     <>
       <Head>
-        <title>Lucy — SoundChain AI</title>
+        <title>{brand.name} — {brand.tagline}</title>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
       </Head>
       <main className="h-screen supports-[height:100dvh]:h-[100dvh] flex flex-col overflow-hidden bg-lucy-bg text-gray-100">
@@ -1345,7 +1469,7 @@ export default function LucyHome() {
                 L
               </div>
               <div className="min-w-0">
-                <h1 className="text-sm font-bold tracking-wider text-white truncate">LUCY</h1>
+                <h1 className="text-sm font-bold tracking-wider text-white truncate">{brand.shortName.toUpperCase()}</h1>
                 <p className="text-[10px] text-gray-500 truncate">
                   SoundChain AI ·{' '}
                   {activeReplySource === 'local'
@@ -1539,19 +1663,51 @@ export default function LucyHome() {
                 )}
               </div>
             ))}
-            {local.loading && (
-              <div className="rounded border border-lucy-glow/30 bg-lucy-glow/5 px-3 py-2 text-xs text-lucy-glow space-y-1">
+            {(local.loading || bootDone) && (
+              <LucyBootConsole
+                progress={local.loadProgress}
+                status={local.loadStatus}
+                active={local.loading}
+                done={!local.loading && bootDone}
+              />
+            )}
+            <LucySkillLoader state={skillLoad} />
+            {lucySource === 'local' && local.supported !== false && !local.ready && !local.loading && (
+              <div className="rounded border border-lucy-glow/30 bg-lucy-glow/5 px-3 py-2.5 text-xs text-lucy-glow space-y-2">
                 <div className="flex items-center gap-1.5">
-                  <Download className="w-3.5 h-3.5 animate-pulse" />
-                  <span className="font-mono uppercase tracking-wider text-[10px]">Loading on-device Lucy</span>
+                  <Cpu className="w-3.5 h-3.5" />
+                  <span className="font-mono uppercase tracking-wider text-[10px]">Lucy lives on this device</span>
                 </div>
-                <div className="h-1 w-full rounded overflow-hidden bg-lucy-bg">
-                  <div
-                    className="h-full bg-lucy-glow transition-all"
-                    style={{ width: `${Math.round((local.loadProgress || 0) * 100)}%` }}
-                  />
-                </div>
-                {local.loadStatus && <div className="text-[10px] text-gray-500 truncate">{local.loadStatus}</div>}
+                {deviceDesc && (
+                  <p className="text-[10px] text-gray-300 leading-relaxed">
+                    <span className="text-lucy-glow">{deviceDesc.headline}</span> {deviceDesc.detail}
+                  </p>
+                )}
+                <p className="text-[10px] text-gray-400 leading-relaxed">
+                  One-time download so Lucy runs fully on-device — private, offline, no cloud. Cached durably and{' '}
+                  <span className="text-lucy-glow">resumes if interrupted</span>, so wifi or cell both work. Keep this screen open while it downloads.
+                </p>
+                <button
+                  onClick={async () => { setError(null); try { await local.init() } catch {/* captured in hook state */} }}
+                  className="w-full px-3 py-1.5 rounded bg-lucy-glow/20 text-lucy-glow hover:bg-lucy-glow/30 text-[10px] font-mono uppercase tracking-wider flex items-center justify-center gap-1.5"
+                >
+                  <Download className="w-3 h-3" /> Download Lucy{local.recommended ? ` ${local.recommended.params}` : ''} to this device
+                </button>
+                {local.upgrades.length > 0 && (
+                  <div className="pt-1 space-y-1">
+                    <div className="text-[9px] uppercase tracking-wider text-gray-500">This device can also run a bigger brain:</div>
+                    {local.upgrades.map((u) => (
+                      <button
+                        key={u.id}
+                        onClick={async () => { setError(null); try { await local.init({ modelId: u.id }) } catch {/* captured in hook state */} }}
+                        className="w-full px-3 py-1.5 rounded border border-lucy-accent/40 text-lucy-accent hover:bg-lucy-accent/10 text-[10px] font-mono uppercase tracking-wider flex items-center justify-center gap-1.5"
+                        title={u.note || ''}
+                      >
+                        <Cpu className="w-3 h-3" /> Run {u.label} (~{u.approxGB}GB)
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
             {error && (
@@ -1576,6 +1732,8 @@ export default function LucyHome() {
             <div ref={messagesEndRef} />
           </div>
         </section>
+
+        <LucyToast message={toast} onDismiss={() => setToast(null)} />
 
         {/* Composer — sticky footer, always visible (never scroll to type) */}
         <footer className="shrink-0 border-t border-lucy-border bg-lucy-surface/60 backdrop-blur-md pb-[env(safe-area-inset-bottom)]">

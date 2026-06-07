@@ -1,0 +1,11 @@
+{
+  "_comment": "THE FORK POINT. Edit this file to white-label the Lucy shell into your own brand — no code changes. name/shortName/tagline rebrand the UI; personaOverride (leave '' to keep the built-in Lucy identity, or set a full system prompt to become your own agent); backendUrl points a fork at its own cloud brain ('' = on-device only / app default); accent/glow are the theme colors (token→CSS-var theming is the next seam). Falls back to the in-code DEFAULT_BRAND if missing or invalid, so the app is always safe.",
+  "name": "Lucy",
+  "shortName": "Lucy",
+  "tagline": "SoundChain AI",
+  "description": "Lucy — a sovereign, on-device AI. Local-first chat, learns skills, runs offline. No cloud, no rug pull.",
+  "accent": "#22d3ee",
+  "glow": "#a855f7",
+  "backendUrl": "",
+  "personaOverride": ""
+}

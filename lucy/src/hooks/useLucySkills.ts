@@ -187,6 +187,10 @@ export function detectSkillUrl(text: string): string | null {
   // a .md / skill.md URL is high-confidence; any URL + learn-intent also counts
   if (/\bskill\.md(?:[?#]|$)/i.test(url) || /\.md(?:[?#]|$)/i.test(url)) return url
   if (LEARN_INTENT.test(t)) return url
+  // Bare domain (no protocol) ending in .md — so Frank's natural phrasing works:
+  // "hey lucy lets add soundchain.io/skill.md". Prepend https:// for the fetch.
+  const bare = t.match(/\b((?:[a-z0-9-]+\.)+[a-z]{2,}\/[^\s)>\]]*?\.md)(?:[?#]|\b)/i)
+  if (bare) return 'https://' + bare[1]
   return null
 }
 
