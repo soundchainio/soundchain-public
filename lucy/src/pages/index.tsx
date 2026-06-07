@@ -1344,9 +1344,9 @@ export default function LucyHome() {
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-lucy-accent to-lucy-glow flex items-center justify-center text-xs font-bold text-black">
                 L
               </div>
-              <div>
-                <h1 className="text-sm font-bold tracking-wider text-white">LUCY</h1>
-                <p className="text-[10px] text-gray-500">
+              <div className="min-w-0">
+                <h1 className="text-sm font-bold tracking-wider text-white truncate">LUCY</h1>
+                <p className="text-[10px] text-gray-500 truncate">
                   SoundChain AI ·{' '}
                   {activeReplySource === 'local'
                     ? <span className="text-lucy-glow">lucy · on-device</span>
@@ -1358,7 +1358,7 @@ export default function LucyHome() {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1 sm:gap-1.5 flex-shrink-0">
               {/* Source mode toggle — anvil (cloud) / local (on-device) / auto */}
               <button
                 onClick={() => setLucySource(s => s === 'auto' ? 'anvil' : s === 'anvil' ? 'local' : 'auto')}
@@ -1384,7 +1384,7 @@ export default function LucyHome() {
                     ? <Cloud className="w-4 h-4" />
                     : <Cloud className="w-4 h-4 opacity-70" />
                 }
-                <span className="text-[9px] font-mono uppercase tracking-wider">{lucySource}</span>
+                <span className="hidden sm:inline text-[9px] font-mono uppercase tracking-wider">{lucySource}</span>
               </button>
               <button
                 onClick={() => setVoiceOutEnabled(v => !v)}
@@ -1396,7 +1396,7 @@ export default function LucyHome() {
               </button>
               <button
                 onClick={() => setVoicePickerOpen(true)}
-                className="px-2 py-1.5 rounded bg-lucy-surface text-gray-400 hover:text-white text-[10px] font-mono uppercase"
+                className="hidden sm:block px-2 py-1.5 rounded bg-lucy-surface text-gray-400 hover:text-white text-[10px] font-mono uppercase"
                 title="Pick Lucy's voice"
               >
                 Voice
@@ -1425,7 +1425,7 @@ export default function LucyHome() {
                 className="px-2 py-1.5 rounded bg-lucy-glow/15 text-lucy-glow hover:bg-lucy-glow/25 text-[10px] font-mono uppercase flex items-center gap-1"
                 title="Live camera + continuous chat"
               >
-                <Video className="w-3 h-3" /> Live
+                <Video className="w-3 h-3" /> <span className="hidden sm:inline">Live</span>
               </button>
               <button
                 onClick={exportChat}

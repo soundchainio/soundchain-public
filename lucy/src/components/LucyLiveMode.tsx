@@ -81,6 +81,27 @@ export default function LucyLiveMode({ onClose, captureIntervalMs = 6000 }: Lucy
   const sttPausedRef = useRef(false)
   useEffect(() => { mutedRef.current = muted }, [muted])
 
+  // Camera facing — start on the rear lens (Lucy looks at the world); flip to the
+  // front/selfie lens so she can see YOU and you can talk to her face-to-face.
+  const [facing, setFacing] = useState<'environment' | 'user'>('environment')
+  const facingRef = useRef<'environment' | 'user'>('environment')
+  const flipCamera = async () => {
+    const next = facingRef.current === 'environment' ? 'user' : 'environment'
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: next }, width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: false,
+      })
+      streamRef.current?.getTracks().forEach((t) => t.stop())
+      streamRef.current = stream
+      if (videoRef.current) { videoRef.current.srcObject = stream; await videoRef.current.play().catch(() => {}) }
+      facingRef.current = next
+      setFacing(next)
+    } catch (e: any) {
+      setError(`Camera flip failed: ${e?.message || 'unavailable'}`)
+    }
+  }
+
   // ───────── Camera startup
   useEffect(() => {
     let cancelled = false
@@ -441,6 +462,7 @@ export default function LucyLiveMode({ onClose, captureIntervalMs = 6000 }: Lucy
       <video
         ref={videoRef}
         className="absolute inset-0 w-full h-full object-cover"
+        style={facing === 'user' ? { transform: 'scaleX(-1)' } : undefined}
         autoPlay
         playsInline
         muted
@@ -525,6 +547,16 @@ export default function LucyLiveMode({ onClose, captureIntervalMs = 6000 }: Lucy
             {showBubbles ? '💬' : '🚫'}
           </div>
           <div className="text-[10px] text-white/70">{showBubbles ? 'subtitles' : 'voice only'}</div>
+        </button>
+        <button
+          onClick={flipCamera}
+          className="flex flex-col items-center gap-1"
+          aria-label="flip camera"
+        >
+          <div className={`w-12 h-12 rounded-full grid place-items-center text-xl ${facing === 'user' ? 'bg-pink-500/20 border border-pink-500/40' : 'bg-cyan-500/20 border border-cyan-500/40'}`}>
+            🔄
+          </div>
+          <div className="text-[10px] text-white/70">{facing === 'user' ? 'facing you' : 'flip cam'}</div>
         </button>
         <button
           onClick={() => captureAndAsk('What do you see right now? Describe in detail.')}
