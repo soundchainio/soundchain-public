@@ -16,6 +16,8 @@ import {
   Dribbble,
   ArrowLeft,
 } from 'lucide-react'
+import { getIdentity, isUrlAvatar } from '@/lib/identity'
+import { ArenaIdentityModal } from './ArenaIdentityModal'
 
 interface ArenaShellProps {
   children: ReactNode
@@ -81,6 +83,11 @@ export function ArenaShell({ children }: ArenaShellProps) {
   const router = useRouter()
   const [menuOpen, setMenuOpen] = useState(false)
   const [portalSC, setPortalSC] = useState(false)
+  const [showIdentity, setShowIdentity] = useState(false)
+  const [myAvatar, setMyAvatar] = useState<string>('🏟️')
+
+  const refreshAvatar = () => setMyAvatar(getIdentity().avatar)
+  useEffect(() => { refreshAvatar() }, [])
 
   // Portal-back affordance — when the user arrived from soundchain.io via the
   // Arena pill (web/src/components/MainPillNav.tsx adds `?portal=soundchain`),
@@ -143,6 +150,19 @@ export function ArenaShell({ children }: ArenaShellProps) {
           {/* Right cluster */}
           <div className="flex items-center gap-2">
             <ThemeToggle />
+            {/* Profile / identity — set or edit your handle + avatar pic */}
+            <button
+              onClick={() => setShowIdentity(true)}
+              aria-label="Your profile"
+              className="flex items-center justify-center w-9 h-9 rounded-full border border-arena-border-l dark:border-arena-border-d hover:border-arena-red transition overflow-hidden"
+            >
+              {isUrlAvatar(myAvatar) ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={myAvatar} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-lg leading-none">{myAvatar}</span>
+              )}
+            </button>
             {portalSC ? (
               <a
                 href="https://soundchain.io"
@@ -217,6 +237,10 @@ export function ArenaShell({ children }: ArenaShellProps) {
       </header>
 
       <main className="flex-1">{children}</main>
+
+      {showIdentity && (
+        <ArenaIdentityModal onClose={() => setShowIdentity(false)} onSaved={refreshAvatar} />
+      )}
 
       <footer className="arena-safe-bottom border-t border-arena-border-l dark:border-arena-border-d bg-arena-paper dark:bg-arena-carbon mt-12">
         <div className="max-w-7xl mx-auto px-4 py-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-arena-muted-l dark:text-arena-muted-d">
