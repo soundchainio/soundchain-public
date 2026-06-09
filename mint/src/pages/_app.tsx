@@ -1,6 +1,8 @@
 import type { AppProps } from 'next/app'
 import Head from 'next/head'
 import { WalletProvider } from 'contexts/WalletProvider'
+import { ToastContainer } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
 import 'styles/globals.css'
 
 export default function MintApp({ Component, pageProps }: AppProps) {
@@ -15,6 +17,7 @@ export default function MintApp({ Component, pageProps }: AppProps) {
       </Head>
       <WalletProvider>
         <Component {...pageProps} />
+        <ToastContainer position="bottom-center" theme="dark" newestOnTop limit={3} />
       </WalletProvider>
     </>
   )

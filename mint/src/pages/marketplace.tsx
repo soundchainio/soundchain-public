@@ -3,6 +3,8 @@ import Head from 'next/head'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { MarketplaceDetailModal } from 'components/MarketplaceDetailModal'
+import { useStreamLogger } from 'hooks/useStreamLogger'
+import { toast } from 'react-toastify'
 
 type PriceToken = 'POL' | 'OGUN' | 'ETH' | 'USDC' | 'USDT' | 'LINK' | 'AVAX'
 
@@ -61,6 +63,12 @@ export default function Marketplace() {
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [playingId, setPlayingId] = useState<string | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const playingIdRef = useRef<string | null>(null)
+  // OGUN streaming reward: every IPFS play >=30s pays the 70/30 split (creator/listener).
+  const logger = useStreamLogger({
+    onCreatorReward: (r, t) => toast.success(`+${r.toFixed(3)} OGUN \u2192 creator of "${t || 'track'}"`, { autoClose: 3500 }),
+    onReward: (r) => toast.success(`+${r.toFixed(3)} OGUN earned for listening`, { autoClose: 3500 }),
+  })
 
   // ── Tab + filter + sort state ─────────────────────────────────────────
   type Tab = 'forSale' | 'minted' | 'all'
@@ -94,15 +102,22 @@ export default function Marketplace() {
     if (!audioUrl) return
     if (playingId === id) {
       audioRef.current?.pause()
+      playingIdRef.current = null
       setPlayingId(null)
       return
     }
     if (!audioRef.current) {
       audioRef.current = new Audio()
-      audioRef.current.addEventListener('ended', () => setPlayingId(null))
+      audioRef.current.addEventListener('ended', () => { playingIdRef.current = null; setPlayingId(null) })
+      audioRef.current.addEventListener('timeupdate', () => {
+        const a = audioRef.current
+        const tid = playingIdRef.current
+        if (a && tid && a.currentTime >= 30) logger.logIfQualified(tid, Math.floor(a.currentTime))
+      })
     }
     audioRef.current.src = audioUrl
     audioRef.current.play().catch(() => setPlayingId(null))
+    playingIdRef.current = id
     setPlayingId(id)
   }
 
