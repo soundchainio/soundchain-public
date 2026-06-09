@@ -48,21 +48,34 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const limitRaw = parseInt(String(req.query.limit ?? DEFAULT_LIMIT), 10)
   const limit = Number.isFinite(limitRaw) ? Math.max(1, Math.min(HARD_LIMIT, limitRaw)) : DEFAULT_LIMIT
   const requestDeviceId = typeof req.query.deviceId === 'string' ? req.query.deviceId : null
+  // Thread mode: ?thread=<messageId> returns that take's replies, oldest-first
+  // (chat order) so the homepage feed can expand an inline reply thread —
+  // exactly like the feed/wall posts on soundchain.io.
+  const threadId = typeof req.query.thread === 'string' ? req.query.thread : null
 
   const db = await arenaDb()
   const col = db.collection<ChatDoc>('arena_game_chat')
 
-  // Newest-first across the entire collection. The compound index
-  // {gameId:1, createdAt:-1} doesn't help here, but createdAt-only sort
-  // on a small collection is fast enough; a {createdAt:-1} index gets
-  // added the first time recent is hit if missing.
-  const docs = await col
-    .find({})
-    .sort({ createdAt: -1 })
-    .limit(limit)
-    .toArray()
+  // Thread = a parent's replies oldest-first; feed = newest takes across all games.
+  const docs = threadId
+    ? await col.find({ replyTo: threadId }).sort({ createdAt: 1 }).limit(HARD_LIMIT).toArray()
+    : await col.find({}).sort({ createdAt: -1 }).limit(limit).toArray()
 
   ensureIndex(col).catch(() => undefined)
+
+  // Reply counts for the returned takes so the feed can show "N replies" under
+  // each one (skip in thread mode — replies aren't themselves expanded here).
+  const countMap = new Map<string, number>()
+  if (!threadId && docs.length) {
+    const ids = docs.map((d) => d._id.toString())
+    const agg = await col
+      .aggregate<{ _id: string; n: number }>([
+        { $match: { replyTo: { $in: ids } } },
+        { $group: { _id: '$replyTo', n: { $sum: 1 } } },
+      ])
+      .toArray()
+    for (const c of agg) countMap.set(String(c._id), c.n)
+  }
 
   res.setHeader('Cache-Control', 'no-store')
   return res.status(200).json({
@@ -87,6 +100,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         replyToPreview: d.replyToPreview ?? null,
         reactions: reactions.map((r) => ({ key: r.key, kind: r.kind, count: r.count })),
         myReactions,
+        replyCount: countMap.get(d._id.toString()) ?? 0,
       }
     }),
   })

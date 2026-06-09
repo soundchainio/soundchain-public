@@ -14,6 +14,8 @@ import Link from 'next/link'
 import { ArrowRight, Loader2, MessageCircle } from 'lucide-react'
 import { isUrlAvatar, getIdentity } from '@/lib/identity'
 import type { ChatReaction } from '@/lib/chat'
+import type { SportKey } from '@/lib/espn'
+import { postChatMessage } from '@/lib/chat'
 import { ChatActions } from './ChatActions'
 import { ParsedBody } from './ParsedBody'
 import { NotificationBell } from './NotificationBell'
@@ -36,6 +38,7 @@ type RecentTake = {
   replyToPreview?: string | null
   reactions?: ChatReaction[]
   myReactions?: string[]
+  replyCount?: number
 }
 
 // Sport key → friendly label + accent + route. The chat API stores lowercase
@@ -74,6 +77,46 @@ export function LiveTakesFeed() {
   const [error, setError] = useState<string | null>(null)
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const cancelledRef = useRef(false)
+  // Inline replies (like feed/wall posts) — fans engage with each other right
+  // from the homepage takes stream.
+  const [replyingId, setReplyingId] = useState<string | null>(null)
+  const [replyText, setReplyText] = useState('')
+  const [sending, setSending] = useState(false)
+  const [openThreadId, setOpenThreadId] = useState<string | null>(null)
+  const [threads, setThreads] = useState<Record<string, RecentTake[]>>({})
+
+  const fetchThread = async (id: string) => {
+    try {
+      const r = await fetch(`/api/chat/recent?thread=${encodeURIComponent(id)}`, { cache: 'no-store' })
+      if (r.ok) {
+        const data = await r.json()
+        setThreads((prev) => ({ ...prev, [id]: Array.isArray(data?.messages) ? data.messages : [] }))
+      }
+    } catch { /* ignore — non-fatal */ }
+  }
+
+  const toggleThread = (t: RecentTake) => {
+    if (openThreadId === t.id) { setOpenThreadId(null); return }
+    setOpenThreadId(t.id)
+    if (!threads[t.id]) fetchThread(t.id)
+  }
+
+  const submitReply = async (t: RecentTake) => {
+    const body = replyText.trim()
+    if (!body || sending) return
+    setSending(true)
+    try {
+      await postChatMessage({ gameId: t.gameId, sport: t.sport as SportKey, body, replyTo: t.id })
+      setReplyText('')
+      setReplyingId(null)
+      // Optimistic count bump + open the thread, then re-fetch the real replies.
+      setTakes((prev) => prev ? prev.map((p) => (p.id === t.id ? { ...p, replyCount: (p.replyCount ?? 0) + 1 } : p)) : prev)
+      setOpenThreadId(t.id)
+      await fetchThread(t.id)
+    } catch { /* keep composer text so the fan can retry */ } finally {
+      setSending(false)
+    }
+  }
 
   useEffect(() => {
     cancelledRef.current = false
@@ -261,6 +304,10 @@ export function LiveTakesFeed() {
                       reactions={t.reactions}
                       myReactions={t.myReactions}
                       shareText={t.body}
+                      onReplyClick={() => {
+                        setReplyText('')
+                        setReplyingId((cur) => (cur === t.id ? null : t.id))
+                      }}
                       onReactionsChange={(next) => {
                         setTakes((prev) =>
                           prev
@@ -269,6 +316,71 @@ export function LiveTakesFeed() {
                         )
                       }}
                     />
+
+                    {/* Reply count → expand the inline thread, like feed/wall posts. */}
+                    {(t.replyCount ?? 0) > 0 && (
+                      <button
+                        onClick={() => toggleThread(t)}
+                        className="mt-1 inline-flex items-center gap-1 text-[11px] font-bold text-arena-red hover:underline"
+                      >
+                        <MessageCircle className="w-3 h-3" />
+                        {t.replyCount} {t.replyCount === 1 ? 'reply' : 'replies'}
+                        <span className="text-[8px]">{openThreadId === t.id ? '▲' : '▼'}</span>
+                      </button>
+                    )}
+
+                    {/* Inline reply composer. */}
+                    {replyingId === t.id && (
+                      <div className="mt-2 flex items-center gap-2">
+                        <input
+                          value={replyText}
+                          onChange={(e) => setReplyText(e.target.value)}
+                          onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitReply(t) } }}
+                          placeholder={`Reply to @${t.handle}…`}
+                          autoFocus
+                          maxLength={500}
+                          className="flex-1 min-w-0 rounded-lg border border-arena-border-l dark:border-arena-border-d bg-arena-paper dark:bg-arena-carbon px-3 py-1.5 text-sm outline-none focus:border-arena-red/60"
+                        />
+                        <button
+                          onClick={() => submitReply(t)}
+                          disabled={sending || !replyText.trim()}
+                          className="flex-shrink-0 rounded-lg bg-arena-red px-3 py-1.5 text-xs font-bold text-white disabled:opacity-40"
+                        >
+                          {sending ? '…' : 'Reply'}
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Inline thread — the take's replies, oldest-first. */}
+                    {openThreadId === t.id && (
+                      <ul className="mt-2 space-y-2 border-l-2 border-arena-red/25 pl-3">
+                        {(threads[t.id] ?? []).map((rep) => (
+                          <li key={rep.id} className="flex items-start gap-2">
+                            {isUrlAvatar(rep.avatar) ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={rep.avatar} alt="" loading="lazy" className="w-5 h-5 rounded-full object-cover border border-arena-border-l/60 dark:border-arena-border-d/60 flex-shrink-0 mt-0.5" />
+                            ) : (
+                              <span className="text-base leading-none flex-shrink-0 mt-0.5" aria-hidden>{rep.avatar || '🏟️'}</span>
+                            )}
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-xs font-bold truncate">@{rep.handle}</span>
+                                <span className="text-[10px] text-arena-muted-l dark:text-arena-muted-d">{formatRelative(rep.createdAt)}</span>
+                              </div>
+                              {rep.body && (
+                                <ParsedBody body={rep.body} className="text-xs text-arena-text-l dark:text-arena-text-d leading-snug break-words" />
+                              )}
+                              {rep.mediaUrl && rep.mediaType === 'image' && (
+                                <img src={rep.mediaUrl} alt="" loading="lazy" className="mt-1 max-h-32 rounded-md border border-arena-border-l dark:border-arena-border-d" />
+                              )}
+                            </div>
+                          </li>
+                        ))}
+                        {threads[t.id] && threads[t.id].length === 0 && (
+                          <li className="text-[11px] text-arena-muted-l dark:text-arena-muted-d">Loading replies…</li>
+                        )}
+                      </ul>
+                    )}
                   </div>
                 </div>
               </li>
