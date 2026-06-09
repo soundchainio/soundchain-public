@@ -10,6 +10,7 @@ import { createPortal } from 'react-dom'
 import { CreateStoryModal } from 'components/dex/CreateStoryModal'
 import { SharePostModal } from 'components/modals/SharePostModal'
 import { NativeTweetCard } from './NativeTweetCard'
+import { PostCarousel } from './PostCarousel'
 import { useMe } from 'hooks/useMe'
 import { useRouter } from 'next/router'
 import { IdentifySource, hasLazyLoadWithThumbnailSupport } from 'utils/NormalizeEmbedLinks'
@@ -118,9 +119,11 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
   const hasMediaLink = !!post.mediaLink
 
   // Check for uploaded media (images/videos from posts)
-  const postWithMedia = post as typeof post & { uploadedMediaUrl?: string | null; uploadedMediaType?: string | null; mediaExpiresAt?: string | null; isEphemeral?: boolean | null }
+  const postWithMedia = post as typeof post & { uploadedMediaUrl?: string | null; uploadedMediaUrls?: string[] | null; uploadedMediaType?: string | null; mediaExpiresAt?: string | null; isEphemeral?: boolean | null }
   const uploadedMediaUrl = postWithMedia.uploadedMediaUrl
   const uploadedMediaType = postWithMedia.uploadedMediaType
+  const uploadedMediaUrls = Array.isArray(postWithMedia.uploadedMediaUrls) ? postWithMedia.uploadedMediaUrls : []
+  const isCarousel = uploadedMediaUrls.length > 1
   const hasUploadedMedia = !!uploadedMediaUrl
   const mediaExpiresAt = postWithMedia.mediaExpiresAt ? new Date(postWithMedia.mediaExpiresAt) : null
   const isExpired = mediaExpiresAt && mediaExpiresAt < new Date()
@@ -158,7 +161,10 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
       {/* Uploaded media (images/videos/audio) - priority display */}
       {hasUploadedMedia && !isExpired && (
         <>
-          {uploadedMediaType === 'image' && (
+          {uploadedMediaType === 'image' && isCarousel && (
+            <PostCarousel images={uploadedMediaUrls} />
+          )}
+          {uploadedMediaType === 'image' && !isCarousel && (
             <img
               src={uploadedMediaUrl!}
               alt="Post media"

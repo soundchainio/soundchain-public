@@ -34,8 +34,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   const { body, mediaLink, uploadedMediaUrl, uploadedMediaType, uploadedMediaThumbnail, repostId } = req.body || {}
+  // IG-style carousel: array of image URLs. First entry mirrors uploadedMediaUrl
+  // so legacy single-image readers keep working untouched.
+  const uploadedMediaUrls: string[] = Array.isArray(req.body?.uploadedMediaUrls)
+    ? req.body.uploadedMediaUrls.filter((u: unknown) => typeof u === 'string' && u).slice(0, 10)
+    : []
+  const firstUploaded = uploadedMediaUrl || uploadedMediaUrls[0] || null
 
-  if (!body?.trim() && !mediaLink && !uploadedMediaUrl && !repostId) {
+  if (!body?.trim() && !mediaLink && !firstUploaded && !repostId) {
     return res.status(400).json({ error: 'Post must have text, mediaLink, uploadedMedia, or repostId' })
   }
 
@@ -53,7 +59,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const profileId = user.profileId as ObjectId
     const now = new Date()
-    const isEphemeral = !!uploadedMediaUrl
+    const isEphemeral = !!firstUploaded
     const mediaExpiresAt = isEphemeral ? new Date(Date.now() + 24 * 60 * 60 * 1000) : undefined
 
     const postDoc: any = {
@@ -61,8 +67,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       body: body || '',
       mediaLink: mediaLink || null,
       mediaThumbnail: uploadedMediaThumbnail || null,
-      uploadedMediaUrl: uploadedMediaUrl || null,
-      uploadedMediaType: uploadedMediaType || null,
+      uploadedMediaUrl: firstUploaded,
+      // Carousel gallery — only stored when there's more than one image.
+      uploadedMediaUrls: uploadedMediaUrls.length > 1 ? uploadedMediaUrls : null,
+      uploadedMediaType: uploadedMediaType || (uploadedMediaUrls.length ? 'image' : null),
       isEphemeral,
       mediaExpiresAt,
       repostId: repostOid,
@@ -137,6 +145,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         mediaLink: postDoc.mediaLink,
         mediaThumbnail: postDoc.mediaThumbnail,
         uploadedMediaUrl: postDoc.uploadedMediaUrl,
+        uploadedMediaUrls: postDoc.uploadedMediaUrls || null,
         uploadedMediaType: postDoc.uploadedMediaType,
         repostId: repostOid ? repostOid.toString() : null,
         createdAt: postDoc.createdAt,

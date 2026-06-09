@@ -69,6 +69,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         body: post.body || null,
         mediaLink: post.mediaLink || null,
         uploadedMediaUrl: post.uploadedMediaUrl || null,
+        uploadedMediaUrls: post.uploadedMediaUrls || null,
         uploadedMediaType: post.uploadedMediaType || null,
         mediaThumbnail: post.mediaThumbnail || null,
         trackId: post.trackId || null,

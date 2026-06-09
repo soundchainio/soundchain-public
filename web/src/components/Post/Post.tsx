@@ -11,6 +11,7 @@ import { AuthorActionsType } from 'types/AuthorActionsType'
 import { canPlayWithReactPlayer, IdentifySource } from 'utils/NormalizeEmbedLinks'
 import { MediaProvider } from 'types/MediaProvider'
 import { LinkPreviewCard } from './LinkPreviewCard'
+import { PostCarousel } from './PostCarousel'
 import { MakePostPermanentModal } from '../modals/MakePostPermanentModal'
 import { CommentSkeleton } from '../Comment/CommentSkeleton'
 import { NewCommentForm } from '../NewCommentForm'
@@ -198,13 +199,15 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
 
   // Check if post has any media (embed links, tracks, reposts, or uploaded ephemeral media)
   // These fields are requested via PostComponentFields fragment but the prop type may not include them
-  const postWithMedia = post as typeof post & { uploadedMediaUrl?: string | null; uploadedMediaType?: string | null; mediaExpiresAt?: string | null; isEphemeral?: boolean | null }
+  const postWithMedia = post as typeof post & { uploadedMediaUrl?: string | null; uploadedMediaUrls?: string[] | null; uploadedMediaType?: string | null; mediaExpiresAt?: string | null; isEphemeral?: boolean | null }
   const hasUploadedMedia = !!postWithMedia.uploadedMediaUrl
   const isEphemeral = !!postWithMedia.isEphemeral
   const mediaExpiresAt = postWithMedia.mediaExpiresAt ? new Date(postWithMedia.mediaExpiresAt) : null
   const isExpired = mediaExpiresAt && mediaExpiresAt < new Date()
   const uploadedMediaUrl = postWithMedia.uploadedMediaUrl
   const uploadedMediaType = postWithMedia.uploadedMediaType
+  const uploadedMediaUrls = Array.isArray(postWithMedia.uploadedMediaUrls) ? postWithMedia.uploadedMediaUrls : []
+  const isCarousel = uploadedMediaUrls.length > 1
 
   const hasMedia = post.mediaLink || post.track || post.repostId || hasUploadedMedia
 
@@ -343,8 +346,12 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
           {/* Uploaded ephemeral media (24h stories) */}
           {hasUploadedMedia && !isExpired && (
             <div className="relative">
+              {/* Carousel — IG-style swipeable gallery when >1 image */}
+              {uploadedMediaType === 'image' && isCarousel && (
+                <PostCarousel images={uploadedMediaUrls} />
+              )}
               {/* Image - full width, natural height like Instagram */}
-              {uploadedMediaType === 'image' && uploadedMediaUrl && (
+              {uploadedMediaType === 'image' && !isCarousel && uploadedMediaUrl && (
                 <img
                   src={uploadedMediaUrl}
                   alt="Post media"

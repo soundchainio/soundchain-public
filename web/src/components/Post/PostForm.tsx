@@ -204,6 +204,7 @@ export const PostForm = ({ ...props }: PostFormProps) => {
   const [uploadedMediaUrl, setUploadedMediaUrl] = useState<string | undefined>()
   const [uploadedMediaType, setUploadedMediaType] = useState<'image' | 'video' | 'audio' | undefined>()
   const [uploadedMediaThumbnail, setUploadedMediaThumbnail] = useState<string | undefined>()
+  const [uploadedMediaUrls, setUploadedMediaUrls] = useState<string[]>([]) // IG-style carousel gallery
   const [showMusicAccordion, setShowMusicAccordion] = useState(false)
   const [showVideoAccordion, setShowVideoAccordion] = useState(false)
   // Post mutations — all Vercel direct (Phase 6d)
@@ -274,6 +275,10 @@ export const PostForm = ({ ...props }: PostFormProps) => {
             (newPostParams as any).uploadedMediaType = uploadedMediaType;
             if (uploadedMediaThumbnail) {
               (newPostParams as any).uploadedMediaThumbnail = uploadedMediaThumbnail;
+            }
+            // IG-style carousel: 2+ images travel as a gallery array.
+            if (uploadedMediaUrls.length > 1) {
+              (newPostParams as any).uploadedMediaUrls = uploadedMediaUrls;
             }
           }
 
@@ -543,11 +548,19 @@ export const PostForm = ({ ...props }: PostFormProps) => {
                 setUploadedMediaUrl(url)
                 setUploadedMediaType(type)
                 setUploadedMediaThumbnail(thumbnailUrl)
+                setUploadedMediaUrls([]) // single media clears any gallery
+              }}
+              onGalleryUploaded={(urls) => {
+                setUploadedMediaUrls(urls)
+                setUploadedMediaUrl(urls[0])
+                setUploadedMediaType('image')
+                setUploadedMediaThumbnail(undefined)
               }}
               onMediaRemoved={() => {
                 setUploadedMediaUrl(undefined)
                 setUploadedMediaType(undefined)
                 setUploadedMediaThumbnail(undefined)
+                setUploadedMediaUrls([])
               }}
               currentUrl={uploadedMediaUrl}
               currentType={uploadedMediaType}

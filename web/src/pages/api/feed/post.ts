@@ -79,6 +79,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         isGuest: post.isGuest || false,
         walletAddress: post.walletAddress || null,
         uploadedMediaUrl: post.uploadedMediaUrl || null,
+        uploadedMediaUrls: post.uploadedMediaUrls || null,
         uploadedMediaType: post.uploadedMediaType || null,
         mediaExpiresAt: post.mediaExpiresAt || null,
         isEphemeral: post.isEphemeral || false,

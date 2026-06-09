@@ -8,6 +8,8 @@ import Image from 'next/image'
 interface PostMediaUploaderProps {
   onMediaSelected: (url: string, type: 'image' | 'video' | 'audio', thumbnailUrl?: string) => void
   onMediaRemoved: () => void
+  /** Fired when >1 image is selected — an IG-style carousel gallery of URLs. */
+  onGalleryUploaded?: (urls: string[]) => void
   currentUrl?: string
   currentType?: string
   isGuest?: boolean // Use guest upload endpoint (images only)
@@ -142,6 +144,7 @@ const acceptedTypes = {
 export const PostMediaUploader = ({
   onMediaSelected,
   onMediaRemoved,
+  onGalleryUploaded,
   currentUrl,
   currentType,
   isGuest,
@@ -176,6 +179,32 @@ export const PostMediaUploader = ({
     async (acceptedFiles: File[]) => {
       const file = acceptedFiles[0]
       if (!file) return
+
+      // Multi-image → IG-style carousel. Only when 2+ files and ALL are images;
+      // a single file (or any video/audio) falls through to the existing path.
+      const allImages = acceptedFiles.length > 1 && acceptedFiles.every((f) => f.type.startsWith('image/'))
+      if (allImages && onGalleryUploaded) {
+        setError(null)
+        setUploading(true)
+        setMediaType('image')
+        setPreview(URL.createObjectURL(acceptedFiles[0]))
+        try {
+          const urls: string[] = []
+          for (const f of acceptedFiles.slice(0, 10)) {
+            const u = await upload([f])
+            if (u) urls.push(u)
+          }
+          if (urls.length > 1) onGalleryUploaded(urls)
+          else if (urls.length === 1) onMediaSelected(urls[0], 'image')
+        } catch (err: any) {
+          setError(err.message || 'Upload failed')
+          setPreview(null)
+          setMediaType(null)
+        } finally {
+          setUploading(false)
+        }
+        return
+      }
 
       setError(null)
       setUploading(true)
@@ -241,7 +270,7 @@ export const PostMediaUploader = ({
         setUploading(false)
       }
     },
-    [upload, uploadThumbnail, onMediaSelected]
+    [upload, uploadThumbnail, onMediaSelected, onGalleryUploaded]
   )
 
   // Dynamic file size limit based on user type
@@ -252,7 +281,7 @@ export const PostMediaUploader = ({
     onDrop,
     accept: acceptedTypes,
     maxSize: maxFileSize,
-    multiple: false,
+    multiple: true,   // allow multi-select for IG-style image carousels (single still works)
     disabled: uploading,
     onDropRejected: (rejections) => {
       const rejection = rejections[0]
