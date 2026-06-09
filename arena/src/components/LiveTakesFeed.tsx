@@ -12,13 +12,14 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { ArrowRight, Loader2, MessageCircle } from 'lucide-react'
-import { isUrlAvatar, getIdentity } from '@/lib/identity'
+import { isUrlAvatar, getIdentity, setHandle } from '@/lib/identity'
 import type { ChatReaction } from '@/lib/chat'
 import type { SportKey } from '@/lib/espn'
 import { postChatMessage } from '@/lib/chat'
 import { ChatActions } from './ChatActions'
 import { ParsedBody } from './ParsedBody'
 import { NotificationBell } from './NotificationBell'
+import { GifPicker } from './GifPicker'
 
 const POLL_MS = 8_000
 const FETCH_LIMIT = 12
@@ -84,6 +85,23 @@ export function LiveTakesFeed() {
   const [sending, setSending] = useState(false)
   const [openThreadId, setOpenThreadId] = useState<string | null>(null)
   const [threads, setThreads] = useState<Record<string, RecentTake[]>>({})
+  const [gifFor, setGifFor] = useState<string | null>(null)
+  // Posting needs a handle (the chat API 400s without one). Arena is "no login,
+  // just sports" — so we prompt for a handle inline rather than an auth gate.
+  const [myHandle, setMyHandle] = useState<string | null>(null)
+  const [handleInput, setHandleInput] = useState('')
+  const [replyErr, setReplyErr] = useState<string | null>(null)
+
+  useEffect(() => { setMyHandle(getIdentity().handle) }, [])
+
+  // Ensure a handle exists before posting; sets one from handleInput if needed.
+  const ensureHandle = (): boolean => {
+    if (myHandle) return true
+    const r = setHandle(handleInput.trim())
+    if (!r.ok) { setReplyErr(r.error || 'Pick a handle to post'); return false }
+    setMyHandle(r.handle); setReplyErr(null); setHandleInput('')
+    return true
+  }
 
   const fetchThread = async (id: string) => {
     try {
@@ -104,7 +122,8 @@ export function LiveTakesFeed() {
   const submitReply = async (t: RecentTake) => {
     const body = replyText.trim()
     if (!body || sending) return
-    setSending(true)
+    if (!ensureHandle()) return
+    setSending(true); setReplyErr(null)
     try {
       await postChatMessage({ gameId: t.gameId, sport: t.sport as SportKey, body, replyTo: t.id })
       setReplyText('')
@@ -113,8 +132,26 @@ export function LiveTakesFeed() {
       setTakes((prev) => prev ? prev.map((p) => (p.id === t.id ? { ...p, replyCount: (p.replyCount ?? 0) + 1 } : p)) : prev)
       setOpenThreadId(t.id)
       await fetchThread(t.id)
-    } catch { /* keep composer text so the fan can retry */ } finally {
+    } catch (e) {
+      setReplyErr((e as Error)?.message ?? 'Reply failed — try again')
+    } finally {
       setSending(false)
+    }
+  }
+
+  // Reply with a GIPHY gif — posted as a media-only reply (same as text replies,
+  // just mediaUrl instead of body). Server gates giphy.com hosts.
+  const submitGifReply = async (t: RecentTake, gifUrl: string) => {
+    setGifFor(null)
+    if (!ensureHandle()) { setReplyingId(t.id); return }
+    setReplyingId(null)
+    try {
+      await postChatMessage({ gameId: t.gameId, sport: t.sport as SportKey, body: '', mediaUrl: gifUrl, replyTo: t.id })
+      setTakes((prev) => prev ? prev.map((p) => (p.id === t.id ? { ...p, replyCount: (p.replyCount ?? 0) + 1 } : p)) : prev)
+      setOpenThreadId(t.id)
+      await fetchThread(t.id)
+    } catch (e) {
+      setReplyErr((e as Error)?.message ?? 'GIF reply failed')
     }
   }
 
@@ -266,7 +303,7 @@ export function LiveTakesFeed() {
                       <span className="text-sm font-bold truncate max-w-[120px] sm:max-w-none">
                         @{t.handle}
                       </span>
-                      <Link href={meta.route} className={`text-[9px] font-mono tracking-wider px-1.5 py-0.5 rounded-full border hover:opacity-80 ${meta.accent}`}>
+                      <Link href={meta.route} className={`inline-flex items-center leading-none whitespace-nowrap shrink-0 text-[9px] font-mono tracking-wider px-1.5 py-0.5 rounded-full border hover:opacity-80 ${meta.accent}`}>
                         {meta.label}
                       </Link>
                       <span className="text-[10px] text-arena-muted-l dark:text-arena-muted-d ml-auto">
@@ -329,26 +366,55 @@ export function LiveTakesFeed() {
                       </button>
                     )}
 
-                    {/* Inline reply composer. */}
+                    {/* Inline reply composer — text or a GIPHY gif. Anonymous fans
+                        pick a handle inline (no login) the first time they post. */}
                     {replyingId === t.id && (
-                      <div className="mt-2 flex items-center gap-2">
-                        <input
-                          value={replyText}
-                          onChange={(e) => setReplyText(e.target.value)}
-                          onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitReply(t) } }}
-                          placeholder={`Reply to @${t.handle}…`}
-                          autoFocus
-                          maxLength={500}
-                          className="flex-1 min-w-0 rounded-lg border border-arena-border-l dark:border-arena-border-d bg-arena-paper dark:bg-arena-carbon px-3 py-1.5 text-sm outline-none focus:border-arena-red/60"
-                        />
-                        <button
-                          onClick={() => submitReply(t)}
-                          disabled={sending || !replyText.trim()}
-                          className="flex-shrink-0 rounded-lg bg-arena-red px-3 py-1.5 text-xs font-bold text-white disabled:opacity-40"
-                        >
-                          {sending ? '…' : 'Reply'}
-                        </button>
+                      <div className="mt-2 space-y-2">
+                        {!myHandle && (
+                          <input
+                            value={handleInput}
+                            onChange={(e) => setHandleInput(e.target.value)}
+                            placeholder="Pick a handle to post (e.g. courtside_carl)"
+                            autoFocus
+                            maxLength={24}
+                            className="w-full rounded-lg border border-arena-red/40 bg-arena-paper dark:bg-arena-carbon px-3 py-1.5 text-sm outline-none focus:border-arena-red"
+                          />
+                        )}
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => { if (!ensureHandle()) return; setGifFor((cur) => (cur === t.id ? null : t.id)) }}
+                            aria-label="Reply with a GIF"
+                            className={`flex-shrink-0 rounded-lg border px-2 py-1.5 text-[11px] font-black tracking-wide ${gifFor === t.id ? 'border-arena-red text-arena-red' : 'border-arena-border-l dark:border-arena-border-d text-arena-muted-l dark:text-arena-muted-d hover:text-arena-red hover:border-arena-red/60'}`}
+                          >
+                            GIF
+                          </button>
+                          <input
+                            value={replyText}
+                            onChange={(e) => setReplyText(e.target.value)}
+                            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitReply(t) } }}
+                            placeholder={`Reply to @${t.handle}…`}
+                            autoFocus={!!myHandle}
+                            maxLength={500}
+                            className="flex-1 min-w-0 rounded-lg border border-arena-border-l dark:border-arena-border-d bg-arena-paper dark:bg-arena-carbon px-3 py-1.5 text-sm outline-none focus:border-arena-red/60"
+                          />
+                          <button
+                            onClick={() => submitReply(t)}
+                            disabled={sending || !replyText.trim() || (!myHandle && !handleInput.trim())}
+                            className="flex-shrink-0 rounded-lg bg-arena-red px-3 py-1.5 text-xs font-bold text-white disabled:opacity-40"
+                          >
+                            {sending ? '…' : 'Reply'}
+                          </button>
+                        </div>
+                        {replyErr && <div className="text-[11px] text-arena-red">{replyErr}</div>}
                       </div>
+                    )}
+
+                    {/* GIPHY picker for a gif reply. */}
+                    {gifFor === t.id && (
+                      <GifPicker
+                        onSelect={(gifUrl) => submitGifReply(t, gifUrl)}
+                        onClose={() => setGifFor(null)}
+                      />
                     )}
 
                     {/* Inline thread — the take's replies, oldest-first. */}
