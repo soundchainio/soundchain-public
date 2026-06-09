@@ -12,7 +12,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { ArrowRight, Loader2, MessageCircle } from 'lucide-react'
-import { isUrlAvatar, getIdentity, setHandle } from '@/lib/identity'
+import { isUrlAvatar, getIdentity, setHandle, setAvatar, ARENA_AVATARS, type Avatar } from '@/lib/identity'
 import type { ChatReaction } from '@/lib/chat'
 import type { SportKey } from '@/lib/espn'
 import { postChatMessage } from '@/lib/chat'
@@ -91,8 +91,33 @@ export function LiveTakesFeed() {
   const [myHandle, setMyHandle] = useState<string | null>(null)
   const [handleInput, setHandleInput] = useState('')
   const [replyErr, setReplyErr] = useState<string | null>(null)
+  const [myAvatar, setMyAvatar] = useState<Avatar>(ARENA_AVATARS[0])
+  const [avatarUploading, setAvatarUploading] = useState(false)
 
-  useEffect(() => { setMyHandle(getIdentity().handle) }, [])
+  useEffect(() => {
+    const id = getIdentity()
+    setMyHandle(id.handle)
+    setMyAvatar(id.avatar)
+  }, [])
+
+  // Upload a custom avatar pic (Pinata via /api/avatars/upload) and persist it.
+  const uploadAvatar = async (file: File) => {
+    setAvatarUploading(true); setReplyErr(null)
+    try {
+      const form = new FormData()
+      form.append('file', file)
+      form.append('deviceId', getIdentity().deviceId)
+      const resp = await fetch('/api/avatars/upload', { method: 'POST', body: form })
+      const j = await resp.json()
+      if (!resp.ok || !j.avatarUrl) { setReplyErr(j.error || 'Avatar upload failed'); return }
+      setAvatar(j.avatarUrl as Avatar); setMyAvatar(j.avatarUrl)
+    } catch {
+      setReplyErr('Avatar upload failed — check your connection')
+    } finally {
+      setAvatarUploading(false)
+    }
+  }
+  const pickEmojiAvatar = (a: Avatar) => { setAvatar(a); setMyAvatar(a) }
 
   // Ensure a handle exists before posting; sets one from handleInput if needed.
   const ensureHandle = (): boolean => {
@@ -370,6 +395,31 @@ export function LiveTakesFeed() {
                         pick a handle inline (no login) the first time they post. */}
                     {replyingId === t.id && (
                       <div className="mt-2 space-y-2">
+                        {/* Avatar — emoji quick-picks or upload your own pic for the pill. */}
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="flex-shrink-0">
+                            {isUrlAvatar(myAvatar) ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={myAvatar} alt="" className="w-7 h-7 rounded-full object-cover border border-arena-red" />
+                            ) : (
+                              <span className="w-7 h-7 inline-flex items-center justify-center text-lg leading-none rounded-full border border-arena-red bg-arena-paper dark:bg-arena-carbon">{myAvatar}</span>
+                            )}
+                          </span>
+                          {ARENA_AVATARS.slice(0, 6).map((a) => (
+                            <button
+                              key={a}
+                              onClick={() => pickEmojiAvatar(a)}
+                              className={`w-7 h-7 inline-flex items-center justify-center text-base leading-none rounded-full border transition ${myAvatar === a ? 'border-arena-red bg-arena-red/15' : 'border-arena-border-l dark:border-arena-border-d hover:border-arena-red'}`}
+                            >
+                              {a}
+                            </button>
+                          ))}
+                          <label className={`flex-shrink-0 cursor-pointer rounded-full border border-arena-border-l dark:border-arena-border-d px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider hover:border-arena-red hover:text-arena-red ${avatarUploading ? 'opacity-50' : ''}`}>
+                            {avatarUploading ? '…' : '📷 Pic'}
+                            <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden" disabled={avatarUploading}
+                              onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadAvatar(f); e.target.value = '' }} />
+                          </label>
+                        </div>
                         {!myHandle ? (
                           <div className="flex items-center gap-2">
                             <input
