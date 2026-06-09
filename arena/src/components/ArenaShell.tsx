@@ -24,6 +24,7 @@ interface ArenaShellProps {
 const NAV = [
   { href: '/',              label: 'Hub',     icon: Home },
   { href: '/live',          label: 'Live',    icon: Activity, accent: true },
+  { href: '/worldcup',      label: 'World Cup', icon: Trophy, accent: true },
   { href: '/nba',           label: 'NBA',     icon: Trophy },
   { href: '/nhl',           label: 'NHL',     icon: Trophy },
   { href: '/mlb',           label: 'MLB',     icon: Trophy },
