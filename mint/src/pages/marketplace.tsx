@@ -875,13 +875,14 @@ function NftChip({
             ✓
           </div>
         )}
-        {/* Inline play button — only when card has audio and we're not in sweep mode */}
+        {/* Inline play button — bottom-LEFT so the edition badge owns the
+            bottom-right corner. Only when card has audio + not in sweep mode. */}
         {hasAudio && !sweepMode && (
           <button
             type="button"
             onClick={handlePlayClick}
             aria-label={isPlaying ? 'Pause' : 'Play'}
-            className={`absolute bottom-1 right-1 w-7 h-7 flex items-center justify-center text-xs font-bold border transition-all ${
+            className={`absolute bottom-1 left-1 w-7 h-7 flex items-center justify-center text-xs font-bold border transition-all ${
               isPlaying
                 ? 'bg-neon-cyan text-black border-neon-cyan shadow-neon-cyan'
                 : 'bg-ink-900/85 text-neon-cyan border-neon-cyan/60 hover:bg-neon-cyan hover:text-black'
@@ -890,6 +891,24 @@ function NftChip({
           >
             {isPlaying ? '❚❚' : '▶'}
           </button>
+        )}
+        {/* Edition fraction — bottom-RIGHT corner of the cover. ONE card per mint;
+            this badge shows the lot size (1/1, 5/5, 1000/1000). When some are
+            actively listed it shows listed/total; otherwise total editions. */}
+        {listing.editionSize != null && (
+          <div
+            className={`absolute bottom-1 right-1 px-1.5 py-[2px] text-[9px] font-mono font-bold leading-none tabular-nums border ${
+              listing.editionSize > 1
+                ? 'bg-neon-magenta/90 text-black border-neon-magenta'
+                : 'bg-ink-900/90 text-neon-cyan/90 border-neon-cyan/40'
+            }`}
+            style={{ clipPath: 'polygon(4px 0,100% 0,100% calc(100% - 4px),calc(100% - 4px) 100%,0 100%,0 4px)' }}
+            title={`${listing.editionListed || 0} listed of ${listing.editionSize} editions`}
+          >
+            {listing.editionListed != null && listing.editionListed > 0
+              ? `${listing.editionListed}/${listing.editionSize}`
+              : `${listing.editionSize}/${listing.editionSize}`}
+          </div>
         )}
         {/* Audio-active pulse ring on card border when playing */}
         {isPlaying && (
@@ -903,9 +922,8 @@ function NftChip({
         <div className="text-[9px] text-gray-500 truncate leading-tight">
           {listing.artist || '—'}
         </div>
-        {/* Price + edition fraction strip — always renders so cards have a consistent shape */}
+        {/* Price strip — the edition fraction now lives as a corner badge on the cover. */}
         <div className="flex items-center justify-between gap-1 mt-0.5 font-mono leading-none">
-          {/* Price (when set) — token symbol always attached */}
           {listing.price != null && listing.priceToken ? (
             <span className="text-[10px] text-neon-cyan tracking-wide tabular-nums truncate">
               {formatPrice(listing.price)} <span className="text-[8px] text-neon-cyan/70">{listing.priceToken}</span>
@@ -913,16 +931,8 @@ function NftChip({
           ) : (
             <span className="text-[9px] text-gray-600 uppercase tracking-widest">—</span>
           )}
-          {/* Edition fraction — X/N. Editions of 1 render as "1/1" so the
-              card shape stays consistent across 1/1s and multi-editions. */}
-          {listing.editionSize != null && (
-            <span className={`text-[9px] tabular-nums flex-shrink-0 ${
-              listing.editionSize > 1 ? 'text-neon-magenta' : 'text-gray-500'
-            }`}>
-              {listing.editionListed != null && listing.editionListed > 0
-                ? `${listing.editionListed}/${listing.editionSize}`
-                : `1/${listing.editionSize}`}
-            </span>
+          {listing.editionSize != null && listing.editionSize > 1 && (
+            <span className="text-[8px] text-neon-magenta/80 uppercase tracking-wider flex-shrink-0">edition</span>
           )}
         </div>
       </div>

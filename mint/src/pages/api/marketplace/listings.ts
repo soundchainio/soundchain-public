@@ -355,48 +355,59 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // to nftData-present). Skip any track already represented in `listed`.
     // Sort newest-first within the browse set so recent mints surface
     // immediately under the for-sale section.
-    const browse: ListingPreview[] = allMintedTracks
-      .filter((t) => !listedIds.has(t.id))
-      .sort((a, b) => {
-        const ad = new Date(a.createdAt || 0).getTime()
-        const bd = new Date(b.createdAt || 0).getTime()
-        return bd - ad
-      })
-      .map((t) => {
-        const price = typeof t.price === 'number' ? t.price : undefined
+    // Group by edition so a multi-edition mint renders as ONE card (whether 1/1
+    // or 1000/1000) — never one card per token-id. Editions of the same mint
+    // share a trackEditionId; collapse them here and surface the individual
+    // token-ids inside the mint's detail card (with a low→high price filter).
+    const browseGroups = new Map<string, any[]>()
+    for (const t of allMintedTracks) {
+      if (listedIds.has(t.id)) continue
+      const key = t.trackEditionId || t.id
+      const arr = browseGroups.get(key)
+      if (arr) arr.push(t)
+      else browseGroups.set(key, [t])
+
+      // Record (contract, tokenId) so the V1/V2 catalog dedupe below skips it.
+      const contractLower = String(t.nftData?.contract || '').toLowerCase()
+      const tokenIdStr = String(t.nftData?.tokenId ?? '')
+      if (tokenIdStr && contractLower === NFT_CONTRACTS.V1.toLowerCase()) {
+        indexedV1.add(tokenIdStr)
+      } else if (tokenIdStr && contractLower === NFT_CONTRACTS.V2.toLowerCase()) {
+        indexedV2.add(tokenIdStr)
+      }
+    }
+
+    const browse: ListingPreview[] = Array.from(browseGroups.values())
+      // rep = newest track in the edition group (surfaces recent mints first)
+      .map((tracks) => tracks.reduce((a, b) =>
+        new Date(b.createdAt || 0).getTime() > new Date(a.createdAt || 0).getTime() ? b : a, tracks[0]))
+      .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+      .map((rep) => {
+        const tracks = browseGroups.get(rep.trackEditionId || rep.id) || [rep]
+        const price = typeof rep.price === 'number' ? rep.price : undefined
         const priceToken: PriceToken | undefined = price != null
-          ? tokenFromSaleType(t.saleType)
+          ? tokenFromSaleType(rep.saleType)
           : undefined
-        const editionSize = typeof t.editionSize === 'number' && t.editionSize > 0
-          ? t.editionSize
-          : 1
-        const editionListed = typeof t.listingCount === 'number' ? t.listingCount : 0
-
-        // Record this card's (contract, tokenId) so the V1/V2 catalog merge
-        // below skips it. Contract addresses are case-insensitive — lowercase
-        // both sides of the comparison.
-        const contractLower = String(t.nftData?.contract || '').toLowerCase()
-        const tokenIdStr = String(t.nftData?.tokenId ?? '')
-        if (tokenIdStr && contractLower === NFT_CONTRACTS.V1.toLowerCase()) {
-          indexedV1.add(tokenIdStr)
-        } else if (tokenIdStr && contractLower === NFT_CONTRACTS.V2.toLowerCase()) {
-          indexedV2.add(tokenIdStr)
-        }
-
+        // editionSize = the mint's declared supply; fall back to how many token
+        // rows we grouped (one mint = the whole lot, shown as the fraction).
+        const editionSize = typeof rep.editionSize === 'number' && rep.editionSize > 0
+          ? rep.editionSize
+          : tracks.length
+        const editionListed = typeof rep.listingCount === 'number' ? rep.listingCount : 0
         return {
-          id: t.id,
-          tokenId: tokenIdStr,
-          title: t.title,
-          artist: t.artist,
-          coverArtUrl: t.artworkUrl,
-          audioUrl: t.playbackUrl || t.assetUrl,
+          id: rep.id,
+          tokenId: String(rep.nftData?.tokenId ?? ''),
+          title: rep.title,
+          artist: rep.artist,
+          coverArtUrl: rep.artworkUrl,
+          audioUrl: rep.playbackUrl || rep.assetUrl,
           price,
           priceToken,
           editionSize,
           editionListed,
           forSale: false,
-          version: detectVersion(t.nftData?.contract),
-          href: `/marketplace/${t.id}`,
+          version: detectVersion(rep.nftData?.contract),
+          href: `/marketplace/${rep.id}`,
         }
       })
 
@@ -439,9 +450,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       })
     }
 
-    // Order: listed (holographic in UI) → GraphQL-indexed → V2 placeholders (newer, more relevant)
-    // → V1 placeholders (legacy 2021-2022 catalog at the tail). limit applies to the combined slice.
-    const merged = [...listed, ...browse, ...v2Placeholder, ...v1Placeholder].slice(0, limit)
+    // Grid = one card per MINT: active listings → grouped GraphQL-indexed mints.
+    // Per-token-id placeholder cards (v1/v2) are intentionally NOT surfaced here —
+    // they spawned one blank "NO ASSET" card per edition token (a 1000-edition mint
+    // = 1000 blank cards). The individual editions live inside their mint's detail
+    // card; on-chain totals still surface in counts + the ON-CHAIN PROOF strip.
+    const merged = [...listed, ...browse].slice(0, limit)
 
     // Hydrate V1/V2 placeholder cards with on-chain tokenURI → IPFS metadata.
     // Without this, legacy NFTs render as "Legacy NFT #N" with no cover art.
