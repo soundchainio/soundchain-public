@@ -5,7 +5,7 @@ import type { SportKey } from '@/lib/espn'
 type SportParam = SportKey | 'f1' | 'boxing' | 'wwe' | 'horseRacing'
 
 const VALID_SPORTS = new Set<SportParam>([
-  'nba', 'nfl', 'mlb', 'nhl', 'wnba', 'mma', 'soccerEpl', 'soccerMls', 'ncaaFootball', 'ncaaMens', 'f1', 'boxing', 'wwe', 'horseRacing',
+  'nba', 'nfl', 'mlb', 'nhl', 'wnba', 'mma', 'soccerEpl', 'soccerMls', 'fifaWorld', 'ncaaFootball', 'ncaaMens', 'f1', 'boxing', 'wwe', 'horseRacing',
 ])
 
 interface CacheEntry { videos: YouTubeVideo[]; fetchedAt: number; error?: string }
