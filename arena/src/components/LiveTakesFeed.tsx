@@ -370,15 +370,29 @@ export function LiveTakesFeed() {
                         pick a handle inline (no login) the first time they post. */}
                     {replyingId === t.id && (
                       <div className="mt-2 space-y-2">
-                        {!myHandle && (
-                          <input
-                            value={handleInput}
-                            onChange={(e) => setHandleInput(e.target.value)}
-                            placeholder="Pick a handle to post (e.g. courtside_carl)"
-                            autoFocus
-                            maxLength={24}
-                            className="w-full rounded-lg border border-arena-red/40 bg-arena-paper dark:bg-arena-carbon px-3 py-1.5 text-sm outline-none focus:border-arena-red"
-                          />
+                        {!myHandle ? (
+                          <div className="flex items-center gap-2">
+                            <input
+                              value={handleInput}
+                              onChange={(e) => setHandleInput(e.target.value)}
+                              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); ensureHandle() } }}
+                              placeholder="Pick a handle to post (e.g. yeah_guy)"
+                              autoFocus
+                              maxLength={24}
+                              className="flex-1 min-w-0 rounded-lg border border-arena-red/40 bg-arena-paper dark:bg-arena-carbon px-3 py-1.5 text-sm outline-none focus:border-arena-red"
+                            />
+                            <button
+                              onClick={() => ensureHandle()}
+                              disabled={!handleInput.trim()}
+                              className="flex-shrink-0 rounded-lg border border-arena-red bg-arena-red/15 px-3 py-1.5 text-xs font-bold text-arena-red disabled:opacity-40"
+                            >
+                              Set handle
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="text-[11px] text-arena-muted-l dark:text-arena-muted-d">
+                            Posting as <span className="font-bold text-arena-red">@{myHandle}</span>
+                          </div>
                         )}
                         <div className="flex items-center gap-2">
                           <button
