@@ -20,6 +20,7 @@ const LEAGUE_CHANNELS: Partial<Record<SportKey, { id: string; name: string }>> =
   mma: { id: 'UCvgfXK4nTYKudb0rFR6noLA', name: 'UFC' },
   soccerEpl: { id: 'UCG5qGWdu8nIRZqJ_GgDwQ_w', name: 'Premier League' },
   soccerMls: { id: 'UC4_5VsVkLQM_ZcLGIVnPnDw', name: 'MLS' },
+  fifaWorld: { id: 'UCpcTrCXblq78GZrTUTLWeBw', name: 'FIFA' },
   ncaaFootball: { id: 'UCN9HKj9KLW6_SHmAvrQbARA', name: 'NCAA Football' },
   ncaaMens: { id: 'UCB0JSO6d5ysH2Mvqb5HBlAQ', name: 'NCAA Basketball' },
 }
