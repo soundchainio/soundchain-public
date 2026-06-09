@@ -17,7 +17,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const client = await clientPromise
     const db = client.db('soundchain')
 
-    const scid = await db.collection('scids').findOne({ trackId: new ObjectId(trackId) })
+    // scids.trackId is stored as a STRING in ~all docs (5432/5433); querying by
+    // ObjectId silently returns null and zeroes scid resolution + streaming rewards.
+    // Match string first, ObjectId as a fallback for the lone legacy doc.
+    const _ors: any[] = [{ trackId: trackId }]
+    if (ObjectId.isValid(trackId)) _ors.push({ trackId: new ObjectId(trackId) })
+    const scid = await db.collection('scids').findOne({ $or: _ors })
     if (!scid) return res.status(200).json({ scidByTrack: null })
 
     // Canonical field is `scid` per api/src/models/SCid.ts + GraphQL schema. Older
