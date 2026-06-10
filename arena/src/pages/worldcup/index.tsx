@@ -1,11 +1,13 @@
 import Head from 'next/head'
 import Link from 'next/link'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Loader2, Trophy, MapPin, Radio, CalendarDays, Users, GitBranch, Star } from 'lucide-react'
+import { Loader2, Trophy, MapPin, Radio, CalendarDays, Users, GitBranch, Star, Award } from 'lucide-react'
 import { ArenaShell } from '@/components/ArenaShell'
+import { HighlightsStrip } from '@/components/HighlightsStrip'
 import {
   fetchWorldCupGroups,
   fetchWorldCupSchedule,
+  fetchWorldCupScorers,
   groupMatchesByDate,
   WC_HOSTS,
   WC_KICKOFF_ISO,
@@ -14,6 +16,7 @@ import {
   type WCMatch,
   type WCMatchSide,
   type WCRound,
+  type WCScorer,
 } from '@/lib/worldcup'
 
 // FIFA World Cup 2026 tournament dashboard — the single hub for the entire
@@ -22,13 +25,14 @@ import {
 // ESPN site.api is CORS-open so everything fetches in the browser; standings +
 // schedule auto-refresh every 60s so scores stay live during matches.
 
-type Tab = 'matches' | 'groups' | 'schedule' | 'bracket' | 'hosts'
+type Tab = 'matches' | 'groups' | 'schedule' | 'bracket' | 'scorers' | 'hosts'
 
 const TABS: { id: Tab; label: string; icon: any }[] = [
   { id: 'matches', label: 'Matches', icon: Radio },
   { id: 'groups', label: 'Groups', icon: Users },
   { id: 'schedule', label: 'Schedule', icon: CalendarDays },
   { id: 'bracket', label: 'Bracket', icon: GitBranch },
+  { id: 'scorers', label: 'Golden Boot', icon: Award },
   { id: 'hosts', label: 'Hosts', icon: MapPin },
 ]
 
@@ -37,6 +41,8 @@ export default function WorldCupDash() {
   const [matches, setMatches] = useState<WCMatch[]>([])
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<Tab>('matches')
+  const [scorers, setScorers] = useState<{ goals: WCScorer[]; assists: WCScorer[] }>({ goals: [], assists: [] })
+  const [scorersLoaded, setScorersLoaded] = useState(false)
   const didInit = useRef(false)
 
   useEffect(() => {
@@ -64,6 +70,26 @@ export default function WorldCupDash() {
       clearInterval(t)
     }
   }, [])
+
+  // Golden Boot is heavier (server resolves ~30 ESPN refs), so load it lazily
+  // when the tab is first opened, then refresh every 90s while it stays open.
+  useEffect(() => {
+    if (tab !== 'scorers') return
+    let alive = true
+    const load = () =>
+      fetchWorldCupScorers().then((s) => {
+        if (alive) {
+          setScorers(s)
+          setScorersLoaded(true)
+        }
+      })
+    if (!scorersLoaded) load()
+    const t = setInterval(load, 90_000)
+    return () => {
+      alive = false
+      clearInterval(t)
+    }
+  }, [tab, scorersLoaded])
 
   const live = matches.filter((m) => m.state === 'in')
   const hasLive = live.length > 0
@@ -114,6 +140,7 @@ export default function WorldCupDash() {
             {tab === 'groups' && <GroupsTab groups={groups} />}
             {tab === 'schedule' && <ScheduleTab matches={matches} />}
             {tab === 'bracket' && <BracketTab matches={matches} />}
+            {tab === 'scorers' && <ScorersTab data={scorers} loaded={scorersLoaded} />}
             {tab === 'hosts' && <HostsTab />}
           </div>
         )}
@@ -294,6 +321,14 @@ function MatchesTab({ matches }: { matches: WCMatch[] }) {
       <Section title="Today" items={todays} icon={CalendarDays} />
       <Section title="Up Next" items={upcoming} />
       <Section title="Recent Results" items={recent} />
+      {/* World Cup footage rail — carried over from the foundation dash so fans
+          get highlights/interviews right on the hub, not just team pages. */}
+      <div className="mt-2">
+        <h2 className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-arena-muted-l dark:text-arena-muted-d mb-2">
+          <Trophy className="w-3.5 h-3.5" /> World Cup Footage
+        </h2>
+        <HighlightsStrip sport={'fifaWorld' as any} limit={12} />
+      </div>
     </div>
   )
 }
@@ -453,6 +488,92 @@ function BracketMatch({ m }: { m: WCMatch }) {
       </div>
     </div>
   )
+}
+
+// ─── Golden Boot tab ────────────────────────────────────────────────────────
+
+function ScorersTab({ data, loaded }: { data: { goals: WCScorer[]; assists: WCScorer[] }; loaded: boolean }) {
+  if (!loaded) {
+    return (
+      <div className="flex items-center justify-center py-16 text-arena-muted-l dark:text-arena-muted-d">
+        <Loader2 className="w-5 h-5 animate-spin mr-2" /> Loading the Golden Boot race…
+      </div>
+    )
+  }
+  if (data.goals.length === 0) {
+    return <Empty msg="The Golden Boot race opens once the first goals are scored. Kickoff is June 11 — check back as the goals fly in." />
+  }
+  return (
+    <div className="grid gap-5 lg:grid-cols-2">
+      <ScorerList title="Golden Boot · Goals" rows={data.goals} unit="G" big />
+      {data.assists.length > 0 && <ScorerList title="Top Assists" rows={data.assists} unit="A" />}
+    </div>
+  )
+}
+
+function ScorerList({ title, rows, unit, big }: { title: string; rows: WCScorer[]; unit: string; big?: boolean }) {
+  return (
+    <div>
+      <h2 className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-arena-muted-l dark:text-arena-muted-d mb-2">
+        <Award className="w-3.5 h-3.5 text-amber-400" /> {title}
+      </h2>
+      <div className="rounded-xl border border-arena-border-l dark:border-arena-border-d bg-arena-card dark:bg-arena-surface overflow-hidden divide-y divide-arena-border-l/50 dark:divide-arena-border-d/50">
+        {rows.map((s) => (
+          <ScorerRow key={s.athleteId} s={s} unit={unit} big={big} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function ScorerRow({ s, unit, big }: { s: WCScorer; unit: string; big?: boolean }) {
+  const top = s.rank === 1
+  const inner = (
+    <div className={`flex items-center gap-3 px-3 py-2 ${top && big ? 'bg-amber-400/10' : ''}`}>
+      <span className={`w-5 text-center text-xs font-black tabular-nums ${top ? 'text-amber-500' : 'text-arena-muted-l dark:text-arena-muted-d'}`}>{s.rank}</span>
+      <div className="relative shrink-0">
+        {s.headshot ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={s.headshot}
+            alt=""
+            className="w-9 h-9 rounded-full object-cover bg-arena-surface"
+            onError={(e) => {
+              const t = e.currentTarget
+              if (t.dataset.fb || !s.flag) return
+              t.dataset.fb = '1'
+              t.src = s.flag
+            }}
+          />
+        ) : s.flag ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={s.flag} alt="" className="w-9 h-9 rounded-full object-cover bg-arena-surface" />
+        ) : (
+          <span className="w-9 h-9 rounded-full bg-arena-surface inline-block" />
+        )}
+        {s.flag && s.headshot && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={s.flag} alt="" className="absolute -bottom-0.5 -right-0.5 w-4 h-3 object-cover rounded-sm border border-arena-card dark:border-arena-surface" />
+        )}
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="text-sm font-bold truncate">{s.name}</div>
+        {s.position && <div className="text-[10px] text-arena-muted-l dark:text-arena-muted-d">{s.position}</div>}
+      </div>
+      <span className={`font-black tabular-nums ${big && top ? 'text-amber-500 text-xl' : 'text-base'}`}>
+        {s.value}
+        <span className="text-[10px] text-arena-muted-l dark:text-arena-muted-d ml-0.5">{unit}</span>
+      </span>
+    </div>
+  )
+  if (s.teamId) {
+    return (
+      <Link href={`/worldcup/team/${s.teamId}`} className="block hover:bg-arena-paper/50 dark:hover:bg-arena-carbon/40 transition">
+        {inner}
+      </Link>
+    )
+  }
+  return inner
 }
 
 // ─── Hosts tab ──────────────────────────────────────────────────────────────

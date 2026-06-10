@@ -257,6 +257,33 @@ export function groupMatchesByDate(matches: WCMatch[]): { date: string; label: s
     }))
 }
 
+// ─── Golden Boot (top scorers + assists) ─────────────────────────────────────
+
+export interface WCScorer {
+  rank: number
+  athleteId: string
+  name: string
+  flag?: string // country flag
+  headshot?: string
+  position?: string
+  teamId?: string // → /worldcup/team/[teamId]
+  value: number // cumulative goals (or assists)
+}
+
+/** Golden Boot race — cumulative goals + assists across all stages. Resolved
+ *  server-side via /api/worldcup/scorers (core API + ref resolution). Empty
+ *  until the first goals are scored. */
+export async function fetchWorldCupScorers(): Promise<{ goals: WCScorer[]; assists: WCScorer[] }> {
+  try {
+    const r = await fetch('/api/worldcup/scorers')
+    if (!r.ok) return { goals: [], assists: [] }
+    const d = await r.json()
+    return { goals: d.goals ?? [], assists: d.assists ?? [] }
+  } catch {
+    return { goals: [], assists: [] }
+  }
+}
+
 // ─── Host cities (static — the 16 venues of WC 2026) ────────────────────────
 
 export interface WCHost {
