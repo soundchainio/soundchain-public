@@ -61,10 +61,13 @@ export default async function handler(req: Request) {
     return json({ error: 'Invalid upload' }, 400)
   }
 
-  const file = form.get('file')
+  // Self-hosted node `next start` returns multipart entries as Blob (not File),
+  // so `instanceof File` wrongly rejected every upload ("Missing file"). Accept
+  // any non-string entry — Blob has .size/.type/.arrayBuffer, all we need.
+  const file = form.get('file') as File | Blob | null
   const deviceId = String(form.get('deviceId') || '')
 
-  if (!(file instanceof File)) return json({ error: 'Missing file' }, 400)
+  if (!file || typeof (file as any) === 'string') return json({ error: 'Missing file' }, 400)
   if (!deviceId || deviceId.length < 8) return json({ error: 'Missing device id' }, 400)
   if (file.size > MAX_BYTES) return json({ error: 'Avatar must be 2 MB or smaller' }, 413)
   if (!ALLOWED_MIMES.has(file.type)) {
