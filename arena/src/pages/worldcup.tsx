@@ -143,6 +143,7 @@ export default function WorldCupPage() {
         hologramLabel="FIFA WORLD CUP · 48 TEAMS · 12 GROUPS"
         pageDescription="Live World Cup scores, all 12 group tables, fixtures, top scorers + a take on every match. Auto-refreshes every 60 seconds."
         extraSection={<WorldCupHeader />}
+        teamLinkBase="/worldcup/team"
       />
     </>
   )

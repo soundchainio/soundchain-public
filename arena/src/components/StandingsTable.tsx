@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import type { EspnStandingsGroup } from '@/lib/espn'
 
 interface StandingsTableProps {
@@ -5,6 +6,8 @@ interface StandingsTableProps {
   showOtLosses?: boolean
   limit?: number
   highlightTop?: number    // first N rows get red text (e.g. playoff seeds)
+  /** When set, team rows link to `${teamLinkBase}/${team.id}` (e.g. WC team pages). */
+  teamLinkBase?: string
 }
 
 export function StandingsTable({
@@ -12,6 +15,7 @@ export function StandingsTable({
   showOtLosses = false,
   limit,
   highlightTop = 0,
+  teamLinkBase,
 }: StandingsTableProps) {
   const rows = limit ? group.entries.slice(0, limit) : group.entries
   return (
@@ -46,25 +50,32 @@ export function StandingsTable({
                   {i + 1}
                 </td>
                 <td className="px-2 py-2">
-                  <div className="flex items-center gap-2">
-                    {entry.team.logo && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={entry.team.logo}
-                        alt={entry.team.abbr}
-                        className="w-5 h-5 object-contain flex-shrink-0"
-                        onError={(e) => {
-                          ;(e.target as HTMLImageElement).style.display = 'none'
-                        }}
-                      />
-                    )}
-                    <span className={`text-sm font-bold ${inPlayoffs ? 'text-arena-red' : ''}`}>
-                      {entry.team.abbr}
-                    </span>
-                    <span className="hidden md:inline text-xs text-arena-muted-l dark:text-arena-muted-d truncate">
-                      {entry.team.displayName}
-                    </span>
-                  </div>
+                  {(() => {
+                    const inner = (
+                      <div className={`flex items-center gap-2 ${teamLinkBase && entry.team.id ? 'group/team cursor-pointer' : ''}`}>
+                        {entry.team.logo && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={entry.team.logo}
+                            alt={entry.team.abbr}
+                            className="w-5 h-5 object-contain flex-shrink-0"
+                            onError={(e) => {
+                              ;(e.target as HTMLImageElement).style.display = 'none'
+                            }}
+                          />
+                        )}
+                        <span className={`text-sm font-bold ${inPlayoffs ? 'text-arena-red' : ''} ${teamLinkBase && entry.team.id ? 'group-hover/team:text-arena-red' : ''}`}>
+                          {entry.team.abbr}
+                        </span>
+                        <span className="hidden md:inline text-xs text-arena-muted-l dark:text-arena-muted-d truncate">
+                          {entry.team.displayName}
+                        </span>
+                      </div>
+                    )
+                    return teamLinkBase && entry.team.id
+                      ? <Link href={`${teamLinkBase}/${entry.team.id}`}>{inner}</Link>
+                      : inner
+                  })()}
                 </td>
                 <td className="px-2 py-2 text-right text-sm font-bold arena-tabular">
                   {entry.wins}

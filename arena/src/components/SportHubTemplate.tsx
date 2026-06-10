@@ -55,6 +55,7 @@ interface SportHubTemplateProps {
   showOtLosses?: boolean         // NHL
   highlightPlayoffSeeds?: number // top N rows = playoff seeds (red text)
   extraSection?: ReactNode       // any sport-specific add-on (e.g. F1 podium card)
+  teamLinkBase?: string          // when set, standings team rows link to `${base}/${team.id}`
 }
 
 /** Polls ESPN scoreboard + standings every 60s. Renders shared sport hub layout. */
@@ -62,7 +63,7 @@ export function SportHubTemplate(props: SportHubTemplateProps) {
   const {
     sport, title, pageDescription, hologramLabel,
     highlightSeasonType, standingsGroupFilter, showOtLosses, highlightPlayoffSeeds,
-    extraSection,
+    extraSection, teamLinkBase,
   } = props
 
   const [games, setGames] = useState<EspnGame[]>([])
@@ -298,6 +299,7 @@ export function SportHubTemplate(props: SportHubTemplateProps) {
                   group={g}
                   showOtLosses={showOtLosses}
                   highlightTop={highlightPlayoffSeeds}
+                  teamLinkBase={teamLinkBase}
                 />
               ))}
             </div>
