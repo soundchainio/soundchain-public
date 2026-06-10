@@ -3,6 +3,7 @@ import Head from 'next/head'
 import { WalletProvider } from 'contexts/WalletProvider'
 import { MintPlayerProvider } from 'contexts/MintPlayerProvider'
 import { FooterPlayer } from 'components/FooterPlayer'
+import { CreateMintLauncher } from 'components/CreateMintLauncher'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import 'styles/globals.css'
@@ -20,6 +21,7 @@ export default function MintApp({ Component, pageProps }: AppProps) {
       <WalletProvider>
         <MintPlayerProvider>
           <Component {...pageProps} />
+          <CreateMintLauncher />
           <FooterPlayer />
         </MintPlayerProvider>
         <ToastContainer position="bottom-center" theme="dark" newestOnTop limit={3} />

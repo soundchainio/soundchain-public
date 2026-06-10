@@ -114,11 +114,14 @@ export default function MintLanding() {
               stake OGUN · earn royalties · <span className="text-neon-cyan">all on-chain</span>.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Link href="/mint" className="btn-neon">
+                ✦ MINT A TRACK
+              </Link>
               <button
                 type="button"
                 onClick={handleConnect}
                 disabled={connecting}
-                className="btn-neon"
+                className="btn-ghost"
               >
                 {connecting
                   ? '◌ LINKING…'
