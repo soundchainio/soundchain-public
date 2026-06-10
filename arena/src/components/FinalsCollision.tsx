@@ -134,7 +134,12 @@ function TapeRow({ label, ny, sa, i }: { label: string; ny: string; sa: string; 
   )
 }
 
-function Wedge({ players, side, entering }: { players: FinalsPlayer[]; side: 'ny' | 'sa'; entering: boolean }) {
+function actionBase(name: string, side: 'ny' | 'sa'): string {
+  const last = (name.split(' ').slice(-1)[0] || name).toLowerCase().replace(/[^a-z]/g, '')
+  return `${side === 'ny' ? 'nyk' : 'sas'}-${last}-action`
+}
+
+function Wedge({ players, side, entering, actionSet }: { players: FinalsPlayer[]; side: 'ny' | 'sa'; entering: boolean; actionSet: Set<string> }) {
   return (
     <div className={`fc-wedge fc-wedge-${side}`} aria-hidden>
       <div className={`fc-fog fc-fog-${side}`} />
@@ -144,14 +149,23 @@ function Wedge({ players, side, entering }: { players: FinalsPlayer[]; side: 'ny
         const pos = side === 'ny' ? { left: `${slot.x}%` } : { right: `${slot.x}%` }
         const anchor = i === 0
         const delay = entering ? 1.0 + (2 - slot.t) * 0.28 + i * 0.04 : 0
+        const base = actionBase(p.name, side)
+        const hasAction = actionSet.has(base)
         return (
           <div
             key={p.id}
-            className={`fc-wp fc-wp-${side} fc-tier-${slot.t} ${anchor ? 'fc-anchor' : ''} ${entering ? 'fc-wp-enter' : ''}`}
+            className={`fc-wp fc-wp-${side} fc-tier-${slot.t} ${anchor ? 'fc-anchor' : ''} ${hasAction ? 'fc-has-action' : ''} ${entering ? 'fc-wp-enter' : ''}`}
             style={{ ...pos, bottom: `${slot.b}%`, ['--s' as any]: slot.s, ['--z' as any]: `${slot.z}px`, ['--r' as any]: `${TIER_RATE[slot.t]}px`, animationDelay: `${delay}s` }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={p.headshot} alt={p.name} className="fc-wp-img" loading={anchor ? 'eager' : 'lazy'} decoding="async" />
+            <img
+              src={hasAction ? `/players/action/${base}.png` : p.headshot}
+              alt={p.name}
+              className="fc-wp-img"
+              loading={anchor ? 'eager' : 'lazy'}
+              decoding="async"
+              onError={(e) => { const t = e.currentTarget; if (t.dataset.fb) return; t.dataset.fb = '1'; t.src = p.headshot; t.closest('.fc-wp')?.classList.remove('fc-has-action') }}
+            />
             {anchor && <div className="fc-wp-name">{(p.name.split(' ').slice(-1)[0] || p.name).toUpperCase()}</div>}
           </div>
         )
@@ -168,6 +182,7 @@ export function FinalsCollision() {
   const [expanded, setExpanded] = useState<{ player: FinalsPlayer; side: 'ny' | 'sa' } | null>(null)
   const [pstats, setPstats] = useState<PlayerStatLine | null>(null)
   const [pstatsLoading, setPstatsLoading] = useState(false)
+  const [actionSet, setActionSet] = useState<Set<string>>(new Set())
   const didInit = useRef(false)
   const stageRef = useRef<HTMLDivElement>(null)
 
@@ -229,6 +244,17 @@ export function FinalsCollision() {
     return () => { cancelAnimationFrame(raf); window.removeEventListener('mousemove', onMove) }
   }, [])
 
+  // Action-cutout manifest — lists which players have a licensed full-body
+  // cutout in /public/players/action/. Empty by default (everyone falls back to
+  // the broadcast-bust headshot); drop cutouts + update the manifest and those
+  // players auto-upgrade to full-body, no rebuild.
+  useEffect(() => {
+    fetch('/players/action/manifest.json')
+      .then((r) => (r.ok ? r.json() : []))
+      .then((arr: string[]) => Array.isArray(arr) && setActionSet(new Set(arr)))
+      .catch(() => {})
+  }, [])
+
   const cd = useCountdown(data?.game.date)
   const ny = data ? (data.home.abbr === 'NY' ? data.home : data.away.abbr === 'NY' ? data.away : data.home) : null
   const sa = data ? (data.home.abbr === 'SA' ? data.home : data.away.abbr === 'SA' ? data.away : data.away) : null
@@ -265,8 +291,8 @@ export function FinalsCollision() {
           </div>
 
           {/* the two armies */}
-          <Wedge players={nyWedge} side="ny" entering={entering} />
-          <Wedge players={saWedge} side="sa" entering={entering} />
+          <Wedge players={nyWedge} side="ny" entering={entering} actionSet={actionSet} />
+          <Wedge players={saWedge} side="sa" entering={entering} actionSet={actionSet} />
 
           {/* trophy + god-ray rising through the VS */}
           <div className="fc-trophy-wrap" aria-hidden>
@@ -474,10 +500,17 @@ export function FinalsCollision() {
         .fc-fog-ny { left: 0; background: linear-gradient(90deg, rgba(29,66,138,.34), rgba(245,132,38,.06) 55%, transparent); }
         .fc-fog-sa { right: 0; background: linear-gradient(270deg, rgba(196,206,212,.26), rgba(20,24,30,.10) 55%, transparent); }
         .fc-wp { position: absolute; width: clamp(150px, 20vw, 250px); transform: translate3d(calc(var(--px) * var(--r)), calc(var(--py) * var(--r) * 0.5), var(--z)) scale(var(--s)); transform-origin: bottom center; will-change: transform; }
-        /* ANCHOR — the poster. Brunson/Wemby ~3-4x any other figure, overlapping the center. */
-        .fc-anchor { width: clamp(240px, 34vw, 460px); }
+        /* ANCHOR — premium broadcast bust. Brunson/Wemby big, rising beside the
+           title, fading up out of shadow so a head-and-shoulders crop reads as an
+           intentional TNT-style intro graphic, not a floating head. Full-body
+           action cutouts (when present) override this via .fc-has-action. */
+        .fc-anchor { width: clamp(300px, 42vw, 560px); }
+        .fc-anchor .fc-wp-img { -webkit-mask-image: linear-gradient(to bottom, #000 56%, transparent 94%); mask-image: linear-gradient(to bottom, #000 56%, transparent 94%); }
         /* feather the bottom edge so cutouts grow out of the layer below (no pasted-PNG look) */
-        .fc-wp-img { width: 100%; display: block; -webkit-mask-image: linear-gradient(to bottom, #000 78%, transparent 98%); mask-image: linear-gradient(to bottom, #000 78%, transparent 98%); }
+        .fc-wp-img { width: 100%; display: block; -webkit-mask-image: linear-gradient(to bottom, #000 74%, transparent 98%); mask-image: linear-gradient(to bottom, #000 74%, transparent 98%); }
+        /* full-body action cutout present → let it dominate (feet at bottom, head to title) */
+        .fc-has-action.fc-anchor { width: clamp(340px, 46vw, 640px); }
+        .fc-has-action .fc-wp-img { -webkit-mask-image: linear-gradient(to bottom, #000 90%, transparent 100%); mask-image: linear-gradient(to bottom, #000 90%, transparent 100%); }
         .fc-wp-ny .fc-wp-img { filter: drop-shadow(0 4px 8px rgba(0,0,0,.55)); }
         .fc-wp-sa .fc-wp-img { transform: scaleX(-1); filter: drop-shadow(0 4px 8px rgba(0,0,0,.55)); }
         .fc-tier-1 .fc-wp-img { filter: drop-shadow(0 4px 8px rgba(0,0,0,.5)) brightness(.92); }
@@ -498,6 +531,7 @@ export function FinalsCollision() {
 
         /* ── center stage ── */
         .fc-core { position: relative; z-index: 5; text-align: center; padding: 4vh 16px; max-width: 760px; transform: translateZ(90px); }
+        .fc-core::before { content: ''; position: absolute; inset: -8% -24%; z-index: -1; background: radial-gradient(closest-side, rgba(4,6,12,.74), rgba(4,6,12,.4) 52%, transparent 80%); pointer-events: none; }
         .fc-kicker { font-size: 10px; letter-spacing: .3em; font-weight: 800; color: #cdd7e2; margin-bottom: 12px; display: inline-flex; align-items: center; gap: 9px; }
         .fc-dot { width: 7px; height: 7px; border-radius: 2px; background: #f58426; box-shadow: 0 0 12px #f58426; }
         .fc-eyebrow .fc-po { display: inline-block; opacity: 0; animation: fc-poweron .5s ease forwards; }
