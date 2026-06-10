@@ -14,6 +14,7 @@
  * preview without leaving the page.
  */
 import { useEffect, useRef, useState } from 'react'
+import { useMintPlayer } from 'contexts/MintPlayerProvider'
 import Head from 'next/head'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
@@ -74,8 +75,7 @@ export default function MarketplaceItem() {
   const [error, setError] = useState<string | null>(null)
   const [approveTx, setApproveTx] = useState<string | null>(null)
   const [buyTx, setBuyTx] = useState<string | null>(null)
-  const [isPlaying, setIsPlaying] = useState(false)
-  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const player = useMintPlayer()
 
   useEffect(() => {
     if (!id) return
@@ -110,15 +110,6 @@ export default function MarketplaceItem() {
     })()
     return () => { cancelled = true }
   }, [id])
-
-  useEffect(() => {
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause()
-        audioRef.current = null
-      }
-    }
-  }, [])
 
   // Derive display shape from whichever source resolved
   const title = resolved?.kind === 'listing'
@@ -160,20 +151,12 @@ export default function MarketplaceItem() {
     ? BigInt(resolved.data.pricesWei[paymentType] || '0')
     : 0n
 
+  // Drive the global player so playback continues in the footer bar after you
+  // navigate away, and the OGUN stream reward fires (the provider owns it).
+  const isPlaying = player.playingId === id && player.isPlaying
   function togglePlay() {
     if (!audioUrl) return
-    if (isPlaying) {
-      audioRef.current?.pause()
-      setIsPlaying(false)
-      return
-    }
-    if (!audioRef.current) {
-      audioRef.current = new Audio()
-      audioRef.current.addEventListener('ended', () => setIsPlaying(false))
-    }
-    audioRef.current.src = audioUrl
-    audioRef.current.play().catch(() => setIsPlaying(false))
-    setIsPlaying(true)
+    player.toggle({ id, audioUrl, title, artist, coverArtUrl })
   }
 
   async function handleBuy() {

@@ -1,6 +1,8 @@
 import type { AppProps } from 'next/app'
 import Head from 'next/head'
 import { WalletProvider } from 'contexts/WalletProvider'
+import { MintPlayerProvider } from 'contexts/MintPlayerProvider'
+import { FooterPlayer } from 'components/FooterPlayer'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import 'styles/globals.css'
@@ -16,7 +18,10 @@ export default function MintApp({ Component, pageProps }: AppProps) {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <WalletProvider>
-        <Component {...pageProps} />
+        <MintPlayerProvider>
+          <Component {...pageProps} />
+          <FooterPlayer />
+        </MintPlayerProvider>
         <ToastContainer position="bottom-center" theme="dark" newestOnTop limit={3} />
       </WalletProvider>
     </>

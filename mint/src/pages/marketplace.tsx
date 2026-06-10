@@ -3,8 +3,7 @@ import Head from 'next/head'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { MarketplaceDetailModal } from 'components/MarketplaceDetailModal'
-import { useStreamLogger } from 'hooks/useStreamLogger'
-import { toast } from 'react-toastify'
+import { useMintPlayer } from 'contexts/MintPlayerProvider'
 
 type PriceToken = 'POL' | 'OGUN' | 'ETH' | 'USDC' | 'USDT' | 'LINK' | 'AVAX'
 
@@ -62,14 +61,10 @@ export default function Marketplace() {
   const [error, setError] = useState<string | null>(null)
   const [sweepMode, setSweepMode] = useState(false)
   const [selected, setSelected] = useState<Set<string>>(new Set())
-  const [playingId, setPlayingId] = useState<string | null>(null)
-  const audioRef = useRef<HTMLAudioElement | null>(null)
-  const playingIdRef = useRef<string | null>(null)
-  // OGUN streaming reward: every IPFS play >=30s pays the 70/30 split (creator/listener).
-  const logger = useStreamLogger({
-    onCreatorReward: (r, t) => toast.success(`+${r.toFixed(3)} OGUN \u2192 creator of "${t || 'track'}"`, { autoClose: 3500 }),
-    onReward: (r) => toast.success(`+${r.toFixed(3)} OGUN earned for listening`, { autoClose: 3500 }),
-  })
+  // Global player (persistent footer bar). Owns the <audio> + OGUN stream
+  // rewards; this page just drives it. playingId keeps the card/modal API stable.
+  const player = useMintPlayer()
+  const playingId = player.playingId
 
   // ── Tab + filter + sort state ─────────────────────────────────────────
   type Tab = 'forSale' | 'minted' | 'all'
@@ -99,37 +94,15 @@ export default function Marketplace() {
   // cleanly; tapping play on the active chip pauses. Stops on unmount. The
   // same audio state threads through the detail modal so playback survives
   // open/close.
+  // Route plays into the global player, enriching with the card's metadata so
+  // the footer bar shows cover/title/artist. Same (id, audioUrl) signature the
+  // cards + detail modal already call.
   function togglePlay(id: string, audioUrl?: string) {
-    if (!audioUrl) return
-    if (playingId === id) {
-      audioRef.current?.pause()
-      playingIdRef.current = null
-      setPlayingId(null)
-      return
-    }
-    if (!audioRef.current) {
-      audioRef.current = new Audio()
-      audioRef.current.addEventListener('ended', () => { playingIdRef.current = null; setPlayingId(null) })
-      audioRef.current.addEventListener('timeupdate', () => {
-        const a = audioRef.current
-        const tid = playingIdRef.current
-        if (a && tid && a.currentTime >= 30) logger.logIfQualified(tid, Math.floor(a.currentTime))
-      })
-    }
-    audioRef.current.src = audioUrl
-    audioRef.current.play().catch(() => setPlayingId(null))
-    playingIdRef.current = id
-    setPlayingId(id)
+    const card = listings.find((c) => c.id === id)
+    const url = audioUrl || card?.audioUrl
+    if (!url) return
+    player.toggle({ id, audioUrl: url, title: card?.title, artist: card?.artist, coverArtUrl: card?.coverArtUrl })
   }
-
-  useEffect(() => {
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause()
-        audioRef.current = null
-      }
-    }
-  }, [])
 
   useEffect(() => {
     let cancelled = false
