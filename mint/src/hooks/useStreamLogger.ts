@@ -42,9 +42,11 @@ export function useStreamLogger(options: StreamLogOptions = {}) {
       // Skip synthetic ids that have no SCid (raw on-chain / version-prefixed cards)
       if (trackId.startsWith('onchain-') || /^v[12]-/.test(trackId)) return null
 
+      // Reward ONCE per track per play (after 30s), NOT every 30s. A sliding
+      // window previously re-logged each minDuration, stacking a growing pile of
+      // OGUN toasters through playback. Once rewarded, never again this session.
       const now = Date.now()
-      const last = lastLogged.current.get(trackId)
-      if (last && now - last < minDuration * 1000) return null
+      if (lastLogged.current.has(trackId)) return null
       if (inFlight.current.has(trackId)) return null
       inFlight.current.add(trackId)
 
