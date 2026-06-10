@@ -196,3 +196,31 @@ export async function fetchSeries(gameId: string): Promise<SeriesGame[]> {
 export function nbaHeadshot(id: string | number): string {
   return `https://a.espncdn.com/i/headshots/nba/players/full/${id}.png`
 }
+
+export interface PlayerStatLine {
+  season: string
+  headline: { pts: string; reb: string; ast: string }
+  line: { label: string; value: string }[]
+}
+
+/** Current-season averages for a player (PPG/RPG/APG + splits), mapped by label
+ *  so it survives ESPN reordering. Returns null if unavailable. */
+export async function fetchPlayerStats(id: string): Promise<PlayerStatLine | null> {
+  try {
+    const r = await fetch(`https://site.web.api.espn.com/apis/common/v3/sports/basketball/nba/athletes/${id}/stats`)
+    if (!r.ok) return null
+    const d = await r.json()
+    const cat = (d.categories || []).find((c: any) => c.name === 'averages')
+    const labels: string[] = cat?.labels || []
+    const entries: any[] = cat?.statistics || []
+    if (!labels.length || !entries.length) return null
+    const latest = entries.reduce((a: any, b: any) => ((b.season?.year ?? 0) >= (a.season?.year ?? 0) ? b : a), entries[entries.length - 1])
+    const stats: string[] = latest.stats || []
+    const get = (lbl: string) => { const i = labels.indexOf(lbl); return i >= 0 ? String(stats[i] ?? '') : '' }
+    const want = ['PTS', 'REB', 'AST', 'MIN', 'FG%', '3P%', 'FT%', 'STL', 'BLK', 'GP']
+    const line = want.map((l) => ({ label: l, value: get(l) })).filter((s) => s.value && s.value !== '0.0')
+    return { season: latest.season?.displayName || '', headline: { pts: get('PTS') || '—', reb: get('REB') || '—', ast: get('AST') || '—' }, line }
+  } catch {
+    return null
+  }
+}

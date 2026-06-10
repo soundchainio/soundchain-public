@@ -4,10 +4,12 @@ import {
   fetchFinals,
   fetchFinalsRosters,
   fetchSeries,
+  fetchPlayerStats,
   nbaHeadshot,
   type FinalsData,
   type FinalsPlayer,
   type SeriesGame,
+  type PlayerStatLine,
 } from '@/lib/nbaFinals'
 import { HighlightsStrip } from './HighlightsStrip'
 
@@ -26,23 +28,28 @@ import { HighlightsStrip } from './HighlightsStrip'
  * data-driven (anchor pinned by id, falls back to roster order).
  */
 
-const ANCHOR_NY = '3934672' // Brunson
-const ANCHOR_SA = '5104157' // Wemby
 const BRUNSON = { pos: 'PG', ht: "6'2\"", wt: '190', age: '29' }
 const WEMBY = { pos: 'C', ht: "7'4\"", wt: '235', age: '22' }
 
-// Wedge slots (left side). [leftVW%, bottom%, scale, z(px), tier]. Right side
-// mirrors via right%. Index 0 = anchor (inner-low-big), higher index fans
-// up-and-out, smaller, deeper. tier: 0 front, 1 mid, 2 back.
+// Star priority per team (ids) — keeps the marquee names in the FRONT tiers
+// (and guarantees the anchor is included even though ESPN rosters are
+// alphabetical and slice Wemby out at index 17). Names/images still come from
+// live ESPN data — this only orders it.
+const STARS_NY = ['3934672', '3136195', '3147657', '3934719', '3062679', '4431823', '4351852'] // Brunson,Towns,Bridges,Anunoby,Hart,McBride,Robinson
+const STARS_SA = ['5104157', '4066259', '4845367', '4395630', '6578', '4592479', '5037871'] // Wemby,Fox,Castle,Vassell,Barnes,Champagnie,Harper
+
+// Wedge slots — a DENSE, bottom-anchored pyramid (Infinity-War logic): figures
+// overlap 20-30%, grow out of the skyline, anchor huge + overlapping center.
+// [x% from edge, bottom%, scale, z(px), tier]. tier: 0 front, 1 mid, 2 back.
 type Slot = { x: number; b: number; s: number; z: number; t: 0 | 1 | 2 }
 const SLOTS: Slot[] = [
-  { x: 30, b: -3, s: 1.0, z: 70, t: 0 }, // anchor
-  { x: 18, b: 11, s: 0.66, z: 8, t: 1 }, // mid
-  { x: 35, b: 15, s: 0.6, z: 8, t: 1 }, // mid
-  { x: 7, b: 24, s: 0.44, z: -80, t: 2 }, // back
-  { x: 23, b: 30, s: 0.4, z: -80, t: 2 }, // back
-  { x: 38, b: 34, s: 0.36, z: -110, t: 2 }, // back
-  { x: 13, b: 40, s: 0.34, z: -130, t: 2 }, // back
+  { x: 22, b: -10, s: 1.0, z: 80, t: 0 }, // ANCHOR — inner, huge, overlaps center
+  { x: 9, b: -3, s: 0.6, z: 18, t: 1 }, // mid (outer shoulder)
+  { x: 34, b: 3, s: 0.52, z: 12, t: 1 }, // mid (inner-upper, by the divider)
+  { x: 2, b: 1, s: 0.42, z: -60, t: 2 }, // back
+  { x: 18, b: 7, s: 0.38, z: -78, t: 2 }, // back
+  { x: 30, b: 10, s: 0.34, z: -98, t: 2 }, // back
+  { x: 11, b: 6, s: 0.32, z: -118, t: 2 }, // back
 ]
 const TIER_RATE = [20, 13, 7] // parallax travel px per tier
 
@@ -72,30 +79,49 @@ function useCountdown(targetIso?: string) {
   return { d: Math.floor(diff / 86400000), h: Math.floor((diff % 86400000) / 3600000), m: Math.floor((diff % 3600000) / 60000), s: Math.floor((diff % 60000) / 1000), done: false }
 }
 
-/** Order a roster so the anchor (by id) is index 0, rest keep roster order. */
-function orderWedge(players: FinalsPlayer[], anchorId: string): FinalsPlayer[] {
-  const anchor = players.find((p) => p.id === anchorId)
-  const rest = players.filter((p) => p.id !== anchorId)
-  return (anchor ? [anchor, ...rest] : players).slice(0, SLOTS.length)
+/** Order a roster by star priority (anchor first), so the marquee names fill
+ *  the front tiers and the anchor is never sliced out. Falls back gracefully. */
+function orderWedge(players: FinalsPlayer[], priority: string[]): FinalsPlayer[] {
+  const rank = (id: string) => { const i = priority.indexOf(id); return i === -1 ? 99 + players.findIndex((p) => p.id === id) : i }
+  return [...players].sort((a, b) => rank(a.id) - rank(b.id)).slice(0, SLOTS.length)
 }
 
 function PowerOn({ text }: { text: string }) {
   return <>{text.split('').map((ch, i) => <span key={i} className="fc-po" style={{ animationDelay: `${0.25 + i * 0.05}s` }}>{ch === ' ' ? ' ' : ch}</span>)}</>
 }
 
+// Recognizable NYC silhouette — One WTC (antenna spire), Empire State (stepped
+// needle), Chrysler (tapered crown), filler towers.
 function GothamSkyline() {
   return (
-    <svg viewBox="0 0 600 220" preserveAspectRatio="none" className="fc-skyline fc-skyline-ny" aria-hidden>
-      <defs><linearGradient id="ny-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#1d428a" stopOpacity="0" /><stop offset="100%" stopColor="#070e1c" stopOpacity="1" /></linearGradient></defs>
-      <path fill="url(#ny-sky)" d="M0,220 L0,120 L24,120 L24,90 L44,90 L44,150 L70,150 L70,70 L82,70 L82,40 L92,40 L92,70 L104,70 L104,150 L130,150 L130,100 L150,100 L150,160 L176,160 L176,60 L186,60 L186,20 L196,20 L196,60 L208,60 L208,130 L236,130 L236,95 L256,95 L256,150 L286,150 L286,80 L300,80 L300,150 L330,150 L330,110 L352,110 L352,150 L380,150 L380,64 L392,64 L392,150 L420,150 L420,98 L446,98 L446,150 L478,150 L478,120 L500,120 L500,150 L536,150 L536,110 L560,110 L560,135 L600,135 L600,220 Z" />
+    <svg viewBox="0 0 600 240" preserveAspectRatio="none" className="fc-skyline fc-skyline-ny" aria-hidden>
+      <defs><linearGradient id="ny-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#2552a8" stopOpacity="0.05" /><stop offset="55%" stopColor="#13294f" stopOpacity="1" /><stop offset="100%" stopColor="#060c18" stopOpacity="1" /></linearGradient></defs>
+      <path fill="url(#ny-sky)" d="M0,240 L0,182 L26,182 L26,158 L48,158 L48,172 L60,172
+        L60,96 L68,96 L68,150 L80,150 L80,40 L82,40 L82,10 L84,10 L84,40 L86,40 L86,96 L96,96 L96,172 L112,172
+        L112,150 L134,150 L134,176 L150,176
+        L150,84 L160,84 L160,60 L168,60 L168,34 L171,34 L171,8 L173,8 L173,34 L176,34 L176,60 L184,60 L184,84 L194,84 L194,176
+        L214,176 L214,156 L236,156 L236,176 L250,176
+        L250,104 L262,104 L262,80 L270,80 L270,44 L273,44 L273,22 L276,22 L276,44 L279,44 L279,80 L287,80 L287,104 L298,104 L298,176
+        L322,176 L322,150 L346,150 L346,176
+        L366,176 L366,116 L378,116 L378,176
+        L398,176 L398,140 L420,140 L420,176 L600,176 L600,240 Z" />
     </svg>
   )
 }
+// San Antonio — Tower of the Americas (the giveaway: thin shaft + flared
+// observation disc + antenna), Frost Tower faceted crown, downtown cluster.
 function SilverSkyline() {
   return (
-    <svg viewBox="0 0 600 220" preserveAspectRatio="none" className="fc-skyline fc-skyline-sa" aria-hidden>
-      <defs><linearGradient id="sa-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#c4ced4" stopOpacity="0" /><stop offset="100%" stopColor="#0c1014" stopOpacity="1" /></linearGradient></defs>
-      <path fill="url(#sa-sky)" d="M0,220 L0,150 L40,150 L40,120 L64,120 L64,150 L96,150 L96,100 L120,100 L120,150 L150,150 L150,128 L172,128 L172,150 L210,150 L210,90 L226,90 L226,150 L262,150 L262,118 L284,118 L284,150 L300,150 L300,40 L308,40 L308,16 L316,16 L316,40 L324,40 L324,150 L356,150 L356,86 L376,86 L376,150 L410,150 L410,110 L432,110 L432,150 L470,150 L470,70 L482,70 L482,150 L516,150 L516,120 L540,120 L540,150 L576,150 L576,128 L600,128 L600,220 Z" />
+    <svg viewBox="0 0 600 240" preserveAspectRatio="none" className="fc-skyline fc-skyline-sa" aria-hidden>
+      <defs><linearGradient id="sa-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#c4ced4" stopOpacity="0.06" /><stop offset="55%" stopColor="#1a2026" stopOpacity="1" /><stop offset="100%" stopColor="#0b0f14" stopOpacity="1" /></linearGradient></defs>
+      <path fill="url(#sa-sky)" d="M0,240 L0,184 L40,184 L40,158 L66,158 L66,184 L96,184
+        L96,150 L106,150 L106,122 L120,122 L120,184 L150,184
+        L150,140 L162,140 L162,118 L172,108 L182,118 L182,140 L196,140 L196,184 L236,184
+        L236,160 L262,160 L262,184 L286,184
+        L286,86 L292,86 L292,76 L284,72 L284,64 L304,58 L324,64 L324,72 L316,76 L316,86 L322,86 L322,184
+        L356,184 L356,120 L376,120 L376,184
+        L406,184 L406,150 L430,150 L430,184 L466,184
+        L466,104 L478,104 L478,184 L516,184 L516,140 L540,140 L540,184 L600,184 L600,240 Z" />
     </svg>
   )
 }
@@ -139,8 +165,16 @@ export function FinalsCollision() {
   const [rosters, setRosters] = useState<{ home: FinalsPlayer[]; away: FinalsPlayer[] }>({ home: [], away: [] })
   const [series, setSeries] = useState<SeriesGame[]>([])
   const [entering, setEntering] = useState(false)
+  const [expanded, setExpanded] = useState<{ player: FinalsPlayer; side: 'ny' | 'sa' } | null>(null)
+  const [pstats, setPstats] = useState<PlayerStatLine | null>(null)
+  const [pstatsLoading, setPstatsLoading] = useState(false)
   const didInit = useRef(false)
   const stageRef = useRef<HTMLDivElement>(null)
+
+  const openCard = (player: FinalsPlayer, side: 'ny' | 'sa') => {
+    setExpanded({ player, side }); setPstats(null); setPstatsLoading(true)
+    fetchPlayerStats(player.id).then((s) => { setPstats(s); setPstatsLoading(false) })
+  }
 
   // data
   useEffect(() => {
@@ -151,7 +185,7 @@ export function FinalsCollision() {
       setData(d)
       if (!didInit.current) {
         didInit.current = true
-        fetchFinalsRosters(d.home.id, d.away.id, 7).then((r) => alive && setRosters(r))
+        fetchFinalsRosters(d.home.id, d.away.id, 18).then((r) => alive && setRosters(r))
         fetchSeries(d.game.id).then((s) => alive && setSeries(s))
       }
     }
@@ -203,8 +237,8 @@ export function FinalsCollision() {
   const state = data?.game.state ?? 'pre'
   const rawNy = rosters.home.length && ny && rosters.home[0]?.teamId === ny.id ? rosters.home : rosters.away
   const rawSa = rosters.home.length && sa && rosters.home[0]?.teamId === sa.id ? rosters.home : rosters.away
-  const nyWedge = orderWedge(rawNy, ANCHOR_NY)
-  const saWedge = orderWedge(rawSa, ANCHOR_SA)
+  const nyWedge = orderWedge(rawNy, STARS_NY)
+  const saWedge = orderWedge(rawSa, STARS_SA)
 
   return (
     <div className="fc-root">
@@ -237,7 +271,18 @@ export function FinalsCollision() {
           {/* trophy + god-ray rising through the VS */}
           <div className="fc-trophy-wrap" aria-hidden>
             <div className="fc-godray" />
-            <div className="fc-trophy">🏆</div>
+            <svg className="fc-trophy" viewBox="0 0 80 120" fill="none">
+              <defs>
+                <linearGradient id="fc-gold" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#fff3c4" /><stop offset="35%" stopColor="#f4d36a" /><stop offset="70%" stopColor="#c9972f" /><stop offset="100%" stopColor="#8a6314" />
+                </linearGradient>
+              </defs>
+              {/* Larry O'Brien — ball on a tapered net/funnel stem + base */}
+              <circle cx="40" cy="22" r="18" fill="url(#fc-gold)" />
+              <path d="M28 36 Q40 50 52 36 L57 64 Q40 76 23 64 Z" fill="url(#fc-gold)" />
+              <rect x="34" y="74" width="12" height="20" rx="2" fill="url(#fc-gold)" />
+              <path d="M22 94 L58 94 L64 112 L16 112 Z" fill="url(#fc-gold)" />
+            </svg>
           </div>
 
           {/* ── CENTER STAGE ── */}
@@ -310,9 +355,9 @@ export function FinalsCollision() {
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={team.logo} alt="" className="fc-roster-logo" />)}<span className="fc-roster-tag">{side === 'ny' ? 'NEW YORK' : 'SAN ANTONIO'}</span></div>
                 <div className="fc-roster-rail">{players.map((p) => (
-                  <div key={p.id} className={`fc-card fc-card-${side}`}><div className="fc-card-glow" aria-hidden />
+                  <button key={p.id} type="button" onClick={() => openCard(p, side)} className={`fc-card fc-card-${side}`}><div className="fc-card-glow" aria-hidden />
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={p.headshot} alt={p.name} className="fc-card-img" loading="lazy" /><div className="fc-card-name">{p.name}</div><div className="fc-card-meta">#{p.jersey} · {p.pos}</div></div>
+                    <img src={p.headshot} alt={p.name} className="fc-card-img" loading="lazy" /><div className="fc-card-name">{p.name}</div><div className="fc-card-meta">#{p.jersey} · {p.pos}</div><div className="fc-card-tap">VIEW STATS →</div></button>
                 ))}</div>
               </div>
             ))}
@@ -330,9 +375,59 @@ export function FinalsCollision() {
         <div className="fc-fan-cta-row"><Link href="/" className="fc-cta fc-cta-ticket"><span className="fc-shine" aria-hidden />🔥 LIVE FAN TAKES</Link><Link href="/picks" className="fc-cta fc-cta-metal">🎯 MAKE YOUR GAME-4 CALL</Link></div>
       </section>
 
+      {/* ════ EXPANDED PLAYER STAT CARD ════ */}
+      {expanded && (() => {
+        const team = expanded.side === 'ny' ? ny : sa
+        const teamName = expanded.side === 'ny' ? 'NEW YORK' : 'SAN ANTONIO'
+        return (
+          <div className="fc-statmodal" onClick={() => setExpanded(null)} role="dialog" aria-modal="true">
+            <div className={`fc-statcard fc-statcard-${expanded.side}`} onClick={(e) => e.stopPropagation()}>
+              <div className="fc-statcity">{expanded.side === 'ny' ? <GothamSkyline /> : <SilverSkyline />}</div>
+              <div className="fc-statbg" />
+              <div className="fc-statteam">{teamName}</div>
+              <button type="button" className="fc-statclose" onClick={() => setExpanded(null)} aria-label="Close">✕</button>
+              <div className="fc-statbody">
+                <div className="fc-statleft">
+                  {team?.logo && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={team.logo} alt="" className="fc-statlogo" />
+                  )}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={expanded.player.headshot} alt={expanded.player.name} className="fc-statimg" />
+                </div>
+                <div className="fc-statright">
+                  <div className="fc-statname">{expanded.player.name}</div>
+                  <div className="fc-statmeta">#{expanded.player.jersey} · {expanded.player.pos} · {team?.name}</div>
+                  {pstatsLoading ? (
+                    <div className="fc-statloading">Loading stats…</div>
+                  ) : pstats ? (
+                    <>
+                      <div className="fc-statheadline">
+                        {[['PPG', pstats.headline.pts], ['RPG', pstats.headline.reb], ['APG', pstats.headline.ast]].map(([l, v]) => (
+                          <div key={l} className="fc-stathl"><b>{v}</b><i>{l}</i></div>
+                        ))}
+                      </div>
+                      <div className="fc-statgrid">
+                        {pstats.line.map((s) => (
+                          <div key={s.label} className="fc-statcell"><span>{s.label}</span><b>{s.value}</b></div>
+                        ))}
+                      </div>
+                      <div className="fc-statseason">{pstats.season} SEASON AVERAGES · ESPN</div>
+                    </>
+                  ) : (
+                    <div className="fc-statloading">Season stats unavailable.</div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
+
       <style jsx global>{`
-        .fc-root { background: #04060c; color: #fff; }
-        .fc-hero { position: relative; min-height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; perspective: 1200px; isolation: isolate; }
+        .fc-root { background: #04060c; color: #fff; overflow-x: clip; }
+        .fc-sec { box-sizing: border-box; }
+        .fc-hero { position: relative; width: 100%; max-width: 100vw; min-height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; perspective: 1200px; isolation: isolate; }
         .fc-stage { position: absolute; inset: 0; transform-style: preserve-3d; display: flex; align-items: center; justify-content: center; --px: 0; --py: 0; }
 
         /* cosmos */
@@ -378,8 +473,11 @@ export function FinalsCollision() {
         .fc-fog { position: absolute; bottom: 0; top: 10%; width: 46%; }
         .fc-fog-ny { left: 0; background: linear-gradient(90deg, rgba(29,66,138,.34), rgba(245,132,38,.06) 55%, transparent); }
         .fc-fog-sa { right: 0; background: linear-gradient(270deg, rgba(196,206,212,.26), rgba(20,24,30,.10) 55%, transparent); }
-        .fc-wp { position: absolute; width: clamp(120px, 17vw, 230px); transform: translate3d(calc(var(--px) * var(--r)), calc(var(--py) * var(--r) * 0.5), var(--z)) scale(var(--s)); transform-origin: bottom center; will-change: transform; }
-        .fc-wp-img { width: 100%; display: block; }
+        .fc-wp { position: absolute; width: clamp(150px, 20vw, 250px); transform: translate3d(calc(var(--px) * var(--r)), calc(var(--py) * var(--r) * 0.5), var(--z)) scale(var(--s)); transform-origin: bottom center; will-change: transform; }
+        /* ANCHOR — the poster. Brunson/Wemby ~3-4x any other figure, overlapping the center. */
+        .fc-anchor { width: clamp(240px, 34vw, 460px); }
+        /* feather the bottom edge so cutouts grow out of the layer below (no pasted-PNG look) */
+        .fc-wp-img { width: 100%; display: block; -webkit-mask-image: linear-gradient(to bottom, #000 78%, transparent 98%); mask-image: linear-gradient(to bottom, #000 78%, transparent 98%); }
         .fc-wp-ny .fc-wp-img { filter: drop-shadow(0 4px 8px rgba(0,0,0,.55)); }
         .fc-wp-sa .fc-wp-img { transform: scaleX(-1); filter: drop-shadow(0 4px 8px rgba(0,0,0,.55)); }
         .fc-tier-1 .fc-wp-img { filter: drop-shadow(0 4px 8px rgba(0,0,0,.5)) brightness(.92); }
@@ -395,7 +493,8 @@ export function FinalsCollision() {
         .fc-trophy-wrap { position: absolute; bottom: 2%; left: 50%; transform: translateX(-50%) translateZ(-30px); pointer-events: none; }
         .fc-godray { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); width: 120px; height: 60vh; background: linear-gradient(to top, rgba(255,220,140,.5), rgba(255,220,140,.12) 35%, transparent 70%); filter: blur(10px); mix-blend-mode: screen; animation: fc-ray 5s ease-in-out infinite; }
         @keyframes fc-ray { 0%,100% { opacity: .55; } 50% { opacity: .85; } }
-        .fc-trophy { font-size: clamp(34px,5vw,60px); filter: drop-shadow(0 0 18px rgba(255,210,120,.8)); }
+        .fc-trophy { width: clamp(40px,6vw,72px); height: auto; filter: drop-shadow(0 0 18px rgba(255,210,120,.85)); animation: fc-trophyglow 4s ease-in-out infinite; }
+        @keyframes fc-trophyglow { 0%,100% { filter: drop-shadow(0 0 14px rgba(255,210,120,.7)); } 50% { filter: drop-shadow(0 0 26px rgba(255,224,150,.95)); } }
 
         /* ── center stage ── */
         .fc-core { position: relative; z-index: 5; text-align: center; padding: 4vh 16px; max-width: 760px; transform: translateZ(90px); }
@@ -498,12 +597,48 @@ export function FinalsCollision() {
         .fc-fanzone { text-align: center; }
         .fc-fan-copy { max-width: 560px; margin: 0 auto 18px; color: #b6c0cc; font-size: 14px; line-height: 1.6; }
 
+        /* card is a button now — reset + tap hint */
+        .fc-card { font: inherit; color: inherit; cursor: pointer; }
+        .fc-card-tap { position: relative; z-index: 1; font-size: 8px; letter-spacing: .12em; color: #f5b942; font-weight: 800; margin-top: 5px; opacity: .6; transition: opacity .15s; }
+        .fc-card:hover .fc-card-tap { opacity: 1; }
+
+        /* ── expanded cinematic stat card ── */
+        .fc-statmodal { position: fixed; inset: 0; z-index: 300; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(2,4,9,.86); backdrop-filter: blur(8px); animation: fc-modalin .2s ease; }
+        @keyframes fc-modalin { from { opacity: 0; } to { opacity: 1; } }
+        .fc-statcard { position: relative; width: 100%; max-width: 620px; border-radius: 20px; overflow: hidden; border: 1px solid rgba(255,255,255,.12); background: #060a12; box-shadow: 0 30px 80px rgba(0,0,0,.6); animation: fc-cardin .3s cubic-bezier(.2,.8,.2,1); }
+        @keyframes fc-cardin { from { opacity: 0; transform: translateY(20px) scale(.97); } to { opacity: 1; transform: none; } }
+        .fc-statcity { position: absolute; left: 0; right: 0; bottom: 0; height: 62%; opacity: .38; }
+        .fc-statcard-ny .fc-statbg { position: absolute; inset: 0; background: radial-gradient(120% 90% at 28% 8%, rgba(29,66,138,.5), rgba(245,132,38,.12) 45%, transparent 72%); }
+        .fc-statcard-sa .fc-statbg { position: absolute; inset: 0; background: radial-gradient(120% 90% at 28% 8%, rgba(196,206,212,.4), rgba(120,134,148,.12) 45%, transparent 72%); }
+        .fc-statteam { position: absolute; top: 4px; left: 0; right: 0; text-align: center; font-size: clamp(40px,11vw,96px); font-weight: 900; letter-spacing: -.02em; color: rgba(255,255,255,.05); pointer-events: none; white-space: nowrap; overflow: hidden; }
+        .fc-statclose { position: absolute; top: 12px; right: 12px; z-index: 5; width: 34px; height: 34px; border-radius: 50%; border: 1px solid rgba(255,255,255,.2); background: rgba(0,0,0,.45); color: #fff; cursor: pointer; font-size: 14px; }
+        .fc-statbody { position: relative; z-index: 2; display: grid; grid-template-columns: 40% 1fr; gap: 14px; padding: 24px 22px 22px; align-items: end; }
+        .fc-statleft { position: relative; }
+        .fc-statlogo { position: absolute; top: -8px; left: -4px; width: 42px; height: 42px; object-fit: contain; opacity: .92; z-index: 2; }
+        .fc-statimg { width: 100%; display: block; }
+        .fc-statcard-ny .fc-statimg { filter: drop-shadow(0 0 24px rgba(29,66,138,.85)) drop-shadow(0 8px 16px rgba(0,0,0,.6)); }
+        .fc-statcard-sa .fc-statimg { filter: drop-shadow(0 0 24px rgba(196,206,212,.6)) drop-shadow(0 8px 16px rgba(0,0,0,.6)); }
+        .fc-statright { padding-bottom: 4px; }
+        .fc-statname { font-size: clamp(20px,3.4vw,30px); font-weight: 900; line-height: 1.05; }
+        .fc-statmeta { font-size: 11px; color: #9aa6b2; margin: 4px 0 14px; }
+        .fc-statheadline { display: flex; gap: 16px; margin-bottom: 14px; }
+        .fc-stathl { text-align: center; }
+        .fc-stathl b { display: block; font-size: clamp(24px,4.4vw,40px); font-weight: 900; color: #f5d76e; line-height: 1; text-shadow: 0 0 14px rgba(245,200,90,.4); }
+        .fc-stathl i { font-size: 9px; letter-spacing: .15em; color: #8a939e; font-style: normal; }
+        .fc-statgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px 14px; }
+        .fc-statcell { display: flex; justify-content: space-between; gap: 6px; border-bottom: 1px solid rgba(255,255,255,.08); padding-bottom: 3px; font-size: 12px; }
+        .fc-statcell span { color: #8a939e; } .fc-statcell b { font-weight: 800; }
+        .fc-statseason { margin-top: 14px; font-size: 9px; letter-spacing: .15em; color: #6b7682; }
+        .fc-statloading { color: #8a939e; font-size: 13px; padding: 14px 0; }
+        @media (max-width: 480px) { .fc-statbody { grid-template-columns: 1fr; align-items: start; } .fc-statleft { max-width: 54%; margin: 0 auto; } .fc-statgrid { grid-template-columns: repeat(2,1fr); } }
+
         @media (min-width: 740px) { .fc-roster { grid-template-columns: 1fr 1fr; } }
         @media (max-width: 480px) {
           .fc-mote:nth-child(2n), .fc-flash:nth-child(2n), .fc-win:nth-child(2n) { display: none; }
           /* keep only 3 players/side on mobile (anchor + 2 mid), drop the back tier */
           .fc-tier-2 { display: none; }
-          .fc-wp { width: clamp(96px, 30vw, 150px); }
+          .fc-wp { width: clamp(110px, 32vw, 160px); }
+          .fc-anchor { width: clamp(150px, 46vw, 230px); }
           .fc-core { max-width: 100%; transform: translateZ(60px); }
           .fc-sl { width: 30vw; } .fc-cd-clock { gap: 8px; } .fc-cd-cell { min-width: 50px; }
           .fc-wm { width: 50vw; }
