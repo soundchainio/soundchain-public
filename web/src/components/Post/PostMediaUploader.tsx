@@ -150,6 +150,7 @@ export const PostMediaUploader = ({
   isGuest,
 }: PostMediaUploaderProps) => {
   const [preview, setPreview] = useState<string | null>(currentUrl || null)
+  const [gallery, setGallery] = useState<string[]>([]) // IG carousel — uploaded image URLs when >1
   const [mediaType, setMediaType] = useState<'image' | 'video' | 'audio' | null>(
     (currentType as 'image' | 'video' | 'audio') || null
   )
@@ -194,7 +195,7 @@ export const PostMediaUploader = ({
             const u = await upload([f])
             if (u) urls.push(u)
           }
-          if (urls.length > 1) onGalleryUploaded(urls)
+          if (urls.length > 1) { setGallery(urls); onGalleryUploaded(urls) }
           else if (urls.length === 1) onMediaSelected(urls[0], 'image')
         } catch (err: any) {
           setError(err.message || 'Upload failed')
@@ -303,8 +304,37 @@ export const PostMediaUploader = ({
   const handleRemove = () => {
     setPreview(null)
     setMediaType(null)
+    setGallery([])
     setError(null)
     onMediaRemoved()
+  }
+
+  // Multi-image carousel preview — a thumbnail strip so you SEE the gallery
+  // you're building before posting.
+  if (gallery.length > 1) {
+    return (
+      <div className="relative rounded-lg overflow-hidden bg-neutral-800 mb-3 p-2">
+        <button
+          onClick={handleRemove}
+          className="absolute top-2 right-2 z-10 w-8 h-8 bg-black/60 hover:bg-black/80 rounded-full flex items-center justify-center transition-colors"
+        >
+          <X className="w-4 h-4 text-white" />
+        </button>
+        <div className="flex items-center gap-1.5 mb-2 px-1">
+          <span className="text-xs font-bold text-white">🎠 Carousel</span>
+          <span className="text-[11px] text-neutral-400">{gallery.length} photos · swipe in the post</span>
+        </div>
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {gallery.map((url, i) => (
+            <div key={i} className="relative flex-shrink-0 w-24 h-24 rounded-md overflow-hidden border border-white/10">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={url} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
+              <span className="absolute top-0.5 left-0.5 px-1 rounded bg-black/60 text-white text-[9px] font-bold tabular-nums">{i + 1}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
   }
 
   // Show preview if media is selected
@@ -393,6 +423,9 @@ export const PostMediaUploader = ({
         <span className={`text-sm ${isDragActive ? 'text-cyan-400' : 'text-gray-400'}`}>
           {isDragActive ? 'Drop file here' : 'Add photo, video, or audio (24h)'}
         </span>
+        {!isDragActive && (
+          <span className="block text-[11px] text-neutral-500 mt-0.5">Pick 2+ photos for a swipeable carousel 🎠</span>
+        )}
       </div>
       {error && (
         <p className="text-red-400 text-xs mt-1">{error}</p>
