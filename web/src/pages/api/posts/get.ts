@@ -57,6 +57,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         uploadedMediaUrl: post.uploadedMediaUrl || null,
         uploadedMediaUrls: post.uploadedMediaUrls || null,
         uploadedMediaType: post.uploadedMediaType || null,
+        mediaLink: post.mediaLink || null,
+        mediaLinks: post.mediaLinks || null,
         linkUrl: post.linkUrl || null,
         isPermanent: post.isPermanent || false,
         permanentTxHash: post.permanentTxHash || null,

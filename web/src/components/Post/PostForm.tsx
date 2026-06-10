@@ -207,6 +207,8 @@ export const PostForm = ({ ...props }: PostFormProps) => {
   const [uploadedMediaUrls, setUploadedMediaUrls] = useState<string[]>([]) // IG-style carousel gallery
   const [showMusicAccordion, setShowMusicAccordion] = useState(false)
   const [showVideoAccordion, setShowVideoAccordion] = useState(false)
+  // Multi-embed carousel — collected from InlineEmbedPicker; sent as mediaLinks when 2+.
+  const [embedLinks, setEmbedLinks] = useState<string[]>([])
   // Post mutations — all Vercel direct (Phase 6d)
   const postJson = async (url: string, payload: any) => {
     const r = await fetch(url, {
@@ -265,6 +267,13 @@ export const PostForm = ({ ...props }: PostFormProps) => {
             }
           }
 
+          // Multi-embed carousel: 2+ embeds travel as an array (mediaLink stays
+          // the first for legacy single-embed readers).
+          if (embedLinks.length > 1) {
+            (newPostParams as any).mediaLinks = embedLinks
+            newPostParams.mediaLink = embedLinks[0]
+          }
+
           if (props.trackId) {
             newPostParams.trackId = props.trackId
           }
@@ -287,6 +296,7 @@ export const PostForm = ({ ...props }: PostFormProps) => {
       }
 
       resetForm()
+      setEmbedLinks([])
       props.afterSubmit()
     } catch (error: any) {
       console.error('Post submission error:', error)
@@ -588,6 +598,7 @@ export const PostForm = ({ ...props }: PostFormProps) => {
             <InlineEmbedPicker
               type="music"
               onLinkChange={(link) => props.setOriginalLink(link)}
+              onLinksChange={setEmbedLinks}
               currentLink={props.originalLink}
             />
           )}
@@ -595,6 +606,7 @@ export const PostForm = ({ ...props }: PostFormProps) => {
             <InlineEmbedPicker
               type="video"
               onLinkChange={(link) => props.setOriginalLink(link)}
+              onLinksChange={setEmbedLinks}
               currentLink={props.originalLink}
             />
           )}

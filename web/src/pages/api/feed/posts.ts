@@ -150,6 +150,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         id: post._id.toString(),
         body: post.body || null,
         mediaLink: post.mediaLink || null,
+        mediaLinks: post.mediaLinks || null,
         mediaThumbnail: post.mediaThumbnail || null,
         repostId: post.repostId ? post.repostId.toString() : null,
         createdAt: post.createdAt,

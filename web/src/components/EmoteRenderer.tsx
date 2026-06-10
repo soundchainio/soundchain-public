@@ -114,10 +114,17 @@ export const EmoteRenderer = ({ text, className = '', linkify = false }: EmoteRe
       emoteUrl = emoteUrl + '.webp'
     }
     const isGif = emoteName.startsWith('gif:')
+    // Custom user-uploaded stickers travel as data: URLs and can be ANY aspect
+    // ratio. Forcing them into a fixed square (w-7 h-7) cropped/squished wide
+    // stickers at the right edge — render them height-locked with auto width
+    // (capped) and object-contain so they keep their real shape.
+    const isCustom = emoteUrl.startsWith('data:')
 
     // GIFs inline with text: slightly larger than emotes but still inline
     // Regular emotes: standard 28px
-    const imgClass = isGif
+    const imgClass = isCustom
+      ? 'inline-block h-8 w-auto max-w-[160px] align-middle mx-0.5 rounded object-contain'
+      : isGif
       ? 'inline-block w-9 h-9 align-middle mx-0.5 rounded'
       : 'inline-block w-7 h-7 align-middle mx-0.5'
 

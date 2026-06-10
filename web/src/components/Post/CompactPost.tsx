@@ -11,6 +11,7 @@ import { CreateStoryModal } from 'components/dex/CreateStoryModal'
 import { SharePostModal } from 'components/modals/SharePostModal'
 import { NativeTweetCard } from './NativeTweetCard'
 import { PostCarousel } from './PostCarousel'
+import { MultiEmbedCarousel } from './MultiEmbedCarousel'
 import { useMe } from 'hooks/useMe'
 import { useRouter } from 'next/router'
 import { IdentifySource, hasLazyLoadWithThumbnailSupport } from 'utils/NormalizeEmbedLinks'
@@ -125,6 +126,9 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
   const uploadedMediaUrls = Array.isArray(postWithMedia.uploadedMediaUrls) ? postWithMedia.uploadedMediaUrls : []
   const isCarousel = uploadedMediaUrls.length > 1
   const hasUploadedMedia = !!uploadedMediaUrl
+  // Multi-embed carousel (2+ embeds) — its own render path; single embed below unchanged.
+  const mediaLinks: string[] = Array.isArray((post as any).mediaLinks) ? (post as any).mediaLinks : []
+  const isMultiEmbed = mediaLinks.length > 1
   const mediaExpiresAt = postWithMedia.mediaExpiresAt ? new Date(postWithMedia.mediaExpiresAt) : null
   const isExpired = mediaExpiresAt && mediaExpiresAt < new Date()
 
@@ -242,8 +246,15 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
         </>
       )}
 
+      {/* Multi-embed carousel — 2+ swipeable music/video embeds */}
+      {!hasUploadedMedia && isMultiEmbed && !hasTrack && (
+        <div className="w-full mt-2" onClick={(e) => e.stopPropagation()}>
+          <MultiEmbedCarousel links={mediaLinks} />
+        </div>
+      )}
+
       {/* Media link - Legacy-style iframe embeds */}
-      {!hasUploadedMedia && hasMediaLink && post.mediaLink && !hasTrack ? (
+      {!hasUploadedMedia && !isMultiEmbed && hasMediaLink && post.mediaLink && !hasTrack ? (
         xTweetId && gridMode ? (
           // Native X/Twitter card — same component Post.tsx uses, so the tweet's
           // own video autoplays inline (AutoplayVideo + light MP4 variant) instead

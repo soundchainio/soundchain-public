@@ -911,6 +911,11 @@ export const StickerPicker = ({ onSelect, onClose, theme = 'dark' }: StickerPick
               <button
                 key={`${emote.source}-${emote.id}`}
                 onClick={() => handleEmoteClick(emote)}
+                // content-visibility:auto lets the browser skip layout/paint for
+                // the off-screen emotes in this 200+ grid (native virtualization),
+                // so the picker stays smooth without a windowing lib. The intrinsic
+                // size keeps the scrollbar honest before an item is rendered.
+                style={{ contentVisibility: 'auto', containIntrinsicSize: '40px 40px' } as React.CSSProperties}
                 className={classNames(
                   'relative flex items-center justify-center p-1 rounded-lg transition-all hover:scale-110 group',
                   {

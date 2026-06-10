@@ -12,6 +12,7 @@ import { canPlayWithReactPlayer, IdentifySource } from 'utils/NormalizeEmbedLink
 import { MediaProvider } from 'types/MediaProvider'
 import { LinkPreviewCard } from './LinkPreviewCard'
 import { PostCarousel } from './PostCarousel'
+import { MultiEmbedCarousel } from './MultiEmbedCarousel'
 import { MakePostPermanentModal } from '../modals/MakePostPermanentModal'
 import { CommentSkeleton } from '../Comment/CommentSkeleton'
 import { NewCommentForm } from '../NewCommentForm'
@@ -208,6 +209,11 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
   const uploadedMediaType = postWithMedia.uploadedMediaType
   const uploadedMediaUrls = Array.isArray(postWithMedia.uploadedMediaUrls) ? postWithMedia.uploadedMediaUrls : []
   const isCarousel = uploadedMediaUrls.length > 1
+  // Multi-embed carousel — 2+ music/video embeds swipeable in one post. Renders
+  // via its own component so the single-embed (autoplay-sensitive) path below is
+  // untouched for the common one-embed case.
+  const mediaLinks: string[] = Array.isArray((post as any).mediaLinks) ? (post as any).mediaLinks : []
+  const isMultiEmbed = mediaLinks.length > 1
 
   const hasMedia = post.mediaLink || post.track || post.repostId || hasUploadedMedia
 
@@ -416,10 +422,13 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
             </div>
           )}
 
+          {/* Multi-embed carousel — 2+ music/video embeds, swipeable */}
+          {isMultiEmbed && <MultiEmbedCarousel links={mediaLinks} className="mt-2" />}
+
           {/* Embedded video/link - Responsive with proper aspect ratio */}
           {/* Key is stable to prevent remounting on orientation change */}
           {/* CSS contain/will-change/transform prevents iframe reload on mobile rotation */}
-          {post.mediaLink && (() => {
+          {!isMultiEmbed && post.mediaLink && (() => {
             const mediaUrl = post.mediaLink?.replace(/^http:/, 'https:') || ''
             // Playlists need iframe to show tracklist - ReactPlayer doesn't support playlists
             const isPlaylist = mediaUrl.includes('listType=playlist') || mediaUrl.includes('videoseries') || mediaUrl.includes('list=')

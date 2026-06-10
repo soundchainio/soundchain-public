@@ -40,8 +40,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     ? req.body.uploadedMediaUrls.filter((u: unknown) => typeof u === 'string' && u).slice(0, 10)
     : []
   const firstUploaded = uploadedMediaUrl || uploadedMediaUrls[0] || null
+  // Multi-embed carousel: array of music/video embed links. First entry mirrors
+  // mediaLink so legacy single-embed readers keep working untouched.
+  const mediaLinks: string[] = Array.isArray(req.body?.mediaLinks)
+    ? req.body.mediaLinks.filter((u: unknown) => typeof u === 'string' && u).slice(0, 8)
+    : []
+  const firstLink = mediaLink || mediaLinks[0] || null
 
-  if (!body?.trim() && !mediaLink && !firstUploaded && !repostId) {
+  if (!body?.trim() && !firstLink && !firstUploaded && !repostId) {
     return res.status(400).json({ error: 'Post must have text, mediaLink, uploadedMedia, or repostId' })
   }
 
@@ -65,8 +71,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const postDoc: any = {
       profileId,
       body: body || '',
-      mediaLink: mediaLink || null,
+      mediaLink: firstLink,
       mediaThumbnail: uploadedMediaThumbnail || null,
+      // Multi-embed carousel — only stored when there's more than one embed.
+      mediaLinks: mediaLinks.length > 1 ? mediaLinks : null,
       uploadedMediaUrl: firstUploaded,
       // Carousel gallery — only stored when there's more than one image.
       uploadedMediaUrls: uploadedMediaUrls.length > 1 ? uploadedMediaUrls : null,
@@ -146,6 +154,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         mediaThumbnail: postDoc.mediaThumbnail,
         uploadedMediaUrl: postDoc.uploadedMediaUrl,
         uploadedMediaUrls: postDoc.uploadedMediaUrls || null,
+        mediaLinks: postDoc.mediaLinks || null,
         uploadedMediaType: postDoc.uploadedMediaType,
         repostId: repostOid ? repostOid.toString() : null,
         createdAt: postDoc.createdAt,
