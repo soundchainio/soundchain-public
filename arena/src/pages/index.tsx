@@ -2,6 +2,7 @@ import Head from 'next/head'
 import Link from 'next/link'
 import { Trophy, Swords, Activity, Flag, Zap, ArrowRight, Globe2, Wifi } from 'lucide-react'
 import { ArenaShell } from '@/components/ArenaShell'
+import { FinalsCollision } from '@/components/FinalsCollision'
 import { PillButton } from '@/components/PillButton'
 import { LiveTakesFeed } from '@/components/LiveTakesFeed'
 import { LiveScoresStrip } from '@/components/LiveScoresStrip'
@@ -70,6 +71,11 @@ export default function ArenaHub() {
       </Head>
 
       <ArenaShell>
+        {/* 🏀 2026 NBA FINALS TAKEOVER — the first thing you see on arena.
+            New York vs San Antonio · Brunson vs Wemby · Game 4 tonight. The
+            collision hero leads; the full multi-sport hub continues below it. */}
+        <FinalsCollision />
+
         {/* ESPN-style live scores ticker — top of every hub page, auto-refresh
             60s, hidden when no games. Frank May 6: pointed at espn.com main
             page as macro reference; this is the anchor of that pattern. */}
