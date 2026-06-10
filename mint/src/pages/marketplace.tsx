@@ -19,6 +19,7 @@ interface ListingPreview {
   priceToken?: PriceToken      // currency symbol attached to price
   editionSize?: number         // total edition supply (1 for 1/1s)
   editionListed?: number       // how many of the edition are listed for sale
+  editions?: { tokenId: string; owner?: string; price?: number; priceToken?: PriceToken; version?: 'v1' | 'v2' }[]
   forSale?: boolean            // active marketplace listing (holographic border)
   version?: 'v1' | 'v2'        // which NFT contract the card lives on
   href?: string
@@ -800,6 +801,7 @@ export default function Marketplace() {
         {detailId && (
           <MarketplaceDetailModal
             id={detailId}
+            editions={listings.find((c) => c.id === detailId)?.editions}
             onClose={closeDetail}
             isPlaying={playingId === detailId}
             onTogglePlay={togglePlay}

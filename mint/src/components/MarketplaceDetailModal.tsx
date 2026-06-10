@@ -51,14 +51,24 @@ type Resolved =
   | { kind: 'browse'; data: BrowseTrack }
   | { kind: 'missing' }
 
+interface EditionRow {
+  tokenId: string
+  owner?: string
+  price?: number
+  priceToken?: string
+  version?: 'v1' | 'v2'
+}
+
 interface Props {
   id: string
+  editions?: EditionRow[]
   onClose: () => void
   isPlaying: boolean
   onTogglePlay: (id: string, audioUrl?: string) => void
 }
 
-export function MarketplaceDetailModal({ id, onClose, isPlaying, onTogglePlay }: Props) {
+export function MarketplaceDetailModal({ id, editions, onClose, isPlaying, onTogglePlay }: Props) {
+  const [editionSort, setEditionSort] = useState<'asc' | 'desc'>('asc')
   const { address, isConnected } = useAccount()
   const chainId = useChainId()
   const { switchChain } = useSwitchChain()
@@ -366,6 +376,65 @@ export function MarketplaceDetailModal({ id, onClose, isPlaying, onTogglePlay }:
                   )}
                 </div>
               </div>
+
+              {/* EDITIONS — every listed edition of this mint, sorted by price */}
+              {editions && editions.length > 1 && (() => {
+                const floor = Math.min(...editions.map((e) => e.price ?? Infinity))
+                const sorted = [...editions].sort((a, b) =>
+                  editionSort === 'asc' ? (a.price ?? 0) - (b.price ?? 0) : (b.price ?? 0) - (a.price ?? 0)
+                )
+                return (
+                  <div className="neon-panel hud-corners p-3 sm:p-4">
+                    <span className="hud-corner hud-corner-tl" />
+                    <span className="hud-corner hud-corner-tr" />
+                    <span className="hud-corner hud-corner-bl" />
+                    <span className="hud-corner hud-corner-br" />
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="text-[9px] font-mono uppercase tracking-[0.3em] text-neon-cyan">
+                        ◤ {editions.length} EDITIONS LISTED
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setEditionSort((s) => (s === 'asc' ? 'desc' : 'asc'))}
+                        className="text-[9px] font-mono uppercase tracking-widest text-gray-400 hover:text-neon-cyan border border-white/10 hover:border-neon-cyan/40 px-2 py-0.5 transition-colors"
+                      >
+                        PRICE {editionSort === 'asc' ? '↑ LOW→HIGH' : '↓ HIGH→LOW'}
+                      </button>
+                    </div>
+                    <div className="space-y-1 max-h-[200px] overflow-y-auto">
+                      {sorted.map((e) => {
+                        const isFloor = e.price != null && e.price === floor
+                        return (
+                          <div
+                            key={e.tokenId}
+                            className={`flex items-center justify-between gap-2 px-2 py-1.5 border bg-ink-800/40 ${
+                              isFloor ? 'border-neon-mint/40' : 'border-white/5'
+                            }`}
+                          >
+                            <span className="flex items-center gap-2 min-w-0">
+                              <span className="text-[9px] font-mono text-gray-500 flex-shrink-0">#{e.tokenId}</span>
+                              {e.owner && (
+                                <span className="text-[9px] font-mono text-gray-600 truncate">
+                                  {e.owner.slice(0, 6)}…{e.owner.slice(-4)}
+                                </span>
+                              )}
+                              {isFloor && (
+                                <span className="text-[8px] font-mono uppercase tracking-widest text-neon-mint border border-neon-mint/40 px-1 flex-shrink-0">
+                                  FLOOR
+                                </span>
+                              )}
+                            </span>
+                            <span className={`text-xs font-mono tabular-nums flex-shrink-0 ${isFloor ? 'text-neon-cyan' : 'text-gray-300'}`}>
+                              {e.price != null ? e.price.toLocaleString(undefined, { maximumFractionDigits: 4 }) : '—'}
+                              <span className="text-gray-600 ml-1">{e.priceToken || 'POL'}</span>
+                            </span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )
+              })()}
 
               {/* LISTING PATH — buy flow */}
               {resolved.kind === 'listing' && (

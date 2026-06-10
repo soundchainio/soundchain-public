@@ -42,6 +42,14 @@ export const NFT_CONTRACTS = {
 
 export type PriceToken = 'POL' | 'OGUN' | 'ETH' | 'USDC' | 'USDT' | 'LINK' | 'AVAX'
 
+export interface EditionRow {
+  tokenId: string
+  owner?: string                   // seller wallet (short-displayed)
+  price?: number                   // display units
+  priceToken?: PriceToken
+  version?: 'v1' | 'v2'
+}
+
 export interface ListingPreview {
   id: string                       // track id or first listing id (used as detail-page key)
   tokenId: string
@@ -53,6 +61,7 @@ export interface ListingPreview {
   priceToken?: PriceToken          // currency symbol on the price
   editionSize?: number             // total edition supply (1 for 1/1s)
   editionListed?: number           // count actively listed for sale right now
+  editions?: EditionRow[]          // every listed edition, sorted low→high (detail view)
   forSale?: boolean                // true = active marketplace listing, false = minted-only
   version?: 'v1' | 'v2'            // which NFT contract (v1=legacy 2021-22, v2=Editions 2023+)
   href?: string
@@ -321,6 +330,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
       }
 
+      // Every listed edition for this mint, sorted cheapest-first — drives the
+      // detail modal's editions list + low→high price filter.
+      const editions: EditionRow[] = groupListings
+        .map((l): EditionRow => {
+          const price = typeof l.pricePerItemToShow === 'number'
+            ? l.pricePerItemToShow
+            : (typeof l.pricePerItem === 'number' ? l.pricePerItem : undefined)
+          return {
+            tokenId: l.tokenId != null ? String(l.tokenId) : '',
+            owner: l.owner || l.seller || l.user?.walletAddress || undefined,
+            price,
+            priceToken: tokenFromSaleType(l.saleType, l.isPaymentOGUN),
+            version: detectVersion(l.nftAddress),
+          }
+        })
+        .filter((e) => e.price != null)
+        .sort((a, b) => (a.price as number) - (b.price as number))
+
       return {
         id: rep.track?.id || rep.id,
         tokenId: rep.tokenId != null ? String(rep.tokenId) : '',
@@ -332,6 +359,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         priceToken,
         editionSize: rep.track?.editionSize || undefined,
         editionListed: groupListings.length,
+        editions: editions.length ? editions : undefined,
         forSale: true,
         version: detectVersion(rep.nftAddress),
         href: `/marketplace/${rep.track?.id || rep.id}`,
