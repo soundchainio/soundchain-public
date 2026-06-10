@@ -107,16 +107,6 @@ function PlayerCard({ p, color, teamName }: { p: Player; color: string; teamName
                 <div key={k}><div className="text-[9px] uppercase tracking-wider text-arena-muted-l dark:text-arena-muted-d">{k}</div><div className="text-xs font-bold">{v}</div></div>
               ))}
           </div>
-          <div className="flex gap-2 mt-3">
-            <a href={ytSearch} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1.5 rounded-full bg-arena-red/15 text-arena-red border border-arena-red/40 hover:bg-arena-red/25">
-              <Youtube className="w-3 h-3" /> Highlights
-            </a>
-            {p.espn && (
-              <a href={p.espn} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1.5 rounded-full border border-arena-border-l dark:border-arena-border-d text-arena-muted-l dark:text-arena-muted-d hover:border-arena-red hover:text-arena-red">
-                <ExternalLink className="w-3 h-3" /> Profile
-              </a>
-            )}
-          </div>
         </div>
       )}
     </div>

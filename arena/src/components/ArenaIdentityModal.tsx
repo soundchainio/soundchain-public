@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { X, Upload, Loader2 } from 'lucide-react'
 import { getIdentity, setHandle, setAvatar, ARENA_AVATARS, isUrlAvatar, type Avatar } from '@/lib/identity'
 
@@ -9,12 +9,21 @@ import { getIdentity, setHandle, setAvatar, ARENA_AVATARS, isUrlAvatar, type Ava
  * / Face ID sign-in is the heavier IdentityModal (follow-up).
  */
 export function ArenaIdentityModal({ onClose, onSaved }: { onClose: () => void; onSaved?: () => void }) {
-  const id = getIdentity()
-  const [handle, setHandleInput] = useState(id.handle ?? '')
-  const [avatar, setAvatarInput] = useState<Avatar>(id.avatar)
+  // getIdentity() returns null during SSR (no localStorage), so we can't seed
+  // useState from it — the handle field would init empty and the Save pill stay
+  // disabled forever. Seed on the client in an effect instead.
+  const [handle, setHandleInput] = useState('')
+  const [avatar, setAvatarInput] = useState<Avatar>(ARENA_AVATARS[0])
+  const [hasHandle, setHasHandle] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    const id = getIdentity()
+    if (id.handle) { setHandleInput(id.handle); setHasHandle(true) }
+    setAvatarInput(id.avatar)
+  }, [])
 
   const upload = async (file: File) => {
     setUploading(true); setError(null)
