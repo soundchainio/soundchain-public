@@ -1,6 +1,6 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { useDropzone } from 'react-dropzone'
-import { X, Clock } from 'lucide-react'
+import { X, Clock, ImagePlus } from 'lucide-react'
 import { useUpload } from 'hooks/useUpload'
 import { imageMimeTypes, videoMimeTypes, audioMimeTypes } from 'lib/mimeTypes'
 import Image from 'next/image'
@@ -161,12 +161,25 @@ export const PostMediaUploader = ({
   useEffect(() => {
     setPreview(currentUrl || null)
     setMediaType((currentType as 'image' | 'video' | 'audio') || null)
+    // Parent cleared the media (post submitted / removed) → drop the gallery too,
+    // otherwise the carousel strip lingers after posting. Building a gallery sets
+    // currentUrl to the first image, so this only fires on a real clear.
+    if (!currentUrl) setGallery([])
   }, [currentUrl, currentType])
 
   // Track pending thumbnail URL for video uploads
   const [pendingThumbnailUrl, setPendingThumbnailUrl] = useState<string | undefined>()
 
+  // While we're assembling a multi-image carousel we push URLs ourselves and
+  // fire onGalleryUploaded once at the end. Suppress useUpload's per-file
+  // onMediaSelected during that window so it can't clobber the assembled array
+  // (which would collapse the carousel back to a single image).
+  const buildingGalleryRef = useRef(false)
+  // Hidden input for the "Add photos" affordance (append to an existing image/gallery).
+  const addMoreRef = useRef<HTMLInputElement>(null)
+
   const { upload } = useUpload(undefined, (url) => {
+    if (buildingGalleryRef.current) return
     if (url && mediaType) {
       onMediaSelected(url, mediaType, pendingThumbnailUrl)
       setPendingThumbnailUrl(undefined)
@@ -181,27 +194,46 @@ export const PostMediaUploader = ({
       const file = acceptedFiles[0]
       if (!file) return
 
-      // Multi-image → IG-style carousel. Only when 2+ files and ALL are images;
-      // a single file (or any video/audio) falls through to the existing path.
-      const allImages = acceptedFiles.length > 1 && acceptedFiles.every((f) => f.type.startsWith('image/'))
-      if (allImages && onGalleryUploaded) {
+      // IG-style carousel that ACCUMULATES. Any time images come in — whether
+      // multi-selected at once OR added one at a time — append them to whatever
+      // images the post already has, instead of replacing. So 2+ images always
+      // become a swipeable carousel, never just the last one added. (The old
+      // logic only built a gallery when 2+ arrived in a single drop, and once a
+      // single image was set the dropzone disappeared, making a second image
+      // impossible — that's why multi-image posts weren't swiping.)
+      const incomingImages = acceptedFiles.filter((f) => f.type.startsWith('image/'))
+      const allIncomingAreImages = incomingImages.length > 0 && incomingImages.length === acceptedFiles.length
+      // Images already on the post: the working gallery, or a single uploaded image.
+      const existing = gallery.length > 0
+        ? gallery
+        : currentUrl && (currentType as string) === 'image'
+          ? [currentUrl]
+          : []
+      const willHaveMultiple = existing.length + incomingImages.length > 1
+      if (allIncomingAreImages && onGalleryUploaded && (willHaveMultiple || existing.length > 0)) {
         setError(null)
         setUploading(true)
         setMediaType('image')
-        setPreview(URL.createObjectURL(acceptedFiles[0]))
+        setPreview(URL.createObjectURL(incomingImages[0]))
+        buildingGalleryRef.current = true
         try {
-          const urls: string[] = []
-          for (const f of acceptedFiles.slice(0, 10)) {
+          const newUrls: string[] = []
+          for (const f of incomingImages.slice(0, 10)) {
             const u = await upload([f])
-            if (u) urls.push(u)
+            if (u) newUrls.push(u)
           }
-          if (urls.length > 1) { setGallery(urls); onGalleryUploaded(urls) }
-          else if (urls.length === 1) onMediaSelected(urls[0], 'image')
+          const combined = [...existing, ...newUrls].slice(0, 10)
+          if (combined.length > 1) {
+            setGallery(combined)
+            onGalleryUploaded(combined)
+          } else if (combined.length === 1) {
+            setGallery([])
+            onMediaSelected(combined[0], 'image')
+          }
         } catch (err: any) {
           setError(err.message || 'Upload failed')
-          setPreview(null)
-          setMediaType(null)
         } finally {
+          buildingGalleryRef.current = false
           setUploading(false)
         }
         return
@@ -309,6 +341,14 @@ export const PostMediaUploader = ({
     onMediaRemoved()
   }
 
+  // "Add photos" — append more images to the current image/gallery. Routes the
+  // picked files through onDrop, which accumulates them into the carousel.
+  const onAddMore = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || [])
+    e.target.value = ''
+    if (files.length) onDrop(files)
+  }
+
   // Multi-image carousel preview — a thumbnail strip so you SEE the gallery
   // you're building before posting.
   if (gallery.length > 1) {
@@ -332,7 +372,19 @@ export const PostMediaUploader = ({
               <span className="absolute top-0.5 left-0.5 px-1 rounded bg-black/60 text-white text-[9px] font-bold tabular-nums">{i + 1}</span>
             </div>
           ))}
+          {gallery.length < 10 && (
+            <button
+              type="button"
+              onClick={() => addMoreRef.current?.click()}
+              disabled={uploading}
+              className="flex-shrink-0 w-24 h-24 rounded-md border border-dashed border-white/25 hover:border-white/50 flex flex-col items-center justify-center gap-1 text-neutral-400 hover:text-white transition disabled:opacity-50"
+            >
+              <ImagePlus className="w-5 h-5" />
+              <span className="text-[10px] font-semibold">Add</span>
+            </button>
+          )}
         </div>
+        <input ref={addMoreRef} type="file" accept="image/*" multiple className="hidden" onChange={onAddMore} />
       </div>
     )
   }
@@ -365,6 +417,17 @@ export const PostMediaUploader = ({
               className="object-contain"
               unoptimized
             />
+            {/* Add more photos → turns a single image into a swipeable carousel */}
+            <button
+              type="button"
+              onClick={() => addMoreRef.current?.click()}
+              disabled={uploading}
+              className="absolute bottom-2 left-2 z-10 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/60 hover:bg-black/80 text-white text-xs font-semibold transition disabled:opacity-50"
+            >
+              <ImagePlus className="w-3.5 h-3.5" />
+              Add photos
+            </button>
+            <input ref={addMoreRef} type="file" accept="image/*" multiple className="hidden" onChange={onAddMore} />
           </div>
         )}
 
