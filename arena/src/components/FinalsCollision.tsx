@@ -504,7 +504,10 @@ export function FinalsCollision() {
            title, fading up out of shadow so a head-and-shoulders crop reads as an
            intentional TNT-style intro graphic, not a floating head. Full-body
            action cutouts (when present) override this via .fc-has-action. */
-        .fc-anchor { width: clamp(380px, 52vw, 760px); }
+        /* anchors biggest AND on top within their wedge (supporting players never
+           paint over Brunson/Wemby). The center title still wins via its translateZ. */
+        .fc-anchor { width: clamp(460px, 60vw, 900px); z-index: 6; }
+        .fc-tier-1 { z-index: 3; }
         .fc-anchor .fc-wp-img { -webkit-mask-image: linear-gradient(to bottom, #000 56%, transparent 94%); mask-image: linear-gradient(to bottom, #000 56%, transparent 94%); }
         /* feather the bottom edge so cutouts grow out of the layer below (no pasted-PNG look) */
         .fc-wp-img { width: 100%; display: block; -webkit-mask-image: linear-gradient(to bottom, #000 74%, transparent 98%); mask-image: linear-gradient(to bottom, #000 74%, transparent 98%); }
@@ -514,7 +517,7 @@ export function FinalsCollision() {
         .fc-wp-ny .fc-wp-img { filter: drop-shadow(0 4px 8px rgba(0,0,0,.55)); }
         .fc-wp-sa .fc-wp-img { transform: scaleX(-1); filter: drop-shadow(0 4px 8px rgba(0,0,0,.55)); }
         .fc-tier-1 .fc-wp-img { filter: drop-shadow(0 4px 8px rgba(0,0,0,.5)) brightness(.92); }
-        .fc-tier-2 { opacity: .55; }
+        .fc-tier-2 { opacity: .55; z-index: 1; }
         .fc-tier-2 .fc-wp-img { filter: blur(2px) brightness(.5) drop-shadow(0 4px 6px rgba(0,0,0,.5)); }
         .fc-anchor.fc-wp-ny .fc-wp-img { filter: drop-shadow(0 0 26px rgba(29,66,138,.95)) drop-shadow(-6px 0 14px rgba(245,132,38,.55)) drop-shadow(0 8px 10px rgba(0,0,0,.6)); }
         .fc-anchor.fc-wp-sa .fc-wp-img { filter: drop-shadow(0 0 26px rgba(196,206,212,.9)) drop-shadow(6px 0 14px rgba(255,255,255,.4)) drop-shadow(0 8px 10px rgba(0,0,0,.6)); }
@@ -676,7 +679,7 @@ export function FinalsCollision() {
           /* keep only 3 players/side on mobile (anchor + 2 mid), drop the back tier */
           .fc-tier-2 { display: none; }
           .fc-wp { width: clamp(140px, 40vw, 200px); }
-          .fc-anchor { width: clamp(200px, 62vw, 320px); }
+          .fc-anchor { width: clamp(240px, 72vw, 400px); }
           .fc-core { max-width: 100%; transform: translateZ(60px); }
           .fc-sl { width: 30vw; } .fc-cd-clock { gap: 8px; } .fc-cd-cell { min-width: 50px; }
           .fc-wm { width: 50vw; }
