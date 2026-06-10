@@ -64,9 +64,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   ensureIndex(col).catch(() => undefined)
 
   // Reply counts for the returned takes so the feed can show "N replies" under
-  // each one (skip in thread mode — replies aren't themselves expanded here).
+  // each one — computed in BOTH modes so nested replies in a thread also show
+  // their own reply counts (recursive threading).
   const countMap = new Map<string, number>()
-  if (!threadId && docs.length) {
+  if (docs.length) {
     const ids = docs.map((d) => d._id.toString())
     const agg = await col
       .aggregate<{ _id: string; n: number }>([

@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { fetchChannelLatest, fetchMultiChannelLatest, getBoxingChannels, getHorseRacingChannels, type YouTubeVideo } from '@/lib/youtube'
+import { fetchChannelLatest, fetchMultiChannelLatest, getBoxingChannels, getHorseRacingChannels, getWorldCupChannels, type YouTubeVideo } from '@/lib/youtube'
 import type { SportKey } from '@/lib/espn'
 
 type SportParam = SportKey | 'f1' | 'boxing' | 'wwe' | 'horseRacing'
@@ -33,6 +33,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       ? await fetchMultiChannelLatest(getBoxingChannels(), limit)
       : sport === 'horseRacing'
       ? await fetchMultiChannelLatest(getHorseRacingChannels(), limit)
+      : sport === 'fifaWorld'
+      ? await fetchMultiChannelLatest(getWorldCupChannels(), limit)
       : await fetchChannelLatest(sport as SportKey | 'f1' | 'wwe', limit)
     cache.set(cacheKey, { videos, fetchedAt: now })
     res.setHeader('Cache-Control', 'public, s-maxage=600, stale-while-revalidate=3600')

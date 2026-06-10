@@ -43,6 +43,15 @@ const HORSE_RACING_CHANNELS: { id: string; name: string }[] = [
   { id: 'UCUiL8HPhvqMY5zpYLQDiscw', name: 'At The Races' },
 ]
 
+// World Cup is a global event with no single channel — aggregate FIFA's official
+// feed (previews, classics, official content) with soccer-culture channels for
+// anchor analysis, team features and player interviews. All RSS-verified.
+const WORLD_CUP_CHANNELS: { id: string; name: string }[] = [
+  { id: 'UCpcTrCXblq78GZrTUTLWeBw', name: 'FIFA' },
+  { id: 'UCX_tjI6Q_4JD1E3234CwemA', name: 'CBS Sports Golazo' },
+  { id: 'UCFIdU1RkuRd26YDA7lerfEQ', name: 'COPA90' },
+]
+
 export function getLeagueChannel(sport: SportKey | 'f1' | 'wwe'): { id: string; name: string } | null {
   if (sport === 'f1') return F1_CHANNEL
   if (sport === 'wwe') return WWE_CHANNEL
@@ -55,6 +64,10 @@ export function getBoxingChannels(): { id: string; name: string }[] {
 
 export function getHorseRacingChannels(): { id: string; name: string }[] {
   return HORSE_RACING_CHANNELS
+}
+
+export function getWorldCupChannels(): { id: string; name: string }[] {
+  return WORLD_CUP_CHANNELS
 }
 
 /** Builds privacy-enhanced embed URL with autoplay + JS API enabled. */

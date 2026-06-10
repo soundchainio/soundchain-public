@@ -20,6 +20,7 @@ import { ChatActions } from './ChatActions'
 import { ParsedBody } from './ParsedBody'
 import { NotificationBell } from './NotificationBell'
 import { GifPicker } from './GifPicker'
+import { ArenaReplyThread } from './ArenaReplyThread'
 
 const POLL_MS = 8_000
 const FETCH_LIMIT = 12
@@ -481,35 +482,11 @@ export function LiveTakesFeed() {
                       />
                     )}
 
-                    {/* Inline thread — the take's replies, oldest-first. */}
+                    {/* Inline thread — recursive: every reply is itself repliable. */}
                     {openThreadId === t.id && (
-                      <ul className="mt-2 space-y-2 border-l-2 border-arena-red/25 pl-3">
-                        {(threads[t.id] ?? []).map((rep) => (
-                          <li key={rep.id} className="flex items-start gap-2">
-                            {isUrlAvatar(rep.avatar) ? (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img src={rep.avatar} alt="" loading="lazy" className="w-5 h-5 rounded-full object-cover border border-arena-border-l/60 dark:border-arena-border-d/60 flex-shrink-0 mt-0.5" />
-                            ) : (
-                              <span className="text-base leading-none flex-shrink-0 mt-0.5" aria-hidden>{rep.avatar || '🏟️'}</span>
-                            )}
-                            <div className="min-w-0 flex-1">
-                              <div className="flex items-center gap-1.5">
-                                <span className="text-xs font-bold truncate">@{rep.handle}</span>
-                                <span className="text-[10px] text-arena-muted-l dark:text-arena-muted-d">{formatRelative(rep.createdAt)}</span>
-                              </div>
-                              {rep.body && (
-                                <ParsedBody body={rep.body} className="text-xs text-arena-text-l dark:text-arena-text-d leading-snug break-words" />
-                              )}
-                              {rep.mediaUrl && rep.mediaType === 'image' && (
-                                <img src={rep.mediaUrl} alt="" loading="lazy" className="mt-1 max-h-32 rounded-md border border-arena-border-l dark:border-arena-border-d" />
-                              )}
-                            </div>
-                          </li>
-                        ))}
-                        {threads[t.id] && threads[t.id].length === 0 && (
-                          <li className="text-[11px] text-arena-muted-l dark:text-arena-muted-d">Loading replies…</li>
-                        )}
-                      </ul>
+                      <div className="mt-2 border-l-2 border-arena-red/25 pl-3">
+                        <ArenaReplyThread parentId={t.id} gameId={t.gameId} sport={t.sport} />
+                      </div>
                     )}
                   </div>
                 </div>
