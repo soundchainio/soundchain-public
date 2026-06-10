@@ -201,7 +201,7 @@ export function FinalsCollision() {
       if (!didInit.current) {
         didInit.current = true
         fetchFinalsRosters(d.home.id, d.away.id, 18).then((r) => alive && setRosters(r))
-        fetchSeries(d.game.id).then((s) => alive && setSeries(s))
+        fetchSeries(d.home.id, d.away.id).then((s) => alive && setSeries(s))
       }
     }
     load()
@@ -499,12 +499,12 @@ export function FinalsCollision() {
         .fc-fog { position: absolute; bottom: 0; top: 10%; width: 46%; }
         .fc-fog-ny { left: 0; background: linear-gradient(90deg, rgba(29,66,138,.34), rgba(245,132,38,.06) 55%, transparent); }
         .fc-fog-sa { right: 0; background: linear-gradient(270deg, rgba(196,206,212,.26), rgba(20,24,30,.10) 55%, transparent); }
-        .fc-wp { position: absolute; width: clamp(150px, 20vw, 250px); transform: translate3d(calc(var(--px) * var(--r)), calc(var(--py) * var(--r) * 0.5), var(--z)) scale(var(--s)); transform-origin: bottom center; will-change: transform; }
+        .fc-wp { position: absolute; width: clamp(190px, 25vw, 340px); transform: translate3d(calc(var(--px) * var(--r)), calc(var(--py) * var(--r) * 0.5), var(--z)) scale(var(--s)); transform-origin: bottom center; will-change: transform; }
         /* ANCHOR — premium broadcast bust. Brunson/Wemby big, rising beside the
            title, fading up out of shadow so a head-and-shoulders crop reads as an
            intentional TNT-style intro graphic, not a floating head. Full-body
            action cutouts (when present) override this via .fc-has-action. */
-        .fc-anchor { width: clamp(300px, 42vw, 560px); }
+        .fc-anchor { width: clamp(380px, 52vw, 760px); }
         .fc-anchor .fc-wp-img { -webkit-mask-image: linear-gradient(to bottom, #000 56%, transparent 94%); mask-image: linear-gradient(to bottom, #000 56%, transparent 94%); }
         /* feather the bottom edge so cutouts grow out of the layer below (no pasted-PNG look) */
         .fc-wp-img { width: 100%; display: block; -webkit-mask-image: linear-gradient(to bottom, #000 74%, transparent 98%); mask-image: linear-gradient(to bottom, #000 74%, transparent 98%); }
@@ -612,14 +612,18 @@ export function FinalsCollision() {
         .fc-game-at { color: #5b6672; font-size: 10px; } .fc-game-upcoming { color: #6b7682; font-size: 11px; letter-spacing: .15em; }
         .fc-game-win { margin-top: 6px; font-size: 9px; letter-spacing: .15em; color: #f58426; font-weight: 800; }
         .fc-roster { display: grid; grid-template-columns: 1fr; gap: 18px; }
-        .fc-roster-team { padding: 14px; border-radius: 16px; border: 1px solid rgba(255,255,255,.07); }
-        .fc-roster-ny { background: linear-gradient(135deg, rgba(29,66,138,.22), rgba(245,132,38,.05) 60%, transparent); }
-        .fc-roster-sa { background: linear-gradient(135deg, rgba(196,206,212,.16), transparent 60%); }
+        /* min-width:0 lets the grid items shrink below their content so the rail
+           SCROLLS instead of expanding the page (the no-scroll / overflow bug). */
+        .fc-roster-team { min-width: 0; padding: 14px; border-radius: 16px; border: 1px solid rgba(255,255,255,.1); }
+        .fc-roster-ny { background: linear-gradient(135deg, rgba(29,66,138,.28), rgba(245,132,38,.06) 60%, transparent); border-left: 3px solid #1d428a; }
+        .fc-roster-sa { background: linear-gradient(135deg, rgba(196,206,212,.18), transparent 60%); border-left: 3px solid #c4ced4; }
         .fc-roster-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
         .fc-roster-logo { width: 30px; height: 30px; object-fit: contain; }
         .fc-roster-tag { font-size: 12px; letter-spacing: .25em; font-weight: 900; }
         .fc-roster-ny .fc-roster-tag { color: #8fb6ff; } .fc-roster-sa .fc-roster-tag { color: #eef3f8; }
-        .fc-roster-rail { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 6px; }
+        .fc-roster-rail { display: flex; gap: 12px; overflow-x: auto; overflow-y: hidden; min-width: 0; padding-bottom: 8px; scrollbar-width: thin; -webkit-overflow-scrolling: touch; scroll-snap-type: x proximity; }
+        .fc-roster-rail::-webkit-scrollbar { height: 6px; } .fc-roster-rail::-webkit-scrollbar-thumb { background: rgba(255,255,255,.2); border-radius: 3px; }
+        .fc-card { scroll-snap-align: start; }
         .fc-card { position: relative; flex: 0 0 auto; width: 124px; text-align: center; border-radius: 14px; padding: 10px 8px; background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.08); overflow: hidden; transition: transform .18s; }
         .fc-card:hover { transform: translateY(-4px); }
         .fc-card-glow { position: absolute; left: 50%; top: -20%; width: 120%; height: 90%; transform: translateX(-50%); border-radius: 50%; filter: blur(12px); z-index: 0; }
@@ -671,8 +675,8 @@ export function FinalsCollision() {
           .fc-mote:nth-child(2n), .fc-flash:nth-child(2n), .fc-win:nth-child(2n) { display: none; }
           /* keep only 3 players/side on mobile (anchor + 2 mid), drop the back tier */
           .fc-tier-2 { display: none; }
-          .fc-wp { width: clamp(110px, 32vw, 160px); }
-          .fc-anchor { width: clamp(150px, 46vw, 230px); }
+          .fc-wp { width: clamp(140px, 40vw, 200px); }
+          .fc-anchor { width: clamp(200px, 62vw, 320px); }
           .fc-core { max-width: 100%; transform: translateZ(60px); }
           .fc-sl { width: 30vw; } .fc-cd-clock { gap: 8px; } .fc-cd-cell { min-width: 50px; }
           .fc-wm { width: 50vw; }

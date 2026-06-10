@@ -160,30 +160,38 @@ export async function fetchFinalsRosters(homeId: string, awayId: string, perTeam
   return { home, away }
 }
 
-/** Series bracket — every game of the Finals so far + tonight. From the game
- *  summary's seasonseries. */
-export async function fetchSeries(gameId: string): Promise<SeriesGame[]> {
+/** Series bracket — every Finals game between the two teams + tonight. From the
+ *  Finals-window scoreboard (reliable scores/winner, unlike the sparse summary
+ *  seasonseries which only returned 2 events with no scores). */
+export async function fetchSeries(teamA: string, teamB: string): Promise<SeriesGame[]> {
   try {
-    const r = await fetch(`${SITE}/summary?event=${encodeURIComponent(gameId)}`)
+    const r = await fetch(`${SITE}/scoreboard?dates=20260601-20260625`)
     if (!r.ok) return []
     const d = await r.json()
-    const series = d.seasonseries?.[0]?.events ?? d.series?.[0]?.competitions ?? []
-    return series.map((e: any, i: number): SeriesGame => {
-      const comp = e.competitions?.[0] ?? e
-      const comps: any[] = comp.competitors ?? e.competitors ?? []
+    const events: any[] = Array.isArray(d?.events) ? d.events : []
+    const ids = new Set([teamA, teamB])
+    const games = events
+      .filter((e) => {
+        const comps = e.competitions?.[0]?.competitors ?? []
+        return comps.length === 2 && comps.every((c: any) => ids.has(String(c.team?.id ?? c.id)))
+      })
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    return games.map((e: any, i: number): SeriesGame => {
+      const comp = e.competitions?.[0] ?? {}
+      const comps: any[] = comp.competitors ?? []
       const home = comps.find((c) => c.homeAway === 'home') ?? comps[0] ?? {}
       const away = comps.find((c) => c.homeAway === 'away') ?? comps[1] ?? {}
-      const state = (e.status?.type?.state ?? comp.status?.type?.state ?? 'pre') as SeriesGame['state']
       const winner = comps.find((c) => c.winner)
+      const sc = (c: any) => (typeof c.score === 'object' ? c.score?.displayValue : c.score)
       return {
         game: i + 1,
-        id: String(e.id ?? comp.id ?? ''),
-        date: e.date ?? comp.date,
+        id: String(e.id ?? ''),
+        date: e.date,
         homeAbbr: home.team?.abbreviation,
         awayAbbr: away.team?.abbreviation,
-        homeScore: home.score?.displayValue ?? home.score,
-        awayScore: away.score?.displayValue ?? away.score,
-        state,
+        homeScore: sc(home),
+        awayScore: sc(away),
+        state: (e.status?.type?.state ?? 'pre') as SeriesGame['state'],
         winnerAbbr: winner?.team?.abbreviation,
       }
     })
