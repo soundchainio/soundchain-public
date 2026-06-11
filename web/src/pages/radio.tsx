@@ -192,6 +192,17 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
   const globalRadio = useRadioOptional()
   const [currentTrack, setCurrentTrack] = useState<RadioTrack | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
+  // The OGUN Radio galaxy — every radio track as an NFT/SCID asteroid body for
+  // RadioScene4D. The playing track's id captures its asteroid into the core.
+  const [galaxyTracks, setGalaxyTracks] = useState<Array<{ id: string; scid?: string; title?: string; genre?: string }>>([])
+  useEffect(() => {
+    let alive = true
+    fetch('/api/radio/galaxy')
+      .then((r) => (r.ok ? r.json() : { tracks: [] }))
+      .then((d) => { if (alive) setGalaxyTracks(Array.isArray(d?.tracks) ? d.tracks : []) })
+      .catch(() => {})
+    return () => { alive = false }
+  }, [])
   const [showUploadAccordion, setShowUploadAccordion] = useState(true) // Open by default
   const [showUploadForm, setShowUploadForm] = useState(false) // SCID upload form modal
   const [scidResult, setScidResult] = useState<{ trackId: string; scid: string; ipfsCid: string; chainCode?: string; title: string } | null>(null)
@@ -1172,6 +1183,8 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
             isPlaying={isPlaying}
             artworkUrl={currentTrack?.artwork_url}
             genre={currentTrack?.genres?.[0]}
+            tracks={galaxyTracks}
+            currentTrackId={currentTrack?.id}
           />
         </div>
 
