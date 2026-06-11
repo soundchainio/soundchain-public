@@ -195,14 +195,24 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
   // The OGUN Radio galaxy — every radio track as an NFT/SCID asteroid body for
   // RadioScene4D. The playing track's id captures its asteroid into the core.
   const [galaxyTracks, setGalaxyTracks] = useState<Array<{ id: string; scid?: string; title?: string; genre?: string }>>([])
-  useEffect(() => {
-    let alive = true
-    fetch('/api/radio/galaxy')
+  const galaxyRefetchedFor = useRef<Set<string>>(new Set())
+  const loadGalaxy = useCallback(() => {
+    fetch('/api/radio/galaxy', { cache: 'no-store' })
       .then((r) => (r.ok ? r.json() : { tracks: [] }))
-      .then((d) => { if (alive) setGalaxyTracks(Array.isArray(d?.tracks) ? d.tracks : []) })
+      .then((d) => setGalaxyTracks(Array.isArray(d?.tracks) ? d.tracks : []))
       .catch(() => {})
-    return () => { alive = false }
   }, [])
+  useEffect(() => { loadGalaxy() }, [loadGalaxy])
+  // Pull in any newly minted NFT / uploaded SCID: if the track that just started
+  // isn't a body yet, refresh the galaxy once (the endpoint queries tracks live).
+  useEffect(() => {
+    const id = currentTrack?.id
+    if (!id || !galaxyTracks.length) return
+    if (galaxyTracks.some((t) => t.id === id)) return
+    if (galaxyRefetchedFor.current.has(id)) return
+    galaxyRefetchedFor.current.add(id)
+    loadGalaxy()
+  }, [currentTrack?.id, galaxyTracks, loadGalaxy])
   const [showUploadAccordion, setShowUploadAccordion] = useState(true) // Open by default
   const [showUploadForm, setShowUploadForm] = useState(false) // SCID upload form modal
   const [scidResult, setScidResult] = useState<{ trackId: string; scid: string; ipfsCid: string; chainCode?: string; title: string } | null>(null)

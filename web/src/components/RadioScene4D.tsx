@@ -234,8 +234,10 @@ export default function RadioScene4D({
   const isPlayingRef = useRef(false)
   const artworkUrlRef = useRef<string>('')
 
-  // Art billboard — the approved look renders cover art FLAT at core center
+  // Cover art renders 4D — mapped onto the ENTIRE core sphere (wraps + spins),
+  // not a flat billboard. coreRef gives the artwork loader the orb to texture.
   const artSpriteRef = useRef<THREE.Sprite | null>(null)
+  const coreRef = useRef<THREE.Mesh | null>(null)
   const artBloomRef = useRef(1) // 0..1 bloom-in progress
 
   // Orbital layer refs
@@ -342,20 +344,28 @@ export default function RadioScene4D({
       proxyUrl,
       (texture) => {
         texture.colorSpace = THREE.SRGBColorSpace
-        const sprite = artSpriteRef.current
-        if (sprite) {
-          const old = (sprite.material as THREE.SpriteMaterial).map
-          ;(sprite.material as THREE.SpriteMaterial).map = texture
-          ;(sprite.material as THREE.SpriteMaterial).needsUpdate = true
+        // 4D: wrap the cover art around the ENTIRE core sphere so it fills the
+        // orb and spins, instead of a flat billboard card.
+        const core = coreRef.current
+        if (core) {
+          const mat = core.material as THREE.MeshBasicMaterial
+          const old = mat.map
+          mat.map = texture
+          mat.color.set(0xffffff) // white base so the art shows true color
+          mat.needsUpdate = true
           if (old) old.dispose()
-          // If no capture animation is driving it (manual track jump), bloom now
-          if (captureRef.current.idx === -1 && artBloomRef.current >= 1) artBloomRef.current = 0
         }
+        // Keep the flat billboard hidden — art lives on the sphere now.
+        const sprite = artSpriteRef.current
+        if (sprite) (sprite.material as THREE.SpriteMaterial).opacity = 0
+        // Trigger the bloom/flash on a manual track jump (no capture in flight).
+        if (captureRef.current.idx === -1 && artBloomRef.current >= 1) artBloomRef.current = 0
       },
       undefined,
       () => {
-        const sprite = artSpriteRef.current
-        if (sprite) (sprite.material as THREE.SpriteMaterial).opacity = 0
+        // load failed — fall back to the warm orb
+        const core = coreRef.current
+        if (core) (core.material as THREE.MeshBasicMaterial).color.set(0xfff3e0)
       }
     )
   }, [artworkUrl])
@@ -405,10 +415,11 @@ export default function RadioScene4D({
 
     // ============ CENTRAL CORE — warm glowing reactor (approved v1 look) ============
     const core = new THREE.Mesh(
-      new THREE.SphereGeometry(CORE_R, 48, 48),
+      new THREE.SphereGeometry(CORE_R, 64, 64),
       new THREE.MeshBasicMaterial({ color: 0xfff3e0 })
     )
     scene.add(core)
+    coreRef.current = core
 
     const makeGlowSprite = (scale: number, color: number, opacity: number) => {
       const s = new THREE.Sprite(new THREE.SpriteMaterial({
@@ -685,8 +696,9 @@ export default function RadioScene4D({
       // --- Core breathing (bass) ---
       const pulse = 1 + 0.02 * Math.sin(elapsed * 1.4) + sBass * 0.06
       core.scale.setScalar(pulse)
+      core.rotation.y += delta * 0.22 // the wrapped cover art spins (4D)
       shell.scale.setScalar(pulse)
-      shell.rotation.y += delta * 0.12
+      shell.rotation.y += delta * 0.24
       glowA.material.opacity = 0.8 + 0.15 * Math.sin(elapsed * 1.4) + sBass * 0.2
       glowB.material.opacity = 0.30 + sBass * 0.18
       glowC.material.opacity = 0.85 + sBass * 0.15
@@ -694,7 +706,7 @@ export default function RadioScene4D({
       glowB.scale.setScalar(58 * (1 + sBass * 0.08))
 
       // --- Starfield drift ---
-      starfield.rotation.y = elapsed * 0.006
+      starfield.rotation.y = elapsed * 0.013
 
       // --- Swarm propagation (mids brighten the belt) ---
       if (!isMobile || frameCount % 2 === 0) {
@@ -702,7 +714,7 @@ export default function RadioScene4D({
         const arr = posAttr.array as Float32Array
         const dtS = isMobile ? delta * 2 : delta
         for (let i = 0; i < SWARM_N; i++) {
-          sw.M[i] += sw.n[i] * dtS
+          sw.M[i] += sw.n[i] * dtS * 3
           kepPos(sw.a[i], sw.e[i], sw.inc[i], sw.raan[i], sw.argp[i], sw.M[i], _kp)
           arr[i * 3] = _kp[0]; arr[i * 3 + 1] = _kp[1]; arr[i * 3 + 2] = _kp[2]
         }
@@ -810,7 +822,7 @@ export default function RadioScene4D({
                 onCaptureCompleteRef.current?.(landedId)
               }
             } else {
-              o.M += o.n * dtN
+              o.M += o.n * dtN * 4
               kepPos(o.a, o.e, o.inc, o.raan, o.argp, o.M, _kp)
               arr[i * 3] = _kp[0]; arr[i * 3 + 1] = _kp[1]; arr[i * 3 + 2] = _kp[2]
             }
@@ -819,17 +831,11 @@ export default function RadioScene4D({
         }
       }
 
-      // --- Cover art bloom + spin (the approved centerpiece) ---
-      if (artSpriteRef.current) {
-        const sprite = artSpriteRef.current
-        const sm = sprite.material as THREE.SpriteMaterial
-        if (sm.map && artBloomRef.current < 1) {
-          artBloomRef.current = Math.min(1, artBloomRef.current + delta * 1.4)
-          const e2 = artBloomRef.current * artBloomRef.current * (3 - 2 * artBloomRef.current)
-          sprite.scale.setScalar(0.01 + e2 * 9.5)
-          sm.opacity = e2
-        }
-        sm.rotation += delta * 0.15 // art spins with the core
+      // --- Cover-art capture flash — the wrapped orb pops as new art lands ---
+      if (artBloomRef.current < 1) {
+        artBloomRef.current = Math.min(1, artBloomRef.current + delta * 1.4)
+        const e2 = artBloomRef.current * artBloomRef.current * (3 - 2 * artBloomRef.current)
+        if (coreRef.current) coreRef.current.scale.multiplyScalar(1 + (1 - e2) * 0.14)
       }
 
       // --- Impact ripple ---
@@ -855,7 +861,7 @@ export default function RadioScene4D({
       }
 
       // --- Camera: cinematic auto-orbit, drag layered on top ---
-      if (!cam.dragging) cam.theta += delta * 0.03
+      if (!cam.dragging) cam.theta += delta * 0.075
       const d = cam.dist + Math.sin(elapsed * 0.05) * 2
       camera.position.set(
         d * Math.sin(cam.phi) * Math.cos(cam.theta),

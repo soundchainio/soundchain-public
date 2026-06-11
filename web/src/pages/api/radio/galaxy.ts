@@ -2,14 +2,15 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import clientPromise from 'lib/mongodb'
 
 /**
- * GET /api/radio/galaxy — the OGUN Radio "galaxy": every radio-eligible track as
- * a lightweight body for RadioScene4D. Each entry becomes an NFT/SCID asteroid
- * on its own Keplerian orbit; when the player's currentTrackId matches one, that
- * asteroid gets gravitationally captured into the core and its cover art blooms.
+ * GET /api/radio/galaxy — the OGUN Radio "galaxy": EVERY radio-eligible track in
+ * the v1+v2 volume (~5,400 SCIDs) as a lightweight body for RadioScene4D. Each
+ * becomes an NFT/SCID asteroid on its own Keplerian orbit (deriveOrbit hashes
+ * the id); when the queue's currentTrackId matches a body, that asteroid is
+ * gravitationally captured into the core and its cover art blooms.
  *
- * Mirrors the radio skill's eligibility (assetUrl present, not deleted, deduped
- * by audio) and joins the scids collection by the STRING trackId (scids.trackId
- * is string-keyed — see the scid resolver bug). Cheap projection, edge-cached.
+ * CRITICAL: do NOT dedup or cap below the full volume — the radio queue can play
+ * ANY eligible track, and if its id isn't a body here, nothing captures. Joins
+ * the scids collection by the STRING trackId (scids.trackId is string-keyed).
  */
 export default async function handler(_req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -20,29 +21,18 @@ export default async function handler(_req: NextApiRequest, res: NextApiResponse
       .collection('tracks')
       .find(
         { assetUrl: { $exists: true, $ne: '' }, deleted: { $ne: true } },
-        { projection: { _id: 1, title: 1, assetUrl: 1, genres: 1 } }
+        { projection: { _id: 1, title: 1, genres: 1 } }
       )
-      .limit(2000)
       .toArray()
 
-    // Dedup by audio (one body per unique track, ignoring editions).
-    const seen = new Set<string>()
-    const unique: any[] = []
-    for (const t of tracks) {
-      const key = t.assetUrl
-      if (!key || seen.has(key)) continue
-      seen.add(key)
-      unique.push(t)
-    }
-
-    const ids = unique.map((t) => t._id.toString())
+    const ids = tracks.map((t) => t._id.toString())
     const scidDocs = await db
       .collection('scids')
       .find({ trackId: { $in: ids } }, { projection: { trackId: 1, scid: 1 } })
       .toArray()
     const scidByTrack = new Map(scidDocs.map((s: any) => [String(s.trackId), s.scid]))
 
-    const bodies = unique.slice(0, 600).map((t: any) => {
+    const bodies = tracks.map((t: any) => {
       const id = t._id.toString()
       return {
         id,
@@ -52,7 +42,8 @@ export default async function handler(_req: NextApiRequest, res: NextApiResponse
       }
     })
 
-    res.setHeader('Cache-Control', 'public, max-age=300, stale-while-revalidate=900')
+    // Short cache so a freshly minted NFT / uploaded SCID joins the galaxy fast.
+    res.setHeader('Cache-Control', 'public, max-age=60, stale-while-revalidate=300')
     res.status(200).json({ tracks: bodies, count: bodies.length })
   } catch (e: any) {
     res.status(200).json({ tracks: [], count: 0, error: String(e?.message || e) })
