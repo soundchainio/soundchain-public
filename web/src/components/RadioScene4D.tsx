@@ -714,7 +714,7 @@ export default function RadioScene4D({
         const arr = posAttr.array as Float32Array
         const dtS = isMobile ? delta * 2 : delta
         for (let i = 0; i < SWARM_N; i++) {
-          sw.M[i] += sw.n[i] * dtS * 3
+          sw.M[i] += sw.n[i] * dtS * 9
           kepPos(sw.a[i], sw.e[i], sw.inc[i], sw.raan[i], sw.argp[i], sw.M[i], _kp)
           arr[i * 3] = _kp[0]; arr[i * 3 + 1] = _kp[1]; arr[i * 3 + 2] = _kp[2]
         }
@@ -822,7 +822,7 @@ export default function RadioScene4D({
                 onCaptureCompleteRef.current?.(landedId)
               }
             } else {
-              o.M += o.n * dtN * 4
+              o.M += o.n * dtN * 9
               kepPos(o.a, o.e, o.inc, o.raan, o.argp, o.M, _kp)
               arr[i * 3] = _kp[0]; arr[i * 3 + 1] = _kp[1]; arr[i * 3 + 2] = _kp[2]
             }
@@ -861,7 +861,7 @@ export default function RadioScene4D({
       }
 
       // --- Camera: cinematic auto-orbit, drag layered on top ---
-      if (!cam.dragging) cam.theta += delta * 0.075
+      if (!cam.dragging) cam.theta += delta * 0.04
       const d = cam.dist + Math.sin(elapsed * 0.05) * 2
       camera.position.set(
         d * Math.sin(cam.phi) * Math.cos(cam.theta),
