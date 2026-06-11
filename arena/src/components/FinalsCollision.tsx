@@ -748,9 +748,12 @@ export function FinalsCollision() {
              top so the two anchors are visible flanking the bottom, facing off. */
           .fc-stage { align-items: flex-start; }
           .fc-core { max-width: 100%; transform: translateZ(36px); padding-top: 5vh; }
-          .fc-anchor { width: clamp(190px, 58vw, 310px); }
-          .fc-wp-ny.fc-anchor { left: -7% !important; right: auto !important; bottom: -5% !important; }
-          .fc-wp-sa.fc-anchor { right: -7% !important; left: auto !important; bottom: -5% !important; }
+          /* clearly separated — no center crossing (was overlapping so much they
+             looked swapped). Brunson hugs the LEFT, Wemby the RIGHT, gap between. */
+          .fc-anchor { width: clamp(150px, 47vw, 240px); }
+          .fc-wp-ny.fc-anchor { left: -2% !important; right: auto !important; bottom: -4% !important; }
+          .fc-wp-sa.fc-anchor { right: -2% !important; left: auto !important; bottom: -4% !important; }
+          .fc-wp-name { font-size: 12px; }
           .fc-sl { width: 30vw; } .fc-cd-clock { gap: 8px; } .fc-cd-cell { min-width: 50px; }
           .fc-wm { width: 48vw; }
         }
