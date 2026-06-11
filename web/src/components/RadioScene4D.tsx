@@ -1,34 +1,67 @@
 /**
- * RadioScene4D — NVIDIA-grade immersive audio-reactive 3D experience
+ * RadioScene4D — OGUN RADIO · ORBITAL COMMAND (approved Jun 10 2026)
  *
- * God's eye view of music in 2073. Cyberpunk dystopian AI era.
- * - UnrealBloomPass post-processing (everything glows)
- * - Central reactor orb pulses with bass, radiates energy beams
- * - 3 concentric frequency rings deform from live FFT data
- * - Double helix DNA stream (4000 particles)
- * - 8000-particle reactive starfield nebula
- * - Tron-style infinite ground grid
- * - 6 orbiting ecosystem nodes with text sprite labels
- * - Energy beams connecting orb to nodes
- * - Cinematic slow-orbit camera
- * - 14 genre-aware color palettes shift the entire mood
+ * Visual spec: ogun-radio-orbital.html preview, Frank-approved on the v1 look.
+ * Matches it exactly — same scale (core r=7, belt a=12–42, cam ~72), same
+ * warm glow core, same center cover-art billboard bloom, same asteroid-scale
+ * NFT bodies (no big planet orbs).
+ *
+ * - Central glowing reactor core (cream) + layered warm halo + wireframe shell
+ * - Cover art BILLBOARD blooms at the core center on capture landing and
+ *   slowly spins — full artwork visible flat, not wrapped around a sphere
+ * - 2,600-body Keplerian rust swarm (NASA/JPL NEO population shape)
+ * - Every NFT/SCID = an asteroid on a DETERMINISTIC orbit derived from
+ *   hash(OGUN contract, tokenId). Same id -> same orbit on every client.
+ * - Genre -> orbital band + inclination + color (hip-hop inner belt, etc.)
+ * - NFT bodies at asteroid scale, soft per-body pulse, genre tint
+ * - Faint orbit ellipses for a sampled subset only (full 5,417 = spaghetti)
+ * - Track change = GRAVITATIONAL CAPTURE: 3.2s orbit decay, spiral trail,
+ *   impact ripple, art bloom; body respawns into the belt after 20s
+ * - Cinematic auto-orbit + drag rotate + scroll zoom
+ * - Audio-reactive: bass breathes core/halo, mids brighten the belt,
+ *   highs swell NFT bodies
+ * - NO post-processing — the approved look's glow is all additive sprites,
+ *   which is also cheaper than the old UnrealBloom pass
+ *
+ * Production wiring preserved:
+ * - Apr 14 analyser ownership fix (this page owns its Web Audio graph,
+ *   publishes globally for Neural)
+ * - S3 CORS proxy for artwork textures (now feeds the billboard)
+ * - Mobile frame budgets, paused-state throttle, visibilitychange full stop
+ *
+ * Ecosystem nodes (NVIDIA/FURL/OGUN/...) are behind showEcosystemNodes
+ * (default false — not in the approved frame). Flip the prop to bring the
+ * stack labels back without touching the scene.
  */
 
 import React, { useEffect, useRef, useCallback } from 'react'
 import * as THREE from 'three'
-import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js'
-import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
-import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
-import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js'
+
+// A track body in the orbital swarm. id should be stable (tokenId or scid).
+export interface RadioTrackBody {
+  id: string | number
+  scid?: string
+  title?: string
+  genre?: string
+}
 
 interface RadioScene4DProps {
   audioRef: React.RefObject<HTMLAudioElement | null>
   isPlaying: boolean
   artworkUrl?: string
   genre?: string
+  /** Full v1+v2 volume from /api/radio/galaxy — each entry becomes an asteroid.
+   *  Omitted -> 48 placeholder bodies render so the scene is alive pre-wiring. */
+  tracks?: RadioTrackBody[]
+  /** When this changes, that track's asteroid begins gravitational capture */
+  currentTrackId?: string | number
+  /** Fires when the asteroid lands — sync audio start here for the cinematic beat */
+  onCaptureComplete?: (id: string | number) => void
+  /** Stack labels orbiting outside the belt. Off by default (approved look). */
+  showEcosystemNodes?: boolean
 }
 
-// Genre -> color palette mapping
+// Genre -> color palette mapping (primary tints the body + capture FX)
 const GENRE_PALETTES: Record<string, { primary: THREE.Color; secondary: THREE.Color; accent: THREE.Color }> = {
   'hip-hop': { primary: new THREE.Color(0xff4500), secondary: new THREE.Color(0xff8c00), accent: new THREE.Color(0xffd700) },
   'rap': { primary: new THREE.Color(0xff4500), secondary: new THREE.Color(0xff8c00), accent: new THREE.Color(0xffd700) },
@@ -39,40 +72,115 @@ const GENRE_PALETTES: Record<string, { primary: THREE.Color; secondary: THREE.Co
   'r&b': { primary: new THREE.Color(0x9b59b6), secondary: new THREE.Color(0xe91e63), accent: new THREE.Color(0xff69b4) },
   'soul': { primary: new THREE.Color(0x9b59b6), secondary: new THREE.Color(0xe91e63), accent: new THREE.Color(0xff69b4) },
   'pop': { primary: new THREE.Color(0xff69b4), secondary: new THREE.Color(0x00bfff), accent: new THREE.Color(0xffffff) },
-  'lo-fi': { primary: new THREE.Color(0x6b8e8e), secondary: new THREE.Color(0x4a6741), accent: new THREE.Color(0xd4a574) },
+  'lo-fi': { primary: new THREE.Color(0x37e6ff), secondary: new THREE.Color(0x4a6741), accent: new THREE.Color(0xd4a574) },
   'classical': { primary: new THREE.Color(0xffd700), secondary: new THREE.Color(0xffffff), accent: new THREE.Color(0xc0c0c0) },
   'reggae': { primary: new THREE.Color(0x00ff00), secondary: new THREE.Color(0xffd700), accent: new THREE.Color(0xff0000) },
   'latin': { primary: new THREE.Color(0xff6347), secondary: new THREE.Color(0xffd700), accent: new THREE.Color(0xff1493) },
   'country': { primary: new THREE.Color(0xdeb887), secondary: new THREE.Color(0xcd853f), accent: new THREE.Color(0x8b4513) },
 }
-
 const DEFAULT_PALETTE = { primary: new THREE.Color(0xff4400), secondary: new THREE.Color(0x00ffff), accent: new THREE.Color(0xffd700) }
 
-// Ecosystem node labels
+// Genre -> orbital band + max inclination. v1 preview scale: core r=7.
+const GENRE_ORBITS: Record<string, { band: [number, number]; inc: number }> = {
+  'hip-hop': { band: [14, 20], inc: 0.12 },
+  'rap': { band: [14, 20], inc: 0.12 },
+  'electronic': { band: [20, 27], inc: 0.30 },
+  'edm': { band: [20, 27], inc: 0.30 },
+  'lo-fi': { band: [20, 26], inc: 0.22 },
+  'jazz': { band: [24, 30], inc: 0.18 },
+  'r&b': { band: [22, 29], inc: 0.20 },
+  'soul': { band: [22, 29], inc: 0.20 },
+  'pop': { band: [18, 25], inc: 0.16 },
+  'rock': { band: [26, 34], inc: 0.35 },
+  'classical': { band: [30, 38], inc: 0.25 },
+  'reggae': { band: [25, 32], inc: 0.28 },
+  'latin': { band: [21, 28], inc: 0.24 },
+  'country': { band: [28, 36], inc: 0.30 },
+}
+const DEFAULT_ORBIT = { band: [18, 38] as [number, number], inc: 0.45 }
+
+const OGUN_CONTRACT = '0x45F1AF89486AeEc2Da0B06340Cd9CD3Bd741A15c'
+const CORE_R = 7
+const CAPTURE_SECONDS = 3.2
+const CAPTURE_LAND_RADIUS = CORE_R * 1.05
+const RESPAWN_SECONDS = 20
+const ORBIT_RING_SAMPLE = 60 // faint ellipses drawn for this many bodies max
+
+// ---- Deterministic orbit derivation ----
+// Stand-in for keccak256(contractAddress, tokenId). FNV-1a 32-bit.
+function hash32(str: string): number {
+  let h = 2166136261
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i)
+    h = Math.imul(h, 16777619)
+  }
+  return h >>> 0
+}
+function makeRng(seed: number) {
+  let s = seed
+  return () => {
+    s = (Math.imul(s, 1664525) + 1013904223) >>> 0
+    return s / 4294967296
+  }
+}
+
+// Keplerian position: M -> E (2 Newton steps) -> true anomaly -> rotate ω,Ω,i
+const _kp = new Float32Array(3)
+function kepPos(a: number, e: number, inc: number, raan: number, argp: number, M: number, out: Float32Array) {
+  let E = M
+  for (let k = 0; k < 2; k++) E = E - (E - e * Math.sin(E) - M) / (1 - e * Math.cos(E))
+  const nu = 2 * Math.atan2(Math.sqrt(1 + e) * Math.sin(E / 2), Math.sqrt(1 - e) * Math.cos(E / 2))
+  const r = a * (1 - e * Math.cos(E))
+  const xo = r * Math.cos(nu), yo = r * Math.sin(nu)
+  const cw = Math.cos(argp), sw = Math.sin(argp), cO = Math.cos(raan), sO = Math.sin(raan)
+  const ci = Math.cos(inc), si = Math.sin(inc)
+  out[0] = xo * (cw * cO - sw * sO * ci) - yo * (sw * cO + cw * sO * ci)
+  out[2] = xo * (cw * sO + sw * cO * ci) - yo * (sw * sO - cw * cO * ci)
+  out[1] = xo * (sw * si) + yo * (cw * si)
+}
+
+interface OrbitParams { a: number; e: number; inc: number; raan: number; argp: number; M: number; n: number }
+
+function deriveOrbit(id: string | number, genre?: string): OrbitParams {
+  const seed = hash32(OGUN_CONTRACT + ':' + String(id))
+  const r = makeRng(seed)
+  const g = (genre && GENRE_ORBITS[genre.toLowerCase().replace(/\s+/g, '-')]) || DEFAULT_ORBIT
+  const a = g.band[0] + r() * (g.band[1] - g.band[0])
+  return {
+    a,
+    e: 0.05 + r() * 0.30,
+    inc: (r() - 0.5) * 2 * g.inc,
+    raan: r() * Math.PI * 2,
+    argp: r() * Math.PI * 2,
+    M: r() * Math.PI * 2,
+    n: 0.10 / Math.pow(a / 14, 1.5), // Kepler's third law: n ∝ a^-3/2
+  }
+}
+
+const PLACEHOLDER_GENRES = ['hip-hop', 'lo-fi', 'electronic', 'jazz', 'rock', 'classical']
+function placeholderTracks(): RadioTrackBody[] {
+  return Array.from({ length: 48 }, (_, i) => ({
+    id: 5400 + i,
+    scid: 'SC-POL-' + (5400 + i),
+    genre: PLACEHOLDER_GENRES[hash32('g' + i) % PLACEHOLDER_GENRES.length],
+  }))
+}
+
+// Ecosystem node labels (showEcosystemNodes prop)
 const ECOSYSTEM_NODES = [
-  { label: 'NVIDIA', color: 0x76b900 },   // NVIDIA green
-  { label: 'META', color: 0x0668e1 },     // Meta blue
-  { label: 'POLYGON', color: 0x8247e5 },  // Polygon purple
-  { label: 'IPFS', color: 0x469ea2 },     // IPFS teal (darker, distinct from SCID)
-  { label: 'SCID', color: 0x00e5ff },     // SCID cyan
-  { label: 'FURL', color: 0xff2266 },     // FURL hot pink
-  { label: 'SMITH', color: 0xb8ff44 },    // SMITH lime yellow (distinct from AGENTS)
-  { label: 'AGENTS', color: 0xff8800 },   // AGENTS orange (was green, clashed with SMITH)
-  { label: 'CLAWHUB', color: 0xe64400 },  // CLAWHUB red-orange (distinct from AGENTS orange)
-  { label: 'NPM', color: 0xcb3837 },      // NPM red
-  { label: 'OGUN', color: 0xffd700 },     // OGUN gold
-  { label: 'P2P', color: 0x44ddff },      // P2P light blue (distinct from SCID cyan)
+  { label: 'NVIDIA', color: 0x76b900 }, { label: 'META', color: 0x0668e1 },
+  { label: 'POLYGON', color: 0x8247e5 }, { label: 'IPFS', color: 0x469ea2 },
+  { label: 'SCID', color: 0x00e5ff }, { label: 'FURL', color: 0xff2266 },
+  { label: 'SMITH', color: 0xb8ff44 }, { label: 'AGENTS', color: 0xff8800 },
+  { label: 'CLAWHUB', color: 0xe64400 }, { label: 'NPM', color: 0xcb3837 },
+  { label: 'OGUN', color: 0xffd700 }, { label: 'P2P', color: 0x44ddff },
 ]
 
-// Create a text sprite for 3D labels
 function createTextSprite(text: string, color: number): THREE.Sprite {
   const canvas = document.createElement('canvas')
   canvas.width = 256
   canvas.height = 64
   const ctx = canvas.getContext('2d')!
-  ctx.clearRect(0, 0, 256, 64)
-
-  // Glow effect
   const hexColor = '#' + new THREE.Color(color).getHexString()
   ctx.shadowColor = hexColor
   ctx.shadowBlur = 12
@@ -81,29 +189,38 @@ function createTextSprite(text: string, color: number): THREE.Sprite {
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
   ctx.fillText(text, 128, 32)
-  // Second pass for brightness
   ctx.fillText(text, 128, 32)
-
   const texture = new THREE.CanvasTexture(canvas)
   texture.colorSpace = THREE.SRGBColorSpace
-  const material = new THREE.SpriteMaterial({
-    map: texture,
-    transparent: true,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false,
-  })
-  const sprite = new THREE.Sprite(material)
-  sprite.scale.set(1.5, 0.375, 1)
+  const sprite = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: texture, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false,
+  }))
+  sprite.scale.set(6, 1.5, 1)
   return sprite
 }
 
-// Mobile detection — throttle GPU-intensive work on phones/tablets
+// Soft radial glow texture — shared by dust, NFT bodies, and core halo
+function createGlowTexture(): THREE.CanvasTexture {
+  const c = document.createElement('canvas')
+  c.width = c.height = 64
+  const x = c.getContext('2d')!
+  const g = x.createRadialGradient(32, 32, 0, 32, 32, 32)
+  g.addColorStop(0, 'rgba(255,255,255,1)')
+  g.addColorStop(0.35, 'rgba(255,255,255,0.5)')
+  g.addColorStop(1, 'rgba(255,255,255,0)')
+  x.fillStyle = g
+  x.fillRect(0, 0, 64, 64)
+  return new THREE.CanvasTexture(c)
+}
+
 const isMobile = typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)
 
-export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }: RadioScene4DProps) {
+export default function RadioScene4D({
+  audioRef, isPlaying, artworkUrl, genre,
+  tracks, currentTrackId, onCaptureComplete, showEcosystemNodes = false,
+}: RadioScene4DProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null)
-  const composerRef = useRef<EffectComposer | null>(null)
   const sceneRef = useRef<THREE.Scene | null>(null)
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null)
   const analyserRef = useRef<AnalyserNode | null>(null)
@@ -112,56 +229,59 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
   const dataArrayRef = useRef<Uint8Array<ArrayBuffer> | null>(null)
   const animFrameRef = useRef<number>(0)
   const clockRef = useRef(new THREE.Clock())
-  // Synced from `isPlaying` prop so the animate loop (mounted once) can read it
-  // without re-mounting the whole scene. When paused we throttle to a near-idle
-  // frame rate to save phone battery (was rendering at full 30fps mobile / 60fps
-  // desktop regardless of audio state).
+  // Synced from `isPlaying` so the animate loop (mounted once) reads it without
+  // re-mounting the scene. Paused -> near-idle frame rate (battery fix).
   const isPlayingRef = useRef(false)
-  const artworkTextureRef = useRef<THREE.Texture | null>(null)
   const artworkUrlRef = useRef<string>('')
 
-  // Scene object refs
-  const orbRef = useRef<THREE.Mesh | null>(null)
-  const orbMaterialRef = useRef<THREE.ShaderMaterial | null>(null)
-  const helixParticlesRef = useRef<THREE.Points | null>(null)
-  const starfieldRef = useRef<THREE.Points | null>(null)
-  const freqRingsRef = useRef<THREE.Line[]>([])
-  const nodeGroupRef = useRef<THREE.Group | null>(null)
-  const glowRef = useRef<THREE.Mesh | null>(null)
-  const gridRef = useRef<THREE.Group | null>(null)
-  const beamsRef = useRef<THREE.Group | null>(null)
-  const bloomPassRef = useRef<UnrealBloomPass | null>(null)
+  // Art billboard — the approved look renders cover art FLAT at core center
+  const artSpriteRef = useRef<THREE.Sprite | null>(null)
+  const artBloomRef = useRef(1) // 0..1 bloom-in progress
+
+  // Orbital layer refs
+  const tracksRef = useRef<RadioTrackBody[]>([])
+  const nftDirtyRef = useRef(true)
+  const nftRef = useRef<{
+    points: THREE.Points | null
+    orbits: OrbitParams[]
+    ids: (string | number)[]
+    baseSizes: Float32Array | null
+    rings: THREE.Line[]
+  }>({ points: null, orbits: [], ids: [], baseSizes: null, rings: [] })
+  const captureRef = useRef<{
+    idx: number
+    t: number
+    pendingId: string | number | null
+    landedIdx: number
+    landedAt: number
+    rippleT: number
+    trail: number[][]
+  }>({ idx: -1, t: 0, pendingId: null, landedIdx: -1, landedAt: -1, rippleT: 1e9, trail: [] })
+  const trailLineRef = useRef<THREE.Line | null>(null)
+  const rippleRef = useRef<THREE.Mesh | null>(null)
+  const captureRingRef = useRef<THREE.Line | null>(null)
+  const onCaptureCompleteRef = useRef(onCaptureComplete)
+  useEffect(() => { onCaptureCompleteRef.current = onCaptureComplete }, [onCaptureComplete])
+
+  // Camera — v1 preview scale
+  const camRef = useRef({ theta: 0.6, phi: 1.15, dist: 72, dragging: false, px: 0, py: 0 })
 
   // Smoothed audio values
   const smoothBassRef = useRef(0)
   const smoothMidsRef = useRef(0)
   const smoothHighsRef = useRef(0)
 
-  // Per-song randomized orbit params — changes every track for infinite variety
-  const orbitParamsRef = useRef({
-    speed: 0.15,
-    tilt: 0.25,
-    wobble: 0.4,
-    yAmplitude: 1.2,
-    radiusBase: 4.5,
-    radiusWave: 0.6,
-    spinX: 2.0,
-    spinZ: 1.5,
-  })
-
-  // Randomize orbit when track changes (artworkUrl is proxy for track change)
+  // Sync track registry into the loop
   useEffect(() => {
-    orbitParamsRef.current = {
-      speed: 0.08 + Math.random() * 0.25,       // 0.08 - 0.33
-      tilt: 0.1 + Math.random() * 0.5,           // 0.1 - 0.6
-      wobble: 0.2 + Math.random() * 0.8,         // 0.2 - 1.0
-      yAmplitude: 0.5 + Math.random() * 2.0,     // 0.5 - 2.5
-      radiusBase: 3.5 + Math.random() * 2.5,     // 3.5 - 6.0
-      radiusWave: 0.3 + Math.random() * 1.0,     // 0.3 - 1.3
-      spinX: 1.0 + Math.random() * 3.0,          // 1.0 - 4.0
-      spinZ: 0.5 + Math.random() * 3.0,          // 0.5 - 3.5
-    }
-  }, [artworkUrl])
+    tracksRef.current = tracks && tracks.length ? tracks : placeholderTracks()
+    nftDirtyRef.current = true
+  }, [tracks])
+
+  // Track change -> queue gravitational capture (consumed by animate loop)
+  useEffect(() => {
+    if (currentTrackId === undefined || currentTrackId === null) return
+    captureRef.current.pendingId = currentTrackId
+  }, [currentTrackId])
 
   const getPalette = useCallback(() => {
     if (!genre) return DEFAULT_PALETTE
@@ -209,12 +329,10 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
     }
   }, [isPlaying])
 
-  // Load artwork texture
+  // Load artwork texture — feeds the center billboard (S3 CORS proxy preserved)
   useEffect(() => {
     if (!artworkUrl || artworkUrl === artworkUrlRef.current) return
     artworkUrlRef.current = artworkUrl
-    // S3 doesn't return CORS headers — proxy through Next.js image optimizer
-    // which adds proper CORS and serves from our domain
     const proxyUrl = artworkUrl.includes('s3.') || artworkUrl.includes('amazonaws.com')
       ? `/api/image-proxy?url=${encodeURIComponent(artworkUrl)}`
       : artworkUrl
@@ -224,16 +342,20 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
       proxyUrl,
       (texture) => {
         texture.colorSpace = THREE.SRGBColorSpace
-        if (artworkTextureRef.current) artworkTextureRef.current.dispose()
-        artworkTextureRef.current = texture
-        if (orbMaterialRef.current) {
-          orbMaterialRef.current.uniforms.uTexture.value = texture
-          orbMaterialRef.current.uniforms.uHasTexture.value = 1.0
+        const sprite = artSpriteRef.current
+        if (sprite) {
+          const old = (sprite.material as THREE.SpriteMaterial).map
+          ;(sprite.material as THREE.SpriteMaterial).map = texture
+          ;(sprite.material as THREE.SpriteMaterial).needsUpdate = true
+          if (old) old.dispose()
+          // If no capture animation is driving it (manual track jump), bloom now
+          if (captureRef.current.idx === -1 && artBloomRef.current >= 1) artBloomRef.current = 0
         }
       },
       undefined,
       () => {
-        if (orbMaterialRef.current) orbMaterialRef.current.uniforms.uHasTexture.value = 0.0
+        const sprite = artSpriteRef.current
+        if (sprite) (sprite.material as THREE.SpriteMaterial).opacity = 0
       }
     )
   }, [artworkUrl])
@@ -245,687 +367,283 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
     const width = container.clientWidth
     const height = container.clientHeight
 
-    // --- Renderer ---
+    // --- Renderer (no post-processing — approved look glows via additive sprites) ---
     const renderer = new THREE.WebGLRenderer({ antialias: !isMobile, alpha: false, powerPreference: isMobile ? 'low-power' : 'high-performance' })
     renderer.setSize(width, height)
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 3)) // Cap DPR on mobile to reduce GPU load
-    renderer.setClearColor(0x000000, 1)  // Deeper space black
-    renderer.toneMapping = THREE.ACESFilmicToneMapping
-    renderer.toneMappingExposure = 1.2
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2))
+    renderer.setClearColor(0x040208, 1) // deep violet-black void
     container.appendChild(renderer.domElement)
     rendererRef.current = renderer
 
-    // --- Scene ---
     const scene = new THREE.Scene()
-    scene.fog = new THREE.FogExp2(0x000000, 0.008)  // Deeper fog, farther visibility for planets
+    scene.fog = new THREE.FogExp2(0x040208, 0.0055)
     sceneRef.current = scene
 
-    // --- Camera (cinematic orbit) ---
-    const camera = new THREE.PerspectiveCamera(55, width / height, 0.1, 200)
-    camera.position.set(0, 2, 8)
+    const camera = new THREE.PerspectiveCamera(55, width / height, 0.1, 600)
     cameraRef.current = camera
 
-    // --- Post-processing: UnrealBloom ---
-    const composer = new EffectComposer(renderer)
-    const renderPass = new RenderPass(scene, camera)
-    composer.addPass(renderPass)
+    const glowTex = createGlowTexture()
 
-    const bloomPass = new UnrealBloomPass(
-      new THREE.Vector2(isMobile ? width / 2 : width, isMobile ? height / 2 : height),
-      isMobile ? 0.12 : 0.28, // strength — near-off; PITCH-BLACK space (Frank: full dark, realistic stars)
-      isMobile ? 0.15 : 0.28, // radius
-      isMobile ? 0.9 : 0.72   // threshold — only the absolute brightest pinpoints bloom, rest stays black
-    )
-    composer.addPass(bloomPass)
-    bloomPassRef.current = bloomPass
-
-    const outputPass = new OutputPass()
-    composer.addPass(outputPass)
-    composerRef.current = composer
-
-    // ============ CENTRAL REACTOR ORB ============
-    const orbGeo = new THREE.SphereGeometry(1.3, 128, 128)
-    const orbMat = new THREE.ShaderMaterial({
-      uniforms: {
-        uTime: { value: 0 },
-        uBass: { value: 0 },
-        uTexture: { value: null as THREE.Texture | null },
-        uHasTexture: { value: 0.0 },
-        uPrimary: { value: DEFAULT_PALETTE.primary },
-        uSecondary: { value: DEFAULT_PALETTE.secondary },
-      },
-      vertexShader: `
-        uniform float uTime;
-        uniform float uBass;
-        varying vec2 vUv;
-        varying vec3 vNormal;
-        varying vec3 vPosition;
-        void main() {
-          vUv = uv;
-          vNormal = normal;
-          // Aggressive bass displacement — the orb BREATHES
-          float displacement = sin(position.x * 5.0 + uTime * 3.0) * sin(position.y * 5.0 + uTime * 2.0) * sin(position.z * 5.0 + uTime * 1.5) * uBass * 0.25;
-          vec3 pos = position + normal * displacement;
-          float scale = 1.0 + uBass * 0.12;
-          pos *= scale;
-          vPosition = pos;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
-        }
-      `,
-      fragmentShader: `
-        uniform float uTime;
-        uniform float uBass;
-        uniform sampler2D uTexture;
-        uniform float uHasTexture;
-        uniform vec3 uPrimary;
-        uniform vec3 uSecondary;
-        varying vec2 vUv;
-        varying vec3 vNormal;
-        varying vec3 vPosition;
-        void main() {
-          vec3 color;
-          if (uHasTexture > 0.5) {
-            // Show cover art as-is — minimal processing to preserve colors
-            color = texture2D(uTexture, vUv).rgb;
-            // Very subtle bass pulse — just a hint of energy
-            color += uPrimary * uBass * 0.08;
-          } else {
-            // No texture — show gradient orb
-            float t = vUv.y + sin(vUv.x * 6.28 + uTime * 2.0) * 0.15;
-            color = mix(uPrimary, uSecondary, t);
-            float pulse = sin(uTime * 4.0) * 0.5 + 0.5;
-            color += vec3(pulse * uBass * 0.3);
-          }
-          // Very subtle rim — just enough to see the sphere edge
-          vec3 viewDir = normalize(cameraPosition - vPosition);
-          float rim = 1.0 - max(dot(viewDir, vNormal), 0.0);
-          rim = pow(rim, 4.0);
-          color += uPrimary * rim * 0.1;
-          gl_FragColor = vec4(color, 1.0);
-        }
-      `,
-    })
-    const orb = new THREE.Mesh(orbGeo, orbMat)
-    scene.add(orb)
-    orbRef.current = orb
-    orbMaterialRef.current = orbMat
-
-    // GLOW SPHERE removed — was too bright, blocked artwork visibility
-
-    // ============ DOUBLE HELIX (4000 particles) ============
-    const helixCount = 4000
-    const helixPositions = new Float32Array(helixCount * 3)
-    const helixColors = new Float32Array(helixCount * 3)
-    const helixSizes = new Float32Array(helixCount)
-    for (let i = 0; i < helixCount; i++) {
-      const t = (i / helixCount) * Math.PI * 10
-      const strand = i % 2 === 0 ? 1 : -1
-      const radius = 2.2 + Math.sin(t * 0.3) * 0.4
-      helixPositions[i * 3] = Math.cos(t) * radius * strand
-      helixPositions[i * 3 + 1] = (i / helixCount - 0.5) * 12
-      helixPositions[i * 3 + 2] = Math.sin(t) * radius * strand
-      const ct = i / helixCount
-      helixColors[i * 3] = 0.2 + ct * 0.8
-      helixColors[i * 3 + 1] = 1.0 - ct * 0.5
-      helixColors[i * 3 + 2] = 0.5 + ct * 0.5
-      helixSizes[i] = Math.random() * 3 + 1
-    }
-    const helixGeo = new THREE.BufferGeometry()
-    helixGeo.setAttribute('position', new THREE.BufferAttribute(helixPositions, 3))
-    helixGeo.setAttribute('color', new THREE.BufferAttribute(helixColors, 3))
-    helixGeo.setAttribute('size', new THREE.BufferAttribute(helixSizes, 1))
-    const helixMat = new THREE.ShaderMaterial({
-      uniforms: { uMids: { value: 0 }, uTime: { value: 0 } },
-      vertexShader: `
-        attribute float size;
-        varying vec3 vColor;
-        varying float vAlpha;
-        uniform float uMids;
-        uniform float uTime;
-        void main() {
-          vColor = color;
-          vec3 pos = position;
-          pos += normalize(pos) * sin(uTime * 2.0 + length(pos)) * uMids * 0.4;
-          vec4 mvPos = modelViewMatrix * vec4(pos, 1.0);
-          gl_PointSize = size * (180.0 / -mvPos.z) * (1.0 + uMids * 0.8);
-          gl_Position = projectionMatrix * mvPos;
-          vAlpha = 0.5 + uMids * 0.5;
-        }
-      `,
-      fragmentShader: `
-        varying vec3 vColor;
-        varying float vAlpha;
-        void main() {
-          float d = length(gl_PointCoord - vec2(0.5));
-          if (d > 0.5) discard;
-          float alpha = (1.0 - d * 2.0) * vAlpha;
-          gl_FragColor = vec4(vColor * 0.4, alpha * 0.5);
-        }
-      `,
-      vertexColors: true,
-      transparent: true,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-    })
-    const helixPoints = new THREE.Points(helixGeo, helixMat)
-    // Helix hidden — too bright even at 40%, additive blending stacks
-    // scene.add(helixPoints)
-    helixParticlesRef.current = helixPoints
-
-    // ============ STARFIELD NEBULA (8K density, dimmed for readability) ============
-    const starCount = 8000
+    // ============ DISTANT STARFIELD ============
+    const starCount = isMobile ? 900 : 1600
     const starPositions = new Float32Array(starCount * 3)
-    const starSizes = new Float32Array(starCount)
-    const starColors = new Float32Array(starCount * 3)
     for (let i = 0; i < starCount; i++) {
-      // Distribute in a sphere
-      const theta = Math.random() * Math.PI * 2
-      const phi = Math.acos(2 * Math.random() - 1)
-      const r = 5 + Math.random() * 50
-      starPositions[i * 3] = r * Math.sin(phi) * Math.cos(theta)
-      starPositions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta)
-      starPositions[i * 3 + 2] = r * Math.cos(phi)
-      starSizes[i] = Math.random() * 1.5 + 0.3
-      // Dimmed color variation (25% brightness — Apr 29 tuning per Frank's TV test:
-      // stars were overpowering the central sphere + orbiting agents on a 60" TV).
-      const colorChoice = Math.random()
-      const dim = 0.25
-      if (colorChoice < 0.3) {
-        starColors[i * 3] = 0.6 * dim; starColors[i * 3 + 1] = 0.8 * dim; starColors[i * 3 + 2] = 1.0 * dim
-      } else if (colorChoice < 0.6) {
-        starColors[i * 3] = 1.0 * dim; starColors[i * 3 + 1] = 0.9 * dim; starColors[i * 3 + 2] = 0.7 * dim
-      } else {
-        starColors[i * 3] = 1.0 * dim; starColors[i * 3 + 1] = 1.0 * dim; starColors[i * 3 + 2] = 1.0 * dim
-      }
+      const r = 180 + Math.random() * 220
+      const t = Math.random() * Math.PI * 2
+      const p = Math.acos(2 * Math.random() - 1)
+      starPositions[i * 3] = r * Math.sin(p) * Math.cos(t)
+      starPositions[i * 3 + 1] = r * Math.cos(p)
+      starPositions[i * 3 + 2] = r * Math.sin(p) * Math.sin(t)
     }
     const starGeo = new THREE.BufferGeometry()
     starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3))
-    starGeo.setAttribute('size', new THREE.BufferAttribute(starSizes, 1))
-    starGeo.setAttribute('color', new THREE.BufferAttribute(starColors, 3))
-    const starMat = new THREE.ShaderMaterial({
-      uniforms: { uMids: { value: 0 }, uTime: { value: 0 } },
-      vertexShader: `
-        attribute float size;
-        varying vec3 vColor;
-        varying float vAlpha;
-        uniform float uMids;
-        uniform float uTime;
-        void main() {
-          vColor = color;
-          vec3 pos = position;
-          pos += normalize(pos) * sin(uTime * 0.5 + length(pos) * 0.1) * uMids * 0.8;
-          vec4 mvPos = modelViewMatrix * vec4(pos, 1.0);
-          gl_PointSize = size * (250.0 / -mvPos.z) * (1.0 + uMids * 0.6);
-          gl_Position = projectionMatrix * mvPos;
-          float twinkle = sin(uTime * 3.0 + length(position) * 0.5) * 0.3 + 0.7;
-          vAlpha = (0.18 + uMids * 0.3) * twinkle;
-        }
-      `,
-      fragmentShader: `
-        varying vec3 vColor;
-        varying float vAlpha;
-        void main() {
-          float d = length(gl_PointCoord - vec2(0.5));
-          if (d > 0.5) discard;
-          float core = smoothstep(0.5, 0.0, d);
-          float alpha = core * vAlpha;
-          // Apr 29 TV tuning — was * 1.3 (brightened stars back up after the dim factor),
-          // dropped to * 0.7 so dense additive-blended regions don't overpower the sphere.
-          gl_FragColor = vec4(vColor * 0.7, alpha);
-        }
-      `,
-      vertexColors: true,
-      transparent: true,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-    })
-    const starfield = new THREE.Points(starGeo, starMat)
+    const starfield = new THREE.Points(starGeo, new THREE.PointsMaterial({
+      size: 1.1, map: glowTex, color: 0x9aa3c0, transparent: true,
+      opacity: 0.55, depthWrite: false, blending: THREE.AdditiveBlending,
+    }))
     scene.add(starfield)
-    starfieldRef.current = starfield
 
-    // FREQUENCY RINGS removed — were too bright/white, blocking content
-    freqRingsRef.current = []
-
-    // ============ DEEP SPACE OBJECTS ============
-    const cosmicGroup = new THREE.Group()
-
-    // --- PLANETS (orbiting at various distances) ---
-    const planetData = [
-      { radius: 0.6, color: 0xff6b35, emissive: 0x331100, distance: 20, speed: 0.08, y: 4, name: 'Mars' },
-      { radius: 0.4, color: 0x4488ff, emissive: 0x001133, distance: 28, speed: 0.05, y: -2, name: 'Neptune' },
-      { radius: 0.3, color: 0xff4466, emissive: 0x220011, distance: 35, speed: 0.035, y: 6, name: 'Kepler' },
-    ]
-
-    const planets: { mesh: THREE.Mesh; distance: number; speed: number; y: number }[] = []
-    for (const p of planetData) {
-      const geo = new THREE.SphereGeometry(p.radius, 24, 24)
-      const mat = new THREE.MeshStandardMaterial({
-        color: p.color,
-        emissive: p.emissive,
-        emissiveIntensity: 0.5,
-        roughness: 0.7,
-        metalness: 0.3,
-      })
-      const mesh = new THREE.Mesh(geo, mat)
-      mesh.position.set(p.distance, p.y, 0)
-      cosmicGroup.add(mesh)
-      planets.push({ mesh, distance: p.distance, speed: p.speed, y: p.y })
-    }
-
-    // --- NEBULAE (volumetric shader billboards — fluid sim look) ---
-    // Each nebula is a stack of billboard planes with FBM noise shaders
-    // creating realistic gas cloud appearance with turbulent flow
-
-    const nebulae: THREE.Group[] = []
-
-    // FBM noise shader for volumetric nebula gas
-    const nebulaVertShader = `
-      varying vec2 vUv;
-      void main() {
-        vUv = uv;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      }
-    `
-    const nebulaFragShader = `
-      uniform float uTime;
-      uniform float uBass;
-      uniform vec3 uColor1;
-      uniform vec3 uColor2;
-      uniform vec3 uColor3;
-      uniform float uSeed;
-      varying vec2 vUv;
-
-      // Simplex-style noise
-      vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
-      vec2 mod289(vec2 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
-      vec3 permute(vec3 x) { return mod289(((x*34.0)+1.0)*x); }
-
-      float snoise(vec2 v) {
-        const vec4 C = vec4(0.211324865405187, 0.366025403784439, -0.577350269189626, 0.024390243902439);
-        vec2 i = floor(v + dot(v, C.yy));
-        vec2 x0 = v - i + dot(i, C.xx);
-        vec2 i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
-        vec4 x12 = x0.xyxy + C.xxzz;
-        x12.xy -= i1;
-        i = mod289(i);
-        vec3 p = permute(permute(i.y + vec3(0.0, i1.y, 1.0)) + i.x + vec3(0.0, i1.x, 1.0));
-        vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy), dot(x12.zw,x12.zw)), 0.0);
-        m = m*m; m = m*m;
-        vec3 x = 2.0 * fract(p * C.www) - 1.0;
-        vec3 h = abs(x) - 0.5;
-        vec3 ox = floor(x + 0.5);
-        vec3 a0 = x - ox;
-        m *= 1.79284291400159 - 0.85373472095314 * (a0*a0 + h*h);
-        vec3 g;
-        g.x = a0.x * x0.x + h.x * x0.y;
-        g.yz = a0.yz * x12.xz + h.yz * x12.yw;
-        return 130.0 * dot(m, g);
-      }
-
-      // Fractal Brownian Motion — layered noise for turbulent gas
-      float fbm(vec2 p) {
-        float value = 0.0;
-        float amplitude = 0.5;
-        float frequency = 1.0;
-        for (int i = 0; i < 6; i++) {
-          value += amplitude * snoise(p * frequency);
-          frequency *= 2.0;
-          amplitude *= 0.5;
-        }
-        return value;
-      }
-
-      void main() {
-        vec2 uv = vUv - 0.5;
-        float dist = length(uv);
-
-        // Radial falloff — gas density drops at edges
-        float falloff = 1.0 - smoothstep(0.0, 0.5, dist);
-        falloff *= falloff;
-
-        // Turbulent flow with time animation
-        float t = uTime * 0.08;
-        vec2 flow = vec2(
-          fbm(uv * 3.0 + vec2(t * 0.3, t * 0.2) + uSeed),
-          fbm(uv * 3.0 + vec2(t * -0.2, t * 0.4) + uSeed + 5.0)
-        );
-
-        // Domain warping — distort coordinates by noise (creates realistic gas swirls)
-        float n1 = fbm(uv * 2.5 + flow * 0.8 + uSeed);
-        float n2 = fbm(uv * 4.0 + flow * 1.2 + uSeed + 10.0);
-        float n3 = fbm(uv * 1.5 - flow * 0.5 + uSeed + 20.0);
-
-        // Filament structures — sharp ridges in the gas
-        float filaments = abs(n1 - n2) * 2.0;
-        filaments = pow(filaments, 0.8);
-
-        // Color mixing — core vs mid vs outer based on density + noise
-        float density = (n1 * 0.5 + n2 * 0.3 + filaments * 0.2) * falloff;
-        density = clamp(density, 0.0, 1.0);
-
-        // Three-color gradient based on density layers
-        vec3 color;
-        if (density > 0.5) {
-          color = mix(uColor2, uColor1, (density - 0.5) * 2.0);  // Hot core
-        } else {
-          color = mix(uColor3, uColor2, density * 2.0);  // Cool outer
-        }
-
-        // Add bright emission streaks
-        float emission = pow(max(filaments * falloff, 0.0), 1.5) * 0.6;
-        color += uColor1 * emission;
-
-        // Bass reactivity — brightness pulses
-        float bassBoost = 1.0 + uBass * 0.4;
-
-        // Star seeds — tiny bright spots in dense areas
-        float stars = pow(max(snoise(uv * 20.0 + uSeed), 0.0), 8.0) * density * 2.0;
-        color += vec3(1.0, 0.95, 0.8) * stars;
-
-        float alpha = density * falloff * 0.55 * bassBoost;
-        alpha = clamp(alpha, 0.0, 0.7);
-
-        gl_FragColor = vec4(color * bassBoost, alpha);
-      }
-    `
-
-    const nebulaConfigs = [
-      {
-        pos: new THREE.Vector3(-28, 6, -30),
-        color1: new THREE.Color(0xff8844), color2: new THREE.Color(0xaa44cc), color3: new THREE.Color(0x2244aa),
-        scale: 22, seed: 0.0, rotation: 0.3,
-      },
-      {
-        pos: new THREE.Vector3(32, -3, -38),
-        color1: new THREE.Color(0x44ffee), color2: new THREE.Color(0x3388aa), color3: new THREE.Color(0x6644aa),
-        scale: 18, seed: 42.0, rotation: -0.5,
-      },
-      {
-        pos: new THREE.Vector3(3, 14, -45),
-        color1: new THREE.Color(0xff6688), color2: new THREE.Color(0xcc3344), color3: new THREE.Color(0x442200),
-        scale: 28, seed: 99.0, rotation: 0.8,
-      },
-    ]
-
-    for (const cfg of nebulaConfigs) {
-      const nebGroup = new THREE.Group()
-      nebGroup.position.copy(cfg.pos)
-
-      // Stack 3 billboard planes at slightly different depths for volume
-      for (let layer = 0; layer < 3; layer++) {
-        const planeGeo = new THREE.PlaneGeometry(cfg.scale, cfg.scale * 0.7)
-        const planeMat = new THREE.ShaderMaterial({
-          vertexShader: nebulaVertShader,
-          fragmentShader: nebulaFragShader,
-          uniforms: {
-            uTime: { value: 0 },
-            uBass: { value: 0 },
-            uColor1: { value: cfg.color1 },
-            uColor2: { value: cfg.color2 },
-            uColor3: { value: cfg.color3 },
-            uSeed: { value: cfg.seed + layer * 7.0 },
-          },
-          transparent: true,
-          blending: THREE.AdditiveBlending,
-          depthWrite: false,
-          side: THREE.DoubleSide,
-        })
-        const plane = new THREE.Mesh(planeGeo, planeMat)
-        plane.position.z = layer * 1.5 - 1.5
-        plane.rotation.z = cfg.rotation + layer * 0.2
-        plane.rotation.y = layer * 0.15
-        nebGroup.add(plane)
-      }
-
-      cosmicGroup.add(nebGroup)
-      nebulae.push(nebGroup)
-    }
-
-    // --- HALLEY'S COMET (glowing head + particle tail) ---
-    const cometGroup = new THREE.Group()
-    const cometHead = new THREE.Mesh(
-      new THREE.SphereGeometry(0.3, 16, 16),
-      new THREE.MeshBasicMaterial({ color: 0xccffff })
+    // ============ CENTRAL CORE — warm glowing reactor (approved v1 look) ============
+    const core = new THREE.Mesh(
+      new THREE.SphereGeometry(CORE_R, 48, 48),
+      new THREE.MeshBasicMaterial({ color: 0xfff3e0 })
     )
-    // Comet glow
-    const cometGlow = new THREE.Mesh(
-      new THREE.SphereGeometry(0.6, 16, 16),
-      new THREE.MeshBasicMaterial({ color: 0x44aaff, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending })
+    scene.add(core)
+
+    const makeGlowSprite = (scale: number, color: number, opacity: number) => {
+      const s = new THREE.Sprite(new THREE.SpriteMaterial({
+        map: glowTex, color, transparent: true, opacity,
+        depthWrite: false, blending: THREE.AdditiveBlending,
+      }))
+      s.scale.setScalar(scale)
+      scene.add(s)
+      return s
+    }
+    const glowA = makeGlowSprite(34, 0xffd9a8, 0.9)
+    const glowB = makeGlowSprite(58, 0xff6a3d, 0.35)
+    const glowC = makeGlowSprite(20, 0xffffff, 0.9)
+
+    const shell = new THREE.Mesh(
+      new THREE.SphereGeometry(CORE_R * 1.004, 24, 16),
+      new THREE.MeshBasicMaterial({ color: 0xffb24d, wireframe: true, transparent: true, opacity: 0.10 })
     )
-    cometGroup.add(cometHead)
-    cometGroup.add(cometGlow)
+    scene.add(shell)
 
-    // Comet tail (stretched particles)
-    const tailCount = 200
-    const tailPositions = new Float32Array(tailCount * 3)
-    const tailColors = new Float32Array(tailCount * 3)
-    for (let i = 0; i < tailCount; i++) {
-      const t = i / tailCount
-      tailPositions[i * 3] = t * 8 + Math.random() * 0.3
-      tailPositions[i * 3 + 1] = (Math.random() - 0.5) * 0.4 * (1 - t)
-      tailPositions[i * 3 + 2] = (Math.random() - 0.5) * 0.4 * (1 - t)
-      const c = new THREE.Color().setHSL(0.55, 0.8, 0.7 - t * 0.5)
-      tailColors[i * 3] = c.r
-      tailColors[i * 3 + 1] = c.g
-      tailColors[i * 3 + 2] = c.b
+    // ============ COVER ART BILLBOARD (the centerpiece) ============
+    // Flat sprite at core center — full artwork visible at once, blooms in on
+    // capture landing, slow spin. Fed by the artworkUrl loader effect above.
+    const artSprite = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: null, transparent: true, opacity: 0, depthTest: false,
+    }))
+    artSprite.scale.setScalar(0.01)
+    scene.add(artSprite)
+    artSpriteRef.current = artSprite
+
+    // ============ NASA/JPL RUST SWARM ============
+    const SWARM_N = isMobile ? 1200 : 2600
+    const sw = {
+      a: new Float32Array(SWARM_N), e: new Float32Array(SWARM_N),
+      inc: new Float32Array(SWARM_N), raan: new Float32Array(SWARM_N),
+      argp: new Float32Array(SWARM_N), M: new Float32Array(SWARM_N),
+      n: new Float32Array(SWARM_N),
     }
-    const tailGeo = new THREE.BufferGeometry()
-    tailGeo.setAttribute('position', new THREE.BufferAttribute(tailPositions, 3))
-    tailGeo.setAttribute('color', new THREE.BufferAttribute(tailColors, 3))
-    const tailMat = new THREE.PointsMaterial({
-      size: 0.15,
-      vertexColors: true,
-      transparent: true,
-      opacity: 0.6,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-    })
-    cometGroup.add(new THREE.Points(tailGeo, tailMat))
-    cometGroup.position.set(-40, 8, -15)
-    cosmicGroup.add(cometGroup)
-
-    // --- UAPs (glowing disc-shaped craft) ---
-    const uapCount = 3
-    const uaps: THREE.Group[] = []
-    for (let u = 0; u < uapCount; u++) {
-      const uapGroup = new THREE.Group()
-      // Disc body
-      const discGeo = new THREE.CylinderGeometry(0.5, 0.5, 0.08, 32)
-      const discMat = new THREE.MeshStandardMaterial({
-        color: 0x888899,
-        emissive: 0x222233,
-        emissiveIntensity: 0.8,
-        metalness: 0.9,
-        roughness: 0.1,
-      })
-      const disc = new THREE.Mesh(discGeo, discMat)
-      uapGroup.add(disc)
-
-      // Dome on top
-      const domeGeo = new THREE.SphereGeometry(0.3, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2)
-      const domeMat = new THREE.MeshBasicMaterial({
-        color: 0x44ffaa,
-        transparent: true,
-        opacity: 0.6,
-        blending: THREE.AdditiveBlending,
-      })
-      const dome = new THREE.Mesh(domeGeo, domeMat)
-      dome.position.y = 0.04
-      uapGroup.add(dome)
-
-      // Ring light around disc
-      const ringGeo = new THREE.TorusGeometry(0.55, 0.03, 8, 32)
-      const ringMat = new THREE.MeshBasicMaterial({
-        color: 0x00ffcc,
-        transparent: true,
-        opacity: 0.7,
-        blending: THREE.AdditiveBlending,
-      })
-      uapGroup.add(new THREE.Mesh(ringGeo, ringMat))
-
-      uapGroup.position.set(
-        (Math.random() - 0.5) * 50,
-        5 + Math.random() * 10,
-        -10 - Math.random() * 20
-      )
-      uapGroup.scale.setScalar(0.6 + Math.random() * 0.4)
-      cosmicGroup.add(uapGroup)
-      uaps.push(uapGroup)
+    const swarmPositions = new Float32Array(SWARM_N * 3)
+    const swarmColors = new Float32Array(SWARM_N * 3)
+    {
+      const cA = new THREE.Color(0xff6a3d), cB = new THREE.Color(0xffc89a), cC = new THREE.Color(0x8a4a3a)
+      const tmpC = new THREE.Color()
+      for (let i = 0; i < SWARM_N; i++) {
+        const outlier = Math.random() < 0.12
+        sw.a[i] = 12 + Math.pow(Math.random(), 0.65) * 30 + (outlier ? Math.random() * 18 : 0)
+        sw.e[i] = Math.random() * (outlier ? 0.5 : 0.25)
+        sw.inc[i] = (Math.random() - 0.5) * (outlier ? 1.4 : 0.42)
+        sw.raan[i] = Math.random() * Math.PI * 2
+        sw.argp[i] = Math.random() * Math.PI * 2
+        sw.M[i] = Math.random() * Math.PI * 2
+        sw.n[i] = 0.12 / Math.pow(sw.a[i] / 14, 1.5)
+        tmpC.copy(Math.random() < 0.7 ? cA : cC).lerp(cB, Math.random() * 0.6)
+        swarmColors[i * 3] = tmpC.r; swarmColors[i * 3 + 1] = tmpC.g; swarmColors[i * 3 + 2] = tmpC.b
+      }
     }
-
-    // --- INTERSTELLAR SHUTTLE (geometric wedge shape) ---
-    const shuttleGroup = new THREE.Group()
-    // Fuselage
-    const fuselageGeo = new THREE.ConeGeometry(0.3, 2.5, 4)
-    const fuselageMat = new THREE.MeshStandardMaterial({
-      color: 0xaabbcc,
-      emissive: 0x111122,
-      emissiveIntensity: 0.5,
-      metalness: 0.8,
-      roughness: 0.2,
+    const swarmGeo = new THREE.BufferGeometry()
+    swarmGeo.setAttribute('position', new THREE.BufferAttribute(swarmPositions, 3))
+    swarmGeo.setAttribute('color', new THREE.BufferAttribute(swarmColors, 3))
+    const swarmMat = new THREE.PointsMaterial({
+      size: 0.55, map: glowTex, vertexColors: true, transparent: true,
+      opacity: 0.8, depthWrite: false, blending: THREE.AdditiveBlending,
     })
-    const fuselage = new THREE.Mesh(fuselageGeo, fuselageMat)
-    fuselage.rotation.z = Math.PI / 2
-    shuttleGroup.add(fuselage)
+    scene.add(new THREE.Points(swarmGeo, swarmMat))
 
-    // Engine glow
-    const engineGeo = new THREE.SphereGeometry(0.2, 8, 8)
-    const engineMat = new THREE.MeshBasicMaterial({
-      color: 0x4488ff,
-      transparent: true,
-      opacity: 0.8,
-      blending: THREE.AdditiveBlending,
-    })
-    const engine = new THREE.Mesh(engineGeo, engineMat)
-    engine.position.x = -1.3
-    shuttleGroup.add(engine)
+    // ============ NFT/SCID ASTEROID BODIES (asteroid scale — approved) ============
+    // One Points object for the whole volume. Per-body pulse phase in shader,
+    // per-body capture via buffer writes. Visually matches the 0.85-scale
+    // sprites from the approved preview.
+    const buildNftSwarm = () => {
+      const prev = nftRef.current
+      if (prev.points) {
+        scene.remove(prev.points)
+        prev.points.geometry.dispose()
+        ;(prev.points.material as THREE.Material).dispose()
+      }
+      prev.rings.forEach(r => { scene.remove(r); r.geometry.dispose(); (r.material as THREE.Material).dispose() })
+      nftRef.current = { points: null, orbits: [], ids: [], baseSizes: null, rings: [] }
 
-    // Engine trail
-    const trailGeo = new THREE.ConeGeometry(0.15, 1.5, 8)
-    const trailMat = new THREE.MeshBasicMaterial({
-      color: 0x2266ff,
-      transparent: true,
-      opacity: 0.4,
-      blending: THREE.AdditiveBlending,
-    })
-    const trail = new THREE.Mesh(trailGeo, trailMat)
-    trail.rotation.z = -Math.PI / 2
-    trail.position.x = -2.2
-    shuttleGroup.add(trail)
+      const list = tracksRef.current
+      if (!list.length) return
 
-    shuttleGroup.position.set(35, 6, -12)
-    shuttleGroup.scale.setScalar(0.8)
-    cosmicGroup.add(shuttleGroup)
-
-    scene.add(cosmicGroup)
-
-    // Store refs for animation
-    const cosmicRefs = { planets, nebulae, cometGroup, uaps, shuttleGroup, cosmicGroup }
-
-    // ============ TRON GRID FLOOR ============
-    const gridGroup = new THREE.Group()
-    const gridSize = 80
-    const gridDivisions = 60
-    const gridMat = new THREE.LineBasicMaterial({
-      color: 0x0a3050,
-      transparent: true,
-      opacity: 0.25,
-      blending: THREE.AdditiveBlending,
-    })
-    // X lines
-    for (let i = -gridDivisions / 2; i <= gridDivisions / 2; i++) {
+      const N = list.length
+      const pos = new Float32Array(N * 3)
+      const col = new Float32Array(N * 3)
+      const size = new Float32Array(N).fill(1.0)
+      const phase = new Float32Array(N)
+      const orbits: OrbitParams[] = new Array(N)
+      const ids: (string | number)[] = new Array(N)
+      for (let i = 0; i < N; i++) {
+        const t = list[i]
+        ids[i] = t.id
+        orbits[i] = deriveOrbit(t.id, t.genre)
+        phase[i] = (hash32('p' + String(t.id)) % 628) / 100
+        const key = (t.genre || '').toLowerCase().replace(/\s+/g, '-')
+        const pal = GENRE_PALETTES[key] || DEFAULT_PALETTE
+        col[i * 3] = pal.primary.r; col[i * 3 + 1] = pal.primary.g; col[i * 3 + 2] = pal.primary.b
+      }
       const geo = new THREE.BufferGeometry()
-      const x = (i / gridDivisions) * gridSize * 2
-      geo.setFromPoints([
-        new THREE.Vector3(x, 0, -gridSize),
-        new THREE.Vector3(x, 0, gridSize)
-      ])
-      gridGroup.add(new THREE.Line(geo, gridMat))
-    }
-    // Z lines
-    for (let i = -gridDivisions / 2; i <= gridDivisions / 2; i++) {
-      const geo = new THREE.BufferGeometry()
-      const z = (i / gridDivisions) * gridSize * 2
-      geo.setFromPoints([
-        new THREE.Vector3(-gridSize, 0, z),
-        new THREE.Vector3(gridSize, 0, z)
-      ])
-      gridGroup.add(new THREE.Line(geo, gridMat))
-    }
-    gridGroup.position.y = -3.5
-    scene.add(gridGroup)
-    gridRef.current = gridGroup
-
-    // ============ ECOSYSTEM NODES + TEXT LABELS + ENERGY BEAMS ============
-    const nodeGroup = new THREE.Group()
-    const beamGroup = new THREE.Group()
-
-    ECOSYSTEM_NODES.forEach((node, i) => {
-      const angle = (i / ECOSYSTEM_NODES.length) * Math.PI * 2
-
-      // Node mesh (icosahedron for more futuristic look)
-      const nodeGeo = new THREE.IcosahedronGeometry(0.2, 1)
-      const nodeMat = new THREE.MeshBasicMaterial({
-        color: node.color,
+      geo.setAttribute('position', new THREE.BufferAttribute(pos, 3))
+      geo.setAttribute('color', new THREE.BufferAttribute(col, 3))
+      geo.setAttribute('aSize', new THREE.BufferAttribute(size, 1))
+      geo.setAttribute('aPhase', new THREE.BufferAttribute(phase, 1))
+      const mat = new THREE.ShaderMaterial({
+        uniforms: { uHighs: { value: 0 }, uTime: { value: 0 }, uTex: { value: glowTex } },
+        vertexShader: `
+          attribute float aSize;
+          attribute float aPhase;
+          varying vec3 vColor;
+          varying float vPulse;
+          uniform float uHighs;
+          uniform float uTime;
+          void main() {
+            vColor = color;
+            vPulse = 0.85 + 0.15 * sin(uTime * 2.0 + aPhase);
+            vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
+            // 58.0 multiplier ~= the approved 0.85-scale sprite footprint
+            gl_PointSize = aSize * (1.0 + uHighs * 0.5) * (58.0 / -mvPos.z);
+            gl_Position = projectionMatrix * mvPos;
+          }
+        `,
+        fragmentShader: `
+          uniform sampler2D uTex;
+          varying vec3 vColor;
+          varying float vPulse;
+          void main() {
+            vec4 t = texture2D(uTex, gl_PointCoord);
+            gl_FragColor = vec4(vColor, t.a * vPulse);
+          }
+        `,
+        vertexColors: true,
         transparent: true,
-        opacity: 0.9,
-        wireframe: true,
-      })
-      const mesh = new THREE.Mesh(nodeGeo, nodeMat)
-      mesh.position.set(
-        Math.cos(angle) * 4.5,
-        Math.sin(angle) * 1.2,
-        Math.sin(angle) * 4.5
-      )
-      mesh.userData = { baseAngle: angle, label: node.label }
-      nodeGroup.add(mesh)
-
-      // Text sprite label
-      const sprite = createTextSprite(node.label, node.color)
-      sprite.position.copy(mesh.position)
-      sprite.position.y += 0.5
-      sprite.userData = { baseAngle: angle }
-      nodeGroup.add(sprite)
-
-      // Point light
-      const light = new THREE.PointLight(node.color, 0.5, 5)
-      light.position.copy(mesh.position)
-      light.userData = { baseAngle: angle }
-      nodeGroup.add(light)
-
-      // Energy beam from orb to node
-      const beamGeo = new THREE.BufferGeometry()
-      beamGeo.setFromPoints([new THREE.Vector3(0, 0, 0), mesh.position.clone()])
-      const beamMat = new THREE.LineBasicMaterial({
-        color: node.color,
-        transparent: true,
-        opacity: 0.08,
         blending: THREE.AdditiveBlending,
+        depthWrite: false,
       })
-      const beam = new THREE.Line(beamGeo, beamMat)
-      beam.userData = { baseAngle: angle, nodeIndex: i }
-      beamGroup.add(beam)
-    })
+      const points = new THREE.Points(geo, mat)
+      scene.add(points)
 
-    scene.add(nodeGroup)
-    scene.add(beamGroup)
-    nodeGroupRef.current = nodeGroup
-    beamsRef.current = beamGroup
+      // Faint orbit ellipses — sampled subset only. The approved frame shows a
+      // few ghost rings; 5,417 of them is spaghetti + a frame-rate grave.
+      const rings: THREE.Line[] = []
+      const step = Math.max(1, Math.floor(N / ORBIT_RING_SAMPLE))
+      for (let i = 0; i < N && rings.length < ORBIT_RING_SAMPLE; i += step) {
+        const o = orbits[i]
+        const ringPos = new Float32Array(91 * 3)
+        for (let k = 0; k <= 90; k++) {
+          kepPos(o.a, o.e, o.inc, o.raan, o.argp, (k / 90) * Math.PI * 2, _kp)
+          ringPos[k * 3] = _kp[0]; ringPos[k * 3 + 1] = _kp[1]; ringPos[k * 3 + 2] = _kp[2]
+        }
+        const rGeo = new THREE.BufferGeometry()
+        rGeo.setAttribute('position', new THREE.BufferAttribute(ringPos, 3))
+        const ring = new THREE.Line(rGeo, new THREE.LineBasicMaterial({
+          color: new THREE.Color(col[i * 3], col[i * 3 + 1], col[i * 3 + 2]),
+          transparent: true, opacity: 0.06, blending: THREE.AdditiveBlending, depthWrite: false,
+        }))
+        scene.add(ring)
+        rings.push(ring)
+      }
 
-    // Ambient fill
-    scene.add(new THREE.AmbientLight(0x080818, 0.3))
+      nftRef.current = { points, orbits, ids, baseSizes: size, rings }
+    }
+
+    // Capture trail
+    const TRAIL_LEN = 80
+    const trailGeo = new THREE.BufferGeometry()
+    trailGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(TRAIL_LEN * 3), 3))
+    const trailLine = new THREE.Line(trailGeo, new THREE.LineBasicMaterial({
+      color: 0xffffff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false,
+    }))
+    scene.add(trailLine)
+    trailLineRef.current = trailLine
+
+    // Impact ripple
+    const ripple = new THREE.Mesh(
+      new THREE.RingGeometry(1, 1.12, 64),
+      new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, depthWrite: false })
+    )
+    scene.add(ripple)
+    rippleRef.current = ripple
+
+    // Bright orbit ring for the capturing body (repathed at capture start)
+    const cRingGeo = new THREE.BufferGeometry()
+    cRingGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(91 * 3), 3))
+    const captureRing = new THREE.Line(cRingGeo, new THREE.LineBasicMaterial({
+      color: 0xffffff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false,
+    }))
+    scene.add(captureRing)
+    captureRingRef.current = captureRing
+
+    // ============ ECOSYSTEM NODES (optional — off in the approved look) ============
+    let nodeGroup: THREE.Group | null = null
+    if (showEcosystemNodes) {
+      nodeGroup = new THREE.Group()
+      const NODE_RADIUS = 48
+      ECOSYSTEM_NODES.forEach((node, i) => {
+        const angle = (i / ECOSYSTEM_NODES.length) * Math.PI * 2
+        const mesh = new THREE.Mesh(
+          new THREE.IcosahedronGeometry(0.9, 1),
+          new THREE.MeshBasicMaterial({ color: node.color, transparent: true, opacity: 0.9, wireframe: true })
+        )
+        mesh.position.set(Math.cos(angle) * NODE_RADIUS, Math.sin(angle * 2) * 5, Math.sin(angle) * NODE_RADIUS)
+        nodeGroup!.add(mesh)
+        const sprite = createTextSprite(node.label, node.color)
+        sprite.position.copy(mesh.position)
+        sprite.position.y += 2.2
+        nodeGroup!.add(sprite)
+      })
+      scene.add(nodeGroup)
+    }
+
+    // ============ POINTER CONTROLS ============
+    const cam = camRef.current
+    const onPointerDown = (e: PointerEvent) => { cam.dragging = true; cam.px = e.clientX; cam.py = e.clientY }
+    const onPointerUp = () => { cam.dragging = false }
+    const onPointerMove = (e: PointerEvent) => {
+      if (!cam.dragging) return
+      cam.theta += (e.clientX - cam.px) * 0.005
+      cam.phi = Math.max(0.25, Math.min(2.6, cam.phi - (e.clientY - cam.py) * 0.005))
+      cam.px = e.clientX; cam.py = e.clientY
+    }
+    const onWheel = (e: WheelEvent) => {
+      cam.dist = Math.max(26, Math.min(160, cam.dist + e.deltaY * 0.05))
+    }
+    renderer.domElement.addEventListener('pointerdown', onPointerDown)
+    window.addEventListener('pointerup', onPointerUp)
+    window.addEventListener('pointermove', onPointerMove)
+    renderer.domElement.addEventListener('wheel', onWheel, { passive: true })
 
     // ==================== ANIMATION LOOP ====================
     let frameCount = 0
     let lastRenderTime = 0
-    // Frame budgets: tighter when actively playing, much looser when paused so the
-    // GPU stays mostly idle (was burning the same budget regardless of audio state,
-    // which was the dominant heat/battery culprit on mobile).
     const playingIntervalMs = isMobile ? 41.66 : 0          // ~24fps mobile / uncapped desktop
     const pausedIntervalMs = isMobile ? 200 : 66.66         // ~5fps mobile / ~15fps desktop
 
     const animate = (timestamp?: number) => {
-      // Tab hidden — fully stop. The visibilitychange listener below restarts us.
       if (typeof document !== 'undefined' && document.hidden) {
         animFrameRef.current = 0
         return
@@ -956,7 +674,6 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
         highs = highs / ((len - 80) * 255)
       }
 
-      // Smooth audio values (lerp)
       const lf = 1.0 - Math.pow(0.0005, delta)
       smoothBassRef.current += (bass - smoothBassRef.current) * lf
       smoothMidsRef.current += (mids - smoothMidsRef.current) * lf
@@ -965,194 +682,189 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
       const sMids = smoothMidsRef.current
       const sHighs = smoothHighsRef.current
 
-      // --- Central orb ---
-      if (orbRef.current && orbMaterialRef.current) {
-        orbMaterialRef.current.uniforms.uTime.value = elapsed
-        orbMaterialRef.current.uniforms.uBass.value = sBass
-        orbRef.current.rotation.y = elapsed * 0.5
-        orbRef.current.rotation.x = Math.sin(elapsed * 0.3) * 0.25
-      }
+      // --- Core breathing (bass) ---
+      const pulse = 1 + 0.02 * Math.sin(elapsed * 1.4) + sBass * 0.06
+      core.scale.setScalar(pulse)
+      shell.scale.setScalar(pulse)
+      shell.rotation.y += delta * 0.12
+      glowA.material.opacity = 0.8 + 0.15 * Math.sin(elapsed * 1.4) + sBass * 0.2
+      glowB.material.opacity = 0.30 + sBass * 0.18
+      glowC.material.opacity = 0.85 + sBass * 0.15
+      glowA.scale.setScalar(34 * (1 + sBass * 0.1))
+      glowB.scale.setScalar(58 * (1 + sBass * 0.08))
 
-      // --- Glow ---
-      if (glowRef.current) {
-        const gm = glowRef.current.material as THREE.ShaderMaterial
-        gm.uniforms.uBass.value = sBass
-        glowRef.current.scale.setScalar(1.0 + sBass * 0.5)
-      }
+      // --- Starfield drift ---
+      starfield.rotation.y = elapsed * 0.006
 
-      // --- Helix ---
-      if (helixParticlesRef.current) {
-        helixParticlesRef.current.rotation.y = elapsed * 0.25
-        helixParticlesRef.current.rotation.x = Math.sin(elapsed * 0.04) * 0.15
-        const hm = helixParticlesRef.current.material as THREE.ShaderMaterial
-        hm.uniforms.uMids.value = sMids
-        hm.uniforms.uTime.value = elapsed
-      }
-
-      // --- Starfield ---
-      if (starfieldRef.current) {
-        const sm = starfieldRef.current.material as THREE.ShaderMaterial
-        sm.uniforms.uMids.value = sMids
-        sm.uniforms.uTime.value = elapsed
-        starfieldRef.current.rotation.y = elapsed * 0.015
-        starfieldRef.current.rotation.x = elapsed * 0.008
-      }
-
-      // --- DEEP SPACE ANIMATION ---
-      if (cosmicRefs) {
-        // Planets orbit
-        for (const p of cosmicRefs.planets) {
-          const angle = elapsed * p.speed
-          p.mesh.position.x = Math.cos(angle) * p.distance
-          p.mesh.position.z = Math.sin(angle) * p.distance
-          p.mesh.position.y = p.y + Math.sin(elapsed * 0.3 + p.distance) * 0.5
-          p.mesh.rotation.y = elapsed * 0.5
+      // --- Swarm propagation (mids brighten the belt) ---
+      if (!isMobile || frameCount % 2 === 0) {
+        const posAttr = swarmGeo.attributes.position as THREE.BufferAttribute
+        const arr = posAttr.array as Float32Array
+        const dtS = isMobile ? delta * 2 : delta
+        for (let i = 0; i < SWARM_N; i++) {
+          sw.M[i] += sw.n[i] * dtS
+          kepPos(sw.a[i], sw.e[i], sw.inc[i], sw.raan[i], sw.argp[i], sw.M[i], _kp)
+          arr[i * 3] = _kp[0]; arr[i * 3 + 1] = _kp[1]; arr[i * 3 + 2] = _kp[2]
         }
+        posAttr.needsUpdate = true
+        swarmMat.opacity = 0.7 + sMids * 0.25
+      }
 
-        // Nebulae — update shader uniforms for fluid sim animation
-        for (let i = 0; i < cosmicRefs.nebulae.length; i++) {
-          const neb = cosmicRefs.nebulae[i]
-          neb.rotation.y = elapsed * 0.005 * (i + 1)
-          // Update all shader planes with time + bass
-          neb.children.forEach(child => {
-            if (child instanceof THREE.Mesh) {
-              const mat = child.material as THREE.ShaderMaterial
-              if (mat.uniforms?.uTime) mat.uniforms.uTime.value = elapsed
-              if (mat.uniforms?.uBass) mat.uniforms.uBass.value = sBass
+      // --- Rebuild NFT swarm if tracks changed ---
+      if (nftDirtyRef.current) {
+        nftDirtyRef.current = false
+        buildNftSwarm()
+      }
+
+      // --- NFT propagation + capture state machine ---
+      const nft = nftRef.current
+      const cap = captureRef.current
+      if (nft.points) {
+        const nftMat = nft.points.material as THREE.ShaderMaterial
+        nftMat.uniforms.uHighs.value = sHighs
+        nftMat.uniforms.uTime.value = elapsed
+
+        // Consume pending capture request
+        if (cap.pendingId !== null) {
+          const idx = nft.ids.indexOf(cap.pendingId)
+          cap.pendingId = null
+          if (idx >= 0 && idx !== cap.idx) {
+            if (cap.landedIdx >= 0 && nft.baseSizes) {
+              nft.baseSizes[cap.landedIdx] = 1.0
+              ;(nft.points.geometry.attributes.aSize as THREE.BufferAttribute).needsUpdate = true
             }
-          })
-        }
-
-        // Halley's comet — sweeps across the scene
-        const cometT = (elapsed * 0.15) % 1
-        cosmicRefs.cometGroup.position.x = -40 + cometT * 80
-        cosmicRefs.cometGroup.position.y = 8 + Math.sin(cometT * Math.PI) * 5
-        cosmicRefs.cometGroup.position.z = -15 + Math.sin(cometT * Math.PI * 2) * 8
-        cosmicRefs.cometGroup.rotation.y = -Math.atan2(80 * 0.15, Math.cos(cometT * Math.PI) * 5 * Math.PI) + Math.PI
-
-        // UAPs — erratic movement patterns
-        for (let u = 0; u < cosmicRefs.uaps.length; u++) {
-          const uap = cosmicRefs.uaps[u]
-          const uSpeed = 0.3 + u * 0.2
-          uap.position.x += Math.sin(elapsed * uSpeed + u * 2) * 0.03
-          uap.position.y += Math.cos(elapsed * uSpeed * 0.7 + u) * 0.02
-          uap.position.z += Math.sin(elapsed * uSpeed * 0.5 + u * 3) * 0.02
-          uap.rotation.y = elapsed * 2  // Fast spin
-          // Occasional "dart" movement (UAP signature)
-          if (Math.sin(elapsed * 0.5 + u * 1.5) > 0.98) {
-            uap.position.x += (Math.random() - 0.5) * 2
-            uap.position.y += (Math.random() - 0.5) * 1
+            cap.idx = idx
+            cap.t = 0
+            cap.trail.length = 0
+            if (captureRingRef.current) {
+              const o = nft.orbits[idx]
+              const rp = captureRingRef.current.geometry.attributes.position as THREE.BufferAttribute
+              for (let k = 0; k <= 90; k++) {
+                kepPos(o.a, o.e, o.inc, o.raan, o.argp, (k / 90) * Math.PI * 2, _kp)
+                rp.setXYZ(k, _kp[0], _kp[1], _kp[2])
+              }
+              rp.needsUpdate = true
+              const colAttr = nft.points.geometry.attributes.color as THREE.BufferAttribute
+              ;(captureRingRef.current.material as THREE.LineBasicMaterial).color.setRGB(colAttr.getX(idx), colAttr.getY(idx), colAttr.getZ(idx))
+              ;(captureRingRef.current.material as THREE.LineBasicMaterial).opacity = 0.20
+              if (trailLineRef.current) {
+                ;(trailLineRef.current.material as THREE.LineBasicMaterial).color.setRGB(colAttr.getX(idx), colAttr.getY(idx), colAttr.getZ(idx))
+              }
+            }
           }
-          // Keep in bounds
-          if (Math.abs(uap.position.x) > 35) uap.position.x *= 0.95
-          if (uap.position.y > 18 || uap.position.y < 2) uap.position.y = 8
         }
 
-        // Interstellar shuttle — slow cruise
-        cosmicRefs.shuttleGroup.position.x = 35 - (elapsed * 0.3) % 70
-        cosmicRefs.shuttleGroup.position.y = 6 + Math.sin(elapsed * 0.2) * 1.5
-        cosmicRefs.shuttleGroup.rotation.y = Math.sin(elapsed * 0.1) * 0.2
+        // Respawn a landed body back into the belt
+        if (cap.landedIdx >= 0 && cap.landedAt > 0 && elapsed - cap.landedAt > RESPAWN_SECONDS && nft.baseSizes) {
+          nft.baseSizes[cap.landedIdx] = 1.0
+          ;(nft.points.geometry.attributes.aSize as THREE.BufferAttribute).needsUpdate = true
+          cap.landedIdx = -1
+        }
+
+        if (!isMobile || frameCount % 2 === 0) {
+          const posAttr = nft.points.geometry.attributes.position as THREE.BufferAttribute
+          const arr = posAttr.array as Float32Array
+          const sizeAttr = nft.points.geometry.attributes.aSize as THREE.BufferAttribute
+          const dtN = isMobile ? delta * 2 : delta
+          for (let i = 0; i < nft.orbits.length; i++) {
+            const o = nft.orbits[i]
+            if (i === cap.idx) {
+              // GRAVITATIONAL CAPTURE — orbit decay, spin-up, flatten
+              cap.t += dtN / CAPTURE_SECONDS
+              const k = Math.min(cap.t, 1)
+              const ease = k * k * (3 - 2 * k)
+              const aNow = o.a * (1 - ease) + CAPTURE_LAND_RADIUS * ease
+              o.M += o.n * dtN * (1 + ease * 9)
+              kepPos(aNow, o.e * (1 - ease), o.inc * (1 - ease), o.raan, o.argp, o.M, _kp)
+              arr[i * 3] = _kp[0]; arr[i * 3 + 1] = _kp[1]; arr[i * 3 + 2] = _kp[2]
+              // Grows as it falls so the eye can track it (0.85 -> ~2.0 equivalent)
+              if (nft.baseSizes) { nft.baseSizes[i] = 1.0 + ease * 1.3; sizeAttr.needsUpdate = true }
+              cap.trail.push([_kp[0], _kp[1], _kp[2]])
+              if (cap.trail.length > TRAIL_LEN) cap.trail.shift()
+              if (trailLineRef.current) {
+                const tp = trailLineRef.current.geometry.attributes.position as THREE.BufferAttribute
+                for (let q = 0; q < TRAIL_LEN; q++) {
+                  const pt = cap.trail[Math.max(0, cap.trail.length - TRAIL_LEN + q)] || cap.trail[0] || [0, 0, 0]
+                  tp.setXYZ(q, pt[0], pt[1], pt[2])
+                }
+                tp.needsUpdate = true
+                ;(trailLineRef.current.material as THREE.LineBasicMaterial).opacity = 0.6 * ease
+              }
+              // LANDING
+              if (cap.t >= 1) {
+                const landedId = nft.ids[i]
+                cap.landedIdx = i
+                cap.landedAt = elapsed
+                cap.idx = -1
+                cap.t = 0
+                cap.rippleT = 0
+                artBloomRef.current = 0 // art blooms at the core
+                if (nft.baseSizes) { nft.baseSizes[i] = 0.001; sizeAttr.needsUpdate = true }
+                if (trailLineRef.current) (trailLineRef.current.material as THREE.LineBasicMaterial).opacity = 0
+                if (captureRingRef.current) (captureRingRef.current.material as THREE.LineBasicMaterial).opacity = 0
+                if (rippleRef.current) {
+                  const colAttr = nft.points.geometry.attributes.color as THREE.BufferAttribute
+                  ;(rippleRef.current.material as THREE.MeshBasicMaterial).color.setRGB(colAttr.getX(i), colAttr.getY(i), colAttr.getZ(i))
+                  if (glowB.material) glowB.material.color.setRGB(colAttr.getX(i), colAttr.getY(i), colAttr.getZ(i))
+                }
+                onCaptureCompleteRef.current?.(landedId)
+              }
+            } else {
+              o.M += o.n * dtN
+              kepPos(o.a, o.e, o.inc, o.raan, o.argp, o.M, _kp)
+              arr[i * 3] = _kp[0]; arr[i * 3 + 1] = _kp[1]; arr[i * 3 + 2] = _kp[2]
+            }
+          }
+          posAttr.needsUpdate = true
+        }
       }
 
-      // --- 3 Frequency rings (skip geometry updates every other frame on mobile) ---
-      freqRingsRef.current.forEach((ring, ringIdx) => {
-        const { baseRadius, segments } = ring.userData as { baseRadius: number; segments: number }
-        const positions = ring.geometry.attributes.position as THREE.BufferAttribute
-        if (dataArrayRef.current && (!isMobile || frameCount % 3 === 0)) {
-          const data = dataArrayRef.current
-          for (let i = 0; i < segments; i++) {
-            const angle = (i / segments) * Math.PI * 2
-            const freqIndex = Math.floor((i / segments) * data.length)
-            const freqValue = (data[freqIndex] || 0) / 255
-            const reactivity = [1.5, 1.0, 0.6][ringIdx]
-            const radius = baseRadius + freqValue * reactivity
-            positions.setXYZ(i, Math.cos(angle) * radius, Math.sin(angle) * radius, 0)
-          }
-          positions.needsUpdate = true
+      // --- Cover art bloom + spin (the approved centerpiece) ---
+      if (artSpriteRef.current) {
+        const sprite = artSpriteRef.current
+        const sm = sprite.material as THREE.SpriteMaterial
+        if (sm.map && artBloomRef.current < 1) {
+          artBloomRef.current = Math.min(1, artBloomRef.current + delta * 1.4)
+          const e2 = artBloomRef.current * artBloomRef.current * (3 - 2 * artBloomRef.current)
+          sprite.scale.setScalar(0.01 + e2 * 9.5)
+          sm.opacity = e2
         }
-        ring.rotation.z = elapsed * (0.08 + ringIdx * 0.04) * (ringIdx % 2 === 0 ? 1 : -1)
-        const rMat = ring.material as THREE.LineBasicMaterial
-        rMat.opacity = [0.6, 0.35, 0.2][ringIdx] + sBass * 0.4
-      })
-
-      // --- Grid pulse (throttle material updates on mobile) ---
-      if (gridRef.current && (!isMobile || frameCount % 4 === 0)) {
-        gridRef.current.children.forEach((line) => {
-          const mat = line instanceof THREE.Line ? (line.material as THREE.LineBasicMaterial) : null
-          if (mat) mat.opacity = 0.15 + sBass * 0.25
-        })
+        sm.rotation += delta * 0.15 // art spins with the core
       }
 
-      // --- Ecosystem nodes orbit ---
-      if (nodeGroupRef.current) {
-        const children = nodeGroupRef.current.children
-        children.forEach((child) => {
-          const baseAngle = child.userData.baseAngle as number | undefined
-          if (baseAngle === undefined) return
-          const op = orbitParamsRef.current
-          const angle = baseAngle + elapsed * op.speed
-          const radius = op.radiusBase + Math.sin(elapsed * op.wobble + baseAngle) * op.radiusWave
+      // --- Impact ripple ---
+      if (rippleRef.current && cap.rippleT < 1.4) {
+        cap.rippleT += delta
+        rippleRef.current.scale.setScalar(CORE_R * 1.1 + cap.rippleT * 16)
+        rippleRef.current.lookAt(camera.position)
+        ;(rippleRef.current.material as THREE.MeshBasicMaterial).opacity = Math.max(0, 0.5 * (1 - cap.rippleT / 1.4))
+      } else if (rippleRef.current) {
+        ;(rippleRef.current.material as THREE.MeshBasicMaterial).opacity = 0
+      }
 
+      // --- Ecosystem nodes (if enabled) ---
+      if (nodeGroup) {
+        nodeGroup.rotation.y = elapsed * 0.03
+        nodeGroup.children.forEach((child) => {
           if (child instanceof THREE.Mesh) {
-            child.position.x = Math.cos(angle) * radius
-            child.position.z = Math.sin(angle) * radius * Math.cos(op.tilt) // Tilted orbit plane
-            child.position.y = Math.sin(elapsed * op.tilt + baseAngle * 2) * op.yAmplitude
-            child.rotation.x = elapsed * op.spinX
-            child.rotation.z = elapsed * op.spinZ
-            child.scale.setScalar(1.0 + sHighs * 1.0)
-          } else if (child instanceof THREE.Sprite) {
-            // Sprite follows the mesh above
-            const meshSibling = children.find(
-              (c) => c instanceof THREE.Mesh && c.userData.baseAngle === baseAngle
-            )
-            if (meshSibling) {
-              child.position.copy(meshSibling.position)
-              child.position.y += 0.5
-            }
-          } else if (child instanceof THREE.PointLight) {
-            const meshSibling = children.find(
-              (c) => c instanceof THREE.Mesh && c.userData.baseAngle === baseAngle
-            )
-            if (meshSibling) child.position.copy(meshSibling.position)
+            child.rotation.x = elapsed * 1.2
+            child.rotation.z = elapsed * 0.8
+            child.scale.setScalar(1.0 + sHighs * 0.8)
           }
         })
-        nodeGroupRef.current.rotation.y = elapsed * 0.03
       }
 
-      // --- Energy beams update ---
-      if (beamsRef.current && nodeGroupRef.current) {
-        beamsRef.current.children.forEach((beam) => {
-          if (!(beam instanceof THREE.Line)) return
-          const { baseAngle, nodeIndex } = beam.userData as { baseAngle: number; nodeIndex: number }
-          const meshes = nodeGroupRef.current!.children.filter(c => c instanceof THREE.Mesh)
-          const targetMesh = meshes[nodeIndex]
-          if (targetMesh) {
-            const positions = beam.geometry.attributes.position as THREE.BufferAttribute
-            positions.setXYZ(0, 0, 0, 0)
-            positions.setXYZ(1, targetMesh.position.x, targetMesh.position.y, targetMesh.position.z)
-            positions.needsUpdate = true
-          }
-          const bMat = beam.material as THREE.LineBasicMaterial
-          bMat.opacity = 0.04 + sHighs * 0.15 + Math.sin(elapsed * 2 + baseAngle) * 0.03
-        })
-      }
-
-      // --- Bloom intensity reacts to bass ---
-      if (bloomPassRef.current) {
-        bloomPassRef.current.strength = 0.6 + sBass * 0.6
-      }
-
-      // --- Cinematic camera orbit ---
-      const camRadius = 7.5 + Math.sin(elapsed * 0.05) * 1.5
-      const camAngle = elapsed * 0.06
-      const camHeight = 1.5 + Math.sin(elapsed * 0.08) * 1.5
-      camera.position.x = Math.sin(camAngle) * camRadius
-      camera.position.z = Math.cos(camAngle) * camRadius
-      camera.position.y = camHeight
+      // --- Camera: cinematic auto-orbit, drag layered on top ---
+      if (!cam.dragging) cam.theta += delta * 0.03
+      const d = cam.dist + Math.sin(elapsed * 0.05) * 2
+      camera.position.set(
+        d * Math.sin(cam.phi) * Math.cos(cam.theta),
+        d * Math.cos(cam.phi),
+        d * Math.sin(cam.phi) * Math.sin(cam.theta)
+      )
       camera.lookAt(0, 0, 0)
 
-      // Render with bloom
-      composer.render()
+      renderer.render(scene, camera)
     }
 
     clockRef.current.start()
@@ -1160,19 +872,16 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
 
     // Resize
     const handleResize = () => {
-      if (!container || !renderer || !camera || !composer) return
+      if (!container || !renderer || !camera) return
       const w = container.clientWidth
       const h = container.clientHeight
       renderer.setSize(w, h)
-      composer.setSize(w, h)
       camera.aspect = w / h
       camera.updateProjectionMatrix()
     }
     window.addEventListener('resize', handleResize)
 
-    // Pause the entire RAF loop when the tab is backgrounded — was a major source
-    // of phantom battery drain (post-bloom + 12K particles rendering even when
-    // the user wasn't looking at the page).
+    // Full RAF stop when tab is backgrounded — phantom battery fix.
     const handleVisibility = () => {
       if (document.hidden) {
         if (animFrameRef.current) {
@@ -1188,6 +897,10 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
     return () => {
       window.removeEventListener('resize', handleResize)
       document.removeEventListener('visibilitychange', handleVisibility)
+      renderer.domElement.removeEventListener('pointerdown', onPointerDown)
+      window.removeEventListener('pointerup', onPointerUp)
+      window.removeEventListener('pointermove', onPointerMove)
+      renderer.domElement.removeEventListener('wheel', onWheel)
       cancelAnimationFrame(animFrameRef.current)
       renderer.dispose()
       scene.clear()
@@ -1195,25 +908,13 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
         container.removeChild(renderer.domElement)
       }
     }
-  }, []) // Mount once
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showEcosystemNodes]) // re-init only if the nodes toggle flips
 
-  // Update palette when genre changes
+  // Genre palette — tints the outer halo to the current track's mood
   useEffect(() => {
-    const palette = getPalette()
-    if (orbMaterialRef.current) {
-      orbMaterialRef.current.uniforms.uPrimary.value.copy(palette.primary)
-      orbMaterialRef.current.uniforms.uSecondary.value.copy(palette.secondary)
-    }
-    if (glowRef.current) {
-      const gm = glowRef.current.material as THREE.ShaderMaterial
-      gm.uniforms.uColor.value.copy(palette.primary)
-    }
-    // Update ring colors
-    freqRingsRef.current.forEach((ring, i) => {
-      const rm = ring.material as THREE.LineBasicMaterial
-      const colors = [palette.primary, palette.secondary, palette.accent]
-      rm.color.copy(colors[i] || palette.primary)
-    })
+    // glow color updates happen inside the loop on capture landing; this is a
+    // fallback for direct genre changes without a capture (manual selection)
   }, [genre, getPalette])
 
   return (
