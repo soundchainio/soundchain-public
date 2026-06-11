@@ -139,6 +139,72 @@ function actionBase(name: string, side: 'ny' | 'sa'): string {
   return `${side === 'ny' ? 'nyk' : 'sas'}-${last}-action`
 }
 
+// ─── Original silhouette artwork — code-generated basketball figures (no photos,
+// no likeness; read by build + pose + jersey number). Spider-Verse poster energy.
+type J = [number, number]
+interface Skel {
+  vb: J; head: J; hr: number
+  torso: [J, J]; shoulders: [J, J]
+  armL: J[]; armR: J[]; legL: J[]; legR: J[]
+  ball?: J; ballR?: number; num: J
+}
+// GUARD anchor (Brunson #11) — low, wide, explosive crossover, leaning toward center (right).
+const POSE_GUARD: Skel = {
+  vb: [120, 200], head: [56, 30], hr: 13,
+  torso: [[56, 46], [62, 112]], shoulders: [[44, 52], [70, 50]],
+  armR: [[70, 50], [88, 76], [80, 110]], armL: [[44, 52], [28, 66], [20, 88]],
+  legL: [[55, 114], [38, 150], [33, 192]], legR: [[68, 112], [88, 148], [96, 190]],
+  ball: [80, 122], ballR: 9, num: [56, 84],
+}
+// CENTER anchor (Wemby #1) — towering, extreme wingspan, rising block/dunk, arms up, leaning left.
+const POSE_CENTER: Skel = {
+  vb: [120, 230], head: [60, 24], hr: 12,
+  torso: [[60, 40], [56, 126]], shoulders: [[47, 46], [73, 46]],
+  armL: [[47, 46], [33, 22], [28, 2]], armR: [[73, 46], [88, 20], [94, 1]],
+  legL: [[51, 128], [43, 172], [40, 222]], legR: [[64, 128], [76, 174], [82, 224]],
+  num: [60, 80],
+}
+// Supporting generic poses — defense slide, rebound leap, jumper follow-through.
+const POSE_DEFENSE: Skel = {
+  vb: [120, 200], head: [60, 36], hr: 12, torso: [[60, 50], [60, 116]], shoulders: [[46, 56], [74, 56]],
+  armL: [[46, 56], [26, 64], [14, 70]], armR: [[74, 56], [94, 64], [106, 70]],
+  legL: [[52, 118], [34, 150], [26, 188]], legR: [[68, 118], [86, 150], [94, 188]], num: [60, 88],
+}
+const POSE_LEAP: Skel = {
+  vb: [120, 210], head: [60, 26], hr: 12, torso: [[60, 40], [60, 110]], shoulders: [[48, 46], [72, 46]],
+  armL: [[48, 46], [38, 22], [34, 4]], armR: [[72, 46], [82, 22], [86, 4]],
+  legL: [[54, 112], [46, 150], [42, 196]], legR: [[66, 112], [76, 150], [82, 200]], num: [60, 78],
+}
+const POSE_JUMPER: Skel = {
+  vb: [120, 205], head: [60, 30], hr: 12, torso: [[60, 44], [60, 112]], shoulders: [[48, 50], [72, 50]],
+  armL: [[48, 50], [42, 28], [44, 8]], armR: [[72, 50], [80, 30], [78, 12]],
+  legL: [[54, 114], [44, 154], [42, 198]], legR: [[66, 114], [78, 152], [82, 198]],
+  ball: [50, 10], ballR: 8, num: [60, 80],
+}
+const SUPPORT_POSES = [POSE_DEFENSE, POSE_LEAP, POSE_JUMPER]
+
+function BballFigure({ sk, num, side, anchor }: { sk: Skel; num?: string; side: 'ny' | 'sa'; anchor?: boolean }) {
+  const pt = (j: J) => `${j[0]},${j[1]}`
+  const poly = (pts: J[]) => 'M' + pts.map(pt).join(' L')
+  return (
+    <svg viewBox={`0 0 ${sk.vb[0]} ${sk.vb[1]}`} preserveAspectRatio="xMidYMax meet" className={`fc-fig fc-fig-${side} ${anchor ? 'fc-fig-anchor' : ''}`}>
+      <g className="fc-fig-body">
+        <path className="fc-fig-torso" d={poly([sk.torso[0], sk.torso[1]])} />
+        <path className="fc-fig-torso" d={poly([sk.shoulders[0], sk.shoulders[1]])} />
+        <path className="fc-fig-limb" d={poly(sk.legL)} />
+        <path className="fc-fig-limb" d={poly(sk.legR)} />
+        <path className="fc-fig-limb" d={poly(sk.armL)} />
+        <path className="fc-fig-limb" d={poly(sk.armR)} />
+        <circle className="fc-fig-head" cx={sk.head[0]} cy={sk.head[1]} r={sk.hr} />
+        {sk.ball && <circle className="fc-fig-ball" cx={sk.ball[0]} cy={sk.ball[1]} r={sk.ballR} />}
+        {/* energy trail off the action limb */}
+        <path className="fc-fig-trail" d={poly(side === 'ny' ? sk.armR : sk.armL)} />
+      </g>
+      {num && <text className="fc-fig-num" x={sk.num[0]} y={sk.num[1]} textAnchor="middle">{num}</text>}
+    </svg>
+  )
+}
+
 function Wedge({ players, side, entering, actionSet }: { players: FinalsPlayer[]; side: 'ny' | 'sa'; entering: boolean; actionSet: Set<string> }) {
   return (
     <div className={`fc-wedge fc-wedge-${side}`} aria-hidden>
@@ -676,13 +742,17 @@ export function FinalsCollision() {
         @media (min-width: 740px) { .fc-roster { grid-template-columns: 1fr 1fr; } }
         @media (max-width: 480px) {
           .fc-mote:nth-child(2n), .fc-flash:nth-child(2n), .fc-win:nth-child(2n) { display: none; }
-          /* keep only 3 players/side on mobile (anchor + 2 mid), drop the back tier */
-          .fc-tier-2 { display: none; }
-          .fc-wp { width: clamp(140px, 40vw, 200px); }
-          .fc-anchor { width: clamp(240px, 72vw, 400px); }
-          .fc-core { max-width: 100%; transform: translateZ(60px); }
+          /* mobile = the two anchors facing off; drop mid + back tiers for clarity */
+          .fc-tier-1, .fc-tier-2 { display: none; }
+          /* the centered, full-width core was covering the players — push it to the
+             top so the two anchors are visible flanking the bottom, facing off. */
+          .fc-stage { align-items: flex-start; }
+          .fc-core { max-width: 100%; transform: translateZ(36px); padding-top: 5vh; }
+          .fc-anchor { width: clamp(190px, 58vw, 310px); }
+          .fc-wp-ny.fc-anchor { left: -7% !important; right: auto !important; bottom: -5% !important; }
+          .fc-wp-sa.fc-anchor { right: -7% !important; left: auto !important; bottom: -5% !important; }
           .fc-sl { width: 30vw; } .fc-cd-clock { gap: 8px; } .fc-cd-cell { min-width: 50px; }
-          .fc-wm { width: 50vw; }
+          .fc-wm { width: 48vw; }
         }
         @media (prefers-reduced-motion: reduce) {
           .fc-stars,.fc-flash,.fc-mote,.fc-sl,.fc-win,.fc-seam,.fc-halo,.fc-title,.fc-vs,.fc-vs-glint,.fc-neon-ny,.fc-neon-sa,.fc-tape-row,.fc-eyebrow .fc-po,.fc-flip,.fc-tips,.fc-cta-ticket,.fc-shine,.fc-scrollhint,.fc-live,.fc-game-tonight,.fc-godray,.fc-wp-enter,.fc-twinkle { animation: none !important; }
