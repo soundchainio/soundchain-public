@@ -58,21 +58,24 @@ export function QuartersRail({ profileId, isOwn, onInvite }: { profileId?: strin
     return () => { dead = true }
   }, [profileId])
 
-  const inviteCount = isOwn ? (items.length === 0 ? 4 : 2) : 0
+  // One rail, one placement: a horizontal strip beside the avatar (Frank
+  // Jun 12 round 2 — the upper-right desktop column is gone). One invite
+  // card max, own profile only.
+  const inviteCount = isOwn ? 1 : 0
   const blanks = useMemo(() => Array.from({ length: inviteCount }), [inviteCount])
   if (items.length === 0 && inviteCount === 0) return null
 
   return (
     <>
-      <div className="flex flex-col gap-1.5 lg:w-48 min-w-0">
-        <div className="flex gap-2 overflow-x-auto pb-1 snap-x lg:grid lg:grid-cols-2 lg:overflow-y-auto lg:overflow-x-visible lg:pb-0 lg:max-h-[13.5rem] lg:pr-1 scrollbar-hide">
+      <div className="flex-1 min-w-0 flex flex-col gap-1">
+        <div className="flex gap-2 overflow-x-auto snap-x scrollbar-hide pb-0.5">
           {items.map((it, i) => (
             <button
               key={it.src}
               onClick={() => setOpen(it)}
               title={it.label || 'View'}
-              className="relative flex-shrink-0 snap-start w-20 h-20 lg:w-auto lg:h-auto lg:aspect-square rounded-md border-2 border-[#221a36] overflow-hidden bg-[#0c0916] hover:border-[#37e6ff]/50 active:scale-95 transition-all"
-              style={{ transform: `rotate(${i % 3 === 0 ? '-1.2deg' : i % 3 === 1 ? '0.8deg' : '-0.4deg'})`, boxShadow: 'inset 0 0 10px rgba(0,0,0,0.5), 0 2px 5px #000' }}
+              className="relative flex-shrink-0 snap-start w-20 h-20 sm:w-24 sm:h-24 rounded-xl border-2 border-[#221a36] overflow-hidden bg-[#0c0916] hover:border-[#37e6ff]/50 active:scale-95 transition-all"
+              style={{ transform: `rotate(${i % 3 === 0 ? '-1deg' : i % 3 === 1 ? '0.7deg' : '-0.3deg'})`, boxShadow: 'inset 0 0 10px rgba(0,0,0,0.5), 0 2px 5px #000' }}
             >
               {it.kind === 'video' ? (
                 <>
@@ -89,13 +92,13 @@ export function QuartersRail({ profileId, isOwn, onInvite }: { profileId?: strin
               key={`b${i}`}
               onClick={onInvite}
               title="Add to your collection"
-              className="flex-shrink-0 snap-start w-20 h-20 lg:w-auto lg:h-auto lg:aspect-square rounded-md border-2 border-dashed border-white/15 hover:border-[#ff3d9a]/50 bg-white/[0.02] flex items-center justify-center text-white/30 hover:text-[#ff3d9a] active:scale-95 transition-all"
+              className="flex-shrink-0 snap-start w-20 h-20 sm:w-24 sm:h-24 rounded-xl border-2 border-dashed border-white/15 hover:border-[#ff3d9a]/50 bg-white/[0.02] flex items-center justify-center text-white/30 hover:text-[#ff3d9a] active:scale-95 transition-all"
             >
               <Plus className="w-5 h-5" />
             </button>
           ))}
         </div>
-        <div className="text-[7px] font-mono tracking-[0.3em] text-white/25 uppercase text-center">Collection Rail · Tap to View</div>
+        <div className="text-[7px] font-mono tracking-[0.3em] text-white/25 uppercase">Collection Rail · Tap to View</div>
       </div>
 
       {/* expand-for-view lightbox */}
