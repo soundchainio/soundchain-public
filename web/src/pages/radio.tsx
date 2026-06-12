@@ -230,6 +230,15 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [expandedCard, setExpandedCard] = useState<null | 'track' | 'neural'>(null)
   const [expandedScale, setExpandedScale] = useState(1)
+  // CINEMA MODE — chevron pill lifts the 4D galaxy above ALL UI (pure imagery,
+  // desktop + mobile). z-jump only: nothing unmounts, audio keeps playing, the
+  // scene never re-inits. Tap the pill again to bring every panel back.
+  const [cinemaMode, setCinemaMode] = useState(false)
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+    document.body.style.overflow = cinemaMode ? 'hidden' : ''
+    return () => { document.body.style.overflow = '' }
+  }, [cinemaMode])
 
   // When a card expands, scale it up to fill the screen. offsetWidth/Height are
   // the unscaled layout size, so measuring after the transform is applied is safe.
@@ -1186,8 +1195,13 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
           )}
         </div>
 
-        {/* 4D Immersive Scene — FULL VIEWPORT fixed background */}
-        <div className="fixed inset-0 w-full h-full overflow-hidden" style={{ zIndex: 0 }}>
+        {/* 4D Immersive Scene — FULL VIEWPORT fixed background. In cinema mode
+            it z-jumps ABOVE all UI (incl. the site nav) so the screen is pure
+            galaxy — drag-to-orbit + zoom work directly on the canvas. */}
+        <div
+          className={`fixed inset-0 w-full h-full overflow-hidden ${cinemaMode ? 'bg-[#020810]' : ''}`}
+          style={{ zIndex: cinemaMode ? 150 : 0 }}
+        >
           <RadioScene4D
             audioRef={audioRef}
             isPlaying={isPlaying}
@@ -1197,6 +1211,29 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
             currentTrackId={currentTrack?.id}
           />
         </div>
+
+        {/* CINEMA MODE chevron pill — always on top, toggles every UI object
+            away / back. Safe-area aware for mobile thumbs. */}
+        <button
+          onClick={() => setCinemaMode(v => !v)}
+          title={cinemaMode ? 'Show controls' : 'Full view — just the galaxy'}
+          aria-label={cinemaMode ? 'Show controls' : 'Hide all controls'}
+          className={`fixed right-3 z-[160] flex items-center gap-1.5 rounded-full border backdrop-blur-md transition-all duration-300 ${
+            cinemaMode
+              ? 'bottom-4 px-3 py-2.5 bg-black/40 border-white/15 text-white/50 hover:text-white hover:border-orange-400/60 hover:bg-black/70 active:scale-95'
+              : 'bottom-4 px-3.5 py-2.5 bg-black/60 border-orange-500/40 text-orange-300 hover:text-white hover:border-orange-400 hover:bg-black/80 active:scale-95 shadow-lg shadow-orange-500/10'
+          }`}
+          style={{ marginBottom: 'env(safe-area-inset-bottom, 0px)' }}
+        >
+          {cinemaMode ? (
+            <ChevronDown className="w-4 h-4" />
+          ) : (
+            <>
+              <ChevronUp className="w-4 h-4" />
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em]">Full View</span>
+            </>
+          )}
+        </button>
 
         {/* Main Content — floats over 4D scene */}
         <main className="relative z-10 max-w-4xl mx-auto px-3 md:px-4 pt-0 pb-4">
