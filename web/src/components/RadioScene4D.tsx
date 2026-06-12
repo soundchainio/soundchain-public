@@ -654,6 +654,7 @@ export default function RadioScene4D({
     const playingIntervalMs = isMobile ? 41.66 : 0          // ~24fps mobile / uncapped desktop
     const pausedIntervalMs = isMobile ? 200 : 66.66         // ~5fps mobile / ~15fps desktop
 
+    let loopErrorLogged = false
     const animate = (timestamp?: number) => {
       if (typeof document !== 'undefined' && document.hidden) {
         animFrameRef.current = 0
@@ -693,6 +694,13 @@ export default function RadioScene4D({
       const sMids = smoothMidsRef.current
       const sHighs = smoothHighsRef.current
 
+      // Every per-frame visual update is wrapped so a runtime error in ANY
+      // section (NFT rebuild, capture state machine, buffer indexing) can never
+      // skip the renderer.render() below. A throw here previously froze the
+      // ENTIRE scene — core, swarm and asteroids — because the rAF reschedules
+      // before the body runs, so the screen kept repainting the last good frame
+      // while the math silently advanced. Render is now unconditional.
+      try {
       // --- Core breathing (bass) ---
       const pulse = 1 + 0.02 * Math.sin(elapsed * 1.4) + sBass * 0.06
       core.scale.setScalar(pulse)
@@ -869,6 +877,13 @@ export default function RadioScene4D({
         d * Math.sin(cam.phi) * Math.sin(cam.theta)
       )
       camera.lookAt(0, 0, 0)
+      } catch (err) {
+        if (!loopErrorLogged) {
+          loopErrorLogged = true
+          // eslint-disable-next-line no-console
+          console.error('[RadioScene4D] per-frame update threw (scene keeps rendering):', err)
+        }
+      }
 
       renderer.render(scene, camera)
     }
