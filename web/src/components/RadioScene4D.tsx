@@ -199,18 +199,27 @@ function createTextSprite(text: string, color: number): THREE.Sprite {
   return sprite
 }
 
-// Soft radial glow texture — shared by dust, NFT bodies, and core halo
+// Soft radial glow texture — shared by dust, NFT bodies, and core halo.
+// 256px + a smooth quartic falloff (many stops): the old 64px / 3-stop
+// gradient banded visibly when magnified to the 34-58-unit halo sprites —
+// on mobile that banding read as edge flicker. This renders as continuous
+// nebula gas instead.
 function createGlowTexture(): THREE.CanvasTexture {
   const c = document.createElement('canvas')
-  c.width = c.height = 64
+  c.width = c.height = 256
   const x = c.getContext('2d')!
-  const g = x.createRadialGradient(32, 32, 0, 32, 32, 32)
-  g.addColorStop(0, 'rgba(255,255,255,1)')
-  g.addColorStop(0.35, 'rgba(255,255,255,0.5)')
-  g.addColorStop(1, 'rgba(255,255,255,0)')
+  const g = x.createRadialGradient(128, 128, 0, 128, 128, 128)
+  for (let i = 0; i <= 16; i++) {
+    const t = i / 16
+    const a = Math.pow(1 - t, 2.6) // smooth gas falloff, no hard edge
+    g.addColorStop(t, `rgba(255,255,255,${a.toFixed(4)})`)
+  }
   x.fillStyle = g
-  x.fillRect(0, 0, 64, 64)
-  return new THREE.CanvasTexture(c)
+  x.fillRect(0, 0, 256, 256)
+  const tex = new THREE.CanvasTexture(c)
+  tex.minFilter = THREE.LinearFilter
+  tex.magFilter = THREE.LinearFilter
+  return tex
 }
 
 const isMobile = typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)
@@ -655,6 +664,10 @@ export default function RadioScene4D({
     const pausedIntervalMs = isMobile ? 200 : 66.66         // ~5fps mobile / ~15fps desktop
 
     let loopErrorLogged = false
+    // Slow-smoothed bass channel for the HALO only — raw sBass stepped the
+    // glow opacity/scale every frame, which at the mobile 24fps cap flickered
+    // the soft edges. ~300ms time constant = stable nebula-gas breathing.
+    let gBass = 0
     const animate = (timestamp?: number) => {
       if (typeof document !== 'undefined' && document.hidden) {
         animFrameRef.current = 0
@@ -714,11 +727,14 @@ export default function RadioScene4D({
       core.rotation.y += delta * 0.22 // the wrapped cover art spins (4D)
       shell.scale.setScalar(pulse)
       shell.rotation.y += delta * 0.24
-      glowA.material.opacity = 0.8 + 0.15 * Math.sin(elapsed * 1.4) + sBass * 0.2
-      glowB.material.opacity = 0.30 + sBass * 0.18
-      glowC.material.opacity = 0.85 + sBass * 0.15
-      glowA.scale.setScalar(34 * (1 + sBass * 0.1))
-      glowB.scale.setScalar(58 * (1 + sBass * 0.08))
+      // Halo = nebula gas: slow-smoothed bass + halved modulation on mobile
+      gBass += (sBass - gBass) * Math.min(1, delta * 3.5)
+      const gAmp = isMobile ? 0.5 : 1
+      glowA.material.opacity = 0.8 + 0.10 * Math.sin(elapsed * 1.4) + gBass * 0.15 * gAmp
+      glowB.material.opacity = 0.30 + gBass * 0.12 * gAmp
+      glowC.material.opacity = 0.85 + gBass * 0.10 * gAmp
+      glowA.scale.setScalar(34 * (1 + gBass * 0.06 * gAmp))
+      glowB.scale.setScalar(58 * (1 + gBass * 0.05 * gAmp))
 
       // --- Starfield drift ---
       starfield.rotation.y = elapsed * 0.013

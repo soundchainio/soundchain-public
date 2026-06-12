@@ -112,6 +112,7 @@ import { GeneratePanel } from 'components/dex/GeneratePanel'
 import { DmMessageContent } from 'components/pulse/DmMessageContent'
 
 const CrewQuarters = dynamic(() => import('components/profile/CrewQuarters'), { ssr: false })
+const QuartersRail = dynamic(() => import('components/profile/QuartersRail'), { ssr: false })
 const MobileBottomAudioPlayer = dynamic(() => import('components/common/BottomAudioPlayer/MobileBottomAudioPlayer'))
 const DesktopBottomAudioPlayer = dynamic(() => import('components/common/BottomAudioPlayer/DesktopBottomAudioPlayer'))
 const AudioEngine = dynamic(() => import('components/common/BottomAudioPlayer/AudioEngine'))
@@ -7147,31 +7148,25 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         <span className="absolute top-2 left-3 text-[8px] font-mono tracking-[0.3em] text-white/30 uppercase">Quarters Viewport — Personal System</span>
                         <span className="absolute bottom-2 right-3 text-[7px] font-mono tracking-[0.25em] text-white/20 uppercase hidden sm:block">Starboard Hull · The Belt Beyond</span>
                       </div>
-                      {/* wall art frames + commendation shelf (desktop) — WIRED to the
-                          pilot's own pics: framed profile photo + cover art velcro'd to
-                          the hull (Frank: "what is this supposed to be wired to?"). */}
-                      <div className="hidden lg:flex w-48 flex-col gap-2">
-                        <div className="flex gap-2 flex-1">
-                          {[
-                            { src: viewingProfile.profilePicture, g: '#ff6a3d,#ff3d9a', rot: '-2deg' },
-                            { src: viewingProfile.coverPicture, g: '#a07bff,#37e6ff', rot: '1.5deg' },
-                            { src: null, g: '#b8ff4d,#ffd700', rot: '-1deg' },
-                          ].map((f, i) => (
-                            <div key={i} className="flex-1 rounded-md border-2 border-[#221a36] shadow-lg overflow-hidden"
-                              style={{ background: f.src ? '#0c0916' : `linear-gradient(135deg, ${f.g})`, transform: `rotate(${f.rot})`, boxShadow: 'inset 0 0 12px rgba(0,0,0,0.5), 0 2px 6px #000' }}>
-                              {f.src && <img src={f.src} alt="" className="w-full h-full object-cover" loading="lazy" />}
-                            </div>
-                          ))}
-                        </div>
-                        <div className="text-[7px] font-mono tracking-[0.3em] text-white/25 uppercase text-center">Wall Art · Velcro Mount</div>
-                        <div className="h-8 rounded-md border border-white/10 flex items-center justify-center gap-3"
-                          style={{ background: 'linear-gradient(180deg, #181228, #0f0a1a)' }}>
-                          {['#ffd700', '#37e6ff', '#ff3d9a'].map((c, i) => (
-                            <span key={i} className="w-2.5 h-2.5 rounded-full" style={{ background: c, boxShadow: `0 0 6px ${c}` }} />
-                          ))}
-                        </div>
-                        <div className="text-[7px] font-mono tracking-[0.3em] text-white/25 uppercase text-center">Commendations</div>
+                      {/* COLLECTION RAIL — the pilot's own pics/gifs/clips velcro'd to
+                          the hull (Frank Jun 12: scrollable, tap to expand, blank
+                          cards invite the owner to add more). Desktop: column beside
+                          the window. Real media via /api/feed/posts, read-only. */}
+                      <div className="hidden lg:block">
+                        <QuartersRail
+                          profileId={viewingProfile.id}
+                          isOwn={isViewingOwnProfile}
+                          onInvite={() => setProfileTab('wall')}
+                        />
                       </div>
+                    </div>
+                    {/* mobile: the rail runs horizontally under the window */}
+                    <div className="lg:hidden mt-2">
+                      <QuartersRail
+                        profileId={viewingProfile.id}
+                        isOwn={isViewingOwnProfile}
+                        onInvite={() => setProfileTab('wall')}
+                      />
                     </div>
                   </div>
 
@@ -7221,6 +7216,23 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         + a black/10 floor (instead of fully transparent) so the name/@handle
                         near the middle stay legible even over a light/bright cover photo. */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-black/10" />
+                    </div>
+
+                    {/* QUARTERS PORT WINDOW — the cover is the room's window into
+                        deep space (Frank Jun 12): hull frame + corner gussets +
+                        rivet row + flywheel seam + stencil. Pure decoration BEHIND
+                        the identity text (z-[5] < content z-10), pointer-events-none. */}
+                    <div className="absolute inset-0 pointer-events-none z-[5]" aria-hidden>
+                      <div className="absolute inset-1.5 sm:inset-2 rounded-lg border-2 border-[#1a1426]"
+                        style={{ boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.07), inset 0 0 46px rgba(0,0,0,0.55)' }} />
+                      <div className="absolute top-2.5 sm:top-3 left-8 right-8 h-1 opacity-50"
+                        style={{ backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.3) 1px, transparent 1.6px)', backgroundSize: '28px 100%' }} />
+                      {(['top-1.5 left-1.5 sm:top-2 sm:left-2', 'top-1.5 right-1.5 sm:top-2 sm:right-2 -scale-x-100', 'bottom-1.5 left-1.5 sm:bottom-2 sm:left-2 -scale-y-100', 'bottom-1.5 right-1.5 sm:bottom-2 sm:right-2 -scale-x-100 -scale-y-100'] as const).map(pos => (
+                        <div key={pos} className={`absolute ${pos} w-6 h-6 sm:w-8 sm:h-8`}
+                          style={{ background: 'linear-gradient(135deg, #1c1530 0%, #0e0a1c 70%, transparent 70%)', clipPath: 'polygon(0 0, 100% 0, 0 100%)' }} />
+                      ))}
+                      <span className="absolute top-3.5 right-6 text-[7px] font-mono tracking-[0.35em] text-white/25 uppercase hidden sm:block">Port Window · Deep Space</span>
+                      <div className="absolute top-2 left-10 right-10 sc-fwrail rounded-full opacity-50" />
                     </div>
 
                     {/* Profile Info — in NORMAL FLOW, pinned to the bottom by the parent's

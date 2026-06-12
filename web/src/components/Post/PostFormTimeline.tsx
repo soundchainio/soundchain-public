@@ -235,16 +235,20 @@ export const PostFormTimeline = ({ onPosted }: { onPosted?: () => void } = {}) =
   // Allow public posting - no login or wallet required!
 
   return (
-    <div className="mb-2 p-3.5 rounded-2xl border border-white/10 bg-white/[0.03]">
+    <div className="sc-mfd mb-2 p-3.5 !rounded-2xl">
       <div className="mb-3 flex items-center justify-between">
-        <span className="text-gray-400 text-sm">Write on feed</span>
+        <span className="flex items-center gap-2">
+          <span className="text-[9px] font-mono font-bold tracking-[0.3em] text-[#39ff7a]/80 uppercase">Comms · New Transmission</span>
+          <span className="sc-led" style={{ ['--lc' as string]: '#39ff7a', ['--d' as string]: '2.2s' }} />
+          <span className="sc-led" style={{ ['--lc' as string]: '#ffb24d', ['--d' as string]: '3.6s', ['--dl' as string]: '0.9s' }} />
+        </span>
         {!me && (
           <span className="text-[10px] px-1.5 py-0.5 bg-neutral-700 text-neutral-300 rounded-full font-medium">Public</span>
         )}
       </div>
       <PostFormMiddleContainer>
         <EmoteTextInput
-          placeholder="What's happening?"
+          placeholder="Broadcast to the mesh…"
           maxLength={postMaxLength}
           onChange={setPostBody}
           value={postBody}
@@ -460,10 +464,10 @@ export const PostFormTimeline = ({ onPosted }: { onPosted?: () => void } = {}) =
             {isSubmitting ? (
               <span className="flex items-center justify-center gap-2">
                 <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Posting...
+                TRANSMITTING…
               </span>
             ) : (
-              'Post'
+              'TRANSMIT'
             )}
           </Button>
         </div>
@@ -477,8 +481,8 @@ const PostFormMiddleContainer = tw.div`
   w-full
   rounded-md
   border-2
-  border-neutral-700
-  bg-neutral-900
+  border-[#1f2630]
+  bg-[#070b10]
   py-[8px] px-[12px]
 `
 
