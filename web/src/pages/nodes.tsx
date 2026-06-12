@@ -14,6 +14,7 @@ import { Post } from 'components/Post/Post'
 import { CompactPost } from 'components/Post/CompactPost'
 import { PostFormTimeline } from 'components/Post/PostFormTimeline'
 import { PostSkeleton } from 'components/Post/PostSkeleton'
+import { FlightDeck } from 'components/nodes/FlightDeck'
 
 // Nodes page uses a custom getLayout (skips default <Layout>), so the modals
 // mounted there (AuthorActionsModal + PostModal) never render. Mount them here
@@ -282,6 +283,9 @@ export default function NodesPage() {
 
   return (
     <div className="min-h-screen bg-[#030303] text-white">
+      {/* SoundChain Starship: the flight-deck cockpit hull around the live
+          dashboard (console strips, Falcon-flicker LEDs, deck floor rail). */}
+      <FlightDeck />
       <DexNavBar />
 
       {/* Lower nav pills — matches dex page nav so users aren't stuck */}
