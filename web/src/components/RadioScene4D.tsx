@@ -729,7 +729,9 @@ export default function RadioScene4D({
         const arr = posAttr.array as Float32Array
         const dtS = isMobile ? delta * 2 : delta
         for (let i = 0; i < SWARM_N; i++) {
-          sw.M[i] += sw.n[i] * dtS * 9
+          // ×1 natural Kepler rate — the old ×9 was compensating for the
+          // getDelta()≈0 clock bug (27b4fa9b6); with real delta it was frantic.
+          sw.M[i] += sw.n[i] * dtS
           kepPos(sw.a[i], sw.e[i], sw.inc[i], sw.raan[i], sw.argp[i], sw.M[i], _kp)
           arr[i * 3] = _kp[0]; arr[i * 3 + 1] = _kp[1]; arr[i * 3 + 2] = _kp[2]
         }
@@ -837,7 +839,7 @@ export default function RadioScene4D({
                 onCaptureCompleteRef.current?.(landedId)
               }
             } else {
-              o.M += o.n * dtN * 9
+              o.M += o.n * dtN // ×1 natural rate (×9 removed with the clock fix)
               kepPos(o.a, o.e, o.inc, o.raan, o.argp, o.M, _kp)
               arr[i * 3] = _kp[0]; arr[i * 3 + 1] = _kp[1]; arr[i * 3 + 2] = _kp[2]
             }
