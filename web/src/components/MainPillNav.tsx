@@ -75,7 +75,10 @@ export default function MainPillNav({ active, borderClass = 'border-white/5', be
   const me = useMe()
 
   const items: PillItem[] = [
-    ...(me?.profile ? [{ id: 'profile', label: 'Profile', route: `/users/${me.profile.userHandle}`, icon: User, accent: 'sky' as Accent }] : []),
+    // Always visible (was logged-in-only, so signed-out surfaces — e.g. the
+    // anvil testbed — showed no Profile pill at all). Logged out → /login,
+    // same pattern as the Manager pill below.
+    { id: 'profile', label: 'Profile', route: me?.profile ? `/users/${me.profile.userHandle}` : '/login', icon: User, accent: 'sky' as Accent },
     { id: 'nodes', label: 'Nodes', route: '/nodes', icon: Home, accent: 'cyan' },
     { id: 'arena', label: 'Arena', route: ARENA_URL, icon: Trophy, accent: 'red', external: true },
     // Manager — Jeremy's booking marketplace (agents ⇄ artists book each other).
