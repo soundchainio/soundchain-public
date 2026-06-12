@@ -111,6 +111,7 @@ import { ProfileReels } from 'components/dex/ProfileReels'
 import { GeneratePanel } from 'components/dex/GeneratePanel'
 import { DmMessageContent } from 'components/pulse/DmMessageContent'
 
+const CrewQuarters = dynamic(() => import('components/profile/CrewQuarters'), { ssr: false })
 const MobileBottomAudioPlayer = dynamic(() => import('components/common/BottomAudioPlayer/MobileBottomAudioPlayer'))
 const DesktopBottomAudioPlayer = dynamic(() => import('components/common/BottomAudioPlayer/DesktopBottomAudioPlayer'))
 const AudioEngine = dynamic(() => import('components/common/BottomAudioPlayer/AudioEngine'))
@@ -3256,7 +3257,13 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
       {/* REMOVED ScrollingBackground - it was covering user's real cover art with Unsplash placeholders */}
 
-      <div className="relative pb-20">
+      {/* CREW QUARTERS — SoundChain Starship profile capsule. Renders ABOVE the
+          cover wallpaper (z-0) and BELOW content (z-10, lifted on the wrapper
+          below): quilted hull walls, flywheel door-slit rails, DIM/WAKE
+          circadian toggle, drifting ninja. Profile view only. */}
+      {selectedView === 'profile' && <CrewQuarters />}
+
+      <div className="relative z-10 pb-20">
         {/* Global top header nav + FURL ticker — both ported to DexNavBar
             (Phase B + C: Apr 19 2026). DexNavBar renders the ticker inside its
             header so every page with DexNavBar gets the ticker automatically. */}

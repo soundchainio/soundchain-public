@@ -2440,6 +2440,14 @@ body.lucy-active iframe[title="FURL Terminal"] {
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 }
+/* CrewQuarters (profile capsule) — ninja astronaut drifts across the
+   wallpaper once per cycle, slow lazy float w/ gentle vertical bob.
+   Plain left/top keyframes (no cqw — older mobile Safari). */
+@keyframes scNinjaDrift {
+  0%   { left: -4%;  top: 26%; transform: rotate(8deg); }
+  45%  { left: 48%;  top: 21%; transform: rotate(-6deg); }
+  100% { left: 104%; top: 30%; transform: rotate(10deg); }
+}
 .sc-fluid-name {
   /* Full SoundChain spectrum — cyan, indigo, purple, pink, gold, emerald —
      so the name never reads as mono light-blue (and never blends into a
