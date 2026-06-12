@@ -669,8 +669,15 @@ export default function RadioScene4D({
       }
       frameCount++
 
-      const elapsed = clockRef.current.getElapsedTime()
-      const delta = clockRef.current.getDelta()
+      // THREE.Clock gotcha: getElapsedTime() CALLS getDelta() internally, so
+      // calling it first consumed the frame delta and the explicit getDelta()
+      // returned ~0.00001s — every delta-driven motion (core spin, swarm,
+      // NFT orbits) advanced by ~nothing → the whole scene read frozen, and
+      // speed multipliers did nothing (N × ~0 = ~0). getDelta() FIRST, then
+      // read .elapsedTime (side-effect-free property). Clamp so a backgrounded
+      // tab resume doesn't teleport the belt by one giant delta.
+      const delta = Math.min(clockRef.current.getDelta(), 0.1)
+      const elapsed = clockRef.current.elapsedTime
 
       // Read FFT — skip every other frame on mobile
       let bass = 0, mids = 0, highs = 0
