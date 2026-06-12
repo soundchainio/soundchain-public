@@ -2571,6 +2571,8 @@ body.lucy-active iframe[title="FURL Terminal"] {
 @keyframes scOrbitSpin{to{transform:rotate(360deg)}}
 .sc-fwrail{height:2px;background:linear-gradient(90deg,#ff6a3d,#ff3d9a,#a07bff,#37e6ff,#b8ff4d,#ffd700);
   opacity:.55;box-shadow:0 0 8px rgba(160,123,255,.4)}
+/* — lofi quarters corner: rising mug steam — */
+@keyframes scSteam{0%{transform:translateY(0) scale(1);opacity:0}18%{opacity:.5}100%{transform:translateY(-16px) scale(1.7);opacity:0}}
 .sc-fluid-name {
   /* Full SoundChain spectrum — cyan, indigo, purple, pink, gold, emerald —
      so the name never reads as mono light-blue (and never blends into a

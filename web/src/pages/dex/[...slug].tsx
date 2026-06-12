@@ -7213,24 +7213,8 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         the starboard slab, rivet row, flywheel seam. All BEHIND the
                         identity text (z-[5] < content z-10), pointer-events-none. */}
                     <div className="absolute inset-0 pointer-events-none z-[5]" aria-hidden>
-                      {/* starboard wall slab — quilted, with locker seams + handrail */}
-                      <div className="absolute top-0 bottom-0 right-0 w-10 sm:w-16 md:w-24"
-                        style={{
-                          background: 'repeating-linear-gradient(45deg, transparent 0 17px, rgba(255,255,255,0.04) 17px 18px), repeating-linear-gradient(-45deg, transparent 0 17px, rgba(0,0,0,0.45) 17px 18px), linear-gradient(270deg, #161028 0%, #0d0918 70%, rgba(13,9,24,0) 100%)',
-                          borderLeft: '1px solid rgba(255,255,255,0.07)',
-                        }}>
-                        <div className="absolute top-[18%] left-1/2 -translate-x-1/2 w-1.5 h-12 rounded-full bg-[#4db8ff]/35 hidden sm:block" />
-                        <div className="absolute top-[48%] left-2 right-2 h-px bg-white/10" />
-                        <div className="absolute top-[62%] left-2 right-2 h-px bg-white/10" />
-                        <div className="absolute bottom-[14%] left-1/2 -translate-x-1/2 flex flex-col gap-1.5">
-                          <span className="sc-led" style={{ ['--lc' as string]: '#ffb24d', ['--d' as string]: '2.8s' }} />
-                          <span className="sc-led" style={{ ['--lc' as string]: '#37e6ff', ['--d' as string]: '4.1s', ['--dl' as string]: '1.2s' }} />
-                        </div>
-                      </div>
-                      {/* port-side thin slab */}
-                      <div className="absolute top-0 bottom-0 left-0 w-2.5 sm:w-4"
-                        style={{ background: 'repeating-linear-gradient(45deg, transparent 0 17px, rgba(255,255,255,0.04) 17px 18px), linear-gradient(90deg, #161028 0%, rgba(13,9,24,0) 100%)', borderRight: '1px solid rgba(255,255,255,0.06)' }} />
-                      {/* hull frame + rivets + gussets */}
+                      {/* hull frame + rivets + gussets (the doubled quilted slabs are
+                          GONE — they duplicated the page's capsule walls, Frank) */}
                       <div className="absolute inset-1.5 sm:inset-2 rounded-lg border-2 border-[#221a38]"
                         style={{ boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.08), inset 0 0 46px rgba(0,0,0,0.55)' }} />
                       <div className="absolute top-2.5 sm:top-3 left-8 right-8 h-1 opacity-60"
@@ -7239,8 +7223,56 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         <div key={pos} className={`absolute ${pos} w-6 h-6 sm:w-9 sm:h-9`}
                           style={{ background: 'linear-gradient(135deg, #241b3e 0%, #110b22 70%, transparent 70%)', clipPath: 'polygon(0 0, 100% 0, 0 100%)' }} />
                       ))}
-                      <span className="absolute top-3.5 right-12 sm:right-[7rem] text-[7px] font-mono tracking-[0.35em] text-white/30 uppercase hidden sm:block">Quarters Wall · Window Above</span>
+                      <span className="absolute top-3.5 right-6 text-[7px] font-mono tracking-[0.35em] text-white/30 uppercase hidden sm:block">Quarters · Home Deck</span>
                       <div className="absolute top-2 left-10 right-10 sc-fwrail rounded-full opacity-60" />
+
+                      {/* ✨ THE LOFI CORNER — lofi girl, SoundChain vibez: warm lamp
+                          pool, fairy lights, vinyl shelf, plant, steaming mug, a
+                          little desk console blinking away. CSS art, all behind
+                          the identity text. */}
+                      <div className="absolute bottom-1 right-2 sm:right-5 w-44 sm:w-72 h-full">
+                        {/* warm lamp pool */}
+                        <div className="absolute bottom-0 right-0 w-48 sm:w-64 h-40 sm:h-52 animate-pulse"
+                          style={{ background: 'radial-gradient(ellipse at 75% 85%, rgba(255,178,77,0.20) 0%, rgba(255,140,60,0.08) 45%, transparent 70%)', animationDuration: '7s' }} />
+                        {/* fairy lights draped under the rivet row */}
+                        <div className="absolute top-5 sm:top-6 left-0 right-2 flex justify-between">
+                          {['#ff6a3d', '#ffd700', '#37e6ff', '#ff3d9a', '#b8ff4d', '#a07bff'].map((c, i) => (
+                            <span key={i} className="sc-led" style={{ ['--lc' as string]: c, ['--d' as string]: `${(2 + i * 0.7).toFixed(1)}s`, ['--dl' as string]: `${(i * 0.5).toFixed(1)}s`, marginTop: i % 2 === 0 ? 0 : 5 }} />
+                          ))}
+                        </div>
+                        {/* shelf */}
+                        <div className="absolute bottom-16 sm:bottom-20 left-1 right-1 h-[3px] rounded bg-[#2a2140]" style={{ boxShadow: '0 2px 6px rgba(0,0,0,0.8)' }} />
+                        {/* vinyl crate — leaning records */}
+                        <div className="absolute bottom-[4.2rem] sm:bottom-[5.25rem] left-2 flex items-end gap-[3px]">
+                          {[['#ff3d9a', '-6deg', 26], ['#37e6ff', '-2deg', 30], ['#ffd700', '3deg', 27], ['#a07bff', '-4deg', 29]].map(([c, rot, h], i) => (
+                            <span key={i} className="block w-[7px] rounded-[2px] border border-black/60"
+                              style={{ height: `${h}px`, background: `linear-gradient(180deg, ${c}, #14101f)`, transform: `rotate(${rot})`, opacity: 0.85 }} />
+                          ))}
+                        </div>
+                        {/* plant — pot + leaves */}
+                        <div className="absolute bottom-[4.2rem] sm:bottom-[5.25rem] left-16 sm:left-20">
+                          <span className="absolute -top-3 left-1 block w-1.5 h-4 rounded-full bg-[#3f9d4e] origin-bottom" style={{ transform: 'rotate(-22deg)' }} />
+                          <span className="absolute -top-4 left-2 block w-1.5 h-5 rounded-full bg-[#54c468] origin-bottom" />
+                          <span className="absolute -top-3 left-3 block w-1.5 h-4 rounded-full bg-[#3f9d4e] origin-bottom" style={{ transform: 'rotate(22deg)' }} />
+                          <span className="block w-6 h-3.5 bg-[#8a4d2e] border border-black/50" style={{ clipPath: 'polygon(8% 0, 92% 0, 78% 100%, 22% 100%)' }} />
+                        </div>
+                        {/* steaming mug */}
+                        <div className="absolute bottom-[4.3rem] sm:bottom-[5.4rem] right-10 sm:right-16">
+                          <span className="absolute -top-3 left-0.5 w-1 h-3 rounded-full bg-white/40 blur-[1px]" style={{ animation: 'scSteam 2.8s ease-out infinite' }} />
+                          <span className="absolute -top-3 left-2 w-1 h-3 rounded-full bg-white/30 blur-[1px]" style={{ animation: 'scSteam 3.6s ease-out infinite', animationDelay: '1.2s' }} />
+                          <span className="relative block w-4 h-3.5 rounded-b-md bg-[#d65a7e] border border-black/50" />
+                          <span className="absolute top-0.5 -right-1.5 w-2 h-2 rounded-full border-2 border-[#d65a7e]" />
+                        </div>
+                        {/* little desk console */}
+                        <div className="absolute bottom-2 right-1 w-20 sm:w-28 h-9 sm:h-11 rounded-md border border-black bg-gradient-to-b from-[#181228] to-[#0d0918] hidden sm:flex items-center justify-around px-1.5"
+                          style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), 0 3px 8px rgba(0,0,0,0.6)' }}>
+                          <span className="sc-led" style={{ ['--lc' as string]: '#39ff7a', ['--d' as string]: '2.1s' }} />
+                          <span className="block w-10 h-4 rounded-sm overflow-hidden" style={{ background: 'linear-gradient(180deg, #03110a, #020806)', boxShadow: 'inset 0 0 4px rgba(57,255,122,0.4)' }}>
+                            <span className="block h-px mt-2 bg-[#39ff7a]/70 animate-pulse" style={{ animationDuration: '1.8s' }} />
+                          </span>
+                          <span className="sc-led" style={{ ['--lc' as string]: '#ffb24d', ['--d' as string]: '3.3s', ['--dl' as string]: '0.8s' }} />
+                        </div>
+                      </div>
                     </div>
 
                     {/* Profile Info — in NORMAL FLOW, pinned to the bottom by the parent's

@@ -3,6 +3,8 @@
  * Shows all connected peers, IPFS pins, relay health, bandwidth, swarm status.
  */
 import { useEffect, useState, useCallback, useMemo, useRef, ReactElement, Component, ErrorInfo, ReactNode } from 'react'
+import Head from 'next/head'
+import { config } from 'config'
 import { useMe } from 'hooks/useMe'
 import { useRouter } from 'next/router'
 import { useGroupedTracks as useGroupedTracksQuery } from 'hooks/useGroupedTracksDirect'  // Phase 7e — Vercel-direct
@@ -304,6 +306,27 @@ export default function NodesPage() {
 
   return (
     <div className="min-h-screen bg-[#030303] text-white">
+      {/* Rich share card — a text-bubble share of /nodes renders the flight
+          deck, not a bare gray link (OG image generated from the real design
+          language, public/og/nodes-flightdeck.png 1200x630). */}
+      <Head>
+        <title>Nodes — Flight Deck | SoundChain</title>
+        <meta name="description" content="SoundChain's live P2P network flight deck — IPFS, Nostr, WebRTC, Polygon. Decentralized, free forever." />
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content="SoundChain Nodes — Flight Deck" />
+        <meta property="og:description" content="The starship's working cockpit: live mesh nodes, tactical scope, annunciators. IPFS · Nostr · WebRTC · Polygon." />
+        <meta property="og:image" content={`${config.domainUrl}/og/nodes-flightdeck.png`} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:url" content={`${config.domainUrl}/nodes`} />
+        <meta property="og:site_name" content="SoundChain | Decentralized Music Platform" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="SoundChain Nodes — Flight Deck" />
+        <meta name="twitter:description" content="Live P2P mesh · tactical scope · cargo manifest. Decentralized, free forever." />
+        <meta name="twitter:image" content={`${config.domainUrl}/og/nodes-flightdeck.png`} />
+        <meta name="theme-color" content="#39ff7a" />
+      </Head>
+
       {/* SoundChain Starship: the flight-deck cockpit hull around the live
           dashboard (console strips, Falcon-flicker LEDs, deck floor rail). */}
       <FlightDeck />
