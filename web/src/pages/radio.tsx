@@ -1212,6 +1212,61 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
           />
         </div>
 
+        {/* CAPSULE WINDOW FRAME — cinema mode only. You're an astronaut at the
+            main hub's biggest window into deep space: SoundChain starship metal
+            framing at the edges (original SC design — not NASA/SpaceX), flywheel
+            light rails only where a vessel mounts light, blinking status LEDs.
+            Pure CSS (no rAF), pointer-events-none so orbit/zoom pass through. */}
+        {cinemaMode && (
+          <div className="fixed inset-0 z-[155] pointer-events-none select-none" aria-hidden>
+            {/* window glass depth — vignette + faint diagonal streak */}
+            <div className="absolute inset-0" style={{ boxShadow: 'inset 0 0 110px 26px rgba(0,0,0,0.8), inset 0 0 16px 4px rgba(0,0,0,0.55)' }} />
+            <div className="absolute inset-0 opacity-[0.045]" style={{ background: 'linear-gradient(115deg, transparent 36%, rgba(255,255,255,0.6) 46%, transparent 52%)' }} />
+
+            {/* hull struts — brushed gunmetal, riveted */}
+            {/* top */}
+            <div className="absolute top-0 left-0 right-0 h-4 md:h-9 flex items-center justify-center"
+              style={{ background: 'linear-gradient(180deg, #2b313b 0%, #161a21 60%, #0a0d12 100%)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+              <div className="absolute inset-0 opacity-60" style={{ backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.16) 1px, transparent 1.7px)', backgroundSize: '30px 100%', backgroundPosition: 'center' }} />
+              <span className="hidden md:block text-[9px] font-mono tracking-[0.45em] text-white/25 uppercase">SC · Hub-01 — Observation Deck</span>
+            </div>
+            {/* bottom */}
+            <div className="absolute bottom-0 left-0 right-0 h-4 md:h-9 flex items-center justify-center"
+              style={{ background: 'linear-gradient(0deg, #2b313b 0%, #161a21 60%, #0a0d12 100%)', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+              <div className="absolute inset-0 opacity-60" style={{ backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.16) 1px, transparent 1.7px)', backgroundSize: '30px 100%', backgroundPosition: 'center' }} />
+              <span className="hidden md:block text-[9px] font-mono tracking-[0.45em] text-white/20 uppercase">SoundChain Starship · Atmo Nominal · Grav 1.0</span>
+            </div>
+            {/* left + right */}
+            <div className="absolute top-4 bottom-4 md:top-9 md:bottom-9 left-0 w-2.5 md:w-6"
+              style={{ background: 'linear-gradient(90deg, #262c35 0%, #14181f 60%, #0a0d12 100%)', borderRight: '1px solid rgba(255,255,255,0.07)' }} />
+            <div className="absolute top-4 bottom-4 md:top-9 md:bottom-9 right-0 w-2.5 md:w-6"
+              style={{ background: 'linear-gradient(270deg, #262c35 0%, #14181f 60%, #0a0d12 100%)', borderLeft: '1px solid rgba(255,255,255,0.07)' }} />
+
+            {/* flywheel light rails — SC spectrum, mounted on the struts' inner edges */}
+            <div className="absolute left-2.5 right-2.5 md:left-6 md:right-6 top-4 md:top-9 h-[2px] opacity-70"
+              style={{ background: 'linear-gradient(90deg, #ff5e3a, #ff2d88, #8a2be2, #22d3ee, #a3e635, #fbbf24, #ff5e3a)', boxShadow: '0 0 8px rgba(138,43,226,0.5)' }} />
+            <div className="absolute left-2.5 right-2.5 md:left-6 md:right-6 bottom-4 md:bottom-9 h-[2px] opacity-70"
+              style={{ background: 'linear-gradient(270deg, #ff5e3a, #ff2d88, #8a2be2, #22d3ee, #a3e635, #fbbf24, #ff5e3a)', boxShadow: '0 0 8px rgba(34,211,238,0.5)' }} />
+
+            {/* corner gusset plates */}
+            {(['top-4 md:top-9 left-2.5 md:left-6', 'top-4 md:top-9 right-2.5 md:right-6 -scale-x-100', 'bottom-4 md:bottom-9 left-2.5 md:left-6 -scale-y-100', 'bottom-4 md:bottom-9 right-2.5 md:right-6 -scale-x-100 -scale-y-100'] as const).map(pos => (
+              <div key={pos} className={`absolute ${pos} w-8 h-8 md:w-14 md:h-14`}
+                style={{ background: 'linear-gradient(135deg, #232932 0%, #11151b 70%, transparent 70%)', clipPath: 'polygon(0 0, 100% 0, 0 100%)', borderTop: '1px solid rgba(255,255,255,0.06)' }} />
+            ))}
+
+            {/* status LEDs — irregular blink, like a live console */}
+            <div className="absolute top-1 md:top-2.5 left-3 md:left-8 flex gap-1.5 md:gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" style={{ animationDuration: '2.3s', boxShadow: '0 0 6px #34d399' }} />
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" style={{ animationDuration: '3.7s', animationDelay: '0.6s', boxShadow: '0 0 6px #fbbf24' }} />
+              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" style={{ animationDuration: '1.9s', animationDelay: '1.1s', boxShadow: '0 0 6px #22d3ee' }} />
+            </div>
+            <div className="absolute bottom-1 md:bottom-2.5 right-3 md:right-8 flex gap-1.5 md:gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-fuchsia-400 animate-pulse" style={{ animationDuration: '2.8s', boxShadow: '0 0 6px #e879f9' }} />
+              <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse" style={{ animationDuration: '4.1s', animationDelay: '0.9s', boxShadow: '0 0 6px #fb923c' }} />
+            </div>
+          </div>
+        )}
+
         {/* CINEMA MODE chevron pill — always on top, toggles every UI object
             away / back. Safe-area aware for mobile thumbs. */}
         <button
@@ -1236,7 +1291,11 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
         </button>
 
         {/* Main Content — floats over 4D scene */}
-        <main className="relative z-10 max-w-4xl mx-auto px-3 md:px-4 pt-0 pb-4">
+        {/* z-[170] while a card is expanded: main's own z-index creates a stacking
+            context, so the cards' fixed z-[100] overlays were painting BELOW the
+            z-50 site navs (the ✕ was lost in the nav chrome). Lifting main puts
+            the fullscreen overlay + close pill above everything. */}
+        <main className={`relative ${expandedCard ? 'z-[170]' : 'z-10'} max-w-4xl mx-auto px-3 md:px-4 pt-0 pb-4`}>
           {/* Radio Display — fully transparent, floating over 4D scene */}
           <div className="relative p-4 md:p-6" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.8), 0 0 20px rgba(0,0,0,0.5)' }}>
 
@@ -1301,10 +1360,13 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
                       title={expandedCard === 'track' ? 'Collapse' : 'Expand'}
                       aria-label={expandedCard === 'track' ? 'Collapse card' : 'Expand card'}
                       className={expandedCard === 'track'
-                        ? 'fixed top-3 right-3 z-[110] w-8 h-8 rounded-full bg-white/15 hover:bg-white/25 active:bg-white/30 border border-white/40 backdrop-blur-md flex items-center justify-center text-white text-base leading-none shadow-lg'
+                        ? 'fixed top-3 right-3 z-[110] flex items-center gap-1.5 px-3.5 py-2.5 rounded-full bg-black/70 hover:bg-black/90 active:scale-95 border border-orange-400/60 backdrop-blur-md text-orange-300 hover:text-white shadow-lg shadow-orange-500/20 transition-all'
                         : 'absolute top-2 right-2 z-10 p-1.5 rounded-lg bg-black/70 border border-white/20 text-white/80 hover:text-white hover:border-cyan-400/50 transition-colors'}
+                      style={expandedCard === 'track' ? { marginTop: 'env(safe-area-inset-top, 0px)' } : undefined}
                     >
-                      {expandedCard === 'track' ? <span aria-hidden>✕</span> : <Maximize className="w-4 h-4" />}
+                      {expandedCard === 'track'
+                        ? (<><X className="w-4 h-4" /><ChevronDown className="w-4 h-4" /><span className="text-[10px] font-bold uppercase tracking-[0.2em]">Close</span></>)
+                        : <Maximize className="w-4 h-4" />}
                     </button>
                     <div
                       data-expanded-card={expandedCard === 'track' ? '' : undefined}
@@ -1387,10 +1449,13 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
                       title={expandedCard === 'neural' ? 'Collapse' : 'Expand'}
                       aria-label={expandedCard === 'neural' ? 'Collapse card' : 'Expand card'}
                       className={expandedCard === 'neural'
-                        ? 'fixed top-3 right-3 z-[110] w-8 h-8 rounded-full bg-white/15 hover:bg-white/25 active:bg-white/30 border border-white/40 backdrop-blur-md flex items-center justify-center text-white text-base leading-none shadow-lg'
+                        ? 'fixed top-3 right-3 z-[110] flex items-center gap-1.5 px-3.5 py-2.5 rounded-full bg-black/70 hover:bg-black/90 active:scale-95 border border-purple-400/60 backdrop-blur-md text-purple-300 hover:text-white shadow-lg shadow-purple-500/20 transition-all'
                         : 'absolute top-2 right-2 z-10 p-1.5 rounded-lg bg-black/70 border border-white/20 text-white/80 hover:text-white hover:border-green-400/50 transition-colors'}
+                      style={expandedCard === 'neural' ? { marginTop: 'env(safe-area-inset-top, 0px)' } : undefined}
                     >
-                      {expandedCard === 'neural' ? <span aria-hidden>✕</span> : <Maximize className="w-4 h-4" />}
+                      {expandedCard === 'neural'
+                        ? (<><X className="w-4 h-4" /><ChevronDown className="w-4 h-4" /><span className="text-[10px] font-bold uppercase tracking-[0.2em]">Close</span></>)
+                        : <Maximize className="w-4 h-4" />}
                     </button>
                     <div
                       data-expanded-card={expandedCard === 'neural' ? '' : undefined}

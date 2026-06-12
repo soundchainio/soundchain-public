@@ -1,16 +1,18 @@
 /**
- * BrainWaveVisualizer — TRIBE v2 inspired neural response visualization
+ * BrainWaveVisualizer — SoundChain's own brain-scan visualization
+ * (TRIBE-v2-inspired density, never their renderer — our design, our colormap)
  *
- * Renders a stylized brain with audio-reactive activation regions.
- * Uses live FFT data from the radio to simulate cortical activation:
+ * Dense voxel heat-field across the whole cortex silhouette — every cell
+ * carries signal (the fMRI-prediction look), colored on the SC heat ramp
+ * (deep violet → blue → cyan → magenta → gold) with a scanner sweep and an
+ * idle shimmer so the brain never reads dead. Live FFT drives 5 regions:
  * - Bass → Motor cortex (rhythm/groove)
  * - Mids → Auditory cortex (melody/harmony)
  * - Highs → Prefrontal (musical expectation)
  * - Volume spikes → Amygdala (emotional response)
  * - Overall energy → Reward circuit (dopamine)
  *
- * Inspired by Meta's TRIBE v2 brain scanner — placeholder for
- * real GPU-powered neural inference when NVIDIA Inception provides compute.
+ * Placeholder for real GPU-powered neural inference (NVIDIA Inception).
  */
 
 import React, { useCallback, useEffect, useRef, useState } from 'react'
@@ -54,20 +56,78 @@ export function BrainWaveVisualizer({ audioRef, isPlaying, trackTitle }: BrainWa
     return () => clearInterval(interval)
   }, [isOpen])
 
-  // Render loop
+  // Render loop — TRIBE-style dense voxel heat-field, SoundChain's own design.
+  // 3× internal resolution so the expanded (scaled-up) card stays crisp.
   useEffect(() => {
     if (!isOpen || !canvasRef.current) return
 
     const canvas = canvasRef.current
     const ctx = canvas.getContext('2d')!
-    const W = canvas.width = 160
-    const H = canvas.height = 130
+    const W = canvas.width = 480
+    const H = canvas.height = 390
 
     let prevBass = 0
     let prevMids = 0
     let prevHighs = 0
 
-    function draw() {
+    // Brain silhouette as a reusable Path2D (same bezier profile, 3× scale)
+    const cx = W * 0.48
+    const cy = H * 0.42
+    const s = 1.65
+    const brainPath = new Path2D()
+    brainPath.moveTo(cx - 50*s, cy + 30*s)
+    brainPath.bezierCurveTo(cx - 55*s, cy - 10*s, cx - 45*s, cy - 50*s, cx - 10*s, cy - 55*s)
+    brainPath.bezierCurveTo(cx + 20*s, cy - 60*s, cx + 50*s, cy - 45*s, cx + 55*s, cy - 20*s)
+    brainPath.bezierCurveTo(cx + 58*s, cy, cx + 55*s, cy + 20*s, cx + 45*s, cy + 35*s)
+    brainPath.bezierCurveTo(cx + 35*s, cy + 45*s, cx + 15*s, cy + 50*s, cx, cy + 48*s)
+    brainPath.bezierCurveTo(cx - 20*s, cy + 46*s, cx - 40*s, cy + 42*s, cx - 50*s, cy + 30*s)
+    brainPath.closePath()
+
+    // Voxel grid — cells inside the silhouette only (computed once)
+    const CELL = 14
+    const voxels: { x: number; y: number }[] = []
+    for (let gy = cy - 60*s; gy < cy + 52*s; gy += CELL) {
+      for (let gx = cx - 58*s; gx < cx + 60*s; gx += CELL) {
+        if (ctx.isPointInPath(brainPath, gx + CELL/2, gy + CELL/2)) voxels.push({ x: gx, y: gy })
+      }
+    }
+
+    // Functional region centers (anatomy preserved from v1)
+    const REGIONS = [
+      { x: cx + 35*s, y: cy + 10*s, r: 34*s, k: 'mids' },     // auditory / temporal
+      { x: cx,        y: cy - 35*s, r: 30*s, k: 'bass' },     // motor strip
+      { x: cx + 40*s, y: cy - 25*s, r: 26*s, k: 'highs' },    // prefrontal
+      { x: cx + 10*s, y: cy + 15*s, r: 24*s, k: 'emotional' },// amygdala
+      { x: cx + 25*s, y: cy + 5*s,  r: 22*s, k: 'reward' },   // reward circuit
+    ] as const
+
+    // SoundChain heat colormap: deep violet → blue → cyan → magenta → gold
+    const STOPS: [number, number[]][] = [
+      [0.0, [26, 11, 46]], [0.25, [30, 58, 138]], [0.5, [34, 211, 238]],
+      [0.75, [255, 45, 136]], [1.0, [251, 191, 36]],
+    ]
+    const heatColor = (v: number): number[] => {
+      const t = Math.max(0, Math.min(1, v))
+      for (let i = 1; i < STOPS.length; i++) {
+        if (t <= STOPS[i][0]) {
+          const [t0, c0] = STOPS[i - 1]; const [t1, c1] = STOPS[i]
+          const f = (t - t0) / (t1 - t0)
+          return [c0[0] + (c1[0]-c0[0])*f, c0[1] + (c1[1]-c0[1])*f, c0[2] + (c1[2]-c0[2])*f]
+        }
+      }
+      return STOPS[STOPS.length - 1][1]
+    }
+
+    let lastDraw = 0
+    let frame = 0
+
+    function draw(ts?: number) {
+      animFrameRef.current = requestAnimationFrame(draw)
+      // ~30fps playing / ~12fps idle — canvas heat-field doesn't need 60
+      const interval = isPlaying ? 33 : 83
+      if (ts && ts - lastDraw < interval) return
+      lastDraw = ts || 0
+      frame++
       let bass = 0, mids = 0, highs = 0, energy = 0
 
       if (analyzerRef.current && isPlaying) {
@@ -99,55 +159,51 @@ export function BrainWaveVisualizer({ audioRef, isPlaying, trackTitle }: BrainWa
       const reward = Math.min(1, energy * 2)
       const engScore = (bass + mids + highs + emotional + reward) / 5
 
-      // Update state every few frames
-      setRegions({ auditory: mids, motor: bass, prefrontal: highs, emotional, reward })
-      setEngagement(Math.round(engScore * 100))
+      // Throttled React state — v1 called setState EVERY rAF frame (60/s,
+      // constant card re-renders). 5Hz is plenty for the meters.
+      if (frame % 6 === 0) {
+        setRegions({ auditory: mids, motor: bass, prefrontal: highs, emotional, reward })
+        setEngagement(Math.round(engScore * 100))
+      }
 
-      // Clear
       ctx.clearRect(0, 0, W, H)
+      const t = (ts || 0) / 1000
+      const vals: Record<string, number> = { bass, mids, highs, emotional, reward }
 
-      // Draw brain silhouette (side view) — scaled for mini card
-      const cx = W * 0.48
-      const cy = H * 0.42
-      const s = 0.55  // Scale factor
-
-      // Brain outline
+      // Base plate + clip
       ctx.save()
-      ctx.beginPath()
-      ctx.moveTo(cx - 50*s, cy + 30*s)
-      ctx.bezierCurveTo(cx - 55*s, cy - 10*s, cx - 45*s, cy - 50*s, cx - 10*s, cy - 55*s)
-      ctx.bezierCurveTo(cx + 20*s, cy - 60*s, cx + 50*s, cy - 45*s, cx + 55*s, cy - 20*s)
-      ctx.bezierCurveTo(cx + 58*s, cy, cx + 55*s, cy + 20*s, cx + 45*s, cy + 35*s)
-      ctx.bezierCurveTo(cx + 35*s, cy + 45*s, cx + 15*s, cy + 50*s, cx, cy + 48*s)
-      ctx.bezierCurveTo(cx - 20*s, cy + 46*s, cx - 40*s, cy + 42*s, cx - 50*s, cy + 30*s)
-      ctx.closePath()
-      ctx.fillStyle = 'rgba(20, 15, 30, 0.8)'
-      ctx.strokeStyle = 'rgba(100, 120, 160, 0.3)'
-      ctx.lineWidth = 1
-      ctx.fill()
-      ctx.stroke()
-      ctx.clip()
+      ctx.fillStyle = 'rgba(14, 9, 26, 0.92)'
+      ctx.fill(brainPath)
+      ctx.clip(brainPath)
 
-      // Draw activation regions as glowing hotspots
+      // VOXEL HEAT-FIELD — every cell carries signal (TRIBE's dense-coverage
+      // look, SoundChain's colormap). Idle shimmer keeps it alive at rest.
+      for (let i = 0; i < voxels.length; i++) {
+        const vx = voxels[i].x + CELL / 2
+        const vy = voxels[i].y + CELL / 2
+        let v = 0.07 + 0.05 * Math.sin(t * 1.7 + vx * 0.045 + vy * 0.085)
+        for (let rgn = 0; rgn < REGIONS.length; rgn++) {
+          const R = REGIONS[rgn]
+          const dx = vx - R.x, dy = vy - R.y
+          v += vals[R.k] * Math.exp(-(dx*dx + dy*dy) / (R.r * R.r))
+        }
+        const c = heatColor(v)
+        ctx.fillStyle = `rgba(${c[0]|0}, ${c[1]|0}, ${c[2]|0}, ${Math.min(0.85, 0.16 + v * 0.7)})`
+        ctx.fillRect(voxels[i].x + 1, voxels[i].y + 1, CELL - 2, CELL - 2)
+      }
 
-      // Auditory cortex (temporal lobe — side, middle)
-      drawActivation(ctx, cx + 35*s, cy + 10*s, mids, [255, 100, 50], 20)
+      // Scanner sweep — a soft vertical band crossing the cortex
+      const sweepX = cx - 58*s + ((t * 55) % (118 * s))
+      const sweep = ctx.createLinearGradient(sweepX - 22, 0, sweepX + 22, 0)
+      sweep.addColorStop(0, 'rgba(34,211,238,0)')
+      sweep.addColorStop(0.5, 'rgba(34,211,238,0.16)')
+      sweep.addColorStop(1, 'rgba(34,211,238,0)')
+      ctx.fillStyle = sweep
+      ctx.fillRect(sweepX - 22, 0, 44, H)
 
-      // Motor cortex (top center — strip)
-      drawActivation(ctx, cx, cy - 35*s, bass, [50, 255, 150], 18)
-
-      // Prefrontal (front — top right of profile)
-      drawActivation(ctx, cx + 40*s, cy - 25*s, highs, [100, 150, 255], 16)
-
-      // Emotional / Amygdala (deep center)
-      drawActivation(ctx, cx + 10*s, cy + 15*s, emotional, [255, 50, 100], 15)
-
-      // Reward circuit (nucleus accumbens — deep front)
-      drawActivation(ctx, cx + 25*s, cy + 5*s, reward, [255, 220, 50], 14)
-
-      // Brain folds (sulci) — subtle lines
-      ctx.strokeStyle = 'rgba(80, 100, 140, 0.15)'
-      ctx.lineWidth = 0.5
+      // Sulci folds over the field
+      ctx.strokeStyle = 'rgba(190, 205, 235, 0.13)'
+      ctx.lineWidth = 1.5
       for (let i = 0; i < 5; i++) {
         ctx.beginPath()
         const sx = cx - 25*s + i * 10*s
@@ -156,61 +212,37 @@ export function BrainWaveVisualizer({ audioRef, isPlaying, trackTitle }: BrainWa
         ctx.quadraticCurveTo(sx + 4*s, sy + 15*s + Math.cos(i) * 6*s, sx + 2*s, sy + 25*s)
         ctx.stroke()
       }
-
       ctx.restore()
 
-      // Brain stem
+      // Outline + brain stem
+      ctx.strokeStyle = 'rgba(150, 170, 215, 0.4)'
+      ctx.lineWidth = 2
+      ctx.stroke(brainPath)
       ctx.beginPath()
       ctx.moveTo(cx - 8*s, cy + 48*s)
       ctx.quadraticCurveTo(cx - 12*s, cy + 60*s, cx - 16*s, cy + 72*s)
-      ctx.strokeStyle = 'rgba(100, 120, 160, 0.3)'
-      ctx.lineWidth = 5
+      ctx.strokeStyle = 'rgba(130, 150, 195, 0.35)'
+      ctx.lineWidth = 8
       ctx.stroke()
 
-      // EEG wave at bottom
+      // EEG wave at bottom (no in-canvas label — the card footer carries it,
+      // the old 8px fillText was colliding with the wave when scaled up)
       ctx.beginPath()
       ctx.strokeStyle = `rgba(34, 211, 238, ${0.4 + energy * 0.4})`
-      ctx.lineWidth = 1
-      const t = Date.now() / 1000
-      for (let x = 0; x < W; x++) {
-        const freq = 0.08 + mids * 0.1
-        const amp = 3 + bass * 8
-        const y = H - 8 + Math.sin(x * freq + t * 3) * amp * Math.sin(x * 0.03 + t)
+      ctx.lineWidth = 2.5
+      for (let x = 0; x < W; x += 2) {
+        const freq = 0.028 + mids * 0.035
+        const amp = 9 + bass * 24
+        const y = H - 22 + Math.sin(x * freq + t * 3) * amp * Math.sin(x * 0.01 + t)
         if (x === 0) ctx.moveTo(x, y)
         else ctx.lineTo(x, y)
       }
       ctx.stroke()
-
-      // "TRIBE v2" label
-      ctx.fillStyle = 'rgba(150, 160, 180, 0.4)'
-      ctx.font = '8px monospace'
-      ctx.fillText('TRIBE v2 × SoundChain', 5, H - 3)
-
-      animFrameRef.current = requestAnimationFrame(draw)
     }
 
     draw()
     return () => cancelAnimationFrame(animFrameRef.current)
   }, [isOpen, isPlaying])
-
-  function drawActivation(
-    ctx: CanvasRenderingContext2D,
-    x: number, y: number,
-    intensity: number,
-    color: number[],
-    radius: number
-  ) {
-    if (intensity < 0.05) return
-    const r = radius * (0.5 + intensity * 0.5)
-    const gradient = ctx.createRadialGradient(x, y, 0, x, y, r)
-    gradient.addColorStop(0, `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${intensity * 0.8})`)
-    gradient.addColorStop(0.4, `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${intensity * 0.4})`)
-    gradient.addColorStop(1, `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0)`)
-    ctx.fillStyle = gradient
-    ctx.beginPath()
-    ctx.arc(x, y, r, 0, Math.PI * 2)
-    ctx.fill()
-  }
 
   if (!isOpen) {
     return (
