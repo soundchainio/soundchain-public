@@ -14,6 +14,7 @@
  */
 
 import React from 'react'
+import { CapsuleWall } from 'components/starship/CapsuleWall'
 
 const PLATE = 'repeating-linear-gradient(0deg, rgba(255,255,255,0.04) 0 1px, transparent 1px 42px), linear-gradient(90deg, #181e26 0%, #10141a 60%, #090b0f 100%)'
 const PLATE_R = 'repeating-linear-gradient(0deg, rgba(255,255,255,0.04) 0 1px, transparent 1px 42px), linear-gradient(270deg, #181e26 0%, #10141a 60%, #090b0f 100%)'
@@ -28,6 +29,12 @@ const LED = ({ color, dur, delay }: { color: string; dur: string; delay?: string
 
 export function FlightDeck() {
   return (
+    <>
+      {/* FULL cockpit console racks — Fable5 buildWall port: knobs, faders,
+          annunciator lamps, phosphor screens, Falcon-blink LEDs. ≥1540px. */}
+      <CapsuleWall side="l" theme="deck" />
+      <CapsuleWall side="r" theme="deck" />
+
     <div className="fixed inset-0 z-40 pointer-events-none select-none" aria-hidden>
       {/* LEFT console strip — bezel seams + switch nubs + instrument LEDs */}
       <div className="absolute top-0 bottom-0 left-0 w-2.5 md:w-5" style={{ background: PLATE, borderRight: '1px solid rgba(255,255,255,0.07)' }}>
@@ -76,6 +83,7 @@ export function FlightDeck() {
       <span className="absolute bottom-1 left-1 w-1 h-1 rounded-full bg-white/15 hidden md:block" />
       <span className="absolute bottom-1 right-1 w-1 h-1 rounded-full bg-white/15 hidden md:block" />
     </div>
+    </>
   )
 }
 

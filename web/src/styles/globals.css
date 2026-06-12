@@ -2448,6 +2448,83 @@ body.lucy-active iframe[title="FURL Terminal"] {
   45%  { left: 48%;  top: 21%; transform: rotate(-6deg); }
   100% { left: 104%; top: 30%; transform: rotate(10deg); }
 }
+
+/* ============================================================
+   SOUNDCHAIN STARSHIP — capsule walls (Fable5 spec port:
+   soundchain-profile-quarters_1.html + soundchain-nodes-flightdeck.html).
+   Full-height instrument/locker walls that FILL the viewport dead space
+   (width calc'd against the content column, so they never cover content)
+   and appear ≥1540px. Modules: knobs, toggle switches, gauges, lockers,
+   annunciators, phosphor screens, Falcon-blink LEDs.
+   ============================================================ */
+.sc-sidewall{position:fixed;top:0;bottom:0;z-index:15;display:none;overflow:hidden;
+  width:calc((100vw - 1380px)/2);min-width:72px;max-width:220px;pointer-events:none}
+.sc-sidewall.sc-wall-l{left:0;border-right:2px solid #000;box-shadow:inset -14px 0 26px rgba(0,0,0,.7)}
+.sc-sidewall.sc-wall-r{right:0;border-left:2px solid #000;box-shadow:inset 14px 0 26px rgba(0,0,0,.7)}
+.sc-sidewall.sc-theme-quarters{background:
+  repeating-linear-gradient(45deg,transparent 0 17px,rgba(255,255,255,.03) 17px 18px),
+  repeating-linear-gradient(-45deg,transparent 0 17px,rgba(0,0,0,.4) 17px 18px),
+  linear-gradient(180deg,#130d20,#0c0816 50%,#0f0a18)}
+.sc-sidewall.sc-theme-deck{background:
+  repeating-linear-gradient(0deg,transparent 0 40px,rgba(255,255,255,.04) 40px 41px),
+  linear-gradient(180deg,#171d25,#0e1218 50%,#0b0e13)}
+.sc-sidewall::after{content:'';position:absolute;top:0;bottom:0;width:3px;
+  background:linear-gradient(180deg,#ff6a3d,#ff3d9a,#a07bff,#37e6ff,#b8ff4d,#ffd700);
+  opacity:.45;filter:blur(1px)}
+.sc-wall-l::after{right:-1px}.sc-wall-r::after{left:-1px}
+@media(min-width:1540px){.sc-sidewall{display:block}}
+.sc-swmod{margin:9px 8px;border:1px solid rgba(255,255,255,.06);border-radius:8px;
+  padding:8px 7px;box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}
+.sc-theme-quarters .sc-swmod{background:linear-gradient(180deg,#181228,#0f0a1a)}
+.sc-theme-deck .sc-swmod{background:linear-gradient(180deg,#1a212b,#11161c)}
+.sc-swmod .sc-lab{font-size:6px;letter-spacing:.22em;color:#3d3852;margin-bottom:6px;text-align:center;
+  font-family:ui-monospace,monospace;text-transform:uppercase}
+.sc-theme-deck .sc-swmod .sc-lab{color:#39424f}
+.sc-swrow{display:flex;gap:6px;justify-content:center;align-items:center;flex-wrap:wrap;margin:4px 0}
+.sc-knob{width:20px;height:20px;border-radius:50%;position:relative;flex-shrink:0;
+  background:radial-gradient(circle at 35% 30%,#473f5c,#171221 70%);
+  border:1px solid #000;box-shadow:0 1px 3px rgba(0,0,0,.7)}
+.sc-theme-deck .sc-knob{background:radial-gradient(circle at 35% 30%,#3d4654,#161b22 70%)}
+.sc-knob::after{content:'';position:absolute;left:50%;top:2px;width:2px;height:7px;border-radius:2px;
+  background:var(--kc,#37e6ff);transform-origin:50% 8px;
+  transform:translateX(-50%) rotate(var(--a,0deg));box-shadow:0 0 4px var(--kc,#37e6ff)}
+.sc-led{width:5px;height:5px;border-radius:50%;background:var(--lc,#ffb24d);
+  box-shadow:0 0 6px var(--lc,#ffb24d);animation:scLedB var(--d,2s) steps(1) infinite;
+  animation-delay:var(--dl,0s)}
+@keyframes scLedB{0%,100%{opacity:1}50%{opacity:.1}}
+.sc-sw2{width:12px;height:20px;border-radius:3px;background:#0c0916;border:1px solid #000;position:relative}
+.sc-sw2::after{content:'';position:absolute;left:2px;right:2px;height:7px;border-radius:2px;
+  background:linear-gradient(180deg,#5a5272,#2a2438);top:var(--p,2px)}
+.sc-gauge{width:26px;height:26px;border-radius:50%;border:1px solid rgba(255,255,255,.12);position:relative;
+  background:radial-gradient(circle,#0d0a16,#070410)}
+.sc-gauge::after{content:'';position:absolute;left:50%;bottom:50%;width:1.5px;height:9px;
+  background:#ffb24d;transform-origin:bottom center;
+  transform:translateX(-50%) rotate(var(--a,20deg));box-shadow:0 0 4px #ffb24d}
+.sc-locker{height:52px;border-radius:6px;margin:2px 1px 0;position:relative;
+  background:linear-gradient(180deg,#1b1430,#110c1f);border:1px solid #000;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+.sc-locker::before{content:'';position:absolute;right:7px;top:50%;width:4px;height:15px;
+  border-radius:2px;background:#5a5272;transform:translateY(-50%)}
+.sc-locker::after{content:'';position:absolute;left:7px;top:7px;width:18px;height:4px;border-radius:2px;
+  background:linear-gradient(90deg,#ff6a3d,#ff3d9a,#a07bff,#37e6ff,#b8ff4d,#ffd700);opacity:.45}
+.sc-annun{display:grid;grid-template-columns:1fr 1fr;gap:3px}
+.sc-annun span{font-size:5.5px;letter-spacing:.12em;font-family:ui-monospace,monospace;text-align:center;
+  padding:3px 1px;border-radius:2px;border:1px solid #000;background:#0c1016;color:var(--ac,#39ff7a);
+  text-shadow:0 0 4px var(--ac,#39ff7a);animation:scLedB var(--d,3s) steps(1) infinite;animation-delay:var(--dl,0s)}
+.sc-screen{height:42px;border-radius:4px;border:1px solid #000;position:relative;overflow:hidden;
+  background:linear-gradient(180deg,#03110a,#020806);display:flex;align-items:flex-end;gap:2px;padding:4px 5px}
+.sc-screen::after{content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(0deg,transparent 0 2px,rgba(57,255,122,.05) 2px 3px)}
+.sc-screen i{flex:1;background:#39ff7a;opacity:.7;box-shadow:0 0 4px #39ff7a;
+  height:var(--h,40%);animation:scPhosBar var(--d,2.2s) ease-in-out infinite alternate}
+@keyframes scPhosBar{from{transform:scaleY(.45)}to{transform:scaleY(1)}}
+.sc-porthole{margin:10px 8px;aspect-ratio:1;border-radius:50%;position:relative;overflow:hidden;
+  border:4px solid #221a36;box-shadow:inset 0 0 18px #000,0 0 0 1px #000,inset 0 0 0 2px rgba(255,255,255,.06);
+  background:radial-gradient(circle at 60% 35%,#101a33 0%,#070b18 55%,#03040a 100%)}
+.sc-theme-deck .sc-porthole{border-color:#28303c}
+.sc-porthole b{position:absolute;width:2px;height:2px;border-radius:50%;background:#fff;
+  animation:scTwinkle var(--d,3s) ease-in-out infinite;animation-delay:var(--dl,0s)}
+@keyframes scTwinkle{0%,100%{opacity:.15}50%{opacity:.9}}
 .sc-fluid-name {
   /* Full SoundChain spectrum — cyan, indigo, purple, pink, gold, emerald —
      so the name never reads as mono light-blue (and never blends into a

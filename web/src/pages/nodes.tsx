@@ -291,7 +291,8 @@ export default function NodesPage() {
       {/* Lower nav pills — matches dex page nav so users aren't stuck */}
       <MainPillNav active="nodes" />
 
-<div className={`mx-auto pt-1 pb-4 space-y-2 ${mobileTab === 'feed' ? 'px-0 max-w-[680px] lg:max-w-[1400px] lg:px-4' : 'px-4 max-w-[1400px]'}`}>
+{/* 1380px column so the FlightDeck console racks own the dead space ≥1540px */}
+<div className={`mx-auto pt-1 pb-4 space-y-2 ${mobileTab === 'feed' ? 'px-0 max-w-[680px] lg:max-w-[1380px] lg:px-4' : 'px-4 max-w-[1380px]'}`}>
         {/* Mobile tab toggle retired — feed is the default mobile landing.
             Network lives in the avatar-menu dropdown on mobile (?tab=network deeplink). */}
 

@@ -19,6 +19,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { Moon, Sun } from 'lucide-react'
+import { CapsuleWall } from 'components/starship/CapsuleWall'
 
 const FLYWHEEL = 'linear-gradient(180deg, #ff6a3d, #ff3d9a, #a07bff, #37e6ff, #b8ff4d, #ffd700)'
 const QUILT =
@@ -41,6 +42,11 @@ export function CrewQuarters() {
 
   return (
     <>
+      {/* FULL capsule walls — Fable5 buildWall port: lockers, knobs, switches,
+          gauges, LEDs, porthole. Fill the dead space ≥1540px, never content. */}
+      <CapsuleWall side="l" theme="quarters" />
+      <CapsuleWall side="r" theme="quarters" />
+
       <div className="fixed inset-0 z-[5] pointer-events-none select-none" aria-hidden>
         {/* circadian ambient wash — tints the wallpaper, never the content */}
         <div

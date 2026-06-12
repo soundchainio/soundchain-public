@@ -3271,8 +3271,10 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
         {/* Profile Header removed - Feed/Stories bar stays at top for clean layout */}
 
-        {/* Main Content - Floats on cover art background */}
-        <div className="max-w-screen-2xl mx-auto relative">
+        {/* Main Content - Floats on cover art background.
+            Profile view: 1380px column so the CrewQuarters capsule walls own
+            the dead space ≥1540px (spec: calc((100vw-1380px)/2), 72-220px). */}
+        <div className={`${selectedView === 'profile' ? 'max-w-[1380px]' : 'max-w-screen-2xl'} mx-auto relative`}>
           {/* Horizontal scrolling nav pills */}
           <div className="flex items-center gap-1.5 mb-1 px-3 pt-1">
             <MainPillNav
