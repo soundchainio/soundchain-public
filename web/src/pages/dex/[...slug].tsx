@@ -7117,6 +7117,56 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
               )}
               {viewingProfile && (
                 <>
+                  {/* QUARTERS VIEWPORT — the room's window into deep space
+                      (Fable5 quarters spec): your personal system orbiting a
+                      warm star, wall-art frames velcro'd beside it. Purely
+                      additive ABOVE the banner — banner/identity untouched. */}
+                  <div className="mt-3 sm:mt-4 px-3 sm:px-4">
+                    <div className="sc-fwrail rounded-full mb-2" />
+                    <div className="flex gap-3 items-stretch">
+                      {/* the window */}
+                      <div className="sc-cupola relative flex-1 h-40 sm:h-52 md:h-60">
+                        {[[6, 22, '3.1s', '0s'], [14, 70, '2.4s', '1.3s'], [24, 38, '4.2s', '0.5s'], [36, 64, '2.8s', '1.9s'], [55, 20, '3.6s', '0.2s'], [67, 72, '2.2s', '1.0s'], [80, 30, '3.9s', '1.6s'], [91, 58, '2.6s', '0.7s']].map(([l, t, d, dl], i) => (
+                          <b key={i} style={{ left: `${l}%`, top: `${t}%`, ['--d' as string]: d, ['--dl' as string]: dl }} />
+                        ))}
+                        {/* the warm star */}
+                        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 sm:w-14 sm:h-14 rounded-full animate-pulse"
+                          style={{ background: 'radial-gradient(circle, #ffe9c4 0%, #ffb24d 35%, rgba(255,106,61,0.5) 60%, transparent 75%)', animationDuration: '4s' }} />
+                        {/* orbit rings + bodies (your tracks, stylized) */}
+                        {[
+                          { size: 90, dots: [['#37e6ff', '14s', '0s'], ['#ff3d9a', '14s', '-6s']] },
+                          { size: 150, dots: [['#a07bff', '24s', '0s'], ['#b8ff4d', '24s', '-9s'], ['#ffd700', '24s', '-17s']] },
+                          { size: 205, dots: [['#ff6a3d', '38s', '-4s'], ['#37e6ff', '38s', '-20s']] },
+                        ].map((ring, ri) => (
+                          <div key={ri} className="sc-orbit" style={{ width: ring.size, height: ring.size }}>
+                            {ring.dots.map(([c, dur, dl], di) => (
+                              <u key={di} style={{ ['--os' as string]: `${ring.size}px`, ['--oc' as string]: c, ['--od' as string]: dur, ['--odl' as string]: dl }} />
+                            ))}
+                          </div>
+                        ))}
+                        <span className="absolute top-2 left-3 text-[8px] font-mono tracking-[0.3em] text-white/30 uppercase">Quarters Viewport — Personal System</span>
+                        <span className="absolute bottom-2 right-3 text-[7px] font-mono tracking-[0.25em] text-white/20 uppercase hidden sm:block">Starboard Hull · The Belt Beyond</span>
+                      </div>
+                      {/* wall art frames + commendation shelf (desktop) */}
+                      <div className="hidden lg:flex w-48 flex-col gap-2">
+                        <div className="flex gap-2 flex-1">
+                          {[['#ff6a3d,#ff3d9a', '-2deg'], ['#a07bff,#37e6ff', '1.5deg'], ['#b8ff4d,#ffd700', '-1deg']].map(([g, rot], i) => (
+                            <div key={i} className="flex-1 rounded-md border-2 border-[#221a36] shadow-lg"
+                              style={{ background: `linear-gradient(135deg, ${g})`, transform: `rotate(${rot})`, boxShadow: 'inset 0 0 12px rgba(0,0,0,0.5), 0 2px 6px #000' }} />
+                          ))}
+                        </div>
+                        <div className="text-[7px] font-mono tracking-[0.3em] text-white/25 uppercase text-center">Wall Art · Velcro Mount</div>
+                        <div className="h-8 rounded-md border border-white/10 flex items-center justify-center gap-3"
+                          style={{ background: 'linear-gradient(180deg, #181228, #0f0a1a)' }}>
+                          {['#ffd700', '#37e6ff', '#ff3d9a'].map((c, i) => (
+                            <span key={i} className="w-2.5 h-2.5 rounded-full" style={{ background: c, boxShadow: `0 0 6px ${c}` }} />
+                          ))}
+                        </div>
+                        <div className="text-[7px] font-mono tracking-[0.3em] text-white/25 uppercase text-center">Commendations</div>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Profile-pic banner — CLEAN. The fluid-gl effect was removed from
                       inside this container per Frank's directive: pic stays untouched,
                       fluid lives ONLY on the @handle chars in the tight row below. */}

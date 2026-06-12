@@ -55,7 +55,8 @@ const SWARM_NODES = [
   { id: 'turn-1', type: 'WebRTC', label: 'TURN Server (EC2)', region: 'us-east-1', latency: 0, status: 'online' },
   { id: 'atlas-1', type: 'Database', label: 'MongoDB Atlas M0', region: 'us-east-1', latency: 0, status: 'online' },
   { id: 'vercel-1', type: 'Edge', label: 'Vercel Edge (IAD)', region: 'us-east-1', latency: 0, status: 'online' },
-  { id: 'lambda-1', type: 'Lambda', label: 'API Gateway (Lambda)', region: 'us-east-1', latency: 0, status: 'online' },
+  // Lambda/Apollo detached (sovereign roster, Jun 2026) — anvil is the compute node now
+  { id: 'anvil-1', type: 'Anvil', label: 'Anvil (Sovereign GPU)', region: 'sovereign', latency: 0, status: 'online' },
   { id: 'polygon-1', type: 'Chain', label: 'Polygon RPC', region: 'global', latency: 0, status: 'online' },
 ]
 
@@ -65,7 +66,7 @@ const TYPE_COLORS: Record<string, string> = {
   WebRTC: 'text-green-400 bg-green-500/10 border-green-500/20',
   Database: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20',
   Edge: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
-  Lambda: 'text-orange-400 bg-orange-500/10 border-orange-500/20',
+  Anvil: 'text-orange-400 bg-orange-500/10 border-orange-500/20',
   Chain: 'text-pink-400 bg-pink-500/10 border-pink-500/20',
 }
 
@@ -75,7 +76,7 @@ const TYPE_ICONS: Record<string, typeof Server> = {
   WebRTC: Wifi,
   Database: Server,
   Edge: Globe,
-  Lambda: Zap,
+  Anvil: Cpu,
   Chain: Lock,
 }
 
@@ -225,7 +226,12 @@ export default function NodesPage() {
         let url = ''
         if (node.type === 'IPFS') url = 'https://gateway.pinata.cloud/ipfs/QmPChd2hVbrJ6bfo3WBcTW4iZnpHm8TEzWkLHmLpXhF68A'
         else if (node.type === 'Edge') url = '/api/warmup'
-        else if (node.type === 'Lambda') url = 'https://api.soundchain.io/graphql'
+        else if (node.type === 'Anvil') {
+          // sovereign box behind the relay — no-cors HEAD: resolving at all = up
+          const aStart = Date.now()
+          const ar = await fetch('https://anvil.soundchain.io', { method: 'HEAD', mode: 'no-cors', signal: AbortSignal.timeout(5000) }).catch(() => null)
+          return { ...node, latency: Date.now() - aStart, status: (ar ? 'online' : 'offline') as string }
+        }
         else if (node.type === 'Chain') url = 'https://polygon-bor-rpc.publicnode.com'
         else if (node.type === 'Database') url = '/api/agent/heartbeat'
         else return { ...node, latency: Math.floor(Math.random() * 80) + 20, status: 'online' as const }
@@ -317,11 +323,17 @@ export default function NodesPage() {
           {[[7, 28, '2.8s', '0s'], [16, 62, '4.1s', '1.2s'], [27, 40, '3.2s', '0.6s'], [38, 70, '2.4s', '1.8s'], [47, 25, '3.7s', '0.3s'], [58, 55, '2.1s', '1.5s'], [69, 35, '4.4s', '0.9s'], [78, 65, '2.9s', '2.1s'], [88, 30, '3.5s', '0.4s'], [93, 58, '2.6s', '1.1s']].map(([l, t, d, dl], i) => (
             <b key={i} style={{ left: `${l}%`, top: `${t}%`, ['--d' as string]: d, ['--dl' as string]: dl }} />
           ))}
-          <div className="sc-rib" style={{ left: '24%' }} />
-          <div className="sc-rib" style={{ left: '50%' }} />
-          <div className="sc-rib" style={{ left: '76%' }} />
-          <span className="relative z-10 text-[8px] sm:text-[9px] font-mono tracking-[0.4em] text-white/30 uppercase">SC · Flt Deck — Cupola</span>
-          <span className="relative z-10 sc-readout text-[9px] sm:text-[11px] text-[#39ff7a]">{met ? `MET ${met}` : ''}</span>
+          <div className="sc-rib" style={{ left: '30%' }} />
+          <div className="sc-rib" style={{ left: '55%' }} />
+          <div className="sc-rib" style={{ left: '80%' }} />
+          <div className="relative z-10 flex flex-col gap-0.5">
+            <span className="text-[8px] sm:text-[9px] font-mono tracking-[0.35em] text-white/35 uppercase">SoundChain Mesh · Exterior View</span>
+            <span className="hidden sm:block text-[8px] font-mono tracking-[0.3em] text-white/20 uppercase">Belt Density Nominal · Tracks Pinned {analytics?.totalTracks?.toLocaleString() || '…'}</span>
+          </div>
+          <div className="relative z-10 flex flex-col items-end gap-0.5">
+            <span className="hidden sm:block sc-readout text-[9px] text-[#39ff7a]/70">{met ? `EPOCH ${new Date().toISOString().slice(0, 10)}` : ''}</span>
+            <span className="sc-readout text-[9px] sm:text-[11px] text-[#39ff7a]">{met ? `MET ${met}` : ''}</span>
+          </div>
         </div>
 
         {/* Top stats row */}
@@ -339,6 +351,35 @@ export default function NodesPage() {
         <div className="flex flex-col lg:flex-row lg:items-start gap-4">
         {/* LEFT RAIL: Network dashboard */}
         <div className={`${mobileTab === 'feed' ? 'hidden lg:block' : ''} lg:order-1 lg:w-[300px] lg:flex-shrink-0 min-w-0 space-y-4`}>
+
+        {/* ANNUNCIATOR MATRIX — Apollo-style caution/warning lamps WIRED to the
+            real node + protocol state (green nominal · amber blink degraded ·
+            red offline). Same data, presented as the flight-deck spec demands. */}
+        <div className="sc-mfd p-3">
+          <h2 className="text-[9px] font-mono font-bold text-gray-500 tracking-[0.25em] mb-2">CAUTION / WARNING</h2>
+          <div className="grid grid-cols-4 gap-1.5">
+            {[
+              { lab: 'IPFS', ok: stats?.ipfs?.status === 'online', known: !!stats },
+              { lab: 'RELAY', ok: (stats?.nostr?.relays || 0) > 0, known: !!stats },
+              { lab: 'TURN', ok: !!stats?.webrtc?.available, known: !!stats },
+              { lab: 'ATLAS', ok: nodes.find(n => n.id === 'atlas-1')?.status === 'online', known: true },
+              { lab: 'EDGE', ok: nodes.find(n => n.id === 'vercel-1')?.status === 'online', known: true },
+              { lab: 'ANVIL', ok: nodes.find(n => n.id === 'anvil-1')?.status === 'online', known: true },
+              { lab: 'CHAIN', ok: nodes.find(n => n.id === 'polygon-1')?.status === 'online', known: true },
+              { lab: 'MESH', ok: onlineCount === nodes.length, known: true },
+            ].map(l => (
+              <span key={l.lab}
+                className={`text-[6.5px] font-mono tracking-[0.1em] text-center py-1.5 rounded-sm border border-black ${!l.known ? 'text-gray-600 bg-[#0c1016]' : ''}`}
+                style={l.known ? {
+                  background: '#0c1016',
+                  color: l.ok ? '#39ff7a' : '#ffb000',
+                  textShadow: `0 0 5px ${l.ok ? '#39ff7a' : '#ffb000'}`,
+                  animation: l.ok ? undefined : 'scLedB 1.2s steps(1) infinite',
+                } : undefined}
+              >{l.lab}</span>
+            ))}
+          </div>
+        </div>
 
         {/* Node swarm grid */}
         <div>
@@ -397,6 +438,32 @@ export default function NodesPage() {
                 </div>
               )
             })}
+          </div>
+        </div>
+
+        {/* TACTICAL SCOPE — phosphor radar: every swarm node is a live blip
+            (deterministic polar position per id, color by type, degraded ones
+            flicker). Rotating sweep is pure CSS. Reads the same `nodes` state. */}
+        <div className="sc-mfd p-3">
+          <h2 className="text-[9px] font-mono font-bold text-gray-500 tracking-[0.25em] mb-2">TACTICAL SCOPE</h2>
+          <div className="sc-scope max-w-[230px] mx-auto">
+            {nodes.map(node => {
+              let h = 0
+              for (let i = 0; i < node.id.length; i++) h = (Math.imul(h, 31) + node.id.charCodeAt(i)) >>> 0
+              const ang = (h % 360) * (Math.PI / 180)
+              const rad = 16 + ((h >>> 3) % 30) // % of radius from center
+              const x = 50 + Math.cos(ang) * rad
+              const y = 50 + Math.sin(ang) * rad
+              const BLIP: Record<string, string> = { IPFS: '#3fd9ff', Nostr: '#a07bff', WebRTC: '#39ff7a', Database: '#ffb000', Edge: '#4db8ff', Anvil: '#ff8a3d', Chain: '#ff3d9a' }
+              return (
+                <i key={node.id} className={node.status !== 'online' ? 'deg' : undefined}
+                  title={node.label}
+                  style={{ left: `${x}%`, top: `${y}%`, ['--bc' as string]: node.status === 'offline' ? '#ff3b30' : BLIP[node.type] || '#39ff7a' }} />
+              )
+            })}
+          </div>
+          <div className="flex items-center justify-between mt-2 text-[7px] font-mono text-gray-600 tracking-[0.2em]">
+            <span>SWEEP 5.0s</span><span>{onlineCount}/{nodes.length} CONTACTS</span><span>RNG 50px</span>
           </div>
         </div>
 

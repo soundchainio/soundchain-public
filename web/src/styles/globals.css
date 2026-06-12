@@ -2543,6 +2543,30 @@ body.lucy-active iframe[title="FURL Terminal"] {
 .sc-breaker{width:10px;height:22px;border-radius:3px;background:#0c1016;border:1px solid #000;position:relative;flex-shrink:0}
 .sc-breaker::after{content:'';position:absolute;left:2px;right:2px;height:8px;border-radius:2px;
   background:linear-gradient(180deg,#5d6878,#2a323d);top:var(--p,2px)}
+/* — tactical scope: phosphor radar w/ rotating sweep + node blips — */
+.sc-scope{position:relative;aspect-ratio:1;border-radius:50%;overflow:hidden;border:2px solid #1a222c;
+  background:radial-gradient(circle,#06130c 0%,#030a06 60%,#020503 100%);
+  box-shadow:inset 0 0 30px #000,0 0 0 1px #000,inset 0 0 12px rgba(57,255,122,.08)}
+.sc-scope::before{content:'';position:absolute;inset:0;border-radius:50%;pointer-events:none;
+  background:repeating-radial-gradient(circle,transparent 0 23%,rgba(57,255,122,.12) 23% 23.5%,transparent 23.5% 46%,rgba(57,255,122,.1) 46% 46.5%,transparent 46.5% 70%,rgba(57,255,122,.08) 70% 70.5%,transparent 70.5%)}
+.sc-scope::after{content:'';position:absolute;inset:0;border-radius:50%;
+  background:conic-gradient(from 0deg,rgba(57,255,122,.28),transparent 70deg,transparent 360deg);
+  animation:scSweep 5s linear infinite}
+@keyframes scSweep{to{transform:rotate(360deg)}}
+.sc-scope i{position:absolute;width:5px;height:5px;border-radius:50%;background:var(--bc,#39ff7a);
+  box-shadow:0 0 6px var(--bc,#39ff7a);transform:translate(-50%,-50%)}
+.sc-scope i.deg{animation:scLedB 1.4s steps(1) infinite}
+/* — quarters viewport: personal system orbits — */
+.sc-orbit{position:absolute;left:50%;top:50%;border:1px solid rgba(255,255,255,.05);border-radius:50%;
+  transform:translate(-50%,-50%)}
+.sc-orbit u{position:absolute;left:50%;top:50%;width:var(--os,100px);height:var(--os,100px);
+  margin-left:calc(var(--os,100px)/-2);margin-top:calc(var(--os,100px)/-2);
+  animation:scOrbitSpin var(--od,30s) linear infinite;animation-delay:var(--odl,0s)}
+.sc-orbit u::after{content:'';position:absolute;left:50%;top:0;width:4px;height:4px;border-radius:50%;
+  background:var(--oc,#37e6ff);box-shadow:0 0 6px var(--oc,#37e6ff);transform:translateX(-50%)}
+@keyframes scOrbitSpin{to{transform:rotate(360deg)}}
+.sc-fwrail{height:2px;background:linear-gradient(90deg,#ff6a3d,#ff3d9a,#a07bff,#37e6ff,#b8ff4d,#ffd700);
+  opacity:.55;box-shadow:0 0 8px rgba(160,123,255,.4)}
 .sc-fluid-name {
   /* Full SoundChain spectrum — cyan, indigo, purple, pink, gold, emerald —
      so the name never reads as mono light-blue (and never blends into a
