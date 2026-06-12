@@ -8030,8 +8030,15 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
                   {/* Main Content */}
                   <div className="relative z-10 max-w-screen-2xl mx-auto px-4 lg:px-6">
-                    {/* Profile Tabs - My Feed (own profile only) | Posts | Music | Shop | Playlists | Wall */}
-                    <div className="flex items-center gap-3 mb-6 overflow-x-auto scrollbar-hide pb-2 bg-black/80 backdrop-blur-md rounded-full px-3 py-1.5 sticky top-0 z-30">
+                    {/* Profile Tabs - My Feed (own profile only) | Posts | Music | Shop | Playlists | Wall
+                        Quarters skin: the tab bar is the room's desk CONSOLE — bezel
+                        plate + stencil + status LEDs. Same buttons, same handlers. */}
+                    <div className="sc-mfd flex items-center gap-3 mb-6 overflow-x-auto scrollbar-hide pb-2 backdrop-blur-md !rounded-2xl px-3 py-1.5 sticky top-0 z-30">
+                      <span className="hidden md:flex items-center gap-1.5 flex-shrink-0 pl-1 pr-2 text-[8px] font-mono tracking-[0.3em] text-white/25 uppercase border-r border-white/10">
+                        Qtrs Console
+                        <span className="sc-led" style={{ ['--lc' as string]: '#37e6ff', ['--d' as string]: '2.4s' }} />
+                        <span className="sc-led" style={{ ['--lc' as string]: '#ffb24d', ['--d' as string]: '3.8s', ['--dl' as string]: '1.1s' }} />
+                      </span>
                       {/* Wall tab - FIRST (MySpace style, default open) */}
                       <Button
                         variant="ghost"

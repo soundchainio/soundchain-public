@@ -52,7 +52,9 @@ export function CapsuleWall({ side, theme }: { side: 'l' | 'r'; theme: 'quarters
       ['--d' as string]: `${(2 + r() * 4).toFixed(2)}s`, ['--dl' as string]: `${(r() * 3).toFixed(2)}s`,
     }} />
   ))
-  mods.push(<div key="ph" className="sc-porthole" style={{ marginTop: 64 }}>{stars}</div>)
+  // 140px top margin clears the sticky navs (translucent — a porthole starting
+  // under them reads as "cropped at top", Frank's Jun 12 bug report)
+  mods.push(<div key="ph" className="sc-porthole" style={{ marginTop: 140 }}>{stars}</div>)
 
   // 14 modules ≈ tall-viewport coverage (spec: ceil(innerHeight/100)+2)
   for (let i = 0; i < 14; i++) {

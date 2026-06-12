@@ -2525,6 +2525,24 @@ body.lucy-active iframe[title="FURL Terminal"] {
 .sc-porthole b{position:absolute;width:2px;height:2px;border-radius:50%;background:#fff;
   animation:scTwinkle var(--d,3s) ease-in-out infinite;animation-delay:var(--dl,0s)}
 @keyframes scTwinkle{0%,100%{opacity:.15}50%{opacity:.9}}
+/* — cockpit middle: cupola window strip, MFD panels, readouts, breakers — */
+.sc-cupola{position:relative;overflow:hidden;border-radius:16px;border:1px solid rgba(255,255,255,.08);
+  background:radial-gradient(130% 170% at 50% 130%,#0e1a2e 0%,#070d18 45%,#03060c 100%);
+  box-shadow:inset 0 0 36px #000,inset 0 0 0 3px rgba(40,48,60,.85),inset 0 0 0 4px #000}
+.sc-cupola b{position:absolute;width:2px;height:2px;border-radius:50%;background:#fff;
+  animation:scTwinkle var(--d,3s) ease-in-out infinite;animation-delay:var(--dl,0s)}
+.sc-cupola .sc-rib{position:absolute;top:0;bottom:0;width:9px;
+  background:linear-gradient(90deg,#1a212b,#0b0e13);
+  border-left:1px solid rgba(255,255,255,.06);border-right:1px solid rgba(255,255,255,.06)}
+.sc-mfd{position:relative;border-radius:10px;border:1px solid #000;
+  background:linear-gradient(180deg,#10151c,#0a0e13);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 0 0 1px rgba(255,255,255,.04)}
+.sc-mfd::after{content:'';position:absolute;inset:0;border-radius:10px;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(255,255,255,.012) 3px 4px)}
+.sc-readout{font-family:ui-monospace,monospace;text-shadow:0 0 8px currentColor;letter-spacing:.06em}
+.sc-breaker{width:10px;height:22px;border-radius:3px;background:#0c1016;border:1px solid #000;position:relative;flex-shrink:0}
+.sc-breaker::after{content:'';position:absolute;left:2px;right:2px;height:8px;border-radius:2px;
+  background:linear-gradient(180deg,#5d6878,#2a323d);top:var(--p,2px)}
 .sc-fluid-name {
   /* Full SoundChain spectrum — cyan, indigo, purple, pink, gold, emerald —
      so the name never reads as mono light-blue (and never blends into a

@@ -281,6 +281,21 @@ export default function NodesPage() {
 
   const onlineCount = nodes.filter(n => n.status === 'online').length
 
+  // MET — Mission Elapsed Time since SoundChain genesis (Jul 14 2021), shown
+  // on the cupola glass. Client-only state (null on SSR → no hydration drift).
+  const [met, setMet] = useState<string | null>(null)
+  useEffect(() => {
+    const genesis = Date.UTC(2021, 6, 14)
+    const tick = () => {
+      const s = Math.floor((Date.now() - genesis) / 1000)
+      const d = Math.floor(s / 86400), h = Math.floor((s % 86400) / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60
+      setMet(`T+${d}d ${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`)
+    }
+    tick()
+    const iv = setInterval(tick, 1000)
+    return () => clearInterval(iv)
+  }, [])
+
   return (
     <div className="min-h-screen bg-[#030303] text-white">
       {/* SoundChain Starship: the flight-deck cockpit hull around the live
@@ -295,6 +310,19 @@ export default function NodesPage() {
 <div className={`mx-auto pt-1 pb-4 space-y-2 ${mobileTab === 'feed' ? 'px-0 max-w-[680px] lg:max-w-[1380px] lg:px-4' : 'px-4 max-w-[1380px]'}`}>
         {/* Mobile tab toggle retired — feed is the default mobile landing.
             Network lives in the avatar-menu dropdown on mobile (?tab=network deeplink). */}
+
+        {/* CUPOLA — the flight deck's window strip: structural ribs, stars,
+            Mission Elapsed Time etched on the glass. Pure CSS + 1s clock. */}
+        <div className="sc-cupola h-14 sm:h-20 flex items-center justify-between px-4 sm:px-6">
+          {[[7, 28, '2.8s', '0s'], [16, 62, '4.1s', '1.2s'], [27, 40, '3.2s', '0.6s'], [38, 70, '2.4s', '1.8s'], [47, 25, '3.7s', '0.3s'], [58, 55, '2.1s', '1.5s'], [69, 35, '4.4s', '0.9s'], [78, 65, '2.9s', '2.1s'], [88, 30, '3.5s', '0.4s'], [93, 58, '2.6s', '1.1s']].map(([l, t, d, dl], i) => (
+            <b key={i} style={{ left: `${l}%`, top: `${t}%`, ['--d' as string]: d, ['--dl' as string]: dl }} />
+          ))}
+          <div className="sc-rib" style={{ left: '24%' }} />
+          <div className="sc-rib" style={{ left: '50%' }} />
+          <div className="sc-rib" style={{ left: '76%' }} />
+          <span className="relative z-10 text-[8px] sm:text-[9px] font-mono tracking-[0.4em] text-white/30 uppercase">SC · Flt Deck — Cupola</span>
+          <span className="relative z-10 sc-readout text-[9px] sm:text-[11px] text-[#39ff7a]">{met ? `MET ${met}` : ''}</span>
+        </div>
 
         {/* Top stats row */}
         <div className={`grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2 ${mobileTab === 'feed' ? 'hidden lg:grid' : ''}`}>
@@ -315,23 +343,35 @@ export default function NodesPage() {
         {/* Node swarm grid */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <h2 className="text-xs font-mono font-bold text-gray-400 tracking-wider">SWARM NODES</h2>
-            {lastRefresh && (
-              <span className="text-[9px] font-mono text-gray-700 flex items-center gap-1">
-                <Clock className="w-3 h-3" />
-                {lastRefresh.toLocaleTimeString()}
-              </span>
-            )}
+            <h2 className="text-xs font-mono font-bold text-gray-400 tracking-wider">SWARM NODES · BREAKERS</h2>
+            <div className="flex items-center gap-2">
+              {lastRefresh && (
+                <span className="text-[9px] font-mono text-gray-700 flex items-center gap-1">
+                  <Clock className="w-3 h-3" />
+                  {lastRefresh.toLocaleTimeString()}
+                </span>
+              )}
+              {/* SYS CHECK — re-ping every node (pingAll existed but had no button) */}
+              <button
+                onClick={pingAll}
+                disabled={pinging}
+                className="px-2 py-0.5 rounded border border-[#39ff7a]/30 text-[8px] font-mono text-[#39ff7a]/80 hover:text-[#39ff7a] hover:border-[#39ff7a]/60 transition disabled:opacity-40"
+              >
+                <RefreshCw className={`w-2.5 h-2.5 inline mr-1 ${pinging ? 'animate-spin' : ''}`} />SYS CHECK
+              </button>
+            </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
             {nodes.map(node => {
               const colorClass = TYPE_COLORS[node.type] || 'text-gray-400 bg-gray-500/10 border-gray-500/20'
               const Icon = TYPE_ICONS[node.type] || Server
               return (
-                <div key={node.id} className={`p-3 rounded-lg border bg-black/40 transition-all hover:bg-black/60 ${
-                  node.status === 'online' ? 'border-green-500/10' : node.status === 'degraded' ? 'border-yellow-500/10' : 'border-red-500/10'
+                <div key={node.id} className={`sc-mfd p-3 transition-all hover:brightness-125 ${
+                  node.status === 'online' ? '' : node.status === 'degraded' ? '!border-yellow-500/30' : '!border-red-500/30'
                 }`}>
                   <div className="flex items-center gap-2.5">
+                    {/* breaker lever — up = online, down = degraded/offline */}
+                    <span className="sc-breaker" style={{ ['--p' as string]: node.status === 'online' ? '2px' : '12px' }} />
                     <div className={`p-1.5 rounded border ${colorClass}`}>
                       <Icon className="w-3.5 h-3.5" />
                     </div>
@@ -363,10 +403,10 @@ export default function NodesPage() {
         {/* Protocol details */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {/* IPFS Details */}
-          <div className="p-4 rounded-lg border border-cyan-500/10 bg-black/40">
+          <div className="sc-mfd p-4">
             <div className="flex items-center gap-2 mb-3">
               <Database className="w-4 h-4 text-cyan-400" />
-              <span className="text-xs font-mono font-bold text-cyan-400">IPFS / PINATA</span>
+              <span className="text-xs font-mono font-bold text-cyan-400">MFD-1 · IPFS / PINATA</span>
               <span className={`ml-auto text-[8px] font-mono px-2 py-0.5 rounded ${
                 stats?.ipfs?.status === 'online' ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'
               }`}>{stats?.ipfs?.status || 'checking'}</span>
@@ -381,10 +421,10 @@ export default function NodesPage() {
           </div>
 
           {/* Nostr Relays */}
-          <div className="p-4 rounded-lg border border-purple-500/10 bg-black/40">
+          <div className="sc-mfd p-4">
             <div className="flex items-center gap-2 mb-3">
               <Radio className="w-4 h-4 text-purple-400" />
-              <span className="text-xs font-mono font-bold text-purple-400">NOSTR RELAYS</span>
+              <span className="text-xs font-mono font-bold text-purple-400">MFD-2 · NOSTR RELAYS</span>
               <span className="ml-auto text-[8px] font-mono text-purple-400/60">{stats?.nostr?.relays || 0} connected</span>
             </div>
             <div className="space-y-1.5">
@@ -401,10 +441,10 @@ export default function NodesPage() {
           </div>
 
           {/* WebRTC */}
-          <div className="p-4 rounded-lg border border-green-500/10 bg-black/40">
+          <div className="sc-mfd p-4">
             <div className="flex items-center gap-2 mb-3">
               <Wifi className="w-4 h-4 text-green-400" />
-              <span className="text-xs font-mono font-bold text-green-400">WebRTC P2P</span>
+              <span className="text-xs font-mono font-bold text-green-400">MFD-3 · WebRTC P2P</span>
               <span className="ml-auto text-[8px] font-mono text-green-400/60">{stats?.webrtc?.available ? 'available' : 'unavailable'}</span>
             </div>
             <div className="space-y-1.5">
@@ -417,10 +457,10 @@ export default function NodesPage() {
           </div>
 
           {/* Blockchain */}
-          <div className="p-4 rounded-lg border border-pink-500/10 bg-black/40">
+          <div className="sc-mfd p-4">
             <div className="flex items-center gap-2 mb-3">
               <Lock className="w-4 h-4 text-pink-400" />
-              <span className="text-xs font-mono font-bold text-pink-400">POLYGON CHAIN</span>
+              <span className="text-xs font-mono font-bold text-pink-400">MFD-4 · POLYGON CHAIN</span>
               <span className="ml-auto text-[8px] font-mono text-pink-400/60">Chain ID: 137</span>
             </div>
             <div className="space-y-1.5">
@@ -442,8 +482,8 @@ export default function NodesPage() {
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               <Database className="w-4 h-4 text-cyan-400" />
-              <h2 className="text-xs font-mono font-bold text-cyan-400 tracking-wider">NETWORK COLLECTION</h2>
-              <span className="text-[8px] font-mono text-gray-600">{collection.length} objects on IPFS</span>
+              <h2 className="text-xs font-mono font-bold text-cyan-400 tracking-wider">CARGO MANIFEST</h2>
+              <span className="text-[8px] font-mono text-gray-600">{collection.length} objects in hold · IPFS</span>
             </div>
             <div className="flex items-center gap-1">
               <button onClick={() => setCollectionView('cards')} className={`px-2 py-0.5 rounded text-[8px] font-mono transition ${collectionView === 'cards' ? 'bg-cyan-500/20 text-cyan-400' : 'text-gray-600 hover:text-gray-400'}`}>CARDS</button>
@@ -496,7 +536,7 @@ export default function NodesPage() {
             </div>
           ) : (
             /* Blur-style data table */
-            <div className="border border-white/5 rounded-lg overflow-hidden">
+            <div className="sc-mfd overflow-hidden">
               {/* Header */}
               <div className="grid grid-cols-12 gap-0 px-3 py-1.5 bg-white/[0.02] border-b border-white/5">
                 <span className="col-span-1 text-[7px] font-mono text-gray-600">#</span>
@@ -576,8 +616,8 @@ export default function NodesPage() {
             {/* FEED label — tight under MainPillNav, sits directly above Stories/Reels */}
             <div className="flex items-center gap-2 px-3 sm:px-0">
               <Activity className="w-3.5 h-3.5 text-cyan-400" />
-              <h2 className="text-xs font-mono font-bold text-cyan-400 tracking-wider">FEED</h2>
-              <span className="text-[8px] font-mono text-gray-600">{feedNodes.length} posts</span>
+              <h2 className="text-xs font-mono font-bold text-cyan-400 tracking-wider">COMMS · TRANSMISSION LOG</h2>
+              <span className="text-[8px] font-mono text-gray-600">{feedNodes.length} transmissions</span>
             </div>
 
             {/* 24hr Stories/Reels — matches dex schema feed */}
@@ -598,7 +638,7 @@ export default function NodesPage() {
                 >
                   <span className="flex items-center gap-2">
                     <PenLine className="w-3.5 h-3.5 text-cyan-400" />
-                    <span className="text-[10px] font-mono font-bold text-cyan-400 tracking-wider">COMPOSE POST</span>
+                    <span className="text-[10px] font-mono font-bold text-cyan-400 tracking-wider">TRANSMIT TO THE MESH</span>
                   </span>
                   {composerOpen
                     ? <ChevronDown className="w-4 h-4 text-gray-500" />
@@ -698,7 +738,7 @@ export default function NodesPage() {
         <PostModal />
 
         {/* Supported protocols banner */}
-        <div className="p-3 rounded-lg border border-white/5 bg-black/30 flex items-center justify-between flex-wrap gap-2">
+        <div className="sc-mfd p-3 flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-4 flex-wrap">
             {['IPFS', 'WebRTC', 'Nostr', 'Bluetooth LE', 'Polygon', 'DTLS', 'SCTP', 'NIP-17'].map(p => (
               <span key={p} className="text-[8px] font-mono text-gray-600 px-2 py-0.5 rounded border border-white/5">{p}</span>
@@ -711,14 +751,24 @@ export default function NodesPage() {
   )
 }
 
+// Segmented-LED instrument readout (flight-deck skin). Same props as the old
+// StatBox — explicit color map (the old `border-${color}-500/10` template
+// string was a Tailwind-purge no-op anyway).
+const READOUT_COLORS: Record<string, string> = {
+  green: '#39ff7a', cyan: '#3fd9ff', purple: '#a07bff',
+  yellow: '#ffb000', blue: '#4db8ff', pink: '#ff3d9a',
+}
 function StatBox({ icon, label, value, color }: { icon: React.ReactNode; label: string; value: string; color: string }) {
+  const c = READOUT_COLORS[color] || '#39ff7a'
   return (
-    <div className={`p-3 rounded-lg border border-${color}-500/10 bg-black/40`}>
+    <div className="sc-mfd p-3 relative">
+      <span className="absolute top-1 left-1.5 w-1 h-1 rounded-full bg-white/15" />
+      <span className="absolute top-1 right-1.5 w-1 h-1 rounded-full bg-white/15" />
       <div className="flex items-center gap-2 mb-1">
         {icon}
-        <span className="text-[8px] font-mono text-gray-600 tracking-wider">{label}</span>
+        <span className="text-[8px] font-mono text-gray-500 tracking-[0.2em]">{label}</span>
       </div>
-      <span className={`text-sm font-mono font-bold text-${color}-400`}>{value}</span>
+      <span className="sc-readout text-sm font-bold" style={{ color: c }}>{value}</span>
     </div>
   )
 }
