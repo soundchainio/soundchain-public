@@ -2473,6 +2473,10 @@ body.lucy-active iframe[title="FURL Terminal"] {
   opacity:.45;filter:blur(1px)}
 .sc-wall-l::after{right:-1px}.sc-wall-r::after{left:-1px}
 @media(min-width:1540px){.sc-sidewall{display:block}}
+/* Profile: the content wrapper is z-10 (its sticky nav's z-50 only counts
+   INSIDE that context), so quarters walls at z-15 were covering the nav's
+   corners — the cropped SoundChain logo Frank flagged. Under the wrapper: */
+.sc-sidewall.sc-theme-quarters{z-index:8}
 .sc-swmod{margin:9px 8px;border:1px solid rgba(255,255,255,.06);border-radius:8px;
   padding:8px 7px;box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}
 .sc-theme-quarters .sc-swmod{background:linear-gradient(180deg,#181228,#0f0a1a)}

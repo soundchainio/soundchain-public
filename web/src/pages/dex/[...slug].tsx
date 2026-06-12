@@ -7147,12 +7147,20 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         <span className="absolute top-2 left-3 text-[8px] font-mono tracking-[0.3em] text-white/30 uppercase">Quarters Viewport — Personal System</span>
                         <span className="absolute bottom-2 right-3 text-[7px] font-mono tracking-[0.25em] text-white/20 uppercase hidden sm:block">Starboard Hull · The Belt Beyond</span>
                       </div>
-                      {/* wall art frames + commendation shelf (desktop) */}
+                      {/* wall art frames + commendation shelf (desktop) — WIRED to the
+                          pilot's own pics: framed profile photo + cover art velcro'd to
+                          the hull (Frank: "what is this supposed to be wired to?"). */}
                       <div className="hidden lg:flex w-48 flex-col gap-2">
                         <div className="flex gap-2 flex-1">
-                          {[['#ff6a3d,#ff3d9a', '-2deg'], ['#a07bff,#37e6ff', '1.5deg'], ['#b8ff4d,#ffd700', '-1deg']].map(([g, rot], i) => (
-                            <div key={i} className="flex-1 rounded-md border-2 border-[#221a36] shadow-lg"
-                              style={{ background: `linear-gradient(135deg, ${g})`, transform: `rotate(${rot})`, boxShadow: 'inset 0 0 12px rgba(0,0,0,0.5), 0 2px 6px #000' }} />
+                          {[
+                            { src: viewingProfile.profilePicture, g: '#ff6a3d,#ff3d9a', rot: '-2deg' },
+                            { src: viewingProfile.coverPicture, g: '#a07bff,#37e6ff', rot: '1.5deg' },
+                            { src: null, g: '#b8ff4d,#ffd700', rot: '-1deg' },
+                          ].map((f, i) => (
+                            <div key={i} className="flex-1 rounded-md border-2 border-[#221a36] shadow-lg overflow-hidden"
+                              style={{ background: f.src ? '#0c0916' : `linear-gradient(135deg, ${f.g})`, transform: `rotate(${f.rot})`, boxShadow: 'inset 0 0 12px rgba(0,0,0,0.5), 0 2px 6px #000' }}>
+                              {f.src && <img src={f.src} alt="" className="w-full h-full object-cover" loading="lazy" />}
+                            </div>
                           ))}
                         </div>
                         <div className="text-[7px] font-mono tracking-[0.3em] text-white/25 uppercase text-center">Wall Art · Velcro Mount</div>
@@ -7167,10 +7175,11 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     </div>
                   </div>
 
-                  {/* Profile-pic banner — CLEAN. The fluid-gl effect was removed from
-                      inside this container per Frank's directive: pic stays untouched,
-                      fluid lives ONLY on the @handle chars in the tight row below. */}
-                  <div className="relative h-[180px] sm:h-[220px] md:h-[260px] w-full overflow-hidden mt-4 sm:mt-6 md:mt-8 scroll-mt-[96px]">
+                  {/* Profile pic — SMALL rounded-square avatar (Frank Jun 12: the
+                      enlarged full-width rectangle crowded the quarters look —
+                      reverted to a compact dossier-style avatar). Same image +
+                      fallback wiring, just the container shrunk. */}
+                  <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden mt-3 sm:mt-4 ml-3 sm:ml-4 scroll-mt-[96px] border border-white/15 shadow-lg shadow-black/60 z-10">
                     {viewingProfile.profilePicture ? (
                       <img
                         src={viewingProfile.profilePicture}
@@ -7179,16 +7188,11 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                       />
                     ) : (
                       <div className="w-full h-full bg-gradient-to-r from-cyan-900/40 via-purple-900/40 to-pink-900/40 flex items-center justify-center">
-                        <span className="text-6xl font-bold text-white/80">
+                        <span className="text-3xl font-bold text-white/80">
                           {(viewingProfile.displayName || viewingProfile.userHandle)?.charAt(0)?.toUpperCase() || 'U'}
                         </span>
                       </div>
                     )}
-                    {/* Cyberpunk top gradient — light touch so the image top reads clean,
-                        not cropped/darkened under the nav. */}
-                    <div className="absolute inset-x-0 top-0 h-6 bg-gradient-to-b from-black/15 to-transparent pointer-events-none z-[5]" />
-                    {/* Neon scanline accent welding the pic to the identity stack below */}
-                    <div className="absolute inset-x-0 bottom-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-400/80 to-transparent pointer-events-none z-10 shadow-[0_0_12px_rgba(34,211,238,0.6)]" />
                   </div>
 
                   {/* Cover Image — the GRANDER profile-pic header (Frank's original design,
