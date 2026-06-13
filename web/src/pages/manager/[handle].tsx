@@ -18,6 +18,7 @@ import { useGroupedTracks as useGroupedTracksQuery } from 'hooks/useGroupedTrack
 import { useMe } from 'hooks/useMe'
 import { Logo } from 'icons/Logo'
 import { ManagerGreeting } from 'components/manager/ManagerGreeting'
+import StarshipBay from 'components/starship/StarshipBay'
 import { ManagerContactForm } from 'components/manager/ManagerContactForm'
 import { ManagerConfig, loadManagerConfig, fetchManagerConfig, ManagerConfigData, saveManagerConfig } from 'components/manager/ManagerConfig'
 import { ManagerCoverUploader } from 'components/manager/ManagerCoverUploader'
@@ -416,6 +417,8 @@ export default function ManagerPage({ ogData, handle, isBot }: ManagerPageProps)
       {ogHead}
 
       <div className="relative min-h-screen bg-black text-white">
+        {/* STARSHIP — Booking Ops: the comms/ops deck (ambient capsule frame, edges only) */}
+        <StarshipBay wall="deck" accent="violet" leftLabel="SC · Booking Ops" rightLabel="Comms Nominal" />
         {/* Full-screen page background the pro uploaded (photo/GIF). object-cover so
             it fills any desktop/mobile viewport; dark overlay keeps content readable.
             Fixed + behind everything (content sits at z-10+). */}
