@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SoundChain Station — Deck Map</title>
+<style>
+  :root{
+    --void:#040208; --rust:#ff6a3d; --amber:#ffb24d; --cyan:#37e6ff;
+    --magenta:#ff3d9a; --lime:#b8ff4d; --violet:#a07bff; --gold:#ffd700;
+    --sky:#4db8ff; --red:#ff5246; --emerald:#3ddc97; --fuchsia:#e879f9;
+    --ink:#e8e4f0; --dim:#6f6a85; --faint:#3d3852;
+    --panel:rgba(10,6,20,.78); --line:rgba(255,106,61,.25); --hair:rgba(255,255,255,.07);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;overflow:hidden;background:var(--void);color:var(--ink);
+    font-family:ui-monospace,'SF Mono','JetBrains Mono',Menlo,Consolas,monospace}
+  #scene{position:fixed;inset:0;width:100%;height:100%;cursor:grab;touch-action:none}
+  #scene:active{cursor:grabbing}
+  @media(max-width:760px){
+    #directory{display:none}
+    #info{width:auto;left:12px;right:12px;bottom:12px;padding:13px 15px}
+    #cmd .row{display:none}
+    #hint{bottom:10px;font-size:8px;width:max-content}
+  }
+  .hud{position:fixed;z-index:10}
+
+  #cmd{top:18px;left:18px;font-size:11px;line-height:1.75;letter-spacing:.04em;pointer-events:none}
+  #cmd .sub{color:var(--cyan);font-size:9.5px;letter-spacing:.26em}
+  #cmd .title{color:var(--rust);font-weight:700;font-size:14px;letter-spacing:.16em}
+  #cmd .row{color:var(--dim);font-size:10px}
+  #cmd .row b{color:var(--ink);font-weight:400}
+  .live{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--lime);
+    margin-right:6px;box-shadow:0 0 8px var(--lime);animation:blink 1.6s infinite}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+
+  /* deck directory */
+  #directory{top:18px;right:18px;width:236px;background:var(--panel);border:1px solid var(--line);
+    border-radius:11px;backdrop-filter:blur(10px);overflow:hidden}
+  #directory h3{font-size:9.5px;color:var(--amber);letter-spacing:.24em;font-weight:700;padding:12px 14px 7px}
+  .deck{display:flex;align-items:center;gap:9px;padding:7px 14px;cursor:pointer;font-size:10px}
+  .deck:hover{background:rgba(255,255,255,.04)}
+  .deck.sel{background:rgba(255,106,61,.1)}
+  .deck .ic{width:8px;height:8px;border-radius:2px;flex-shrink:0;transform:rotate(45deg)}
+  .deck .nm{flex:1;font-weight:700;letter-spacing:.06em}
+  .deck .st{font-size:7.5px;color:var(--faint);letter-spacing:.1em}
+
+  /* module info panel */
+  #info{left:18px;bottom:18px;width:330px;background:var(--panel);border:1px solid var(--line);
+    border-radius:13px;backdrop-filter:blur(12px);padding:16px 18px;
+    transform:translateY(130%);transition:transform .5s cubic-bezier(.2,.9,.25,1)}
+  #info.open{transform:translateY(0)}
+  #info .mod{font-size:8.5px;letter-spacing:.28em;margin-bottom:5px}
+  #info .nm{font-size:17px;font-weight:700;letter-spacing:.04em}
+  #info .role{font-size:9.5px;color:var(--dim);margin-top:3px;letter-spacing:.08em}
+  #info .desc{font-size:10px;line-height:1.7;color:#c8c2da;margin-top:10px}
+  #info ul{list-style:none;margin-top:10px}
+  #info li{font-size:9px;color:var(--dim);padding:2.5px 0;letter-spacing:.04em}
+  #info li b{color:var(--cyan);font-weight:400;margin-right:6px}
+  #info .enter{margin-top:14px;width:100%;font-family:inherit;font-weight:700;font-size:10.5px;
+    letter-spacing:.16em;padding:12px;border-radius:10px;border:none;cursor:pointer;color:#fff;
+    background:linear-gradient(135deg,var(--rust),var(--magenta));box-shadow:0 0 16px rgba(255,61,154,.4)}
+  #info .status-row{display:flex;gap:8px;margin-top:10px}
+  #info .chip{font-size:7.5px;letter-spacing:.12em;padding:3px 8px;border-radius:5px;border:1px solid}
+
+  #hint{bottom:20px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--dim);
+    letter-spacing:.2em;pointer-events:none}
+  footer{position:fixed;bottom:5px;right:14px;font-size:8.5px;color:var(--faint);letter-spacing:.1em;z-index:10}
+</style>
+</head>
+<body>
+<canvas id="scene"></canvas>
+
+<div class="hud" id="cmd">
+  <div class="sub">SOUNDCHAIN</div>
+  <div class="title"><span class="live"></span>STATION · DECK MAP</div>
+  <div class="row">MODULES <b>10 PRESSURIZED</b> · CREW <b>726</b> · CARGO <b>5,417 TRACKS</b></div>
+  <div class="row">REACTOR <b>OGUN CORE · NOMINAL</b> · SETTLEMENT <b>POLYGON · ZETACHAIN</b></div>
+</div>
+
+<div class="hud" id="directory"><h3>DECK DIRECTORY</h3><div id="deckList"></div></div>
+
+<div class="hud" id="info">
+  <div class="mod" id="iMod">—</div>
+  <div class="nm" id="iName">—</div>
+  <div class="role" id="iRole">—</div>
+  <div class="desc" id="iDesc">—</div>
+  <ul id="iFeat"></ul>
+  <div class="status-row" id="iChips"></div>
+  <button class="enter" id="iEnter">ENTER MODULE ⟶</button>
+</div>
+
+<div class="hud" id="hint">CLICK A MODULE · DRAG TO FLY · SCROLL TO APPROACH</div>
+<footer>SOUNDCHAIN STATION · EVERY PILL IS A CAPSULE · MODULE PAGES SHIP SEPARATELY</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* ============================================================
+   SOUNDCHAIN STATION — DECK MAP
+   The connective tissue: every nav pill is a physical module
+   on one station. Click a module (or the directory) -> camera
+   flies to it, info panel opens with the deck's REAL feature
+   set (inventoried from soundchain-public), ENTER routes to
+   that deck's page. CC: swap ENTER hrefs for real routes.
+   ============================================================ */
+
+const MODULES=[
+  {id:'radio',   name:'ORBITAL COMMAND',  pill:'RADIO',     color:0xff6a3d, route:'/radio',
+   role:'OBSERVATION DOME · DECK 1', pos:[0,15.5,0],
+   desc:'The dome. OGUN Radio renders the entire catalog as a NASA/JPL asteroid swarm — every NFT/SCID on a hash-derived orbit, gravitational capture pulling the next track onto the core.',
+   feat:[['359+','tracks in rotation'],['5,417','bodies in the belt'],['3.2s','gravitational capture'],['LIVE','frequency channels']],
+   status:['LIVE','REDESIGNED']},
+  {id:'nodes',   name:'FLIGHT DECK',      pill:'NODES',     color:0x37e6ff, route:'/nodes',
+   role:'COCKPIT · DECK 2', pos:[0,4,16],
+   desc:'The cockpit. P2P mesh as breaker switches, Apollo caution/warning annunciators wired to live node status, tactical scope, MFD protocol screens, comms-console feed, cargo manifest.',
+   feat:[['10','swarm nodes'],['6,208','IPFS pins'],['3','Nostr relays'],['DTLS 1.2','mesh protocol']],
+   status:['LIVE','REDESIGNED']},
+  {id:'profile', name:'CREW QUARTERS',    pill:'PROFILE',   color:0x4db8ff, route:'/users/{handle}',
+   role:'HABITATION RING · SECTION A', pos:[-21,4,0], ring:true,
+   desc:'Pilot dossiers. Every artist is a star with their own orbiting track system. Wall, tracks, playlists, gallery 3D (in-place tab), followers — commendations and flight log included.',
+   feat:[['726','crew aboard'],['6','dossier tabs'],['∞','personal systems'],['OGUN','tipping enabled']],
+   status:['LIVE','REDESIGNED']},
+  {id:'manager', name:'DOCKING BAY',      pill:'MANAGER',   color:0xa07bff, route:'/manager/{handle}',
+   role:'AIRLOCK COMPLEX · DECK 3', pos:[19,1,8],
+   desc:'The booking marketplace. Agents and artists request berths in each other\'s schedules — docking requests, OGUN/hr rates, availability launch windows, roster manifests.',
+   feat:[['⇄','agents book artists'],['OGUN/hr','rate cards'],['CAL','availability windows'],['QUEUE','docking requests']],
+   status:['LIVE','NEXT UP']},
+  {id:'arena',   name:'ARENA MODULE',     pill:'ARENA',     color:0xff5246, route:'https://arena.soundchain.io?portal=soundchain',
+   role:'ZERO-G STADIUM · EXTERNAL HULL', pos:[26,9,-10],
+   desc:'Detached stadium craft on its own subdomain. 14+ leagues — NBA, NHL, MLB, F1, boxing, MMA, EPL, FIFA — plus fantasy, picks, live, and the gym. Portal-back affordance to the station.',
+   feat:[['14+','leagues live'],['EXT','arena.soundchain.io'],['PICKS','+ fantasy decks'],['LIVE','game feeds']],
+   status:['EXTERNAL','QUEUED']},
+  {id:'explore', name:'SENSOR ARRAY',     pill:'EXPLORE',   color:0x3ddc97, route:'/dex/explore',
+   role:'DEEP SCAN TELESCOPE · MAST', pos:[0,-13,-9],
+   desc:'The telescope. Deep-scan the catalog and the mesh — discovery feeds routed through the dex hub. Sweep the sky for new signals.',
+   feat:[['DEX','hub routed'],['SCAN','discovery feed'],['NEW','signal detection']],
+   status:['DEX HUB','QUEUED']},
+  {id:'users',   name:'CREW REGISTRY',    pill:'USERS',     color:0xff3d9a, route:'/dex/users',
+   role:'HABITATION RING · SECTION B', pos:[21,4,0], ring:true,
+   desc:'The manifest of everyone aboard. Browse crew, follow, message — registry views routed through the dex hub.',
+   feat:[['726','registered crew'],['FOLLOW','+ DM channels'],['DEX','hub routed']],
+   status:['DEX HUB','QUEUED']},
+  {id:'library', name:'PERSONAL HANGAR',  pill:'LIBRARY',   color:0xffb24d, route:'/library',
+   role:'HANGAR DECK · BELOW', pos:[-14,-9,10],
+   desc:'Your hangar. Owned, favorited, and collected tracks berthed in personal racks. Walk the rows.',
+   feat:[['OWNED','+ favorites'],['RACKS','collection berths'],['DEX','hub routed']],
+   status:['DEX HUB','QUEUED']},
+  {id:'playlist',name:'NAV ROOM',         pill:'PLAYLISTS', color:0xe879f9, route:'/users/{handle}?tab=playlists',
+   role:'FLIGHT PLANNING · DECK 4', pos:[14,-9,-12],
+   desc:'Flight plans. Every playlist is a plotted course through the catalog. Routes to your quarters\' playlist tab — exactly like production.',
+   feat:[['PLANS','plotted courses'],['→','profile ?tab=playlists'],['QUEUE','course sequencing']],
+   status:['REDIRECT','QUEUED']},
+  {id:'archive', name:'BLACK BOX VAULT',  pill:'ARCHIVE',   color:0xb8ff4d, route:'/archive',
+   role:'RECORDS VAULT · KEEL', pos:[-9,-14,-13],
+   desc:'The recorder. Every bookmark is a flight recording, filed by channel: All / Posts / Reels / Stories / Music / Media. IG-style grid + list playback.',
+   feat:[['6','recorder channels'],['GRID','+ list views'],['SAVED','transmissions']],
+   status:['LIVE PAGE','QUEUED']},
+]
+
+function glowTexF(){const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d')
+const g=x.createRadialGradient(32,32,0,32,32,32);g.addColorStop(0,'rgba(255,255,255,1)')
+g.addColorStop(.35,'rgba(255,255,255,.5)');g.addColorStop(1,'rgba(255,255,255,0)')
+x.fillStyle=g;x.fillRect(0,0,64,64);return new THREE.CanvasTexture(c)}
+
+function labelSprite(text,colorHex){
+  const c=document.createElement('canvas');c.width=512;c.height=72
+  const x=c.getContext('2d')
+  const col='#'+new THREE.Color(colorHex).getHexString()
+  x.shadowColor=col;x.shadowBlur=16;x.fillStyle=col
+  x.font='bold 36px ui-monospace,monospace';x.textAlign='center';x.textBaseline='middle'
+  x.fillText(text,256,36);x.fillText(text,256,36)
+  const t=new THREE.CanvasTexture(c)
+  const s=new THREE.Sprite(new THREE.SpriteMaterial({map:t,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}))
+  s.scale.set(11,1.55,1)
+  return s
+}
+
+const canvas=document.getElementById('scene')
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true})
+renderer.setPixelRatio(Math.min(devicePixelRatio,2))
+const scene=new THREE.Scene()
+scene.fog=new THREE.FogExp2(0x040208,0.0048)
+const camera=new THREE.PerspectiveCamera(55,1,0.1,600)
+const cam={theta:.7,phi:1.18,dist:74,dragging:false,px:0,py:0,tTheta:null,tPhi:null,tDist:null}
+function resize(){renderer.setSize(innerWidth,innerHeight,true);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix()}
+addEventListener('resize',resize);resize()
+const softTex=glowTexF()
+
+scene.add(new THREE.AmbientLight(0x8888aa,.55))
+const key=new THREE.DirectionalLight(0xfff0dd,1.1);key.position.set(40,60,30);scene.add(key)
+const rim=new THREE.DirectionalLight(0x3766ff,.5);rim.position.set(-50,-20,-40);scene.add(rim)
+
+// stars + belt dust
+{const n=1500,p=new Float32Array(n*3)
+for(let i=0;i<n;i++){const r=190+Math.random()*230,t=Math.random()*6.283,ph=Math.acos(2*Math.random()-1)
+p[i*3]=r*Math.sin(ph)*Math.cos(t);p[i*3+1]=r*Math.cos(ph);p[i*3+2]=r*Math.sin(ph)*Math.sin(t)}
+const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(p,3))
+scene.add(new THREE.Points(g,new THREE.PointsMaterial({size:1.1,map:softTex,color:0x9aa3c0,transparent:true,opacity:.5,depthWrite:false,blending:THREE.AdditiveBlending})))}
+{const n=900,p=new Float32Array(n*3),cl=new Float32Array(n*3)
+const cA=new THREE.Color(0xff6a3d),cB=new THREE.Color(0xffc89a),tc=new THREE.Color()
+for(let i=0;i<n;i++){const a=55+Math.random()*90,th2=Math.random()*6.283
+p[i*3]=Math.cos(th2)*a;p[i*3+1]=(Math.random()-.5)*16;p[i*3+2]=Math.sin(th2)*a
+tc.copy(cA).lerp(cB,Math.random()*.6);cl[i*3]=tc.r;cl[i*3+1]=tc.g;cl[i*3+2]=tc.b}
+const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(p,3))
+g.setAttribute('color',new THREE.BufferAttribute(cl,3))
+scene.add(new THREE.Points(g,new THREE.PointsMaterial({size:.6,map:softTex,vertexColors:true,transparent:true,opacity:.55,depthWrite:false,blending:THREE.AdditiveBlending})))}
+
+const hullMat=c=>new THREE.MeshStandardMaterial({color:c||0x9aa6b8,metalness:.75,roughness:.35})
+const darkMat=new THREE.MeshStandardMaterial({color:0x3a4250,metalness:.8,roughness:.4})
+
+// ===== STATION =====
+const station=new THREE.Group()
+scene.add(station)
+
+// OGUN reactor core
+const core=new THREE.Mesh(new THREE.SphereGeometry(5,40,40),new THREE.MeshBasicMaterial({color:0xfff3e0}))
+station.add(core)
+function addGlow(s,c,o){const m=new THREE.Sprite(new THREE.SpriteMaterial({map:softTex,color:c,transparent:true,opacity:o,depthWrite:false,blending:THREE.AdditiveBlending}))
+m.scale.setScalar(s);station.add(m);return m}
+const gA=addGlow(22,0xffd9a8,.85),gB=addGlow(40,0xff6a3d,.3)
+station.add(new THREE.Mesh(new THREE.SphereGeometry(5.05,24,16),
+  new THREE.MeshBasicMaterial({color:0xffb24d,wireframe:true,transparent:true,opacity:.12})))
+
+// spine
+const spine=new THREE.Mesh(new THREE.CylinderGeometry(1.1,1.1,34,16),hullMat())
+station.add(spine)
+// spine struts horizontal
+const hspine=new THREE.Mesh(new THREE.CylinderGeometry(.9,.9,46,14),hullMat(0x8d99ab))
+hspine.rotation.z=Math.PI/2;station.add(hspine)
+
+// habitation ring (rotates) — Profile + Users live here
+const ringGroup=new THREE.Group();station.add(ringGroup)
+const ring=new THREE.Mesh(new THREE.TorusGeometry(21,1.5,12,64),hullMat(0xa8b4c6))
+ring.rotation.x=Math.PI/2;ringGroup.add(ring)
+for(let i=0;i<4;i++){const sp=new THREE.Mesh(new THREE.CylinderGeometry(.4,.4,21,8),darkMat)
+sp.rotation.z=Math.PI/2;sp.rotation.y=i*Math.PI/4;ringGroup.add(sp)}
+// ring windows (glow points)
+for(let i=0;i<28;i++){const a=i/28*6.283
+const w=new THREE.Sprite(new THREE.SpriteMaterial({map:softTex,color:0xffd9a8,transparent:true,opacity:.8,depthWrite:false,blending:THREE.AdditiveBlending}))
+w.scale.setScalar(.9);w.position.set(Math.cos(a)*21,Math.sin(i)*0.4,Math.sin(a)*21);ringGroup.add(w)}
+
+// solar wings
+for(const s of[-1,1]){
+  const wing=new THREE.Group()
+  const panel=new THREE.Mesh(new THREE.BoxGeometry(16,.18,7),
+    new THREE.MeshStandardMaterial({color:0x16244a,metalness:.6,roughness:.3,emissive:0x0a1430,emissiveIntensity:.6}))
+  panel.position.x=s*15;wing.add(panel)
+  for(let i=1;i<6;i++){const seam=new THREE.Mesh(new THREE.BoxGeometry(.12,.22,7),darkMat)
+    seam.position.x=s*(15-8+i*2.7);wing.add(seam)}
+  wing.position.y=11;wing.position.z=-7
+  station.add(wing)
+}
+
+// ===== MODULES (clickable) =====
+const clickables=[]
+const moduleObjs=MODULES.map(m=>{
+  const g=new THREE.Group()
+  let mesh
+  if(m.id==='radio'){ // dome
+    mesh=new THREE.Mesh(new THREE.SphereGeometry(4.4,28,18,0,6.283,0,Math.PI/2),
+      new THREE.MeshStandardMaterial({color:0x223044,metalness:.4,roughness:.15,transparent:true,opacity:.85,emissive:0x12202e,emissiveIntensity:.8}))
+    const base=new THREE.Mesh(new THREE.CylinderGeometry(4.4,4.8,1.6,24),hullMat());base.position.y=-.8
+    g.add(base)
+  } else if(m.id==='arena'){ // detached stadium torus
+    mesh=new THREE.Mesh(new THREE.TorusGeometry(4.6,1.7,10,40),hullMat(0xb88a8a))
+    mesh.rotation.x=Math.PI/2.4
+  } else if(m.id==='explore'){ // dish
+    mesh=new THREE.Mesh(new THREE.ConeGeometry(4.2,2.2,26,1,true),
+      new THREE.MeshStandardMaterial({color:0xc8d2dd,metalness:.7,roughness:.3,side:THREE.DoubleSide}))
+    mesh.rotation.x=Math.PI
+    const mast=new THREE.Mesh(new THREE.CylinderGeometry(.3,.3,7,8),darkMat);mast.position.y=4;g.add(mast)
+  } else if(m.id==='manager'){ // docking bay — open box w/ bay lights
+    mesh=new THREE.Mesh(new THREE.BoxGeometry(7.5,4.6,5.6),hullMat(0x9aa0c8))
+    const mouth=new THREE.Mesh(new THREE.PlaneGeometry(5.4,3.2),
+      new THREE.MeshBasicMaterial({color:0x14102a}))
+    mouth.position.x=3.8;mouth.rotation.y=-Math.PI/2;g.add(mouth)
+    for(let i=0;i<5;i++){const l=new THREE.Sprite(new THREE.SpriteMaterial({map:softTex,color:0xa07bff,transparent:true,opacity:.9,depthWrite:false,blending:THREE.AdditiveBlending}))
+      l.scale.setScalar(.8);l.position.set(3.9,-1.9,-2.2+i*1.1);g.add(l)}
+  } else if(m.ring){ // ring section pods
+    mesh=new THREE.Mesh(new THREE.SphereGeometry(2.6,18,14),hullMat(0xb0bcce))
+    mesh.scale.set(1.5,1,1)
+  } else if(m.id==='archive'){
+    mesh=new THREE.Mesh(new THREE.BoxGeometry(4.6,4.6,4.6),
+      new THREE.MeshStandardMaterial({color:0x2a3140,metalness:.85,roughness:.5}))
+  } else if(m.id==='library'){
+    mesh=new THREE.Mesh(new THREE.BoxGeometry(7,4,5),hullMat(0xc0a888))
+  } else { // nodes cockpit + nav room
+    mesh=new THREE.Mesh(new THREE.BoxGeometry(5,3.2,4.4),hullMat())
+    if(m.id==='nodes'){const visor=new THREE.Mesh(new THREE.PlaneGeometry(3.8,1.5),
+      new THREE.MeshBasicMaterial({color:0x37e6ff,transparent:true,opacity:.4,blending:THREE.AdditiveBlending}))
+      visor.position.z=2.25;g.add(visor)}
+  }
+  mesh.userData.module=m
+  g.add(mesh)
+  clickables.push(mesh)
+  // marker beacon + label
+  const beacon=new THREE.Sprite(new THREE.SpriteMaterial({map:softTex,color:m.color,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}))
+  beacon.scale.setScalar(2.6);beacon.position.y=(m.id==='radio')?5.6:3.6
+  g.add(beacon)
+  const lbl=labelSprite(m.pill,m.color)
+  lbl.position.y=(m.id==='radio')?7.6:5.6
+  g.add(lbl)
+  g.position.set(...m.pos)
+  // connector strut to core (skip arena — it's external)
+  if(m.id!=='arena'){
+    const v=new THREE.Vector3(...m.pos)
+    const len=v.length()
+    const strut=new THREE.Mesh(new THREE.CylinderGeometry(.32,.32,len,8),darkMat)
+    strut.position.copy(v.clone().multiplyScalar(.5))
+    strut.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),v.clone().normalize())
+    station.add(strut)
+  }
+  station.add(g)
+  return{m,g,mesh,beacon,seed:Math.random()*6.283}
+})
+
+// shuttle traffic to the docking bay
+const shuttles=[0,1,2].map(i=>{
+  const s=new THREE.Group()
+  const body=new THREE.Mesh(new THREE.ConeGeometry(.5,1.8,4),hullMat(0xd0d8e4))
+  body.rotation.z=-Math.PI/2;s.add(body)
+  const eng=new THREE.Sprite(new THREE.SpriteMaterial({map:softTex,color:0x37e6ff,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}))
+  eng.scale.setScalar(1.4);eng.position.x=-1.2;s.add(eng)
+  scene.add(s)
+  return{s,t:i*.33}
+})
+
+// ===== selection =====
+let selected=null
+const raycaster=new THREE.Raycaster()
+const mouse=new THREE.Vector2()
+let downAt=[0,0]
+// Multi-touch: 1 finger = orbit, 2 fingers = pinch zoom (phones first-class)
+const pts=new Map()
+let pinchD=0
+canvas.addEventListener('pointerdown',e=>{
+  pts.set(e.pointerId,[e.clientX,e.clientY])
+  if(pts.size===1){cam.dragging=true;cam.px=e.clientX;cam.py=e.clientY;downAt=[e.clientX,e.clientY]}
+  else if(pts.size===2){
+    cam.dragging=false
+    const a=[...pts.values()];pinchD=Math.hypot(a[0][0]-a[1][0],a[0][1]-a[1][1])
+  }
+})
+addEventListener('pointerup',e=>{
+  pts.delete(e.pointerId)
+  if(pts.size===0){
+    cam.dragging=false
+    if(Math.hypot(e.clientX-downAt[0],e.clientY-downAt[1])<6){
+      mouse.x=(e.clientX/innerWidth)*2-1;mouse.y=-(e.clientY/innerHeight)*2+1
+      raycaster.setFromCamera(mouse,camera)
+      const hits=raycaster.intersectObjects(clickables)
+      if(hits.length)selectModule(hits[0].object.userData.module.id)
+    }
+  }
+})
+addEventListener('pointercancel',e=>{pts.delete(e.pointerId);if(pts.size===0)cam.dragging=false})
+addEventListener('pointermove',e=>{
+  if(!pts.has(e.pointerId))return
+  pts.set(e.pointerId,[e.clientX,e.clientY])
+  if(pts.size===2){
+    const a=[...pts.values()]
+    const d=Math.hypot(a[0][0]-a[1][0],a[0][1]-a[1][1])
+    if(pinchD>0){cam.dist=Math.max(24,Math.min(150,cam.dist*(pinchD/d)));cam.tDist=null}
+    pinchD=d
+    return
+  }
+  if(!cam.dragging)return
+  cam.theta+=(e.clientX-cam.px)*0.005
+  cam.phi=Math.max(.3,Math.min(2.5,cam.phi-(e.clientY-cam.py)*0.005))
+  cam.tTheta=null;cam.tPhi=null
+  cam.px=e.clientX;cam.py=e.clientY
+})
+addEventListener('wheel',e=>{cam.dist=Math.max(24,Math.min(150,cam.dist+e.deltaY*0.05));cam.tDist=null},{passive:true})
+
+const STATUS_COLORS={LIVE:'var(--lime)',REDESIGNED:'var(--cyan)','NEXT UP':'var(--amber)',QUEUED:'var(--dim)',
+  EXTERNAL:'var(--red)','DEX HUB':'var(--emerald)',REDIRECT:'var(--fuchsia)','LIVE PAGE':'var(--lime)'}
+function selectModule(id){
+  const mo=moduleObjs.find(o=>o.m.id===id);if(!mo)return
+  selected=mo
+  const wp=new THREE.Vector3();mo.g.getWorldPosition(wp)
+  cam.tTheta=Math.atan2(wp.z,wp.x)+.4
+  cam.tPhi=Math.max(.55,Math.min(2.1,Math.acos(wp.y/Math.max(1,wp.length()))-.1))
+  cam.tDist=Math.max(28,wp.length()+18)
+  const m=mo.m,col='#'+new THREE.Color(m.color).getHexString()
+  document.getElementById('iMod').textContent=m.role
+  document.getElementById('iMod').style.color=col
+  document.getElementById('iName').textContent=m.name
+  document.getElementById('iRole').textContent='PILL: '+m.pill+' · ROUTE: '+m.route
+  document.getElementById('iDesc').textContent=m.desc
+  document.getElementById('iFeat').innerHTML=m.feat.map(f=>`<li><b>${f[0]}</b>${f[1]}</li>`).join('')
+  document.getElementById('iChips').innerHTML=m.status.map(s=>
+    `<span class="chip" style="color:${STATUS_COLORS[s]||'var(--dim)'};border-color:currentColor">${s}</span>`).join('')
+  document.getElementById('iEnter').onclick=()=>{
+    const handle=new URLSearchParams(location.search).get('handle')||''
+    let r=m.route
+    if(r.includes('{handle}')) r = handle ? r.replace('{handle}',handle) : '/login'
+    try{ (window.top||window).location.href=r }catch(_){ location.href=r }
+  }
+  document.getElementById('info').classList.add('open')
+  document.querySelectorAll('.deck').forEach(el=>el.classList.toggle('sel',el.dataset.id===id))
+}
+
+// directory
+{
+  const el=document.getElementById('deckList')
+  MODULES.forEach(m=>{
+    const col='#'+new THREE.Color(m.color).getHexString()
+    const d=document.createElement('div');d.className='deck';d.dataset.id=m.id
+    d.innerHTML=`<span class="ic" style="background:${col};box-shadow:0 0 7px ${col}"></span>
+      <span class="nm">${m.name}</span><span class="st">${m.pill}</span>`
+    d.onclick=()=>selectModule(m.id)
+    el.appendChild(d)
+  })
+}
+
+// ===== loop =====
+let last=performance.now()
+function tick(now){
+  const dt=Math.min((now-last)/1000,.05);last=now;const t=now/1000
+  if(!cam.dragging){
+    if(cam.tTheta!==null){
+      cam.theta+=(cam.tTheta-cam.theta)*Math.min(1,dt*2.2)
+      cam.phi+=(cam.tPhi-cam.phi)*Math.min(1,dt*2.2)
+      if(Math.abs(cam.tTheta-cam.theta)<.01)cam.tTheta=null
+    } else cam.theta+=dt*.022
+  }
+  if(cam.tDist!==null){cam.dist+=(cam.tDist-cam.dist)*Math.min(1,dt*2.2)
+    if(Math.abs(cam.tDist-cam.dist)<.5)cam.tDist=null}
+  camera.position.set(cam.dist*Math.sin(cam.phi)*Math.cos(cam.theta),
+    cam.dist*Math.cos(cam.phi),cam.dist*Math.sin(cam.phi)*Math.sin(cam.theta))
+  camera.lookAt(0,1,0)
+
+  station.rotation.y=t*.015            // whole station slow drift
+  ringGroup.rotation.z=t*.09           // habitation ring spin (artificial gravity)
+  gA.material.opacity=.75+.15*Math.sin(t*1.4)
+
+  for(const mo of moduleObjs){
+    mo.beacon.material.opacity=.6+.4*Math.sin(t*2+mo.seed)
+    if(selected===mo)mo.beacon.scale.setScalar(3.6+Math.sin(t*4)*.4)
+    else mo.beacon.scale.setScalar(2.6)
+    if(mo.m.id==='explore')mo.g.rotation.y=t*.2 // dish sweeps
+    if(mo.m.id==='arena'){mo.g.position.y=mo.m.pos[1]+Math.sin(t*.4)*1.2;mo.g.rotation.y=t*.1}
+  }
+  // shuttles approach the docking bay
+  const bay=new THREE.Vector3(19,1,8).applyAxisAngle(new THREE.Vector3(0,1,0),station.rotation.y)
+  shuttles.forEach((sh,i)=>{
+    sh.t=(sh.t+dt*.05)%1
+    const k=sh.t
+    const start=new THREE.Vector3(90,14-i*6,-50+i*40)
+    const p=start.clone().lerp(bay.clone().add(new THREE.Vector3(6,0,0)),k)
+    sh.s.position.copy(p)
+    sh.s.lookAt(bay)
+    sh.s.rotateY(Math.PI/2)
+  })
+
+  renderer.render(scene,camera)
+  requestAnimationFrame(tick)
+}
+requestAnimationFrame(tick)
+
+// open on the docking bay — it's next up
+setTimeout(()=>selectModule('manager'),1700)
+</script>
+</body>
+</html>

@@ -10,6 +10,8 @@ const PROFILE_FIELDS = new Set([
   'socialMedias', 'featuredTrackId', 'featuredAudioUrl', 'featuredAudioTitle',
   'featuredAudioArtist', 'featuredAudioCoverUrl', 'wallAudioPlaylist',
   'topFriends', 'pinnedPostId',
+  // Quarters collection rail — owner-curated pics/gifs/clips: [{src, kind}]
+  'quartersRail',
 ])
 
 // Fields that go on the USERS collection (handle is special; notification

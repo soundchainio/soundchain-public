@@ -7175,6 +7175,15 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                       profileId={viewingProfile.id}
                       isOwn={isViewingOwnProfile}
                       onInvite={() => setProfileTab('wall')}
+                      customItems={(viewingProfile as any).quartersRail || null}
+                      onSaveCustom={isViewingOwnProfile ? async (railItems: any[]) => {
+                        await fetch('/api/profile/update', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          credentials: 'include',
+                          body: JSON.stringify({ fields: { quartersRail: railItems } }),
+                        })
+                      } : undefined}
                     />
                   </div>
 

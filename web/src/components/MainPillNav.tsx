@@ -16,7 +16,8 @@
 import { useRouter } from 'next/router'
 import {
   Home, Trophy, Compass, Users as UsersIcon,
-  Radio as RadioIcon, Music, ListMusic, Archive as ArchiveIcon, User, Briefcase
+  Radio as RadioIcon, Music, ListMusic, Archive as ArchiveIcon, User, Briefcase,
+  Map as MapIcon,
 } from 'lucide-react'
 import { useMe } from 'hooks/useMe'
 
@@ -62,7 +63,7 @@ const ACCENT_IDLE: Record<Accent, string> = {
 }
 
 type Props = {
-  active: 'profile' | 'nodes' | 'arena' | 'manager' | 'gallery3d' | 'explore3d' | 'land' | 'radio' | 'explore' | 'users' | 'library' | 'playlist' | 'archive' | 'moltbook' | (string & {})
+  active: 'profile' | 'nodes' | 'arena' | 'manager' | 'gallery3d' | 'explore3d' | 'land' | 'radio' | 'explore' | 'users' | 'library' | 'playlist' | 'archive' | 'deck' | 'moltbook' | (string & {})
   borderClass?: string
   /** Fired before navigation. Used by dex/[...slug].tsx to collapse the bio panel before route change. */
   beforeNavigate?: (id: string) => void
@@ -99,6 +100,9 @@ export default function MainPillNav({ active, borderClass = 'border-white/5', be
     { id: 'library', label: 'Library', route: '/library', icon: Music, accent: 'amber' },
     { id: 'playlist', label: 'Playlists', route: '/playlist', icon: ListMusic, accent: 'fuchsia' },
     { id: 'archive', label: 'Archive', route: '/archive', icon: ArchiveIcon, accent: 'lime' },
+    // Deck Map — the SoundChain Starship station map: every pill is a module
+    // on the vessel; fly the camera, tap a module, ENTER routes to its page.
+    { id: 'deck', label: 'Deck Map', route: '/deck', icon: MapIcon, accent: 'orange' },
   ]
 
   const pillRow = (
