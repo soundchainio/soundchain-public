@@ -113,6 +113,7 @@ import { DmMessageContent } from 'components/pulse/DmMessageContent'
 
 const CrewQuarters = dynamic(() => import('components/profile/CrewQuarters'), { ssr: false })
 const QuartersRail = dynamic(() => import('components/profile/QuartersRail'), { ssr: false })
+const StarshipBay = dynamic(() => import('components/starship/StarshipBay'), { ssr: false })
 const MobileBottomAudioPlayer = dynamic(() => import('components/common/BottomAudioPlayer/MobileBottomAudioPlayer'))
 const DesktopBottomAudioPlayer = dynamic(() => import('components/common/BottomAudioPlayer/DesktopBottomAudioPlayer'))
 const AudioEngine = dynamic(() => import('components/common/BottomAudioPlayer/AudioEngine'))
@@ -3263,6 +3264,22 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
           below): quilted hull walls, flywheel door-slit rails, DIM/WAKE
           circadian toggle, drifting ninja. Profile view only. */}
       {selectedView === 'profile' && <CrewQuarters />}
+
+      {/* STARSHIP BAYS — each remaining pill is a deck of the same vessel.
+          Ambient capsule frame (CapsuleWall + console hull), painted into the
+          viewport dead-space at the edges; content + plumbing untouched. */}
+      {selectedView === 'library' && (
+        <StarshipBay wall="quarters" accent="amber" leftLabel="SC · Library" rightLabel="Index Nominal" />
+      )}
+      {selectedView === 'explore' && (
+        <StarshipBay wall="deck" accent="emerald" leftLabel="SC · Obs Deck" rightLabel="Sensors Nominal" sweep />
+      )}
+      {selectedView === 'users' && (
+        <StarshipBay wall="deck" accent="pink" leftLabel="SC · Manifest" rightLabel="Crew Aboard" />
+      )}
+      {selectedView === 'playlist' && (
+        <StarshipBay wall="deck" accent="fuchsia" leftLabel="SC · Media Bay" rightLabel="Audio Nominal" />
+      )}
 
       <div className="relative z-10 pb-20">
         {/* Global top header nav + FURL ticker — both ported to DexNavBar

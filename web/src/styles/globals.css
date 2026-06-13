@@ -2449,6 +2449,15 @@ body.lucy-active iframe[title="FURL Terminal"] {
   100% { left: 104%; top: 30%; transform: rotate(10deg); }
 }
 
+/* StarshipBay observation-deck sensor sweep — an accent scanline drifting down
+   the hull (used by components/starship/StarshipBay.tsx, sweep prop). */
+@keyframes scBaySweep {
+  0%   { top: 8%;  opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { top: 94%; opacity: 0; }
+}
+
 /* ============================================================
    SOUNDCHAIN STARSHIP — capsule walls (Fable5 spec port:
    soundchain-profile-quarters_1.html + soundchain-nodes-flightdeck.html).
