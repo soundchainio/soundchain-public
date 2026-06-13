@@ -6,6 +6,7 @@ import { useEffect, useState, useCallback, ReactElement } from 'react'
 import { useMe } from 'hooks/useMe'
 import { useRouter } from 'next/router'
 import { DexNavBar } from 'components/DexNavBar'
+import StarshipBay from 'components/starship/StarshipBay'
 import { Bookmark, Grid, List, RefreshCw, Music, Image as ImageIcon, Film, MessageCircle, Heart, ExternalLink, Upload, HardDrive, Copy, Check } from 'lucide-react'
 
 export default function ArchivePage() {
@@ -62,6 +63,8 @@ export default function ArchivePage() {
 
   return (
     <div className="min-h-screen bg-[#030303] text-white">
+      {/* STARSHIP — Cargo Vault: the stowage deck (ambient capsule frame, edges only) */}
+      <StarshipBay wall="quarters" accent="lime" leftLabel="SC · Cargo Vault" rightLabel="Stowage Sealed" />
       <DexNavBar />
 
       {/* Lower nav pills — so users aren't stuck on Archive */}
