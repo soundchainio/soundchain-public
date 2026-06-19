@@ -937,6 +937,11 @@ export default function LoginPage() {
         throw new Error('EMAILKEY_REQUIRED');
       } else if (loginRes.status === 404) {
         throw new Error('No account found with this email');
+      } else if (loginRes.status >= 500) {
+        // Sovereign Mongo-direct route errored (e.g. DB unreachable / Atlas
+        // allowlist). Surface it honestly instead of limping to the dead
+        // Apollo/Lambda path, which only masks it as a generic "Login failed".
+        throw new Error('SERVICE_UNAVAILABLE');
       } else {
         // Vercel route failed — fallback to Lambda
         console.log('[Auth] Vercel failed, trying Lambda fallback...');
@@ -968,6 +973,8 @@ export default function LoginPage() {
         setError('This account is secured with Face ID. No Face ID on this device? Use the button below to login with email.');
       } else if (msg.includes('No account found')) {
         setError('No account found with this email. Create an account below, or try Google login.');
+      } else if (msg.includes('SERVICE_UNAVAILABLE')) {
+        setError('Login is temporarily unavailable (database connection). Please try again in a moment.');
       } else if (msg.includes('cancelled') || msg.includes('denied')) {
         setError(null);
       } else {
@@ -1052,21 +1059,16 @@ export default function LoginPage() {
     <>
       <SEO title="Login | SoundChain" description="Log in to SoundChain" canonicalUrl="/login/" />
       <div className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden force-dark">
-        {/* Background GIF */}
-        <div className="fixed inset-0 z-0">
-          <img
-            src="/images/login-background.gif"
-            alt="Login background"
-            className="min-h-full min-w-full object-cover"
-            style={{
-              objectFit: 'cover',
-              width: '100vw',
-              height: '100vh',
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)'
-            }}
+        {/* Background — SoundChain Starship DECK MAP (Fable5 station, served
+            verbatim from public/deck-map.html, same as /deck). Purely visual:
+            pointer-events-none so it never steals focus from the login form;
+            <Overlay/> below dims it for text readability. */}
+        <div className="fixed inset-0 z-0 pointer-events-none bg-black">
+          <iframe
+            src="/deck-map.html"
+            title="SoundChain Starship — Deck Map"
+            className="w-full h-full border-0"
+            style={{ width: '100vw', height: '100vh' }}
           />
         </div>
         <Overlay />
