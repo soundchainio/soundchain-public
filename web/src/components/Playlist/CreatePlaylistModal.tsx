@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback, useRef } from 'react'
-import { X, ImagePlus, Loader2, Plus, Search, Link2, Music2, Trash2 } from 'lucide-react'
+import { X, ImagePlus, Loader2, Plus, Search, Link2, Music2, Trash2, Wand2 } from 'lucide-react'
 import { SortExploreTracksField, SortOrder, PlaylistTrackSourceType } from 'lib/graphql'
 import { useExploreTracks as useExploreTracksQuery } from 'hooks/useExploreTracksSlimDirect'  // Phase 7e — Vercel-direct
 // Apollo mutations replaced by Vercel direct (Phase 5e)
@@ -315,6 +315,21 @@ export const CreatePlaylistModal = ({ isOpen, onClose, onSuccess }: CreatePlayli
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-5 max-h-[70vh] overflow-y-auto">
+          {/* Scraper shortcut — rebuild a WHOLE Spotify/YouTube playlist at once.
+              The single-link "Add external link" below adds one track; this routes
+              to /playlists where the scraper imports every song into a new playlist. */}
+          <a
+            href="/playlists"
+            className="flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-fuchsia-500/15 to-cyan-500/10 border border-fuchsia-400/40 hover:border-fuchsia-400/70 transition-colors group"
+          >
+            <Wand2 className="w-5 h-5 text-fuchsia-400 flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-fuchsia-200">Rebuild from Spotify / YouTube</p>
+              <p className="text-xs text-neutral-400">Paste a playlist link → import every song. The scraper builds it for you.</p>
+            </div>
+            <span className="text-fuchsia-300 group-hover:translate-x-0.5 transition-transform">→</span>
+          </a>
+
           {/* Hidden file input */}
           <input
             ref={fileInputRef}

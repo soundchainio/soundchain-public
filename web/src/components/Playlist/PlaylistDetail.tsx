@@ -211,6 +211,28 @@ const extractYouTubeVideoId = (url: string): string | null => {
   return match ? match[1] : null
 }
 
+// Load the YouTube IFrame Player API once (idempotent). Resolves with window.YT.
+// We use the real API (not a bare <iframe autoplay>) so we can (1) UNMUTE +
+// playVideo() — plain embeds autoplay MUTED under browser policy — and (2) get
+// reliable onStateChange(ENDED) events to auto-advance the queue.
+let ytApiPromise: Promise<any> | null = null
+const loadYouTubeIframeAPI = (): Promise<any> => {
+  if (typeof window === 'undefined') return Promise.reject(new Error('no window'))
+  const w = window as any
+  if (w.YT?.Player) return Promise.resolve(w.YT)
+  if (ytApiPromise) return ytApiPromise
+  ytApiPromise = new Promise((resolve) => {
+    const prev = w.onYouTubeIframeAPIReady
+    w.onYouTubeIframeAPIReady = () => { try { prev?.() } catch {} ; resolve(w.YT) }
+    if (!document.querySelector('script[src="https://www.youtube.com/iframe_api"]')) {
+      const tag = document.createElement('script')
+      tag.src = 'https://www.youtube.com/iframe_api'
+      document.head.appendChild(tag)
+    }
+  })
+  return ytApiPromise
+}
+
 export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, currentUserWallet }: PlaylistDetailProps) => {
   const apolloClient = useApolloClient()
   const router = useRouter()
@@ -271,6 +293,13 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
   const [showShareMenu, setShowShareMenu] = useState(false)
   const [showStoryModal, setShowStoryModal] = useState(false)
   const shareMenuRef = useRef<HTMLDivElement>(null)
+  // YouTube IFrame Player API — one persistent player reused across songs (so the
+  // browser keeps the "user initiated playback" grant → unmuted autoplay of the
+  // NEXT song works, even on iOS). playNextRef always points at the latest
+  // playNextInQueue so the ENDED handler advances from the current index.
+  const ytHostRef = useRef<HTMLDivElement>(null)
+  const ytPlayerRef = useRef<any>(null)
+  const playNextRef = useRef<() => void>(() => {})
 
   // Local tracks state for optimistic updates (Bug #4 fix)
   const [localTracks, setLocalTracks] = useState<PlaylistTrackType[]>(playlist.tracks?.nodes || [])
@@ -363,47 +392,11 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
     return () => window.removeEventListener('externalTrackPlay', handleExternalTrack as EventListener)
   }, [])
 
-  // BUG-001 FIX: Auto-advance when external embeds end
-  // YouTube: IFrame API postMessage events (enablejsapi=1 on embed URL enables this)
-  // Spotify: 30s preview timer (free embeds only play 30s snippets)
+  // Auto-advance when external embeds end.
+  // YouTube is handled by the IFrame Player API effect below (onStateChange ENDED).
+  // Spotify free embeds only play a ~30s preview then stop — advance on a timer.
   useEffect(() => {
     if (!activeEmbed) return
-
-    if (activeEmbed.sourceType === PlaylistTrackSourceType.Youtube) {
-      const handleYouTubeMessage = (event: MessageEvent) => {
-        if (typeof event.data !== 'string') return
-        try {
-          const data = JSON.parse(event.data)
-          // YouTube state 0 = video ended
-          if (data.event === 'onStateChange' && data.info === 0) {
-            console.log('[PlaylistDetail] YouTube video ended, auto-advancing')
-            playNextInQueue()
-          }
-        } catch {
-          // Not a YouTube message
-        }
-      }
-
-      window.addEventListener('message', handleYouTubeMessage)
-
-      // Send "listening" command to YouTube iframe to subscribe to state changes
-      const sendListening = () => {
-        const iframe = document.querySelector('iframe[src*="youtube.com"]') as HTMLIFrameElement
-        if (iframe?.contentWindow) {
-          iframe.contentWindow.postMessage(JSON.stringify({ event: 'listening', id: 'sc-playlist' }), '*')
-        }
-      }
-      const t1 = setTimeout(sendListening, 500)
-      const t2 = setTimeout(sendListening, 2000)
-
-      return () => {
-        window.removeEventListener('message', handleYouTubeMessage)
-        clearTimeout(t1)
-        clearTimeout(t2)
-      }
-    }
-
-    // Spotify free embeds play ~30s previews then stop
     if (activeEmbed.sourceType === PlaylistTrackSourceType.Spotify) {
       const timer = setTimeout(() => {
         console.log('[PlaylistDetail] Spotify preview ended, auto-advancing')
@@ -412,6 +405,53 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
       return () => clearTimeout(timer)
     }
   }, [activeEmbed?.url, currentQueueIndex, tracks.length]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Keep playNextRef pointed at the freshest closure (latest currentQueueIndex).
+  // In an effect (not bare in render) so it runs after playNextInQueue is defined.
+  useEffect(() => { playNextRef.current = playNextInQueue })
+
+  // YouTube IFrame Player API: create one player, reuse it across songs.
+  // onReady → unMute + playVideo (sound on); onStateChange ENDED(0) → next song.
+  const isYouTubeEmbed = activeEmbed?.sourceType === PlaylistTrackSourceType.Youtube
+  const ytVideoId = isYouTubeEmbed && activeEmbed ? extractYouTubeVideoId(activeEmbed.url) : null
+  useEffect(() => {
+    // Not showing a YouTube video → tear the player down so other embeds render.
+    if (!isYouTubeEmbed || !ytVideoId) {
+      if (ytPlayerRef.current) { try { ytPlayerRef.current.destroy() } catch {} ; ytPlayerRef.current = null }
+      return
+    }
+    let cancelled = false
+    loadYouTubeIframeAPI().then((YT) => {
+      if (cancelled) return
+      if (ytPlayerRef.current) {
+        // Player already exists → just load the next video (keeps the playback
+        // grant alive → unmuted autoplay continues without a fresh user tap).
+        try { ytPlayerRef.current.loadVideoById(ytVideoId) } catch {}
+        return
+      }
+      if (!ytHostRef.current) return
+      ytPlayerRef.current = new YT.Player(ytHostRef.current, {
+        width: '100%',
+        height: '100%',
+        videoId: ytVideoId,
+        playerVars: { autoplay: 1, playsinline: 1, rel: 0, modestbranding: 1, origin: typeof window !== 'undefined' ? window.location.origin : undefined },
+        events: {
+          onReady: (e: any) => { try { e.target.unMute(); e.target.setVolume(100); e.target.playVideo() } catch {} },
+          onStateChange: (e: any) => { if (e?.data === 0) playNextRef.current() }, // 0 = YT.PlayerState.ENDED
+        },
+      })
+    }).catch(() => {})
+    return () => { cancelled = true }
+  }, [isYouTubeEmbed, ytVideoId])
+
+  // Preload the IFrame API on open (so the player is ready inside the first
+  // Play tap → unmuted autoplay sticks on iOS); destroy the player on unmount.
+  useEffect(() => {
+    loadYouTubeIframeAPI().catch(() => {})
+    return () => {
+      if (ytPlayerRef.current) { try { ytPlayerRef.current.destroy() } catch {} ; ytPlayerRef.current = null }
+    }
+  }, [])
 
   // Query for tracks to add
   const { data: searchTracksData, loading: searchLoading } = useExploreTracksQuery({
@@ -1544,13 +1584,22 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
                       : 'min(56.25%, 50vh)',
                   }}
                 >
-                  <iframe
-                    src={activeEmbed.url}
-                    className="absolute inset-0 w-full h-full"
-                    allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
-                    allowFullScreen
-                    frameBorder="0"
-                  />
+                  {activeEmbed.sourceType === PlaylistTrackSourceType.Youtube ? (
+                    // YouTube IFrame Player API mounts its iframe into this host
+                    // (gives us unMute + autoplay + ENDED → next-song). Outer div
+                    // holds the real pixel box; the API sizes its iframe to 100%.
+                    <div className="absolute inset-0 w-full h-full">
+                      <div ref={ytHostRef} className="w-full h-full" />
+                    </div>
+                  ) : (
+                    <iframe
+                      src={activeEmbed.url}
+                      className="absolute inset-0 w-full h-full"
+                      allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+                      allowFullScreen
+                      frameBorder="0"
+                    />
+                  )}
                 </div>
               </div>
             )}

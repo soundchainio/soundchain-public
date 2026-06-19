@@ -103,7 +103,7 @@ import {
   Database, X, ChevronDown, ChevronUp, ExternalLink, LogOut as Logout, BadgeCheck, ListMusic, Compass, RefreshCw,
   AlertCircle, RefreshCcw, PiggyBank, Settings, Headphones, Check, User, AtSign,
   Radio, MapPin, Download, Smartphone, Rss, Gift, Sparkles, PenLine, ArrowLeft, FileText, Tag, MessageSquare, Eye,
-  Star, GripVertical, ShieldCheck, Youtube, Disc3, Send, Bot, Phone
+  Star, GripVertical, ShieldCheck, Youtube, Disc3, Send, Bot, Phone, Wand2
 } from 'lucide-react'
 import { ConcertChat } from 'components/dex/ConcertChat'
 import { StoriesBar } from 'components/dex/StoriesBar'
@@ -2369,45 +2369,44 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   // Lazy query for fetching a specific playlist by ID (for share links)
   const [fetchPlaylistById, { data: sharedPlaylistData }] = usePlaylistLazyQuery()
 
-  // Auto-open PlaylistDetail when navigating to /dex/playlist/{id}
-  // Handles share links: first check own playlists, then fetch by ID
+  // Open PlaylistDetail for /dex/playlist/{id}. Vercel-direct read returns the
+  // playlist + its tracks (incl. embed/YouTube rows) so it actually PLAYS —
+  // replaces the dead Apollo usePlaylistLazyQuery path (graphql-stub). While a
+  // scraper rebuild is still importing, re-fetch every few seconds so the queue
+  // fills live.
   useEffect(() => {
-    if (routeType !== 'playlist' || !routeId || selectedPlaylist) return
-
-    // Check if playlist exists in own playlists data
-    const ownPlaylist = playlistsData?.getUserPlaylists?.nodes?.find((p) => p.id === routeId)
-    if (ownPlaylist) {
-      setSelectedPlaylist(ownPlaylist)
-      return
+    if (routeType !== 'playlist' || !routeId) return
+    let on = true
+    let timer: any
+    const load = () => {
+      fetch(`/api/playlists/list?playlistId=${encodeURIComponent(routeId)}`, { credentials: 'include' })
+        .then(r => (r.ok ? r.json() : null))
+        .then(j => {
+          if (!on || !j?.playlist) return
+          const p = j.playlist
+          setSelectedPlaylist({
+            __typename: 'Playlist',
+            id: p.id,
+            title: p.title,
+            description: p.description,
+            artworkUrl: p.artworkUrl || null,
+            profileId: p.profileId,
+            favoriteCount: p.favoriteCount || 0,
+            followCount: p.followCount || 0,
+            isFavorite: false,
+            isFollowed: false,
+            createdAt: p.createdAt,
+            updatedAt: p.updatedAt || p.createdAt,
+            importStatus: p.importStatus || null,
+            tracks: { __typename: 'PlaylistTrackConnection', nodes: p.tracks?.nodes || [], pageInfo: { hasNextPage: false, hasPreviousPage: false, startCursor: null, endCursor: null } },
+          } as any)
+          if (p.importStatus?.status === 'building') timer = setTimeout(load, 4000)
+        })
+        .catch(() => {})
     }
-
-    // Not found in own playlists (shared link from another user) — fetch basic info
-    if (!playlistsLoading) {
-      fetchPlaylistById({ variables: { id: routeId } })
-    }
-  }, [routeType, routeId, playlistsData, playlistsLoading, selectedPlaylist])
-
-  // When shared playlist data arrives, construct a playlist object for PlaylistDetail
-  useEffect(() => {
-    if (sharedPlaylistData?.playlist && routeType === 'playlist' && routeId && !selectedPlaylist) {
-      const p = sharedPlaylistData.playlist
-      setSelectedPlaylist({
-        __typename: 'Playlist',
-        id: p.id,
-        title: p.title,
-        description: p.description,
-        artworkUrl: p.artworkUrl,
-        profileId: p.profileId,
-        favoriteCount: p.favoriteCount,
-        followCount: p.followCount,
-        isFavorite: false,
-        isFollowed: false,
-        createdAt: p.createdAt,
-        updatedAt: p.createdAt,
-        tracks: null,
-      } as any)
-    }
-  }, [sharedPlaylistData, routeType, routeId, selectedPlaylist])
+    load()
+    return () => { on = false; if (timer) clearTimeout(timer) }
+  }, [routeType, routeId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Handle follow toggle
   const handleFollowToggle = async (profileId: string, isFollowed: boolean, handle: string) => {
@@ -3269,7 +3268,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
           Ambient capsule frame (CapsuleWall + console hull), painted into the
           viewport dead-space at the edges; content + plumbing untouched. */}
       {selectedView === 'library' && (
-        <StarshipBay wall="quarters" accent="amber" leftLabel="SC · Library" rightLabel="Index Nominal" />
+        <StarshipBay wall="deck" accent="amber" leftLabel="SC · Library Bay" rightLabel="Catalog Nominal" />
       )}
       {selectedView === 'explore' && (
         <StarshipBay wall="deck" accent="emerald" leftLabel="SC · Obs Deck" rightLabel="Sensors Nominal" sweep />
@@ -4739,25 +4738,34 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
           {/* Library View - Real Liked Tracks */}
           {selectedView === 'library' && (
-            <div className="space-y-6">
+            <div className="space-y-6 sc-library-bay">
+              {/* Flight-deck bay header — matches the Deck Map + /nodes console look */}
+              <div className="sc-mfd flex items-center justify-between px-4 py-2.5">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Music className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                  <span className="font-mono tracking-[0.3em] text-amber-300/90 text-[11px] sm:text-xs uppercase truncate">SoundChain · Library Bay</span>
+                </div>
+                <span className="sc-readout text-[10px] text-[#39ff7a] hidden sm:block">CATALOG ONLINE</span>
+              </div>
+
               {/* Library Stats */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Card className="metadata-section p-4 text-center cursor-pointer hover:bg-white/5 transition-colors">
+                <Card className="sc-mfd p-4 text-center cursor-pointer hover:bg-white/5 transition-colors">
                   <Heart className="w-8 h-8 text-red-400 mx-auto mb-2" />
                   <p className="text-2xl font-bold text-white">{favoriteTracksData?.favoriteTracks?.nodes?.length || 0}</p>
                   <p className="text-xs text-gray-400">Liked Tracks</p>
                 </Card>
-                <Card className="metadata-section p-4 text-center cursor-pointer hover:bg-white/5 transition-colors" onClick={() => setSelectedView('wallet')}>
+                <Card className="sc-mfd p-4 text-center cursor-pointer hover:bg-white/5 transition-colors" onClick={() => setSelectedView('wallet')}>
                   <ImageIcon className="w-8 h-8 text-purple-400 mx-auto mb-2" />
                   <p className="text-2xl font-bold text-white">{ownedTracksData?.groupedTracks?.nodes?.length || 0}</p>
                   <p className="text-xs text-gray-400">My Collection</p>
                 </Card>
-                <Card className="metadata-section p-4 text-center cursor-pointer hover:bg-white/5 transition-colors" onClick={() => setSelectedView('playlist')}>
+                <Card className="sc-mfd p-4 text-center cursor-pointer hover:bg-white/5 transition-colors" onClick={() => setSelectedView('playlist')}>
                   <ListMusic className="w-8 h-8 text-green-400 mx-auto mb-2" />
                   <p className="text-2xl font-bold text-white">{playlistsData?.getUserPlaylists?.nodes?.length || 0}</p>
                   <p className="text-xs text-gray-400">Playlists</p>
                 </Card>
-                <Card className="metadata-section p-4 text-center">
+                <Card className="sc-mfd p-4 text-center">
                   <Play className="w-8 h-8 text-cyan-400 mx-auto mb-2" />
                   <p className="text-2xl font-bold text-white">--</p>
                   <p className="text-xs text-gray-400">Play History</p>
@@ -4882,14 +4890,24 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     <Badge className="bg-green-500/20 text-green-400 text-xs">{playlistsData?.getUserPlaylists?.nodes?.length || 0}</Badge>
                     {playlistsLoading && <Badge className="bg-yellow-500/20 text-yellow-400 text-xs">Loading...</Badge>}
                   </div>
-                  <Button
-                    onClick={() => setShowCreatePlaylistModal(true)}
-                    className="retro-button bg-gradient-to-r from-green-500 to-cyan-500 hover:opacity-90 text-sm"
-                    size="sm"
-                  >
-                    <Plus className="w-4 h-4 mr-1" />
-                    New
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      onClick={() => router.push('/playlists')}
+                      className="text-sm bg-gradient-to-r from-fuchsia-500/20 to-cyan-500/15 border border-fuchsia-400/50 text-fuchsia-200 hover:opacity-90"
+                      size="sm"
+                    >
+                      <Wand2 className="w-4 h-4 mr-1" />
+                      Scraper
+                    </Button>
+                    <Button
+                      onClick={() => setShowCreatePlaylistModal(true)}
+                      className="retro-button bg-gradient-to-r from-green-500 to-cyan-500 hover:opacity-90 text-sm"
+                      size="sm"
+                    >
+                      <Plus className="w-4 h-4 mr-1" />
+                      New
+                    </Button>
+                  </div>
                 </div>
                 {playlistsLoading ? (
                   <div className="flex items-center justify-center py-12">
@@ -4976,14 +4994,24 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                       <p className="text-gray-500 text-xs font-mono">{allPlaylists.length} collections</p>
                     </div>
                   </div>
-                  <Button
-                    onClick={() => setShowCreatePlaylistModal(true)}
-                    className="retro-button bg-gradient-to-r from-pink-500 to-purple-500 hover:opacity-90"
-                    size="sm"
-                  >
-                    <Plus className="w-4 h-4 mr-1" />
-                    New
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      onClick={() => router.push('/playlists')}
+                      className="bg-gradient-to-r from-fuchsia-500/20 to-cyan-500/15 border border-fuchsia-400/50 text-fuchsia-200 hover:opacity-90"
+                      size="sm"
+                    >
+                      <Wand2 className="w-4 h-4 mr-1" />
+                      Scraper
+                    </Button>
+                    <Button
+                      onClick={() => setShowCreatePlaylistModal(true)}
+                      className="retro-button bg-gradient-to-r from-pink-500 to-purple-500 hover:opacity-90"
+                      size="sm"
+                    >
+                      <Plus className="w-4 h-4 mr-1" />
+                      New
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Search + Sort + View Toggle */}
