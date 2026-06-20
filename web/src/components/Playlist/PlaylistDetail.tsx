@@ -854,7 +854,9 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
     }
   }
 
-  const playlistShareUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/dex/playlist/${playlist.id}`
+  // Share via the OG route (/playlist/<id>) so links render a cover-art card in
+  // iMessage/X/etc.; it redirects humans to /dex/playlist/<id> (the live player).
+  const playlistShareUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/playlist/${playlist.id}`
 
   const handleShareCopyLink = async () => {
     try {
