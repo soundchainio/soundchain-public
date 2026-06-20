@@ -80,8 +80,9 @@ module.exports = withPWA({
       { source: '/settings/:path*', destination: '/dex/settings/:path*' },
       // Wallet — rewrite to mega-router (has full NFT collection, staking, sweep, transfers)
       { source: '/wallet', destination: '/dex/wallet' },
-      // Playlist
-      { source: '/playlist/:id', destination: '/dex/playlist/:id' },
+      // Playlist — NO rewrite: pages/playlist/[id].tsx serves rich OG share cards
+      // to link bots and redirects humans to /dex/playlist/:id (the live player).
+      // (A rewrite here would shadow that page with the dead-Apollo dex router.)
       // Post detail
       { source: '/post/:id', destination: '/dex/post/:id' },
       // Messages
