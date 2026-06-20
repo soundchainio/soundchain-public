@@ -98,7 +98,7 @@ export default function PlaylistsExplorePage() {
 
   const runScrape = async () => {
     const url = parseUrls(scrapeUrl)[0] // preview the first link only
-    if (!url) return
+    if (!url) { setScrapeError('Paste a Spotify or YouTube playlist link first.'); return }
     if (!isSupportedUrl(url)) { setScrapeError('Paste a Spotify or YouTube playlist link (one per line).'); return }
     setScraping(true); setScrapeError(''); setScraped(null)
     try {
@@ -119,7 +119,7 @@ export default function PlaylistsExplorePage() {
 
   // Rebuild: scrape → create SC playlist → background-match each song to YouTube.
   const runRebuild = async () => {
-    if (!urls.length) return
+    if (!urls.length) { setBuildError('Paste a Spotify or YouTube playlist link first.'); return }
     if (!hasSupported) { setBuildError('Paste a Spotify or YouTube playlist link (one per line).'); return }
     setBuilding(true); setBuildError(''); setNeedsLogin(false); setBuild(null); setScraped(null)
     try {
@@ -163,7 +163,7 @@ export default function PlaylistsExplorePage() {
       <DexNavBar />
       <MainPillNav active="playlist" />
 
-      <div className="mx-auto max-w-[1380px] px-3 sm:px-4 pt-2 pb-24 space-y-3">
+      <div className="relative z-30 mx-auto max-w-[1380px] px-3 sm:px-4 pt-2 pb-24 space-y-3">
         {/* Flight-deck bay header */}
         <div className="sc-mfd flex items-center justify-between px-4 py-2.5">
           <div className="flex items-center gap-2 min-w-0">
@@ -252,16 +252,18 @@ export default function PlaylistsExplorePage() {
               reachable above the on-screen keyboard); Preview is optional. */}
           <div className="flex flex-col sm:flex-row gap-2">
             <button
+              type="button"
               onClick={runRebuild}
-              disabled={building || !scrapeUrl.trim()}
+              disabled={building}
               className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-[13px] font-mono uppercase tracking-[0.1em] bg-fuchsia-500/20 text-fuchsia-100 border border-fuchsia-400/60 hover:bg-fuchsia-500/30 active:bg-fuchsia-500/40 disabled:opacity-40 disabled:cursor-not-allowed transition-all whitespace-nowrap shadow-[0_0_16px_rgba(232,121,249,0.18)]"
             >
               {building ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
               {building ? 'Building…' : 'Rebuild on SoundChain'}
             </button>
             <button
+              type="button"
               onClick={runScrape}
-              disabled={scraping || building || !scrapeUrl.trim()}
+              disabled={scraping || building}
               className="inline-flex items-center justify-center gap-1.5 px-4 py-3 sm:py-2 rounded-lg text-[12px] font-mono uppercase tracking-[0.1em] text-fuchsia-300/80 border border-fuchsia-500/25 hover:bg-fuchsia-500/10 disabled:opacity-40 disabled:cursor-not-allowed transition-all whitespace-nowrap"
             >
               {scraping ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
