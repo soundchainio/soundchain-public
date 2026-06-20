@@ -16,7 +16,7 @@
  * Spotify reading land in the next ship (needs embed-track support + the
  * Spotify app key).
  */
-import { ReactElement, useEffect, useState } from 'react'
+import { ReactElement, useEffect, useRef, useState } from 'react'
 import Head from 'next/head'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/router'
@@ -72,10 +72,15 @@ export default function PlaylistsExplorePage() {
   const [needsLogin, setNeedsLogin] = useState(false)
   const [build, setBuild] = useState<{ playlistId: string; title: string; total: number; done: number; matched: number; status: string; sources: number } | null>(null)
 
+  const taRef = useRef<HTMLTextAreaElement>(null)
   const parseUrls = (s: string) => Array.from(new Set(s.split(/[\n,]/).map(x => x.trim()).filter(Boolean)))
   // A link is "supported" only if it's a Spotify or YouTube playlist URL. Used to
   // give immediate inline feedback instead of letting a bad paste silently fail.
   const isSupportedUrl = (u: string) => /(?:open\.)?spotify\.com\/.*playlist|youtube\.com|youtu\.be/i.test(u)
+  // Read the LIVE textarea value (DOM) — some mobile paste/autofill paths don't
+  // fire React onChange, leaving `scrapeUrl` state empty while the box shows text.
+  // Reading the ref makes Rebuild/Preview work off exactly what the user sees.
+  const liveUrls = () => parseUrls((taRef.current?.value ?? scrapeUrl) || '')
   const urls = parseUrls(scrapeUrl)
   const hasSupported = urls.some(isSupportedUrl)
 
@@ -97,7 +102,10 @@ export default function PlaylistsExplorePage() {
   }, [sort, genre])
 
   const runScrape = async () => {
-    const url = parseUrls(scrapeUrl)[0] // preview the first link only
+    const all = liveUrls()
+    const live = taRef.current?.value
+    if (live != null && live !== scrapeUrl) setScrapeUrl(live) // sync state to what's shown
+    const url = all[0] // preview the first link only
     if (!url) { setScrapeError('Paste a Spotify or YouTube playlist link first.'); return }
     if (!isSupportedUrl(url)) { setScrapeError('Paste a Spotify or YouTube playlist link (one per line).'); return }
     setScraping(true); setScrapeError(''); setScraped(null)
@@ -119,13 +127,16 @@ export default function PlaylistsExplorePage() {
 
   // Rebuild: scrape → create SC playlist → background-match each song to YouTube.
   const runRebuild = async () => {
-    if (!urls.length) { setBuildError('Paste a Spotify or YouTube playlist link first.'); return }
-    if (!hasSupported) { setBuildError('Paste a Spotify or YouTube playlist link (one per line).'); return }
+    const all = liveUrls()
+    const live = taRef.current?.value
+    if (live != null && live !== scrapeUrl) setScrapeUrl(live) // sync state to what's shown
+    if (!all.length) { setBuildError('Paste a Spotify or YouTube playlist link first.'); return }
+    if (!all.some(isSupportedUrl)) { setBuildError('Paste a Spotify or YouTube playlist link (one per line).'); return }
     setBuilding(true); setBuildError(''); setNeedsLogin(false); setBuild(null); setScraped(null)
     try {
       const r = await fetch('/api/playlists/import-build', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-        body: JSON.stringify({ urls, title: playlistName.trim() || undefined }),
+        body: JSON.stringify({ urls: all, title: playlistName.trim() || undefined }),
       })
       const d = await r.json().catch(() => ({}))
       if (r.status === 401) { setNeedsLogin(true); setBuildError('Sign in to rebuild a playlist onto your profile.'); setBuilding(false); return }
@@ -228,6 +239,7 @@ export default function PlaylistsExplorePage() {
             Paste one or more <span className="text-gray-300">Spotify</span> or <span className="text-gray-300">YouTube</span> playlist links (one per line) — the scraper reads every song and rebuilds them into <span className="text-fuchsia-300">one</span> SoundChain playlist, matched to YouTube. Drop two links to combine two playlists into a single queue.
           </p>
           <textarea
+            ref={taRef}
             value={scrapeUrl}
             onChange={e => { setScrapeUrl(e.target.value); if (scrapeError) setScrapeError(''); if (buildError) { setBuildError(''); setNeedsLogin(false) } }}
             placeholder={'Paste playlist links — one per line\nhttps://open.spotify.com/playlist/…\nhttps://www.youtube.com/playlist?list=…'}

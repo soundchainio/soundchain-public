@@ -43,9 +43,12 @@ export function QuartersRail({ profileId, isOwn, onInvite, customItems, onSaveCu
   const fileRef = useRef<HTMLInputElement>(null)
   const { upload } = useUpload()
 
-  // Owner-curated rail wins; derived feed media is the fallback
+  // Owner-curated rail wins; derived feed media is the fallback ONLY when the
+  // owner has never curated (customItems == null). An intentionally EMPTY
+  // curated rail ([]) must stay empty — otherwise deleting the derived cards
+  // just re-derives them ("delete doesn't save" / phantom album covers).
   useEffect(() => {
-    if (customItems && customItems.length > 0) setItems(customItems.filter(i => i?.src))
+    if (Array.isArray(customItems)) setItems(customItems.filter(i => i?.src))
   }, [customItems])
 
   const persist = async (next: RailItem[]) => {
@@ -79,7 +82,7 @@ export function QuartersRail({ profileId, isOwn, onInvite, customItems, onSaveCu
 
   useEffect(() => {
     if (!profileId) return
-    if (customItems && customItems.length > 0) return // curated rail set — skip derive
+    if (Array.isArray(customItems)) return // owner-curated (incl. empty) — never derive
     let dead = false
     ;(async () => {
       try {

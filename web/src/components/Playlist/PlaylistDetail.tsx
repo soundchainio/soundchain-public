@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { Play, Pause, Heart, Share2, Clock, X, Trash2, ExternalLink, Music, Loader2, Plus, Search, SkipBack, SkipForward, Link2, Import, Check, CheckSquare, Square, Camera, MessageSquare, Film, Copy } from 'lucide-react'
+import { Play, Pause, Heart, Share2, Clock, X, Trash2, ExternalLink, Music, Loader2, Plus, Search, SkipBack, SkipForward, Link2, Import, Check, CheckSquare, Square, Camera, MessageSquare, Film, Copy, Shuffle, Repeat } from 'lucide-react'
 import { useAudioPlayerContext, Song } from 'hooks/useAudioPlayer'
 import { GetUserPlaylistsQuery, PlaylistTrackSourceType, TrackDocument, SortExploreTracksField, SortOrder } from 'lib/graphql'
 import { useExploreTracks as useExploreTracksQuery } from 'hooks/useExploreTracksSlimDirect'  // Phase 7e — Vercel-direct
@@ -283,6 +283,8 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
   const [activeEmbed, setActiveEmbed] = useState<{ url: string; title: string; sourceType: PlaylistTrackSourceType } | null>(null)
   const [currentQueueIndex, setCurrentQueueIndex] = useState<number>(-1)
   const [isPlayingAll, setIsPlayingAll] = useState(false)
+  const [shuffle, setShuffle] = useState(false)
+  const [loopTrack, setLoopTrack] = useState(false)
   const [importUrl, setImportUrl] = useState('')
   const [importLoading, setImportLoading] = useState(false)
   const [importError, setImportError] = useState('')
@@ -300,6 +302,7 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
   const ytHostRef = useRef<HTMLDivElement>(null)
   const ytPlayerRef = useRef<any>(null)
   const playNextRef = useRef<() => void>(() => {})
+  const loopTrackRef = useRef(false)
 
   // Local tracks state for optimistic updates (Bug #4 fix)
   const [localTracks, setLocalTracks] = useState<PlaylistTrackType[]>(playlist.tracks?.nodes || [])
@@ -408,7 +411,7 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
 
   // Keep playNextRef pointed at the freshest closure (latest currentQueueIndex).
   // In an effect (not bare in render) so it runs after playNextInQueue is defined.
-  useEffect(() => { playNextRef.current = playNextInQueue })
+  useEffect(() => { playNextRef.current = playNextInQueue; loopTrackRef.current = loopTrack })
 
   // YouTube IFrame Player API: create one player, reuse it across songs.
   // onReady → unMute + playVideo (sound on); onStateChange ENDED(0) → next song.
@@ -437,7 +440,15 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
         playerVars: { autoplay: 1, playsinline: 1, rel: 0, modestbranding: 1, origin: typeof window !== 'undefined' ? window.location.origin : undefined },
         events: {
           onReady: (e: any) => { try { e.target.unMute(); e.target.setVolume(100); e.target.playVideo() } catch {} },
-          onStateChange: (e: any) => { if (e?.data === 0) playNextRef.current() }, // 0 = YT.PlayerState.ENDED
+          onStateChange: (e: any) => {
+            if (e?.data !== 0) return // 0 = YT.PlayerState.ENDED
+            // Loop the current track if enabled; otherwise advance the queue.
+            if (loopTrackRef.current && ytPlayerRef.current) {
+              try { ytPlayerRef.current.seekTo(0); ytPlayerRef.current.playVideo() } catch {}
+            } else {
+              playNextRef.current()
+            }
+          },
         },
       })
     }).catch(() => {})
@@ -727,8 +738,15 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
     }
   }
 
-  // Play next track in queue
+  // Play next track in queue (shuffle → random track, never the same twice in a row)
   const playNextInQueue = () => {
+    if (tracks.length === 0) return
+    if (shuffle && tracks.length > 1) {
+      let n = currentQueueIndex
+      while (n === currentQueueIndex) n = Math.floor(Math.random() * tracks.length)
+      playTrackAtIndex(n)
+      return
+    }
     if (currentQueueIndex < tracks.length - 1) {
       playTrackAtIndex(currentQueueIndex + 1)
     }
@@ -1543,6 +1561,22 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
                   </div>
                   <div className="flex items-center gap-0.5">
                     <button
+                      onClick={() => setShuffle(s => !s)}
+                      className={`p-2 rounded-full transition-all ${shuffle ? 'text-cyan-300 bg-cyan-500/20 shadow-[0_0_10px_rgba(6,182,212,0.3)]' : 'text-gray-500 hover:bg-cyan-500/10 hover:text-cyan-400'}`}
+                      aria-label="Shuffle"
+                      title={shuffle ? 'Shuffle: on' : 'Shuffle: off'}
+                    >
+                      <Shuffle className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => setLoopTrack(l => !l)}
+                      className={`p-2 rounded-full transition-all ${loopTrack ? 'text-cyan-300 bg-cyan-500/20 shadow-[0_0_10px_rgba(6,182,212,0.3)]' : 'text-gray-500 hover:bg-cyan-500/10 hover:text-cyan-400'}`}
+                      aria-label="Repeat current track"
+                      title={loopTrack ? 'Repeat one: on' : 'Repeat one: off'}
+                    >
+                      <Repeat className="w-4 h-4" />
+                    </button>
+                    <button
                       onClick={playPreviousInQueue}
                       disabled={currentQueueIndex <= 0}
                       className="p-2 hover:bg-cyan-500/10 rounded-full transition-all disabled:opacity-20"
@@ -1552,7 +1586,7 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
                     </button>
                     <button
                       onClick={playNextInQueue}
-                      disabled={currentQueueIndex >= tracks.length - 1}
+                      disabled={!shuffle && currentQueueIndex >= tracks.length - 1}
                       className="p-2 hover:bg-cyan-500/10 rounded-full transition-all disabled:opacity-20"
                       aria-label="Next track"
                     >
