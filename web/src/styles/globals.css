@@ -2553,6 +2553,29 @@ body.lucy-active iframe[title="FURL Terminal"] {
 .sc-mfd::after{content:'';position:absolute;inset:0;border-radius:10px;pointer-events:none;
   background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(255,255,255,.012) 3px 4px)}
 .sc-readout{font-family:ui-monospace,monospace;text-shadow:0 0 8px currentColor;letter-spacing:.06em}
+/* Candy rail 3D (Jun 20, 2026) — "4D" depth on the Playlists/Profile shelves,
+   BATTERY-SAFE: GPU-composited transforms only (no rAF, no WebGL), and the tilt
+   is gated to fine-pointer hover. Coarse-pointer (phones/tablets) + reduced-
+   motion render flat + static so older iPhones never heat up. */
+.sc-rail-3d{perspective:1100px}
+.sc-candy-card{transform:translateZ(0);transition:transform .35s cubic-bezier(.2,.7,.3,1);will-change:transform}
+@media(hover:hover) and (pointer:fine){
+  .sc-candy-card:hover{transform:translateY(-6px) rotateX(7deg) scale(1.04);z-index:2}
+  .sc-candy-card:hover > div:first-child{box-shadow:0 18px 40px rgba(232,121,249,.22),0 8px 20px rgba(0,0,0,.6)}
+}
+@media(prefers-reduced-motion:reduce){.sc-candy-card{transition:none}.sc-candy-card:hover{transform:none}}
+/* Library Bay (Jun 18, 2026) — recast the legacy retro cards/titles in the
+   /library view as flight-deck console panels so it matches the Deck Map +
+   /nodes aesthetic. Scoped to .sc-library-bay → zero bleed into the 18-20
+   other retro-card/retro-title uses (settings, admin, staking, …). */
+.sc-library-bay .retro-card{
+  background:linear-gradient(180deg,#10151c,#0a0e13);
+  border:1px solid #000;border-radius:10px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 0 0 1px rgba(255,255,255,.04)}
+.sc-library-bay .retro-title{
+  font-family:ui-monospace,monospace;text-transform:uppercase;
+  letter-spacing:.16em;color:#f0c674;font-weight:700;
+  text-shadow:0 0 9px rgba(240,198,116,.35)}
 .sc-breaker{width:10px;height:22px;border-radius:3px;background:#0c1016;border:1px solid #000;position:relative;flex-shrink:0}
 .sc-breaker::after{content:'';position:absolute;left:2px;right:2px;height:8px;border-radius:2px;
   background:linear-gradient(180deg,#5d6878,#2a323d);top:var(--p,2px)}

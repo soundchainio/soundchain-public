@@ -58,7 +58,7 @@ export const PlaylistCard = ({ playlist, onSelect, compact = false }: PlaylistCa
 
   return (
     <div
-      className="group relative bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:scale-[1.02]"
+      className="sc-candy-card group relative bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 rounded-2xl overflow-hidden cursor-pointer"
       style={{
         boxShadow: isHovered ? '0 20px 60px -15px rgba(236, 72, 153, 0.3)' : '0 4px 20px rgba(0,0,0,0.3)'
       }}

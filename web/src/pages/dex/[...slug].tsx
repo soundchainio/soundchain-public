@@ -4915,27 +4915,29 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     <span className="ml-3 text-gray-400">Loading playlists...</span>
                   </div>
                 ) : (playlistsData?.getUserPlaylists?.nodes?.length ?? 0) > 0 ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                    {playlistsData?.getUserPlaylists?.nodes?.slice(0, 8).map((playlist: any) => (
+                  // Horizontal candy rail — swipe sideways, matches /playlists + the deck framework
+                  <div className="flex gap-3 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-1 sc-rail-3d">
+                    {playlistsData?.getUserPlaylists?.nodes?.slice(0, 12).map((playlist: any) => (
                       <div
                         key={playlist.id}
-                        className="group relative bg-neutral-800/50 rounded-lg p-3 cursor-pointer hover:bg-neutral-700/50 transition-all"
+                        className="sc-candy-card group relative flex-shrink-0 snap-start w-32 sm:w-36 cursor-pointer"
                         onClick={() => {
                           setSelectedPlaylist(playlist)
                           setShowPlaylistDetail(true)
                         }}
                       >
-                        <div className="aspect-square rounded-md overflow-hidden mb-2 bg-gradient-to-br from-green-500/20 to-cyan-500/20">
+                        <div className="relative aspect-square rounded-xl overflow-hidden mb-1.5 bg-gradient-to-br from-green-500/20 to-cyan-500/20 border border-white/10 shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
                           {playlist.artworkUrl ? (
-                            <img src={playlist.artworkUrl} alt={playlist.title} className="w-full h-full object-cover" />
+                            <img src={playlist.artworkUrl} alt={playlist.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center">
-                              <ListMusic className="w-8 h-8 text-green-400/50" />
+                              <ListMusic className="w-9 h-9 text-green-400/50" />
                             </div>
                           )}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                          <div className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 rounded bg-black/60 backdrop-blur-sm text-[8px] font-mono text-white/70 uppercase tracking-wider">{playlist.tracks?.nodes?.length || 0} trk</div>
                         </div>
-                        <p className="text-white text-sm font-medium truncate">{playlist.title}</p>
-                        <p className="text-gray-500 text-xs">{playlist.tracks?.nodes?.length || 0} tracks</p>
+                        <p className="text-white text-[12px] font-semibold truncate">{playlist.title}</p>
                       </div>
                     ))}
                   </div>
@@ -5092,8 +5094,8 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                           />
                         ))}
                       </div>
-                      {/* Desktop: grid */}
-                      <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                      {/* Desktop: candy grid (deck framework + 3D depth) */}
+                      <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sc-rail-3d">
                         {sortedPlaylists.map((playlist: any) => (
                           <PlaylistCard
                             key={playlist.id}
@@ -9712,6 +9714,15 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     const slug = context.params?.slug as string[] | undefined
     const routeType = slug?.[0]
     const routeId = slug?.[1]
+
+    // Share bubbles: a link bot hitting /dex/playlist/<id> (e.g. an address-bar
+    // copy) gets redirected to the dedicated SSR OG route /playlist/<id>, which
+    // builds the cover-art + player card from Mongo directly. The dex playlist
+    // OG path below goes through (now-dead) Apollo → no card; bots follow 3xx, so
+    // this is what makes shared playlist links render rich. Humans fall through.
+    if (isBot && routeType === 'playlist' && routeId) {
+      return { redirect: { destination: `/playlist/${routeId}`, permanent: false } }
+    }
 
     // Only fetch OG data for track, profile, playlist, and story pages
     if (!routeType || !routeId || (routeType !== 'track' && routeType !== 'users' && routeType !== 'playlist' && routeType !== 'story')) {

@@ -395,16 +395,48 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
     return () => window.removeEventListener('externalTrackPlay', handleExternalTrack as EventListener)
   }, [])
 
-  // Auto-advance when external embeds end.
-  // YouTube is handled by the IFrame Player API effect below (onStateChange ENDED).
-  // Spotify free embeds only play a ~30s preview then stop — advance on a timer.
+  // Auto-advance when external embeds end. Per source:
+  //  • YouTube   → IFrame Player API effect below (onStateChange ENDED).
+  //  • SoundCloud→ Widget API: autoplay on READY, advance on FINISH (real event).
+  //  • Bandcamp  → no ended-event API → advance on a duration timer (scraped
+  //                track length + 2s pad, default 240s). Loop repeats instead.
+  //  • Spotify   → 30s preview only; advance on a timer (shouldn't normally play,
+  //                the scraper re-sources Spotify songs to YouTube).
   useEffect(() => {
     if (!activeEmbed) return
+
+    if (activeEmbed.sourceType === PlaylistTrackSourceType.Soundcloud) {
+      let widget: any = null
+      const attach = (SC: any) => {
+        const iframe = document.querySelector('iframe[src*="soundcloud.com"]') as HTMLIFrameElement | null
+        if (!iframe || !SC?.Widget) return
+        widget = SC.Widget(iframe)
+        widget.bind(SC.Widget.Events.READY, () => { try { widget.play() } catch {} })
+        widget.bind(SC.Widget.Events.FINISH, () => {
+          if (loopTrackRef.current) { try { widget.seekTo(0); widget.play() } catch {} }
+          else playNextRef.current()
+        })
+      }
+      const w = window as any
+      if (w.SC?.Widget) { const t = setTimeout(() => attach(w.SC), 400); return () => { clearTimeout(t); try { widget?.unbind(w.SC.Widget.Events.FINISH) } catch {} } }
+      const existing = document.querySelector('script[src*="w.soundcloud.com/player/api.js"]')
+      const s = existing || document.createElement('script')
+      if (!existing) { (s as HTMLScriptElement).src = 'https://w.soundcloud.com/player/api.js'; document.body.appendChild(s) }
+      const onload = () => setTimeout(() => attach((window as any).SC), 400)
+      s.addEventListener('load', onload)
+      if ((window as any).SC?.Widget) onload()
+      return () => { s.removeEventListener('load', onload); try { widget?.unbind((window as any).SC?.Widget?.Events?.FINISH) } catch {} }
+    }
+
+    if (activeEmbed.sourceType === PlaylistTrackSourceType.Bandcamp) {
+      const dur = tracks[currentQueueIndex]?.duration
+      const ms = ((dur && dur > 0 ? dur : 240) + 2) * 1000
+      const timer = setTimeout(() => { if (loopTrackRef.current) return; playNextInQueue() }, ms)
+      return () => clearTimeout(timer)
+    }
+
     if (activeEmbed.sourceType === PlaylistTrackSourceType.Spotify) {
-      const timer = setTimeout(() => {
-        console.log('[PlaylistDetail] Spotify preview ended, auto-advancing')
-        playNextInQueue()
-      }, 35000)
+      const timer = setTimeout(() => { if (loopTrackRef.current) return; playNextInQueue() }, 35000)
       return () => clearTimeout(timer)
     }
   }, [activeEmbed?.url, currentQueueIndex, tracks.length]) // eslint-disable-line react-hooks/exhaustive-deps
