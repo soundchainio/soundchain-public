@@ -71,7 +71,16 @@ export default function PlaylistsExplorePage() {
 
   const parseUrls = (s: string) => Array.from(new Set((s || '').split(/[\n,]/).map(x => x.trim()).filter(Boolean)))
   const isSupportedUrl = (u: string) => /(?:open\.)?spotify\.com\/.*playlist|youtube\.com|youtu\.be|soundcloud\.com|bandcamp\.com/i.test(u)
-  const liveUrls = () => parseUrls(taRef.current?.value || '')
+  // Read links from the link box; DEFENSIVE — if it's empty but the user pasted
+  // a link into the name box by mistake, recover it from there so it still works.
+  const liveUrls = () => {
+    let urls = parseUrls(taRef.current?.value || '')
+    if (!urls.some(isSupportedUrl)) {
+      const fromName = parseUrls(nameRef.current?.value || '').filter(isSupportedUrl)
+      if (fromName.length) { urls = fromName; if (nameRef.current) nameRef.current.value = '' }
+    }
+    return urls
+  }
 
   useEffect(() => {
     let on = true
@@ -185,24 +194,28 @@ export default function PlaylistsExplorePage() {
             Paste <span className="text-gray-300">Spotify · YouTube · SoundCloud · Bandcamp</span> links (one per line). The scraper re-sources every song to a playable version and builds <span className="text-fuchsia-300">one</span> SoundChain queue. Drop several links to combine them.
           </p>
           {/* A real <form> so the button submits reliably on every device (tap
-              AND keyboard); onSubmit reads the live textarea value. */}
+              AND keyboard); onSubmit reads the live link value. ONE obvious link
+              box (bold label); the optional name is demoted BELOW the buttons so
+              it can never be mistaken for the link box (the old mispaste bug). */}
           <form onSubmit={e => { e.preventDefault(); runRebuild() }}>
+            <label htmlFor="sc-scrape-links" className="flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-[0.15em] text-fuchsia-200 mb-1">
+              <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-fuchsia-500/30 border border-fuchsia-400/50 text-[9px]">1</span>
+              Paste playlist link(s) here
+            </label>
             <textarea
+              id="sc-scrape-links"
               ref={taRef}
               defaultValue=""
               onInput={() => { setLinkCount(liveUrls().length); if (scrapeError) setScrapeError(''); if (buildError) { setBuildError(''); setNeedsLogin(false) } }}
-              placeholder={'Paste playlist links — one per line\nhttps://open.spotify.com/playlist/…\nhttps://soundcloud.com/…  ·  https://…bandcamp.com/album/…'}
+              onPaste={() => setTimeout(() => setLinkCount(liveUrls().length), 0)}
+              placeholder={'https://on.soundcloud.com/…\nhttps://open.spotify.com/playlist/…\nhttps://www.youtube.com/playlist?list=…  ·  …bandcamp.com/album/…'}
               spellCheck={false} autoCapitalize="none" autoCorrect="off" autoComplete="off" inputMode="url" rows={3}
-              className="w-full bg-black/50 border border-fuchsia-500/25 focus:border-fuchsia-400/60 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 font-mono outline-none transition-colors resize-y"
+              className="w-full bg-black/50 border-2 border-fuchsia-500/40 focus:border-fuchsia-400 rounded-lg px-3 py-2.5 text-sm text-white placeholder-gray-600 font-mono outline-none transition-colors resize-y"
             />
-            {/* live detector — visibly proves the field is being read on this device */}
-            <p className="text-[10px] font-mono text-fuchsia-300/70 mt-1">
-              {linkCount > 0 ? `✓ ${linkCount} link${linkCount > 1 ? 's' : ''} detected — ready to rebuild` : 'Paste a link above to begin'}
+            {/* live detector — visibly proves the link box is being read */}
+            <p className={`text-[10px] font-mono mt-1 ${linkCount > 0 ? 'text-[#39ff7a]' : 'text-gray-500'}`}>
+              {linkCount > 0 ? `✓ ${linkCount} link${linkCount > 1 ? 's' : ''} detected — ready to rebuild` : 'Spotify · YouTube · SoundCloud · Bandcamp — one per line'}
             </p>
-            <input
-              ref={nameRef} defaultValue="" placeholder="Playlist name (optional)" spellCheck={false} autoCapitalize="none" autoCorrect="off"
-              className="w-full mt-2 bg-black/50 border border-fuchsia-500/25 focus:border-fuchsia-400/60 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 font-mono outline-none transition-colors"
-            />
             <div className="flex flex-col sm:flex-row gap-2 mt-2">
               <button
                 type="submit" disabled={building}
@@ -219,6 +232,11 @@ export default function PlaylistsExplorePage() {
                 Preview songs
               </button>
             </div>
+            {/* optional name — clearly secondary, AFTER the buttons */}
+            <input
+              ref={nameRef} defaultValue="" placeholder="Name it (optional) — auto-named if blank" spellCheck={false} autoCapitalize="none" autoCorrect="off"
+              className="w-full mt-2 bg-black/30 border border-white/10 focus:border-fuchsia-400/40 rounded-lg px-3 py-1.5 text-[12px] text-gray-300 placeholder-gray-600 font-mono outline-none transition-colors"
+            />
           </form>
 
           {(scrapeError || buildError) && (
