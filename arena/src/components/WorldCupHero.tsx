@@ -9,6 +9,120 @@ import { WC_KICKOFF_ISO, WC_FINAL_ISO } from '@/lib/worldcup'
  * (stylized, not a real person), zero-weight (vector), battery-free. Filled with
  * a team-color gradient. This is the "superstar cutout" without stock/IP/GPU.
  */
+/**
+ * WCTrophy — a faithful vector of the actual FIFA World Cup trophy (two figures
+ * spiralling up to hold the globe, on a banded base), gold gradient. Vector, not
+ * a licensed photo → royalty-safe, crisp at any size, battery-free. Replaces the
+ * generic 🏆 cup emoji (a different trophy) Frank flagged.
+ */
+function WCTrophy({ className = '' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 120 200" className={className} aria-hidden>
+      <defs>
+        <linearGradient id="wcGold" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#fde68a" />
+          <stop offset="38%" stopColor="#f5c542" />
+          <stop offset="70%" stopColor="#d4972a" />
+          <stop offset="100%" stopColor="#9a6a16" />
+        </linearGradient>
+        <radialGradient id="wcGlobe" cx="40%" cy="35%" r="70%">
+          <stop offset="0%" stopColor="#fff4c2" />
+          <stop offset="55%" stopColor="#f0bf3c" />
+          <stop offset="100%" stopColor="#b07d1c" />
+        </radialGradient>
+      </defs>
+      <g fill="url(#wcGold)">
+        {/* globe on top (the world) */}
+        <ellipse cx="60" cy="34" rx="26" ry="28" fill="url(#wcGlobe)" />
+        <path d="M60 8 q-16 26 0 52 q16 -26 0 -52" fill="#c8901f" opacity=".55" />
+        <path d="M34 34 h52" stroke="#c8901f" strokeWidth="2.5" opacity=".5" />
+        {/* two intertwined figures forming the spiralling stem */}
+        <path d="M48 60 q-14 28 6 60 q6 18 6 40 l8 0 q-2 -24 -6 -42 q-16 -30 -4 -56 q-8 -3 -10 -2 z" />
+        <path d="M72 60 q14 28 -6 60 q-6 18 -6 40 l-8 0 q2 -24 6 -42 q16 -30 4 -56 q8 -3 10 -2 z" />
+        {/* malachite banded base */}
+        <path d="M40 158 q20 8 40 0 l4 14 q-24 9 -48 0 z" fill="#1f7a3d" />
+        <path d="M36 174 q24 9 48 0 l3 12 q-27 10 -54 0 z" fill="#155e2e" />
+        <rect x="34" y="186" width="52" height="8" rx="2" fill="url(#wcGold)" />
+      </g>
+    </svg>
+  )
+}
+
+/**
+ * ActionFigure — a real player's ESPN headshot (face) composited onto the
+ * dynamic striker body (team-colour silhouette), as ONE SVG so the face stays
+ * locked to the body's head circle at any size. Free full-body action photos
+ * are licensed/paid; this is the royalty-safe way to show a real player IN an
+ * action pose.
+ */
+const TEAM_COLORS: Record<string, [string, string]> = {
+  Argentina: ['#75aadb', '#1d4e89'], Brazil: ['#ffdf00', '#009b3a'], France: ['#3b82f6', '#1e3a8a'],
+  England: ['#ef4444', '#1e3a8a'], Spain: ['#ef4444', '#a31621'], Portugal: ['#16a34a', '#a31621'],
+  Germany: ['#facc15', '#111827'], Netherlands: ['#f97316', '#c2410c'], Belgium: ['#facc15', '#b91c1c'],
+  Croatia: ['#ef4444', '#1e3a8a'], 'United States': ['#3b82f6', '#b91c1c'], Mexico: ['#16a34a', '#a31621'],
+  Canada: ['#ef4444', '#7f1d1d'], Uruguay: ['#60a5fa', '#1e3a8a'],
+}
+function ActionFigure({ face, team, className = '', flip, uid }: { face: string; team: string; className?: string; flip?: boolean; uid: string }) {
+  const [from, to] = TEAM_COLORS[team] || ['#34d399', '#0e7490']
+  return (
+    <svg viewBox="0 0 120 200" className={className} style={flip ? { transform: 'scaleX(-1)' } : undefined} aria-hidden>
+      <defs>
+        <linearGradient id={`g${uid}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={from} /><stop offset="100%" stopColor={to} />
+        </linearGradient>
+        <clipPath id={`c${uid}`}><circle cx="62" cy="20" r="18" /></clipPath>
+      </defs>
+      <g fill={`url(#g${uid})`}>
+        <path d="M50 36 q14 -6 26 2 l6 40 q-20 8 -38 0 z" />
+        <path d="M52 42 q-22 -6 -30 12 q-3 8 4 10 q6 -2 9 -10 q8 -8 19 -8 z" />
+        <path d="M78 44 q18 4 24 22 q2 7 -5 8 q-6 -1 -8 -9 q-6 -10 -14 -13 z" />
+        <path d="M52 74 q8 4 14 2 l-2 50 q-1 30 -9 44 q-3 5 -9 3 q-4 -2 -2 -8 q6 -16 6 -40 z" />
+        <path d="M66 76 q9 2 14 -2 q14 18 30 22 q6 2 4 9 q-3 6 -10 3 q-22 -6 -36 -24 q-4 -4 -6 -11 z" />
+      </g>
+      {/* real player face, clipped into the head */}
+      <g style={flip ? { transform: 'scaleX(-1)', transformOrigin: '60px 20px' } : undefined}>
+        <circle cx="62" cy="20" r="18.5" fill="none" stroke={from} strokeWidth="2.5" />
+        <image href={face} x="42" y="0" width="40" height="40" clipPath={`url(#c${uid})`} preserveAspectRatio="xMidYMid slice" />
+      </g>
+    </svg>
+  )
+}
+
+/**
+ * StarRail — real WC players popping in & out as ACTION FIGURES (real face on a
+ * striker body). One rotating window, CSS-animated entrances (one interval, no
+ * rAF → battery-safe). Holds the first frame under prefers-reduced-motion.
+ */
+function StarRail() {
+  const [stars, setStars] = useState<{ name: string; team: string; flag: string; pos: string; img: string }[]>([])
+  const [i, setI] = useState(0)
+  useEffect(() => {
+    let on = true
+    fetch('/api/worldcup/stars').then(r => r.json()).then(d => { if (on && Array.isArray(d?.stars)) setStars(d.stars) }).catch(() => {})
+    return () => { on = false }
+  }, [])
+  useEffect(() => {
+    if (stars.length < 2) return
+    const id = setInterval(() => setI(p => (p + 1) % stars.length), 2600)
+    return () => clearInterval(id)
+  }, [stars.length])
+  if (!stars.length) return null
+  const win = [0, 1, 2].map(o => stars[(i + o) % stars.length])
+  return (
+    <div className="wc-starrail" aria-hidden>
+      {win.map((s, o) => (
+        <div key={`${s.img}-${o}`} className={`wc-star-card ${o === 1 ? 'wc-star-active' : ''}`}>
+          <ActionFigure face={s.img} team={s.team} flip={o === 2} uid={`${i}_${o}`} className="wc-star-figure" />
+          <div className="wc-star-meta">
+            <span className="wc-star-flag">{s.flag}</span>
+            <span className="wc-star-name">{s.name}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 function PlayerSilhouette({ id, from, to, className = '', flip }: { id: string; from: string; to: string; className?: string; flip?: boolean }) {
   return (
     <svg viewBox="0 0 120 200" className={className} style={flip ? { transform: 'scaleX(-1)' } : undefined} aria-hidden>
@@ -152,16 +266,16 @@ export function WorldCupHero() {
             </div>
           </div>
 
-          {/* ── Right: big overlapping STRIKER CUTOUTS + trophy + flags ──
-              Mobile-visible (shorter on phones), the standout hero imagery. */}
-          <div className="relative flex items-center justify-center min-h-[240px] lg:min-h-[380px]" aria-hidden>
-            {/* spotlight wash behind the cutouts */}
-            <div className="absolute w-[260px] h-[260px] lg:w-[360px] lg:h-[360px] rounded-full bg-emerald-400/15 blur-3xl" />
-            {/* two overlapping striker silhouettes */}
-            <PlayerSilhouette id="wcp1" from="#34d399" to="#0e7490" className="wc-player wc-player-1" />
-            <PlayerSilhouette id="wcp2" from="#f59e0b" to="#b91c1c" className="wc-player wc-player-2" flip />
-            {/* trophy + ball + host flag discs layered over */}
-            <div className="wc-trophy">🏆</div>
+          {/* ── Right: REAL player action figures popping in/out + the actual
+              WC trophy + flags. Mobile-visible — the standout hero imagery. ── */}
+          <div className="relative flex items-center justify-center min-h-[300px] lg:min-h-[400px]" aria-hidden>
+            {/* spotlight wash */}
+            <div className="absolute w-[280px] h-[280px] lg:w-[380px] lg:h-[380px] rounded-full bg-emerald-400/15 blur-3xl" />
+            {/* the actual FIFA World Cup trophy (vector), big, behind the players */}
+            <WCTrophy className="wc-trophy-svg" />
+            {/* live rail of real players as action figures */}
+            <StarRail />
+            {/* host flag discs + ball layered over */}
             <div className="wc-flag-disc wc-disc-1">🇲🇽</div>
             <div className="wc-flag-disc wc-disc-2">🇺🇸</div>
             <div className="wc-flag-disc wc-disc-3">🇨🇦</div>

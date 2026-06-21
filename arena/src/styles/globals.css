@@ -344,3 +344,58 @@ main, header, nav, footer, .arena-content { position: relative; z-index: 1; }
   .wc-ball{font-size:38px}
 }
 @media (prefers-reduced-motion: reduce){ .wc-player{animation:none} }
+
+/* ───────────────────────────────────────────────────────────────────────────
+   WC hero v2 (Jun 20, 2026) — beautiful SOCCER PITCH + grand real-player action
+   figures + the actual WC trophy. Battery-safe (CSS only; reduced-motion calms).
+   ─────────────────────────────────────────────────────────────────────────── */
+/* lush mowed-grass pitch — alternating green bands + depth vignette */
+.wc-hero-pitch{
+  background:
+    radial-gradient(120% 90% at 50% -10%, rgba(255,255,255,.08), transparent 55%),
+    radial-gradient(100% 120% at 50% 120%, rgba(0,0,0,.55), transparent 60%),
+    repeating-linear-gradient(90deg, #0a5a2c 0 7.5%, #0c6733 7.5% 15%);
+}
+/* field markings layer (center circle + halfway line + spot) — subtle, grander on desktop */
+.wc-hero-stripes{
+  background:
+    radial-gradient(circle at 50% 52%, transparent 70px, rgba(255,255,255,.16) 71px, rgba(255,255,255,.16) 73px, transparent 74px),
+    radial-gradient(circle at 50% 52%, rgba(255,255,255,.18) 0 4px, transparent 5px),
+    linear-gradient(90deg, transparent calc(50% - 1px), rgba(255,255,255,.12) calc(50% - 1px) calc(50% + 1px), transparent calc(50% + 1px));
+  opacity:.5;mask-image:linear-gradient(180deg, transparent, #000 25%, #000 75%, transparent);
+}
+@media (min-width:1024px){
+  .wc-hero-stripes{
+    background:
+      radial-gradient(circle at 50% 54%, transparent 120px, rgba(255,255,255,.18) 121px, rgba(255,255,255,.18) 124px, transparent 125px),
+      radial-gradient(circle at 50% 54%, rgba(255,255,255,.2) 0 6px, transparent 7px),
+      linear-gradient(90deg, transparent calc(50% - 1.5px), rgba(255,255,255,.14) calc(50% - 1.5px) calc(50% + 1.5px), transparent calc(50% + 1.5px));
+    opacity:.6;
+  }
+}
+
+/* actual WC trophy (vector) — grand, gold, gently floating behind the players */
+.wc-trophy-svg{position:absolute;height:230px;width:auto;z-index:1;opacity:.96;
+  filter:drop-shadow(0 16px 40px rgba(234,179,8,.45));animation:wcFloat 5.5s ease-in-out infinite}
+@media (min-width:1024px){ .wc-trophy-svg{height:360px} }
+
+/* real-player action-figure rail — grand, the active one popped forward */
+.wc-starrail{position:relative;z-index:3;display:flex;align-items:flex-end;justify-content:center;gap:0;width:100%;height:100%}
+.wc-star-card{position:relative;display:flex;flex-direction:column;align-items:center;
+  transition:transform .5s cubic-bezier(.2,.8,.3,1),opacity .5s ease;will-change:transform,opacity}
+.wc-star-figure{height:170px;width:auto;filter:drop-shadow(0 14px 26px rgba(0,0,0,.55))}
+.wc-star-card{opacity:.42;transform:translateY(14px) scale(.78)}
+.wc-star-active{opacity:1;transform:translateY(-6px) scale(1.18);z-index:4;animation:wcPop .55s cubic-bezier(.2,.9,.3,1.2)}
+.wc-star-card:nth-child(1){margin-right:-26px}
+.wc-star-card:nth-child(3){margin-left:-26px}
+@media (min-width:1024px){ .wc-star-figure{height:300px} .wc-star-card:nth-child(1){margin-right:-44px} .wc-star-card:nth-child(3){margin-left:-44px} }
+.wc-star-meta{display:flex;align-items:center;gap:5px;margin-top:4px;padding:2px 9px;border-radius:9999px;
+  background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(4px);white-space:nowrap}
+.wc-star-flag{font-size:13px}
+.wc-star-name{font-size:10px;font-weight:800;letter-spacing:.02em;color:#fff;max-width:120px;overflow:hidden;text-overflow:ellipsis}
+.wc-star-card:not(.wc-star-active) .wc-star-meta{display:none}
+@keyframes wcPop{0%{opacity:0;transform:translateY(40px) scale(.7) rotate(-4deg)}60%{transform:translateY(-10px) scale(1.22) rotate(1deg)}100%{opacity:1;transform:translateY(-6px) scale(1.18)}}
+@media (prefers-reduced-motion: reduce){
+  .wc-trophy-svg,.wc-star-active{animation:none}
+  .wc-star-card{transition:none}
+}
