@@ -45,6 +45,12 @@ export default function WorldCupDash() {
   const [scorersLoaded, setScorersLoaded] = useState(false)
   const didInit = useRef(false)
 
+  // Deep-link: the homepage WorldCupHero links to /worldcup?tab=bracket etc.
+  useEffect(() => {
+    const t = new URLSearchParams(window.location.search).get('tab') as Tab | null
+    if (t && ['matches', 'groups', 'schedule', 'bracket', 'scorers', 'hosts'].includes(t)) setTab(t)
+  }, [])
+
   useEffect(() => {
     let alive = true
     const load = async () => {

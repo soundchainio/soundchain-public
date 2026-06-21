@@ -281,3 +281,49 @@ html:not(.dark) .btn-neon:hover:not(:disabled) {
 /* z-stack — content above the holographic grid + scanline */
 main, header, nav, footer, .arena-content { position: relative; z-index: 1; }
 
+
+/* ───────────────────────────────────────────────────────────────────────────
+   FIFA WORLD CUP 2026 hero (Jun 20, 2026) — eye-candy landing, BATTERY-SAFE.
+   Pure CSS (GPU-composited transforms/gradients only — no rAF/canvas/WebGL).
+   All motion is killed by prefers-reduced-motion so older iPhones stay cool.
+   ─────────────────────────────────────────────────────────────────────────── */
+.wc-hero-pitch{
+  background:
+    radial-gradient(120% 80% at 80% 0%, rgba(16,185,129,.18), transparent 60%),
+    radial-gradient(120% 90% at 10% 100%, rgba(6,182,212,.16), transparent 55%),
+    linear-gradient(160deg, #04140d 0%, #061a16 45%, #03100c 100%);
+}
+.wc-hero-stripes{
+  background-image:repeating-linear-gradient(90deg, rgba(255,255,255,.025) 0 64px, transparent 64px 128px);
+  mask-image:linear-gradient(180deg, transparent, #000 30%, #000 70%, transparent);
+}
+.wc-hero-glow{
+  background:radial-gradient(40% 60% at 78% 45%, rgba(52,211,153,.22), transparent 70%);
+  animation:wcGlow 6s ease-in-out infinite;
+}
+@keyframes wcGlow{0%,100%{opacity:.55}50%{opacity:1}}
+.wc-count-cell{
+  min-width:58px;border-radius:12px;padding:8px 6px;
+  border:1px solid rgba(52,211,153,.25);background:rgba(0,0,0,.35);backdrop-filter:blur(6px);
+}
+/* big overlapping trophy + flag-disc cutout cluster */
+.wc-trophy{
+  font-size:200px;line-height:1;filter:drop-shadow(0 12px 40px rgba(234,179,8,.45));
+  transform:rotate(-8deg);animation:wcFloat 5s ease-in-out infinite;
+}
+.wc-flag-disc{
+  position:absolute;width:84px;height:84px;border-radius:9999px;display:flex;align-items:center;justify-content:center;
+  font-size:48px;background:rgba(0,0,0,.5);border:2px solid rgba(255,255,255,.18);
+  box-shadow:0 8px 28px rgba(0,0,0,.6);backdrop-filter:blur(4px);overflow:hidden;
+}
+.wc-disc-1{left:6%;top:22%;animation:wcFloat 4.5s ease-in-out infinite}
+.wc-disc-2{left:18%;bottom:14%;width:96px;height:96px;font-size:54px;animation:wcFloat 5.5s ease-in-out infinite .4s}
+.wc-disc-3{right:10%;top:14%;animation:wcFloat 4.8s ease-in-out infinite .8s}
+.wc-ball{position:absolute;right:18%;bottom:10%;font-size:60px;animation:wcSpin 7s linear infinite}
+@keyframes wcFloat{0%,100%{transform:translateY(0) rotate(-8deg)}50%{transform:translateY(-12px) rotate(-4deg)}}
+@keyframes wcSpin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+.wc-marquee{animation:wcMarquee 38s linear infinite;width:max-content}
+@keyframes wcMarquee{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+@media (prefers-reduced-motion: reduce){
+  .wc-hero-glow,.wc-trophy,.wc-flag-disc,.wc-ball,.wc-marquee{animation:none}
+}
