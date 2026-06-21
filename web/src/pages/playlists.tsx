@@ -67,7 +67,8 @@ export default function PlaylistsExplorePage() {
   const [buildError, setBuildError] = useState('')
   const [needsLogin, setNeedsLogin] = useState(false)
   const [linkCount, setLinkCount] = useState(0) // live "N links detected" — proves the field is read
-  const [build, setBuild] = useState<{ playlistId: string; title: string; total: number; done: number; matched: number; status: string; sources: number } | null>(null)
+  const [build, setBuild] = useState<{ playlistId: string; title: string; total: number; done: number; matched: number; status: string; sources: number; capped?: boolean; missed?: string[]; missedCount?: number } | null>(null)
+  const [showMissed, setShowMissed] = useState(false)
 
   const parseUrls = (s: string) => Array.from(new Set((s || '').split(/[\n,]/).map(x => x.trim()).filter(Boolean)))
   const isSupportedUrl = (u: string) => /(?:open\.)?spotify\.com\/.*playlist|youtube\.com|youtu\.be|soundcloud\.com|bandcamp\.com/i.test(u)
@@ -131,14 +132,14 @@ export default function PlaylistsExplorePage() {
       const d = await r.json().catch(() => ({}))
       if (r.status === 401) { setNeedsLogin(true); setBuildError('Sign in to rebuild a playlist onto your profile.'); setBuilding(false); return }
       if (!r.ok) { setBuildError(d.error || 'Could not rebuild that playlist — make sure the links are public.'); setBuilding(false); return }
-      setBuild({ playlistId: d.playlistId, title: d.title, total: d.total, done: 0, matched: 0, status: 'building', sources: d.sources || all.length })
+      setBuild({ playlistId: d.playlistId, title: d.title, total: d.total, done: 0, matched: 0, status: 'building', sources: d.sources || all.length, capped: d.capped })
       const poll = async () => {
         try {
           const pr = await fetch(`/api/playlists/list?playlistId=${d.playlistId}`, { credentials: 'include' })
           const pj = await pr.json()
           const st = pj?.playlist?.importStatus
           if (st) {
-            setBuild(b => (b ? { ...b, done: st.done || 0, matched: st.matched || 0, status: st.status || 'building' } : b))
+            setBuild(b => (b ? { ...b, done: st.done || 0, matched: st.matched || 0, status: st.status || 'building', missed: st.missed || [], missedCount: st.missedCount || 0 } : b))
             if (st.status === 'building') { setTimeout(poll, 3000); return }
           }
         } catch { /* keep last state */ }
@@ -260,6 +261,35 @@ export default function PlaylistsExplorePage() {
                   ? `✓ Done — ${build.matched}/${build.total} songs added${build.sources > 1 ? ` from ${build.sources} playlists` : ''}. Tap Open to play.`
                   : `Re-sourcing songs… ${build.done}/${build.total} (${build.matched} added)${build.sources > 1 ? ` · ${build.sources} playlists` : ''}`}
               </p>
+
+              {/* Spotify read-cap transparency */}
+              {build.capped && (
+                <p className="text-[10px] text-amber-400/80 mt-1 leading-snug">
+                  ⚠ Spotify only shares the first 100 songs without a Premium-connected app — songs beyond 100 couldn’t be read. (YouTube · SoundCloud · Bandcamp have no limit.)
+                </p>
+              )}
+
+              {/* Transparency: songs that couldn't be re-sourced to ANY playable platform */}
+              {build.status === 'done' && (build.missedCount ?? 0) > 0 && (
+                <div className="mt-1.5">
+                  <button
+                    onClick={() => setShowMissed(s => !s)}
+                    className="text-[10px] font-mono text-amber-400/90 hover:text-amber-300 underline"
+                  >
+                    {showMissed ? '▾' : '▸'} {build.missedCount} song{(build.missedCount ?? 0) > 1 ? 's' : ''} couldn’t be found on YouTube or SoundCloud
+                  </button>
+                  {showMissed && (
+                    <div className="mt-1 max-h-28 overflow-y-auto scrollbar-hide rounded border border-amber-500/20 bg-black/40 p-2 space-y-0.5">
+                      {(build.missed || []).map((m, i) => (
+                        <div key={i} className="text-[10px] text-gray-400 truncate">• {m}</div>
+                      ))}
+                      {(build.missedCount ?? 0) > (build.missed?.length ?? 0) && (
+                        <div className="text-[9px] text-gray-600 pt-0.5">+ {(build.missedCount ?? 0) - (build.missed?.length ?? 0)} more…</div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 

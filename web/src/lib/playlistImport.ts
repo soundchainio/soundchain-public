@@ -229,6 +229,53 @@ export const matchYouTube = async (query: string): Promise<ImportedTrack | null>
   return (await searchYouTubeDirect(query)) || (await pipedSearchYouTube(query))
 }
 
+// ── FORGE re-sourcing engine — find a song on ANY playable+monetized platform ─
+// A song that isn't on YouTube may still live on SoundCloud (artists monetize
+// there too). Forge tries sources in order and returns the first playable hit
+// with its native sourceType, so the rebuilt queue plays + pays the artist.
+// (Spotify is never a target — 30s previews; it's a catalog source only.)
+
+// Module-cached SoundCloud web client_id (stable for hours) for search.
+let _scClientId = ''
+let _scClientIdAt = 0
+export const getSoundCloudClientId = async (signal?: AbortSignal): Promise<string> => {
+  if (_scClientId && Date.now() - _scClientIdAt < 6 * 3600 * 1000) return _scClientId
+  try {
+    const r = await fetch('https://soundcloud.com/discover', {
+      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' },
+      signal: signal || AbortSignal.timeout(12000),
+    })
+    if (r.ok) {
+      const id = await scrapeSoundCloudClientId(await r.text(), signal || AbortSignal.timeout(12000))
+      if (id) { _scClientId = id; _scClientIdAt = Date.now() }
+    }
+  } catch { /* leave empty → SoundCloud fallback simply unavailable this call */ }
+  return _scClientId
+}
+
+export const searchSoundCloud = async (query: string): Promise<ImportedTrack | null> => {
+  try {
+    const cid = await getSoundCloudClientId()
+    if (!cid) return null
+    const r = await fetch(`https://api-v2.soundcloud.com/search/tracks?q=${encodeURIComponent(query)}&limit=1&client_id=${cid}`, {
+      headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' }, signal: AbortSignal.timeout(12000),
+    })
+    if (!r.ok) return null
+    const j = await r.json()
+    const t = j?.collection?.[0]
+    return t ? scRow(t) : null
+  } catch { return null }
+}
+
+export type PlayableMatch = { url: string; thumbnail: string | null; durationSec: number | null; sourceType: 'YOUTUBE' | 'SOUNDCLOUD' }
+export const matchPlayable = async (query: string): Promise<PlayableMatch | null> => {
+  const yt = await matchYouTube(query)
+  if (yt?.url) return { url: yt.url, thumbnail: yt.thumbnail, durationSec: yt.durationSec ?? null, sourceType: 'YOUTUBE' }
+  const sc = await searchSoundCloud(query)
+  if (sc?.url) return { url: sc.url, thumbnail: sc.thumbnail, durationSec: sc.durationSec ?? null, sourceType: 'SOUNDCLOUD' }
+  return null
+}
+
 // ── Spotify (public playlist read via Client Credentials, no Premium) ────────
 export const extractSpotifyPlaylistId = (url: string): string | null => {
   const m = url.match(/playlist[/:]([a-zA-Z0-9]+)/)

@@ -17,7 +17,7 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import clientPromise from 'lib/mongodb'
 import { ObjectId } from 'mongodb'
 import { authFromRequest } from 'lib/api/authJwt'
-import { scrapePlaylist, matchYouTube } from 'lib/playlistImport'
+import { scrapePlaylist, matchPlayable } from 'lib/playlistImport'
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
 const norm = (s: string) => s.toLowerCase().replace(/\s+/g, ' ').replace(/[^\w\s]/g, '').trim()
@@ -90,44 +90,53 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   res.status(200).json({ playlistId: playlistId.toString(), title, total, sources: urls.length, capped })
 
   // 4) Background: match + insert. Sequential to respect the keyless search.
+  //    Songs that can't be re-sourced to a playable platform are recorded in
+  //    importStatus.missed (TRANSPARENCY — the user sees exactly what didn't
+  //    transfer). Capped to keep the doc small; missedCount is the true total.
   ;(async () => {
     let position = 0
     let done = 0
     let matched = 0
+    const missed: string[] = []
     for (const t of combined) {
       try {
-        // Spotify (or any url-less row) re-sources to YouTube; native YouTube/
-        // SoundCloud/Bandcamp rows keep their own playable url + sourceType.
-        const hit = t.needsMatch ? await matchYouTube(t.title) : t
+        // Native rows (YouTube/SoundCloud/Bandcamp) keep their own url+type.
+        // Catalog rows (Spotify, or any url-less row) are re-sourced by FORGE —
+        // YouTube first, then SoundCloud — to a playable+monetized platform.
+        const hit = t.needsMatch
+          ? await matchPlayable(t.title)
+          : { url: t.url, thumbnail: t.thumbnail, durationSec: t.durationSec, sourceType: t.sourceType as 'YOUTUBE' | 'SOUNDCLOUD' }
         if (hit && hit.url) {
           await db.collection('playlisttracks').insertOne({
             playlistId,
-            sourceType: t.needsMatch ? 'YOUTUBE' : t.sourceType,
+            sourceType: hit.sourceType,
             title: t.title,
             artist: '',
             artworkUrl: hit.thumbnail || t.thumbnail || '',
             externalUrl: hit.url,
-            duration: t.durationSec || null,
+            duration: hit.durationSec ?? t.durationSec ?? null,
             position: position++,
             profileId: auth.profileId,
             createdAt: new Date(),
             updatedAt: new Date(),
           })
           matched++
+        } else {
+          missed.push(t.title)
         }
-      } catch { /* skip this song, keep going */ }
+      } catch { missed.push(t.title) }
       done++
       if (done % 5 === 0 || done === total) {
         await db.collection('playlists').updateOne(
           { _id: playlistId },
-          { $set: { 'importStatus.done': done, 'importStatus.matched': matched, updatedAt: new Date() } },
+          { $set: { 'importStatus.done': done, 'importStatus.matched': matched, 'importStatus.missed': missed.slice(0, 80), 'importStatus.missedCount': missed.length, updatedAt: new Date() } },
         ).catch(() => {})
       }
       if (t.needsMatch) await sleep(250)
     }
     await db.collection('playlists').updateOne(
       { _id: playlistId },
-      { $set: { 'importStatus.done': done, 'importStatus.matched': matched, 'importStatus.status': 'done', 'importStatus.finishedAt': new Date(), updatedAt: new Date() } },
+      { $set: { 'importStatus.done': done, 'importStatus.matched': matched, 'importStatus.missed': missed.slice(0, 80), 'importStatus.missedCount': missed.length, 'importStatus.status': 'done', 'importStatus.finishedAt': new Date(), updatedAt: new Date() } },
     ).catch(() => {})
   })().catch(() => {})
 }
