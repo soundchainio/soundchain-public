@@ -78,6 +78,78 @@ export const fetchYouTubePlaylistFull = async (playlistId: string): Promise<Impo
   }
 }
 
+// Robust FULL YouTube playlist read — scrape the playlist page's ytInitialData
+// for every video, then page through continuations via the public youtubei API
+// (the yt-dlp/innertube technique). Keyless + reliable from a server, and not
+// dependent on the flaky public Piped instances (which cap us at the 15-track
+// RSS fallback). Handles playlists of any size.
+export const fetchYouTubePlaylistDirect = async (playlistId: string): Promise<ImportedTrack[]> => {
+  const headers: Record<string, string> = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Accept-Language': 'en-US,en;q=0.9',
+  }
+  const cookies = process.env.YOUTUBE_COOKIES
+  if (cookies && cookies.includes('=') && !cookies.trim().startsWith('/')) headers['Cookie'] = cookies
+  headers['Cookie'] = `CONSENT=YES+1; ${headers['Cookie'] || ''}`.replace(/; $/, '') // bypass cookieless consent interstitial
+  const tracks: ImportedTrack[] = []
+  const seen = new Set<string>()
+  const push = (videoId?: string, title?: string) => {
+    if (!videoId || !title || seen.has(videoId)) return
+    seen.add(videoId)
+    tracks.push({ title, url: `https://www.youtube.com/watch?v=${videoId}`, thumbnail: `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg` })
+  }
+  // Walk ANY object tree for both the legacy playlistVideoRenderer AND the new
+  // lockupViewModel format (YouTube's late-2024 redesign) → robust to layout.
+  let lastToken: string | null = null
+  const walk = (o: any) => {
+    if (Array.isArray(o)) { for (const v of o) walk(v); return }
+    if (!o || typeof o !== 'object') return
+    const lv = o.lockupViewModel
+    if (lv?.contentId && lv?.contentType === 'LOCKUP_CONTENT_TYPE_VIDEO') {
+      push(lv.contentId, lv?.metadata?.lockupMetadataViewModel?.title?.content)
+    }
+    const pv = o.playlistVideoRenderer
+    if (pv?.videoId) push(pv.videoId, pv?.title?.runs?.[0]?.text || pv?.title?.simpleText)
+    const tok = o.continuationItemRenderer?.continuationEndpoint?.continuationCommand?.token
+    if (tok) lastToken = tok
+    for (const k in o) walk(o[k])
+  }
+
+  const res = await fetch(`https://www.youtube.com/playlist?list=${playlistId}&hl=en&gl=US`, { headers, signal: AbortSignal.timeout(20000) })
+  if (!res.ok) throw new Error(`YouTube returned ${res.status}`)
+  const html = await res.text()
+  const dm = html.match(/var ytInitialData\s*=\s*(\{.+?\});<\/script>/s) || html.match(/ytInitialData"\]\s*=\s*(\{.+?\});/s)
+  if (!dm) throw new Error('No ytInitialData')
+  let data: any
+  try { data = JSON.parse(dm[1]) } catch { throw new Error('ytInitialData parse failed') }
+  const apiKey = (html.match(/"INNERTUBE_API_KEY":"([^"]+)"/) || [])[1]
+  const clientVersion = (html.match(/"INNERTUBE_CONTEXT_CLIENT_VERSION":"([^"]+)"/) || html.match(/"clientVersion":"([^"]+)"/) || [])[1] || '2.20240101.00.00'
+
+  walk(data)
+  let cont = lastToken
+
+  // Page through continuations (cap ~120 pages).
+  let pages = 0
+  while (cont && apiKey && pages < 120) {
+    lastToken = null
+    try {
+      const r = await fetch(`https://www.youtube.com/youtubei/v1/browse?key=${apiKey}&prettyPrint=false`, {
+        method: 'POST', headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ context: { client: { clientName: 'WEB', clientVersion, hl: 'en', gl: 'US' } }, continuation: cont }),
+        signal: AbortSignal.timeout(20000),
+      })
+      if (!r.ok) break
+      const before = tracks.length
+      walk(await r.json())
+      if (tracks.length === before) break // no new videos → stop
+      cont = lastToken
+    } catch { break }
+    pages++
+  }
+  if (tracks.length === 0) throw new Error('No videos parsed')
+  return tracks
+}
+
 export const fetchYouTubePlaylistRSS = async (playlistId: string): Promise<ImportedTrack[]> => {
   const res = await fetch(`https://www.youtube.com/feeds/videos.xml?playlist_id=${playlistId}`, {
     headers: { 'User-Agent': 'SoundChain/1.0' }, signal: AbortSignal.timeout(8000),
@@ -244,38 +316,90 @@ export const fetchSpotifyPlaylistEmbed = async (playlistId: string): Promise<{ t
 // both single tracks ("sound") and sets/playlists. Returns "Artist – Title" rows
 // so they match to YouTube like Spotify (needsMatch). Partial sets (SoundCloud
 // only hydrates full metadata for the first tracks) still yield what's present.
+const scRow = (t: any): ImportedTrack | null => {
+  const title = t?.title
+  if (!title) return null
+  const artist = t?.publisher_metadata?.artist || t?.user?.username || ''
+  const art = (t?.artwork_url || t?.user?.avatar_url || '')?.replace('-large', '-t300x300') || null
+  return {
+    title: artist ? `${artist} – ${title}` : title,
+    url: t?.permalink_url || '',
+    thumbnail: art,
+    durationSec: t?.duration ? Math.round(t.duration / 1000) : (t?.full_duration ? Math.round(t.full_duration / 1000) : null),
+  }
+}
+
+// SoundCloud embeds FULL data for only the first ~5 tracks of a set in
+// __sc_hydration; the rest are {id} stubs. To get the WHOLE playlist we scrape
+// the public web client_id from the page's JS assets, then batch-resolve the
+// stub ids via the public api-v2 /tracks endpoint (the yt-dlp technique). Keyless.
+const scrapeSoundCloudClientId = async (html: string, signal: AbortSignal): Promise<string> => {
+  const inline = html.match(/client_id\s*[:=]\s*["']([a-zA-Z0-9]{24,})["']/)
+  if (inline) return inline[1]
+  const assets = Array.from(html.matchAll(/src="(https:\/\/[a-z0-9-]+\.sndcdn\.com\/assets\/[^"]+\.js)"/g)).map(m => m[1])
+  // client_id usually lives in one of the LAST bundles
+  for (const a of assets.reverse().slice(0, 6)) {
+    try {
+      const r = await fetch(a, { signal })
+      if (!r.ok) continue
+      const js = await r.text()
+      const m = js.match(/client_id\s*[:=]\s*["']([a-zA-Z0-9]{24,})["']/)
+      if (m) return m[1]
+    } catch { /* next asset */ }
+  }
+  return ''
+}
+
 export const fetchSoundCloud = async (url: string): Promise<{ tracks: ImportedTrack[]; name: string | null }> => {
-  const res = await fetch(url, {
-    headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36', 'Accept-Language': 'en-US,en;q=0.9' },
-    redirect: 'follow',
-    signal: AbortSignal.timeout(15000),
-  })
-  if (!res.ok) return { tracks: [], name: null }
-  const html = await res.text()
-  const m = html.match(/window\.__sc_hydration\s*=\s*(\[[\s\S]*?\]);/)
-  if (!m) return { tracks: [], name: null }
-  let hydration: any[]
-  try { hydration = JSON.parse(m[1]) } catch { return { tracks: [], name: null } }
-  const row = (t: any): ImportedTrack | null => {
-    const title = t?.title
-    if (!title) return null
-    const artist = t?.publisher_metadata?.artist || t?.user?.username || ''
-    const art = (t?.artwork_url || t?.user?.avatar_url || '')?.replace('-large', '-t300x300') || null
-    return {
-      title: artist ? `${artist} – ${title}` : title,
-      url: t?.permalink_url || '',
-      thumbnail: art,
-      durationSec: t?.duration ? Math.round(t.duration / 1000) : (t?.full_duration ? Math.round(t.full_duration / 1000) : null),
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 45000)
+  try {
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36', 'Accept-Language': 'en-US,en;q=0.9' },
+      redirect: 'follow', signal: controller.signal,
+    })
+    if (!res.ok) return { tracks: [], name: null }
+    const html = await res.text()
+    const m = html.match(/window\.__sc_hydration\s*=\s*(\[[\s\S]*?\]);/)
+    if (!m) return { tracks: [], name: null }
+    let hydration: any[]
+    try { hydration = JSON.parse(m[1]) } catch { return { tracks: [], name: null } }
+
+    const pl = hydration.find(h => h?.hydratable === 'playlist')?.data
+    if (pl?.tracks?.length) {
+      const all: any[] = pl.tracks
+      const full = all.filter((t: any) => t?.title)
+      const stubIds = all.filter((t: any) => !t?.title && t?.id).map((t: any) => t.id)
+      const byId = new Map<number, any>(full.map((t: any) => [t.id, t]))
+
+      // Resolve the stub ids → full tracks via api-v2 (batched ≤50/req).
+      if (stubIds.length) {
+        const clientId = await scrapeSoundCloudClientId(html, controller.signal)
+        if (clientId) {
+          for (let i = 0; i < stubIds.length; i += 50) {
+            const ids = stubIds.slice(i, i + 50).join(',')
+            try {
+              const r = await fetch(`https://api-v2.soundcloud.com/tracks?ids=${ids}&client_id=${clientId}`, {
+                headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' }, signal: controller.signal,
+              })
+              if (r.ok) for (const t of await r.json()) if (t?.id) byId.set(t.id, t)
+            } catch { /* keep going — partial is better than nothing */ }
+          }
+        }
+      }
+
+      // Preserve original playlist order.
+      const ordered = all.map((t: any) => byId.get(t.id)).filter(Boolean)
+      const tracks = ordered.map(scRow).filter(Boolean) as ImportedTrack[]
+      return { tracks, name: pl.title || null }
     }
+
+    const sound = hydration.find(h => h?.hydratable === 'sound')?.data
+    if (sound) { const r = scRow(sound); return { tracks: r ? [r] : [], name: sound.title || null } }
+    return { tracks: [], name: null }
+  } finally {
+    clearTimeout(timeout)
   }
-  const pl = hydration.find(h => h?.hydratable === 'playlist')?.data
-  if (pl?.tracks?.length) {
-    const tracks = pl.tracks.map(row).filter(Boolean) as ImportedTrack[]
-    return { tracks, name: pl.title || null }
-  }
-  const sound = hydration.find(h => h?.hydratable === 'sound')?.data
-  if (sound) { const r = row(sound); return { tracks: r ? [r] : [], name: sound.title || null } }
-  return { tracks: [], name: null }
 }
 
 // ── Bandcamp (keyless — JSON-LD on the album/track page) ──────────────────────
@@ -348,10 +472,12 @@ export const scrapePlaylist = async (url: string): Promise<ScrapeResult> => {
   if (hostname.includes('youtube.com') || hostname.includes('youtu.be')) {
     const playlistId = extractYouTubePlaylistId(url)
     if (!playlistId) throw new Error('Could not find a YouTube playlist ID (the link must contain ?list=…).')
-    let tracks: ImportedTrack[]
+    let tracks: ImportedTrack[] = []
     let note: string | undefined
-    try { tracks = await fetchYouTubePlaylistFull(playlistId) }
-    catch { tracks = await fetchYouTubePlaylistRSS(playlistId); note = 'Fetched via fallback (up to 15 tracks).' }
+    // Direct ytInitialData scrape (FULL, reliable) → Piped (full, flaky) → RSS (15, last resort).
+    try { tracks = await fetchYouTubePlaylistDirect(playlistId) } catch { /* try next */ }
+    if (tracks.length === 0) { try { tracks = await fetchYouTubePlaylistFull(playlistId) } catch { /* try next */ } }
+    if (tracks.length === 0) { tracks = await fetchYouTubePlaylistRSS(playlistId); note = 'Fetched via fallback (up to 15 tracks).' }
     return { platform: 'YouTube', playlistName: null, tracks, needsMatch: false, note }
   }
 
