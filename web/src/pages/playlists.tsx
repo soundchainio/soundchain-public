@@ -66,6 +66,7 @@ export default function PlaylistsExplorePage() {
   const [building, setBuilding] = useState(false)
   const [buildError, setBuildError] = useState('')
   const [needsLogin, setNeedsLogin] = useState(false)
+  const [linkCount, setLinkCount] = useState(0) // live "N links detected" — proves the field is read
   const [build, setBuild] = useState<{ playlistId: string; title: string; total: number; done: number; matched: number; status: string; sources: number } | null>(null)
 
   const parseUrls = (s: string) => Array.from(new Set((s || '').split(/[\n,]/).map(x => x.trim()).filter(Boolean)))
@@ -107,6 +108,8 @@ export default function PlaylistsExplorePage() {
   }
 
   const runRebuild = async () => {
+   try {
+    // Read the link from the textarea (ref) → fall back to any value the DOM has.
     const all = liveUrls()
     if (!all.length) { setBuildError('Paste a Spotify, YouTube, SoundCloud or Bandcamp link first.'); return }
     if (!all.some(isSupportedUrl)) { setBuildError('Those links aren’t supported — use Spotify, YouTube, SoundCloud or Bandcamp.'); return }
@@ -136,6 +139,10 @@ export default function PlaylistsExplorePage() {
     } catch {
       setBuildError('Network error — try again.'); setBuilding(false)
     }
+   } catch (err: any) {
+    // Last-resort: never fail silently — any unexpected throw is shown.
+    setBuildError(`Rebuild error: ${err?.message || 'unknown'} — tell support.`); setBuilding(false)
+   }
   }
 
   // Derive candy rails from one fetch (no extra round-trips).
@@ -177,34 +184,42 @@ export default function PlaylistsExplorePage() {
           <p className="text-[11px] text-gray-500 leading-snug">
             Paste <span className="text-gray-300">Spotify · YouTube · SoundCloud · Bandcamp</span> links (one per line). The scraper re-sources every song to a playable version and builds <span className="text-fuchsia-300">one</span> SoundChain queue. Drop several links to combine them.
           </p>
-          <textarea
-            ref={taRef}
-            defaultValue=""
-            onInput={() => { if (scrapeError) setScrapeError(''); if (buildError) { setBuildError(''); setNeedsLogin(false) } }}
-            placeholder={'Paste playlist links — one per line\nhttps://open.spotify.com/playlist/…\nhttps://soundcloud.com/…  ·  https://…bandcamp.com/album/…'}
-            spellCheck={false} autoCapitalize="none" autoCorrect="off" autoComplete="off" inputMode="url" rows={3}
-            className="w-full bg-black/50 border border-fuchsia-500/25 focus:border-fuchsia-400/60 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 font-mono outline-none transition-colors resize-y"
-          />
-          <input
-            ref={nameRef} defaultValue="" placeholder="Playlist name (optional)" spellCheck={false} autoCapitalize="none" autoCorrect="off"
-            className="w-full bg-black/50 border border-fuchsia-500/25 focus:border-fuchsia-400/60 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 font-mono outline-none transition-colors"
-          />
-          <div className="flex flex-col sm:flex-row gap-2">
-            <button
-              type="button" onClick={runRebuild} disabled={building}
-              className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-[13px] font-mono uppercase tracking-[0.1em] bg-fuchsia-500/20 text-fuchsia-100 border border-fuchsia-400/60 hover:bg-fuchsia-500/30 active:bg-fuchsia-500/40 disabled:opacity-40 disabled:cursor-not-allowed transition-all whitespace-nowrap shadow-[0_0_16px_rgba(232,121,249,0.18)]"
-            >
-              {building ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
-              {building ? 'Building…' : 'Rebuild on SoundChain'}
-            </button>
-            <button
-              type="button" onClick={runScrape} disabled={scraping || building}
-              className="inline-flex items-center justify-center gap-1.5 px-4 py-3 sm:py-2 rounded-lg text-[12px] font-mono uppercase tracking-[0.1em] text-fuchsia-300/80 border border-fuchsia-500/25 hover:bg-fuchsia-500/10 disabled:opacity-40 disabled:cursor-not-allowed transition-all whitespace-nowrap"
-            >
-              {scraping ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
-              Preview songs
-            </button>
-          </div>
+          {/* A real <form> so the button submits reliably on every device (tap
+              AND keyboard); onSubmit reads the live textarea value. */}
+          <form onSubmit={e => { e.preventDefault(); runRebuild() }}>
+            <textarea
+              ref={taRef}
+              defaultValue=""
+              onInput={() => { setLinkCount(liveUrls().length); if (scrapeError) setScrapeError(''); if (buildError) { setBuildError(''); setNeedsLogin(false) } }}
+              placeholder={'Paste playlist links — one per line\nhttps://open.spotify.com/playlist/…\nhttps://soundcloud.com/…  ·  https://…bandcamp.com/album/…'}
+              spellCheck={false} autoCapitalize="none" autoCorrect="off" autoComplete="off" inputMode="url" rows={3}
+              className="w-full bg-black/50 border border-fuchsia-500/25 focus:border-fuchsia-400/60 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 font-mono outline-none transition-colors resize-y"
+            />
+            {/* live detector — visibly proves the field is being read on this device */}
+            <p className="text-[10px] font-mono text-fuchsia-300/70 mt-1">
+              {linkCount > 0 ? `✓ ${linkCount} link${linkCount > 1 ? 's' : ''} detected — ready to rebuild` : 'Paste a link above to begin'}
+            </p>
+            <input
+              ref={nameRef} defaultValue="" placeholder="Playlist name (optional)" spellCheck={false} autoCapitalize="none" autoCorrect="off"
+              className="w-full mt-2 bg-black/50 border border-fuchsia-500/25 focus:border-fuchsia-400/60 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 font-mono outline-none transition-colors"
+            />
+            <div className="flex flex-col sm:flex-row gap-2 mt-2">
+              <button
+                type="submit" disabled={building}
+                className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-[13px] font-mono uppercase tracking-[0.1em] bg-fuchsia-500/20 text-fuchsia-100 border border-fuchsia-400/60 hover:bg-fuchsia-500/30 active:bg-fuchsia-500/40 disabled:opacity-40 disabled:cursor-not-allowed transition-all whitespace-nowrap shadow-[0_0_16px_rgba(232,121,249,0.18)]"
+              >
+                {building ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
+                {building ? 'Building…' : 'Rebuild on SoundChain'}
+              </button>
+              <button
+                type="button" onClick={runScrape} disabled={scraping || building}
+                className="inline-flex items-center justify-center gap-1.5 px-4 py-3 sm:py-2 rounded-lg text-[12px] font-mono uppercase tracking-[0.1em] text-fuchsia-300/80 border border-fuchsia-500/25 hover:bg-fuchsia-500/10 disabled:opacity-40 disabled:cursor-not-allowed transition-all whitespace-nowrap"
+              >
+                {scraping ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
+                Preview songs
+              </button>
+            </div>
+          </form>
 
           {(scrapeError || buildError) && (
             <p className="text-[11px] text-amber-400/90 leading-snug">
