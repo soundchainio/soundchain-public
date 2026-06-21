@@ -4,6 +4,39 @@ import { Trophy, MapPin, CalendarDays, GitBranch, ArrowRight } from 'lucide-reac
 import { WC_KICKOFF_ISO, WC_FINAL_ISO } from '@/lib/worldcup'
 
 /**
+ * PlayerSilhouette — a dynamic soccer-striker cutout, composed from SVG shapes
+ * (head + torso + posed arms/legs mid-kick). Royalty-free + no-likeness-risk
+ * (stylized, not a real person), zero-weight (vector), battery-free. Filled with
+ * a team-color gradient. This is the "superstar cutout" without stock/IP/GPU.
+ */
+function PlayerSilhouette({ id, from, to, className = '', flip }: { id: string; from: string; to: string; className?: string; flip?: boolean }) {
+  return (
+    <svg viewBox="0 0 120 200" className={className} style={flip ? { transform: 'scaleX(-1)' } : undefined} aria-hidden>
+      <defs>
+        <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={from} />
+          <stop offset="100%" stopColor={to} />
+        </linearGradient>
+      </defs>
+      <g fill={`url(#${id})`}>
+        {/* head */}
+        <circle cx="62" cy="22" r="13" />
+        {/* torso, leaning into the strike */}
+        <path d="M50 36 q14 -6 26 2 l6 40 q-20 8 -38 0 z" />
+        {/* back arm raised for balance */}
+        <path d="M52 42 q-22 -6 -30 12 q-3 8 4 10 q6 -2 9 -10 q8 -8 19 -8 z" />
+        {/* front arm */}
+        <path d="M78 44 q18 4 24 22 q2 7 -5 8 q-6 -1 -8 -9 q-6 -10 -14 -13 z" />
+        {/* planted leg */}
+        <path d="M52 74 q8 4 14 2 l-2 50 q-1 30 -9 44 q-3 5 -9 3 q-4 -2 -2 -8 q6 -16 6 -40 z" />
+        {/* striking leg, swung up to the ball */}
+        <path d="M66 76 q9 2 14 -2 q14 18 30 22 q6 2 4 9 q-3 6 -10 3 q-22 -6 -36 -24 q-4 -4 -6 -11 z" />
+      </g>
+    </svg>
+  )
+}
+
+/**
  * WorldCupHero — the arena homepage takeover for FIFA World Cup 2026.
  *
  * Replaces the NBA FinalsCollision hero (ghosted until next year's finals).
@@ -119,10 +152,16 @@ export function WorldCupHero() {
             </div>
           </div>
 
-          {/* ── Right: big overlapping trophy + flag-disc cutout cluster ── */}
-          <div className="relative hidden lg:flex items-center justify-center min-h-[340px]" aria-hidden>
+          {/* ── Right: big overlapping STRIKER CUTOUTS + trophy + flags ──
+              Mobile-visible (shorter on phones), the standout hero imagery. */}
+          <div className="relative flex items-center justify-center min-h-[240px] lg:min-h-[380px]" aria-hidden>
+            {/* spotlight wash behind the cutouts */}
+            <div className="absolute w-[260px] h-[260px] lg:w-[360px] lg:h-[360px] rounded-full bg-emerald-400/15 blur-3xl" />
+            {/* two overlapping striker silhouettes */}
+            <PlayerSilhouette id="wcp1" from="#34d399" to="#0e7490" className="wc-player wc-player-1" />
+            <PlayerSilhouette id="wcp2" from="#f59e0b" to="#b91c1c" className="wc-player wc-player-2" flip />
+            {/* trophy + ball + host flag discs layered over */}
             <div className="wc-trophy">🏆</div>
-            {/* overlapping host-nation flag discs */}
             <div className="wc-flag-disc wc-disc-1">🇲🇽</div>
             <div className="wc-flag-disc wc-disc-2">🇺🇸</div>
             <div className="wc-flag-disc wc-disc-3">🇨🇦</div>

@@ -327,3 +327,20 @@ main, header, nav, footer, .arena-content { position: relative; z-index: 1; }
 @media (prefers-reduced-motion: reduce){
   .wc-hero-glow,.wc-trophy,.wc-flag-disc,.wc-ball,.wc-marquee{animation:none}
 }
+
+/* WC striker cutouts + mobile-responsive cluster (Jun 20, 2026) */
+.wc-player{
+  position:absolute;height:200px;width:auto;filter:drop-shadow(0 14px 30px rgba(0,0,0,.55));
+}
+.wc-player-1{left:14%;bottom:0;height:230px;z-index:2;animation:wcFloat 5.2s ease-in-out infinite}
+.wc-player-2{right:12%;bottom:6%;height:190px;z-index:1;opacity:.92;animation:wcFloat 6s ease-in-out infinite .5s}
+/* phones: shrink the whole cluster so it still reads but doesn't dominate */
+@media (max-width:1023px){
+  .wc-trophy{font-size:120px}
+  .wc-player-1{height:150px;left:8%}
+  .wc-player-2{height:128px;right:8%}
+  .wc-flag-disc{width:54px;height:54px;font-size:30px}
+  .wc-disc-2{width:60px;height:60px;font-size:34px}
+  .wc-ball{font-size:38px}
+}
+@media (prefers-reduced-motion: reduce){ .wc-player{animation:none} }

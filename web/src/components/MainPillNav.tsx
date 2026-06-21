@@ -75,13 +75,20 @@ export default function MainPillNav({ active, borderClass = 'border-white/5', be
   const router = useRouter()
   const me = useMe()
 
+  // Arena lives on its own subdomain. Keep the user on the SAME deployment they're
+  // already on: on the anvil testbed (web.anvil.soundchain.io) the pill must land
+  // on arena.anvil.soundchain.io, NOT Vercel prod arena.soundchain.io. Host-aware.
+  const arenaUrl = (typeof window !== 'undefined' && window.location.hostname.includes('anvil'))
+    ? 'https://arena.anvil.soundchain.io?portal=soundchain'
+    : ARENA_URL
+
   const items: PillItem[] = [
     // Always visible (was logged-in-only, so signed-out surfaces — e.g. the
     // anvil testbed — showed no Profile pill at all). Logged out → /login,
     // same pattern as the Manager pill below.
     { id: 'profile', label: 'Profile', route: me?.profile ? `/users/${me.profile.userHandle}` : '/login', icon: User, accent: 'sky' as Accent },
     { id: 'nodes', label: 'Nodes', route: '/nodes', icon: Home, accent: 'cyan' },
-    { id: 'arena', label: 'Arena', route: ARENA_URL, icon: Trophy, accent: 'red', external: true },
+    { id: 'arena', label: 'Arena', route: arenaUrl, icon: Trophy, accent: 'red', external: true },
     // Manager — Jeremy's booking marketplace (agents ⇄ artists book each other).
     // Routes to the viewer's own manager page; /login when signed out (the SSR
     // [handle] page 404s without a real handle, and there's no /manager index).
@@ -97,8 +104,14 @@ export default function MainPillNav({ active, borderClass = 'border-white/5', be
     { id: 'radio', label: 'Radio', route: '/radio', icon: RadioIcon, accent: 'orange' },
     { id: 'explore', label: 'Explore', route: '/explore', icon: Compass, accent: 'emerald' },
     { id: 'users', label: 'Users', route: '/users', icon: UsersIcon, accent: 'pink' },
+    // Library — restored Jun 18, 2026 after fixing the /library self-redirect
+    // loop (it was never the data layer). /library serves the StarshipBay-styled
+    // dex library view; pill matches the deck/flight-deck aesthetic.
     { id: 'library', label: 'Library', route: '/library', icon: Music, accent: 'amber' },
-    { id: 'playlist', label: 'Playlists', route: '/playlist', icon: ListMusic, accent: 'fuchsia' },
+    // Playlists → global Playlists Explore (all SC users' playlists, deck
+    // aesthetic). Was '/playlist' which bounced to the viewer's OWN profile
+    // playlists; "my playlists" still lives on the profile.
+    { id: 'playlist', label: 'Playlists', route: '/playlists', icon: ListMusic, accent: 'fuchsia' },
     { id: 'archive', label: 'Archive', route: '/archive', icon: ArchiveIcon, accent: 'lime' },
     // Deck Map — the SoundChain Starship station map: every pill is a module
     // on the vessel; fly the camera, tap a module, ENTER routes to its page.
@@ -139,7 +152,13 @@ export default function MainPillNav({ active, borderClass = 'border-white/5', be
 
   return (
     <div className={`border-b ${borderClass} bg-black/40 backdrop-blur-md`}>
-      <div className="flex items-center gap-1.5 px-3 pt-2 pb-2">
+      {/* ≥1540px the starship side consoles (CapsuleWall, fixed, up to 220px each,
+          filling (100vw-1380)/2 of dead space per side) sit at the viewport edges.
+          A full-bleed pill row slid its left pills UNDER the left console's porthole
+          (Frank's "radar cutting off the nav" on /nodes). Centering the row in the
+          same 1380 content column the page body uses lands it exactly inside the
+          consoles with a 12px buffer. Below 1540px (mobile + laptop) it's untouched. */}
+      <div className="flex items-center gap-1.5 px-3 pt-2 pb-2 2xl:max-w-[1380px] 2xl:mx-auto">
         {pillRow}
       </div>
     </div>
