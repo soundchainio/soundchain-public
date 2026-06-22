@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { Play, Pause, Heart, Share2, Clock, X, Trash2, ExternalLink, Music, Loader2, Plus, Search, SkipBack, SkipForward, Link2, Import, Check, CheckSquare, Square, Camera, MessageSquare, Film, Copy, Shuffle, Repeat } from 'lucide-react'
+import { Play, Pause, Heart, Share2, Clock, X, Trash2, ExternalLink, Music, Loader2, Plus, Search, SkipBack, SkipForward, Link2, Import, Check, CheckSquare, Square, Camera, MessageSquare, Film, Copy, Shuffle, Repeat, ListPlus } from 'lucide-react'
 import { useAudioPlayerContext, Song } from 'hooks/useAudioPlayer'
 import { GetUserPlaylistsQuery, PlaylistTrackSourceType, TrackDocument, SortExploreTracksField, SortOrder } from 'lib/graphql'
 import { useExploreTracks as useExploreTracksQuery } from 'hooks/useExploreTracksSlimDirect'  // Phase 7e — Vercel-direct
@@ -285,6 +285,8 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
   const [isPlayingAll, setIsPlayingAll] = useState(false)
   const [shuffle, setShuffle] = useState(false)
   const [loopTrack, setLoopTrack] = useState(false)
+  const [trackQuery, setTrackQuery] = useState('') // filter the queue by artist/song
+  const [queueNext, setQueueNext] = useState<string[]>([]) // row ids queued to play next (Spotify-style)
   const [importUrl, setImportUrl] = useState('')
   const [importLoading, setImportLoading] = useState(false)
   const [importError, setImportError] = useState('')
@@ -773,6 +775,13 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
   // Play next track in queue (shuffle → random track, never the same twice in a row)
   const playNextInQueue = () => {
     if (tracks.length === 0) return
+    // Spotify-style "Play next" — manually-queued tracks jump the line first.
+    if (queueNext.length) {
+      const nextId = queueNext[0]
+      const idx = tracks.findIndex(t => t.id === nextId)
+      setQueueNext(q => q.slice(1))
+      if (idx >= 0) { playTrackAtIndex(idx); return }
+    }
     if (shuffle && tracks.length > 1) {
       let n = currentQueueIndex
       while (n === currentQueueIndex) n = Math.floor(Math.random() * tracks.length)
@@ -782,6 +791,12 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
     if (currentQueueIndex < tracks.length - 1) {
       playTrackAtIndex(currentQueueIndex + 1)
     }
+  }
+
+  // Queue a track to play next (Spotify-style). Found via search, tap "Play next".
+  const queueTrackNext = (rowId: string, title: string) => {
+    setQueueNext(q => [rowId, ...q.filter(id => id !== rowId)])
+    toast.success(`Up next: ${title.length > 40 ? title.slice(0, 40) + '…' : title}`)
   }
 
   // Play previous track in queue
@@ -1672,8 +1687,27 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
               </div>
             )}
 
-            {/* Header */}
-            <div className="sticky bg-black/90 backdrop-blur-sm px-6 py-3 border-b border-cyan-500/10" style={{ top: activeEmbed ? 'auto' : 0, zIndex: 5 }}>
+            {/* Header + search */}
+            <div className="sticky bg-black/90 backdrop-blur-sm px-3 sm:px-6 py-2.5 border-b border-cyan-500/10" style={{ top: activeEmbed ? 'auto' : 0, zIndex: 5 }}>
+              {/* search the queue by artist / song */}
+              {tracks.length > 3 && (
+                <div className="relative mb-2">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-cyan-500/40" />
+                  <input
+                    type="text"
+                    value={trackQuery}
+                    onChange={(e) => setTrackQuery(e.target.value)}
+                    placeholder="Search this playlist — artist or song…"
+                    spellCheck={false}
+                    className="w-full pl-8 pr-8 py-1.5 bg-black/50 border border-cyan-500/20 focus:border-cyan-400/50 rounded-lg text-white placeholder-gray-600 text-xs focus:outline-none"
+                  />
+                  {trackQuery && (
+                    <button onClick={() => setTrackQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white">
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+              )}
               <div className="flex items-center text-[10px] font-mono text-cyan-500/50 uppercase tracking-[0.2em]">
                 <span className="w-8 text-center">#</span>
                 <span className="flex-1 ml-4">Title</span>
@@ -1711,6 +1745,10 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
                   const displayArtist = pt.artist || meta?.artist || (isNft ? 'SoundChain NFT' : getSourceLabel(pt.sourceType))
                   const displayArtwork = pt.artworkUrl || meta?.artworkUrl
                   const displayDuration = pt.duration || meta?.duration
+
+                  // Search filter — hide non-matches but keep `index` tied to the
+                  // original tracks array so play/queue indices never break.
+                  if (trackQuery && !`${displayTitle} ${displayArtist}`.toLowerCase().includes(trackQuery.toLowerCase())) return null
 
                   const handleClick = () => {
                     if (isNft && pt.trackId) {
@@ -1810,8 +1848,19 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
                         </span>
                       </div>
 
+                      {/* Play next (Spotify-style) — always visible when searching,
+                          on-hover otherwise. Queues this track to jump the line. */}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); queueTrackNext(pt.id, displayTitle) }}
+                        title="Play next"
+                        aria-label="Play next"
+                        className={`w-7 sm:w-8 flex items-center justify-center flex-shrink-0 transition-opacity ${queueNext.includes(pt.id) ? 'opacity-100' : trackQuery ? 'opacity-80' : 'opacity-0 group-hover:opacity-100'}`}
+                      >
+                        <ListPlus className={`w-4 h-4 ${queueNext.includes(pt.id) ? 'text-cyan-400' : 'text-gray-500 hover:text-cyan-400'}`} />
+                      </button>
+
                       {/* Duration */}
-                      <div className="w-14 sm:w-16 text-right text-gray-600 text-xs font-mono flex-shrink-0">
+                      <div className="w-12 sm:w-16 text-right text-gray-600 text-xs font-mono flex-shrink-0">
                         {formatDuration(displayDuration)}
                       </div>
 

@@ -264,9 +264,10 @@ export const AudioPlayerModal = () => {
             <div className="absolute inset-0 bg-black" />
             <div className="absolute inset-0 top-12 bottom-48 bg-black rounded-lg overflow-hidden">
               <iframe
+                key={externalEmbed.url}
                 src={externalEmbed.url}
                 className="w-full h-full border-0"
-                allow="autoplay; encrypted-media; picture-in-picture"
+                allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
                 allowFullScreen
                 title={currentSong.title || 'External Track'}
               />

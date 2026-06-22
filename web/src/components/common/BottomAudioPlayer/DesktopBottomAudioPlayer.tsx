@@ -57,7 +57,7 @@ export const BottomAudioPlayer = () => {
   }
 
   return (
-    <Container style={{ height: isCollapsed ? '60px' : '90px' }}>
+    <Container style={{ height: isCollapsed ? '44px' : '60px' }}>
       {/* Close button (X) on the far left */}
       <button
         aria-label="Close player"
@@ -73,8 +73,8 @@ export const BottomAudioPlayer = () => {
             <Asset src={currentSong.art} />
           </ImageContainer>
           <Title>
-            <h2 className="w-[150px] truncate font-medium text-white">{currentSong.title || 'Unknown Title'}</h2>
-            <p className="w-[150px] truncate font-normal text-neutral-400">{currentSong.artist || 'Unknown artist'}</p>
+            <h2 className="w-[150px] truncate font-medium text-white text-[13px] leading-tight">{currentSong.title || 'Unknown Title'}</h2>
+            <p className="w-[150px] truncate font-normal text-neutral-400 text-[11px] leading-tight">{currentSong.artist || 'Unknown artist'}</p>
           </Title>
           <FavoriteTrack />
         </TrackDetails>
@@ -135,7 +135,7 @@ const Container = tw.div`
   justify-between
   items-center
   bg-neutral-900
-  h-[90px]
+  h-[60px]
   transition-all duration-300
   animate-slide-up
   shadow-[0_-4px_20px_rgba(0,0,0,0.5)]
@@ -147,24 +147,26 @@ const TrackDetails = tw.div`
 `
 
 const ImageContainer = tw.div`
-  h-[90px]
-  w-[90px]
+  h-[48px]
+  w-[48px]
+  rounded-md
+  overflow-hidden
+  flex-shrink-0
 `
 
 const Title = tw.div`
   flex
   flex-col
   items-start
-  mr-6
-  ml-3
+  mr-4
+  ml-2.5
 `
 
 const TrackControls = tw.div`
-  flex 
-  items-center 
-  mt-4 
-  mr-4 
-  justify-center 
-  gap-2 
+  flex
+  items-center
+  mr-4
+  justify-center
+  gap-1.5
   h-full
 `
