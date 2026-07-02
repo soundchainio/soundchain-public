@@ -146,19 +146,22 @@ export function useLucyLocal() {
           loadStatus: typeof p?.text === 'string' ? p.text : s.loadStatus,
         }))
       }
-      // DURABLE, RESUMABLE, CROSS-PLATFORM CACHE — the fix for the re-download
-      // loop. WebLLM's default backend is the Cache API ('cache'), which every
-      // browser evicts under storage pressure and does NOT reliably flush before
-      // the process dies. So a tab killed mid-download — iOS jetsam, Android
-      // low-memory, a closed laptop lid — loses the partial weights, and the next
-      // load RESTARTS FROM ZERO ("LOADING ON-DEVICE LUCY… 97%… white refresh…
-      // again"). IndexedDB commits each shard in its own transaction, durably, on
-      // EVERY platform (iOS/Android/Samsung/Windows/Ubuntu/Linux/ChromeOS;
-      // Intel/AMD/NVIDIA) → a killed download RESUMES from the last cached shard
-      // instead of looping, and survives slow cellular across many attempts.
-      // Spread prebuiltAppConfig so the full prebuilt model_list is preserved.
+      // CACHE BACKEND — split by platform; each choice is load-bearing.
+      // IndexedDB (Android/desktop): commits each shard durably in its own
+      // transaction, so a killed download RESUMES instead of restarting from
+      // zero. BUT web-llm's IndexedDB READ path materializes every cached
+      // shard in the JS heap before the GPU build — ~1.7GB resident for 3B —
+      // and that is exactly what iOS jetsams at the end of every boot (the
+      // "gets to ~90%, page refreshes, never completes" loop). The Cache API
+      // streams shards disk→GPU without holding the set in memory, which is
+      // the configuration that booted 3B on iPhone reliably pre-June. So:
+      // iOS gets the streaming Cache API (navigator.storage.persist() is
+      // already requested above to resist eviction); everything else keeps
+      // durable IndexedDB. Spread prebuiltAppConfig to preserve model_list.
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+        || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) // iPadOS masquerades as Mac
       const appConfig = mod.prebuiltAppConfig
-        ? { ...mod.prebuiltAppConfig, cacheBackend: 'indexeddb' as const }
+        ? { ...mod.prebuiltAppConfig, cacheBackend: (isIOS ? 'cache' : 'indexeddb') as const }
         : undefined
       const engineConfig: any = { initProgressCallback: onProgress }
       if (appConfig) engineConfig.appConfig = appConfig

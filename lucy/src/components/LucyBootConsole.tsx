@@ -34,10 +34,17 @@ const baseOf = (s: string) =>
     .toLowerCase()
 
 // Branded boot preamble — frames the real fetch lines that follow.
+// Cache line mirrors the platform split in useLucyLocal: iOS streams via the
+// Cache API (low-memory — survives jetsam), everything else gets IndexedDB.
+const IS_IOS = typeof navigator !== 'undefined'
+  && (/iPad|iPhone|iPod/.test(navigator.userAgent)
+    || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1))
 const SEED = [
   'booting lucy · on-device runtime',
   'probing gpu adapter · webgpu',
-  'cache backend · indexeddb  (durable · resumable)',
+  IS_IOS
+    ? 'cache backend · cache-api  (streaming · low-memory)'
+    : 'cache backend · indexeddb  (durable · resumable)',
   'fetching neural weights · llama-3.2-3b  (one time · yours forever)',
 ]
 
